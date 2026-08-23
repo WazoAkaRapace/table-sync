@@ -196,12 +196,14 @@ export const characters = sqliteTable(
     // Active Unarmored Defense when several are available (null = best auto)
     unarmoredDefense: text('unarmored_defense'),
   },
-  (_t) => [
+  (t) => [
     check('characters_strength_check', sql`strength >= 1`),
     check('characters_capacity_multiplier_check', sql`capacity_multiplier > 0`),
     check('characters_exhaustion_check', sql`exhaustion >= 0 AND exhaustion <= 6`),
     check('characters_max_hp_check', sql`max_hp >= 1`),
     check('characters_level_check', sql`level >= 1 AND level <= 20`),
+    index('idx_characters_party').on(t.partyId),
+    index('idx_characters_owner').on(t.ownerId),
   ],
 );
 
