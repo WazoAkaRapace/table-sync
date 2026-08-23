@@ -170,9 +170,36 @@ function textFontSize(displayedWidth: number): number {
   return Math.max(10, Math.round(displayedWidth / 22));
 }
 
+/**
+ * Fond de lisibilité derrière une note : l'ivoire et l'or se perdent sur une
+ * carte claire, l'encre et le sang sur une zone sombre. On mesure la
+ * luminance du texte — clair → scrim encre translucide, foncé → parchemin
+ * translucide. Utilisé PARTOUT (span de session ET composite enregistré)
+ * pour que l'aperçu ressemble à l'enregistré.
+ */
+function noteBackdrop(color: string): string {
+  const lin = (hex: string) => {
+    const c = Number.parseInt(hex, 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  };
+  const lum =
+    0.2126 * lin(color.slice(1, 3)) +
+    0.7152 * lin(color.slice(3, 5)) +
+    0.0722 * lin(color.slice(5, 7));
+  // Seuil 0,18 : l'or (≈0,33) part sur scrim sombre, le sang (≈0,05) sur parchemin.
+  return lum >= 0.18 ? 'rgba(42,31,20,0.55)' : 'rgba(253,250,243,0.82)';
+}
+
 /** L'élément tapé appartient-il au chrome annotation (barre, palette, saisie) ? */
 function isAnnotationUI(target: EventTarget | null): boolean {
   return target instanceof Element && !!target.closest('[data-annotation-ui]');
+}
+
+/** Id de la note posée visée (span draggable), sinon null. */
+function noteIdFromTarget(target: EventTarget | null): number | null {
+  if (!(target instanceof Element)) return null;
+  const el = target.closest('[data-note-id]');
+  return el ? Number(el.getAttribute('data-note-id')) : null;
 }
 
 export function ItemImageViewer({
@@ -411,6 +438,9 @@ export function ItemImageViewer({
 
   // Rect 1× à recadrer quand on REVIENT au repos (layout stable sinon) ou au
   // redimensionnement de la fenêtre — les textes dépendent de cette ancre.
+  // + à la fin de l'animation d'entrée (scale 0.96→1) : une capture prise
+  // PENDANT l'animation épinglerait un rect ~4 % trop petit, et les notes
+  // s'afficheraient décalées par rapport au composite enregistré.
   useEffect(() => {
     const capture = () => {
       const el = imgRef.current;
@@ -420,7 +450,12 @@ export function ItemImageViewer({
     };
     if (loaded && view.scale === 1 && view.x === 0 && view.y === 0) capture();
     window.addEventListener('resize', capture);
-    return () => window.removeEventListener('resize', capture);
+    const area = imageAreaRef.current;
+    area?.addEventListener('animationend', capture, { once: true });
+    return () => {
+      window.removeEventListener('resize', capture);
+      area?.removeEventListener('animationend', capture);
+    };
   }, [loaded, view]);
 
   // ---------- Enregistrement : composite base + annotations → JPEG ----------
@@ -457,10 +492,30 @@ export function ItemImageViewer({
           for (const [nx, ny] of a.points) ctx.lineTo(nx * W, ny * H);
           ctx.stroke();
         } else {
-          ctx.font = `italic ${textFontSize(W)}px ui-serif, Georgia, serif`;
-          ctx.fillStyle = a.color;
+          const fontPx = textFontSize(W);
+          ctx.font = `italic ${fontPx}px ui-serif, Georgia, serif`;
           ctx.textBaseline = 'alphabetic';
-          ctx.fillText(a.text, a.nx * W, a.ny * H);
+          const tx = a.nx * W;
+          const ty = a.ny * H;
+          // Petit fond translucide ARRONDI (voir noteBackdrop) : la note reste
+          // lisible sur n'importe quelle image — l'aperçu de session matche.
+          const m = ctx.measureText(a.text);
+          const padX = fontPx * 0.3;
+          const padY = fontPx * 0.12;
+          const bx = tx - padX;
+          const by = ty - m.actualBoundingBoxAscent - padY;
+          const bw = m.width + padX * 2;
+          const bh = m.actualBoundingBoxAscent + m.actualBoundingBoxDescent + padY * 2;
+          ctx.fillStyle = noteBackdrop(a.color);
+          ctx.beginPath();
+          const rc = ctx as CanvasRenderingContext2D & {
+            roundRect?: (x: number, y: number, w: number, h: number, r: number) => void;
+          };
+          if (typeof rc.roundRect === 'function') rc.roundRect(bx, by, bw, bh, fontPx * 0.2);
+          else ctx.rect(bx, by, bw, bh);
+          ctx.fill();
+          ctx.fillStyle = a.color;
+          ctx.fillText(a.text, tx, ty);
         }
       }
       const blob = await new Promise<Blob | null>((resolve) =>
@@ -490,6 +545,70 @@ export function ItemImageViewer({
   const dragRef = useRef<{ x: number; y: number; tx: number; ty: number } | null>(null);
   const movedRef = useRef(false);
   const lastTapRef = useRef<{ t: number; x: number; y: number } | null>(null);
+  // Note posée en cours de déplacement : on mémorise l'ÉCART entre le pointeur
+  // et l'ancre de la note au départ — la note suit le DELTA du pointeur sans
+  // sauter sous le doigt (l'ancre n'est pas le milieu de la note).
+  const dragNoteRef = useRef<{
+    id: number;
+    pointerNx: number;
+    pointerNy: number;
+    noteNx: number;
+    noteNy: number;
+  } | null>(null);
+
+  // ---------- Pince à deux doigts (zoom + pan natifs) ----------
+  // Pointeurs suivis (hors chrome d'annotation) + ancrage du geste capturé au
+  // départ (et réancré si un doigt surnuméraire part). Le `touch-none` de la
+  // racine garantit que ces pointeurs arrivent SANS intervention du navigateur.
+  const pointersRef = useRef(new Map<number, { x: number; y: number }>());
+  const pinchRef = useRef<{
+    startDist: number;
+    startScale: number;
+    startMid: { x: number; y: number };
+    startX: number;
+    startY: number;
+  } | null>(null);
+
+  /** (Ré)ancre la pince sur les deux premiers doigts suivis, vue courante. */
+  const anchorPinch = () => {
+    const [a, b] = [...pointersRef.current.values()];
+    pinchRef.current = {
+      startDist: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)),
+      startScale: viewRef.current.scale,
+      startMid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 },
+      startX: viewRef.current.x,
+      startY: viewRef.current.y,
+    };
+  };
+
+  /**
+   * Applique la pince : zoom continu (écart des doigts) + pan (glissé du
+   * milieu), ancré sur le milieu ACTUEL — même formule que zoomTo (le point
+   * de l'image sous le milieu y reste), composée avec le déplacement du
+   * milieu depuis le départ du geste.
+   */
+  const applyPinch = () => {
+    const pinch = pinchRef.current;
+    if (!pinch) return;
+    const pts = [...pointersRef.current.values()];
+    if (pts.length < 2) return;
+    const [a, b] = pts;
+    const dist = Math.max(1, Math.hypot(a.x - b.x, a.y - b.y));
+    const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    const scale = Math.min(MAX_ZOOM, Math.max(1, pinch.startScale * (dist / pinch.startDist)));
+    const k = scale / pinch.startScale;
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight / 2;
+    const bx = pinch.startX + (mid.x - pinch.startMid.x);
+    const by = pinch.startY + (mid.y - pinch.startMid.y);
+    setView(
+      clampPan({
+        scale,
+        x: mid.x - cx - (mid.x - cx - bx) * k,
+        y: mid.y - cy - (mid.y - cy - by) * k,
+      }),
+    );
+  };
 
   const zoomed = view.scale > 1.01;
   const toolButton = (t: Tool, label: string, glyph: string) => (
@@ -529,6 +648,45 @@ export function ItemImageViewer({
       }`}
       onPointerDown={(e) => {
         if (isAnnotationUI(e.target)) return;
+        pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (pointersRef.current.size >= 2) {
+          // Deux doigts : pince, quel que soit l'outil (un doigt dessine,
+          // deux naviguent — gestes d'annotation standard). Un trait en
+          // cours est figé tel quel ; le pan simple est coupé ; la remontée
+          // ne devra jamais compter pour une tape.
+          const stroke = activeStrokeRef.current;
+          if (stroke) {
+            activeStrokeRef.current = null;
+            setAnnotations((list) => [...list, stroke]);
+          }
+          dragRef.current = null;
+          dragNoteRef.current = null;
+          setPanning(false);
+          movedRef.current = true;
+          anchorPinch();
+          return;
+        }
+        // Note posée visée : déplacement à la main (avant enregistrement),
+        // depuis n'importe quel outil — la note suit le pointeur SANS sauter :
+        // on part de l'écart pointeur↔ancre au moment de l'attrape.
+        const noteId = noteIdFromTarget(e.target);
+        if (noteId != null) {
+          const note = annotationsRef.current.find(
+            (x): x is Extract<Annotation, { kind: 'text' }> => x.kind === 'text' && x.id === noteId,
+          );
+          const p = normalizePoint(e.clientX, e.clientY);
+          if (note && p) {
+            dragNoteRef.current = {
+              id: noteId,
+              pointerNx: p[0],
+              pointerNy: p[1],
+              noteNx: note.nx,
+              noteNy: note.ny,
+            };
+            movedRef.current = true; // la remontée ne compte jamais pour une tape
+          }
+          return;
+        }
         if (tool === 'draw' && loaded) {
           const p = normalizePoint(e.clientX, e.clientY);
           if (p) {
@@ -541,6 +699,28 @@ export function ItemImageViewer({
         movedRef.current = false;
       }}
       onPointerMove={(e) => {
+        if (pointersRef.current.has(e.pointerId)) {
+          pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        }
+        if (pinchRef.current) {
+          applyPinch();
+          return;
+        }
+        // Note en déplacement : delta normalisé du pointeur appliqué à l'ancre
+        // de départ (borné à l'image) — insensible au zoom comme à l'échelle du
+        // rect, le composite gardera exactement la pose affichée.
+        const dragNote = dragNoteRef.current;
+        if (dragNote != null) {
+          const p = normalizePoint(e.clientX, e.clientY);
+          if (p) {
+            const nx = Math.min(1, Math.max(0, dragNote.noteNx + (p[0] - dragNote.pointerNx)));
+            const ny = Math.min(1, Math.max(0, dragNote.noteNy + (p[1] - dragNote.pointerNy)));
+            setAnnotations((list) =>
+              list.map((x) => (x.kind === 'text' && x.id === dragNote.id ? { ...x, nx, ny } : x)),
+            );
+          }
+          return;
+        }
         const active = activeStrokeRef.current;
         if (active) {
           const p = normalizePoint(e.clientX, e.clientY);
@@ -564,6 +744,32 @@ export function ItemImageViewer({
         setView((v) => clampPan({ scale: v.scale, x: d.tx + dx, y: d.ty + dy }));
       }}
       onPointerUp={(e) => {
+        pointersRef.current.delete(e.pointerId);
+        dragNoteRef.current = null;
+        if (pinchRef.current) {
+          if (pointersRef.current.size >= 2) {
+            anchorPinch(); // un doigt surnuméraire parti : réancrer sur les restants
+            return;
+          }
+          pinchRef.current = null;
+          setAnnounce(
+            viewRef.current.scale <= 1.01
+              ? 'Taille d’écran'
+              : `Zoom ${Math.round(viewRef.current.scale * 100)} %`,
+          );
+          // Un doigt reste : il devient un pan (en navigation) depuis l'état
+          // courant — jamais une tape, le geste est déjà consommé.
+          if (
+            pointersRef.current.size === 1 &&
+            toolRef.current === 'navigate' &&
+            viewRef.current.scale > 1.01
+          ) {
+            const [p] = [...pointersRef.current.values()];
+            dragRef.current = { x: p.x, y: p.y, tx: viewRef.current.x, ty: viewRef.current.y };
+            movedRef.current = true;
+          }
+          return;
+        }
         if (activeStrokeRef.current) {
           const stroke = activeStrokeRef.current;
           activeStrokeRef.current = null;
@@ -576,9 +782,29 @@ export function ItemImageViewer({
         if (!d) return;
         if (movedRef.current) return; // c'était un pan, pas une tape
         if (tool === 'text' && loaded) {
+          // Relocalisation : figer d'abord une note à moitié tapée (même
+          // ajout que commitDraftNote, sans quitter le mode texte).
+          if (pendingTextRef.current && draft.trim()) {
+            const pending = pendingTextRef.current;
+            const text = draft.trim();
+            setAnnotations((list) => [
+              ...list,
+              {
+                kind: 'text',
+                id: ++noteIdRef.current,
+                nx: pending.nx,
+                ny: pending.ny,
+                text,
+                color,
+              },
+            ]);
+          }
           const p = normalizePoint(e.clientX, e.clientY);
           if (p) {
-            setPendingText({ nx: p[0], ny: p[1], sx: e.clientX, sy: e.clientY });
+            // Le ref est mis à jour immédiatement : les événements souris de
+            // compat de CETTE tape arrivent juste après (voir onMouseDown).
+            pendingTextRef.current = { nx: p[0], ny: p[1], sx: e.clientX, sy: e.clientY };
+            setPendingText(pendingTextRef.current);
             setDraft('');
           }
           return;
@@ -601,7 +827,14 @@ export function ItemImageViewer({
         // Fermeture par tape hors image — uniquement au repos 1×.
         if (onBackdrop && !zoomed) requestCloseRef.current();
       }}
-      onPointerCancel={() => {
+      onPointerCancel={(e) => {
+        pointersRef.current.delete(e.pointerId);
+        dragNoteRef.current = null;
+        if (pinchRef.current) {
+          if (pointersRef.current.size >= 2) anchorPinch();
+          else pinchRef.current = null;
+          return;
+        }
         if (activeStrokeRef.current) {
           const stroke = activeStrokeRef.current;
           activeStrokeRef.current = null;
@@ -609,6 +842,15 @@ export function ItemImageViewer({
         }
         dragRef.current = null;
         setPanning(false);
+      }}
+      onMouseDown={(e) => {
+        // Piège mobile : les événements souris de COMPATIBILITÉ d'une tape
+        // arrivent APRÈS son pointerup — donc APRÈS l'ouverture du champ de
+        // note. Ce mousedown parasite vole le focus (blur → note vide → champ
+        // refermé aussitôt). Annuler son action par défaut (le déplacement de
+        // focus) tant qu'une saisie est ouverte ; le chrome d'annotation et
+        // le reste de l'interaction passent par les pointer events.
+        if (pendingTextRef.current && !isAnnotationUI(e.target)) e.preventDefault();
       }}
     >
       {/* Chrome flottant : le nom et ✕ posent SUR l'image, pas de bandeau.
@@ -679,12 +921,16 @@ export function ItemImageViewer({
           return (
             <span
               key={`note-${a.id}`}
-              className="pointer-events-none absolute font-body italic"
+              data-note-id={a.id}
+              className="pointer-events-auto absolute cursor-move touch-none font-body italic"
               style={{
                 left: p.x,
                 top: p.y - size,
                 color: a.color,
                 fontSize: size,
+                backgroundColor: noteBackdrop(a.color),
+                borderRadius: '0.25em',
+                padding: '0.05em 0.3em',
                 textShadow: '0 1px 2px rgba(0,0,0,0.55), 0 0 3px rgba(0,0,0,0.35)',
               }}
             >
@@ -703,7 +949,7 @@ export function ItemImageViewer({
           onChange={(e) => setDraft(e.target.value)}
           placeholder="Écris ta note"
           aria-label="Texte de la note"
-          className="fixed z-10 w-44 rounded-lg border border-gold-400 bg-parchment-50 px-2 py-1.5 text-sm text-ink-900 shadow-xl"
+          className="fixed z-10 w-44 select-text rounded-lg border border-gold-400 bg-parchment-50 px-2 py-1.5 text-sm text-ink-900 shadow-xl"
           style={{
             left: Math.min(pendingText.sx, window.innerWidth - 180),
             top: Math.max(pendingText.sy - 44, 56),
@@ -844,7 +1090,9 @@ export function ItemImageViewer({
           <p className="text-[11px] text-parchment-50/70">Trace ton doigt sur l'image</p>
         )}
         {loaded && tool === 'text' && !pendingText && (
-          <p className="text-[11px] text-parchment-50/70">Touche l'image pour poser un texte</p>
+          <p className="text-[11px] text-parchment-50/70">
+            Touche l'image pour poser un texte — glisse une note pour la déplacer
+          </p>
         )}
       </div>
       {!loaded && (
