@@ -318,8 +318,16 @@ export function InventoryRow({
                     )}
                     {/* Illustration en châssis — montée à l'ouverture seulement
                         (zéro requête tant que la ligne est repliée) ; la
-                        description est la légende, l'image est la pièce. */}
-                    {expanded && item.hasImage && <ItemVignette itemId={item.id} name={itemName} />}
+                        description est la légende, l'image est la pièce.
+                        Ligne éditable → la visionneuse gagne les outils
+                        d'annotation (dessin/notes sur l'exemplaire). */}
+                    {expanded && item.hasImage && (
+                      <ItemVignette
+                        itemId={item.id}
+                        name={itemName}
+                        editableEntryId={canEdit ? entry.id : undefined}
+                      />
+                    )}
                     {/* Computed attack & damage from character stats (weapons) */}
                     {item.category === 'weapon' &&
                       (() => {

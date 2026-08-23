@@ -47,6 +47,11 @@ export async function itemRoutes(app: FastifyInstance) {
       const drizzle = getDrizzle();
       const where: Array<SQL | undefined> = [];
 
+      // Les exemplaires annotés (objets dérivés) ne sont PAS du catalogue :
+      // ni recherche joueur ni onglet Objets custom — chaque annotation ne
+      // doit pas devenir un objet « ajoutable ». GET /items/:id les sert.
+      where.push(isNull(items.derivedFromItemId));
+
       // A party context (inventory search, GM dashboard) scopes the catalog:
       // SRD items + THAT party's customs only — a member of several parties
       // never sees another party's items. Compose with source=custom for the

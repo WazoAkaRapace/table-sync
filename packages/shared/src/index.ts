@@ -68,6 +68,13 @@ export interface Item {
   // An illustration (map, letter…) is attached — the bytes NEVER ride in list
   // payloads; clients fetch GET /api/items/:id/image once (cached, immutable).
   hasImage: boolean;
+  /**
+   * Annotation d'exemplaire : id de l'objet de BASE dont celui-ci est la copie
+   * annotée (dessin/notes aplatis dans sa propre image). Null = objet de
+   * catalogue. Les dérivés sont exclus des recherches/catalogues (GET /items)
+   * mais servis par GET /items/:id et par la fiche inventaire.
+   */
+  derivedFromItemId: number | null;
 }
 
 export type SurvivalTag = 'food' | 'water';

@@ -277,6 +277,7 @@ export function mapItem(row: any): Item {
       : [],
     imagePath: row.image_path,
     hasImage: !!row.image_url,
+    derivedFromItemId: row.derived_from_item_id ?? null,
   };
 }
 
@@ -414,6 +415,7 @@ export function mapInventoryEntry(row: any): InventoryEntry {
         survival_tags: row.i_survival_tags,
         image_path: row.i_image_path,
         image_url: row.i_image_url,
+        derived_from_item_id: row.i_derived_from_item_id,
       }
     : row;
 

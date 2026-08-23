@@ -265,6 +265,12 @@ export const items = sqliteTable(
     // Internal path to the attached illustration (data/images/items/<id>.jpg)
     // — never exposed in payloads, only the derived hasImage boolean is.
     imageUrl: text('image_url'),
+    // Annotation d'exemplaire : copie dérivée de l'objet de base (dessin/notes
+    // aplatis dans SON image). SET NULL si la base disparaît — l'exemplaire
+    // annoté vit sa vie. Toujours NULL sur les objets de catalogue.
+    derivedFromItemId: integer('derived_from_item_id').references(() => items.id, {
+      onDelete: 'set null',
+    }),
   },
   (t) => [
     check('items_source_check', sql`source IN ('srd','custom')`),

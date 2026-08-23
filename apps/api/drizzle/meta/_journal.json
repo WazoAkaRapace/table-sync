@@ -2,75 +2,15 @@
   "version": "7",
   "dialect": "sqlite",
   "entries": [
-    {
-      "idx": 0,
-      "version": "6",
-      "when": 1787259948716,
-      "tag": "0000_baseline",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1787263802713,
-      "tag": "0001_armor_proficiencies",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1787319518741,
-      "tag": "0002_groovy_rhino",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1787334715668,
-      "tag": "0003_mean_lilith",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "6",
-      "when": 1787389484470,
-      "tag": "0004_wise_dormammu",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "6",
-      "when": 1787399134614,
-      "tag": "0005_black_apocalypse",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "6",
-      "when": 1787484608109,
-      "tag": "0006_safe_susan_delgado",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "6",
-      "when": 1787487261912,
-      "tag": "0007_goofy_black_tarantula",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "6",
-      "when": 1787498000000,
-      "tag": "0008_natural_justin_hammer",
-      "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "6",
-      "when": 1787497600000,
-      "tag": "0009_rebuild_inventory_location_unique",
-      "breakpoints": true
-    }
+    {"idx": 0, "version": "6", "when": 1787259948716, "tag": "0000_baseline", "breakpoints": true},
+    {"idx": 1, "version": "6", "when": 1787263802713, "tag": "0001_armor_proficiencies", "breakpoints": true},
+    {"idx": 2, "version": "6", "when": 1787319518741, "tag": "0002_groovy_rhino", "breakpoints": true},
+    {"idx": 3, "version": "6", "when": 1787334715668, "tag": "0003_mean_lilith", "breakpoints": true},
+    {"idx": 4, "version": "6", "when": 1787389484470, "tag": "0004_wise_dormammu", "breakpoints": true},
+    {"idx": 5, "version": "6", "when": 1787399134614, "tag": "0005_black_apocalypse", "breakpoints": true},
+    {"idx": 6, "version": "6", "when": 1787484608109, "tag": "0006_safe_susan_delgado", "breakpoints": true},
+    {"idx": 7, "version": "6", "when": 1787487261912, "tag": "0007_goofy_black_tarantula", "breakpoints": true},
+    {"idx": 8, "version": "6", "when": 1787493848202, "tag": "0008_natural_justin_hammer", "breakpoints": true},
+    {"idx": 9, "version": "6", "when": 1787497600000, "tag": "0009_rebuild_inventory_location_unique", "breakpoints": true}
   ]
 }
