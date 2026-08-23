@@ -15,10 +15,11 @@ import { expect } from 'playwright/test';
 import { API_BASE } from './env';
 import { gmTest, openTab, playerTest, seed, sheetUrl } from './fixtures';
 
-// 1×1 JPEG RÉEL (encodé PIL, données de scan incluses) — le navigateur doit
-// pouvoir le DÉCODER (constante partagée avec item-images.spec.ts).
-const REAL_1X1_JPEG = Buffer.from(
-  '/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDi6KKK+ZP3E//Z',
+// 400×300 PNG réel (RGB plein, zlib) — géométrie HUMAINE pour les tests de
+// position (glissé de note, projection) : l'élément <img> occupe ~390px de
+// large, un déplacement du pointeur correspond au déplacement projeté à 1×.
+const REAL_PNG_400X300 = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAZAAAAEsCAIAAABi1XKVAAAD8UlEQVR4nO3UMQ0AIBDAwPevDw2MaMACG2lyyQno1Dl7ASTM9wKAR4YFZBgWkGFYQIZhARmGBWQYFpBhWECGYQEZhgVkGBaQYVhAhmEBGYYFZBgWkGFYQIZhARmGBWQYFpBhWECGYQEZhgVkGBaQYVhAhmEBGYYFZBgWkGFYQIZhARmGBWQYFpBhWECGYQEZhgVkGBaQYVhAhmEBGYYFZBgWkGFYQIZhARmGBWQYFpBhWECGYQEZhgVkGBaQYVhAhmEBGYYFZBgWkGFYQIZhARmGBWQYFpBhWECGYQEZhgVkGBaQYVhAhmEBGYYFZBgWkGFYQIZhARmGBWQYFpBhWECGYQEZhgVkGBaQYVhAhmEBGYYFZBgWkGFYQIZhARmGBWQYFpBhWECGYQEZhgVkGBaQYVhAhmEBGYYFZBgWkGFYQIZhARmGBWQYFpBhWECGYQEZhgVkGBaQYVhAhmEBGYYFZBgWkGFYQIZhARmGBWQYFpBhWECGYQEZhgVkGBaQYVhAhmEBGYYFZBgWkGFYQIZhARmGBWQYFpBhWECGYQEZhgVkGBaQYVhAhmEBGYYFZBgWkGFYQIZhARmGBWQYFpBhWECGYQEZhgVkGBaQYVhAhmEBGYYFZBgWkGFYQIZhARmGBWQYFpBhWECGYQEZhgVkGBaQYVhAhmEBGYYFZBgWkGFYQIZhARmGBWQYFpBhWECGYQEZhgVkGBaQYVhAhmEBGYYFZBgWkGFYQIZhARmGBWQYFpBhWECGYQEZhgVkGBaQYVhAhmEBGYYFZBgWkGFYQIZhARmGBWQYFpBhWECGYQEZhgVkGBaQYVhAhmEBGYYFZBgWkGFYQIZhARmGBWQYFpBhWECGYQEZhgVkGBaQYVhAhmEBGYYFZBgWkGFYQIZhARmGBWQYFpBhWECGYQEZhgVkGBaQYVhAhmEBGYYFZBgWkGFYQIZhARmGBWQYFpBhWECGYQEZhgVkGBaQYVhAhmEBGYYFZBgWkGFYQIZhARmGBWQYFpBhWECGYQEZhgVkGBaQYVhAhmEBGYYFZBgWkGFYQIZhARmGBWQYFpBhWECGYQEZhgVkGBaQYVhAhmEBGYYFZBgWkGFYQIZhARmGBWQYFpBhWECGYQEZhgVkGBaQYVhAhmEBGYYFZBgWkGFYQIZhARmGBWQYFpBhWECGYQEZhgVkGBaQYVhAhmEBGYYFZBgWkGFYQIZhARmGBWQYFpBhWECGYQEZhgVkGBaQYVhAhmEBGYYFZBgWkGFYQIZhARmGBWQYFpBhWECGYQEZhgVkGBaQYVhAhmEBGYYFZBgWkGFYQIZhARmGBWQYFpBhWECGYQEZhgVkGBaQcQExqmb0ultKEAAAAABJRU5ErkJggg==',
   'base64',
 );
 
@@ -59,7 +60,7 @@ async function setupCampaign(): Promise<{ rookId: number; croquisId: number }> {
   const croquisId = (await itemRes.json()).item.id;
 
   const form = new FormData();
-  form.append('image', new Blob([REAL_1X1_JPEG], { type: 'image/jpeg' }), 'illustration.jpg');
+  form.append('image', new Blob([REAL_PNG_400X300], { type: 'image/png' }), 'illustration.png');
   const put = await fetch(`${API_BASE}/api/items/${croquisId}/image`, {
     method: 'PUT',
     headers: { authorization: `Bearer ${gm.token}` },
@@ -106,7 +107,7 @@ async function openCroquisViewer(page: Page) {
   await page.getByRole('button', { name: "Agrandir l'illustration de Croquis annotable" }).click();
   const dialog = page.getByRole('dialog', { name: 'Illustration — Croquis annotable' });
   await expect(dialog).toBeVisible();
-  await expect(dialog.locator('img')).toHaveJSProperty('naturalWidth', 1);
+  await expect(dialog.locator('img')).toHaveJSProperty('naturalWidth', 400);
   return dialog;
 }
 
@@ -170,6 +171,11 @@ playerTest.describe('Annotations (joueuse)', () => {
     await input.fill('Ici !');
     await input.press('Enter');
     await expect(dialog.getByText('Ici !')).toBeVisible();
+    // Fond de lisibilité translucide : note couleur sang (défaut) → parchemin.
+    await expect(dialog.getByText('Ici !')).toHaveCSS(
+      'background-color',
+      'rgba(253, 250, 243, 0.82)',
+    );
 
     // Enregistrer : POST composite → visionneuse refermée, ligne re-rendue.
     await dialog.getByRole('button', { name: 'Enregistrer' }).click();
@@ -230,6 +236,135 @@ playerTest.describe('Annotations (joueuse)', () => {
   });
 
   playerTest(
+    'le champ de note survit aux événents souris de compat d’une tape',
+    async ({ page }) => {
+      // Régression mobile : sur tactile, les événements souris de COMPATIBILITÉ
+      // d'une tape arrivent APRÈS son pointerup — donc APRÈS l'ouverture du
+      // champ. Leur mousedown parasite volait le focus (blur → note vide →
+      // champ refermé aussitôt). On rejoue la séquence : mousedown/up sur
+      // l'image juste après l'ouverture, le champ doit rester ouvert et le
+      // texte pouvoir être saisi.
+      const dialog = await openCroquisViewer(page);
+      await dialog.getByRole('button', { name: 'Écrire' }).click();
+      const box = await dialog.locator('img').boundingBox();
+      expect(box, 'image bounding box').not.toBeNull();
+      await page.mouse.click(box!.x + box!.width * 0.5, box!.y + box!.height * 0.35);
+      const input = dialog.getByLabel('Texte de la note');
+      await expect(input).toBeFocused();
+
+      // La « tape mobile » : un mousedown/up parasite ailleurs sur l'image,
+      // juste après l'ouverture du champ.
+      await page.mouse.move(box!.x + box!.width * 0.3, box!.y + box!.height * 0.7);
+      await page.mouse.down();
+      await expect(input, 'le mousedown parasite ne ferme pas le champ').toBeVisible();
+      await page.mouse.up();
+      await expect(input, 'le champ reste ouvert après la tape parasite').toBeVisible();
+      await expect(input).toBeFocused();
+
+      // La saisie aboutit toujours : note posée et visible en session.
+      await input.fill('Note au doigt');
+      await input.press('Enter');
+      await expect(dialog.getByText('Note au doigt')).toBeVisible();
+    },
+  );
+
+  playerTest('une note posée se déplace à la main avant enregistrement', async ({ page }) => {
+    const dialog = await openCroquisViewer(page);
+    await dialog.getByRole('button', { name: 'Écrire' }).click();
+    const box = await dialog.locator('img').boundingBox();
+    expect(box, 'image bounding box').not.toBeNull();
+    await page.mouse.click(box!.x + box!.width * 0.5, box!.y + box!.height * 0.35);
+    const input = dialog.getByLabel('Texte de la note');
+    await input.fill('Bouge-moi');
+    await input.press('Enter');
+    const note = dialog.getByText('Bouge-moi');
+    await expect(note).toBeVisible();
+
+    const posOf = async () => {
+      const style = (await note.getAttribute('style')) ?? '';
+      return {
+        left: Number(/left:\s*(-?[\d.]+)px/.exec(style)?.[1]),
+        top: Number(/top:\s*(-?[\d.]+)px/.exec(style)?.[1]),
+      };
+    };
+    const before = await posOf();
+
+    // Glissé (pointer events unifiés) : la note suit le pointeur d'exactement
+    // son déplacement, SANS sauter sous la main (l'écart d'attrape est conservé)
+    // — à 1×, projection et rect affiché coïncident.
+    const nb = await note.boundingBox();
+    await page.mouse.move(nb!.x + nb!.width / 2, nb!.y + nb!.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(nb!.x + nb!.width / 2 + 40, nb!.y + nb!.height / 2 + 40, { steps: 6 });
+    await page.mouse.up();
+    const after = await posOf();
+    expect(Math.abs(after.left - before.left - 40), 'déplacement horizontal exact').toBeLessThan(3);
+    expect(Math.abs(after.top - before.top - 40), 'déplacement vertical exact').toBeLessThan(3);
+
+    // Le glissé n'a pas ouvert de champ ni déclenché de tape : la visionneuse
+    // est intacte et l'enregistrement embarque la note déplacée.
+    await expect(dialog.getByLabel('Texte de la note')).toHaveCount(0);
+    await dialog.getByRole('button', { name: 'Enregistrer' }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+  });
+
+  playerTest(
+    'pince à deux doigts : zoom et dézoom continus, puis retour au repos',
+    async ({ page }) => {
+      // Geste natif : deux doigts qui s'écartent zooment (ancré au milieu),
+      // se rapprochent dézooment — clampé à 1×. Injecté par CDP (vrais touch
+      // events multi-points → pointer events dans le navigateur).
+      const dialog = await openCroquisViewer(page);
+      const img = dialog.locator('img');
+      await expect(img).toHaveJSProperty('naturalWidth', 400);
+      const scaleOf = async () => {
+        const style = (await img.getAttribute('style')) ?? '';
+        const m = style.match(/scale\(([\d.]+)\)/);
+        return m ? Number.parseFloat(m[1]) : 1;
+      };
+      expect(await scaleOf()).toBe(1);
+
+      const cdp = await page.context().newCDPSession(page);
+      const touch = (type: string, points: Array<{ x: number; y: number }>) =>
+        cdp.send('Input.dispatchTouchEvent', { type, touchPoints: points });
+      const cx = 195; // centre du viewport 390
+      const y = 400;
+
+      // Écartement progressif des doigts → zoom continu.
+      await touch('touchStart', [
+        { x: cx - 50, y },
+        { x: cx + 50, y },
+      ]);
+      for (const d of [60, 72, 84, 96, 108, 120]) {
+        await touch('touchMove', [
+          { x: cx - d, y },
+          { x: cx + d, y },
+        ]);
+      }
+      await touch('touchEnd', []);
+      const zoomedScale = await scaleOf();
+      expect(zoomedScale, "l'écart des doigts zoome").toBeGreaterThan(1.4);
+      // Le dialogue n'a pas été refermé par la remontée des doigts.
+      await expect(dialog).toBeVisible();
+
+      // Resserrement sous la distance de départ → retour au repos 1× (clamp).
+      await touch('touchStart', [
+        { x: cx - 120, y },
+        { x: cx + 120, y },
+      ]);
+      for (const d of [100, 80, 60, 40, 20]) {
+        await touch('touchMove', [
+          { x: cx - d, y },
+          { x: cx + d, y },
+        ]);
+      }
+      await touch('touchEnd', []);
+      expect(await scaleOf(), 'le resserrement dézoome au repos').toBe(1);
+      await expect(dialog).toBeVisible();
+    },
+  );
+
+  playerTest(
     '2e annotation : la vignette recharge la BONNE image immédiatement',
     async ({ page }) => {
       // Régression 2026-08-23 bis : ré-annoter le dérivé réécrit SON fichier —
@@ -270,7 +405,7 @@ playerTest.describe('Annotations (joueuse)', () => {
       await vignette.click();
       const dialog2 = page.getByRole('dialog', { name: 'Illustration — Croquis annotable' });
       await expect(dialog2).toBeVisible();
-      await expect(dialog2.locator('img')).toHaveJSProperty('naturalWidth', 1);
+      await expect(dialog2.locator('img')).toHaveJSProperty('naturalWidth', 400);
       await drawStroke(dialog2, 0.75);
       await dialog2.getByRole('button', { name: 'Enregistrer' }).click();
       await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -342,6 +477,6 @@ gmTest('le dashboard MD ouvre la visionneuse en lecture seule', async ({ page })
   await mini.click();
   const dialog = page.getByRole('dialog', { name: 'Illustration — Lettre du duc' });
   await expect(dialog).toBeVisible();
-  await expect(dialog.locator('img')).toHaveJSProperty('naturalWidth', 1);
+  await expect(dialog.locator('img')).toHaveJSProperty('naturalWidth', 400);
   await expect(dialog.getByRole('button', { name: 'Dessiner' })).toHaveCount(0);
 });

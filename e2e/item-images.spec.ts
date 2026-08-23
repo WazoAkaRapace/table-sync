@@ -65,7 +65,7 @@ playerTest.describe('Objets-illustrations (joueur)', () => {
     // La pastille 🔍 ne s'affiche qu'une fois l'octet arrivé (onLoad) —
     // preuve du chargement réel depuis l'API, pas d'un plateau vide.
     await expect(chassis.getByText('🔍')).toBeVisible();
-    await expect(chassis.locator('img')).toHaveJSProperty('naturalWidth', 1);
+    await expect(chassis.locator('img')).toHaveJSProperty('naturalWidth', 400);
   });
 
   playerTest('la tape ouvre la visionneuse plein écran, ✕ la referme', async ({ page }) => {
@@ -77,7 +77,7 @@ playerTest.describe('Objets-illustrations (joueur)', () => {
     const dialog = page.getByRole('dialog', { name: 'Illustration — Lettre du duc' });
     await expect(dialog).toBeVisible();
     // Même URL que la vignette → hit de cache : l'image est là immédiatement.
-    await expect(dialog.locator('img')).toHaveJSProperty('naturalWidth', 1);
+    await expect(dialog.locator('img')).toHaveJSProperty('naturalWidth', 400);
 
     await dialog.getByRole('button', { name: 'Fermer' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
