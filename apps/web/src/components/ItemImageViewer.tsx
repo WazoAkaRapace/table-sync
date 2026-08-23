@@ -512,7 +512,15 @@ export function ItemImageViewer({
       aria-modal="true"
       aria-label={`Illustration — ${name}`}
       className={`viewer-enter fixed inset-0 z-50 flex h-dvh touch-none select-none flex-col bg-black/85 ${
-        zoomed ? (panning ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-zoom-in'
+        tool === 'draw'
+          ? 'cursor-crosshair'
+          : tool === 'text'
+            ? 'cursor-text'
+            : zoomed
+              ? panning
+                ? 'cursor-grabbing'
+                : 'cursor-grab'
+              : 'cursor-zoom-in'
       }`}
       onPointerDown={(e) => {
         if (isAnnotationUI(e.target)) return;
