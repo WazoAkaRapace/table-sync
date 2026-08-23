@@ -106,7 +106,7 @@ export default function GmDashboardPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-parchment-200">
+      <div className="flex gap-1 overflow-x-auto no-scrollbar border-b border-parchment-200">
         <TabButton active={tab === 'characters'} onClick={() => setTab('characters')}>
           Personnages ({party.characters.length})
         </TabButton>
@@ -266,7 +266,7 @@ function TabButton({
     <button
       type="button"
       onClick={onClick}
-      className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+      className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
         active
           ? 'border-blood-600 text-blood-700'
           : 'border-transparent text-ink-400 hover:text-ink-700'
