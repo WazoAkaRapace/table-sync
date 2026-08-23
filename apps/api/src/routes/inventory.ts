@@ -70,6 +70,7 @@ const INVENTORY_WITH_ITEM = {
   i_properties_json: items.propertiesJson,
   i_survival_tags: items.survivalTags,
   i_image_path: items.imagePath,
+  i_image_url: items.imageUrl,
 };
 
 /** The entry row (with its item) for one inventory id. */
@@ -198,6 +199,7 @@ export async function inventoryRoutes(app: FastifyInstance) {
               : r.i_survival_tags
             : [],
           imagePath: r.i_image_path,
+          hasImage: !!r.i_image_url,
         },
         quantity: r.quantity,
         equipped: !!r.equipped,

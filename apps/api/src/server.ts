@@ -5,6 +5,7 @@
 
 import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
+import multipart from '@fastify/multipart';
 import websocket from '@fastify/websocket';
 import Fastify from 'fastify';
 import { runDrizzleMigrations } from './db/drizzle.ts';
@@ -19,6 +20,7 @@ import { characterRoutes } from './routes/characters.ts';
 import { combatRoutes } from './routes/combat.ts';
 import { domainSpellRoutes } from './routes/domain-spells.ts';
 import { inventoryRoutes } from './routes/inventory.ts';
+import { itemImageRoutes } from './routes/item-images.ts';
 import { itemRoutes } from './routes/items.ts';
 import { locationRoutes } from './routes/locations.ts';
 import { monsterRoutes } from './routes/monsters.ts';
@@ -75,6 +77,9 @@ async function buildServer() {
   // normal successful usage. Installed as plain root-level hooks (not a
   // registered plugin) so they apply to every /api route below.
   await errorRateLimit(app);
+  // Multipart uploads (item illustrations). fileSize ceiling aligns with the
+  // PUT route's bodyLimit — the 2 MB business rule lives in the route itself.
+  await app.register(multipart, { limits: { fileSize: 5 * 1024 * 1024, files: 1 } });
   await app.register(websocket);
 
   // Health check (public)
@@ -90,7 +95,9 @@ async function buildServer() {
   });
 
   // Global auth guard: require JWT on all /api routes EXCEPT public ones.
-  // /ws authenticates via query param token, so it's excluded here.
+  // /ws and the item-image GET authenticate via query param token, so they're
+  // excluded here (the image GET verifies its token itself; its PUT/DELETE
+  // siblings self-authenticate via their onRequest hook).
   app.addHook('onRequest', async (request: any, reply: any) => {
     const url = request.url.split('?')[0];
     if (
@@ -98,7 +105,8 @@ async function buildServer() {
       url === '/api/auth/login' ||
       url === '/api/auth/register' ||
       url === '/api/auth/logout' ||
-      url === '/ws'
+      url === '/ws' ||
+      /^\/api\/items\/\d+\/image$/.test(url)
     ) {
       return; // public routes
     }
@@ -113,6 +121,7 @@ async function buildServer() {
   // Routes
   await app.register(authRoutes, { prefix: '/api/auth' });
   await app.register(itemRoutes, { prefix: '/api' });
+  await app.register(itemImageRoutes, { prefix: '/api' });
   await app.register(partyRoutes, { prefix: '/api' });
   await app.register(characterRoutes, { prefix: '/api' });
   await app.register(inventoryRoutes, { prefix: '/api' });

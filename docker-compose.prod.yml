@@ -16,6 +16,8 @@ services:
     #   - "${API_PORT:-4010}:4000"
     volumes:
       - db-data:/app/data/db
+      # Uploaded item illustrations — survive container recreation.
+      - image-data:/app/data/images
     environment:
       - PORT=4000
       - DATABASE_PATH=/app/data/db/inventory.sqlite
@@ -33,3 +35,4 @@ services:
 
 volumes:
   db-data:
+  image-data:

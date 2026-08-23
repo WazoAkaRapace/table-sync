@@ -262,6 +262,9 @@ export const items = sqliteTable(
     survivalTags: text('survival_tags').notNull().default('[]'),
     aliases: text('aliases'),
     imagePath: text('image_path'),
+    // Internal path to the attached illustration (data/images/items/<id>.jpg)
+    // — never exposed in payloads, only the derived hasImage boolean is.
+    imageUrl: text('image_url'),
   },
   (t) => [
     check('items_source_check', sql`source IN ('srd','custom')`),

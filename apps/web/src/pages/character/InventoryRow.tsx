@@ -8,6 +8,7 @@ import {
   WEAPON_PROPERTY_LABELS_FR,
 } from '@dnd-inventory/shared';
 import { useEffect, useState } from 'react';
+import { ItemVignette } from '../../components/ItemImageViewer';
 import { Chip, RarityBadge, WeightBadge } from '../../components/ui';
 import { LOCATION_TYPE_ICON } from './types';
 
@@ -67,7 +68,8 @@ export function InventoryRow({
     item.strMin !== null ||
     item.stealthDisadvantage ||
     (item.properties && item.properties.length > 0) ||
-    !!entry.notes;
+    !!entry.notes ||
+    item.hasImage; // un objet réduit à son image (carte sans texte) reste dépliable
   const itemName = item.nameFr || item.name;
 
   // Locations available to move this item to (everything except the active one)
@@ -154,11 +156,22 @@ export function InventoryRow({
                 onClick={canExpand ? onToggleExpand : undefined}
                 className="min-w-0 flex-1 text-left"
                 aria-expanded={expanded}
-                aria-label={`${itemName}, ${quantity} exemplaire${quantity > 1 ? 's' : ''}`}
+                aria-label={`${itemName}, ${quantity} exemplaire${quantity > 1 ? 's' : ''}${
+                  item.hasImage ? ', illustré' : ''
+                }`}
               >
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-medium truncate">{itemName}</span>
                   {item.rarity !== 'none' && <RarityBadge rarity={item.rarity} />}
+                  {item.hasImage && (
+                    <span
+                      aria-hidden="true"
+                      title="Illustration — touche la ligne pour la voir"
+                      className="ml-0.5 text-sm text-ink-400"
+                    >
+                      🗺
+                    </span>
+                  )}
                   {canExpand && (
                     <span
                       className={`text-ink-400 text-xs chevron ${expanded ? 'is-open' : 'is-closed'}`}
@@ -303,6 +316,10 @@ export function InventoryRow({
                         Aussi connu sous : {item.aliases.join(', ')}
                       </p>
                     )}
+                    {/* Illustration en châssis — montée à l'ouverture seulement
+                        (zéro requête tant que la ligne est repliée) ; la
+                        description est la légende, l'image est la pièce. */}
+                    {expanded && item.hasImage && <ItemVignette itemId={item.id} name={itemName} />}
                     {/* Computed attack & damage from character stats (weapons) */}
                     {item.category === 'weapon' &&
                       (() => {

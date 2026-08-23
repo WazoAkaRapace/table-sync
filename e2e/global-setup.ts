@@ -190,6 +190,39 @@ export default async function globalSetup(): Promise<void> {
     await addSpell(playerToken, mira.id, name, prepared);
   }
 
+  // — Objet illustré « Lettre du duc » : création MD + illustration multipart,
+  //    portée par Kael — la spec objets-illustrations déplie sa ligne —
+  const { item: lettre } = await call<{ item: { id: number } }>(
+    'POST',
+    `/api/parties/${party.id}/items`,
+    {
+      token: gmToken,
+      body: { name: 'Lettre du duc', description: 'Un ordre de mission au sceau brisé' },
+    },
+  );
+  // 1×1 JPEG RÉEL (données de scan incluses) — le navigateur du joueur doit le
+  // DÉCODER dans la vignette : un JPEG réduit à son en-tête passe le sniff du
+  // serveur mais fire img.onerror côté browser (leçon e2e 2026-08-23).
+  const jpeg = Buffer.from(
+    '/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDi6KKK+ZP3E//Z',
+    'base64',
+  );
+  const form = new FormData();
+  form.append('image', new Blob([jpeg], { type: 'image/jpeg' }), 'illustration.jpg');
+  const putImage = await fetch(`${API_BASE}/api/items/${lettre.id}/image`, {
+    method: 'PUT',
+    headers: { authorization: `Bearer ${gmToken}` },
+    body: form,
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (!putImage.ok) {
+    throw new Error(`Seed E2E : illustration de la lettre → ${putImage.status}`);
+  }
+  await call('POST', `/api/characters/${kael.id}/inventory`, {
+    token: playerToken,
+    body: { itemId: lettre.id, quantity: 1 },
+  });
+
   // — Rencontre « Embuscade gobeline » : setup, NON démarrée —
   const { encounter } = await call<{ encounter: { id: number; name: string } }>(
     'POST',
@@ -242,6 +275,7 @@ export default async function globalSetup(): Promise<void> {
     inviteCode: party.inviteCode,
     guerrier: { id: kael.id, name: kael.name, combatantId: kaelCombatant.id },
     clerc: { id: mira.id, name: mira.name },
+    lettreId: lettre.id,
     encounterId: encounter.id,
     encounterName: encounter.name,
     gobelinIds: goblins.map((g) => g.id),

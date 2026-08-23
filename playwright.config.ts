@@ -16,10 +16,21 @@ import { defineConfig } from 'playwright/test';
 import { API_BASE, E2E_API_PORT, E2E_WEB_PORT, WEB_BASE } from './e2e/env';
 
 // Base de données neuve par lancement — data/db/ est gitignoré.
+// ⚠ Nettoyage garde-fou : Playwright ré-importe ce module dans CHAQUE worker —
+// n'exécuter le rmSync qu'une fois, dans le process principal, sinon un worker
+// efface la base (et les illustrations seedées par globalSetup) sous les pieds
+// du serveur lancé par webServer (leçon e2e 2026-08-23 : GET /image → 404).
+const isMainProcess = !process.env.TEST_WORKER_INDEX;
 const dbPath = path.resolve(process.cwd(), 'data', 'db', 'e2e.sqlite');
-for (const suffix of ['', '-wal', '-shm']) {
-  rmSync(`${dbPath}${suffix}`, { force: true });
+if (isMainProcess) {
+  for (const suffix of ['', '-wal', '-shm']) {
+    rmSync(`${dbPath}${suffix}`, { force: true });
+  }
+  // Illustrations d'objets : même contrat, dir jetable sous data/db/ (gitignoré).
+  const imagesPath = path.resolve(process.cwd(), 'data', 'db', 'e2e-images');
+  rmSync(imagesPath, { recursive: true, force: true });
 }
+const imagesPath = path.resolve(process.cwd(), 'data', 'db', 'e2e-images');
 
 export default defineConfig({
   testDir: './e2e',
@@ -50,6 +61,7 @@ export default defineConfig({
       env: {
         PORT: String(E2E_API_PORT),
         DATABASE_PATH: dbPath,
+        ITEM_IMAGES_PATH: imagesPath,
         JWT_SECRET: 'e2e-test-secret',
         // Tout le trafic vient de 127.0.0.1 : assouplir les seaux d'erreurs
         // du rate limiter pour éviter les flakes sur les asserts 4xx.

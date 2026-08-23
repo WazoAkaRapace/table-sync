@@ -276,6 +276,7 @@ export function mapItem(row: any): Item {
         : row.aliases
       : [],
     imagePath: row.image_path,
+    hasImage: !!row.image_url,
   };
 }
 
@@ -412,6 +413,7 @@ export function mapInventoryEntry(row: any): InventoryEntry {
         properties_json: row.i_properties_json,
         survival_tags: row.i_survival_tags,
         image_path: row.i_image_path,
+        image_url: row.i_image_url,
       }
     : row;
 

@@ -65,6 +65,9 @@ export interface Item {
   survivalTags: string[]; // ["food"] / ["water"] / ["food","water"] / []
   aliases: string[]; // alternative search names: ["bricoleur","outils de bricoleur"]
   imagePath: string | null;
+  // An illustration (map, letter…) is attached — the bytes NEVER ride in list
+  // payloads; clients fetch GET /api/items/:id/image once (cached, immutable).
+  hasImage: boolean;
 }
 
 export type SurvivalTag = 'food' | 'water';

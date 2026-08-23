@@ -24,6 +24,17 @@ export function getDbPath(): string {
   return resolve(monorepoRoot(), 'data', 'db', 'inventory.sqlite');
 }
 
+/**
+ * Directory where item illustrations live (data/images/items/<id>.jpg).
+ * Env-overridable and repo-root relative like DATABASE_PATH, so test stacks
+ * can point it at a throwaway dir.
+ */
+export function getItemImagesDir(): string {
+  const fromEnv = process.env.ITEM_IMAGES_PATH;
+  if (fromEnv) return resolve(monorepoRoot(), fromEnv);
+  return resolve(monorepoRoot(), 'data', 'images', 'items');
+}
+
 export function getDb(): DB {
   if (dbInstance) return dbInstance;
 

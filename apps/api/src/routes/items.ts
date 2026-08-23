@@ -2,10 +2,13 @@
  * Item catalog routes: search SRD + custom items, GM creates custom items.
  */
 
+import { existsSync, unlinkSync } from 'node:fs';
+import { join } from 'node:path';
 import type { CreateCustomItem } from '@dnd-inventory/shared';
 import { and, eq, inArray, isNull, or, type SQL, sql } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../db/drizzle.ts';
+import { getItemImagesDir } from '../db/index.ts';
 import { cols } from '../db/projections.ts';
 import { items, parties, partyMembers } from '../db/schema.ts';
 import { bus } from '../sync/bus.ts';
@@ -254,6 +257,11 @@ export async function itemRoutes(app: FastifyInstance) {
       }
 
       drizzle.delete(items).where(eq(items.id, itemId)).run();
+      // Drop the attached illustration file too (the row is gone — leave no orphan).
+      if (item.image_url) {
+        const filePath = join(getItemImagesDir(), item.image_url);
+        if (existsSync(filePath)) unlinkSync(filePath);
+      }
       bus.emitChange({
         type: 'party:change',
         partyId: item.party_id,

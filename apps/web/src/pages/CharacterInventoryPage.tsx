@@ -23,6 +23,11 @@ import api from '../api';
 import { useAuth } from '../auth';
 import CharacterStateBand from '../components/CharacterStateBand';
 import ConcentrationAlert from '../components/ConcentrationAlert';
+import {
+  EMPTY_ITEM_IMAGE,
+  ItemImageField,
+  type ItemImageValue,
+} from '../components/ItemImageField';
 import TurnSlash, { combatVibrate, useTurnSlash } from '../components/TurnSlash';
 import {
   BottomSheet,
@@ -206,6 +211,9 @@ export default function CharacterInventoryPage() {
   const [createItemCategory, setCreateItemCategory] = useState('custom');
   const [createItemWeight, setCreateItemWeight] = useState('');
   const [createItemDesc, setCreateItemDesc] = useState('');
+  // Illustration stagée du créateur d'objet — envoyée après le POST (une fois
+  // l'id connu), jamais dans le JSON de création.
+  const [createItemImage, setCreateItemImage] = useState<ItemImageValue>(EMPTY_ITEM_IMAGE);
   const [creatingItem, setCreatingItem] = useState(false);
 
   // Transfer modal
@@ -499,6 +507,7 @@ export default function CharacterInventoryPage() {
     setCreateItemCategory('custom');
     setCreateItemWeight('');
     setCreateItemDesc('');
+    setCreateItemImage(EMPTY_ITEM_IMAGE);
     // Fold the catalog sheet: the creator modal takes over, and the freshly
     // created item lands in the bag (toast) rather than behind the sheet.
     setCatalogOpen(false);
@@ -518,6 +527,20 @@ export default function CharacterInventoryPage() {
       });
       const created: Item = res.data.item;
       setCreateItemOpen(false);
+      // L'illustration part après la création (l'id vient d'exister). Si elle
+      // échoue, l'objet reste créé — toast ciblé, jamais de perte silencieuse.
+      if (createItemImage.staged) {
+        try {
+          const form = new FormData();
+          form.append('image', createItemImage.staged.blob, 'illustration.jpg');
+          await api.put(`/api/items/${created.id}/image`, form, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          });
+        } catch {
+          pushToast('Illustration non envoyée — réessaie depuis Modifier', 'error');
+        }
+      }
+      setCreateItemImage(EMPTY_ITEM_IMAGE);
       await queryClient.invalidateQueries({ queryKey: ['catalog'] });
       pushToast(`« ${created.nameFr || created.name} » créé`);
       // The search was meant to ADD the item — land it in the bag right away.
@@ -1459,6 +1482,9 @@ export default function CharacterInventoryPage() {
               placeholder="À quoi ça sert ?"
             />
           </label>
+          {/* L'illustration est le second contenu de l'objet — après la
+            description, avant le submit (plan objets-illustrations §5.1). */}
+          <ItemImageField value={createItemImage} onChange={setCreateItemImage} />
           <button
             type="submit"
             disabled={creatingItem || !createItemName.trim()}

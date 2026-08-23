@@ -62,3 +62,49 @@ export async function copyText(text: string): Promise<boolean> {
     }
   }
 }
+
+/**
+ * Decode an image file, matte it on WHITE, downscale the long edge to
+ * `maxEdge` and re-encode as a JPEG Blob (illustrations: a card or letter
+ * must stay readable zoomed on a 390px screen — 1280px leaves ~3× native
+ * margin). The white fillRect happens BEFORE drawImage because JPEG has no
+ * alpha channel: without it a transparent PNG would come out black. EXIF
+ * orientation is honored by createImageBitmap's default ('from-image').
+ *
+ * Generalization of the 256px portrait precedent (CharacterDescriptionTab),
+ * which keeps its own smaller resolution for a medallion — do not touch it.
+ * Returns null when the file cannot be decoded (caller shows an inline error).
+ */
+export async function downscaleImage(
+  file: Blob,
+  maxEdge = 1280,
+  quality = 0.85,
+): Promise<{ blob: Blob; width: number; height: number } | null> {
+  try {
+    const bitmap = await createImageBitmap(file);
+    let { width, height } = bitmap;
+    if (width > height && width > maxEdge) {
+      height = Math.round((height * maxEdge) / width);
+      width = maxEdge;
+    } else if (height > maxEdge) {
+      width = Math.round((width * maxEdge) / height);
+      height = maxEdge;
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, width, height);
+    ctx.drawImage(bitmap, 0, 0, width, height);
+    bitmap.close();
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob((b) => resolve(b), 'image/jpeg', quality),
+    );
+    if (!blob) return null;
+    return { blob, width, height };
+  } catch {
+    return null;
+  }
+}

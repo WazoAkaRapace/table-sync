@@ -33,6 +33,8 @@ export interface SeedData {
   inviteCode: string;
   guerrier: { id: number; name: string; combatantId: number };
   clerc: { id: number; name: string };
+  /** Objet personnalisé illustré (« Lettre du duc ») porté par le guerrier. */
+  lettreId: number;
   encounterId: number;
   encounterName: string;
   gobelinIds: number[];
