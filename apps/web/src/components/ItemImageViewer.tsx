@@ -205,6 +205,7 @@ export function ItemImageViewer({
   const [discardConfirm, setDiscardConfirm] = useState(false);
 
   const rootRef = useRef<HTMLDivElement>(null);
+  const imageAreaRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
@@ -385,6 +386,10 @@ export function ItemImageViewer({
 
   // Desktop : molette = zoom continu (non-passif pour preventDefault).
   // zoomTo vit dans un ref : le listener se bind une fois, sans closure périmée.
+  // En mode dessin/écrire, le zoom est FIGÉ au niveau courant : on dessine sur
+  // une zone stable, l'échelle ne glisse pas sous le doigt.
+  const toolRef = useRef(tool);
+  toolRef.current = tool;
   const zoomToRef = useRef(zoomTo);
   zoomToRef.current = zoomTo;
   useEffect(() => {
@@ -392,6 +397,7 @@ export function ItemImageViewer({
     if (!root) return;
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
+      if (toolRef.current !== 'navigate') return; // zoom figé en édition
       zoomToRef.current(viewRef.current.scale * factor(e.deltaY), e.clientX, e.clientY);
     };
     root.addEventListener('wheel', onWheel, { passive: false });
@@ -592,22 +598,32 @@ export function ItemImageViewer({
         setPanning(false);
       }}
     >
-      {/* Chrome flottant : le nom et ✕ posent SUR l'image, pas de bandeau */}
-      <div className="flex items-start justify-between gap-3 pt-[calc(0.75rem+env(safe-area-inset-top))] pl-4 pr-2">
+      {/* Chrome flottant : le nom et ✕ posent SUR l'image, pas de bandeau.
+          pointer-events-none sur le bandeau, auto sur ✕ — les tapes passent
+          au travers vers l'image (la zone ne vole aucun pixel d'interaction). */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-3 pt-[calc(0.75rem+env(safe-area-inset-top))] pl-4 pr-2">
         <span className="min-w-0 truncate font-display text-sm text-parchment-50">{name}</span>
         <button
           ref={closeBtnRef}
           type="button"
           onClick={() => requestCloseRef.current()}
           aria-label="Fermer"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xl text-parchment-50 transition-colors hover:bg-white/10"
+          className="pointer-events-auto flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xl text-parchment-50 transition-colors hover:bg-white/10"
         >
           ✕
         </button>
       </div>
 
-      {/* L'image possède l'écran — object-contain, zoom/pan sur l'img seule */}
-      <div className="viewer-image-enter flex min-h-0 flex-1 items-center justify-center">
+      {/* L'image possède l'écran — object-contain sur TOUT l'écran, zoom/pan
+          sur l'img seule. Le conteneur est absolute inset-0 : l'apparition de
+          la barre d'outils ne redimensionne PLUS la zone image (leçon
+          2026-08-23 : en flux, la barre décalait l'image, l'ancre 1× des
+          textes partait au mauvais endroit et le saut visuel cassait le zoom
+          de travail). */}
+      <div
+        ref={imageAreaRef}
+        className="viewer-image-enter absolute inset-0 flex items-center justify-center"
+      >
         <img
           ref={imgRef}
           src={src}
@@ -693,13 +709,19 @@ export function ItemImageViewer({
         />
       )}
 
-      {/* Barre d'outils annotation — uniquement depuis une ligne éditable */}
+      {/* Barre d'outils annotation — uniquement depuis une ligne éditable.
+          Flottante basse (absolute), au-dessus de la ligne d'indice : elle ne
+          prend PLUS de place en flux — l'image ne bouge pas quand elle
+          apparaît. */}
       {editable && loaded && (
-        <div data-annotation-ui className="flex flex-col items-center gap-2 px-2 pt-2">
+        <div
+          data-annotation-ui
+          className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col items-center gap-2 px-2 pb-[calc(1rem+env(safe-area-inset-bottom))]"
+        >
           {discardConfirm && (
             <p
               role="alert"
-              className="rounded-full bg-ink-900/85 px-4 py-2 text-sm text-parchment-50 backdrop-blur"
+              className="pointer-events-auto rounded-full bg-ink-900/85 px-4 py-2 text-sm text-parchment-50 backdrop-blur"
             >
               Annotations non enregistrées —{' '}
               <button
@@ -720,7 +742,7 @@ export function ItemImageViewer({
             </p>
           )}
           {(tool === 'draw' || tool === 'text') && (
-            <div className="flex items-center gap-1 rounded-full bg-ink-900/70 p-1.5 backdrop-blur">
+            <div className="pointer-events-auto flex items-center gap-1 rounded-full bg-ink-900/70 p-1.5 backdrop-blur">
               {STROKE_COLORS.map((c) => (
                 <button
                   type="button"
@@ -760,7 +782,7 @@ export function ItemImageViewer({
                 ))}
             </div>
           )}
-          <div className="flex items-center gap-1 rounded-full bg-ink-900/70 p-1.5 backdrop-blur">
+          <div className="pointer-events-auto flex items-center gap-1 rounded-full bg-ink-900/70 p-1.5 backdrop-blur">
             {toolButton('navigate', 'Naviguer', '🖐')}
             {toolButton('draw', 'Dessiner', '✏️')}
             {toolButton('text', 'Écrire', 'T')}
@@ -799,8 +821,9 @@ export function ItemImageViewer({
         </div>
       )}
 
-      {/* Indice gestuel : navigation au repos, aide contextuelle en annotation */}
-      <div className="pb-[env(safe-area-inset-bottom)] pt-2 text-center">
+      {/* Indice gestuel : flottant bas, sous la barre quand elle existe —
+          jamais en flux (l'image ne doit pas être repoussée). */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-1 z-0 pb-[env(safe-area-inset-bottom)] pt-2 text-center">
         {loaded && tool === 'navigate' && !zoomed && (
           <p className="text-[11px] text-parchment-50/70">Touche deux fois pour zoomer</p>
         )}
