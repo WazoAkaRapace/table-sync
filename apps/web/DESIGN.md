@@ -137,10 +137,18 @@ primaires) ; tous les autres états sont des marques imprimées.
 | `Chip` | pastille de stat (attaque 🎯, dégâts ⚔, DD 🛡, ×N, +magique ✨) | `tone` (orange/red/blood/blue/amber/gold/indigo), `soft`, `title` = info-bulle de décomposition |
 | `EncumbranceBar` | portage et paliers | affiche conséquences de règle au moment où elles s'appliquent ; `compact` = variante une-ligne du bandeau (barre fine + lecture mono + palier, conséquence conservée) |
 | `CharacterStateBand` | bandeau d'état de la fiche joueur (`components/CharacterStateBand.tsx`) | rail réglé épinglé sous l'en-tête : identité (renomme inline) + phrase d'état (PV avec segment temp bleu + puce `+N`, CA, sorts, états) + ligne de combat (`CombatLine` : appel d'initiative / Agir / tour quiet, `aria-live` sur la copie statique) + encombrance compact ; panneau dépliable (états, emplacements par niveau, PV ±1/±5 — **les dégâts absorbent les PV temp d'abord**, debouncés 700 ms en UN patch portant les deux champs, pour le jet de concentration sur le total) ; jumeau fixe compact au défilement (`band-drop`, IntersectionObserver — le flux ne change jamais de hauteur) ; le multiplicateur de portage vit dans l'onglet Caractéristiques (tuile « Portage max » des Statistiques dérivées) |
-| `ConfirmButton` | suppression en deux temps | arme 4 s puis confirme ; n'bulle pas au parent |
+| `ConfirmButton` | suppression en deux temps — LE motif des suppressions de contenu | arme le contrôle **sur place** (rouge + `pulse-warn` : « Supprimer ? » en pilule sur les ×, « Confirmer ? » sur les liens verbes), 4 s puis retombe, Échap/blur désarment ; 2ᵉ tap confirme ; n'bulle pas au parent |
 | `ToastStack` / `Toast` | retours d'action | bas d'écran, `aria-live` |
 | `RarityBadge` `CategoryBadge` `WeightBadge` `CostBadge` | métadonnées d'objet | |
 | `EmptyState` `LoadingSpinner` `ErrorMsg` | états de page | |
+
+**Échelle de confirmation** — toute suppression se confirme au point de tap,
+jamais ailleurs dans la carte : `ConfirmButton` arme le contrôle lui-même
+(× des cartes traits/notes/objets personnalisés, lien portrait, verbes du
+combat, pastille transport) ; les lignes d'inventaire et l'oubli de sort
+remplacent la ligne sur place ; le `Modal` avec texte de conséquences est
+réservé aux entités entières (personnage, PNJ) dont la suppression est en
+cascade. État armé = rouge + `pulse-warn`, partout la même signature.
 
 ## Motion
 

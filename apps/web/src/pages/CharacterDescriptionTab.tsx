@@ -25,7 +25,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import api from '../api';
 import { useAuth } from '../auth';
 import AddClassSheet from '../components/AddClassSheet';
-import { BottomSheet } from '../components/ui';
+import { BottomSheet, ConfirmButton } from '../components/ui';
 
 interface Props {
   character: Character;
@@ -496,13 +496,16 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
               📷 {character.portraitUrl ? 'Changer' : 'Téléverser'}
             </button>
             {character.portraitUrl && (
-              <button
-                type="button"
-                onClick={removePortrait}
+              <ConfirmButton
+                onConfirm={removePortrait}
                 className="text-xs text-red-500 hover:text-red-700"
+                armedClassName="font-semibold text-red-700!"
+                confirmChildren="Confirmer ?"
+                title="Supprimer le portrait"
+                ariaLabel="Supprimer le portrait"
               >
                 Supprimer
-              </button>
+              </ConfirmButton>
             )}
           </div>
         </div>

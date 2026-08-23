@@ -16,7 +16,15 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../auth';
-import { CategoryBadge, EmptyState, ErrorMsg, Fab, LoadingSpinner, Modal } from '../components/ui';
+import {
+  CategoryBadge,
+  ConfirmButton,
+  EmptyState,
+  ErrorMsg,
+  Fab,
+  LoadingSpinner,
+  Modal,
+} from '../components/ui';
 import { useSyncEvent } from '../sync';
 import { plural } from '../utils';
 
@@ -796,7 +804,6 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
   const [togglingPlayersCreate, setTogglingPlayersCreate] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -913,7 +920,6 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
   const remove = async (id: number) => {
     try {
       await api.delete(`/api/items/${id}`);
-      setConfirmDelete(null);
       await loadCustomItems();
     } catch (err: any) {
       setError(err.response?.data?.error || 'Erreur');
@@ -992,33 +998,17 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
                 >
                   ✎
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setConfirmDelete(item.id)}
-                  className="text-ink-400 hover:text-red-500 text-sm p-1"
-                  aria-label="Supprimer"
+                <ConfirmButton
+                  onConfirm={() => remove(item.id)}
+                  className="text-ink-400 hover:text-red-500 text-sm p-1 rounded-full transition-colors"
+                  armedClassName="bg-red-600 hover:bg-red-700 text-white! px-2.5 py-1 font-semibold"
+                  title={`Supprimer ${item.nameFr || item.name}`}
+                  ariaLabel={`Supprimer ${item.nameFr || item.name}`}
+                  confirmChildren="Supprimer ?"
                 >
                   ×
-                </button>
+                </ConfirmButton>
               </div>
-              {confirmDelete === item.id && (
-                <div className="flex items-center gap-2 ml-2">
-                  <button
-                    type="button"
-                    onClick={() => remove(item.id)}
-                    className="text-xs px-2 py-1 rounded bg-red-600 text-white hover:bg-red-700"
-                  >
-                    Supprimer ?
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setConfirmDelete(null)}
-                    className="text-xs px-2 py-1 rounded bg-parchment-200 hover:bg-parchment-300"
-                  >
-                    Annuler
-                  </button>
-                </div>
-              )}
             </li>
           ))}
         </ul>

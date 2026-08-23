@@ -7,7 +7,7 @@ import type { Character, CharacterNote } from '@dnd-inventory/shared';
 import { useCallback, useEffect, useState } from 'react';
 import api from '../api';
 import { SortableCard, SortableGrid } from '../components/SortableGrid';
-import { EmptyState, Modal } from '../components/ui';
+import { ConfirmButton, EmptyState, Modal } from '../components/ui';
 import { useSyncEvent } from '../sync';
 
 interface Props {
@@ -116,7 +116,6 @@ export default function CharacterNotesTab({
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<CharacterNote | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [saving, setSaving] = useState(false);
@@ -192,7 +191,6 @@ export default function CharacterNotesTab({
   const remove = async (id: number) => {
     try {
       await api.delete(`/api/character-notes/${id}`);
-      setConfirmDelete(null);
       await load();
       await onSaved();
     } catch {
@@ -259,14 +257,16 @@ export default function CharacterNotesTab({
                       >
                         ✎
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => setConfirmDelete(note.id)}
-                        className="text-ink-400 hover:text-red-500 text-sm p-1"
-                        aria-label={`Supprimer ${note.title}`}
+                      <ConfirmButton
+                        onConfirm={() => remove(note.id)}
+                        className="text-ink-400 hover:text-red-500 text-sm p-1 rounded-full transition-colors"
+                        armedClassName="bg-red-600 hover:bg-red-700 text-white! px-2.5 py-1 font-semibold"
+                        title={`Supprimer ${note.title}`}
+                        ariaLabel={`Supprimer ${note.title}`}
+                        confirmChildren="Supprimer ?"
                       >
                         ×
-                      </button>
+                      </ConfirmButton>
                       {notes.length > 1 && handle}
                     </div>
                   </div>
@@ -280,25 +280,6 @@ export default function CharacterNotesTab({
                   <span className="text-[10px] text-ink-400 mt-auto">
                     Modifié le {new Date(`${note.updatedAt}Z`).toLocaleDateString('fr-FR')}
                   </span>
-                  {confirmDelete === note.id && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-red-600">Supprimer ?</span>
-                      <button
-                        type="button"
-                        onClick={() => remove(note.id)}
-                        className="text-xs px-2 py-1 rounded bg-red-600 text-white hover:bg-red-700"
-                      >
-                        Oui
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setConfirmDelete(null)}
-                        className="text-xs px-2 py-1 rounded bg-parchment-200 hover:bg-parchment-300"
-                      >
-                        Non
-                      </button>
-                    </div>
-                  )}
                 </div>
               )}
             </SortableCard>

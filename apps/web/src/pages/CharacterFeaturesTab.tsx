@@ -25,7 +25,7 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 import api from '../api';
 import { SortableCard, SortableGrid } from '../components/SortableGrid';
-import { EmptyState, Modal } from '../components/ui';
+import { ConfirmButton, EmptyState, Modal } from '../components/ui';
 import { useSyncEvent } from '../sync';
 
 interface Props {
@@ -55,7 +55,6 @@ export default function CharacterFeaturesTab({
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<CharacterFeature | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
   const [showTemplateHelp, setShowTemplateHelp] = useState(false);
 
   // Form state
@@ -207,7 +206,6 @@ export default function CharacterFeaturesTab({
   const remove = async (id: number) => {
     try {
       await api.delete(`/api/character-features/${id}`);
-      setConfirmDelete(null);
       await load();
       await onSaved();
     } catch {
@@ -326,14 +324,16 @@ export default function CharacterFeaturesTab({
                               >
                                 ✎
                               </button>
-                              <button
-                                type="button"
-                                onClick={() => setConfirmDelete(feature.id)}
-                                className="text-ink-400 hover:text-red-500 text-sm p-1"
-                                aria-label={`Supprimer ${feature.title}`}
+                              <ConfirmButton
+                                onConfirm={() => remove(feature.id)}
+                                className="text-ink-400 hover:text-red-500 text-sm p-1 rounded-full transition-colors"
+                                armedClassName="bg-red-600 hover:bg-red-700 text-white! px-2.5 py-1 font-semibold"
+                                title={`Supprimer ${feature.title}`}
+                                ariaLabel={`Supprimer ${feature.title}`}
+                                confirmChildren="Supprimer ?"
                               >
                                 ×
-                              </button>
+                              </ConfirmButton>
                               {group.items.length > 1 && handle}
                             </div>
                           </div>
@@ -415,27 +415,6 @@ export default function CharacterFeaturesTab({
                           >
                             {FEATURE_CATEGORY_LABELS_FR[feature.category]}
                           </span>
-
-                          {/* Delete confirmation */}
-                          {confirmDelete === feature.id && (
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="text-xs text-red-600">Supprimer ?</span>
-                              <button
-                                type="button"
-                                onClick={() => remove(feature.id)}
-                                className="text-xs px-2 py-1 rounded bg-red-600 text-white hover:bg-red-700"
-                              >
-                                Oui
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setConfirmDelete(null)}
-                                className="text-xs px-2 py-1 rounded bg-parchment-200 hover:bg-parchment-300"
-                              >
-                                Non
-                              </button>
-                            </div>
-                          )}
                         </div>
                       )}
                     </SortableCard>
