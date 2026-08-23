@@ -822,8 +822,13 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
   const [desc, setDesc] = useState('');
   // Illustration : stagée ici, envoyée à l'enregistrement (jamais au choix).
   const [imageValue, setImageValue] = useState<ItemImageValue>(EMPTY_ITEM_IMAGE);
-  // Mini-châssis de la liste → visionneuse plein écran.
-  const [viewingImage, setViewingImage] = useState<{ id: number; name: string } | null>(null);
+  // Mini-châssis de la liste → visionneuse plein écran (rev capturée à
+  // l'ouverture : l'URL change si le fichier a changé entre-temps).
+  const [viewingImage, setViewingImage] = useState<{
+    id: number;
+    name: string;
+    rev: string | null;
+  } | null>(null);
   // Toast ciblé (échec d'envoi de l'illustration après un enregistrement réussi).
   const [toasts, setToasts] = useState<Toast[]>([]);
   const toastId = useRef(0);
@@ -1022,12 +1027,18 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
               {item.hasImage ? (
                 <button
                   type="button"
-                  onClick={() => setViewingImage({ id: item.id, name: item.nameFr || item.name })}
+                  onClick={() =>
+                    setViewingImage({
+                      id: item.id,
+                      name: item.nameFr || item.name,
+                      rev: item.imageRev ?? null,
+                    })
+                  }
                   className="shrink-0 overflow-hidden rounded-md border border-parchment-200"
                   aria-label={`Agrandir l'illustration de ${item.nameFr || item.name}`}
                 >
                   <img
-                    src={itemImageUrl(item.id)}
+                    src={itemImageUrl(item.id, item.imageRev)}
                     alt=""
                     loading="lazy"
                     className="h-10 w-10 object-cover"
@@ -1141,6 +1152,7 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
             value={imageValue}
             onChange={setImageValue}
             existingItemId={editing?.id}
+            existingRev={editing?.imageRev ?? undefined}
             existingName={editing ? editing.nameFr || editing.name : undefined}
           />
           {error && <div className="text-red-600 text-sm">{error}</div>}
@@ -1168,7 +1180,7 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
       {viewingImage && (
         <ItemImageViewer
           name={viewingImage.name}
-          src={itemImageUrl(viewingImage.id)}
+          src={itemImageUrl(viewingImage.id, viewingImage.rev ?? undefined)}
           onClose={() => setViewingImage(null)}
         />
       )}

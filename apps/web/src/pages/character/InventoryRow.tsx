@@ -325,6 +325,7 @@ export function InventoryRow({
                       <ItemVignette
                         itemId={item.id}
                         name={itemName}
+                        imageRev={item.imageRev}
                         editableEntryId={canEdit ? entry.id : undefined}
                       />
                     )}

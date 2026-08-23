@@ -152,6 +152,8 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   eq(res.status, 200, 're-annotation of a derived row → 200');
   eq(res.data.entry.itemId, derivedId, 'overwrite keeps the SAME derived (no second level)');
   eq(res.data.entry.item.derivedFromItemId, baseId, 'still derived from the original base');
+  const revAfter2nd = res.data.entry.item.imageRev;
+  ok(!!revAfter2nd, 'entry payload carries item.imageRev (same shape as the ETag, unquoted)');
   const annotatedBytes = (
     await getImageBytes(base, `/api/items/${derivedId}/image?token=${fx.player.token}`)
   ).bytes;
@@ -172,6 +174,10 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   eq(revalidated.status, 304, 'If-None-Match with the current ETag → 304 (cache valid)');
   const res3 = await postAnnotation(base, invId, fx.player.token, TINY_JPEG);
   eq(res3.status, 200, 'third edit (re-annotate again)');
+  ok(
+    !!res3.data.entry.item.imageRev && res3.data.entry.item.imageRev !== revAfter2nd,
+    'imageRev CHANGES on each edit — the <img> URL changes, the browser re-requests (leçon 2026-08-23 bis)',
+  );
   const fresh = await getImageBytes(
     base,
     `/api/items/${derivedId}/image?token=${fx.player.token}`,

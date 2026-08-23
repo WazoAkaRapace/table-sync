@@ -41,12 +41,16 @@ export function ItemImageField({
   value,
   onChange,
   existingItemId,
+  existingRev,
   existingName,
 }: {
   value: ItemImageValue;
   onChange: (v: ItemImageValue) => void;
   /** En édition : id de l'objet existant (aperçu via son URL servie). */
   existingItemId?: number;
+  /** Version du fichier existant (Item.imageRev) — rafraîchit l'aperçu
+      après un remplacement enregistré sans rouvrir le formulaire. */
+  existingRev?: string | null;
   existingName?: string;
 }) {
   const [processing, setProcessing] = useState(false);
@@ -136,7 +140,7 @@ export function ItemImageField({
             </>
           ) : (
             <img
-              src={itemImageUrl(existingItemId as number)}
+              src={itemImageUrl(existingItemId as number, existingRev ?? undefined)}
               alt={`Illustration actuelle de ${existingName ?? 'l’objet'}`}
               className="mx-auto max-h-56 w-full object-contain"
             />

@@ -229,6 +229,59 @@ playerTest.describe('Annotations (joueuse)', () => {
     await expect(dialog).toBeVisible();
   });
 
+  playerTest(
+    '2e annotation : la vignette recharge la BONNE image immédiatement',
+    async ({ page }) => {
+      // Régression 2026-08-23 bis : ré-annoter le dérivé réécrit SON fichier —
+      // même item, donc même URL d'<img>… qui ne re-demande JAMAIS un src
+      // inchangé, ETag ou pas. Item.imageRev (?v=…) doit faire bouger l'URL.
+      const vignette = page.getByRole('button', {
+        name: "Agrandir l'illustration de Croquis annotable",
+      });
+      const drawStroke = async (dialog: ReturnType<typeof openCroquisViewer>, ny: number) => {
+        const box = await dialog.locator('img').boundingBox();
+        expect(box, 'image bounding box').not.toBeNull();
+        await dialog.getByRole('button', { name: 'Dessiner' }).click();
+        await page.mouse.move(box!.x + box!.width * 0.2, box!.y + box!.height * ny);
+        await page.mouse.down();
+        await page.mouse.move(box!.x + box!.width * 0.8, box!.y + box!.height * ny, { steps: 8 });
+        await page.mouse.up();
+      };
+
+      // 1re annotation (dérivation) — trait haut ; l'état annoté persiste pour
+      // le test suivant (transfert), qui trouve le même dérivé.
+      const dialog1 = await openCroquisViewer(page);
+      await drawStroke(dialog1, 0.25);
+      await dialog1.getByRole('button', { name: 'Enregistrer' }).click();
+      await expect(page.getByRole('dialog')).toHaveCount(0);
+      await expect(vignette).toBeVisible();
+      const src1 = await vignette.locator('img').getAttribute('src');
+      expect(src1, "l'URL versionnée porte déjà ?v= après dérivation").toMatch(/[?&]v=/);
+
+      // 2e annotation (écrasement du dérivé) — trait bas. La ligne est restée
+      // dépliée au 1er enregistrement : on ouvre directement depuis la vignette
+      // (openCroquisViewer re-basculerait la ligne). On guette la requête
+      // d'image que le NOUVEAU src doit déclencher : c'est la preuve navigateur
+      // du rechargement, pas seulement d'un attribut changé.
+      const freshImage = page.waitForResponse(
+        (r) => /\/api\/items\/\d+\/image/.test(r.url()) && /[?&]v=/.test(r.url()),
+        { timeout: 8000 },
+      );
+      await vignette.click();
+      const dialog2 = page.getByRole('dialog', { name: 'Illustration — Croquis annotable' });
+      await expect(dialog2).toBeVisible();
+      await expect(dialog2.locator('img')).toHaveJSProperty('naturalWidth', 1);
+      await drawStroke(dialog2, 0.75);
+      await dialog2.getByRole('button', { name: 'Enregistrer' }).click();
+      await expect(page.getByRole('dialog')).toHaveCount(0);
+      const response = await freshImage;
+      expect(response.status(), 'le navigateur a re-téléchargé la version neuve').toBe(200);
+
+      const src2 = await vignette.locator('img').getAttribute('src');
+      expect(src2, "l'URL de la vignette CHANGE à la 2e annotation").not.toBe(src1);
+    },
+  );
+
   playerTest("l'exemplaire annoté survit au transfert vers Mira", async ({ page }) => {
     // L'état annoté provient du premier test (même base e2e, ordre du fichier).
     const rookInv = await getJson(`/api/characters/${rookId}/inventory`, seed().player.token);

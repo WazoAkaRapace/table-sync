@@ -69,6 +69,14 @@ export interface Item {
   // payloads; clients fetch GET /api/items/:id/image once (cached, immutable).
   hasImage: boolean;
   /**
+   * Version du fichier illustration (mtime+taille, même forme que l'ETag) —
+   * change à chaque écriture (remplacement MD, 2e annotation sur l'exemplaire
+   * dérivé). Les clients l'appendent à l'URL (?v=…) : un <img> dont le src ne
+   * change pas ne re-demande JAMAIS le fichier, ETag ou pas. Null = pas
+   * d'illustration (ou fichier absent).
+   */
+  imageRev?: string | null;
+  /**
    * Annotation d'exemplaire : id de l'objet de BASE dont celui-ci est la copie
    * annotée (dessin/notes aplatis dans sa propre image). Null = objet de
    * catalogue. Les dérivés sont exclus des recherches/catalogues (GET /items)

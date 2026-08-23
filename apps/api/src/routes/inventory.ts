@@ -28,6 +28,7 @@ import { bus } from '../sync/bus.ts';
 import {
   attachCharacterClasses,
   characterVisibleTo,
+  imageRevision,
   isOwnerOrGM,
   isPartyGM,
   isPartyMember,
@@ -202,6 +203,7 @@ export async function inventoryRoutes(app: FastifyInstance) {
             : [],
           imagePath: r.i_image_path,
           hasImage: !!r.i_image_url,
+          imageRev: r.i_image_url ? imageRevision(r.i_image_url) : null,
           derivedFromItemId: r.i_derived_from_item_id ?? null,
         },
         quantity: r.quantity,

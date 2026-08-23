@@ -3,6 +3,8 @@
  */
 
 import { randomInt } from 'node:crypto';
+import { statSync } from 'node:fs';
+import { join } from 'node:path';
 import {
   type Character,
   type CharacterClassEntry,
@@ -23,7 +25,7 @@ import {
 import { and, eq, inArray, ne, sql } from 'drizzle-orm';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../db/drizzle.ts';
-import { getDb } from '../db/index.ts';
+import { getDb, getItemImagesDir } from '../db/index.ts';
 import { cols } from '../db/projections.ts';
 import {
   characterClasses,
@@ -277,8 +279,25 @@ export function mapItem(row: any): Item {
       : [],
     imagePath: row.image_path,
     hasImage: !!row.image_url,
+    imageRev: row.image_url ? imageRevision(row.image_url) : null,
     derivedFromItemId: row.derived_from_item_id ?? null,
   };
+}
+
+/**
+ * Version du fichier illustration : mtime+taille en hex, la MÊME forme que
+ * l'ETag servi par GET /items/:id/image. Exposée dans les payloads (Item.
+ * imageRev) pour que les clients bâtissent des URL qui changent quand le
+ * fichier change — un <img> au src identique ne re-demande jamais l'image,
+ * c'est lui (pas le cache HTTP) qui pinne la 2e annotation.
+ */
+export function imageRevision(imageUrl: string): string | null {
+  try {
+    const stat = statSync(join(getItemImagesDir(), imageUrl));
+    return `${stat.mtimeMs.toString(16)}-${stat.size.toString(16)}`;
+  } catch {
+    return null; // fichier absent : le client affichera l'état d'échec
+  }
 }
 
 /** Map a raw DB row to CharacterSummary. */

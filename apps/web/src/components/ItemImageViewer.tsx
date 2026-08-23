@@ -41,17 +41,22 @@ import { ConfirmButton } from './ui';
 export function ItemVignette({
   itemId,
   name,
+  imageRev,
   editableEntryId,
 }: {
   itemId: number;
   name: string;
+  /** Version du fichier (Item.imageRev) — l'URL change quand l'image change. */
+  imageRev?: string | null;
   editableEntryId?: number;
 }) {
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
   const [bust, setBust] = useState(0);
   const [viewerOpen, setViewerOpen] = useState(false);
-  const src = itemImageUrl(itemId, bust);
+  // Réessayer (bust) prime sur la version servie : c'est un contournement
+  // de cache, pas un contenu connu.
+  const src = itemImageUrl(itemId, bust > 0 ? bust : (imageRev ?? undefined));
 
   const retry = () => {
     setFailed(false);

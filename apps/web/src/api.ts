@@ -37,12 +37,15 @@ export const API_BASE = import.meta.env.VITE_API_URL || '';
 /**
  * Authenticated URL of an item illustration. An <img> tag cannot send the
  * Authorization header, so the JWT rides in the query string (same contract
- * as the /ws socket). Pass `bust > 0` on the Réessayer path to skip the
- * browser cache after a failed load. The response is immutable-cached, so
- * the inventory vignette and the fullscreen viewer share ONE fetch.
+ * as the /ws socket). Pass `version` = Item.imageRev (file mtime+size, served
+ * in every payload) so the URL CHANGES when the image is re-written — a
+ * re-render alone never re-requests an <img> whose src didn't change (leçon
+ * 2026-08-23 : la 2e annotation passait côté serveur, personne ne la revoyait).
+ * Same param doubles as the Réessayer cache-buster (bump counter).
+ * The response is ETag + no-cache : le cache sert, chaque URL neuve revalide.
  */
-export function itemImageUrl(itemId: number, bust = 0): string {
+export function itemImageUrl(itemId: number, version?: number | string): string {
   const token = encodeURIComponent(localStorage.getItem('dnd-inv-token') ?? '');
-  const sep = bust > 0 ? `&r=${bust}` : '';
-  return `${API_BASE}/api/items/${itemId}/image?token=${token}${sep}`;
+  const suffix = version != null && version !== '' ? `&v=${version}` : '';
+  return `${API_BASE}/api/items/${itemId}/image?token=${token}${suffix}`;
 }

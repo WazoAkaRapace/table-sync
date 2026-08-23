@@ -5,9 +5,9 @@
  * annotated copy becomes a DERIVED item so it survives inventory transfers.
  *
  * Responsiveness contract: image BYTES never ride in list/search/inventory
- * payloads — those carry only the derived hasImage boolean. The GET below is
- * the single fetch per item (served with an immutable cache header, so the
- * fullscreen viewer reuses the browser cache the inventory vignette paid for).
+ * payloads — those carry only the derived hasImage boolean + imageRev (file
+ * version, see helpers.imageRevision). The GET below is the single fetch per
+ * item (ETag + no-cache : le cache sert, chaque ouverture revalide).
  *
  * GET authenticates via ?token=<JWT> like /ws (an <img src> cannot send an
  * Authorization header) — it is exempted from the global auth hook in
@@ -18,7 +18,7 @@
  * modal can stage an illustration the same way the GM dashboard does.
  */
 
-import { existsSync, mkdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { MultipartFile } from '@fastify/multipart';
 import { and, eq, isNull, ne, sql } from 'drizzle-orm';
@@ -29,6 +29,7 @@ import { cols } from '../db/projections.ts';
 import { characters, inventory, items, parties } from '../db/schema.ts';
 import { bus } from '../sync/bus.ts';
 import {
+  imageRevision,
   isOwnerOrGM,
   isPartyGM,
   isPartyMember,
@@ -110,8 +111,10 @@ export async function itemImageRoutes(app: FastifyInstance) {
       // annotation semblait « ne pas passer » — elle passait, mais personne
       // ne la revoyait). ETag = mtime+size, no-cache : le cache sert, chaque
       // ouverture revalide (304 tant que le fichier n'a pas changé).
-      const stat = statSync(filePath);
-      const etag = `"${stat.mtimeMs.toString(16)}-${stat.size.toString(16)}"`;
+      // NB : côté client, Item.imageRev (même forme) fait changer l'URL des
+      // <img> à chaque écriture — c'est LUI qui déclenche la re-demande, l'ETag
+      // ne sert qu'à éviter de re-télécharger les octets.
+      const etag = `"${imageRevision(String(row.image_url))}"`;
       // Révalidation : le navigateur renvoie son ETag en If-None-Match — tant
       // que le fichier n'a pas changé, 304 sans octet. Fastify ne gère pas
       // If-None-Match automatiquement, on le compare ici.
