@@ -7,6 +7,9 @@ services:
       - "${API_PORT:-4010}:4000"
     volumes:
       - db-data:/app/data/db
+      # Uploaded item illustrations (data/images/items) — without this, every
+      # redeploy wipes the campaign's maps and letters with the container.
+      - image-data:/app/data/images
     environment:
       - PORT=4000
       - DATABASE_PATH=/app/data/db/inventory.sqlite
@@ -32,3 +35,4 @@ services:
 
 volumes:
   db-data:
+  image-data:

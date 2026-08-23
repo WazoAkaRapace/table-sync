@@ -12,10 +12,16 @@ import {
   proficiencyBonus,
   skillProficiencyLevel,
 } from '@dnd-inventory/shared';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import api from '../api';
+import api, { itemImageUrl } from '../api';
 import { useAuth } from '../auth';
+import {
+  EMPTY_ITEM_IMAGE,
+  ItemImageField,
+  type ItemImageValue,
+} from '../components/ItemImageField';
+import { ItemImageViewer } from '../components/ItemImageViewer';
 import {
   CategoryBadge,
   ConfirmButton,
@@ -24,6 +30,8 @@ import {
   Fab,
   LoadingSpinner,
   Modal,
+  type Toast,
+  ToastStack,
 } from '../components/ui';
 import { useSyncEvent } from '../sync';
 import { plural } from '../utils';
@@ -812,6 +820,23 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
   const [category, setCategory] = useState('custom');
   const [weight, setWeight] = useState('');
   const [desc, setDesc] = useState('');
+  // Illustration : stagée ici, envoyée à l'enregistrement (jamais au choix).
+  const [imageValue, setImageValue] = useState<ItemImageValue>(EMPTY_ITEM_IMAGE);
+  // Mini-châssis de la liste → visionneuse plein écran (rev capturée à
+  // l'ouverture : l'URL change si le fichier a changé entre-temps).
+  const [viewingImage, setViewingImage] = useState<{
+    id: number;
+    name: string;
+    rev: string | null;
+  } | null>(null);
+  // Toast ciblé (échec d'envoi de l'illustration après un enregistrement réussi).
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const toastId = useRef(0);
+  const pushToast = useCallback((message: string, kind: Toast['kind'] = 'error') => {
+    const id = ++toastId.current;
+    setToasts((t) => [...t, { id, message, kind }]);
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 5000);
+  }, []);
 
   const loadCustomItems = useCallback(async () => {
     try {
@@ -875,6 +900,7 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
     setCategory('custom');
     setWeight('');
     setDesc('');
+    setImageValue(EMPTY_ITEM_IMAGE);
     setError('');
     setShowModal(true);
   };
@@ -885,6 +911,7 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
     setCategory(item.category);
     setWeight(item.weightKg !== null ? String(item.weightKg) : '');
     setDesc(item.description || '');
+    setImageValue(EMPTY_ITEM_IMAGE); // l'illustration existante s'affiche via son URL
     setError('');
     setShowModal(true);
   };
@@ -903,12 +930,35 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
       description: desc.trim() || null,
     };
     try {
+      let itemId = editing?.id as number | undefined;
       if (editing) {
         await api.patch(`/api/items/${editing.id}`, payload);
       } else {
-        await api.post(`/api/parties/${partyId}/items`, payload);
+        const res = await api.post(`/api/parties/${partyId}/items`, payload);
+        itemId = res.data.item.id;
+      }
+      // Séquencement illustration : l'image part à l'enregistrement. Si elle
+      // échoue, l'objet reste créé/sauvegardé — toast ciblé, jamais de perte
+      // silencieuse (le MD réessaie depuis Modifier).
+      if (itemId != null) {
+        try {
+          if (imageValue.staged) {
+            const form = new FormData();
+            form.append('image', imageValue.staged.blob, 'illustration.jpg');
+            // L'instance axios force Content-Type: application/json — laisser le
+            // navigateur poser la boundary multipart (sinon FST_INVALID_MULTIPART).
+            await api.put(`/api/items/${itemId}/image`, form, {
+              headers: { 'Content-Type': 'multipart/form-data' },
+            });
+          } else if (imageValue.removed) {
+            await api.delete(`/api/items/${itemId}/image`);
+          }
+        } catch {
+          pushToast('Illustration non envoyée — réessaie depuis Modifier');
+        }
       }
       setShowModal(false);
+      setImageValue(EMPTY_ITEM_IMAGE);
       await loadCustomItems();
     } catch (err: any) {
       setError(err.response?.data?.error || 'Erreur');
@@ -972,6 +1022,29 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
         <ul className="space-y-2">
           {customItems.map((item) => (
             <li key={item.id} className="card p-3 flex items-start gap-3">
+              {/* Mini-châssis 40px : le MD vérifie une illustration sans ouvrir
+                  l'éditeur — et préchauffe le cache de la visionneuse. */}
+              {item.hasImage ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setViewingImage({
+                      id: item.id,
+                      name: item.nameFr || item.name,
+                      rev: item.imageRev ?? null,
+                    })
+                  }
+                  className="shrink-0 overflow-hidden rounded-md border border-parchment-200"
+                  aria-label={`Agrandir l'illustration de ${item.nameFr || item.name}`}
+                >
+                  <img
+                    src={itemImageUrl(item.id, item.imageRev)}
+                    alt=""
+                    loading="lazy"
+                    className="h-10 w-10 object-cover"
+                  />
+                </button>
+              ) : null}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-medium text-ink-800">{item.nameFr || item.name}</span>
@@ -1073,6 +1146,15 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
               placeholder="Une lame brillant d'une lumière dorée…"
             />
           </label>
+          {/* L'image est le second contenu de l'objet — après la description,
+            avant l'erreur et les boutons (plan objets-illustrations §5.1). */}
+          <ItemImageField
+            value={imageValue}
+            onChange={setImageValue}
+            existingItemId={editing?.id}
+            existingRev={editing?.imageRev ?? undefined}
+            existingName={editing ? editing.nameFr || editing.name : undefined}
+          />
           {error && <div className="text-red-600 text-sm">{error}</div>}
           <div className="flex gap-2 pt-1">
             <button
@@ -1093,6 +1175,21 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
           </div>
         </div>
       </Modal>
+
+      {/* Visionneuse plein écran (mini-châssis de la liste) */}
+      {viewingImage && (
+        <ItemImageViewer
+          name={viewingImage.name}
+          src={itemImageUrl(viewingImage.id, viewingImage.rev ?? undefined)}
+          onClose={() => setViewingImage(null)}
+        />
+      )}
+
+      {/* Toast ciblé (échec d'envoi de l'illustration après un save réussi) */}
+      <ToastStack
+        toasts={toasts}
+        onDismiss={(id) => setToasts((t) => t.filter((x) => x.id !== id))}
+      />
     </div>
   );
 }

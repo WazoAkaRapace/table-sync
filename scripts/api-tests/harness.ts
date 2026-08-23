@@ -140,6 +140,7 @@ function freePort(preferred: number): Promise<number> {
 export interface ServerHandle {
   base: string;
   dbPath: string;
+  imagesDir: string;
   tracePath: string;
   serverLog: string;
   child: ChildProcess;
@@ -153,6 +154,7 @@ export async function startServer(): Promise<ServerHandle> {
   const port = await freePort(4611);
   const dir = mkdtempSync(join(tmpdir(), 'dnd-api-test-'));
   const dbPath = join(dir, 'test.sqlite');
+  const imagesDir = join(dir, 'images');
   const tracePath = join(dir, 'trace.log');
   const serverLog = join(dir, 'server.log');
 
@@ -162,6 +164,7 @@ export async function startServer(): Promise<ServerHandle> {
       ...process.env,
       PORT: String(port),
       DATABASE_PATH: dbPath,
+      ITEM_IMAGES_PATH: imagesDir,
       JWT_SECRET,
       DB_SQL_TRACE: tracePath,
       // The harness rotates a fake x-real-ip per request precisely so the
@@ -226,7 +229,7 @@ export async function startServer(): Promise<ServerHandle> {
     rmSync(dir, { recursive: true, force: true });
   };
 
-  return { base, dbPath, tracePath, serverLog, child, query, queryAll, stop };
+  return { base, dbPath, imagesDir, tracePath, serverLog, child, query, queryAll, stop };
 }
 
 // ---------- fixtures ----------

@@ -8,6 +8,9 @@ build/
 
 # SQLite databases (runtime data, not committed)
 data/db/
+
+# Uploaded item illustrations (runtime data, not committed)
+data/images/
 *.sqlite
 *.sqlite-journal
 *.db

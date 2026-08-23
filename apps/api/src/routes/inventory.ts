@@ -28,6 +28,7 @@ import { bus } from '../sync/bus.ts';
 import {
   attachCharacterClasses,
   characterVisibleTo,
+  imageRevision,
   isOwnerOrGM,
   isPartyGM,
   isPartyMember,
@@ -39,9 +40,10 @@ import {
 /**
  * inventory JOIN items with the item columns prefixed `i_` — the shape
  * mapInventoryEntry expects (avoids collisions between the two tables'
- * id/name/notes columns).
+ * id/name/notes columns). Exported: the annotation routes (item-images.ts)
+ * return the same updated-entry payload.
  */
-const INVENTORY_WITH_ITEM = {
+export const INVENTORY_WITH_ITEM = {
   id: inventory.id,
   character_id: inventory.characterId,
   item_id: inventory.itemId,
@@ -70,6 +72,8 @@ const INVENTORY_WITH_ITEM = {
   i_properties_json: items.propertiesJson,
   i_survival_tags: items.survivalTags,
   i_image_path: items.imagePath,
+  i_image_url: items.imageUrl,
+  i_derived_from_item_id: items.derivedFromItemId,
 };
 
 /** The entry row (with its item) for one inventory id. */
@@ -198,6 +202,9 @@ export async function inventoryRoutes(app: FastifyInstance) {
               : r.i_survival_tags
             : [],
           imagePath: r.i_image_path,
+          hasImage: !!r.i_image_url,
+          imageRev: r.i_image_url ? imageRevision(r.i_image_url) : null,
+          derivedFromItemId: r.i_derived_from_item_id ?? null,
         },
         quantity: r.quantity,
         equipped: !!r.equipped,
