@@ -18,7 +18,7 @@
  * modal can stage an illustration the same way the GM dashboard does.
  */
 
-import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { MultipartFile } from '@fastify/multipart';
 import { and, eq, isNull, ne, sql } from 'drizzle-orm';
@@ -104,9 +104,25 @@ export async function itemImageRoutes(app: FastifyInstance) {
       // The column stores what was uploaded (client sends JPEG; a raw PNG is
       // accepted) — serve the true type from the magic bytes.
       const mime = sniffImageMime(buffer) ?? 'image/jpeg';
-      // Immutable for a year: the path is stable per item and a re-upload
-      // replaces the content — clients bust the cache with ?r=n on error.
-      reply.header('Cache-Control', 'private, max-age=31536000, immutable');
+      // The URL is stable per item but the CONTENT changes (GM replace,
+      // player re-annotation on the derived item) — 'immutable' would pin a
+      // stale first edit in every browser forever (leçon 2026-08-23 : la 2e
+      // annotation semblait « ne pas passer » — elle passait, mais personne
+      // ne la revoyait). ETag = mtime+size, no-cache : le cache sert, chaque
+      // ouverture revalide (304 tant que le fichier n'a pas changé).
+      const stat = statSync(filePath);
+      const etag = `"${stat.mtimeMs.toString(16)}-${stat.size.toString(16)}"`;
+      // Révalidation : le navigateur renvoie son ETag en If-None-Match — tant
+      // que le fichier n'a pas changé, 304 sans octet. Fastify ne gère pas
+      // If-None-Match automatiquement, on le compare ici.
+      if (req.headers['if-none-match'] === etag) {
+        reply.status(304);
+        reply.header('Cache-Control', 'private, no-cache');
+        reply.header('ETag', etag);
+        return reply.send();
+      }
+      reply.header('Cache-Control', 'private, no-cache');
+      reply.header('ETag', etag);
       reply.header('Content-Type', mime);
       return reply.send(buffer);
     },

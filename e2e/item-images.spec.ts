@@ -128,7 +128,10 @@ gmTest.describe('Objets-illustrations (MD)', () => {
       expect(created?.hasImage).toBe(true);
       const img = await fetch(`${API_BASE}/api/items/${created.id}/image?token=${seed().gm.token}`);
       expect(img.ok).toBe(true);
-      expect(img.headers.get('cache-control')).toBe('private, max-age=31536000, immutable');
+      // no-cache + ETag : le contenu peut changer sur la même URL (remplacement
+      // MD, ré-annotation) — le client revalide, jamais d'édition épinglée.
+      expect(img.headers.get('cache-control')).toBe('private, no-cache');
+      expect(img.headers.get('etag')).toBeTruthy();
     },
   );
 });

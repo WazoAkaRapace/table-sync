@@ -40,10 +40,21 @@ async function postAnnotation(
   return { status: res.status, data: await res.json().catch(() => null) };
 }
 
-async function getImageBytes(base: string, path: string): Promise<Buffer | null> {
-  const res = await fetch(`${base}${path}`, { headers: { 'x-real-ip': nextIp() } });
-  if (!res.ok) return null;
-  return Buffer.from(await res.arrayBuffer());
+async function getImageBytes(
+  base: string,
+  path: string,
+  etag?: string,
+): Promise<{ bytes: Buffer | null; etag: string | null; status: number }> {
+  const res = await fetch(`${base}${path}`, {
+    headers: { 'x-real-ip': nextIp(), ...(etag ? { 'if-none-match': etag } : {}) },
+  });
+  if (res.status === 304) return { bytes: null, etag: res.headers.get('etag'), status: 304 };
+  if (!res.ok) return { bytes: null, etag: null, status: res.status };
+  return {
+    bytes: Buffer.from(await res.arrayBuffer()),
+    etag: res.headers.get('etag'),
+    status: res.status,
+  };
 }
 
 export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promise<void> {
@@ -70,7 +81,8 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
 
   // ---------- Dérivation qty=1 : swap d'item, même ligne ----------
   const baseId = await illustratedItem('Lettre annotable');
-  const baseBytes = await getImageBytes(base, `/api/items/${baseId}/image?token=${fx.gm.token}`);
+  const baseBytes = (await getImageBytes(base, `/api/items/${baseId}/image?token=${fx.gm.token}`))
+    .bytes;
   ok(!!baseBytes, 'base image served before annotation');
 
   let r = await api(base, 'POST', `/api/characters/${fx.charBran.id}/inventory`, {
@@ -113,7 +125,8 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   eq(derivedRow.source, 'custom', 'derived is a custom item');
 
   // La base est intacte : octets servis identiques, image_url inchangée.
-  const baseAfter = await getImageBytes(base, `/api/items/${baseId}/image?token=${fx.gm.token}`);
+  const baseAfter = (await getImageBytes(base, `/api/items/${baseId}/image?token=${fx.gm.token}`))
+    .bytes;
   ok(baseAfter?.equals(baseBytes as Buffer), 'base image bytes untouched by annotation');
 
   // Le dérivé est invisible de la recherche et du catalogue custom du MD.
@@ -139,11 +152,33 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   eq(res.status, 200, 're-annotation of a derived row → 200');
   eq(res.data.entry.itemId, derivedId, 'overwrite keeps the SAME derived (no second level)');
   eq(res.data.entry.item.derivedFromItemId, baseId, 'still derived from the original base');
-  const annotatedBytes = await getImageBytes(
+  const annotatedBytes = (
+    await getImageBytes(base, `/api/items/${derivedId}/image?token=${fx.player.token}`)
+  ).bytes;
+  ok(annotatedBytes?.equals(TINY_JPEG_2), 'overwrite wrote the new JPEG bytes');
+
+  // ---------- Révalidation ETag : la 2e édition doit être VISIBLE ----------
+  // (leçon 2026-08-23 : 'immutable' épinglait la 1e édition dans le cache du
+  // navigateur pour un an — la 2e annotation passait mais personne ne la
+  // revoyait). Le client revalide : 304 tant que rien n'a changé, octets
+  // frais dès que le fichier a été réécrit.
+  const first = await getImageBytes(base, `/api/items/${derivedId}/image?token=${fx.player.token}`);
+  ok(!!first.etag, 'derived image carries an ETag');
+  const revalidated = await getImageBytes(
     base,
     `/api/items/${derivedId}/image?token=${fx.player.token}`,
+    first.etag as string,
   );
-  ok(annotatedBytes?.equals(TINY_JPEG_2), 'overwrite wrote the new JPEG bytes');
+  eq(revalidated.status, 304, 'If-None-Match with the current ETag → 304 (cache valid)');
+  const res3 = await postAnnotation(base, invId, fx.player.token, TINY_JPEG);
+  eq(res3.status, 200, 'third edit (re-annotate again)');
+  const fresh = await getImageBytes(
+    base,
+    `/api/items/${derivedId}/image?token=${fx.player.token}`,
+    first.etag as string,
+  );
+  eq(fresh.status, 200, 'stale ETag after a new edit → 200 with fresh bytes');
+  ok(fresh.bytes?.equals(TINY_JPEG), 'the revalidating client sees the LATEST edit');
 
   // ---------- MD : porte ouverte sur la fiche d'un joueur ----------
   const gmBaseId = await illustratedItem('Plan du donjon');
@@ -219,10 +254,9 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   eq(r.data.entry.itemId, loneBaseId, 'row swapped back to the base item');
 
   // ---------- L'annoté survit au transfert (LE gain du modèle dérivé) ----------
-  const beforeTransfer = await getImageBytes(
-    base,
-    `/api/items/${derivedId}/image?token=${fx.player.token}`,
-  );
+  const beforeTransfer = (
+    await getImageBytes(base, `/api/items/${derivedId}/image?token=${fx.player.token}`)
+  ).bytes;
   r = await api(base, 'POST', `/api/characters/${fx.charBran.id}/transfer`, {
     token: fx.player.token,
     body: { toCharacterId: fx.charAlya.id, inventoryId: invId, quantity: 1 },
@@ -234,10 +268,9 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   const moved = (r.data.entries ?? []).find((e: any) => e.itemId === derivedId);
   ok(!!moved, 'annotated copy lives in Alya inventory after transfer');
   eq(moved.item.derivedFromItemId, baseId, 'still derived after the move');
-  const afterTransfer = await getImageBytes(
-    base,
-    `/api/items/${derivedId}/image?token=${fx.gm.token}`,
-  );
+  const afterTransfer = (
+    await getImageBytes(base, `/api/items/${derivedId}/image?token=${fx.gm.token}`)
+  ).bytes;
   ok(
     afterTransfer?.equals(beforeTransfer as Buffer),
     'annotated image byte-identical after transfer',
@@ -257,7 +290,9 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   const orphan = (r.data.entries ?? []).find((e: any) => e.itemId === derivedId);
   ok(!!orphan, 'inventory row survives the base deletion');
   eq(orphan.item.derivedFromItemId, null, 'orphan no longer claims a base');
-  const orphanImg = await getImageBytes(base, `/api/items/${derivedId}/image?token=${fx.gm.token}`);
+  const orphanImg = (
+    await getImageBytes(base, `/api/items/${derivedId}/image?token=${fx.gm.token}`)
+  ).bytes;
   ok(orphanImg?.equals(afterTransfer as Buffer), 'orphan derived still serves its annotated image');
   // Base disparue → plus rien à reset-er.
   {

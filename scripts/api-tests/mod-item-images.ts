@@ -125,9 +125,10 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   eq(img.headers.get('content-type'), 'image/jpeg', 'image served as image/jpeg');
   eq(
     img.headers.get('cache-control'),
-    'private, max-age=31536000, immutable',
-    'image served immutable-private (one cached fetch per item, ever)',
+    'private, no-cache',
+    'image served private with revalidation (ETag) — content can change on the same URL',
   );
+  ok(!!img.headers.get('etag'), 'image served with an ETag');
   ok(img.bytes?.equals(TINY_JPEG), 'image bytes round-trip identically');
 
   img = await getImage(base, `/api/items/${itemId}/image`);
