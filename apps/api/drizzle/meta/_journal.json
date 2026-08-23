@@ -50,6 +50,13 @@
       "when": 1787484608109,
       "tag": "0006_safe_susan_delgado",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1787497600000,
+      "tag": "0009_rebuild_inventory_location_unique",
+      "breakpoints": true
     }
   ]
 }
