@@ -55,7 +55,6 @@ playerTest.describe('Objets-illustrations (joueur)', () => {
   });
 
   playerTest('déplier monte la vignette en châssis, image chargée', async ({ page }) => {
-
     await lettreRow(page)
       .getByRole('button', { name: 'Lettre du duc, 1 exemplaire, illustré' })
       .click();
