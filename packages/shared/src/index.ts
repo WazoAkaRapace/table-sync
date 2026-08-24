@@ -192,6 +192,179 @@ export interface JoinPartyPayload {
   inviteCode: string;
 }
 
+// ---------- GM Assistant (intégration groupe ↔ campagne) ----------
+
+/** GET /api/gma/status — the caller's stored key. Never carries the key itself. */
+export interface GmaAccountStatus {
+  linked: boolean;
+  account: {
+    /** Masked (`m***@example.com`) — enough to recognize the account. */
+    email: string | null;
+    /** 'read' | 'full_access' | null = unknown until the first write attempt. */
+    scope: 'read' | 'full_access' | null;
+    validatedAt: string;
+  } | null;
+}
+
+export interface GmaSaveKeyPayload {
+  apiKey: string;
+}
+
+/** A campaign on GM Assistant (sparse projection — what the picker needs). */
+export interface GmaCampaignSummary {
+  id: string;
+  title: string;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+}
+
+export interface GmaLinkCampaignPayload {
+  campaignId: string;
+}
+
+/** GET /api/parties/:id/gma/link — party membership view of the link. */
+export interface GmaLinkStatus {
+  linked: boolean;
+  campaign: { id: string; title: string; linkedAt: string } | null;
+  /** The linking GM still has a stored key (false → "clé expirée" state). */
+  accountOk: boolean;
+}
+
+/** POST /api/parties/:id/gma/init — the one-time campaign creation from the group. */
+export interface GmaInitPayload {
+  characterIds: number[];
+}
+
+export interface GmaInitResult {
+  campaign: { id: string; title: string };
+  created: Array<{
+    characterId: number;
+    name: string;
+    playedBy: string;
+    gmaPcId: string;
+  }>;
+  failed: Array<{ name: string; reason: string }>;
+}
+
+/** Writable GMA player-character fields we keep in sync. */
+export type GmaPcField = 'name' | 'played_by' | 'description';
+
+export interface GmaPcChange {
+  field: GmaPcField;
+  from: string;
+  to: string;
+}
+
+export const GMA_PC_FIELD_LABELS_FR: Record<GmaPcField, string> = {
+  name: 'Nom',
+  played_by: 'Joué par',
+  description: 'Description',
+};
+
+/** The GM-triggered resync diff (dryRun returns it without applying). */
+export interface GmaCharacterDiff {
+  toCreate: Array<{
+    characterId: number;
+    name: string;
+    playedBy: string;
+    description: string;
+  }>;
+  toUpdate: Array<{
+    characterId: number;
+    name: string;
+    gmaPcId: string;
+    changes: GmaPcChange[];
+  }>;
+  /** Link whose local sheet was deleted — explicit delete candidate on GMA. */
+  orphans: Array<{ gmaPcId: string; nameAtSync: string }>;
+  /** PCs living only on GM Assistant (created in their app) — info only. */
+  gmaOnly: Array<{ gmaPcId: string; name: string | null }>;
+  upToDate: number;
+}
+
+export interface GmaSyncCharactersPayload {
+  /** Which unlinked characters to create (the checkboxes). */
+  createCharacterIds?: number[];
+  dryRun?: boolean;
+}
+
+export interface GmaSyncCharactersResult extends GmaCharacterDiff {
+  applied: boolean;
+  created: Array<{ characterId: number; name: string; gmaPcId: string }>;
+  updated: Array<{ characterId: number; name: string }>;
+  failed: Array<{ name: string; action: 'create' | 'update'; reason: string }>;
+}
+
+/** A session of the linked campaign (chronicle cache). */
+export interface GmaSession {
+  id: string;
+  title: string;
+  playedAt: string | null;
+  order: number;
+}
+
+export interface GmaSessionsResponse {
+  sessions: GmaSession[];
+  fetchedAt: string | null;
+  /** Cache served past its TTL / upstream unreachable — still readable. */
+  stale: boolean;
+}
+
+/** One recap style of a session (`default` = the canonical recap). */
+export interface GmaRecapEntry {
+  style: string;
+  text: string;
+  updatedAt: string | null;
+}
+
+export interface GmaRecapsResponse {
+  recaps: GmaRecapEntry[];
+  /** Memorable moments, user-arranged order (fetched with the recaps). */
+  moments: GmaMoment[];
+  fetchedAt: string | null;
+  stale: boolean;
+}
+
+export const GMA_RECAP_STYLE_LABELS_FR: Record<string, string> = {
+  default: 'Résumé',
+  short_summary: 'En bref',
+  classic_summary: 'Héraut',
+  fable_summary: 'Conte',
+  snarky_summary: 'Ironique',
+  sonnet_summary: 'Sonnet',
+};
+
+/** Style label for the recap chips — unknown styles surface verbatim. */
+export function gmaRecapStyleLabel(style: string): string {
+  return GMA_RECAP_STYLE_LABELS_FR[style] ?? style;
+}
+
+/** A memorable moment of a session (quote or highlight, from the analysis). */
+export interface GmaMoment {
+  id: string;
+  isQuote: boolean;
+  /** Open enum: epic/funny/dramatic/tragic/intriguing/other + unknown values. */
+  type: string | null;
+  description: string;
+  speaker: string | null;
+  context: string | null;
+}
+
+export const GMA_MOMENT_TYPE_LABELS_FR: Record<string, string> = {
+  epic: 'Épique',
+  funny: 'Drôle',
+  dramatic: 'Dramatique',
+  tragic: 'Tragique',
+  intriguing: 'Intrigant',
+  other: 'Autre',
+};
+
+/** Moment type label — unknown values surface verbatim (open enum upstream). */
+export function gmaMomentTypeLabel(type: string | null): string {
+  if (!type) return 'Moment';
+  return GMA_MOMENT_TYPE_LABELS_FR[type] ?? type;
+}
+
 // ---------- NPCs ----------
 
 export type NpcDisposition = 'friendly' | 'neutral' | 'hostile' | 'unknown';

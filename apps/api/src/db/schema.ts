@@ -572,3 +572,124 @@ export const combatants = sqliteTable(
     check('combatants_type_check', sql`type IN ('player','monster')`),
   ],
 );
+
+// ---------- GM Assistant integration (group ↔ campaign link + chronicle cache) ----------
+// Our writes over there are exactly two: the one-time init (campaign + player
+// characters created FROM the group) and the GM-triggered character resync
+// (upsert batch; deletion only ever explicit). Sessions and recaps are cached
+// locally so players never hit the GMA API and a GMA outage degrades to a
+// stale-but-readable chronicle.
+
+/** A user's GM Assistant API key — server-side only, encrypted at rest. */
+export const userGmaLinks = sqliteTable('user_gma_links', {
+  userId: integer('user_id')
+    .primaryKey()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  // AES-256-GCM blob: v1:<iv b64>:<tag b64>:<ciphertext b64>
+  apiKeyEnc: text('api_key_enc').notNull(),
+  gmaAccountId: text('gma_account_id'),
+  gmaEmail: text('gma_email'), // masked when served — never the raw key
+  // 'read' | 'full_access' | NULL = unknown until the first write attempt
+  scope: text('scope'),
+  validatedAt: text('validated_at').notNull().default(sql`(datetime('now'))`),
+});
+
+/** 1:1 link between a party and a GM Assistant campaign. */
+export const partyGmaLinks = sqliteTable(
+  'party_gma_links',
+  {
+    partyId: integer('party_id')
+      .primaryKey()
+      .references(() => parties.id, { onDelete: 'cascade' }),
+    gmaCampaignId: text('gma_campaign_id').notNull().unique('party_gma_links_campaign_unique'),
+    campaignTitle: text('campaign_title').notNull(), // display cache
+    linkedByUserId: integer('linked_by_user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    // Party-wide sessions-list freshness marker (lives here, not on the rows:
+    // an empty campaign has no rows to carry a timestamp).
+    sessionsFetchedAt: text('sessions_fetched_at'),
+    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+    updatedAt: text('updated_at').notNull().default(sql`(datetime('now'))`),
+  },
+  (t) => [index('idx_party_gma_links_campaign').on(t.gmaCampaignId)],
+);
+
+/** Cache of the linked campaign's sessions — the chronicle's table of contents. */
+export const gmaSessions = sqliteTable(
+  'gma_sessions',
+  {
+    partyId: integer('party_id')
+      .notNull()
+      .references(() => parties.id, { onDelete: 'cascade' }),
+    sessionId: text('session_id').notNull(),
+    title: text('title').notNull(),
+    playedAt: text('played_at'), // YYYY-MM-DD or null
+    sortOrder: integer('sort_order').notNull().default(0),
+    // Per-session content freshness marker — recaps AND memorable moments
+    // (fetched together). null = content never fetched.
+    recapsFetchedAt: text('recaps_fetched_at'),
+  },
+  (t) => [primaryKey({ columns: [t.partyId, t.sessionId] })],
+);
+
+/** Cache of one session's recaps (every style; `default` served first). */
+export const gmaRecaps = sqliteTable(
+  'gma_recaps',
+  {
+    partyId: integer('party_id')
+      .notNull()
+      .references(() => parties.id, { onDelete: 'cascade' }),
+    sessionId: text('session_id').notNull(),
+    style: text('style').notNull(),
+    text: text('text').notNull(),
+    updatedAt: text('updated_at'), // GMA-side timestamp, display only
+  },
+  (t) => [primaryKey({ columns: [t.partyId, t.sessionId, t.style] })],
+);
+
+/** Cache of one session's memorable moments (fetched with the recaps). */
+export const gmaMoments = sqliteTable(
+  'gma_moments',
+  {
+    partyId: integer('party_id')
+      .notNull()
+      .references(() => parties.id, { onDelete: 'cascade' }),
+    sessionId: text('session_id').notNull(),
+    momentId: text('moment_id').notNull(),
+    isQuote: integer('is_quote').notNull().default(0),
+    type: text('type'),
+    description: text('description').notNull(),
+    speaker: text('speaker'),
+    context: text('context'),
+    sortOrder: integer('sort_order').notNull().default(0),
+  },
+  (t) => [
+    primaryKey({ columns: [t.partyId, t.sessionId, t.momentId] }),
+    index('idx_gma_moments_session').on(t.partyId, t.sessionId),
+  ],
+);
+
+/** Mapping local character ↔ GMA player character (written by init + resync). */
+export const gmaPcLinks = sqliteTable(
+  'gma_pc_links',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    partyId: integer('party_id')
+      .notNull()
+      .references(() => parties.id, { onDelete: 'cascade' }),
+    // SET NULL: a deleted local sheet leaves an ORPHAN link — surfaced in the
+    // resync diff, deleted on GMA only via an explicit confirmed gesture.
+    characterId: integer('character_id').references(() => characters.id, {
+      onDelete: 'set null',
+    }),
+    gmaPcId: text('gma_pc_id').notNull().unique('gma_pc_links_pc_unique'),
+    nameAtSync: text('name_at_sync').notNull(), // display name for orphan rows
+    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+    updatedAt: text('updated_at').notNull().default(sql`(datetime('now'))`),
+  },
+  (t) => [
+    unique('gma_pc_links_party_character_unique').on(t.partyId, t.characterId),
+    index('idx_gma_pc_links_party').on(t.partyId),
+  ],
+);

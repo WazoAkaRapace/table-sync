@@ -19,6 +19,7 @@ import { characterSpellRoutes } from './routes/character-spells.ts';
 import { characterRoutes } from './routes/characters.ts';
 import { combatRoutes } from './routes/combat.ts';
 import { domainSpellRoutes } from './routes/domain-spells.ts';
+import { gmaRoutes } from './routes/gma.ts';
 import { inventoryRoutes } from './routes/inventory.ts';
 import { itemImageRoutes } from './routes/item-images.ts';
 import { itemRoutes } from './routes/items.ts';
@@ -136,6 +137,7 @@ async function buildServer() {
   await app.register(wildShapeRoutes, { prefix: '/api' });
   await app.register(domainSpellRoutes, { prefix: '/api' });
   await app.register(restRoutes, { prefix: '/api' });
+  await app.register(gmaRoutes, { prefix: '/api' });
 
   // WebSocket (real-time sync)
   await registerWsRoutes(app);

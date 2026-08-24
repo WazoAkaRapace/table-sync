@@ -5,7 +5,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 // ---------- Types ----------
 
 export interface SyncEvent {
-  type: 'inventory:change' | 'character:change' | 'party:change' | 'combat:change';
+  type: 'inventory:change' | 'character:change' | 'party:change' | 'combat:change' | 'gma:change';
   partyId: number;
   characterId?: number;
   toCharacterId?: number;
