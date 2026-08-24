@@ -162,21 +162,30 @@ espacé 0.1em `gold-300` sur filet `ink-100` à 12 % ; invites `$ ` en
 honnêtes, comme le tampon copier de l'app : **« Copié ✓ » / « Copie
 impossible »** pendant 2 s — jamais de succès annoncé sans preuve.
 
-## Motion
+## Motion — la plume inscrit la page
 
-Une seule courbe : `--ease` `cubic-bezier(0.16, 1, 0.3, 1)`. La pose du
-registre est **armée par JS uniquement** : `main.js` ajoute `.js` sur
-`<html>` en premier geste, et seuls `.js .rise` commencent invisibles —
-sans JS, le contenu est intégralement visible. `register-rise` : montée de
-12 px + fondu, 0.35s, déclenchée par IntersectionObserver (seuil 0.25, une
-fois par bloc). Sur cette page le dispositif n'arme qu'**un** bloc `.rise`
-(la copie de l'entrée courante) — l'entrée de tête se pose, puis plus rien
-ne bouge hors interactions (chips, barres, soulèvements de cadres).
-`prefers-reduced-motion: reduce` coupe tout : `.rise` visible sans
-animation (`none !important`), défilement `auto`, cadres sans soulèvement,
-barres et puces sans transition — avec états finaux lisibles. `html` a
-`scroll-behavior: smooth` pour les ancres internes (auto en mouvement
-réduit).
+Une seule courbe : `--ease` `cubic-bezier(0.16, 1, 0.3, 1)`. Le geste est
+**armé par JS uniquement** : `main.js` pose `.js` sur `<html>` en premier
+geste ; seuls `.js .reveal` commencent invisibles — sans JS, la page est
+intégralement visible. La thèse : la page S'ÉCRIT en défilant, le geste du
+registre de l'app (« les entrées se posent sous la règle de tête l'une
+après l'autre ») étendu au scroll.
+
+| Dispositif | Recette |
+|---|---|
+| Le filet de tête | `.entry-head::after` (trait explicite, plus de border) : `scaleX(0)` → `rule-draw` 0.45s origine gauche — la plume trace la règle |
+| Les entrées réglées | chaque `li` de `.subentries` se pose en stagger ×70 ms (`register-rise`, montée 12 px + fondu 0.35s), plafonné à 6 — une seule liste-stagger par entrée |
+| Les preuves | `.proof` tamponne après la dernière entrée réglée |
+| La colonne visuelle | poste/démo/capture arrive en fin de séquence (`max(delay, 180ms)`) |
+| Le hero | la fiche se remplit à l'arrivée : nom → slogan → offre → champs → verbes (×70 ms) puis les six tuiles FOR→CHA (×60 ms) ; la paire de téléphones se pose en parallèle (son entrée propre) |
+| Repos long | les enfants du panneau se posent, le terminal clôt (+40 ms) |
+| Personnalité / pied | quadrants ×90 ms, colonnes du pied ×80 ms — le pied à son observateur propre |
+
+Délais portés par `--reveal-delay` (inline), `animation: both`. Une fois
+par entrée (IntersectionObserver seuil 0.12, `rootMargin -6%`, unobserve).
+Transform et opacité uniquement — aucune propriété de layout, aucun
+scroll-linked rAF. `prefers-reduced-motion: reduce` : tout visible, aucune
+animation (`none !important`), filets tracés d'office, défilement `auto`.
 
 ## Accessibilité
 

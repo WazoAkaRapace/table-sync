@@ -454,9 +454,19 @@ code {
   display: flex;
   align-items: baseline;
   gap: 1rem;
-  border-bottom: 1px solid var(--parchment-200);
   padding-bottom: 0.9rem;
   margin-bottom: 2rem;
+  position: relative;
+}
+
+/* Le filet de tête : un trait explicite, animable (la plume le trace) */
+.entry-head::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-bottom: 1px solid var(--parchment-200);
 }
 
 .entry-ordinal {
@@ -1094,7 +1104,11 @@ code {
   border: 1px solid var(--parchment-300);
 }
 
-/* ---------- Motion : le registre se pose, une fois ---------- */
+/* ---------- Motion : la plume inscrit la page ----------
+   La page s'écrit en défilant : le filet de tête se trace de gauche à
+   droite, les entrées réglées se posent l'une après l'autre sous la règle,
+   les preuves tamponnent en dernier. Le geste du registre de l'app,
+   étendu au scroll — transform et opacité seulement, une fois par entrée. */
 
 @keyframes register-rise {
   from {
@@ -1107,13 +1121,32 @@ code {
   }
 }
 
-/* Le contenu est visible par défaut ; seul un JS vivant arme la pose du registre */
-.js .rise {
+@keyframes rule-draw {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Le contenu est visible par défaut ; seul un JS vivant arme l'inscription */
+.js .reveal {
   opacity: 0;
 }
 
-.js .rise.is-risen {
-  animation: register-rise 0.35s var(--ease) forwards;
+.js .reveal.is-risen {
+  animation: register-rise 0.35s var(--ease) both;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+
+.js .entry-head::after {
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.js .entry-head.is-risen::after {
+  animation: rule-draw 0.45s var(--ease) 0.05s both;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1121,10 +1154,15 @@ code {
     scroll-behavior: auto;
   }
 
-  .js .rise {
+  .js .reveal {
     opacity: 1;
     /* biome-ignore lint/complexity/noImportantStyles: coupe toute animation sous prefers-reduced-motion, y compris les classes ajoutées après coup. */
     animation: none !important;
+  }
+
+  .js .entry-head::after {
+    transform: none;
+    animation: none;
   }
 
   .shot:hover .shot-frame {

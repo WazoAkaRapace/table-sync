@@ -133,31 +133,159 @@
     });
   });
 
-  const risers = document.querySelectorAll('.rise');
+  /* ---------- La plume inscrit la page ----------
+     Chaque bloc reçoit .reveal + --reveal-delay ; l'observateur déclenche
+     .is-risen quand l'entrée entre à l'écran. Une seule liste réglée en
+     stagger par entrée (le geste du registre de l'app), délais plafonnés. */
 
-  const riseAll = () => {
-    risers.forEach((el) => {
-      el.classList.add('is-risen');
+  const STEP = 70; // ms entre deux entrées réglées
+  const armed = [];
+  const heroArmed = [];
+
+  const armReveal = (el, delay) => {
+    if (!el) return;
+    el.classList.add('reveal');
+    el.style.setProperty('--reveal-delay', `${Math.round(delay)}ms`);
+    armed.push(el);
+  };
+
+  // Les pas d'une entrée du registre : la tête trace son filet, les entrées
+  // réglées se posent l'une après l'autre, les preuves tamponnent, la
+  // colonne visuelle arrive en fin
+  const armEntry = (entry) => {
+    const head = entry.querySelector('.entry-head');
+    const copy = entry.querySelector('.entry-copy');
+    const media = entry.querySelector('.entry-body > :not(.entry-copy)');
+    const deployPanel = entry.querySelector('.deploy');
+
+    if (head && !deployPanel) {
+      armReveal(head, 0);
+    }
+
+    let delay = 90;
+    if (deployPanel) {
+      // Repos long : la tête compacte vit dans le panneau avec le reste de
+      // la copie, le terminal clôt la séquence
+      const parts = deployPanel.querySelector('.entry-copy').children;
+      for (const part of parts) {
+        armReveal(part, delay);
+        delay += STEP;
+      }
+      armReveal(deployPanel.querySelector('.terminal'), delay + 40);
+    } else {
+      const subs = copy?.querySelector('.subentries');
+      if (subs) {
+        const items = [...subs.querySelectorAll('li')].slice(0, 6);
+        for (const li of items) {
+          armReveal(li, delay);
+          delay += STEP;
+        }
+        armReveal(copy.querySelector('.proof'), delay);
+      } else if (copy) {
+        for (const child of copy.children) {
+          armReveal(child, delay);
+          delay += STEP;
+        }
+      }
+      if (media) {
+        armReveal(media, Math.max(delay, 180));
+      }
+    }
+  };
+
+  // La fiche du hero se remplit d'elle-même à l'ouverture : nom, slogan,
+  // offre, champs, verbes, puis les six tuiles FOR→CHA
+  const armHero = () => {
+    const pieces = ['.hero-name', '.hero-tagline', '.hero-offer', '.sheet-fields', '.cta-row'];
+    let delay = 0;
+    for (const selector of pieces) {
+      const el = document.querySelector(selector);
+      if (el) heroArmed.push(el);
+      armReveal(el, delay);
+      delay += STEP;
+    }
+    document.querySelectorAll('.ability').forEach((tile, i) => {
+      heroArmed.push(tile);
+      armReveal(tile, delay + 60 + i * 60);
     });
   };
 
+  // Les quadrants de personnalité (entrée à part entière, révélés par
+  // l'observateur des entrées) puis le pied de page (observé à part)
+  const armPersonality = () => {
+    document.querySelectorAll('.personality article').forEach((article, i) => {
+      armReveal(article, i * 90);
+    });
+  };
+
+  const armFooter = () => {
+    const footerCols = document.querySelectorAll('.site-footer .footer-cols > div');
+    footerCols.forEach((col, i) => {
+      armReveal(col, i * 80);
+    });
+    armReveal(document.querySelector('.footer-seal-row'), footerCols.length * 80);
+  };
+
+  const riseAll = () => {
+    for (const el of armed) {
+      el.classList.add('is-risen');
+    }
+  };
+
+  const riseHero = () => {
+    for (const el of heroArmed) {
+      el.classList.add('is-risen');
+    }
+  };
+
   if (reduceMotion || !('IntersectionObserver' in window)) {
+    armHero();
+    document.querySelectorAll('.entry').forEach(armEntry);
+    armPersonality();
+    armFooter();
     riseAll();
   } else {
-    const riseIo = new IntersectionObserver(
+    armHero();
+    armPersonality();
+    document.querySelectorAll('.entry').forEach(armEntry); // armées d'emblée, révélées au scroll
+    riseHero(); // la fiche s'inscrit dès l'arrivée
+
+    const entryIo = new IntersectionObserver(
       (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('is-risen');
-            riseIo.unobserve(entry.target);
+        for (const observed of entries) {
+          if (observed.isIntersecting) {
+            for (const el of armed) {
+              if (observed.target.contains(el) || el.contains(observed.target)) {
+                el.classList.add('is-risen');
+              }
+            }
+            entryIo.unobserve(observed.target);
           }
         }
       },
-      { threshold: 0.25 },
+      { threshold: 0.12, rootMargin: '0px 0px -6% 0px' },
     );
-    risers.forEach((el) => {
-      riseIo.observe(el);
+    document.querySelectorAll('.entry').forEach((entry) => {
+      entryIo.observe(entry);
     });
+
+    // Le pied se lève à son tour quand on y arrive
+    const footer = document.querySelector('.site-footer');
+    if (footer) {
+      const footerIo = new IntersectionObserver(
+        (entries) => {
+          for (const observed of entries) {
+            if (observed.isIntersecting) {
+              armFooter();
+              riseAll();
+              footerIo.disconnect();
+            }
+          }
+        },
+        { threshold: 0.2 },
+      );
+      footerIo.observe(footer);
+    }
   }
 
   /* ---------- Copier les commandes ---------- */
