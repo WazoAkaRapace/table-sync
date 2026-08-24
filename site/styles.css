@@ -352,6 +352,12 @@ code {
   color: var(--ink-500);
 }
 
+/* Le dd UA porte margin-inline-start: 40px — sans remise à zéro, score et
+   fait se centrent dans une boîte décalée : la tuile entière penche à droite */
+.ability dd {
+  margin: 0;
+}
+
 .ability .score {
   display: block;
   font-family: var(--font-display);
