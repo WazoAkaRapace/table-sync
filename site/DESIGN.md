@@ -88,7 +88,7 @@ Le dispositif signé de la page : deux panneaux et un fil.
 | Dispositif | Recette |
 |---|---|
 | Panneaux | TRAQUEUR (« Embuscade gobeline · écran du MD ») et FICHE (« Lyra · téléphone du joueur ») : blanc 65 % bordé `parchment-200`, rayon 12 ; titre Cinzel 0.72rem espacé 0.16em + qui/quoi en corps 1rem `ink-800` |
-| Le fil | `.wire` : trait pointillé `parchment-400` traversant les deux panneaux, étiqueté « temps réel » en italique 0.72rem sur pastille `parchment-50`, `aria-hidden` — le WebSocket, littéralisé |
+| Le fil | `.wire` : trait pointillé `parchment-400`, étiqueté « temps réel » en italique 0.72rem sur pastille `parchment-50`, `aria-hidden` — le WebSocket, littéralisé. Placement explicite par `grid-area` (`demo-tracker` 1/1, `demo-sheet` 1/2, fil 2/1/-1, note 3/1/-1 à ≥640px) : un fil `1/-1` dans l'ordre du DOM empilerait les panneaux même en deux colonnes ; sous 640px, flux naturel empilé avec le fil entre les panneaux. L'entrée I (`with-demo`) reçoit deux colonnes égales à ≥1024px — la démo a la largeur d'une scène, la capture sous la démo reste plafonnée à 380px |
 | Barre de PV | piste 10 px pilule `parchment-200`, remplissage `--rule-green` ; paliers HpBar : jaune ≤ 50 %, rouge ≤ 25 % (seuils `ceil`, 0.6s `--ease`) ; lecture mono « Lyra · 24/31 PV » côté MD, « 24/31 PV » côté joueur |
 | Verbe du MD | `⚔ Infliger 9 dégâts` : bouton **sang doux** (fond `blood-50`, bordure `blood-200`, texte `blood-700`, survol `blood-100`), 44 px — le sang plein reste réservé aux CTA ; c'est un membre secondaire du système de boutons |
 | Puce de dégâts | pilule mono 0.8rem blanc sur `blood-600` : « ⚔ 9 dégâts → fiche de Lyra », monte de 4 px |

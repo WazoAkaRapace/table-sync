@@ -462,6 +462,18 @@ code {
   .entry-body {
     grid-template-columns: minmax(0, 1fr) 380px;
   }
+
+  /* L'entrée I donne sa scène à la démo : deux colonnes égales, les panneaux
+     TRAQUEUR/FICHE se posent côte à côte avec la place de respirer */
+  .entry-body.with-demo {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  /* La capture sous la démo garde la mesure des autres cadres téléphone */
+  .entry-body.with-demo .shot {
+    max-width: 380px;
+    margin-inline: auto;
+  }
 }
 
 .entry-copy p + p {
@@ -593,10 +605,28 @@ code {
   gap: 1.1rem;
 }
 
+/* Placement explicite : sans lui, le fil (1/-1) entre les deux panneaux dans
+   l'ordre du DOM les empilerait en colonnes même en grille deux colonnes */
 @media (min-width: 640px) {
   .demo {
     grid-template-columns: 1fr 1fr;
     align-items: stretch;
+  }
+
+  .demo-tracker {
+    grid-area: 1 / 1;
+  }
+
+  .demo-sheet {
+    grid-area: 1 / 2;
+  }
+
+  .demo .wire {
+    grid-area: 2 / 1 / 3 / -1;
+  }
+
+  .demo .demo-note {
+    grid-area: 3 / 1 / 4 / -1;
   }
 }
 
