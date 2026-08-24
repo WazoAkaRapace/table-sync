@@ -41,7 +41,7 @@ jobs:
           cp docs/logo.png publish/assets/
           cp -a docs/screenshots publish/assets/screenshots
 
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: publish
 
