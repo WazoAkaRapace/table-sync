@@ -468,12 +468,6 @@ code {
   .entry-body.with-demo {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
-
-  /* La capture sous la démo garde la mesure des autres cadres téléphone */
-  .entry-body.with-demo .shot {
-    max-width: 380px;
-    margin-inline: auto;
-  }
 }
 
 .entry-copy p + p {
@@ -568,6 +562,15 @@ code {
   margin: 0;
 }
 
+/* La capture sous la démo (entrée I) garde la mesure des autres cadres
+   téléphone — posée après .shot pour éviter la spécificité descendante */
+@media (min-width: 1024px) {
+  .entry-body.with-demo .shot {
+    max-width: 380px;
+    margin-inline: auto;
+  }
+}
+
 .shot-frame {
   border-radius: 30px;
   border: 1px solid var(--parchment-300);
@@ -606,7 +609,9 @@ code {
 }
 
 /* Placement explicite : sans lui, le fil (1/-1) entre les deux panneaux dans
-   l'ordre du DOM les empilerait en colonnes même en grille deux colonnes */
+   l'ordre du DOM les empilerait en colonnes même en grille deux colonnes.
+   Sélecteurs nus (sans .demo) : même spécificité que leurs bases plus bas,
+   l'ordre du fichier tranche. */
 @media (min-width: 640px) {
   .demo {
     grid-template-columns: 1fr 1fr;
@@ -621,11 +626,11 @@ code {
     grid-area: 1 / 2;
   }
 
-  .demo .wire {
+  .wire {
     grid-area: 2 / 1 / 3 / -1;
   }
 
-  .demo .demo-note {
+  .demo-note {
     grid-area: 3 / 1 / 4 / -1;
   }
 }
