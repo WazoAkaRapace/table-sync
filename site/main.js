@@ -107,6 +107,33 @@
 
   /* ---------- register-rise ---------- */
 
+  /* ---------- Poste de consultation (série de captures, entrée II) ---------- */
+
+  const post = document.querySelector('.phonepost');
+
+  if (post) {
+    const views = post.querySelectorAll('.phonepost-view');
+    const pills = post.querySelectorAll('.phonepost-dock button');
+    const caption = post.querySelector('.phonepost-caption');
+
+    pills.forEach((pill) => {
+      pill.addEventListener('click', () => {
+        const index = Number.parseInt(pill.dataset.view ?? '0', 10);
+        views.forEach((view, i) => {
+          view.classList.toggle('is-active', i === index);
+        });
+        pills.forEach((p) => {
+          const active = p === pill;
+          p.classList.toggle('is-active', active);
+          p.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+        if (caption && pill.dataset.caption) {
+          caption.textContent = pill.dataset.caption;
+        }
+      });
+    });
+  }
+
   const risers = document.querySelectorAll('.rise');
 
   const riseAll = () => {

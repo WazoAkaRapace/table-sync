@@ -600,6 +600,78 @@ code {
   color: var(--ink-500);
 }
 
+/* ---------- Le poste de consultation (saisons de captures ≥ 3) ----------
+   Un seul téléphone vivant : les vues superposées dans le cadre, un dock de
+   pilules dessous — le vocabulaire du dock de l'app, la pile remplacée. */
+.phonepost {
+  margin: 0;
+  display: grid;
+  gap: 0.9rem;
+  justify-items: center;
+}
+
+.phonepost-screen {
+  display: grid;
+  overflow: hidden;
+}
+
+.phonepost-view {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 0.25s var(--ease),
+    transform 0.25s var(--ease);
+}
+
+.phonepost-view.is-active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.phonepost-dock {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.phonepost-dock button {
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--ink-700);
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid var(--parchment-300);
+  border-radius: 999px;
+  min-height: 44px;
+  padding: 0.35rem 0.9rem;
+  cursor: pointer;
+  transition:
+    background-color 0.2s var(--ease),
+    border-color 0.2s var(--ease),
+    color 0.2s var(--ease);
+}
+
+.phonepost-dock button:hover {
+  background: var(--parchment-100);
+}
+
+.phonepost-dock button.is-active {
+  background: var(--ink-800);
+  border-color: var(--ink-800);
+  color: var(--parchment-50);
+}
+
+.phonepost-caption {
+  margin: 0;
+  text-align: center;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--ink-500);
+  min-height: 2.6em;
+  max-width: 34ch;
+}
+
 /* ---------- Démo temps réel (I) ---------- */
 
 .demo {
@@ -1040,7 +1112,12 @@ code {
 
   .hp-fill,
   .damage-chip,
-  .conc-chip {
+  .conc-chip,
+  .phonepost-view {
     transition: none;
+  }
+
+  .phonepost-view {
+    transform: none;
   }
 }

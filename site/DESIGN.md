@@ -110,9 +110,26 @@ parchemin : cadre rayon 30 px, bordure `parchment-300`, matelas 9 px sur
 `ink-500` centrée. Au survol le cadre se soulève (`shadow-raised` +
 translateY(−3px), 0.3s `--ease` ; aucun soulèvement en mouvement réduit).
 Le portrait du hero est la variante calme : rayons 20/13 px, matelas 8 px,
-pas de survol. Les séries : `.shots` en pile centrée, `.shots-duo` en
-2 colonnes plafonnées 26rem. Attributs `width`/`height` (390×844) partout —
-zéro décalage de mise en page ; `loading="lazy"` sous le pli.
+pas de survol. Attributs `width`/`height` (390×844) partout — zéro décalage
+de mise en page.
+
+**Une série, c'est deux cadres maximum en pile** (`.shots` en pile centrée,
+`.shots-duo` en 2 colonnes plafonnées 26rem, `loading="lazy"`). Au-delà de
+deux vues, la série devient un **poste de consultation** (`.phonepost`) : un
+seul téléphone vivant, jamais une chaîne de cadres identiques.
+
+## Le poste de consultation (série de l'entrée II)
+
+| Dispositif | Recette |
+|---|---|
+| L'écran | `.phonepost-screen` : un cadre `.shot-frame` en `display: grid` ; les vues `.phonepost-view` superposées en `grid-area: 1/1`, fondu 0.25s `--ease` + montée 6 px — une seule `.is-active` |
+| Le dock | `.phonepost-dock` sous le cadre — le vocabulaire du dock de l'app : pilules rayon 999, 44 px, bordées `parchment-300` sur blanc 65 % ; active = `ink-800` plein, texte `parchment-50` (le sang reste réservé aux CTA et à la démo) ; `aria-pressed` par pilule |
+| La légende | `.phonepost-caption` : italique corps 0.85rem `ink-500` centrée, `aria-live="polite"`, hauteur réservée 2.6em — le texte suit la vue active, le dock ne saute jamais |
+| Comportement (`main.js`) | un pilier par vue : bascule `.is-active` sur vue + pilule, `aria-pressed`, légende depuis `data-caption` |
+
+Règle : les vues d'un poste se chargent toutes (pas de `lazy` — l'échange ne
+ doit jamais afficher un écran vide) ; en mouvement réduit, l'échange est
+ instantané (fondu et montée coupés).
 
 ## Le terminal (entrée V)
 

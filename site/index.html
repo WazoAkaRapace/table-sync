@@ -293,60 +293,80 @@
               <li class="phrase">multiclasse SRD 5.1</li>
             </ul>
           </div>
-          <div class="shots">
-            <figure class="shot">
-              <div class="shot-frame">
-                <img
-                  src="assets/screenshots/02-inventaire.png"
-                  alt="Inventaire d'un personnage : objets, poids en kilogrammes, bourse"
-                  width="390"
-                  height="844"
-                  loading="lazy"
-                  decoding="async"
-                />
-              </div>
-              <figcaption>L'inventaire : poids et bourse</figcaption>
-            </figure>
-            <figure class="shot">
-              <div class="shot-frame">
-                <img
-                  src="assets/screenshots/07-lancer-sort.png"
-                  alt="Lancement d'un sort avec incantation supérieure et dégâts mis à l'échelle"
-                  width="390"
-                  height="844"
-                  loading="lazy"
-                  decoding="async"
-                />
-              </div>
-              <figcaption>Lancer un sort : incantation supérieure</figcaption>
-            </figure>
-            <figure class="shot">
-              <div class="shot-frame">
-                <img
-                  src="assets/screenshots/09-forme-sauvage.png"
-                  alt="Forme sauvage du Druide avec points de vie de la forme"
-                  width="390"
-                  height="844"
-                  loading="lazy"
-                  decoding="async"
-                />
-              </div>
-              <figcaption>Forme sauvage : PV de la forme</figcaption>
-            </figure>
-            <figure class="shot">
-              <div class="shot-frame">
-                <img
-                  src="assets/screenshots/14-multiclasse.png"
-                  alt="Multiclasse avec deux pools d'emplacements de sorts"
-                  width="390"
-                  height="844"
-                  loading="lazy"
-                  decoding="async"
-                />
-              </div>
-              <figcaption>Multiclasse : deux pools d'emplacements</figcaption>
-            </figure>
-          </div>
+          <figure class="phonepost" aria-label="Vues de la fiche de personnage">
+            <div class="shot-frame phonepost-screen">
+              <img
+                class="phonepost-view is-active"
+                src="assets/screenshots/02-inventaire.png"
+                alt="Inventaire d'un personnage : objets, poids en kilogrammes, bourse"
+                width="390"
+                height="844"
+                decoding="async"
+              />
+              <img
+                class="phonepost-view"
+                src="assets/screenshots/07-lancer-sort.png"
+                alt="Lancement d'un sort avec incantation supérieure et dégâts mis à l'échelle"
+                width="390"
+                height="844"
+                decoding="async"
+              />
+              <img
+                class="phonepost-view"
+                src="assets/screenshots/09-forme-sauvage.png"
+                alt="Forme sauvage du Druide avec points de vie de la forme"
+                width="390"
+                height="844"
+                decoding="async"
+              />
+              <img
+                class="phonepost-view"
+                src="assets/screenshots/14-multiclasse.png"
+                alt="Multiclasse avec deux pools d'emplacements de sorts"
+                width="390"
+                height="844"
+                decoding="async"
+              />
+            </div>
+            <div class="phonepost-dock">
+              <button
+                type="button"
+                class="is-active"
+                aria-pressed="true"
+                data-view="0"
+                data-caption="646 objets pesés en kilogrammes, bourse et paliers d'encombrance"
+              >
+                Inventaire
+              </button>
+              <button
+                type="button"
+                aria-pressed="false"
+                data-view="1"
+                data-caption="Incantation supérieure : dégâts mis à l'échelle en direct"
+              >
+                Sorts
+              </button>
+              <button
+                type="button"
+                aria-pressed="false"
+                data-view="2"
+                data-caption="Forme sauvage : bêtes déjà vues, PV lancés aux dés"
+              >
+                Forme sauvage
+              </button>
+              <button
+                type="button"
+                aria-pressed="false"
+                data-view="3"
+                data-caption="Multiclasse : deux pools d'emplacements"
+              >
+                Multiclasse
+              </button>
+            </div>
+            <figcaption class="phonepost-caption" aria-live="polite">
+              646 objets pesés en kilogrammes, bourse et paliers d'encombrance
+            </figcaption>
+          </figure>
         </div>
       </section>
 
