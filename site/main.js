@@ -109,9 +109,8 @@
 
   /* ---------- Poste de consultation (série de captures, entrée II) ---------- */
 
-  const post = document.querySelector('.phonepost');
-
-  if (post) {
+  // Chaque poste de consultation (série multi-captures) est câblé indépendamment
+  document.querySelectorAll('.phonepost').forEach((post) => {
     const views = post.querySelectorAll('.phonepost-view');
     const pills = post.querySelectorAll('.phonepost-dock button');
     const caption = post.querySelector('.phonepost-caption');
@@ -132,7 +131,7 @@
         }
       });
     });
-  }
+  });
 
   const risers = document.querySelectorAll('.rise');
 

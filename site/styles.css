@@ -616,18 +616,8 @@ code {
 
 /* ---------- Captures en cadre téléphone ---------- */
 
-.shots {
-  display: grid;
-  gap: 1.4rem;
-  justify-items: center;
-}
-
-.shots-duo {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  max-width: 26rem;
-  margin-inline: auto;
-}
-
+/* Toute série multi-captures vit en poste de consultation (.phonepost) ;
+   .shot reste l'exception d'une capture unique (entrée I) */
 .shot {
   margin: 0;
 }

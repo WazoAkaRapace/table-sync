@@ -424,47 +424,64 @@
               <li class="phrase">PV synchronisés fiche ↔ traqueur</li>
             </ul>
           </div>
-          <div class="shots shots-duo">
-            <figure class="shot">
-              <div class="shot-frame">
-                <img
-                  src="assets/screenshots/12-traqueur.png"
-                  alt="Traqueur de combat du MD : échelle d'initiative et scène du tour"
-                  width="390"
-                  height="844"
-                  loading="lazy"
-                  decoding="async"
-                />
-              </div>
-              <figcaption>Le traqueur, en plein tour</figcaption>
-            </figure>
-            <figure class="shot">
-              <div class="shot-frame">
-                <img
-                  src="assets/screenshots/13-bloc-stats.png"
-                  alt="Bloc de stats d'un monstre avec dés cliquables"
-                  width="390"
-                  height="844"
-                  loading="lazy"
-                  decoding="async"
-                />
-              </div>
-              <figcaption>Bloc de stats : dés cliquables</figcaption>
-            </figure>
-            <figure class="shot">
-              <div class="shot-frame">
-                <img
-                  src="assets/screenshots/11-table-md.png"
-                  alt="Table du MD : tableau de bord du groupe"
-                  width="390"
-                  height="844"
-                  loading="lazy"
-                  decoding="async"
-                />
-              </div>
-              <figcaption>La table du MD</figcaption>
-            </figure>
-          </div>
+          <figure class="phonepost" aria-label="Vues de l'écran du MD">
+            <div class="shot-frame phonepost-screen">
+              <img
+                class="phonepost-view is-active"
+                src="assets/screenshots/12-traqueur.png"
+                alt="Traqueur de combat du MD : échelle d'initiative et scène du tour"
+                width="390"
+                height="844"
+                decoding="async"
+              />
+              <img
+                class="phonepost-view"
+                src="assets/screenshots/13-bloc-stats.png"
+                alt="Bloc de stats d'un monstre avec dés cliquables"
+                width="390"
+                height="844"
+                decoding="async"
+              />
+              <img
+                class="phonepost-view"
+                src="assets/screenshots/11-table-md.png"
+                alt="Table du MD : tableau de bord du groupe"
+                width="390"
+                height="844"
+                decoding="async"
+              />
+            </div>
+            <div class="phonepost-dock">
+              <button
+                type="button"
+                class="is-active"
+                aria-pressed="true"
+                data-view="0"
+                data-caption="Initiative par groupe, scène du tour, PV lancés aux dés"
+              >
+                Traqueur
+              </button>
+              <button
+                type="button"
+                aria-pressed="false"
+                data-view="1"
+                data-caption="Dés cliquables — le critique double les dés"
+              >
+                Bloc de stats
+              </button>
+              <button
+                type="button"
+                aria-pressed="false"
+                data-view="2"
+                data-caption="Tableau de bord du groupe, PNJ et secrets réservés au MD"
+              >
+                Table du MD
+              </button>
+            </div>
+            <figcaption class="phonepost-caption" aria-live="polite">
+              Initiative par groupe, scène du tour, PV lancés aux dés
+            </figcaption>
+          </figure>
         </div>
       </section>
 
@@ -509,34 +526,48 @@
               <li>cache serveur 5 min</li>
             </ul>
           </div>
-          <div class="shots shots-duo">
-            <figure class="shot">
-              <div class="shot-frame">
-                <img
-                  src="assets/screenshots/16-chronique.png"
-                  alt="Registre des séances de la chronique de campagne"
-                  width="390"
-                  height="844"
-                  loading="lazy"
-                  decoding="async"
-                />
-              </div>
-              <figcaption>Le registre des séances</figcaption>
-            </figure>
-            <figure class="shot">
-              <div class="shot-frame">
-                <img
-                  src="assets/screenshots/17-moments.png"
-                  alt="Moments mémorables enluminés de la chronique"
-                  width="390"
-                  height="844"
-                  loading="lazy"
-                  decoding="async"
-                />
-              </div>
-              <figcaption>Moments enluminés</figcaption>
-            </figure>
-          </div>
+          <figure class="phonepost" aria-label="Vues de la chronique">
+            <div class="shot-frame phonepost-screen">
+              <img
+                class="phonepost-view is-active"
+                src="assets/screenshots/16-chronique.png"
+                alt="Registre des séances de la chronique de campagne"
+                width="390"
+                height="844"
+                decoding="async"
+              />
+              <img
+                class="phonepost-view"
+                src="assets/screenshots/17-moments.png"
+                alt="Moments mémorables enluminés de la chronique"
+                width="390"
+                height="844"
+                decoding="async"
+              />
+            </div>
+            <div class="phonepost-dock">
+              <button
+                type="button"
+                class="is-active"
+                aria-pressed="true"
+                data-view="0"
+                data-caption="Les séances en ordinaux romains, la dernière en entrée courante"
+              >
+                Séances
+              </button>
+              <button
+                type="button"
+                aria-pressed="false"
+                data-view="1"
+                data-caption="Chaque moment s'enlumine selon sa nature : épique, tragique, intrigant"
+              >
+                Moments
+              </button>
+            </div>
+            <figcaption class="phonepost-caption" aria-live="polite">
+              Les séances en ordinaux romains, la dernière en entrée courante
+            </figcaption>
+          </figure>
         </div>
       </section>
 
@@ -661,7 +692,7 @@
       <button type="button" class="viewer-close" aria-label="Fermer la capture">✕</button>
       <figure class="viewer-figure">
         <div class="viewer-frame">
-          <img class="viewer-img" src="" alt="" decoding="async" />
+          <img class="viewer-img" alt="" decoding="async" />
         </div>
         <figcaption class="viewer-caption"></figcaption>
       </figure>

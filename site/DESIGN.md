@@ -115,12 +115,17 @@ téléphones se posent sur la table, 0.55 s / 0.5 s décalées de 100 ms, coupé
 en mouvement réduit) est l'unique moment signé du hero. Attributs `width`/`height` (390×844) partout — zéro décalage
 de mise en page.
 
-**Une série, c'est deux cadres maximum en pile** (`.shots` en pile centrée,
-`.shots-duo` en 2 colonnes plafonnées 26rem, `loading="lazy"`). Au-delà de
-deux vues, la série devient un **poste de consultation** (`.phonepost`) : un
-seul téléphone vivant, jamais une chaîne de cadres identiques.
+**Toute série multi-captures vit en poste de consultation** (`.phonepost`) :
+un seul grand téléphone vivant à pilules, jamais une chaîne ni une grille de
+cadres identiques. `.shot` reste l'exception d'une capture unique (entrée I,
+sous la démo).
 
-## Le poste de consultation (série de l'entrée II)
+## Le poste de consultation (toutes les séries multi-captures)
+
+Trois postes servent la page : la fiche du joueur (entrée II, 4 vues),
+l'écran du MD (entrée III, Traqueur / Bloc de stats / Table du MD) et la
+chronique (entrée IV, Séances / Moments). Chacun est câblé indépendamment
+(`main.js` boucle sur `.phonepost`).
 
 | Dispositif | Recette |
 |---|---|
