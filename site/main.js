@@ -185,4 +185,55 @@
       flashCopied(false);
     }
   });
+
+  /* ---------- Visionneuse plein écran ----------
+     Le vocabulaire de l'app : fondu du rideau, l'image se pose depuis 0.96,
+     le zoom lui-même ne s'anime jamais (outil de lecture). */
+
+  const viewer = document.querySelector('.viewer');
+  const viewerImg = viewer?.querySelector('.viewer-img');
+  const viewerCaption = viewer?.querySelector('.viewer-caption');
+  const viewerClose = viewer?.querySelector('.viewer-close');
+  let lastFocus = null;
+
+  const closeViewer = () => {
+    if (!viewer || viewer.hidden) return;
+    viewer.hidden = true;
+    document.body.style.overflow = '';
+    lastFocus?.focus();
+  };
+
+  const openViewer = (img) => {
+    if (!viewer || !viewerImg) return;
+    lastFocus = document.activeElement;
+    viewerImg.src = img.src;
+    viewerImg.alt = img.alt;
+    if (viewerCaption) {
+      viewerCaption.textContent = img.alt;
+    }
+    viewer.hidden = false;
+    document.body.style.overflow = 'hidden';
+    viewerClose?.focus();
+  };
+
+  if (viewer && viewerImg) {
+    // Chaque écran de téléphone s'ouvre en plein écran ; dans un poste de
+    // consultation, c'est la vue ACTIVE qui s'ouvre (les autres n'écoutent pas)
+    document.querySelectorAll('.shot-frame img, .portrait-frame img').forEach((img) => {
+      img.addEventListener('click', () => {
+        if (img.classList.contains('phonepost-view') && !img.classList.contains('is-active')) {
+          return;
+        }
+        openViewer(img);
+      });
+    });
+
+    viewer.addEventListener('click', (event) => {
+      if (event.target === viewer || event.target === viewerClose) closeViewer();
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closeViewer();
+    });
+  }
 })();

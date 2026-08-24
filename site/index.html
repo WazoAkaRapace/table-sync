@@ -655,6 +655,18 @@
       </div>
     </footer>
 
+    <!-- Visionneuse plein écran — le vocabulaire de l'app : fondu du rideau,
+         l'image se pose depuis 0.96, le zoom ne s'anime jamais -->
+    <div class="viewer" role="dialog" aria-modal="true" aria-label="Capture en plein écran" hidden>
+      <button type="button" class="viewer-close" aria-label="Fermer la capture">✕</button>
+      <figure class="viewer-figure">
+        <div class="viewer-frame">
+          <img class="viewer-img" src="" alt="" decoding="async" />
+        </div>
+        <figcaption class="viewer-caption"></figcaption>
+      </figure>
+    </div>
+
     <script src="main.js" defer></script>
   </body>
 </html>

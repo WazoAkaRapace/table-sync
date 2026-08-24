@@ -133,6 +133,20 @@ Règle : les vues d'un poste se chargent toutes (pas de `lazy` — l'échange ne
  doit jamais afficher un écran vide) ; en mouvement réduit, l'échange est
  instantané (fondu et montée coupés).
 
+## La visionneuse plein écran
+
+Chaque écran de téléphone (paire du hero, poste de consultation, cadres des
+séries) s'ouvre en plein écran au clic — la visionneuse de l'app, portée
+telle quelle.
+
+| Dispositif | Recette |
+|---|---|
+| Le rideau | `.viewer` `fixed inset-0` sur `ink-900` à 88 %, fondu 0.2s ; `role="dialog"` + `aria-modal`, focus au ✕, rendu au déclencheur à la fermeture, défilement du corps verrouillé |
+| L'image | `.viewer-frame` : le même matelas parchemin que les cadres (9 px, rayons 30/21) ; l'image se pose depuis 0.96 (0.25s `--ease`) — le zoom lui-même ne s'anime jamais, outil de lecture |
+| Fermeture | Échap, clic sur le rideau, bouton ✕ 44 px (bordé `ink-100` à 35 %, or au survol) |
+| Légende | l'`alt` de l'image, en italique `ink-100` — jamais réécrite à la main |
+| Poste de consultation | `.phonepost-view:not(.is-active)` ne pointe pas (`pointer-events: none`) : le clic sur l'écran ouvre TOUJOURS la vue active |
+
 ## Le terminal (entrée V)
 
 L'écran du bricoleur, dans le monde : fond `ink-900`, texte `ink-100`, rayon

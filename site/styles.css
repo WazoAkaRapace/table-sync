@@ -1196,3 +1196,107 @@ code {
     animation: none;
   }
 }
+
+/* ---------- Visionneuse plein écran ----------
+   La visionneuse de l'app, portée telle quelle : rideau ink qui fond,
+   l'image se pose depuis 0.96 — le zoom lui-même ne s'anime jamais. */
+.viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(42, 31, 20, 0.88);
+  animation: viewer-fade-in 0.2s ease-out;
+}
+
+.viewer[hidden] {
+  display: none;
+}
+
+.viewer-figure {
+  margin: 0;
+  display: grid;
+  justify-items: center;
+  gap: 0.9rem;
+  max-height: 100%;
+}
+
+.viewer-frame {
+  border-radius: 30px;
+  border: 1px solid rgba(233, 225, 212, 0.25);
+  background: var(--parchment-100);
+  padding: 9px;
+  animation: viewer-image-in 0.25s var(--ease);
+}
+
+.viewer-img {
+  display: block;
+  border-radius: 21px;
+  max-height: calc(100vh - 9rem);
+  max-width: calc(100vw - 4rem);
+  width: auto;
+  height: auto;
+}
+
+.viewer-caption {
+  font-size: 0.9rem;
+  font-style: italic;
+  color: var(--ink-100);
+  text-align: center;
+  max-width: 40ch;
+}
+
+.viewer-close {
+  position: absolute;
+  top: 1.1rem;
+  right: 1.1rem;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 999px;
+  border: 1px solid rgba(233, 225, 212, 0.35);
+  background: rgba(42, 31, 20, 0.6);
+  color: var(--ink-100);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition:
+    border-color 0.2s var(--ease),
+    color 0.2s var(--ease);
+}
+
+.viewer-close:hover {
+  border-color: var(--gold-300);
+  color: var(--gold-300);
+}
+
+/* Les écrans de téléphone invitent au clic ; dans un poste, seule la vue
+   active écoute */
+.shot-frame img,
+.portrait-frame img {
+  cursor: zoom-in;
+}
+
+.phonepost-view:not(.is-active) {
+  pointer-events: none;
+}
+
+@keyframes viewer-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes viewer-image-in {
+  from {
+    transform: scale(0.96);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .viewer,
+  .viewer-frame {
+    animation: none;
+  }
+}
