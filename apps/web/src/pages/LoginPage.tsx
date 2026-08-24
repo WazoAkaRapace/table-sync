@@ -31,7 +31,9 @@ export default function LoginPage() {
         <div className="text-center mb-6">
           <img src="/icon-seal.svg" alt="" aria-hidden="true" className="w-20 h-20 mx-auto mb-3" />
           <h1 className="font-display text-2xl font-bold text-blood-700">Table Sync</h1>
-          <p className="text-ink-400 text-sm mt-1">Le compagnon de campagne partagé, pour le MD et les joueurs</p>
+          <p className="text-ink-400 text-sm mt-1">
+            Le compagnon de campagne partagé, pour le MD et les joueurs
+          </p>
         </div>
         <form onSubmit={submit} className="space-y-4">
           <div>

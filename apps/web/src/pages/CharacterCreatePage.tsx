@@ -15,12 +15,7 @@
  * finish review, the verdict, and DESIGN.md
  */
 
-import type {
-  AbilityKey,
-  ClassInfo,
-  CreateCharacterPayload,
-  SkillKey,
-} from '@table-sync/shared';
+import type { AbilityKey, ClassInfo, CreateCharacterPayload, SkillKey } from '@table-sync/shared';
 import {
   ABILITY_SHORT_FR,
   abilityModifier,

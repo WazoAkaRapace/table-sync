@@ -1,9 +1,4 @@
-import type {
-  Character,
-  InventoryEntry,
-  ItemCategory,
-  StorageLocation,
-} from '@table-sync/shared';
+import type { Character, InventoryEntry, ItemCategory, StorageLocation } from '@table-sync/shared';
 import { CATEGORY_LABELS_FR } from '@table-sync/shared';
 import { useState } from 'react';
 import { InventoryRow } from './InventoryRow';
