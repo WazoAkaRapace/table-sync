@@ -209,6 +209,26 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
     characterClass: 'Guerrier',
     level: 3,
   });
+  r = await api(base, 'PATCH', `/api/characters/${charCedric.id}`, {
+    token: fx.gm.token,
+    body: {
+      alignment: 'Loyal Bon',
+      sex: 'F',
+      age: '32 ans',
+      height: '1,75 m',
+      weight: '65 kg',
+      skin: 'Mate',
+      eyes: 'Vairons',
+      hair: 'Roux, tressés',
+      appearance: 'Cicatrice sur la pommette gauche.',
+      personalityTraits: 'Je fonce sans calculer.',
+      ideals: 'La liberté avant tout.',
+      bonds: 'Ma sœur disparue à Chult.',
+      flaws: 'Je ne supporte pas l’autorité.',
+      backstory: 'Née à Port Nyanzaru, elle cherche sa sœur.',
+    },
+  });
+  eq(r.status, 200, 'identity fields saved on Cedric');
   const charDora = await createCharacter(base, fx.player.token, party2.id, { name: 'Dora' });
   const charSneaky = await createCharacter(base, fx.gm.token, party2.id, {
     name: 'Sneaky',
@@ -235,7 +255,27 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   const pcPost = mock.requests.find((q) => q.method === 'POST' && q.body?.name === 'Cedric');
   ok(!!pcPost, 'player-character POST sent');
   eq(pcPost.body.played_by, 'ALICE', 'played_by = owner displayName');
-  eq(pcPost.body.description, 'Guerrier niveau 3', 'description = class summary');
+  const cedricDesc = String(pcPost.body.description);
+  ok(
+    cedricDesc.startsWith('Guerrier niveau 3 · Loyal Bon'),
+    'description headlines class + alignment',
+  );
+  ok(
+    cedricDesc.includes(
+      'Apparence : F · 32 ans · 1,75 m · 65 kg · peau mate · yeux vairons · cheveux roux, tressés\nCicatrice sur la pommette gauche.',
+    ),
+    'physical quick-fields and appearance composed',
+  );
+  ok(
+    cedricDesc.includes(
+      'Personnalité : Je fonce sans calculer.\nIdéaux : La liberté avant tout.\nLiens : Ma sœur disparue à Chult.\nDéfauts : Je ne supporte pas l’autorité.',
+    ),
+    'personality quartet composed',
+  );
+  ok(
+    cedricDesc.endsWith('Histoire :\nNée à Port Nyanzaru, elle cherche sa sœur.'),
+    'backstory composed last',
+  );
   eq(
     srv.queryAll('SELECT * FROM gma_pc_links WHERE party_id = ?', party2.id).length,
     2,
@@ -305,6 +345,29 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   ok(!!patchReq, 'PATCH sent as merge-patch');
   eq(patchReq.body.name, 'Cédric II', 'patch carries the new name');
   ok(!('description' in patchReq.body), 'patch limited to changed fields');
+
+  // Identity edits flow through the composed description (GMA has no identity
+  // fields of its own) and respect the 6000-char maxLength.
+  r = await api(base, 'PATCH', `/api/characters/${charCedric.id}`, {
+    token: fx.gm.token,
+    body: { backstory: 'A'.repeat(7000) },
+  });
+  eq(r.status, 200, 'backstory grows past GMA maxLength');
+  r = await api(base, 'POST', `/api/parties/${party2.id}/gma/characters/sync`, {
+    token: fx.gm.token,
+    body: { dryRun: true },
+  });
+  const descChange = r.data.toUpdate
+    .find((u: any) => u.characterId === charCedric.id)
+    ?.changes.find((c: any) => c.field === 'description');
+  ok(!!descChange, 'identity edit diffs the description');
+  eq(descChange.to.length, 6000, 'description capped at GMA maxLength');
+  ok(descChange.to.endsWith('…'), 'cap marked with an ellipsis');
+  r = await api(base, 'POST', `/api/parties/${party2.id}/gma/characters/sync`, {
+    token: fx.gm.token,
+    body: {},
+  });
+  eq(r.data.updated.length, 1, 'identity update applied upstream');
 
   r = await api(base, 'POST', `/api/parties/${party2.id}/gma/characters/sync`, {
     token: fx.gm.token,

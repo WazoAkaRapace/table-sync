@@ -110,7 +110,7 @@ Après toute sync qui change les données : `bus.emitChange({ type:'gma:change',
 
 `POST /api/parties/:id/gma/init` (GM, groupe non lié, clé présente) :
 1. `POST /v1/campaigns` — `{title: nom du groupe, ttrpg_system: 'dungeons and dragons', ttrpg_system_edition: '5e'}` (setting/genre : null, le MD les règle chez GMA s'il veut).
-2. Pour chaque perso sélectionné : `POST /v1/campaigns/{id}/player-characters` — `{name: nom du perso, played_by: displayName du propriétaire, description: 'Classe n X' (résumé de lignes de classe)}` ; l'id GMA renvoyé est enregistré dans `gma_pc_links`.
+2. Pour chaque perso sélectionné : `POST /v1/campaigns/{id}/player-characters` — `{name: nom du perso, played_by: displayName du propriétaire, description}`. GMA n'expose qu'une `description` (6 000 car. max) : elle compose la fiche d'identité complète — titre « Classe n X · Alignement », bloc **Apparence** (champs rapides sexe/âge/taille/poids/peau/yeux/cheveux + texte libre), quartet **Personnalité** (traits, idéaux, liens, défauts), **Histoire** (backstory, tronquée avec « … » si le tout dépasse la limite) ; l'id GMA renvoyé est enregistré dans `gma_pc_links`.
 3. Liaison locale du groupe vers la campagne créée.
 
 **Pas de rollback** : nous n'avons pas le droit morale de `DELETE` chez GMA. Si un PJ échoue (validation…), la campagne existe et reste liée ; la réponse renvoie `{created:{campaign, playerCharacters[]}, failed:[{name, reason}]}` et l'UI affiche les échecs avec un lien vers GMA pour compléter à la main. La création est proposée **une seule fois** par groupe (liaison = garde 409).
@@ -122,7 +122,7 @@ Le complément naturel de l'init : un nouveau joueur rejoint le groupe, un perso
 1. Lecture croisée : `GET /v1/campaigns/{id}/player-characters` (pagination suivie) + fiches locales du groupe + `gma_pc_links`.
 2. **Plan de diff** (retourné tel quel par `dryRun`, ou avant application) :
    - `toCreate` — persos du groupe **sans lien**, filtrés par `createCharacterIds[]` (cases cochées, même grammaire que l'init ; défaut : tout coché) ;
-   - `toUpdate` — PJ **liés divergents** (nom, `played_by` = displayName du propriétaire courant, description = résumé de lignes de classe) : **toujours appliqués**, la sélection ne porte que les créations ;
+   - `toUpdate` — PJ **liés divergents** (nom, `played_by` = displayName du propriétaire courant, description = fiche d'identité composée §init) : **toujours appliqués**, la sélection ne porte que les créations ;
    - `orphans` — lien dont la fiche locale a disparu (`character_id` NULL) : affichés, jamais touchés par le lot ;
    - `gmaOnly` — PJ présents chez GMA sans lien (créés dans leur app) : information seule ;
    - `upToDate` — compteur de conformité.

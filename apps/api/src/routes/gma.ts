@@ -164,9 +164,68 @@ function classSummary(row: any): string {
   return row.character_class ? `${row.character_class} niveau ${row.level}` : `Niveau ${row.level}`;
 }
 
+/** GMA rejects longer descriptions (openapi maxLength 6000). */
+const GMA_DESCRIPTION_MAX = 6000;
+
+/** Quick identity fields → one readable line ('femme · 32 ans · peau pâle'). */
+function physicalLine(row: any): string {
+  const bits: string[] = [];
+  for (const key of ['sex', 'age', 'height', 'weight']) {
+    const v = String(row[key] ?? '').trim();
+    if (v) bits.push(v);
+  }
+  for (const [key, label] of [
+    ['skin', 'peau'],
+    ['eyes', 'yeux'],
+    ['hair', 'cheveux'],
+  ] as const) {
+    const v = String(row[key] ?? '').trim();
+    if (v) bits.push(`${label} ${v[0].toLowerCase()}${v.slice(1)}`);
+  }
+  return bits.join(' · ');
+}
+
+/**
+ * GMA player characters expose a single 6000-char description, so the sheet's
+ * whole identity composes into it: class headline + alignement, apparence,
+ * personnalité, histoire. Labels mirror the Description tab's vocabulary.
+ */
+function gmaDescription(row: any): string {
+  const blocks: string[] = [];
+  const headline = [classSummary(row), String(row.alignment ?? '').trim()]
+    .filter(Boolean)
+    .join(' · ');
+  if (headline) blocks.push(headline);
+
+  const physical = physicalLine(row);
+  const appearance = String(row.appearance ?? '').trim();
+  if (physical || appearance) {
+    const head = physical ? `Apparence : ${physical}` : 'Apparence :';
+    blocks.push([head, appearance].filter(Boolean).join('\n'));
+  }
+
+  const personality = (
+    [
+      ['Personnalité', row.personality_traits],
+      ['Idéaux', row.ideals],
+      ['Liens', row.bonds],
+      ['Défauts', row.flaws],
+    ] as const
+  ).filter(([, v]) => String(v ?? '').trim());
+  if (personality.length > 0) {
+    blocks.push(personality.map(([label, v]) => `${label} : ${String(v).trim()}`).join('\n'));
+  }
+
+  const backstory = String(row.backstory ?? '').trim();
+  if (backstory) blocks.push(`Histoire :\n${backstory}`);
+
+  const text = blocks.join('\n\n');
+  return text.length > GMA_DESCRIPTION_MAX ? `${text.slice(0, GMA_DESCRIPTION_MAX - 1)}…` : text;
+}
+
 /** What the character SHOULD look like as a GMA player character. */
 function desiredPc(row: any): { name: string; played_by: string; description: string } {
-  return { name: row.name, played_by: row.owner_name, description: classSummary(row) };
+  return { name: row.name, played_by: row.owner_name, description: gmaDescription(row) };
 }
 
 // ---------- sessions / recaps cache ----------
@@ -749,7 +808,7 @@ export async function gmaRoutes(app: FastifyInstance) {
           characterId: c.id,
           name: c.name,
           playedBy: c.owner_name,
-          description: classSummary(c),
+          description: gmaDescription(c),
         });
       }
       for (const l of linkRows) {
@@ -767,7 +826,7 @@ export async function gmaRoutes(app: FastifyInstance) {
             characterId: char.id,
             name: char.name,
             playedBy: char.owner_name,
-            description: classSummary(char),
+            description: gmaDescription(char),
           });
           continue;
         }

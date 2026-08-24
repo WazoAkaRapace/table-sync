@@ -90,8 +90,8 @@ Conçue pour être utilisée sur téléphone et tablette pendant la partie : PWA
 | ![Widget](docs/screenshots/05-widget-combat.png) | ![Formes](docs/screenshots/10-formes.png) |
 
 ### 📜 GM Assistant — chronique de campagne
-- **Liaison groupe ↔ campagne** [gmassistant.app](https://gmassistant.app) : le MD connecte sa clé API (chiffrée côté serveur, jamais dans le navigateur), relie une campagne existante ou la **crée depuis le groupe** — campagne D&D 5e + les personnages cochés avec leur « joué par »
-- **Resynchronisation des personnages** à la demande : créations cochables, mises à jour nom / joué par / classes, orphelins supprimés uniquement d'un geste confirmé — lecture seule partout ailleurs
+- **Liaison groupe ↔ campagne** [gmassistant.app](https://gmassistant.app) : le MD connecte sa clé API (chiffrée côté serveur, jamais dans le navigateur), relie une campagne existante ou la **crée depuis le groupe** — campagne D&D 5e + les personnages cochés avec leur « joué par » et leur fiche d'identité
+- **Resynchronisation des personnages** à la demande : créations cochables, mises à jour nom / joué par / fiche d'identité (classes, alignement, apparence, personnalité, histoire), orphelins supprimés uniquement d'un geste confirmé — lecture seule partout ailleurs
 - **Chronique** (📜 en annexes, ouverte à toute la table) : registre des séances — ordinaux romains = numéros de séance, la dernière en entrée courante — résumés multi-styles (Résumé, En bref, Héraut, Conte, Ironique, Sonnet…) et **moments mémorables enluminés par type** (⚔ épique gravé en or, 🕯 tragique en italique éteint, 🗝 intrigant à la clé…)
 - **Cache serveur** (TTL 5 min, rafraîchissement MD, event temps réel) : une panne GM Assistant n'affiche jamais d'écran d'erreur au joueur — la chronique sert son dernier cachet, honnêtement marqué
 

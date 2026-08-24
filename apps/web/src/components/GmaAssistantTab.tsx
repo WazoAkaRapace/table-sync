@@ -47,6 +47,12 @@ function ScopeChip({ scope }: { scope: 'read' | 'full_access' | null }) {
 }
 
 /** « joué par » preview line for the init + resync creation rows. */
+/** Inline preview of a possibly long, multi-line value (description carries the identity). */
+function inlineClip(value: string, max = 72): string {
+  const flat = value.replaceAll('\n', ' · ');
+  return flat.length > max ? `${flat.slice(0, max - 1)}…` : flat;
+}
+
 function CandidateRow({
   name,
   playedBy,
@@ -73,7 +79,7 @@ function CandidateRow({
       <label htmlFor={inputId} className="min-w-0 flex-1 text-sm">
         <span className="font-medium text-ink-800">{name}</span>
         <span className="mt-0.5 block text-xs text-ink-400">
-          joué par {playedBy} · {description}
+          joué par {playedBy} · {inlineClip(description, 96)}
         </span>
       </label>
     </li>
@@ -749,8 +755,8 @@ function SyncDiffBody({
                 <ul className="mt-0.5 space-y-0.5">
                   {u.changes.map((ch) => (
                     <li key={ch.field} className="text-xs text-ink-500">
-                      {GMA_PC_FIELD_LABELS_FR[ch.field] ?? ch.field} : {ch.from} →{' '}
-                      <span className="font-medium text-ink-800">{ch.to}</span>
+                      {GMA_PC_FIELD_LABELS_FR[ch.field] ?? ch.field} : {inlineClip(ch.from)} →{' '}
+                      <span className="font-medium text-ink-800">{inlineClip(ch.to)}</span>
                     </li>
                   ))}
                 </ul>
