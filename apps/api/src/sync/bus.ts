@@ -12,7 +12,7 @@ import { EventEmitter } from 'node:events';
 import type { ConcentrationCheck } from '@dnd-inventory/shared';
 
 export interface SyncEvent {
-  type: 'inventory:change' | 'character:change' | 'party:change' | 'combat:change';
+  type: 'inventory:change' | 'character:change' | 'party:change' | 'combat:change' | 'gma:change';
   partyId: number;
   characterId?: number;
   toCharacterId?: number; // for transfers
@@ -32,7 +32,11 @@ export interface SyncEvent {
     | 'initiative'
     | 'turn'
     | 'hp'
-    | 'condition';
+    | 'condition'
+    | 'link'
+    | 'unlink'
+    | 'init'
+    | 'sync';
   itemName?: string;
   actorUserId?: number;
   /** Membership action target (remove/ban/unban) — ws.ts delivers to them directly. */

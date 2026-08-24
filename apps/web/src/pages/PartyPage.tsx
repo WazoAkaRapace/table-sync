@@ -223,6 +223,22 @@ export default function PartyPage() {
   const [disbanded, setDisbanded] = useState(false);
   const [inviteCopied, setInviteCopied] = useState(false);
   const [inviteCopyFailed, setInviteCopyFailed] = useState(false);
+  // Chronique annex: shown only once a GM Assistant campaign is linked.
+  const [gmaLinked, setGmaLinked] = useState(false);
+
+  const loadGmaLink = useCallback(async () => {
+    if (!partyId) return;
+    try {
+      const res = await api.get(`/api/parties/${partyId}/gma/link`);
+      setGmaLinked(!!res.data?.linked);
+    } catch {
+      setGmaLinked(false);
+    }
+  }, [partyId]);
+
+  useEffect(() => {
+    loadGmaLink();
+  }, [loadGmaLink]);
 
   const load = useCallback(
     async (silent = false) => {
@@ -259,6 +275,11 @@ export default function PartyPage() {
       if (event.action === 'disband') {
         // The party row is GONE (cascade) — a reload would only 403.
         setDisbanded(true);
+        return;
+      }
+      if (event.type === 'gma:change') {
+        // Link/unlink/resync — only the annex visibility lives on this page.
+        loadGmaLink();
         return;
       }
       load(true); // silent — no spinner flash on sync updates
@@ -441,6 +462,7 @@ export default function PartyPage() {
         <ul className="list-none">
           {isGM && <TocLink to={`/party/${partyId}/gm`} label="Table du MD" glyph="🛡" />}
           <TocLink to={`/party/${partyId}/combat`} label="Combat" glyph="⚔" />
+          {gmaLinked && <TocLink to={`/party/${partyId}/chronique`} label="Chronique" glyph="📜" />}
           <TocLink to={`/party/${partyId}/npcs`} label="PNJ" glyph="🎭" />
           {isGM && (
             <li className="flex items-center border-b border-parchment-200 py-3.5 pl-3 pr-3">

@@ -20,6 +20,7 @@ import { createServer, type Server } from 'node:net';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { type MockGmaHandle, startMockGma } from './mock-gma.ts';
 
 const require = createRequire(import.meta.url);
 const Database = require('better-sqlite3');
@@ -144,6 +145,8 @@ export interface ServerHandle {
   tracePath: string;
   serverLog: string;
   child: ChildProcess;
+  /** The mock GM Assistant server the API talks to (GMA_BASE_URL). */
+  gma: MockGmaHandle;
   /** Read-only query against the live test DB (WAL allows concurrent readers). */
   query: (sql: string, ...params: unknown[]) => any;
   queryAll: (sql: string, ...params: unknown[]) => any[];
@@ -152,6 +155,7 @@ export interface ServerHandle {
 
 export async function startServer(): Promise<ServerHandle> {
   const port = await freePort(4611);
+  const gmaMock = await startMockGma();
   const dir = mkdtempSync(join(tmpdir(), 'dnd-api-test-'));
   const dbPath = join(dir, 'test.sqlite');
   const imagesDir = join(dir, 'images');
@@ -172,6 +176,8 @@ export async function startServer(): Promise<ServerHandle> {
       // trust the header here (the default, direct-exposure mode would key
       // every probe on 127.0.0.1 and 429 the suite).
       TRUST_PROXY: 'true',
+      // GM Assistant calls go to the in-process mock (see mock-gma.ts).
+      GMA_BASE_URL: gmaMock.url,
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
@@ -226,10 +232,22 @@ export async function startServer(): Promise<ServerHandle> {
     } catch {
       /* already closed */
     }
+    await gmaMock.stop();
     rmSync(dir, { recursive: true, force: true });
   };
 
-  return { base, dbPath, imagesDir, tracePath, serverLog, child, query, queryAll, stop };
+  return {
+    base,
+    dbPath,
+    imagesDir,
+    tracePath,
+    serverLog,
+    child,
+    gma: gmaMock,
+    query,
+    queryAll,
+    stop,
+  };
 }
 
 // ---------- fixtures ----------

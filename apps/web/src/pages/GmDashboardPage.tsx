@@ -16,6 +16,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import api, { itemImageUrl } from '../api';
 import { useAuth } from '../auth';
+import { GmaAssistantTab } from '../components/GmaAssistantTab';
 import {
   EMPTY_ITEM_IMAGE,
   ItemImageField,
@@ -56,9 +57,9 @@ export default function GmDashboardPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [tab, setTab] = useState<'characters' | 'transactions' | 'custom' | 'members'>(
-    'characters',
-  );
+  const [tab, setTab] = useState<
+    'characters' | 'transactions' | 'custom' | 'members' | 'assistant'
+  >('characters');
 
   const load = useCallback(
     async (silent = false) => {
@@ -119,6 +120,9 @@ export default function GmDashboardPage() {
         <TabButton active={tab === 'members'} onClick={() => setTab('members')}>
           Joueurs ({party.members.length})
         </TabButton>
+        <TabButton active={tab === 'assistant'} onClick={() => setTab('assistant')}>
+          GM Assistant
+        </TabButton>
       </div>
 
       {tab === 'characters' && (
@@ -136,6 +140,14 @@ export default function GmDashboardPage() {
           characters={party.characters}
           partyId={partyId!}
           onReload={load}
+        />
+      )}
+
+      {tab === 'assistant' && (
+        <GmaAssistantTab
+          partyId={partyId!}
+          partyName={party.party.name}
+          characters={party.characters}
         />
       )}
 

@@ -20,6 +20,7 @@ import { run as authParties } from './api-tests/mod-auth-parties.ts';
 import { run as characters } from './api-tests/mod-characters.ts';
 import { run as combat } from './api-tests/mod-combat.ts';
 import { run as featuresNotes } from './api-tests/mod-features-notes.ts';
+import { run as gma } from './api-tests/mod-gma.ts';
 import { run as inventory } from './api-tests/mod-inventory.ts';
 import { run as itemAnnotations } from './api-tests/mod-item-annotations.ts';
 import { run as itemImages } from './api-tests/mod-item-images.ts';
@@ -40,6 +41,7 @@ const MODULES: Array<{
   { name: 'inventory + locations', run: inventory },
   { name: 'item images', run: itemImages },
   { name: 'item annotations', run: itemAnnotations },
+  { name: 'gm assistant', run: gma },
   { name: 'spells', run: spells },
   { name: 'features + notes', run: featuresNotes },
   { name: 'npcs + monsters', run: npcsMonsters },

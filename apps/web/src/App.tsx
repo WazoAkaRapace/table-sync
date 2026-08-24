@@ -14,6 +14,7 @@ import { useSync, useSyncEvent } from './sync';
 // export at the same path).
 const CharacterCreatePage = lazy(() => import('./pages/CharacterCreatePage'));
 const CharacterInventoryPage = lazy(() => import('./pages/CharacterInventoryPage'));
+const ChroniclePage = lazy(() => import('./pages/ChroniclePage'));
 const CombatPage = lazy(() => import('./pages/CombatPage'));
 const GmDashboardPage = lazy(() => import('./pages/GmDashboardPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
@@ -285,6 +286,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <NpcPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/party/:partyId/chronique"
+              element={
+                <ProtectedRoute>
+                  <ChroniclePage />
                 </ProtectedRoute>
               }
             />
