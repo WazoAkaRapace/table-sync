@@ -185,6 +185,15 @@ code {
   align-items: start;
 }
 
+/* À partir du desktop, la fiche s'ouvre : identité à gauche, portrait à
+   droite — la mise en page d'une vraie feuille de personnage */
+@media (min-width: 1024px) {
+  .hero-identity {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 25rem);
+    gap: 3rem;
+  }
+}
+
 .seal {
   width: 5.5rem;
   height: 5.5rem;
@@ -245,9 +254,63 @@ code {
 }
 
 /* Portrait de fiche = la vraie app, dans son cadre */
-.portrait {
+/* La paire posée sur la table : le traqueur du MD derrière, le registre du
+   joueur devant — deux écrans, une seule table, dès le premier regard */
+.portrait-pair {
+  position: relative;
   justify-self: center;
-  width: min(17.5rem, 100%);
+  width: min(25rem, 100%);
+}
+
+.portrait-back {
+  position: absolute;
+  top: -5%;
+  left: -10%;
+  width: 66%;
+  transform: rotate(-8deg);
+  z-index: 1;
+  box-shadow: var(--shadow-raised);
+  animation: pair-back-in 0.55s var(--ease) 0.08s backwards;
+}
+
+.portrait-front {
+  position: relative;
+  margin-left: auto;
+  width: 80%;
+  z-index: 2;
+  animation: pair-front-in 0.5s var(--ease) 0.18s backwards;
+}
+
+/* Sous la tablette, la paire se replie : le registre reste seul en portrait */
+@media (max-width: 767px) {
+  .portrait-back {
+    display: none;
+  }
+
+  .portrait-front {
+    width: 100%;
+  }
+}
+
+@keyframes pair-back-in {
+  from {
+    opacity: 0;
+    transform: rotate(-13deg) translateY(22px);
+  }
+}
+
+@keyframes pair-front-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+.portrait-pair figcaption {
+  margin-top: 0.6rem;
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--ink-500);
 }
 
 .portrait-frame {
@@ -262,13 +325,6 @@ code {
   border-radius: 13px;
   width: 100%;
   height: auto;
-}
-
-.portrait figcaption {
-  margin-top: 0.6rem;
-  text-align: center;
-  font-size: 0.82rem;
-  color: var(--ink-500);
 }
 
 /* ---------- Boutons (membres du système de l'app) ---------- */
@@ -1133,5 +1189,10 @@ code {
 
   .phonepost-view {
     transform: none;
+  }
+
+  .portrait-back,
+  .portrait-front {
+    animation: none;
   }
 }

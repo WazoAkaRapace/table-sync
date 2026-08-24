@@ -56,7 +56,7 @@ sélection `gold-100`. Titres h1–h3 en Cinzel 600, `text-wrap: balance`.
 | Sceau | logo rond 5.5rem, anneau 2 px `parchment-300`, `shadow-card` — le cachet de la maison |
 | Nom / offre | h1 `clamp(2.1rem, 5.5vw, 3.4rem)` resserré (−0.02em) ; offre 1.15rem `ink-700`, plafonnée 34rem |
 | Champs de fiche (`sheet-fields`) | CLASSE / HISTORIQUE / TAILLE / LANGUE : dt Cinzel 0.7rem espacé 0.14em `ink-500`, dd 0.95rem `ink-700`, posés sous un filet `parchment-200` |
-| Portrait | la capture réelle `01-parties.png` (390×844) dans un cadre : rayon 20 px, bordure `parchment-300`, matelas 8 px sur `parchment-100` — le « portrait de fiche » EST l'app |
+| La paire portrait | **Deux téléphones posés sur la table** : le traqueur du MD (`12-traqueur.png`) incliné −8° derrière (66 % de large, `shadow-raised`), le registre du joueur (`01-parties.png`) droit devant (80 %) — deux écrans, une seule table, dès le premier regard. Cadres `.portrait-frame` (rayon 20/13 px, matelas 8 px). ≥1024px la fiche s'ouvre en deux colonnes (identité \| portrait) comme une vraie feuille ; <768px la paire se replie — le registre reste seul |
 | CTA | deux boutons 44 px : « Code source sur GitHub » (primaire `blood-600`) + « Auto-héberger en 3 commandes » (secondaire `parchment-200`, ancre interne) |
 | Six tuiles (`abilities`) | FOR→CHA, grille 2→3→6 colonnes (640/1024px) ; tuile blanche 60 % bordée `parchment-200`, rayon 12 ; libellé Cinzel 0.72rem espacé 0.18em, **score Cinzel 2.2rem `ink-800`**, fait 0.82rem `ink-500` |
 | Tuile courante | DEX (le temps réel, la différenciatrice) porte `.is-lead` : score `blood-600`. Une seule tuile sang — l'équivalent de l'entrée courante du registre |
@@ -109,8 +109,10 @@ parchemin : cadre rayon 30 px, bordure `parchment-300`, matelas 9 px sur
 `parchment-100`, `shadow-card` ; écran interne rayon 21 px ; légende 0.8rem
 `ink-500` centrée. Au survol le cadre se soulève (`shadow-raised` +
 translateY(−3px), 0.3s `--ease` ; aucun soulèvement en mouvement réduit).
-Le portrait du hero est la variante calme : rayons 20/13 px, matelas 8 px,
-pas de survol. Attributs `width`/`height` (390×844) partout — zéro décalage
+Les cadres de la paire portrait du hero utilisent la variante calme :
+rayons 20/13 px, matelas 8 px, pas de survol ; leur entrée (les deux
+téléphones se posent sur la table, 0.55 s / 0.5 s décalées de 100 ms, coupée
+en mouvement réduit) est l'unique moment signé du hero. Attributs `width`/`height` (390×844) partout — zéro décalage
 de mise en page.
 
 **Une série, c'est deux cadres maximum en pile** (`.shots` en pile centrée,
