@@ -4,6 +4,8 @@
 
 # Inventaire D&D
 
+🌐 Site de présentation : [wazoakarapace.github.io/dnd-inventory](https://wazoakarapace.github.io/dnd-inventory/)
+
 </div>
 
 Application web **mobile-first** de gestion de fiche de personnage, d'inventaire et de **combat** pour D&D 5e — entièrement en **français**, poids en **kilogrammes**, avec un moteur de règles SRD complet et de la **synchronisation en temps réel** entre le MD et les joueurs.

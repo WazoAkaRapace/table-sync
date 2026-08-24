@@ -1,0 +1,1011 @@
+/* ------------------------------------------------------------------
+   Site marketing — Inventaire D&D
+   Le monde visuel de l'app, hérité tel quel : parchemin, encre, sang, or.
+   Tokens = copie exacte de apps/web/src/index.css @theme.
+   ------------------------------------------------------------------ */
+
+:root {
+  --parchment-50: #fdfaf3;
+  --parchment-100: #f7f0e1;
+  --parchment-200: #ece0c4;
+  --parchment-300: #ddcb9e;
+  --parchment-400: #c9b074;
+  --parchment-500: #b8975a;
+
+  --blood-50: #faf0f0;
+  --blood-100: #f0d4d4;
+  --blood-200: #dda3a3;
+  --blood-300: #c05151;
+  --blood-400: #a92424;
+  --blood-500: #8b1a1a;
+  --blood-600: #7a1f1f;
+  --blood-700: #651515;
+
+  --ink-100: #e9e1d4;
+  --ink-300: #a8926f;
+  --ink-400: #7d6850;
+  --ink-500: #6b5640;
+  --ink-600: #5b4733;
+  --ink-700: #4a3825;
+  --ink-800: #3a2b1c;
+  --ink-900: #2a1f14;
+
+  --gold-100: #f6ecd2;
+  --gold-300: #e3c766;
+  --gold-400: #d4af37;
+  --gold-500: #b8975a;
+  --gold-700: #7e6439;
+
+  /* Couleurs de règles (paliers PV / encombrance) — sens de règle uniquement */
+  --rule-green: #22c55e;
+  --rule-yellow: #eab308;
+  --rule-red: #ef4444;
+
+  --font-display: "Cinzel", Georgia, serif;
+  --font-body: "Iowan Old Style", Palatino, Georgia, serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --shadow-card: 0 1px 2px rgba(42, 31, 20, 0.04), 0 4px 12px rgba(42, 31, 20, 0.03);
+  --shadow-raised: 0 4px 8px rgba(42, 31, 20, 0.08), 0 14px 32px rgba(42, 31, 20, 0.14);
+}
+
+/* ---------- Base ---------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100%;
+  color: var(--ink-900);
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  background-color: var(--parchment-50);
+  background-image:
+    radial-gradient(at 20% 0%, rgba(184, 151, 90, 0.06) 0px, transparent 50%),
+    radial-gradient(at 80% 100%, rgba(122, 31, 31, 0.04) 0px, transparent 50%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.2;
+  margin: 0;
+  text-wrap: balance;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--blood-600);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  color: var(--blood-500);
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+code {
+  font-family: var(--font-mono);
+}
+
+:focus-visible {
+  outline: 2px solid var(--blood-500);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--gold-100);
+}
+
+.wrap {
+  max-width: 68rem;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .wrap {
+    padding-inline: 2.5rem;
+  }
+}
+
+/* Le mono est réservé aux valeurs mesurées : counts, PV, commandes. */
+.mono {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  letter-spacing: 0.02em;
+}
+
+/* ---------- Carte (surface de travail, recette .card de l'app) ---------- */
+
+.panel {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--parchment-200);
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
+}
+
+/* ---------- Double règle de tête (grammaire du registre) ---------- */
+
+.rule-head {
+  border-top: 2px solid var(--parchment-400);
+}
+
+.rule-head::after {
+  content: "";
+  display: block;
+  height: 0;
+  margin-top: 3px;
+  border-top: 1px solid var(--parchment-300);
+}
+
+/* ---------- En-tête de fiche (hero) ---------- */
+
+.hero {
+  padding-block: 2.5rem 3.5rem;
+}
+
+.hero-card {
+  padding: clamp(1.5rem, 4vw, 3rem);
+  display: grid;
+  gap: 2rem;
+}
+
+.hero-identity {
+  display: grid;
+  gap: 1.75rem;
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+.seal {
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 2px solid var(--parchment-300);
+  box-shadow: var(--shadow-card);
+}
+
+.hero-name {
+  font-size: clamp(2.1rem, 5.5vw, 3.4rem);
+  letter-spacing: -0.02em;
+}
+
+.hero-offer {
+  margin-top: 0.9rem;
+  max-width: 34rem;
+  color: var(--ink-700);
+  font-size: 1.15rem;
+}
+
+/* Champs de fiche : Classe / Historique / Taille / Alignement */
+.sheet-fields {
+  margin-top: 1.4rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 2.2rem;
+  border-top: 1px solid var(--parchment-200);
+  padding-top: 0.9rem;
+}
+
+.sheet-fields div {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+}
+
+.sheet-fields dt {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--ink-500);
+}
+
+.sheet-fields dd {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--ink-700);
+}
+
+/* Portrait de fiche = la vraie app, dans son cadre */
+.portrait {
+  justify-self: center;
+  width: min(17.5rem, 100%);
+}
+
+.portrait-frame {
+  border-radius: 20px;
+  border: 1px solid var(--parchment-300);
+  background: var(--parchment-100);
+  padding: 8px;
+  box-shadow: var(--shadow-card);
+}
+
+.portrait-frame img {
+  border-radius: 13px;
+  width: 100%;
+  height: auto;
+}
+
+.portrait figcaption {
+  margin-top: 0.6rem;
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--ink-500);
+}
+
+/* ---------- Boutons (membres du système de l'app) ---------- */
+
+.cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.55rem 1.25rem;
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 1rem;
+  border: 1px solid transparent;
+  text-decoration: none;
+  transition:
+    background-color 0.2s var(--ease),
+    border-color 0.2s var(--ease),
+    transform 0.15s var(--ease);
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background: var(--blood-600);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: var(--blood-700);
+  color: #fff;
+}
+
+.btn-secondary {
+  background: var(--parchment-200);
+  color: var(--ink-900);
+}
+
+.btn-secondary:hover {
+  background: var(--parchment-300);
+  color: var(--ink-900);
+}
+
+/* ---------- Caractéristiques (six tuiles) ---------- */
+
+.abilities {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.9rem;
+  border-top: 1px solid var(--parchment-200);
+  padding-top: 1.75rem;
+}
+
+@media (min-width: 640px) {
+  .abilities {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .abilities {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+.ability {
+  text-align: center;
+  padding: 1rem 0.6rem 1.1rem;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--parchment-200);
+  border-radius: 12px;
+}
+
+.ability dt {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--ink-500);
+}
+
+.ability .score {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 600;
+  color: var(--ink-800);
+  line-height: 1.15;
+  margin-block: 0.15rem 0.35rem;
+}
+
+.ability .fact {
+  display: block;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--ink-500);
+}
+
+/* DEX porte la différenciatrice (temps réel) : la tuile courante passe au sang */
+.ability.is-lead .score {
+  color: var(--blood-600);
+}
+
+/* ---------- Sommaire (table des matières réglée) ---------- */
+
+.toc {
+  padding-block: 0.75rem 2.25rem;
+}
+
+.toc ul {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0;
+  margin: 0;
+  padding: 0;
+  font-size: 0.95rem;
+}
+
+.toc li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.toc li + li::before {
+  content: "·";
+  margin-inline: 0.85rem;
+  color: var(--ink-300);
+}
+
+.toc a {
+  color: var(--ink-700);
+  text-decoration: none;
+  border-bottom: 1px solid var(--parchment-300);
+}
+
+.toc a:hover {
+  color: var(--blood-600);
+  border-bottom-color: var(--blood-300);
+}
+
+/* ---------- Registre des capacités (sections) ---------- */
+
+.entry {
+  padding-block: clamp(2.5rem, 6vw, 4.5rem);
+}
+
+.entry-head {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  border-bottom: 1px solid var(--parchment-200);
+  padding-bottom: 0.9rem;
+  margin-bottom: 2rem;
+}
+
+.entry-ordinal {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--ink-300);
+  min-width: 2.5rem;
+  text-align: right;
+}
+
+.entry.is-lead .entry-ordinal {
+  color: var(--blood-500);
+  font-size: 1.6rem;
+}
+
+.entry-title {
+  font-size: clamp(1.35rem, 3vw, 1.75rem);
+  letter-spacing: -0.01em;
+}
+
+/* Variante compacte : tête de section logée dans un panneau (Repos long) */
+.entry-head-compact {
+  margin-bottom: 1.2rem;
+  padding-bottom: 0.7rem;
+}
+
+.entry-body {
+  display: grid;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .entry-body {
+    grid-template-columns: minmax(0, 1fr) 380px;
+  }
+}
+
+.entry-copy p + p {
+  margin-top: 0.9rem;
+}
+
+.entry-copy {
+  max-width: 62ch;
+}
+
+/* Preuves mesurées : tampons mono sur parchemin */
+.proof {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1.4rem 0 0;
+  padding: 0;
+}
+
+.proof li {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  color: var(--ink-700);
+  background: var(--parchment-100);
+  border: 1px solid var(--parchment-200);
+  border-radius: 8px;
+  padding: 0.3rem 0.6rem;
+}
+
+/* Le mono est réservé aux valeurs mesurées ; les phrases quittent le tampon :
+   tokens d'italique de corps, sans bordure ni fond, séparés par des points */
+.proof li.phrase {
+  font-family: var(--font-body);
+  font-style: italic;
+  letter-spacing: 0;
+  font-size: 0.9rem;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.proof li.phrase + .proof li.phrase::before {
+  content: "·";
+  margin-right: 0.5rem;
+  color: var(--ink-300);
+  font-style: normal;
+}
+
+/* Sous-entrées réglées : à même le parchemin, séparées par des filets */
+.subentries {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.subentries li {
+  padding-block: 1.4rem;
+  border-bottom: 1px solid var(--parchment-200);
+}
+
+.subentries li:first-child {
+  padding-top: 0.2rem;
+}
+
+.subentries h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.45rem;
+}
+
+.subentries p {
+  color: var(--ink-700);
+  font-size: 1rem;
+}
+
+/* ---------- Captures en cadre téléphone ---------- */
+
+.shots {
+  display: grid;
+  gap: 1.4rem;
+  justify-items: center;
+}
+
+.shots-duo {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-width: 26rem;
+  margin-inline: auto;
+}
+
+.shot {
+  margin: 0;
+}
+
+.shot-frame {
+  border-radius: 30px;
+  border: 1px solid var(--parchment-300);
+  background: var(--parchment-100);
+  padding: 9px;
+  box-shadow: var(--shadow-card);
+  transition:
+    box-shadow 0.3s var(--ease),
+    transform 0.3s var(--ease);
+}
+
+.shot:hover .shot-frame {
+  box-shadow: var(--shadow-raised);
+  transform: translateY(-3px);
+}
+
+.shot-frame img {
+  border-radius: 21px;
+  width: 100%;
+  height: auto;
+}
+
+.shot figcaption {
+  margin-top: 0.55rem;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--ink-500);
+}
+
+/* ---------- Démo temps réel (I) ---------- */
+
+.demo {
+  padding: 1.4rem;
+  display: grid;
+  gap: 1.1rem;
+}
+
+@media (min-width: 640px) {
+  .demo {
+    grid-template-columns: 1fr 1fr;
+    align-items: stretch;
+  }
+}
+
+.demo-panel {
+  border: 1px solid var(--parchment-200);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.65);
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.demo-panel h4 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--ink-500);
+}
+
+.demo-panel h4 .who {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--ink-800);
+  margin-top: 0.2rem;
+}
+
+/* Barre de PV (paliers HpBar : vert > 50 %, jaune ≤ 50 %, rouge ≤ 25 %) */
+.hp-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.hp-read {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--ink-700);
+}
+
+.hp-track {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--parchment-200);
+  overflow: hidden;
+}
+
+.hp-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--rule-green);
+  transition:
+    width 0.6s var(--ease),
+    background-color 0.6s var(--ease);
+}
+
+.hp-fill[data-tier="low"] {
+  background: var(--rule-yellow);
+}
+
+.hp-fill[data-tier="crit"] {
+  background: var(--rule-red);
+}
+
+/* L'action du MD */
+.demo-strike {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  padding: 0.45rem 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--blood-200);
+  background: var(--blood-50);
+  color: var(--blood-700);
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition:
+    background-color 0.2s var(--ease),
+    transform 0.15s var(--ease);
+}
+
+.demo-strike:hover {
+  background: var(--blood-100);
+}
+
+.demo-strike:active {
+  transform: scale(0.97);
+}
+
+/* Puce de dégâts qui court du traqueur vers la fiche */
+.damage-chip {
+  align-self: flex-start;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: #fff;
+  background: var(--blood-600);
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity 0.35s var(--ease),
+    transform 0.35s var(--ease);
+}
+
+.damage-chip.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Alerte concentration — monte sur la fiche du joueur */
+.conc-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--ink-800);
+  background: var(--gold-100);
+  border: 1px solid var(--gold-300);
+  border-radius: 10px;
+  padding: 0.5rem 0.8rem;
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 0.35s var(--ease),
+    transform 0.35s var(--ease);
+}
+
+.conc-chip.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.conc-chip .mono {
+  white-space: nowrap;
+}
+
+.demo-note {
+  grid-column: 1 / -1;
+  font-size: 0.82rem;
+  color: var(--ink-500);
+  text-align: center;
+  margin: 0;
+}
+
+/* Fil reliant les deux panneaux (le WebSocket, littéralement) */
+.wire {
+  grid-column: 1 / -1;
+  height: 0;
+  border-top: 1px dashed var(--parchment-400);
+  position: relative;
+  overflow: visible;
+  margin-block: 0.2rem;
+}
+
+.wire::after {
+  content: "temps réel";
+  position: absolute;
+  left: 50%;
+  top: -0.7em;
+  transform: translateX(-50%);
+  background: var(--parchment-50);
+  padding-inline: 0.6rem;
+  font-size: 0.72rem;
+  font-style: italic;
+  color: var(--ink-500);
+}
+
+/* ---------- Personnalité (quadrants de fiche) ---------- */
+
+.personality {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .personality {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.personality article {
+  border: 1px solid var(--parchment-200);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.6);
+  padding: 1.1rem 1.25rem;
+}
+
+.personality h3 {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--ink-500);
+  margin-bottom: 0.5rem;
+}
+
+.personality p {
+  font-size: 1rem;
+  color: var(--ink-700);
+}
+
+/* ---------- Repos long (auto-hébergement) ---------- */
+
+.deploy {
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  display: grid;
+  gap: 1.75rem;
+}
+
+@media (min-width: 1024px) {
+  .deploy {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+    align-items: start;
+  }
+}
+
+.deploy-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.terminal {
+  border-radius: 12px;
+  border: 1px solid var(--parchment-300);
+  background: var(--ink-900);
+  color: var(--ink-100);
+  overflow: hidden;
+}
+
+.terminal-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0.9rem;
+  border-bottom: 1px solid rgba(233, 225, 212, 0.12);
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  font-family: var(--font-display);
+  color: var(--gold-300);
+}
+
+.terminal-copy {
+  border: 1px solid rgba(233, 225, 212, 0.25);
+  background: transparent;
+  color: var(--ink-100);
+  border-radius: 8px;
+  min-height: 44px;
+  padding: 0.25rem 0.9rem;
+  font-size: 0.75rem;
+  font-family: var(--font-body);
+  letter-spacing: 0;
+  transition:
+    border-color 0.2s var(--ease),
+    color 0.2s var(--ease);
+}
+
+.terminal-copy:hover {
+  border-color: var(--gold-300);
+  color: var(--gold-300);
+}
+
+.terminal pre {
+  margin: 0;
+  padding: 1.1rem 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  line-height: 1.8;
+  overflow-x: auto;
+}
+
+.terminal .cmt {
+  color: var(--ink-300);
+}
+
+.terminal .prompt {
+  color: var(--gold-400);
+  user-select: none;
+}
+
+.deploy-notes {
+  list-style: none;
+  margin: 1.1rem 0 0;
+  padding: 0;
+}
+
+.deploy-notes li {
+  padding-block: 0.6rem;
+  border-bottom: 1px solid var(--parchment-200);
+  font-size: 0.95rem;
+  color: var(--ink-700);
+}
+
+.deploy-notes li:last-child {
+  border-bottom: none;
+}
+
+/* ---------- Pied de page ---------- */
+
+.site-footer {
+  padding-block: 2.5rem 3.5rem;
+}
+
+.site-footer .rule-head {
+  margin-bottom: 1.6rem;
+}
+
+.footer-cols {
+  display: grid;
+  gap: 1.6rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .footer-cols {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.site-footer h3 {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--ink-500);
+  margin-bottom: 0.55rem;
+}
+
+.site-footer p,
+.site-footer li {
+  font-size: 0.92rem;
+  color: var(--ink-500);
+}
+
+.site-footer ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.footer-seal-row {
+  margin-top: 2.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  color: var(--ink-500);
+  font-size: 0.85rem;
+}
+
+.footer-seal-row img {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 999px;
+  border: 1px solid var(--parchment-300);
+}
+
+/* ---------- Motion : le registre se pose, une fois ---------- */
+
+@keyframes register-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Le contenu est visible par défaut ; seul un JS vivant arme la pose du registre */
+.js .rise {
+  opacity: 0;
+}
+
+.js .rise.is-risen {
+  animation: register-rise 0.35s var(--ease) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .js .rise {
+    opacity: 1;
+    /* biome-ignore lint/complexity/noImportantStyles: coupe toute animation sous prefers-reduced-motion, y compris les classes ajoutées après coup. */
+    animation: none !important;
+  }
+
+  .shot:hover .shot-frame {
+    transform: none;
+  }
+
+  .hp-fill,
+  .damage-chip,
+  .conc-chip {
+    transition: none;
+  }
+}

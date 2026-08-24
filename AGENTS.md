@@ -9,6 +9,7 @@ apps/web/      React + Vite + Tailwind v4 frontend
 packages/shared/  Shared TypeScript types + D&D 5e SRD rules engine
 data/          Seed JSON (646 items, 490 spells, 964 monsters) + SQLite DB
 scripts/       Import/translate scripts + rules test suites
+site/          Marketing site (static, zero-build) — GitHub Pages
 biome.jsonc    Linter + formatter config (whole monorepo)
 ```
 
@@ -28,6 +29,7 @@ npm run test-class-features # Class-feature catalog, resources, applyRest, pact 
 npm run test-multiclass-rules # Multiclassage SRD 5.1 : pools, prérequis, niveau de classe, dés de vie
 npm run test-api           # API integration suite + zero-raw-SQL gate (boots a throwaway server)
 npm run test:e2e           # Playwright browser E2E (boots its own throwaway API + vite stack, fresh e2e.sqlite)
+npm run site               # Marketing site: assemble site/assets from docs/ + serve on :4188 (no-cache)
 npm run screenshots        # Regenerate README's docs/screenshots/*.png (isolated stack + Playwright)
 ```
 
@@ -93,6 +95,7 @@ auth, characters (incl. HP/concentration/condition sync side-effects), inventory
 - **README screenshots**: `npm run screenshots` (`scripts/generate-screenshots.ts`) — boots a throwaway local stack (tsx API on a free port with fresh SQLite `data/db/screenshots-demo.sqlite`, gitignored + vite dev proxying to it), seeds a demo campaign via REST ("Les Héros de Chult": Druide Lune/Guerrier/Clerc + active "Embuscade gobeline" mid-turn), then Playwright re-captures the 13 `docs/screenshots/*.png` at 390×844. `--only 03,07` for a subset, `--keep` to leave servers up. Never touches the dev/Docker DBs. One-time setup per machine: `npx playwright install chromium`. When the UI changes, refresh with a plain run — monster HP dice are the only intentional randomness
 - GUI testing: browser-use skills (bootstrap via `ZCODE_PLUGIN_ROOT` → `browser-client.mjs`), screenshots land in `gui-test-screenshots/` (gitignored); verify via screenshot + DOM cross-check, not DOM alone
 - CI (GitHub Actions) builds & pushes `ghcr.io/wazoakarapace/dnd-inventory-{api,web}:latest` on main; prod runs `docker-compose.prod.yml` — remind the user to `pull && up -d` after pushes that touch the tablet-facing build (the PWA caches: changes need a force-refresh / app restart; manifest is `orientation: any`)
+- **Marketing site (`site/`, GitHub Pages)** — static zero-build landing (French, « la fiche de personnage du produit »), same parchment/ink/blood/gold world as the app (tokens mirrored by hand in `site/styles.css`; system documented in `site/DESIGN.md`). Deployed by `.github/workflows/site.yml` (Actions→Pages, fires on `site/**`, `docs/screenshots/**`, `docs/logo.png`) to `wazoakarapace.github.io/dnd-inventory/`. Assets (`site/assets/`) are COPIES from `docs/` at preview/deploy time — gitignored, never commit them; edit the HTML/CSS/JS only. Preview: `npm run site` (:4188, no-cache). Pages is already enabled with `build_type=workflow`
 - Commits: the user asks for "commit and push" at milestones; mixed-file changes can be split with hunk-level staging (python `git diff` split + `git apply --cached`)
 
 ### Agent-environment gotchas (this machine)

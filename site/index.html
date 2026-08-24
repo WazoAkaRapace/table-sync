@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Inventaire D&amp;D — toute la table sur la même fiche</title>
+    <meta
+      name="description"
+      content="Fiches de personnage, inventaire en kilogrammes et combat D&D 5e, 100 % français, synchronisés en temps réel entre l'écran du MD et le téléphone de chaque joueur. Auto-hébergée."
+    />
+    <link rel="icon" href="assets/logo.png" type="image/png" />
+    <link rel="canonical" href="https://wazoakarapace.github.io/dnd-inventory/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:title" content="Inventaire D&amp;D — toute la table sur la même fiche" />
+    <meta
+      property="og:description"
+      content="Fiches, inventaire en kg et combat D&D 5e, 100 % français, synchronisés en temps réel entre le MD et les joueurs. Auto-hébergée."
+    />
+    <meta property="og:image" content="https://wazoakarapace.github.io/dnd-inventory/assets/screenshots/01-parties.png" />
+    <meta property="og:url" content="https://wazoakarapace.github.io/dnd-inventory/" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!--
+      THESIS: la landing EST la fiche de personnage du produit — l'outil se
+      présente comme un personnage D&D 5e (en-tête de fiche, six
+      caractéristiques, traits en registre à ordinaux romains, repos long =
+      déploiement). Refusé : l'agencement hero→fonctionnalités→CTA du SaaS.
+      OWN-WORLD: parchemin/encre/sang/or (tokens exacts de l'app), Cinzel en
+      display, Iowan Old Style en corps, double règle + ordinaux romains du
+      registre, cartes blanches 85 % à ombre décalée, mono réservé aux valeurs
+      mesurées.
+      STORY: le visiteur (joueur ou MD 5e francophone) reconnaît une fiche en
+      une seconde, lit les six preuves comme des caractéristiques, descend le
+      registre des capacités (temps réel → fiche → MD → chronique), et repart
+      par GitHub + docker compose.
+      FIRST VIEWPORT: sceau + nom + champs de fiche + portrait = capture
+      réelle de l'app, six tuiles FOR→CHA pleine largeur, CTA sang.
+      FORM: fiche de personnage 5e (candidat 5/7, graine 28d9a99e).
+      FINISH: unreviewed and undocumented is unfinished; this build ends with
+      the finish review, the verdict, and DESIGN.md.
+    -->
+
+    <header class="hero wrap">
+      <div class="panel hero-card">
+        <div class="hero-identity">
+          <div>
+            <img class="seal" src="assets/logo.png" alt="" width="88" height="88" />
+            <h1 class="hero-name">Inventaire D&amp;D</h1>
+            <p class="hero-offer">
+              Toute la table sur la même fiche. Fiches de personnage, inventaire en
+              kilogrammes et combat D&amp;D&nbsp;5e, 100&nbsp;% français, synchronisés
+              en temps réel entre l'écran du MD et le téléphone de chaque joueur.
+            </p>
+            <dl class="sheet-fields">
+              <div>
+                <dt>CLASSE</dt>
+                <dd>Outil de table</dd>
+              </div>
+              <div>
+                <dt>HISTORIQUE</dt>
+                <dd>Auto-hébergée (Docker)</dd>
+              </div>
+              <div>
+                <dt>TAILLE</dt>
+                <dd>P (téléphone) à G (écran du MD)</dd>
+              </div>
+              <div>
+                <dt>LANGUE</dt>
+                <dd>Français</dd>
+              </div>
+            </dl>
+            <div class="cta-row">
+              <a class="btn btn-primary" href="https://github.com/WazoAkaRapace/dnd-inventory">
+                Code source sur GitHub
+              </a>
+              <a class="btn btn-secondary" href="#repos-long">Auto-héberger en 3 commandes</a>
+            </div>
+          </div>
+          <figure class="portrait">
+            <div class="portrait-frame">
+              <img
+                src="assets/screenshots/01-parties.png"
+                alt="Le registre des groupes dans l'application Inventaire D&D"
+                width="390"
+                height="844"
+              />
+            </div>
+            <figcaption>Le registre des groupes, l'app en vrai.</figcaption>
+          </figure>
+        </div>
+
+        <dl class="abilities">
+          <div class="ability">
+            <dt>FOR</dt>
+            <dd>
+              <span class="score">18</span>
+              <span class="fact">646 objets du SRD, pesés en kilogrammes</span>
+            </dd>
+          </div>
+          <div class="ability is-lead">
+            <dt>DEX</dt>
+            <dd>
+              <span class="score">20</span>
+              <span class="fact">temps réel entre traqueur du MD et fiches</span>
+            </dd>
+          </div>
+          <div class="ability">
+            <dt>CON</dt>
+            <dd>
+              <span class="score">16</span>
+              <span class="fact">PWA installable, fiable en séance</span>
+            </dd>
+          </div>
+          <div class="ability">
+            <dt>INT</dt>
+            <dd>
+              <span class="score">18</span>
+              <span class="fact">règles SRD 5.1 : CA, sorts, multiclasse</span>
+            </dd>
+          </div>
+          <div class="ability">
+            <dt>SAG</dt>
+            <dd>
+              <span class="score">14</span>
+              <span class="fact">16 états, concentration, épuisement surveillés</span>
+            </dd>
+          </div>
+          <div class="ability">
+            <dt>CHA</dt>
+            <dd>
+              <span class="score">16</span>
+              <span class="fact">parle français : AideDD, 5e-drs</span>
+            </dd>
+          </div>
+        </dl>
+      </div>
+    </header>
+
+    <nav class="toc wrap" aria-label="Sommaire">
+      <ul>
+        <li><a href="#table">La table en temps réel</a></li>
+        <li><a href="#fiche">La fiche du joueur</a></li>
+        <li><a href="#md">L'écran du MD</a></li>
+        <li><a href="#chronique">La chronique</a></li>
+        <li><a href="#repos-long">Repos long</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <section class="entry wrap is-lead" id="table">
+        <div class="entry-head">
+          <span class="entry-ordinal" aria-hidden="true">I</span>
+          <h2 class="entry-title">La table en temps réel</h2>
+        </div>
+        <div class="entry-body">
+          <div class="entry-copy rise">
+            <p>
+              Le MD blesse dans son traqueur&nbsp;: la fiche du joueur suit
+              aussitôt&nbsp;; si un sort est concentré, le jet de Constitution
+              s'affiche avec sa difficulté calculée. Le joueur se soigne depuis
+              sa fiche&nbsp;: le traqueur remonte. Un objet change de sac, de
+              personnage ou de monture&nbsp;: toute la table le voit.
+            </p>
+            <p>
+              Un seul état partagé, poussé par WebSocket. Pas de rechargement,
+              pas de «&nbsp;attends, je rafraîchis&nbsp;»&nbsp;: quand c'est ton
+              tour, le téléphone vibre.
+            </p>
+            <ul class="proof" aria-label="Preuves">
+              <li class="phrase">synchronisation WebSocket</li>
+              <li class="phrase">PV synchronisés dans les deux sens</li>
+              <li class="phrase">jet de concentration automatique</li>
+              <li class="phrase">initiative poussée, vibration «&nbsp;à toi&nbsp;»</li>
+            </ul>
+          </div>
+          <div>
+            <section class="panel demo" aria-label="Démonstration de la synchronisation temps réel">
+              <div class="demo-panel">
+                <h4>
+                  TRAQUEUR
+                  <span class="who">Embuscade gobeline · écran du MD</span>
+                </h4>
+                <div class="hp-row">
+                  <span class="hp-read" data-hp-read>Lyra · 24/31 PV</span>
+                </div>
+                <div class="hp-track" role="progressbar" aria-valuemin="0" aria-valuemax="31" aria-valuenow="24" aria-valuetext="24 sur 31 points de vie" data-hp-bar>
+                  <div class="hp-fill" data-hp-fill style="width: 77%"></div>
+                </div>
+                <button type="button" class="demo-strike" data-strike>⚔&nbsp;Infliger 9 dégâts</button>
+                <span class="damage-chip" data-chip>⚔ 9 dégâts → fiche de Lyra</span>
+              </div>
+              <div class="wire" aria-hidden="true"></div>
+              <div class="demo-panel">
+                <h4>
+                  FICHE
+                  <span class="who">Lyra · téléphone du joueur</span>
+                </h4>
+                <div class="hp-row">
+                  <span class="hp-read" data-hp-read>24/31 PV</span>
+                </div>
+                <div class="hp-track" role="progressbar" aria-valuemin="0" aria-valuemax="31" aria-valuenow="24" aria-valuetext="24 sur 31 points de vie" data-hp-bar>
+                  <div class="hp-fill" data-hp-fill style="width: 77%"></div>
+                </div>
+                <p class="conc-chip" data-conc>
+                  🌀 Concentration · jet de CON <span class="mono">DD 10</span>
+                </p>
+              </div>
+              <p class="demo-note">
+                Démonstration interactive&nbsp;: tapez le bouton du MD, la fiche
+                répond. En séance, tout se joue sans un rechargement.
+              </p>
+            </section>
+            <figure class="shot" style="margin-top: 1.4rem">
+              <div class="shot-frame">
+                <img
+                  src="assets/screenshots/05-widget-combat.png"
+                  alt="Widget de combat sur la fiche du joueur : tour en cours, initiative, points de vie"
+                  width="390"
+                  height="844"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+              <figcaption>Le widget de combat, sur la fiche du joueur</figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section class="entry wrap" id="fiche">
+        <div class="entry-head">
+          <span class="entry-ordinal" aria-hidden="true">II</span>
+          <h2 class="entry-title">La fiche du joueur</h2>
+        </div>
+        <div class="entry-body">
+          <div class="entry-copy">
+            <ul class="subentries">
+              <li>
+                <h3>Inventaire &amp; bourse</h3>
+                <p>
+                  646 objets du SRD en recherche instantanée, pesés en
+                  kilogrammes. L'encombrance avance par paliers et montre ses
+                  effets sur la vitesse au moment où ils s'appliquent. Places de
+                  stockage (porté, montures, conteneurs) et bourse
+                  PC/PA/PE/PO/PP&nbsp;: l'argent pèse. Sur chaque arme, des
+                  puces calculées&nbsp;: bonus d'attaque détaillé au clic, dés de
+                  dégâts, bonus magique ✨, avertissement de non-qualification.
+                </p>
+              </li>
+              <li>
+                <h3>Sorts</h3>
+                <p>
+                  490 sorts du SRD et des extensions, tout en français.
+                  Emplacements par classe et niveau, incantation supérieure avec
+                  dégâts mis à l'échelle en direct, rituels, sorts toujours
+                  préparés ◆ hors quota, aperçu des soins ✚.
+                </p>
+              </li>
+              <li>
+                <h3>Survie &amp; forme sauvage</h3>
+                <p>
+                  Dés de vie, sauvegardes contre la mort, épuisement 1–6, 16
+                  états avec durées. Le Druide change de forme selon son
+                  cercle&nbsp;: DD, vol et nage, bêtes déjà vues 👁, PV lancés aux
+                  dés et retour automatique avec dégâts excédentaires.
+                </p>
+              </li>
+              <li>
+                <h3>Multiclasse</h3>
+                <p>
+                  SRD 5.1&nbsp;: deux pools d'emplacements (incantation + magie
+                  de pacte en or), prérequis affichés sans jamais bloquer, dés
+                  de vie par type de dé, règles évaluées au niveau de chaque
+                  classe.
+                </p>
+              </li>
+            </ul>
+            <ul class="proof" aria-label="Preuves">
+              <li>646 objets</li>
+              <li>490 sorts</li>
+              <li>16 états</li>
+              <li>poids en kg</li>
+              <li class="phrase">multiclasse SRD 5.1</li>
+            </ul>
+          </div>
+          <div class="shots">
+            <figure class="shot">
+              <div class="shot-frame">
+                <img
+                  src="assets/screenshots/02-inventaire.png"
+                  alt="Inventaire d'un personnage : objets, poids en kilogrammes, bourse"
+                  width="390"
+                  height="844"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+              <figcaption>L'inventaire : poids et bourse</figcaption>
+            </figure>
+            <figure class="shot">
+              <div class="shot-frame">
+                <img
+                  src="assets/screenshots/07-lancer-sort.png"
+                  alt="Lancement d'un sort avec incantation supérieure et dégâts mis à l'échelle"
+                  width="390"
+                  height="844"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+              <figcaption>Lancer un sort : incantation supérieure</figcaption>
+            </figure>
+            <figure class="shot">
+              <div class="shot-frame">
+                <img
+                  src="assets/screenshots/09-forme-sauvage.png"
+                  alt="Forme sauvage du Druide avec points de vie de la forme"
+                  width="390"
+                  height="844"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+              <figcaption>Forme sauvage : PV de la forme</figcaption>
+            </figure>
+            <figure class="shot">
+              <div class="shot-frame">
+                <img
+                  src="assets/screenshots/14-multiclasse.png"
+                  alt="Multiclasse avec deux pools d'emplacements de sorts"
+                  width="390"
+                  height="844"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+              <figcaption>Multiclasse : deux pools d'emplacements</figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section class="entry wrap" id="md">
+        <div class="entry-head">
+          <span class="entry-ordinal" aria-hidden="true">III</span>
+          <h2 class="entry-title">L'écran du MD</h2>
+        </div>
+        <div class="entry-body">
+          <div class="entry-copy">
+            <ul class="subentries">
+              <li>
+                <h3>Traqueur de combat</h3>
+                <p>
+                  Rencontres préparées, initiative partagée par groupe de
+                  monstres, tours et rounds. Les PV des monstres sont lancés aux
+                  dés de vie. Dégâts, soins, demi-dégâts, éditions directes
+                  PV/CA&nbsp;; les états expirent tout seuls en fin de tour.
+                </p>
+              </li>
+              <li>
+                <h3>Bestiaire</h3>
+                <p>
+                  964 monstres avec blocs de stats complets&nbsp;: capacités,
+                  actions, dés cliquables (le critique double les dés) et
+                  sorts des monstres consultables.
+                </p>
+              </li>
+              <li>
+                <h3>La table du MD</h3>
+                <p>
+                  Tableau de bord du groupe, PNJ partagés dont les secrets ne
+                  quittent pas l'écran du MD, notes par personnage. L'initiative
+                  se saisit par les joueurs depuis leur propre écran.
+                </p>
+              </li>
+            </ul>
+            <ul class="proof" aria-label="Preuves">
+              <li>964 monstres</li>
+              <li class="phrase">PV lancés aux dés</li>
+              <li>16 états auto-expirants</li>
+              <li class="phrase">PV synchronisés fiche ↔ traqueur</li>
+            </ul>
+          </div>
+          <div class="shots shots-duo">
+            <figure class="shot">
+              <div class="shot-frame">
+                <img
+                  src="assets/screenshots/12-traqueur.png"
+                  alt="Traqueur de combat du MD : échelle d'initiative et scène du tour"
+                  width="390"
+                  height="844"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+              <figcaption>Le traqueur, en plein tour</figcaption>
+            </figure>
+            <figure class="shot">
+              <div class="shot-frame">
+                <img
+                  src="assets/screenshots/13-bloc-stats.png"
+                  alt="Bloc de stats d'un monstre avec dés cliquables"
+                  width="390"
+                  height="844"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+              <figcaption>Bloc de stats : dés cliquables</figcaption>
+            </figure>
+            <figure class="shot">
+              <div class="shot-frame">
+                <img
+                  src="assets/screenshots/11-table-md.png"
+                  alt="Table du MD : tableau de bord du groupe"
+                  width="390"
+                  height="844"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+              <figcaption>La table du MD</figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section class="entry wrap" id="chronique">
+        <div class="entry-head">
+          <span class="entry-ordinal" aria-hidden="true">IV</span>
+          <h2 class="entry-title">La chronique</h2>
+        </div>
+        <div class="entry-body">
+          <div class="entry-copy">
+            <ul class="subentries">
+              <li>
+                <h3>GM Assistant</h3>
+                <p>
+                  Le groupe se lie à une campagne
+                  <a href="https://gmassistant.app" rel="noopener">gmassistant.app</a>&nbsp;:
+                  le MD connecte sa clé, choisit ses personnages, et la fiche
+                  d'identité de chacun (classes, alignement, apparence,
+                  personnalité, histoire) s'écrit toute seule.
+                </p>
+              </li>
+              <li>
+                <h3>Le registre des séances</h3>
+                <p>
+                  La chronique sert la table entière&nbsp;: les séances en
+                  ordinaux romains, la dernière en entrée courante, des résumés
+                  multi-styles (Résumé, En bref, Héraut, Conte, Sonnet).
+                </p>
+              </li>
+              <li>
+                <h3>Les moments mémorables</h3>
+                <p>
+                  Chaque moment retenu s'enlumine selon sa nature&nbsp;:
+                  ⚔&nbsp;épique gravé en or, 🕯&nbsp;tragique en italique
+                  éteint, 🗝&nbsp;intrigant à la clé.
+                </p>
+              </li>
+            </ul>
+            <ul class="proof" aria-label="Preuves">
+              <li class="phrase">liaison groupe ↔ campagne</li>
+              <li class="phrase">fiches d'identité auto-écrites</li>
+              <li>cache serveur 5 min</li>
+            </ul>
+          </div>
+          <div class="shots shots-duo">
+            <figure class="shot">
+              <div class="shot-frame">
+                <img
+                  src="assets/screenshots/16-chronique.png"
+                  alt="Registre des séances de la chronique de campagne"
+                  width="390"
+                  height="844"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+              <figcaption>Le registre des séances</figcaption>
+            </figure>
+            <figure class="shot">
+              <div class="shot-frame">
+                <img
+                  src="assets/screenshots/17-moments.png"
+                  alt="Moments mémorables enluminés de la chronique"
+                  width="390"
+                  height="844"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+              <figcaption>Moments enluminés</figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section class="entry wrap" id="personnalite" aria-label="Personnalité">
+        <div class="entry-head">
+          <h2 class="entry-title">Personnalité</h2>
+        </div>
+        <div class="personality">
+          <article>
+            <h3>TRAITS</h3>
+            <p>
+              Mobile-first&nbsp;: une main, le coude sur la table, le téléphone
+              dans la poche entre deux tours.
+            </p>
+          </article>
+          <article>
+            <h3>IDÉAUX</h3>
+            <p>
+              Les règles s'enseignent par l'UI&nbsp;: chaque palier d'encombrance,
+              chaque jet de concentration se montre au moment où il s'applique.
+            </p>
+          </article>
+          <article>
+            <h3>LIENS</h3>
+            <p>
+              SRD 5.1, traductions françaises de 5e-drs.fr et AideDD.org, et
+              les données de la table qui restent chez vous.
+            </p>
+          </article>
+          <article>
+            <h3>DÉFAUTS</h3>
+            <p>
+              Ne remplace ni les dés, ni les voix, ni le plateau : la table
+              reste physique.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="entry wrap" id="repos-long">
+        <div class="panel deploy">
+          <div class="entry-copy">
+            <div class="entry-head entry-head-compact">
+              <span class="entry-ordinal" aria-hidden="true">V</span>
+              <h2 class="entry-title">Repos long : auto-hébergement</h2>
+            </div>
+            <p>
+              L'app vit chez vous&nbsp;: deux conteneurs Docker, votre base
+              SQLite, vos données. Migration et semis sont automatiques au
+              premier démarrage&nbsp;: 646 objets, 490 sorts et 964 monstres prêts
+              à servir.
+            </p>
+            <ul class="deploy-notes">
+              <li>Sans Docker&nbsp;: Node 22, puis <code class="mono">npm install &amp;&amp; npm run dev</code></li>
+              <li>Installable comme application (PWA) sur téléphones et tablette</li>
+              <li>Licence SRD 5.1 : usage personnel, pas de revente</li>
+            </ul>
+            <div class="deploy-cta">
+              <a class="btn btn-primary" href="https://github.com/WazoAkaRapace/dnd-inventory">
+                Cloner depuis GitHub
+              </a>
+              <a
+                class="btn btn-secondary"
+                href="https://github.com/WazoAkaRapace/dnd-inventory#readme"
+              >
+                Le guide complet (README)
+              </a>
+            </div>
+          </div>
+          <div class="terminal">
+            <div class="terminal-bar">
+              <span>TERMINAL</span>
+              <button type="button" class="terminal-copy" data-copy>Copier</button>
+            </div>
+            <pre><code><span class="prompt">$ </span>git clone \
+    https://github.com/WazoAkaRapace/dnd-inventory.git
+<span class="prompt">$ </span>cd dnd-inventory
+<span class="prompt">$ </span>docker compose up --build
+<span class="cmt"># web → localhost:8080 · api → localhost:4010</span></code></pre>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer wrap">
+      <div class="rule-head"></div>
+      <div class="footer-cols">
+        <div>
+          <h3>L'OUTIL</h3>
+          <p>
+            Fiches, inventaire, combat et chronique D&amp;D 5e&nbsp;: mobile-first,
+            en français, auto-hébergée.
+          </p>
+        </div>
+        <div>
+          <h3>DONNÉES &amp; RÈGLES</h3>
+          <p>
+            Contenu SRD 5.1 (usage personnel). Traductions françaises de
+            <a href="https://5e-drs.fr" rel="noopener">5e-drs.fr</a> et
+            <a href="https://www.aidedd.org" rel="noopener">AideDD.org</a>.
+          </p>
+        </div>
+        <div>
+          <h3>LE DÉPÔT</h3>
+          <ul>
+            <li>
+              <a href="https://github.com/WazoAkaRapace/dnd-inventory">github.com/WazoAkaRapace/dnd-inventory</a>
+            </li>
+            <li>Site servi par GitHub Pages</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-seal-row">
+        <img src="assets/logo.png" alt="" width="36" height="36" />
+        <span>Inventaire D&amp;D — fait pour la table.</span>
+      </div>
+    </footer>
+
+    <script src="main.js" defer></script>
+  </body>
+</html>

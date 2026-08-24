@@ -1,0 +1,49 @@
+# Site marketing — déploiement GitHub Pages.
+# Zéro build : le site est statique (site/), les images sont copiées depuis
+# docs/ au moment du déploiement (docs/ reste la source de vérité).
+# Prérequis unique (une fois) : Settings → Pages → Source = GitHub Actions.
+
+name: Site (GitHub Pages)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - 'docs/screenshots/**'
+      - 'docs/logo.png'
+      - '.github/workflows/site.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Assembler le répertoire de publication
+        run: |
+          mkdir -p publish/assets
+          cp -a site/. publish/
+          cp docs/logo.png publish/assets/
+          cp -a docs/screenshots publish/assets/screenshots
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: publish
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

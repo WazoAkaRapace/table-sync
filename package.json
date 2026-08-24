@@ -28,7 +28,8 @@
     "test-creation-data": "tsx scripts/test-creation-data.ts",
     "test-api": "tsx scripts/test-api.ts",
     "test:e2e": "playwright test",
-    "screenshots": "tsx scripts/generate-screenshots.ts"
+    "screenshots": "tsx scripts/generate-screenshots.ts",
+    "site": "node scripts/serve-site.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.8",
