@@ -4,8 +4,8 @@
  * casting time, range, components, duration, and the French description.
  */
 
-import type { Spell, SpellSchool } from '@dnd-inventory/shared';
-import { SPELL_SCHOOL_LABELS_FR } from '@dnd-inventory/shared';
+import type { Spell, SpellSchool } from '@table-sync/shared';
+import { SPELL_SCHOOL_LABELS_FR } from '@table-sync/shared';
 import { useEffect, useState } from 'react';
 import api from '../api';
 import { BottomSheet } from './ui';

@@ -22,7 +22,7 @@ import {
   spellDamageAtLevel,
   spellHealingAtLevel,
   spellSaveDC,
-} from '@dnd-inventory/shared';
+} from '@table-sync/shared';
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import api from '../api';
 import CastSpellSheet from '../components/CastSpellSheet';

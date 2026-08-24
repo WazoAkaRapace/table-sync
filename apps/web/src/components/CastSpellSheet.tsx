@@ -1,10 +1,10 @@
-import type { Spell } from '@dnd-inventory/shared';
+import type { Spell } from '@table-sync/shared';
 import {
   formatModifier,
   spellDamageAtLevel,
   spellHealingAtLevel,
   spellSaveDC,
-} from '@dnd-inventory/shared';
+} from '@table-sync/shared';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Chip } from './ui';

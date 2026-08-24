@@ -5,13 +5,13 @@
  * and legendary actions.
  */
 
-import type { Monster, MonsterAction } from '@dnd-inventory/shared';
+import type { Monster, MonsterAction } from '@table-sync/shared';
 import {
   abilityModifier,
   formatCR,
   formatModifier,
   MONSTER_SIZE_LABELS_FR,
-} from '@dnd-inventory/shared';
+} from '@table-sync/shared';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import api from '../api';

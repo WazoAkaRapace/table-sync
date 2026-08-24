@@ -9,7 +9,7 @@
  * The GM uses the full CombatPage route.
  */
 
-import type { Combatant, EncounterDetail } from '@dnd-inventory/shared';
+import type { Combatant, EncounterDetail } from '@table-sync/shared';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import api from '../api';

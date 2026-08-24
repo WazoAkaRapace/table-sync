@@ -9,7 +9,7 @@ import {
   computeEncumbrance,
   type PatchInventoryPayload,
   type TransferPayload,
-} from '@dnd-inventory/shared';
+} from '@table-sync/shared';
 import { and, desc, eq, isNull, or, sql } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../db/drizzle.ts';

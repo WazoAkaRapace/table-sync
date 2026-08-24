@@ -8,7 +8,7 @@ import type {
   CreateCharacterNotePayload,
   PatchCharacterNotePayload,
   ReorderPayload,
-} from '@dnd-inventory/shared';
+} from '@table-sync/shared';
 import { eq, inArray, sql } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { getDrizzle } from '../db/drizzle.ts';

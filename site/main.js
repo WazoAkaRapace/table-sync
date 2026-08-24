@@ -1,4 +1,4 @@
-// Site marketing — Inventaire D&D
+// Site marketing — Table Sync
 // 1) la démo temps réel (le MD frappe, la fiche répond)
 // 2) les entrées du registre se posent une fois (register-rise)
 // 3) copier les commandes d'auto-hébergement

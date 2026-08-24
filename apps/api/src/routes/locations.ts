@@ -3,7 +3,7 @@
  * Each character gets a default "carried" location on creation.
  */
 
-import type { CreateStorageLocationPayload } from '@dnd-inventory/shared';
+import type { CreateStorageLocationPayload } from '@table-sync/shared';
 import { and, eq, sql } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../db/drizzle.ts';

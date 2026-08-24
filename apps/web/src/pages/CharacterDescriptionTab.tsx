@@ -20,7 +20,7 @@ import {
   LAND_CIRCLES,
   multiclassPrereqStatuses,
   type PatchCharacterPayload,
-} from '@dnd-inventory/shared';
+} from '@table-sync/shared';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import api from '../api';
 import { useAuth } from '../auth';

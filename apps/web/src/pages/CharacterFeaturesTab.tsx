@@ -21,7 +21,7 @@ import {
   nextClassFeatureGains,
   renderFeatureTemplate,
   TEMPLATE_VARIABLES,
-} from '@dnd-inventory/shared';
+} from '@table-sync/shared';
 import { useCallback, useEffect, useState } from 'react';
 import api from '../api';
 import { SortableCard, SortableGrid } from '../components/SortableGrid';

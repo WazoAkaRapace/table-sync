@@ -8,8 +8,8 @@ import type {
   PartyDetail,
   Rarity,
   StorageLocation,
-} from '@dnd-inventory/shared';
-import { findClass } from '@dnd-inventory/shared';
+} from '@table-sync/shared';
+import { findClass } from '@table-sync/shared';
 import {
   keepPreviousData,
   useInfiniteQuery,

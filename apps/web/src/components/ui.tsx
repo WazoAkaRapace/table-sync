@@ -1,10 +1,10 @@
-import type { CostUnit, EncumbranceState, ItemCategory, Rarity } from '@dnd-inventory/shared';
+import type { CostUnit, EncumbranceState, ItemCategory, Rarity } from '@table-sync/shared';
 import {
   CATEGORY_LABELS_FR,
   COIN_LABELS_FR,
   ENCUMBRANCE_LABELS_FR,
   RARITY_LABELS_FR,
-} from '@dnd-inventory/shared';
+} from '@table-sync/shared';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';

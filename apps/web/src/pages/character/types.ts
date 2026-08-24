@@ -1,4 +1,4 @@
-import type { StorageLocation, StorageType } from '@dnd-inventory/shared';
+import type { StorageLocation, StorageType } from '@table-sync/shared';
 
 // ---------- Shared types & helpers for the character sheet modules ----------
 // Extracted from CharacterInventoryPage — only the pieces used by several of

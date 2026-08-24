@@ -6,13 +6,13 @@ import type {
   ConcentrationCheck,
   CreateCharacterPayload,
   PatchCharacterPayload,
-} from '@dnd-inventory/shared';
+} from '@table-sync/shared';
 import {
   abilityModifier,
   CLASS_SUBCLASSES,
   CONCENTRATION_BREAKING_CONDITIONS_FR,
   computeAC,
-} from '@dnd-inventory/shared';
+} from '@table-sync/shared';
 import { and, desc, eq, inArray, ne, sql } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../db/drizzle.ts';

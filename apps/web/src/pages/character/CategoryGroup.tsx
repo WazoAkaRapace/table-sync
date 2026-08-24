@@ -3,8 +3,8 @@ import type {
   InventoryEntry,
   ItemCategory,
   StorageLocation,
-} from '@dnd-inventory/shared';
-import { CATEGORY_LABELS_FR } from '@dnd-inventory/shared';
+} from '@table-sync/shared';
+import { CATEGORY_LABELS_FR } from '@table-sync/shared';
 import { useState } from 'react';
 import { InventoryRow } from './InventoryRow';
 

@@ -4,8 +4,8 @@
  * on selection. Lets the GM set a count for grouped monsters.
  */
 
-import type { MonsterSummary } from '@dnd-inventory/shared';
-import { formatCR, MONSTER_SIZE_LABELS_FR } from '@dnd-inventory/shared';
+import type { MonsterSummary } from '@table-sync/shared';
+import { formatCR, MONSTER_SIZE_LABELS_FR } from '@table-sync/shared';
 import { useCallback, useEffect, useState } from 'react';
 import api from '../api';
 import { Modal, NumberField } from './ui';

@@ -4,7 +4,7 @@
  * or use the select-all toggle to bring the whole party into the fight.
  */
 
-import type { CharacterSummary } from '@dnd-inventory/shared';
+import type { CharacterSummary } from '@table-sync/shared';
 import { useEffect, useState } from 'react';
 import { Modal } from './ui';
 

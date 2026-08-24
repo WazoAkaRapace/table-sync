@@ -1,4 +1,4 @@
-import type { CharacterSummary, InventoryEntry, PartyDetail } from '@dnd-inventory/shared';
+import type { CharacterSummary, InventoryEntry, PartyDetail } from '@table-sync/shared';
 import { useEffect, useState } from 'react';
 import api from '../../api';
 import { EmptyState, LoadingSpinner, Modal, NumberField } from '../../components/ui';

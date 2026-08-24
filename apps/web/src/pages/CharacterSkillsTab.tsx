@@ -41,7 +41,7 @@ import {
   TOOL_CATEGORY_LABELS_FR,
   type ToolCategory,
   toolProficiencyLevel,
-} from '@dnd-inventory/shared';
+} from '@table-sync/shared';
 import { type FormEvent, Fragment, useCallback, useState } from 'react';
 import api from '../api';
 

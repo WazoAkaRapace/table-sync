@@ -1,4 +1,4 @@
-import type { Character, InventoryEntry, StorageLocation } from '@dnd-inventory/shared';
+import type { Character, InventoryEntry, StorageLocation } from '@table-sync/shared';
 import {
   computeWeaponStats,
   formatModifier,
@@ -6,7 +6,7 @@ import {
   proficiencyBonus,
   resolveMagicArmorBase,
   WEAPON_PROPERTY_LABELS_FR,
-} from '@dnd-inventory/shared';
+} from '@table-sync/shared';
 import { useEffect, useState } from 'react';
 import { ItemVignette } from '../../components/ItemImageViewer';
 import { Chip, RarityBadge, WeightBadge } from '../../components/ui';

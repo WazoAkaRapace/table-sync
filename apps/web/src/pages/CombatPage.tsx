@@ -26,7 +26,7 @@ import type {
   EncounterStatus,
   EncounterSummary,
   PartyDetail,
-} from '@dnd-inventory/shared';
+} from '@table-sync/shared';
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import api from '../api';

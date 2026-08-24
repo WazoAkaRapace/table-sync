@@ -3,8 +3,8 @@
  * Uses the 16 SRD conditions (DND_CONDITIONS_FR) with optional durations.
  */
 
-import type { CombatantCondition } from '@dnd-inventory/shared';
-import { DND_CONDITIONS_FR } from '@dnd-inventory/shared';
+import type { CombatantCondition } from '@table-sync/shared';
+import { DND_CONDITIONS_FR } from '@table-sync/shared';
 import { useState } from 'react';
 import { BottomSheet } from './ui';
 

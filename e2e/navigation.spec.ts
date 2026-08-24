@@ -37,7 +37,7 @@ playerTest.describe('Navigation (routes lazy)', () => {
 
   playerTest('l’écran de connexion reste accessible', async ({ page }) => {
     await page.goto('/login');
-    await expect(page.getByRole('heading', { name: 'Inventaire D&D' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Table Sync' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Se connecter' })).toBeVisible();
   });
 });

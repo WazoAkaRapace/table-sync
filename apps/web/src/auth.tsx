@@ -1,4 +1,4 @@
-import type { User } from '@dnd-inventory/shared';
+import type { User } from '@table-sync/shared';
 import type React from 'react';
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import api from './api';

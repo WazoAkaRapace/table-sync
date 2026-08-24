@@ -6,8 +6,8 @@
  * lecture : résumé par défaut, styles en pastilles, cachet de synchronisation.
  * Lecture seule, servie du cache — le MD rafraîchit depuis sa Table.
  */
-import type { GmaLinkStatus, GmaRecapsResponse, GmaSession } from '@dnd-inventory/shared';
-import { gmaMomentTypeLabel, gmaRecapStyleLabel } from '@dnd-inventory/shared';
+import type { GmaLinkStatus, GmaRecapsResponse, GmaSession } from '@table-sync/shared';
+import { gmaMomentTypeLabel, gmaRecapStyleLabel } from '@table-sync/shared';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../api';

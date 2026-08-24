@@ -1,5 +1,5 @@
 {
-  "name": "@dnd-inventory/api",
+  "name": "@table-sync/api",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -13,7 +13,7 @@
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {
-    "@dnd-inventory/shared": "*",
+    "@table-sync/shared": "*",
     "@fastify/cors": "^11.3.0",
     "@fastify/jwt": "^10.2.1",
     "@fastify/multipart": "^9.4.0",

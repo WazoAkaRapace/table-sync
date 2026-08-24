@@ -28,7 +28,7 @@ import {
   type EncumbranceState,
   fightingStylesOf,
   type InventoryEntry,
-} from '@dnd-inventory/shared';
+} from '@table-sync/shared';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api';

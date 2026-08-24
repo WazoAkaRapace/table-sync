@@ -1,5 +1,5 @@
-import type { Character } from '@dnd-inventory/shared';
-import { COIN_LABELS_FR } from '@dnd-inventory/shared';
+import type { Character } from '@table-sync/shared';
+import { COIN_LABELS_FR } from '@table-sync/shared';
 import { useState } from 'react';
 import { NumberField } from '../../components/ui';
 import type { CoinsState } from './types';

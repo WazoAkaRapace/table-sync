@@ -20,7 +20,7 @@ import type {
   ClassInfo,
   CreateCharacterPayload,
   SkillKey,
-} from '@dnd-inventory/shared';
+} from '@table-sync/shared';
 import {
   ABILITY_SHORT_FR,
   abilityModifier,
@@ -38,7 +38,7 @@ import {
   formatModifier,
   proficiencyBonus,
   STANDARD_ARRAY,
-} from '@dnd-inventory/shared';
+} from '@table-sync/shared';
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../api';

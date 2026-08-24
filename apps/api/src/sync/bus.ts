@@ -9,7 +9,7 @@
  * in-process EventEmitter is sufficient — no Redis needed.
  */
 import { EventEmitter } from 'node:events';
-import type { ConcentrationCheck } from '@dnd-inventory/shared';
+import type { ConcentrationCheck } from '@table-sync/shared';
 
 export interface SyncEvent {
   type: 'inventory:change' | 'character:change' | 'party:change' | 'combat:change' | 'gma:change';

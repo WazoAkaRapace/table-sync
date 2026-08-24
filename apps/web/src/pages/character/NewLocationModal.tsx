@@ -1,4 +1,4 @@
-import type { StorageType } from '@dnd-inventory/shared';
+import type { StorageType } from '@table-sync/shared';
 import { useEffect, useState } from 'react';
 import { Modal } from '../../components/ui';
 import type { NewLocationPayload } from './types';

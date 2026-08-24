@@ -4,14 +4,14 @@ import type {
   CharacterSummary,
   PartyDetail,
   PartyMember,
-} from '@dnd-inventory/shared';
+} from '@table-sync/shared';
 import {
   abilityModifier,
   computeAC,
   passivePerception,
   proficiencyBonus,
   skillProficiencyLevel,
-} from '@dnd-inventory/shared';
+} from '@table-sync/shared';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import api, { itemImageUrl } from '../api';

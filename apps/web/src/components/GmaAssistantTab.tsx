@@ -13,8 +13,8 @@ import type {
   GmaInitResult,
   GmaLinkStatus,
   GmaSyncCharactersResult,
-} from '@dnd-inventory/shared';
-import { GMA_PC_FIELD_LABELS_FR } from '@dnd-inventory/shared';
+} from '@table-sync/shared';
+import { GMA_PC_FIELD_LABELS_FR } from '@table-sync/shared';
 import { useCallback, useEffect, useState } from 'react';
 import api from '../api';
 import { plural } from '../utils';

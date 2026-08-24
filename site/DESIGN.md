@@ -177,7 +177,7 @@ français décrivant le contenu réel. `lang="fr"`, `scroll-behavior` réduit.
   captures de `docs/`, zéro build, déploiement GitHub Pages).
 - Page 100 % statique : HTML + CSS + un IIFE JS, aucune dépendance ;
   lisible sans JS (voir Motion). Canonical et OG pointent vers
-  `wazoakarapace.github.io/dnd-inventory/`, image OG = la première capture.
+  `wazoakarapace.github.io/table-sync/`, image OG = la première capture.
 
 ## Étendre le système
 

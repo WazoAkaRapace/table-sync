@@ -1,4 +1,4 @@
-import type { ConcentrationCheck } from '@dnd-inventory/shared';
+import type { ConcentrationCheck } from '@table-sync/shared';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import api from './api';

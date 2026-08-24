@@ -8,7 +8,7 @@ import {
   effectiveWeaponProficiencies,
   type Item,
   resolveMagicWeaponBase,
-} from '@dnd-inventory/shared';
+} from '@table-sync/shared';
 
 let failures = 0;
 function check(label: string, actual: unknown, expected: unknown) {
@@ -332,7 +332,7 @@ check(
 );
 
 // --- Unarmed strikes ---
-import { computeUnarmedStats, martialArtsDie } from '@dnd-inventory/shared';
+import { computeUnarmedStats, martialArtsDie } from '@table-sync/shared';
 
 let u = computeUnarmedStats(mkChar({ strength: 18, level: 5, characterClass: 'Guerrier' }));
 check(
@@ -437,7 +437,7 @@ check(
 );
 
 // --- Sneak Attack / Extra Attack / spell damage ---
-import { extraAttacks, sneakAttackDice, spellDamageAtLevel } from '@dnd-inventory/shared';
+import { extraAttacks, sneakAttackDice, spellDamageAtLevel } from '@table-sync/shared';
 
 check(
   'Attaque furtive : 1d6/3d6/10d6 (niv 1/5/20)',

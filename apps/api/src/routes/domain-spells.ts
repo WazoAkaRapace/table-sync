@@ -3,8 +3,8 @@
  * the prepared-spells limit. Derived from domain + level — no stored rows.
  */
 
-import type { Spell } from '@dnd-inventory/shared';
-import { bonusPreparedSpells, domainSpellsFor, findClass } from '@dnd-inventory/shared';
+import type { Spell } from '@table-sync/shared';
+import { bonusPreparedSpells, domainSpellsFor, findClass } from '@table-sync/shared';
 import { eq, sql } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../db/drizzle.ts';

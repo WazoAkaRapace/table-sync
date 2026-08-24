@@ -7,7 +7,7 @@ import type {
   EncumbranceMode,
   JoinPartyPayload,
   PartyRole,
-} from '@dnd-inventory/shared';
+} from '@table-sync/shared';
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../db/drizzle.ts';

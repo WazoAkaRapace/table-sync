@@ -1,4 +1,4 @@
-import type { Character, ConcentrationCheck } from '@dnd-inventory/shared';
+import type { Character, ConcentrationCheck } from '@table-sync/shared';
 import { useEffect, useRef, useState } from 'react';
 import api from '../../api';
 import { HpBar, NumberField } from '../../components/ui';

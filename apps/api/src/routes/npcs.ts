@@ -4,7 +4,7 @@
  * Secrets are visible only to creator + GM.
  */
 
-import type { CreateNpcPayload, PatchNpcPayload } from '@dnd-inventory/shared';
+import type { CreateNpcPayload, PatchNpcPayload } from '@table-sync/shared';
 import { and, eq, or, sql } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../db/drizzle.ts';

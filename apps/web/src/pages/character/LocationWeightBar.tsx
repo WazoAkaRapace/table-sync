@@ -1,4 +1,4 @@
-import type { LocationWeight } from '@dnd-inventory/shared';
+import type { LocationWeight } from '@table-sync/shared';
 
 // ---------- Per-location weight bar (compact) ----------
 

@@ -21,7 +21,7 @@ import type {
   GmaLinkCampaignPayload,
   GmaSaveKeyPayload,
   GmaSyncCharactersPayload,
-} from '@dnd-inventory/shared';
+} from '@table-sync/shared';
 import { and, eq, notInArray, sql } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../db/drizzle.ts';

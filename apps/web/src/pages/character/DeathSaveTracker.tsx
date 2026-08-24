@@ -1,4 +1,4 @@
-import type { Character } from '@dnd-inventory/shared';
+import type { Character } from '@table-sync/shared';
 import { useEffect, useState } from 'react';
 import api from '../../api';
 import type { SheetActionProps } from './types';

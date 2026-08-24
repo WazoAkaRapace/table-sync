@@ -2,7 +2,7 @@
  * Sanity checks for resolveMagicArmorBase / computeAC magic-armor handling.
  * Run: npm run test-armor-stats
  */
-import { computeAC, computeSpeed, type Item, resolveMagicArmorBase } from '@dnd-inventory/shared';
+import { computeAC, computeSpeed, type Item, resolveMagicArmorBase } from '@table-sync/shared';
 
 let failures = 0;
 function check(label: string, actual: unknown, expected: unknown) {

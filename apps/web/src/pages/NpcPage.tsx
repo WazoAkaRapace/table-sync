@@ -5,8 +5,8 @@ import type {
   NpcStatus,
   PartyDetail,
   PatchNpcPayload,
-} from '@dnd-inventory/shared';
-import { NPC_DISPOSITION_LABELS_FR, NPC_STATUS_LABELS_FR } from '@dnd-inventory/shared';
+} from '@table-sync/shared';
+import { NPC_DISPOSITION_LABELS_FR, NPC_STATUS_LABELS_FR } from '@table-sync/shared';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../api';

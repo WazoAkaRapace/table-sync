@@ -3,7 +3,7 @@
  * Monsters are global reference data (no party scoping), like spells.
  */
 
-import type { Monster, MonsterSummary } from '@dnd-inventory/shared';
+import type { Monster, MonsterSummary } from '@table-sync/shared';
 import { eq, or, sql } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../db/drizzle.ts';

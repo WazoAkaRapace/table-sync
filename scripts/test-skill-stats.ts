@@ -18,7 +18,7 @@ import {
   skillModifier,
   skillProficiencyLevel,
   toolProficiencyLevel,
-} from '@dnd-inventory/shared';
+} from '@table-sync/shared';
 
 let failures = 0;
 function check(label: string, actual: unknown, expected: unknown) {

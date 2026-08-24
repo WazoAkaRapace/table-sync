@@ -13,7 +13,7 @@ import {
   DND_RACES,
   DND_SKILLS,
   STANDARD_ARRAY,
-} from '@dnd-inventory/shared';
+} from '@table-sync/shared';
 
 let failures = 0;
 function check(label: string, actual: unknown, expected: unknown) {

@@ -8,7 +8,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_PREFIX: wazoakarapace/dnd-inventory
+  IMAGE_PREFIX: wazoakarapace/table-sync
 
 jobs:
   # ---------- Security scan ----------

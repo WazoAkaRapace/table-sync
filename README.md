@@ -1,14 +1,14 @@
 <div align="center">
 
-<img src="docs/logo.png" width="180" alt="Inventaire D&D" />
+<img src="docs/logo.png" width="180" alt="Table Sync" />
 
-# Inventaire D&D
+# Table Sync
 
-🌐 Site de présentation : [wazoakarapace.github.io/dnd-inventory](https://wazoakarapace.github.io/dnd-inventory/)
+🌐 Site de présentation : [wazoakarapace.github.io/table-sync](https://wazoakarapace.github.io/table-sync/)
 
 </div>
 
-Application web **mobile-first** de gestion de fiche de personnage, d'inventaire et de **combat** pour D&D 5e — entièrement en **français**, poids en **kilogrammes**, avec un moteur de règles SRD complet et de la **synchronisation en temps réel** entre le MD et les joueurs.
+Le compagnon de campagne partagé, pour le MD et les joueurs. Application web **mobile-first** de gestion de fiche de personnage, d'inventaire et de **combat** pour D&D 5e — entièrement en **français**, poids en **kilogrammes**, avec un moteur de règles SRD complet et de la **synchronisation en temps réel** entre le MD et les joueurs.
 
 Conçue pour être utilisée sur téléphone et tablette pendant la partie : PWA installable, chaque joueur sur son écran, le MD sur le sien.
 

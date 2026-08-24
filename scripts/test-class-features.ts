@@ -20,7 +20,7 @@ import {
   nextClassFeatureGain,
   renderFeatureTemplate,
   SPELL_SLOTS_PACT,
-} from '@dnd-inventory/shared';
+} from '@table-sync/shared';
 
 let failures = 0;
 function check(label: string, actual: unknown, expected: unknown) {

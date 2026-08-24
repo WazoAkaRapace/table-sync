@@ -1,8 +1,8 @@
 {
-  "name": "dnd-inventory",
+  "name": "table-sync",
   "version": "0.1.0",
   "private": true,
-  "description": "D&D 5e player & party inventory management app (kg/SI, mobile-first)",
+  "description": "Table Sync — compagnon de campagne partagé pour MDs et joueurs (fiches, inventaire, combat D&D 5e ; kg/SI, mobile-first)",
   "workspaces": [
     "apps/*",
     "packages/*"

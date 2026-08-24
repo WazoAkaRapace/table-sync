@@ -1,4 +1,4 @@
-import type { ConcentrationCheck } from '@dnd-inventory/shared';
+import type { ConcentrationCheck } from '@table-sync/shared';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import api from '../api';

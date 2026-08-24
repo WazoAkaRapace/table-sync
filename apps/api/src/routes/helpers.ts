@@ -21,7 +21,7 @@ import {
   type Rarity,
   type Spell,
   type SpellSchool,
-} from '@dnd-inventory/shared';
+} from '@table-sync/shared';
 import { and, eq, inArray, ne, sql } from 'drizzle-orm';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../db/drizzle.ts';

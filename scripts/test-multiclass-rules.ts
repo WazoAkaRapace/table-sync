@@ -32,7 +32,7 @@ import {
   spellDamageAtLevel,
   totalLevel,
   unarmoredDefensesOf,
-} from '@dnd-inventory/shared';
+} from '@table-sync/shared';
 import { classFeatureResourceMax, findClassFeature } from '../packages/shared/src/classFeatures.ts';
 
 let failures = 0;

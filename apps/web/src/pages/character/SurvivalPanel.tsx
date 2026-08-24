@@ -3,7 +3,7 @@ import type {
   CharacterFeature,
   ConcentrationCheck,
   InventoryEntry,
-} from '@dnd-inventory/shared';
+} from '@table-sync/shared';
 import {
   CONCENTRATION_BREAKING_CONDITIONS_FR,
   classesOf,
@@ -25,7 +25,7 @@ import {
   type WildShapeFormSummary,
   wildShapeDurationHours,
   wildShapeMaxCR,
-} from '@dnd-inventory/shared';
+} from '@table-sync/shared';
 import { useEffect, useState } from 'react';
 import api from '../../api';
 import { CONDITION_ICONS } from '../../components/ConditionsEditor';

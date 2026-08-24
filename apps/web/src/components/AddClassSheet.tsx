@@ -15,7 +15,7 @@ import {
   findClass,
   MULTICLASS_PREREQUISITES,
   MULTICLASS_PROFICIENCIES_GAINED,
-} from '@dnd-inventory/shared';
+} from '@table-sync/shared';
 import { useMemo, useState } from 'react';
 import { BottomSheet } from './ui';
 

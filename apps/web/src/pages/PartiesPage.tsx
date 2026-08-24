@@ -14,7 +14,7 @@
  * finish review, the verdict, and DESIGN.md
  */
 
-import type { EncumbranceMode, PartyListRow, PartyRole } from '@dnd-inventory/shared';
+import type { EncumbranceMode, PartyListRow, PartyRole } from '@table-sync/shared';
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api';

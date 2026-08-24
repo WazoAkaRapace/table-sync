@@ -1,5 +1,5 @@
-import type { Item, ItemCategory, Rarity } from '@dnd-inventory/shared';
-import { CATEGORY_LABELS_FR, RARITY_LABELS_FR } from '@dnd-inventory/shared';
+import type { Item, ItemCategory, Rarity } from '@table-sync/shared';
+import { CATEGORY_LABELS_FR, RARITY_LABELS_FR } from '@table-sync/shared';
 import {
   CategoryBadge,
   CostBadge,

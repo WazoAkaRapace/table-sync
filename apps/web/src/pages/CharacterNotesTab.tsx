@@ -3,7 +3,7 @@
  * Supports: # headers, **bold**, *italic*, - lists, `code`, > quotes, --- dividers.
  */
 
-import type { Character, CharacterNote } from '@dnd-inventory/shared';
+import type { Character, CharacterNote } from '@table-sync/shared';
 import { useCallback, useEffect, useState } from 'react';
 import api from '../api';
 import { SortableCard, SortableGrid } from '../components/SortableGrid';

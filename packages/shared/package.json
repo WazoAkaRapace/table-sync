@@ -1,5 +1,5 @@
 {
-  "name": "@dnd-inventory/shared",
+  "name": "@table-sync/shared",
   "version": "0.1.0",
   "private": true,
   "type": "module",

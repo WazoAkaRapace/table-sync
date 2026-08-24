@@ -5,7 +5,7 @@
 #
 services:
   api:
-    image: ghcr.io/wazoakarapace/dnd-inventory-api:latest
+    image: ghcr.io/wazoakarapace/table-sync-api:latest
     # NOT published: the web nginx proxies /api and /ws to api:4000 over the
     # internal compose network. Publishing the API port would let direct
     # clients forge X-Real-IP / X-Forwarded-For and evade the rate limiter
@@ -26,7 +26,7 @@ services:
     restart: unless-stopped
 
   web:
-    image: ghcr.io/wazoakarapace/dnd-inventory-web:latest
+    image: ghcr.io/wazoakarapace/table-sync-web:latest
     ports:
       - "${WEB_PORT:-8080}:80"
     depends_on:

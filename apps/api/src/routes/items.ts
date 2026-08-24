@@ -4,7 +4,7 @@
 
 import { existsSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
-import type { CreateCustomItem } from '@dnd-inventory/shared';
+import type { CreateCustomItem } from '@table-sync/shared';
 import { and, eq, inArray, isNull, or, type SQL, sql } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../db/drizzle.ts';

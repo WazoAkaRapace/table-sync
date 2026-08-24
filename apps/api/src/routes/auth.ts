@@ -3,7 +3,7 @@
  * Passwords hashed with bcrypt. JWT issued on login/register.
  */
 
-import type { User } from '@dnd-inventory/shared';
+import type { User } from '@table-sync/shared';
 import bcrypt from 'bcryptjs';
 import { eq } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';

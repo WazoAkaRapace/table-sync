@@ -1,17 +1,24 @@
 {
-  "name": "Inventaire D&D",
-  "short_name": "Inventaire",
-  "description": "Gestion d'inventaire D&D 5e pour joueurs et MD — poids en kg, encombrement, monnaie, et synchronisation en temps réel.",
+  "name": "Table Sync",
+  "short_name": "Table Sync",
+  "description": "Le compagnon de campagne partagé, pour le MD et les joueurs — fiches, inventaire en kg et combat D&D 5e en temps réel.",
   "lang": "fr",
   "dir": "ltr",
   "start_url": "/",
   "scope": "/",
   "display": "fullscreen",
-  "display_override": ["fullscreen", "standalone"],
+  "display_override": [
+    "fullscreen",
+    "standalone"
+  ],
   "orientation": "any",
   "background_color": "#f4ecd8",
   "theme_color": "#2a1f14",
-  "categories": ["games", "utilities", "productivity"],
+  "categories": [
+    "games",
+    "utilities",
+    "productivity"
+  ],
   "icons": [
     {
       "src": "/favicon-32.png",

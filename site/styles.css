@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------
-   Site marketing — Inventaire D&D
+   Site marketing — Table Sync
    Le monde visuel de l'app, hérité tel quel : parchemin, encre, sang, or.
    Tokens = copie exacte de apps/web/src/index.css @theme.
    ------------------------------------------------------------------ */
@@ -197,6 +197,14 @@ code {
 .hero-name {
   font-size: clamp(2.1rem, 5.5vw, 3.4rem);
   letter-spacing: -0.02em;
+}
+
+/* Le slogan : une ligne d'italique entre le nom et l'offre */
+.hero-tagline {
+  margin-top: 0.45rem;
+  font-style: italic;
+  font-size: 1.08rem;
+  color: var(--ink-600);
 }
 
 .hero-offer {
