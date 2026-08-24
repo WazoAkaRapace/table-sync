@@ -32,7 +32,7 @@
     "site": "node scripts/serve-site.mjs"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.8",
+    "@biomejs/biome": "2.5.10",
     "concurrently": "^10.0.4",
     "drizzle-orm": "^0.45.2",
     "playwright": "^1.62.1",
