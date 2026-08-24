@@ -318,9 +318,10 @@
      le zoom lui-même ne s'anime jamais (outil de lecture). */
 
   const viewer = document.querySelector('.viewer');
-  const viewerImg = viewer?.querySelector('.viewer-img');
+  const viewerFrame = viewer?.querySelector('.viewer-frame');
   const viewerCaption = viewer?.querySelector('.viewer-caption');
   const viewerClose = viewer?.querySelector('.viewer-close');
+  let viewerImg = null;
   let lastFocus = null;
 
   const closeViewer = () => {
@@ -331,7 +332,14 @@
   };
 
   const openViewer = (img) => {
-    if (!viewer || !viewerImg) return;
+    if (!viewer || !viewerFrame) return;
+    // l'image naît à la première ouverture — jamais de <img> vide dans la page
+    if (!viewerImg) {
+      viewerImg = document.createElement('img');
+      viewerImg.className = 'viewer-img';
+      viewerImg.decoding = 'async';
+      viewerFrame.appendChild(viewerImg);
+    }
     lastFocus = document.activeElement;
     viewerImg.src = img.src;
     viewerImg.alt = img.alt;
@@ -343,7 +351,7 @@
     viewerClose?.focus();
   };
 
-  if (viewer && viewerImg) {
+  if (viewer && viewerFrame) {
     // Chaque écran de téléphone s'ouvre en plein écran ; dans un poste de
     // consultation, c'est la vue ACTIVE qui s'ouvre (les autres n'écoutent pas)
     document.querySelectorAll('.shot-frame img, .portrait-frame img').forEach((img) => {
@@ -361,6 +369,11 @@
 
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape') closeViewer();
+      if (event.key === 'Tab' && !viewer.hidden) {
+        // la visionneuse ne possède qu'un seul focusable : le piège tient en une ligne
+        event.preventDefault();
+        viewerClose?.focus();
+      }
     });
   }
 })();

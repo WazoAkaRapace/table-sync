@@ -50,6 +50,11 @@
   --shadow-raised: 0 4px 8px rgba(42, 31, 20, 0.08), 0 14px 32px rgba(42, 31, 20, 0.14);
 }
 
+/* Le monde est clair, comme l'app — jamais de sombre automatique */
+:root {
+  color-scheme: light;
+}
+
 /* ---------- Base ---------- */
 
 *,
@@ -197,6 +202,7 @@ code {
 .seal {
   width: 5.5rem;
   height: 5.5rem;
+  margin-bottom: 1rem;
   border-radius: 999px;
   object-fit: cover;
   border: 2px solid var(--parchment-300);
@@ -376,6 +382,22 @@ code {
 .btn-secondary:hover {
   background: var(--parchment-300);
   color: var(--ink-900);
+}
+
+/* Sous la tablette, les deux verbes se posent en barres pleine largeur —
+   jamais deux demi-boutons tassés */
+@media (max-width: 639px) {
+  .cta-row .btn {
+    flex: 1 1 100%;
+  }
+}
+
+/* Liens dans le texte : le doigt touche ~44px sans bouger la mise en page
+   (padding vertical neutralisé par une marge négative) */
+.entry-copy a:not(.btn),
+.site-footer a:not(.btn) {
+  padding-block: 0.75em;
+  margin-block: -0.75em;
 }
 
 /* ---------- Caractéristiques (six tuiles) ---------- */

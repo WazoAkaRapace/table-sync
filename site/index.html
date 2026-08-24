@@ -9,6 +9,7 @@
       content="Table Sync — le compagnon de campagne partagé, pour le MD et les joueurs. Fiches, inventaire en kg et combat D&D 5e, 100 % français, synchronisés en temps réel. Auto-hébergé."
     />
     <link rel="icon" href="assets/logo.png" type="image/png" />
+    <meta name="theme-color" content="#fdfaf3" />
     <link rel="canonical" href="https://wazoakarapace.github.io/table-sync/" />
 
     <meta property="og:type" content="website" />
@@ -677,13 +678,12 @@
     </footer>
 
     <!-- Visionneuse plein écran — le vocabulaire de l'app : fondu du rideau,
-         l'image se pose depuis 0.96, le zoom ne s'anime jamais -->
+         l'image se pose depuis 0.96, le zoom ne s'anime jamais.
+         L'image est créée par main.js à la première ouverture. -->
     <div class="viewer" role="dialog" aria-modal="true" aria-label="Capture en plein écran" hidden>
       <button type="button" class="viewer-close" aria-label="Fermer la capture">✕</button>
       <figure class="viewer-figure">
-        <div class="viewer-frame">
-          <img class="viewer-img" alt="" decoding="async" />
-        </div>
+        <div class="viewer-frame"></div>
         <figcaption class="viewer-caption"></figcaption>
       </figure>
     </div>
