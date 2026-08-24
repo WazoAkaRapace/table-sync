@@ -7,15 +7,21 @@
  *   1. API   — tsx apps/api/src/server.ts sur un port libre, SQLite neuf
  *              (data/db/screenshots-demo.sqlite, gitignoré) ; le serveur
  *              s'auto-migre et sème le catalogue (646 objets, 490 sorts,
- *              964 monstres) avant d'écouter.
+ *              964 monstres) avant d'écouter. GMA_BASE_URL pointe vers le
+ *              mock GM Assistant in-process (scripts/api-tests/mock-gma.ts) :
+ *              la clé, la campagne et la chronique de démo vivent là — aucune
+ *              vraie clé, aucun appel réseau sortant. NB : le mock meurt avec
+ *              le script (--keep ne le conserve pas).
  *   2. Web   — vite en dev sur un port libre, proxy /api + /ws vers l'API.
  *   3. Seed  — campagne de démo par REST : groupe « Les Héros de Chult »,
  *              3 PJ (Druide cercle de la Lune, Guerrier, Clerc) avec équipement
- *              et sorts, puis une « Embuscade gobeline » active en plein tour.
+ *              et sorts, puis une « Embuscade gobeline » active en plein tour ;
+ *              côté GM Assistant : init (campagne + PJ) puis séances, résumés
+ *              et moments de démo injectés dans le mock.
  *   4. Shots — chaque capture reproduit l'état documenté dans le README.
  *
  * Usage :
- *   npm run screenshots                  # régénère les 13 captures
+ *   npm run screenshots                  # régénère les 17 captures
  *   npm run screenshots -- --only 03,07  # seulement certaines (numéros ou noms)
  *   npm run screenshots -- --keep        # laisser les serveurs tourner (debug)
  *
@@ -29,6 +35,7 @@ import net from 'node:net';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { type Browser, type BrowserContext, chromium, type Page } from 'playwright';
+import { type MockGmaHandle, startMockGma } from './api-tests/mock-gma.ts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT_DIR = path.join(ROOT, 'docs', 'screenshots');
@@ -162,6 +169,7 @@ interface Stack {
   apiPort: number;
   webPort: number;
   procs: Proc[];
+  gma: MockGmaHandle;
 }
 
 async function bootStack(): Promise<Stack> {
@@ -183,12 +191,16 @@ async function bootStack(): Promise<Stack> {
 
   const procs: Proc[] = [];
 
+  // Mock GM Assistant in-process : la stack de captures n'a aucune clé réelle.
+  const gma = await startMockGma();
+
   // API — la migration + le seed du catalogue terminent AVANT listen, donc
   // /api/health vert ⇒ catalogue complet prêt.
   procs.push(
     new Proc('api', tsxBin, ['apps/api/src/server.ts'], {
       PORT: String(apiPort),
       DATABASE_PATH: DB_PATH,
+      GMA_BASE_URL: gma.url,
     }),
   );
   const api = procs[0];
@@ -227,7 +239,7 @@ async function bootStack(): Promise<Stack> {
     }
   });
 
-  return { apiPort, webPort, procs };
+  return { apiPort, webPort, procs, gma };
 }
 
 // ---------------------------------------------------------------------------
@@ -300,7 +312,10 @@ interface SeedRefs {
   chars: { lyra: number; kael: number; mira: number; vesper: number };
 }
 
-async function seed(apiPort: number): Promise<SeedRefs & { sessions: Session[] }> {
+async function seed(
+  apiPort: number,
+  gmaMock: MockGmaHandle['state'],
+): Promise<SeedRefs & { sessions: Session[] }> {
   const md = await register(apiPort, 'mdj', 'Maître Jehan');
   const aurore = await register(apiPort, 'aurore', 'Aurore');
   const bastien = await register(apiPort, 'bastien', 'Bastien');
@@ -534,6 +549,95 @@ async function seed(apiPort: number): Promise<SeedRefs & { sessions: Session[] }
   });
   await patchC(ogre!.id, { hitPoints: 41, cardColor: '#fee2e2' });
 
+  // — GM Assistant : le vrai parcours MD, contre le mock — clé du compte puis
+  // init (la campagne « Les Héros de Chult » + les 3 PJ de table naissent
+  // côté GMA). Vesper reste hors sync — multiclassé en pleine démo.
+  await mdCall('PUT', '/api/gma/key', { apiKey: 'gma_test_full_good_key' });
+  const { campaign } = await mdCall<{ campaign: { id: string } }>(
+    'POST',
+    `/api/parties/${party.id}/gma/init`,
+    { characterIds: [lyra.id, kael.id, mira.id] },
+  );
+
+  // Chronique de démo, directement dans l'état du mock : trois séances,
+  // résumés multi-styles et moments de chaque type pour l'enluminure.
+  const iso = () => new Date().toISOString();
+  gmaMock.sessions.set(campaign.id, [
+    { id: 'demo-1', title: "L'arrivée à Port Nyanzaru", played_at: '2026-06-12', order: 0 },
+    { id: 'demo-2', title: 'La jungle éternelle', played_at: '2026-06-26', order: 1 },
+    { id: 'demo-3', title: 'Le campement des batiri', played_at: '2026-07-10', order: 2 },
+  ]);
+  gmaMock.recaps.set('demo-3', [
+    {
+      style: 'short_summary',
+      text: 'Négociation tendue au campement batiri : une idole brisée, un passage gagné.',
+      updated_at: iso(),
+    },
+    {
+      style: 'sonnet_summary',
+      text: 'Sous la pluie de Chult, le pont tenait peu,\nLe chamane brandissait un crâne qui crie ;\nMira frappa l’idole au signe de la foi,\nEt le passage s’ouvrit pour la compagnie.',
+      updated_at: iso(),
+    },
+    {
+      style: 'classic_summary',
+      text: 'Oyez, oyez ! Par la bruine et la liane, nos héros approachèrent du camp batiri. Là, Kael le Marteau tint tête au chamane au crâne hurlant, tandis que dame Mira, d’un coup nourri, brisa l’idole impie — et le passage fut gagné contre promesse de tribut !',
+      updated_at: iso(),
+    },
+    {
+      style: 'default',
+      text: "Après trois jours de marche dans la bruine, les héros atteignent le campement batiri signalé par le guide. Kael négocie le passage du pont pendant que Lyra, changée en panthère, repère les sentinelles depuis la rive. Quand le chamane brandit un crâne hurlant, la table bascule : Mira brise l'idole d'un coup de masse au signe sacré et le campement s'ouvre enfin — contre la promesse d'un tribut à discuter demain. Dans la nuit, la jungle garde un œil sur le camp.",
+      updated_at: iso(),
+    },
+  ]);
+  gmaMock.moments.set('demo-3', [
+    {
+      id: 'demo-m1',
+      is_quote: true,
+      type: 'epic',
+      description: 'Je ne paie pas deux fois le même pont.',
+      speaker: 'Kael Aubemarteau',
+      context: 'Le pont de rondins',
+      order: 0,
+    },
+    {
+      id: 'demo-m2',
+      is_quote: false,
+      type: 'funny',
+      description:
+        'Vesper tente de vendre au chamane un crâne identique à son idole — la négociation ne survit pas au premier éternuement.',
+      speaker: null,
+      context: null,
+      order: 1,
+    },
+    {
+      id: 'demo-m3',
+      is_quote: true,
+      type: 'dramatic',
+      description: 'Le crâne a crié votre nom avant votre arrivée.',
+      speaker: 'Le chamane batiri',
+      context: 'Le feu de camp',
+      order: 2,
+    },
+    {
+      id: 'demo-m4',
+      is_quote: false,
+      type: 'tragic',
+      description: 'La mule Emmeline s’enfonce dans la mangrove avec trois jours de rations.',
+      speaker: null,
+      context: null,
+      order: 3,
+    },
+    {
+      id: 'demo-m5',
+      is_quote: true,
+      type: 'intriguing',
+      description: 'Quelque chose suit notre trace depuis la rivière.',
+      speaker: 'Lyra Feuillenoire',
+      context: null,
+      order: 4,
+    },
+  ]);
+
   return {
     partyId: party.id,
     encounterId: enc,
@@ -640,7 +744,7 @@ async function shoot(page: Page, file: string, opts: { animations?: 'allow' | 'd
 }
 
 // ---------------------------------------------------------------------------
-// Les 13 captures du README
+// Les 17 captures du README
 // ---------------------------------------------------------------------------
 
 interface ShotCtx {
@@ -866,6 +970,63 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
       await page.close();
     },
   },
+  {
+    file: '15-gm-assistant.png',
+    async run(c) {
+      // Onglet GM Assistant de la Table du MD : compte connecté (email masqué,
+      // portée), campagne liée par l'init, actions de vie de la liaison.
+      const page = await c.md.newPage();
+      await page.goto(webUrl(c.webPort, `/party/${c.refs.partyId}/gm`), {
+        waitUntil: 'networkidle',
+        timeout: 90_000,
+      });
+      await settle(page, 600);
+      await page.getByRole('button', { name: 'GM Assistant' }).click();
+      await page.getByRole('button', { name: '↺ Rafraîchir les séances' }).waitFor({
+        timeout: 10_000,
+      });
+      await page.waitForTimeout(300);
+      await shoot(page, '15-gm-assistant.png');
+      await page.close();
+    },
+  },
+  {
+    file: '16-chronique.png',
+    async run(c) {
+      // La Chronique vue d'un joueur : registre des séances, la dernière en
+      // entrée courante (ordinal sang), les anciennes compactes.
+      const page = await c.aurore.newPage();
+      await page.goto(webUrl(c.webPort, `/party/${c.refs.partyId}/chronique`), {
+        waitUntil: 'networkidle',
+        timeout: 90_000,
+      });
+      await settle(page, 600);
+      await page.getByText('Le campement des batiri').first().waitFor({ timeout: 10_000 });
+      await page.waitForTimeout(400); // register-rise décalé
+      await shoot(page, '16-chronique.png');
+      await page.close();
+    },
+  },
+  {
+    file: '17-moments.png',
+    async run(c) {
+      // Lecture de la dernière séance : pastilles de styles puis les moments
+      // mémorables enluminés par type (⚔ épique gravé, 🕯 tragique éteint…).
+      const page = await c.aurore.newPage();
+      await page.goto(webUrl(c.webPort, `/party/${c.refs.partyId}/chronique`), {
+        waitUntil: 'networkidle',
+        timeout: 90_000,
+      });
+      await settle(page, 600);
+      await page.getByRole('button', { name: 'Lire le résumé : Le campement des batiri' }).click();
+      await page.getByRole('heading', { name: 'Moments mémorables' }).waitFor({ timeout: 10_000 });
+      await page.waitForTimeout(400); // register-rise de la section
+      await page.getByRole('heading', { name: 'Moments mémorables' }).scrollIntoViewIfNeeded();
+      await page.waitForTimeout(250);
+      await shoot(page, '17-moments.png');
+      await page.close();
+    },
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -885,7 +1046,7 @@ async function main() {
   let exitCode = 0;
   try {
     console.log('🌱 Semis de la campagne de démo…');
-    const { sessions, ...refs } = await seed(stack.apiPort);
+    const { sessions, ...refs } = await seed(stack.apiPort, stack.gma.state);
     const [mdS, auS, baS] = sessions;
 
     console.log('🎭 Ouverture de Chromium (390×844, mobile)…');
