@@ -60,7 +60,7 @@ sélection `gold-100`. Titres h1–h3 en Cinzel 600, `text-wrap: balance`.
 | CTA | deux boutons 44 px : « Code source sur GitHub » (primaire `blood-600`) + « Auto-héberger en 3 commandes » (secondaire `parchment-200`, ancre interne) |
 | Six tuiles (`abilities`) | FOR→CHA, grille 2→3→6 colonnes (640/1024px) ; tuile blanche 60 % bordée `parchment-200`, rayon 12 ; libellé Cinzel 0.72rem espacé 0.18em, **score Cinzel 2.2rem `ink-800`**, fait 0.82rem `ink-500` |
 | Tuile courante | DEX (le temps réel, la différenciatrice) porte `.is-lead` : score `blood-600`. Une seule tuile sang — l'équivalent de l'entrée courante du registre |
-| Personnalité | les quatre quadrants de fiche 5e (TRAITS / IDÉAUX / LIENS / DÉFAUTS), cartes blanches 60 % 2 colonnes — sans ordinal, hors sommaire |
+| Personnalité | les quatre quadrants de fiche 5e (TRAITS / IDÉAUX / LIENS / DÉFAUTS), cartes blanches 60 % 2 colonnes — sans ordinal, hors registre |
 | Pied | double règle de tête, 3 colonnes (L'OUTIL / DONNÉES & RÈGLES / LE DÉPÔT), rangée sceau 36 px « fait pour la table » |
 
 ## La grammaire du registre sur cette page
@@ -75,7 +75,6 @@ filets.
 | Entrée courante (`.is-lead`, entrée I « La table en temps réel ») | ordinal `blood-500` 1.6rem — le sang marque « maintenant », une seule entrée |
 | Tête d'entrée | ordinal + h2 `clamp(1.35rem, 3vw, 1.75rem)` sur filet `parchment-200` (pb 0.9rem, mb 2rem) |
 | Tête compacte (`.entry-head-compact`, Repos long) | même recette resserrée dans le panneau : pb 0.7rem, mb 1.2rem |
-| Sommaire (`toc`) | liens `ink-700` soulignés `parchment-300`, joints par « · » `ink-300` ; survol `blood-600` + trait `blood-300` |
 | Corps d'entrée | à 1024px : colonnes `minmax(0,1fr) 380px` (copie \| visuels) ; copie plafonnée 62ch |
 | Sous-entrées réglées | `h3` 1.1rem + paragraphe `ink-700`, chaque `li` refermé par un filet `parchment-200` — jamais de carte |
 | Preuves mesurées (tampon) | `.proof li` : mono 0.78rem espacé 0.05em, `ink-700` sur `parchment-100` bordé `parchment-200`, rayon 8 — pour les valeurs comptables (646 objets, 490 sorts, 964 monstres, 16 états, kg, cache 5 min) |
@@ -176,7 +175,7 @@ ne bouge hors interactions (chips, barres, soulèvements de cadres).
 `prefers-reduced-motion: reduce` coupe tout : `.rise` visible sans
 animation (`none !important`), défilement `auto`, cadres sans soulèvement,
 barres et puces sans transition — avec états finaux lisibles. `html` a
-`scroll-behavior: smooth` pour les ancres du sommaire (auto en mouvement
+`scroll-behavior: smooth` pour les ancres internes (auto en mouvement
 réduit).
 
 ## Accessibilité
