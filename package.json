@@ -48,6 +48,6 @@
     "esbuild@0.21.5": true
   },
   "dependencies": {
-    "vite": "^8.2.1"
+    "vite": "^8.2.2"
   }
 }
