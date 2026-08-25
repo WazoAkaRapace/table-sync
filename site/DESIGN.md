@@ -77,8 +77,7 @@ filets.
 | Tête compacte (`.entry-head-compact`, Repos long) | même recette resserrée dans le panneau : pb 0.7rem, mb 1.2rem |
 | Corps d'entrée | à 1024px : colonnes `minmax(0,1fr) 380px` (copie \| visuels) ; copie plafonnée 62ch |
 | Sous-entrées réglées | `h3` 1.1rem + paragraphe `ink-700`, chaque `li` refermé par un filet `parchment-200` — jamais de carte |
-| Preuves mesurées (tampon) | `.proof li` : mono 0.78rem espacé 0.05em, `ink-700` sur `parchment-100` bordé `parchment-200`, rayon 8 — pour les valeurs comptables (646 objets, 490 sorts, 964 monstres, 16 états, kg, cache 5 min) |
-| Preuves en phrases | `.proof li.phrase` : la phrase quitte le tampon — italique corps 0.9rem, sans fond ni bordure, tokens joints par « · » `ink-300`. **Le tampon mono est réservé au mesurable ; une phrase ne se met jamais en tampon** |
+| Preuves (tampons) | `.proof li` : mono 0.78rem espacé 0.05em, `ink-700` sur `parchment-100` bordé `parchment-200`, rayon 8 — **un seul traitement pour toutes les preuves**, mesures comme phrases (le tampon de l'app est mono quoi qu'il porte). Décision utilisateur : le niveau à deux traitements (stamps mesurés + tokens italiques) ne se lisait pas, il paraissait un défaut |
 
 ## La démo temps réel (entrée I)
 
@@ -215,7 +214,7 @@ français décrivant le contenu réel. `lang="fr"`, `scroll-behavior` réduit.
 2. Nouvelle entrée du registre → ordinal romain suivant en Cinzel
    `aria-hidden`, tête sur filet, sous-entrées réglées ; une seule entrée
    peut être `.is-lead` (sang).
-3. Nouvelle preuve → tampon mono si c'est un nombre mesurable, `.phrase`
+3. Nouvelle preuve → tampon mono `.proof li`, quel que soit son contenu
    italique jointe par «·» sinon ; jamais l'inverse.
 4. Nouvelle section interactive → contenu visible sans JS, animations
    armées par la classe `.js`, état final statique lisible en mouvement

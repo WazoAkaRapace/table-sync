@@ -562,25 +562,6 @@ code {
   padding: 0.3rem 0.6rem;
 }
 
-/* Le mono est réservé aux valeurs mesurées ; les phrases quittent le tampon :
-   tokens d'italique de corps, sans bordure ni fond, séparés par des points */
-.proof li.phrase {
-  font-family: var(--font-body);
-  font-style: italic;
-  letter-spacing: 0;
-  font-size: 0.9rem;
-  background: transparent;
-  border: none;
-  padding: 0;
-}
-
-.proof li.phrase + .proof li.phrase::before {
-  content: "·";
-  margin-right: 0.5rem;
-  color: var(--ink-300);
-  font-style: normal;
-}
-
 /* Sous-entrées réglées : à même le parchemin, séparées par des filets */
 .subentries {
   list-style: none;
