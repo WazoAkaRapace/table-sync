@@ -72,7 +72,7 @@
               </div>
               <div>
                 <dt>HISTORIQUE</dt>
-                <dd>Auto-hébergée (Docker)</dd>
+                <dd>Auto-hébergé (Docker)</dd>
               </div>
               <div>
                 <dt>TAILLE</dt>
@@ -169,15 +169,15 @@
         <div class="entry-body with-demo">
           <div class="entry-copy">
             <p>
-              Le MD blesse dans son traqueur&nbsp;: la fiche du joueur suit
-              aussitôt&nbsp;; si un sort est concentré, le jet de Constitution
+              Le MD frappe depuis son traqueur&nbsp;: la fiche du joueur suit
+              aussitôt&nbsp;; s'il concentre un sort, le jet de Constitution
               s'affiche avec sa difficulté calculée. Le joueur se soigne depuis
               sa fiche&nbsp;: le traqueur remonte. Un objet change de sac, de
               personnage ou de monture&nbsp;: toute la table le voit.
             </p>
             <p>
               Un seul état partagé, poussé par WebSocket. Pas de rechargement,
-              pas de «&nbsp;attends, je rafraîchis&nbsp;»&nbsp;: quand c'est ton
+              pas de «&nbsp;attends, je rafraîchis&nbsp;»&nbsp;: quand vient ton
               tour, le téléphone vibre.
             </p>
             <ul class="proof" aria-label="Preuves">
@@ -220,8 +220,8 @@
                 </p>
               </div>
               <p class="demo-note">
-                Démonstration interactive&nbsp;: tapez le bouton du MD, la fiche
-                répond. En séance, tout se joue sans un rechargement.
+                Démonstration interactive&nbsp;: tape le bouton du MD, la fiche
+                répond. En séance, tout se joue sans rechargement.
               </p>
             </section>
             <figure class="shot" style="margin-top: 1.4rem">
@@ -253,12 +253,12 @@
                 <h3>Inventaire &amp; bourse</h3>
                 <p>
                   646 objets du SRD en recherche instantanée, pesés en
-                  kilogrammes. L'encombrance avance par paliers et montre ses
-                  effets sur la vitesse au moment où ils s'appliquent. Places de
+                  kilogrammes. L'encombrance se déclenche par paliers et affiche ses
+                  effets sur la vitesse au moment où ils s'appliquent. Emplacements de
                   stockage (porté, montures, conteneurs) et bourse
                   PC/PA/PE/PO/PP&nbsp;: l'argent pèse. Sur chaque arme, des
                   puces calculées&nbsp;: bonus d'attaque détaillé au clic, dés de
-                  dégâts, bonus magique ✨, avertissement de non-qualification.
+                  dégâts, bonus magique ✨, alerte ⚠ non qualifié.
                 </p>
               </li>
               <li>
@@ -274,9 +274,10 @@
                 <h3>Survie &amp; forme sauvage</h3>
                 <p>
                   Dés de vie, sauvegardes contre la mort, épuisement 1–6, 16
-                  états avec durées. Le Druide change de forme selon son
-                  cercle&nbsp;: DD, vol et nage, bêtes déjà vues 👁, PV lancés aux
-                  dés et retour automatique avec dégâts excédentaires.
+                  états avec durées. Le Druide change de forme dans les
+                  limites de son niveau&nbsp;: vol et nage quand ils sont
+                  permis, bêtes déjà vues 👁, PV lancés aux dés et retour
+                  automatique avec les dégâts excédentaires.
                 </p>
               </li>
               <li>
@@ -387,8 +388,8 @@
                 <p>
                   Rencontres préparées, initiative partagée par groupe de
                   monstres, tours et rounds. Les PV des monstres sont lancés aux
-                  dés de vie. Dégâts, soins, demi-dégâts, éditions directes
-                  PV/CA&nbsp;; les états expirent tout seuls en fin de tour.
+                  dés de vie. Dégâts, soins, demi-dégâts, PV et CA
+                  éditables&nbsp;; les états expirent tout seuls en fin de tour.
                 </p>
               </li>
               <li>
@@ -396,15 +397,14 @@
                 <p>
                   964 monstres avec blocs de stats complets&nbsp;: capacités,
                   actions, dés cliquables (le critique double les dés) et
-                  sorts des monstres consultables.
+                  sorts des monstres.
                 </p>
               </li>
               <li>
                 <h3>La table du MD</h3>
                 <p>
                   Tableau de bord du groupe, PNJ partagés dont les secrets ne
-                  quittent pas l'écran du MD, notes par personnage. L'initiative
-                  se saisit par les joueurs depuis leur propre écran.
+                  quittent pas l'écran du MD, notes par personnage. Chaque joueur saisit son initiative depuis son écran.
                 </p>
               </li>
             </ul>
@@ -489,7 +489,7 @@
                 <p>
                   Le groupe se lie à une campagne
                   <a href="https://gmassistant.app" rel="noopener">gmassistant.app</a>&nbsp;:
-                  le MD connecte sa clé, choisit ses personnages, et la fiche
+                  le MD connecte sa clé, choisit ses personnages&nbsp;— la fiche
                   d'identité de chacun (classes, alignement, apparence,
                   personnalité, histoire) s'écrit toute seule.
                 </p>
@@ -499,7 +499,7 @@
                 <p>
                   La chronique sert la table entière&nbsp;: les séances en
                   ordinaux romains, la dernière en entrée courante, des résumés
-                  multi-styles (Résumé, En bref, Héraut, Conte, Sonnet).
+                  dans tous les styles (Résumé, En bref, Héraut, Conte, Sonnet).
                 </p>
               </li>
               <li>
@@ -578,7 +578,7 @@
             <h3>IDÉAUX</h3>
             <p>
               Les règles s'enseignent par l'UI&nbsp;: chaque palier d'encombrance,
-              chaque jet de concentration se montre au moment où il s'applique.
+              chaque jet de concentration s'affiche au moment où il s'applique.
             </p>
           </article>
           <article>
@@ -607,13 +607,13 @@
             </div>
             <p>
               L'app vit chez vous&nbsp;: deux conteneurs Docker, votre base
-              SQLite, vos données. Migration et semis sont automatiques au
+              SQLite, vos données. Migration et semis automatiques au
               premier démarrage&nbsp;: 646 objets, 490 sorts et 964 monstres prêts
               à servir.
             </p>
             <ul class="deploy-notes">
               <li>Sans Docker&nbsp;: Node 22, puis <code class="mono">npm install &amp;&amp; npm run dev</code></li>
-              <li>Installable comme application (PWA) sur téléphones et tablette</li>
+              <li>Installable comme application (PWA) sur téléphones et tablettes</li>
               <li>Licence SRD 5.1 : usage personnel, pas de revente</li>
             </ul>
             <div class="deploy-cta">
@@ -650,7 +650,7 @@
           <h3>L'OUTIL</h3>
           <p>
             Fiches, inventaire, combat et chronique D&amp;D 5e&nbsp;: mobile-first,
-            en français, auto-hébergée.
+            en français, auto-hébergé.
           </p>
         </div>
         <div>
