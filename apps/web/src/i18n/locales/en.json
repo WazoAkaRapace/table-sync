@@ -1,0 +1,31 @@
+{
+  "app": {
+    "sync": {
+      "connected": "Synced",
+      "connecting": "Connecting…",
+      "disconnected": "Offline"
+    },
+    "home": "Home",
+    "logout": "Log out",
+    "language": "Language"
+  },
+  "common": {
+    "loading": "Loading…",
+    "close": "Close",
+    "add": "Add",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "search": "Search",
+    "retry": "Retry",
+    "error": "Something went wrong"
+  },
+  "spell": {
+    "one": "Spell",
+    "seeSpell": "View spell: {{name}}"
+  },
+  "monster": {
+    "one": "Monster"
+  }
+}

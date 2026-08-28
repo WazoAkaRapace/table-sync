@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { appLang } from './i18n';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '',
@@ -11,6 +12,8 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  // Payloads mono-locale : l'API sert la langue demandée, jamais les deux.
+  config.headers['Accept-Language'] = appLang();
   return config;
 });
 

@@ -410,7 +410,7 @@ export function SurvivalPanel({
                 <p className="text-xs text-green-800 text-center">
                   🐾{' '}
                   <strong className="text-green-900">
-                    {shapeForms.find((f) => f.slug === character.wildShapeSlug)?.nameFr ??
+                    {shapeForms.find((f) => f.slug === character.wildShapeSlug)?.name ??
                       character.wildShapeSlug}
                   </strong>{' '}
                   · {wildShapeDurationHours(character.level ?? 2)} h max
@@ -824,7 +824,7 @@ export function SurvivalPanel({
                     <span>
                       Forme actuelle :{' '}
                       <strong className="text-ink-900">
-                        {shapeForms.find((f) => f.slug === character.wildShapeSlug)?.nameFr ??
+                        {shapeForms.find((f) => f.slug === character.wildShapeSlug)?.name ??
                           character.wildShapeSlug}
                       </strong>{' '}
                       · {wildShapeDurationHours(character.level ?? 2)} h max
@@ -895,7 +895,7 @@ export function SurvivalPanel({
             <div className="space-y-1.5">
               {equippedWeapons.map((e) => {
                 const stats = computeWeaponStats(e.item, character);
-                const itemName = e.item.nameFr || e.item.name;
+                const itemName = e.item.name;
                 if (!stats) {
                   return (
                     <div
@@ -1396,8 +1396,7 @@ export function SurvivalPanel({
               .filter(
                 (f) =>
                   (!shapeSeenOnly || f.seen) &&
-                  (!shapeSearch.trim() ||
-                    (f.nameFr ?? f.name).toLowerCase().includes(shapeSearch.toLowerCase())),
+                  (!shapeSearch.trim() || f.name.toLowerCase().includes(shapeSearch.toLowerCase())),
               )
               .map((f) => (
                 <div
@@ -1418,7 +1417,7 @@ export function SurvivalPanel({
                     <span
                       className={`text-sm font-medium block truncate ${f.seen ? 'text-ink-800' : 'text-ink-400'}`}
                     >
-                      {f.nameFr ?? f.name}
+                      {f.name}
                     </span>
                     <span className="text-[10px] text-ink-400">
                       DD{' '}
@@ -1443,7 +1442,7 @@ export function SurvivalPanel({
                     type="button"
                     onClick={() => setShapeStatBlock(f.slug)}
                     className="shrink-0 w-8 h-8 rounded-lg bg-parchment-100 hover:bg-gold-100 text-ink-500 hover:text-gold-600 border border-parchment-200 text-sm flex items-center justify-center transition-colors"
-                    aria-label={`Voir le bloc de stats de ${f.nameFr ?? f.name}`}
+                    aria-label={`Voir le bloc de stats de ${f.name}`}
                     title="Bloc de stats"
                   >
                     📜
@@ -1457,9 +1456,7 @@ export function SurvivalPanel({
                         : 'bg-parchment-200 text-ink-400 hover:bg-parchment-300'
                     }`}
                     aria-label={
-                      f.seen
-                        ? `Marquer ${f.nameFr ?? f.name} comme non vue`
-                        : `Marquer ${f.nameFr ?? f.name} comme vue`
+                      f.seen ? `Marquer ${f.name} comme non vue` : `Marquer ${f.name} comme vue`
                     }
                     aria-pressed={f.seen}
                     title={f.seen ? 'Déjà vue — cliquer pour retirer' : 'Marquer comme vue'}

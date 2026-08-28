@@ -5,6 +5,7 @@
 import { existsSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import type { CreateCustomItem } from '@table-sync/shared';
+import { resolveItemBases } from '@table-sync/shared';
 import { and, eq, inArray, isNull, or, type SQL, sql } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../db/drizzle.ts';
@@ -13,6 +14,7 @@ import { cols } from '../db/projections.ts';
 import { items, parties, partyMembers } from '../db/schema.ts';
 import { bus } from '../sync/bus.ts';
 import { isPartyGM, isPartyMember, mapItem, requireUser } from './helpers.ts';
+import { langFromReq } from './lang.ts';
 
 interface ItemQuery {
   search?: string;
@@ -142,7 +144,7 @@ export async function itemRoutes(app: FastifyInstance) {
       if (row.party_id != null && !isPartyMember(row.party_id, userId)) {
         return reply.code(403).send({ error: 'not a member' });
       }
-      return reply.send({ item: mapItem(row) });
+      return reply.send({ item: mapItem(row, langFromReq(req)) });
     },
   );
 
@@ -176,6 +178,13 @@ export async function itemRoutes(app: FastifyInstance) {
         return reply.code(400).send({ error: 'name is required' });
       }
 
+      // Clés de base résolues à la création (découplage moteur/noms)
+      const bases = resolveItemBases({
+        category: body.category || 'custom',
+        name: body.name.trim(),
+        nameFr: body.nameFr || body.name.trim(),
+        description: body.description || null,
+      });
       const row = drizzle
         .insert(items)
         .values({
@@ -190,11 +199,15 @@ export async function itemRoutes(app: FastifyInstance) {
           costQty: body.costQty ?? null,
           costUnit: body.costUnit || null,
           description: body.description || null,
+          baseWeapon: bases.baseWeapon,
+          baseArmor: bases.baseArmor,
+          armorFamily: bases.armorFamily,
+          magicBonus: bases.magicBonus,
         })
         .returning(cols(items))
         .get() as any;
       bus.emitChange({ type: 'party:change', partyId, action: 'custom-item', actorUserId: userId });
-      return reply.code(201).send({ item: mapItem(row) });
+      return reply.code(201).send({ item: mapItem(row, langFromReq(req)) });
     },
   );
 
@@ -238,7 +251,7 @@ export async function itemRoutes(app: FastifyInstance) {
         action: 'custom-item',
         actorUserId: userId,
       });
-      return reply.send({ item: mapItem(row) });
+      return reply.send({ item: mapItem(row, langFromReq(req)) });
     },
   );
 

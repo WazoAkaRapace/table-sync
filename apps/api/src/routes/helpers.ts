@@ -35,6 +35,7 @@ import {
   partyMembers,
 } from '../db/schema.ts';
 import { bus } from '../sync/bus.ts';
+import { type AppLang, pickLocalized } from './lang.ts';
 
 /** Parse a JSON column that's guaranteed to be an array; never throws. */
 function parseJsonArray(raw: any, fallback: any[] = []): any[] {
@@ -247,20 +248,23 @@ export function replaceCharacterClasses(characterId: number, entries: CharacterC
 }
 
 /** Map a raw DB row to the Item domain type. */
-export function mapItem(row: any): Item {
+export function mapItem(row: any, lang: AppLang = 'fr'): Item {
   return {
     id: row.id,
     source: row.source,
     partyId: row.party_id,
     createdBy: row.created_by,
     category: row.category as ItemCategory,
-    name: row.name,
-    nameFr: row.name_fr,
+    name: pickLocalized(lang, row.name, row.name_fr),
     rarity: row.rarity as Rarity,
     weightKg: row.weight_kg,
     costQty: row.cost_qty,
     costUnit: row.cost_unit as CostUnit | null,
-    description: row.description,
+    description: pickLocalized(lang, row.description_en, row.description),
+    baseWeapon: row.base_weapon ?? null,
+    baseArmor: row.base_armor ?? null,
+    armorFamily: row.armor_family ?? null,
+    magicBonus: row.magic_bonus ?? null,
     damageDice: row.damage_dice,
     damageType: row.damage_type,
     acBase: row.ac_base,
@@ -408,7 +412,7 @@ export function mapCharacter(row: any): Character {
 }
 
 /** Map a raw inventory row (with joined item using i_ aliases) to InventoryEntry. */
-export function mapInventoryEntry(row: any): InventoryEntry {
+export function mapInventoryEntry(row: any, lang: AppLang = 'fr'): InventoryEntry {
   // Detect whether row uses aliased columns (i_id) or raw (id)
   const usesAliases = row.i_id !== undefined;
   const itemRow = usesAliases
@@ -442,7 +446,7 @@ export function mapInventoryEntry(row: any): InventoryEntry {
     id: row.id,
     characterId: row.character_id,
     itemId: row.item_id,
-    item: mapItem(itemRow),
+    item: mapItem(itemRow, lang),
     quantity: row.quantity,
     equipped: !!row.equipped,
     notes: row.notes,
@@ -456,12 +460,11 @@ export function mapInventoryEntry(row: any): InventoryEntry {
  * Handles snake_case → camelCase and JSON parsing of
  * components / classes_json / damage_json / dc_json.
  */
-export function mapSpell(row: any): Spell {
+export function mapSpell(row: any, lang: AppLang = 'fr'): Spell {
   return {
     id: row.id,
     srdIndex: row.srd_index,
-    name: row.name,
-    nameFr: row.name_fr ?? null,
+    name: pickLocalized(lang, row.name, row.name_fr),
     level: row.level,
     school: row.school as SpellSchool,
     castingTime: row.casting_time ?? null,
@@ -471,10 +474,8 @@ export function mapSpell(row: any): Spell {
     duration: row.duration ?? null,
     concentration: !!row.concentration,
     ritual: !!row.ritual,
-    description: row.description ?? null,
-    descriptionFr: row.description_fr ?? null,
-    higherLevel: row.higher_level ?? null,
-    higherLevelFr: row.higher_level_fr ?? null,
+    description: pickLocalized(lang, row.description, row.description_fr),
+    higherLevel: pickLocalized(lang, row.higher_level, row.higher_level_fr),
     attackType: row.attack_type ?? null,
     // damage_json / dc_json are kept as raw JSON strings per the Spell type
     damageJson: row.damage_json ?? null,
@@ -488,7 +489,7 @@ export function mapSpell(row: any): Spell {
  * Expects spell columns to be prefixed with `s_` to avoid collisions
  * with the link table's own columns (id, prepared, sort_order, ...).
  */
-export function mapCharacterSpell(row: any): CharacterSpell {
+export function mapCharacterSpell(row: any, lang: AppLang = 'fr'): CharacterSpell {
   const spellRow = {
     id: row.s_id,
     srd_index: row.s_srd_index,
@@ -515,7 +516,7 @@ export function mapCharacterSpell(row: any): CharacterSpell {
   return {
     id: row.id,
     characterId: row.character_id,
-    spell: mapSpell(spellRow),
+    spell: mapSpell(spellRow, lang),
     prepared: !!row.prepared,
     classSource: row.class_source ?? null,
     sortOrder: row.sort_order ?? 0,

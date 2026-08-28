@@ -561,5 +561,37 @@ check(
   'Warhammer',
 );
 
+// --- Découplage moteur/noms : résolution par CLÉS seules (aucun nom parseable) ---
+const keyedMagicWeapon = {
+  category: 'weapon',
+  name: 'Épée mystérieuse', // aucun nom de catalogue
+  nameFr: null,
+  description: null, // aucun en-tête FR
+  properties: [],
+  damageDice: null,
+  baseWeapon: 'Longsword',
+  baseArmor: null,
+  armorFamily: null,
+  magicBonus: 2,
+};
+const r = resolveMagicWeaponBase(keyedMagicWeapon);
+check('Clés seules → base Longsword', r.base?.nameEn, 'Longsword');
+check('Clés seules → bonus +2', r.magicBonus, 2);
+const s2 = computeWeaponStats(keyedMagicWeapon as any, duelliste);
+check('Clés seules → stats 1d8+7 (FOR 3 + magie 2 + Duel 2)', s2?.damageStr, '1d8+7');
+const keyedMundane = {
+  category: 'weapon',
+  name: 'Artifact sans nom',
+  nameFr: null,
+  description: null,
+  properties: [],
+  damageDice: '1d8',
+  damageType: 'Slashing',
+  baseWeapon: 'Longsword',
+  magicBonus: null,
+};
+const s3 = computeWeaponStats(keyedMundane as any, duelliste);
+check('Arme avec dés + clé → Duel appliqué (1d8)', s3?.damageStr, '1d8+5');
+
 console.log(failures === 0 ? '\n✅ All weapon stats checks pass' : `\n❌ ${failures} failure(s)`);
 process.exit(failures === 0 ? 0 : 1);

@@ -43,7 +43,7 @@ export default function SpellDetailSheet({ open, spellId, onClose }: Props) {
     <BottomSheet
       open={open}
       onClose={onClose}
-      title={spell?.nameFr ?? (loading ? 'Chargement…' : 'Sort')}
+      title={spell?.name ?? (loading ? 'Chargement…' : 'Sort')}
       size="md"
       mobileOnly={false}
     >
@@ -104,18 +104,18 @@ export default function SpellDetailSheet({ open, spellId, onClose }: Props) {
           </div>
 
           {/* Description */}
-          {spell.descriptionFr && (
-            <p className="text-sm text-ink-700 whitespace-pre-line">{spell.descriptionFr}</p>
+          {spell.description && (
+            <p className="text-sm text-ink-700 whitespace-pre-line">{spell.description}</p>
           )}
-          {!spell.descriptionFr && spell.description && (
+          {!spell.description && spell.description && (
             <p className="text-sm text-ink-700 whitespace-pre-line">{spell.description}</p>
           )}
 
           {/* At higher levels */}
-          {(spell.higherLevelFr || spell.higherLevel) && (
+          {(spell.higherLevel || spell.higherLevel) && (
             <div className="text-sm">
               <span className="font-semibold">Aux niveaux supérieurs.</span>{' '}
-              <span className="text-ink-600">{spell.higherLevelFr || spell.higherLevel}</span>
+              <span className="text-ink-600">{spell.higherLevel || spell.higherLevel}</span>
             </div>
           )}
         </div>

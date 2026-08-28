@@ -47,7 +47,7 @@ export default function AddMonsterModal({ open, onClose, onAdd }: Props) {
 
   const handleAdd = useCallback(() => {
     if (!selected) return;
-    onAdd(selected.slug, count, selected.nameFr);
+    onAdd(selected.slug, count, selected.name);
     setSelected(null);
     setSearch('');
     setCount(1);
@@ -87,7 +87,7 @@ export default function AddMonsterModal({ open, onClose, onAdd }: Props) {
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="font-medium">{m.nameFr}</span>
+                    <span className="font-medium">{m.name}</span>
                     <span className="text-xs text-ink-400 ml-2">{m.type}</span>
                   </div>
                   <div className="text-xs text-ink-500 flex gap-3">
@@ -105,7 +105,7 @@ export default function AddMonsterModal({ open, onClose, onAdd }: Props) {
           <div className="card p-4 bg-parchment-50">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="section-title">{selected.nameFr}</h3>
+                <h3 className="section-title">{selected.name}</h3>
                 <p className="text-sm text-ink-500">
                   {selected.type} · {MONSTER_SIZE_LABELS_FR[selected.size] ?? selected.size} · FP{' '}
                   {formatCR(selected.challengeRating)}

@@ -8,6 +8,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { resolveItemBases } from '@table-sync/shared';
 import { getDb } from './index.ts';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -59,21 +60,28 @@ interface SeedItem {
 const INSERT = `
   INSERT INTO items (
     source, party_id, category, srd_index, name, name_fr, rarity,
-    weight_kg, cost_qty, cost_unit, description,
+    weight_kg, cost_qty, cost_unit, description, description_en,
     damage_dice, damage_type, ac_base, str_min, stealth_disadvantage,
-    properties_json, survival_tags, aliases, image_path
+    properties_json, survival_tags, aliases, image_path,
+    base_weapon, base_armor, armor_family, magic_bonus
   ) VALUES (
     'srd', NULL, ?, ?, ?, ?, ?,
-    ?, ?, ?, ?,
     ?, ?, ?, ?, ?,
+    ?, ?, ?, ?, ?,
+    ?, ?, ?, ?,
     ?, ?, ?, ?
   )
   ON CONFLICT(srd_index) DO UPDATE SET
     name_fr = excluded.name_fr,
     weight_kg = excluded.weight_kg,
     description = excluded.description,
+    description_en = excluded.description_en,
     survival_tags = excluded.survival_tags,
-    aliases = excluded.aliases
+    aliases = excluded.aliases,
+    base_weapon = excluded.base_weapon,
+    base_armor = excluded.base_armor,
+    armor_family = excluded.armor_family,
+    magic_bonus = excluded.magic_bonus
 `;
 
 // SRD items that count as food or water for survival tracking
@@ -128,6 +136,8 @@ export function seedItems(): void {
   const insert = db.prepare(INSERT);
   const tx = db.transaction((rows: SeedItem[]) => {
     for (const it of rows) {
+      // Clés de base résolues UNE FOIS à l'import (docs/i18n-engine-refactor-plan.md)
+      const bases = resolveItemBases(it);
       insert.run(
         it.category,
         it.srdIndex,
@@ -138,6 +148,7 @@ export function seedItems(): void {
         it.costQty,
         it.costUnit,
         it.description,
+        (it as { descriptionEn?: string | null }).descriptionEn ?? null,
         it.damageDice,
         it.damageType,
         it.acBase,
@@ -147,6 +158,10 @@ export function seedItems(): void {
         JSON.stringify(SURVIVAL_TAGS[it.srdIndex] || []),
         JSON.stringify(ITEM_ALIASES[it.srdIndex] || []),
         it.imagePath,
+        bases.baseWeapon,
+        bases.baseArmor,
+        bases.armorFamily,
+        bases.magicBonus,
       );
     }
   });
@@ -297,14 +312,15 @@ const MONSTER_INSERT = `
     speed_json, abilities_json, saving_throws_json, skills_json, languages_json,
     challenge_rating, xp, senses, telepathy,
     damage_resistances_json, damage_immunities_json, condition_immunities_json,
-    traits_json, actions_json, legendary_actions_json, source
+    traits_json, actions_json, legendary_actions_json, source, overlay_en
   ) VALUES (
     ?, ?, ?, ?, ?, ?,
     ?, ?, ?, ?,
     ?, ?, ?, ?, ?,
     ?, ?, ?, ?,
     ?, ?, ?,
-    ?, ?, ?, ?
+    ?, ?, ?, ?,
+    ?
   )
   ON CONFLICT(slug) DO UPDATE SET
     name_fr = excluded.name_fr,
@@ -315,7 +331,8 @@ const MONSTER_INSERT = `
     abilities_json = excluded.abilities_json,
     actions_json = excluded.actions_json,
     legendary_actions_json = excluded.legendary_actions_json,
-    traits_json = excluded.traits_json
+    traits_json = excluded.traits_json,
+    overlay_en = excluded.overlay_en
 `;
 
 const MONSTER_COUNT_SQL = `SELECT COUNT(*) as n FROM monsters`;
@@ -325,6 +342,15 @@ export function seedMonsters(): void {
   const seedPath = resolveSeedPath('monsters-seed.json');
   const monsters = JSON.parse(readFileSync(seedPath, 'utf8')) as SeedMonster[];
   console.log(`[seed] loading monsters from ${seedPath}`);
+  // Overlay anglais (bestiaire localisé — voir docs/i18n-english-plan.md)
+  let enOverlay: Record<string, unknown> = {};
+  try {
+    const enPath = resolveSeedPath('monsters-en.json');
+    enOverlay = JSON.parse(readFileSync(enPath, 'utf8')) as Record<string, unknown>;
+    console.log(`[seed] EN monster overlay: ${Object.keys(enOverlay).length} entries`);
+  } catch {
+    console.log('[seed] no EN monster overlay found (FR-only)');
+  }
 
   const before = (db.prepare(MONSTER_COUNT_SQL).get() as { n: number }).n;
 
@@ -358,6 +384,7 @@ export function seedMonsters(): void {
         JSON.stringify(m.actions),
         JSON.stringify(m.legendaryActions),
         m.source,
+        enOverlay[m.slug] ? JSON.stringify(enOverlay[m.slug]) : null,
       );
     }
   });

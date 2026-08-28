@@ -51,7 +51,7 @@ export default function CastSpellSheet({
   onCast: (level: number, ritual?: boolean, pool?: 'spellcasting' | 'pact') => Promise<void> | void;
 }) {
   const isCantrip = spell.level === 0;
-  const canUpcast = !!(spell.higherLevelFr || spell.higherLevel);
+  const canUpcast = !!(spell.higherLevel || spell.higherLevel);
 
   // Options d'emplacement : un bouton par dépense possible — Incantation
   // (le niveau du sort + les niveaux supérieurs quand il évolue) ET, si le
@@ -121,11 +121,11 @@ export default function CastSpellSheet({
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-label={`Lancer ${spell.nameFr ?? spell.name}`}
+        aria-label={`Lancer ${spell.name}`}
       >
         <div className="flex items-start justify-between gap-2 mb-3">
           <div>
-            <h3 className="section-title">🪄 {spell.nameFr ?? spell.name}</h3>
+            <h3 className="section-title">🪄 {spell.name}</h3>
             <p className="text-xs text-ink-400">
               {isCantrip ? 'Tour de magie' : `Sort de niveau ${spell.level}`}
               {spell.concentration && ' · 🌀 Concentration'}
@@ -146,8 +146,8 @@ export default function CastSpellSheet({
           <div className="rounded-lg bg-amber-50 border border-amber-300 p-3 mb-3 text-sm text-amber-900">
             <p className="font-semibold">⚠️ Concentration en cours</p>
             <p className="mt-0.5">
-              Tu concentres déjà un sort. Lancer <strong>{spell.nameFr ?? spell.name}</strong>{' '}
-              mettra fin au sort précédent.
+              Tu concentres déjà un sort. Lancer <strong>{spell.name}</strong> mettra fin au sort
+              précédent.
             </p>
           </div>
         )}

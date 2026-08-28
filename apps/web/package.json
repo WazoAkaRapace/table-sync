@@ -15,8 +15,10 @@
     "@table-sync/shared": "*",
     "@tanstack/react-query": "^5.101.4",
     "axios": "^1.7.7",
+    "i18next": "^26.4.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "react-i18next": "^17.0.12",
     "react-router-dom": "^7.18.2"
   },
   "devDependencies": {

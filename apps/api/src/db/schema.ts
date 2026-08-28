@@ -257,6 +257,11 @@ export const items = sqliteTable(
     costQty: integer('cost_qty'),
     costUnit: text('cost_unit'),
     description: text('description'),
+    descriptionEn: text('description_en'),
+    baseWeapon: text('base_weapon'),
+    baseArmor: text('base_armor'),
+    armorFamily: text('armor_family'),
+    magicBonus: integer('magic_bonus'),
     damageDice: text('damage_dice'),
     damageType: text('damage_type'),
     acBase: integer('ac_base'),
@@ -493,6 +498,8 @@ export const monsters = sqliteTable(
   {
     slug: text('slug').primaryKey(),
     nameFr: text('name_fr').notNull(),
+    /** Overlay anglais (nom + bloc de stat texte) — voir data/monsters-en.json. */
+    overlayEn: text('overlay_en'),
     type: text('type'),
     subtype: text('subtype'),
     size: text('size'),

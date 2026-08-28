@@ -4,12 +4,13 @@
  * require authentication (enforced by the global guard in server.ts).
  */
 
-import { and, eq, isNotNull, or, type SQL, sql } from 'drizzle-orm';
+import { and, eq, or, type SQL, sql } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../db/drizzle.ts';
 import { cols } from '../db/projections.ts';
 import { spells } from '../db/schema.ts';
 import { mapSpell, requireUser } from './helpers.ts';
+import { langFromReq, pickLocalized } from './lang.ts';
 
 interface SpellQuery {
   class?: string;
@@ -109,14 +110,18 @@ export async function spellRoutes(app: FastifyInstance) {
   app.get('/spells/light', async (req: FastifyRequest, reply: FastifyReply) => {
     const userId = requireUser(req, reply);
     if (userId === null) return;
+    const lang = langFromReq(req);
     const rows = getDrizzle()
-      .select({ id: spells.id, name_fr: spells.nameFr, level: spells.level })
+      .select({ id: spells.id, name_fr: spells.nameFr, name: spells.name, level: spells.level })
       .from(spells)
-      .where(isNotNull(spells.nameFr))
       .orderBy(spells.level, sql`${spells.nameFr} COLLATE NOCASE ASC`)
       .all();
     return reply.send({
-      spells: rows.map((r: any) => ({ id: r.id, nameFr: r.name_fr, level: r.level })),
+      spells: rows.map((r: any) => ({
+        id: r.id,
+        name: pickLocalized(lang, r.name, r.name_fr),
+        level: r.level,
+      })),
     });
   });
 
@@ -132,7 +137,7 @@ export async function spellRoutes(app: FastifyInstance) {
         .where(eq(spells.id, Number(req.params.id)))
         .get() as any;
       if (!row) return reply.code(404).send({ error: 'spell not found' });
-      return reply.send({ spell: mapSpell(row) });
+      return reply.send({ spell: mapSpell(row, langFromReq(req)) });
     },
   );
 }

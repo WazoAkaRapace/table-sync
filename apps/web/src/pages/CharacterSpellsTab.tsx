@@ -488,7 +488,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
         .sort(
           (a, b) =>
             Number(b.prepared) - Number(a.prepared) ||
-            (a.spell.nameFr ?? a.spell.name).localeCompare(b.spell.nameFr ?? b.spell.name, 'fr'),
+            (a.spell.name ?? a.spell.name).localeCompare(b.spell.name ?? b.spell.name, 'fr'),
         ),
     }))
     .filter((g) => g.spells.length > 0);
@@ -704,7 +704,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                       {group.spells.map((cs) => {
                         const spell = cs.spell;
                         const isExpanded = expandedId === cs.id;
-                        const name = spell.nameFr ?? spell.name;
+                        const name = spell.name;
                         const isDomain = domainIds.has(spell.id);
                         const canRemove = !isDomain;
                         const isBonusAction = !!spell.castingTime?.includes('bonus');
@@ -807,11 +807,10 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                               </div>
                               {isExpanded && (
                                 <div className="px-3 pb-3 pt-2 border-t border-parchment-200 text-xs text-ink-600 space-y-2 bg-parchment-50">
-                                  <p>{spell.descriptionFr ?? spell.description}</p>
-                                  {spell.higherLevelFr && (
+                                  <p>{spell.description}</p>
+                                  {spell.higherLevel && (
                                     <p className="text-ink-400 italic">
-                                      <strong>Aux niveaux supérieurs :</strong>{' '}
-                                      {spell.higherLevelFr}
+                                      <strong>Aux niveaux supérieurs :</strong> {spell.higherLevel}
                                     </p>
                                   )}
                                   <SpellStatBadges
@@ -1338,7 +1337,7 @@ function SpellCatalog({
             {spells.map((spell) => {
               const isExpanded = expandedSpellId === spell.id;
               const isKnown = knownSpellIds.has(spell.id);
-              const name = spell.nameFr ?? spell.name;
+              const name = spell.name;
               return (
                 <li
                   key={spell.id}
@@ -1394,10 +1393,10 @@ function SpellCatalog({
                   </div>
                   {isExpanded && (
                     <div className="px-3 pb-3 pt-2 border-t border-parchment-200 text-xs text-ink-600 space-y-2 bg-parchment-50">
-                      <p>{spell.descriptionFr ?? spell.description}</p>
-                      {spell.higherLevelFr && (
+                      <p>{spell.description}</p>
+                      {spell.higherLevel && (
                         <p className="text-ink-400 italic">
-                          <strong>Aux niveaux supérieurs :</strong> {spell.higherLevelFr}
+                          <strong>Aux niveaux supérieurs :</strong> {spell.higherLevel}
                         </p>
                       )}
                       <SpellStatBadges

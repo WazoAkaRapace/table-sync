@@ -14,7 +14,9 @@ import {
   songOfRestDie,
 } from './classFeatures.ts';
 
+export * from './classFeatures.en.ts';
 export * from './classFeatures.ts';
+export * from './labels.en.ts';
 
 // ---------- Items ----------
 
@@ -47,14 +49,21 @@ export interface Item {
   /** Author of a custom item (players can author when the party allows it). */
   createdBy: number | null;
   category: ItemCategory;
+  /** Localisé par l'API selon la langue de la requête (repli FR si absent). */
   name: string;
-  nameFr: string | null;
   rarity: Rarity;
   /** Weight in KILOGRAMS. Null when unknown (some magic items). */
   weightKg: number | null;
   costQty: number | null;
   costUnit: CostUnit | null;
+  /** Localisée par l'API selon la langue de la requête (repli FR si absent). */
   description: string | null;
+  /** Clés de base stables (calculées à l'import/création — voir
+   *  docs/i18n-engine-refactor-plan.md) : le moteur ne parse plus les noms. */
+  baseWeapon: string | null;
+  baseArmor: string | null;
+  armorFamily: 'light' | 'medium' | 'heavy' | 'shield' | null;
+  magicBonus: number | null;
   // Weapon/armor specifics
   damageDice: string | null;
   damageType: string | null;
@@ -1954,10 +1963,10 @@ export function computeAC(
       category: string;
       acBase: number | null;
       strMin: number | null;
-      nameFr: string | null;
+      nameFr?: string | null;
       name: string;
       description?: string | null;
-    };
+    } & ItemBaseKeys;
     equipped: boolean;
   }>,
   dexMod: number,
@@ -2578,10 +2587,15 @@ export function effectiveWeaponProficiencies(
 
 /** Is the character proficient with this weapon? (Magic weapons follow their base weapon.) */
 export function isProficientWithWeapon(
-  item: Pick<
-    Item,
-    'category' | 'name' | 'nameFr' | 'properties' | 'damageDice' | 'damageType' | 'description'
-  >,
+  item: {
+    category: string;
+    name: string;
+    nameFr?: string | null;
+    properties?: string[];
+    damageDice?: string | null;
+    damageType?: string | null;
+    description?: string | null;
+  } & ItemBaseKeys,
   character: { characterClass?: string | null; weaponProficiencies?: string[] | null },
 ): boolean {
   if (item.category !== 'weapon') return false;
@@ -2590,6 +2604,8 @@ export function isProficientWithWeapon(
   if (!item.damageDice) {
     const magic = resolveMagicWeaponBase(item);
     if (magic.base) nameEn = magic.base.nameEn;
+  } else if (item.baseWeapon) {
+    nameEn = item.baseWeapon;
   }
   const prof = effectiveWeaponProficiencies(character);
   const base = findMundaneByName(nameEn, item.nameFr);
@@ -2682,7 +2698,14 @@ export function effectiveArmorProficiencies(
  * the sheet only surfaces as a hint, never blocks.)
  */
 export function isProficientWithArmor(
-  item: Pick<Item, 'category' | 'name' | 'nameFr' | 'acBase' | 'strMin' | 'description'>,
+  item: {
+    category: string;
+    name: string;
+    nameFr?: string | null;
+    acBase?: number | null;
+    strMin?: number | null;
+    description?: string | null;
+  } & ItemBaseKeys,
   character: { characterClass?: string | null; armorProficiencies?: string[] | null },
 ): boolean {
   if (item.category !== 'armor') return false;
@@ -2714,9 +2737,9 @@ export function isProficientWithArmor(
   const armorType =
     base && base.armorType !== 'shield'
       ? base.armorType
-      : item.strMin !== null && item.strMin >= 13
+      : item.strMin != null && item.strMin >= 13
         ? 'heavy'
-        : acBase !== null && acBase >= 13 && acBase <= 15
+        : acBase != null && acBase >= 13 && acBase <= 15
           ? 'medium'
           : 'light';
   if (armorType === 'light') return prof.light;
@@ -2738,6 +2761,79 @@ export function findMundaneByName(
     if (byFr) return byFr;
   }
   return null;
+}
+
+/** Entrée de resolveItemBases : un objet seed/BD avec ses noms FR/EN d'origine. */
+export interface ItemBasesInput {
+  category?: string | null;
+  name: string | null;
+  nameFr?: string | null;
+  description?: string | null;
+  properties?: string[];
+  damageDice?: string | null;
+}
+
+/** Clés de base stables d'un objet — persistées en base, lues par le moteur. */
+export interface ItemBases {
+  baseWeapon: string | null;
+  baseArmor: string | null;
+  armorFamily: 'light' | 'medium' | 'heavy' | 'shield' | null;
+  magicBonus: number | null;
+}
+
+/**
+ * Résout les clés de base d'un objet UNE FOIS (seed, création, backfill boot) en
+ * réutilisant les résolveurs par noms FR/EN. C'est l'outil d'import du
+ * découplage moteur/noms — le runtime, lui, lit `Item.baseWeapon` etc.
+ * (docs/i18n-engine-refactor-plan.md).
+ */
+export function resolveItemBases(item: ItemBasesInput): ItemBases {
+  const out: ItemBases = {
+    baseWeapon: null,
+    baseArmor: null,
+    armorFamily: null,
+    magicBonus: null,
+  };
+  if (item.category === 'weapon') {
+    const base = item.damageDice
+      ? findMundaneByName(item.name, item.nameFr)
+      : resolveMagicWeaponBase(item).base;
+    if (base) {
+      out.baseWeapon = base.nameEn;
+      out.magicBonus = item.damageDice ? 0 : resolveMagicWeaponBase(item).magicBonus;
+    }
+    return out;
+  }
+  if (item.category === 'armor') {
+    const magic = resolveMagicArmorBase(item);
+    if (magic.shield) {
+      out.armorFamily = 'shield';
+      out.baseArmor = magic.base?.nameEn ?? 'Shield';
+      out.magicBonus = magic.magicBonus || null;
+      return out;
+    }
+    if (magic.base) {
+      out.baseArmor = magic.base.nameEn;
+      out.armorFamily = magic.base.armorType;
+      out.magicBonus = magic.magicBonus || null;
+      return out;
+    }
+    // Armure de famille (« +1 armure (légère) ») : famille seule
+    const header = item.description?.match(/^Armure \(([^)]+)\)/i)?.[1]?.toLowerCase() ?? '';
+    if (header.includes('légère') || header.includes('legere')) out.armorFamily = 'light';
+    else if (header.includes('intermédiaire') || header.includes('intermediaire'))
+      out.armorFamily = 'medium';
+    else if (header.includes('lourde')) out.armorFamily = 'heavy';
+  }
+  return out;
+}
+
+/** Champs de clés de base optionnels — acceptés par les résolveurs runtime. */
+export interface ItemBaseKeys {
+  baseWeapon?: string | null;
+  baseArmor?: string | null;
+  armorFamily?: 'light' | 'medium' | 'heavy' | 'shield' | null;
+  magicBonus?: number | null;
 }
 
 /** Result of resolving a magic weapon to its base weapon + magic bonus. */
@@ -2762,9 +2858,27 @@ export interface MagicWeaponBase {
  *     de dégâts" in the description.
  */
 export function resolveMagicWeaponBase(
-  item: Pick<Item, 'name' | 'nameFr' | 'description' | 'properties' | 'damageDice'>,
+  item: {
+    name: string | null;
+    nameFr?: string | null;
+    description?: string | null;
+    properties?: string[];
+    damageDice?: string | null;
+  } & ItemBaseKeys,
 ): MagicWeaponBase {
   const result: MagicWeaponBase = { base: null, presumed: false, magicBonus: 0 };
+
+  // Clé stable d'abord (docs/i18n-engine-refactor-plan.md) — insensible à la
+  // langue d'affichage. Le parse de noms qui suit n'est plus qu'un repli pour
+  // les lignes sans clés.
+  if (item.baseWeapon) {
+    const keyed = MUNDANE_WEAPONS.find((m) => m.nameEn === item.baseWeapon);
+    if (keyed) {
+      result.base = keyed;
+      result.magicBonus = item.magicBonus ?? 0;
+      return result;
+    }
+  }
 
   // Magic bonus from name ("Arme +2") or description
   const nameBonus = (item.name ?? '').match(/\+(\d)/);
@@ -2869,10 +2983,15 @@ function formatDiceWithMod(dice: string, mod: number): string | null {
  * Returns null for non-weapons or weapons with no dice and no resolvable base.
  */
 export function computeWeaponStats(
-  item: Pick<
-    Item,
-    'category' | 'name' | 'nameFr' | 'description' | 'properties' | 'damageDice' | 'damageType'
-  >,
+  item: {
+    category: string;
+    name: string;
+    nameFr?: string | null;
+    description?: string | null;
+    properties?: string[];
+    damageDice?: string | null;
+    damageType?: string | null;
+  } & ItemBaseKeys,
   character: CharacterClassSource &
     Pick<Character, 'strength' | 'dexterity' | 'level'> & {
       weaponProficiencies?: string[] | null;
@@ -2881,9 +3000,9 @@ export function computeWeaponStats(
   if (item.category !== 'weapon') return null;
 
   // Magic weapons: resolve base weapon + bonus
-  let dice: string | null = item.damageDice;
-  let damageType = item.damageType;
-  let props = item.properties;
+  let dice: string | null = item.damageDice ?? null;
+  let damageType = item.damageType ?? null;
+  let props = item.properties ?? [];
   let magicBonus = 0;
   let presumedBase = false;
   let nameEn = item.name;
@@ -2906,7 +3025,7 @@ export function computeWeaponStats(
   // Monk weapons (martial arts): STR or DEX for Monks — monk features key off
   // the Moine CLASS level (SRD multiclassing), not the character level.
   const monkLvl = classLevelOf(character, 'Moine');
-  const monkWeapon = props.includes('monk') || isMonkWeaponName(nameEn, item.nameFr);
+  const monkWeapon = props.includes('monk') || isMonkWeaponName(nameEn, item.nameFr ?? null);
   const styles = fightingStylesOf(character);
 
   // Martial arts: the monk's damage die replaces the weapon's when larger
@@ -3022,10 +3141,10 @@ export function computeSpeed(
       category: string;
       acBase: number | null;
       strMin: number | null;
-      nameFr: string | null;
+      nameFr?: string | null;
       name: string;
       description?: string | null;
-    };
+    } & ItemBaseKeys;
     equipped: boolean;
   }>,
 ): SpeedResult {
@@ -3513,7 +3632,6 @@ export function wildShapeDurationHours(level: number): number {
 
 export interface WildShapeFormSummary {
   slug: string;
-  nameFr: string | null;
   name: string;
   challengeRating: number;
   size: string | null;
@@ -3837,9 +3955,19 @@ export interface MagicArmorBase {
 export function resolveMagicArmorBase(
   // Wider than Pick<Item, …>: computeAC/computeSpeed entry items carry an
   // optional description (string | null | undefined) — full Item still matches.
-  item: { name: string; nameFr: string | null; description?: string | null },
+  item: { name: string | null; nameFr?: string | null; description?: string | null } & ItemBaseKeys,
 ): MagicArmorBase {
   const result: MagicArmorBase = { base: null, shield: false, magicBonus: 0 };
+
+  // Clé stable d'abord (docs/i18n-engine-refactor-plan.md) — remplace le parse
+  // d'en-têtes FR/noms, qui ne survit pas à un affichage localisé.
+  if (item.baseArmor || item.armorFamily === 'shield') {
+    result.shield = item.armorFamily === 'shield';
+    result.base = MUNDANE_ARMORS.find((a) => a.nameEn === (item.baseArmor ?? 'Shield')) ?? null;
+    result.magicBonus = item.magicBonus ?? 0;
+    return result;
+  }
+
   const header = item.description?.match(/^Armure \(([^)]+)\)/i)?.[1]?.toLowerCase() ?? '';
   const nameLower = `${item.name ?? ''} ${item.nameFr ?? ''}`.toLowerCase();
 
@@ -3928,8 +4056,8 @@ export const SPELL_SCHOOL_LABELS_FR: Record<SpellSchool, string> = {
 export interface Spell {
   id: number;
   srdIndex: string;
+  /** Localisé par l'API selon la langue de la requête (?lang=/Accept-Language, fr par défaut). */
   name: string;
-  nameFr: string | null;
   level: number; // 0-9 (0 = cantrip)
   school: SpellSchool;
   castingTime: string | null;
@@ -3939,10 +4067,9 @@ export interface Spell {
   duration: string | null;
   concentration: boolean;
   ritual: boolean;
+  /** Localisés par l'API selon la langue de la requête (repli FR si absent). */
   description: string | null;
-  descriptionFr: string | null;
   higherLevel: string | null;
-  higherLevelFr: string | null;
   attackType: string | null; // "ranged"/"melee" or null
   damageJson: string | null;
   dcJson: string | null;
@@ -4500,7 +4627,8 @@ export interface MonsterSkill {
 /** A full monster stat block from the French SRD bestiary (metric units). */
 export interface Monster {
   slug: string;
-  nameFr: string;
+  /** Localisé par l'API selon la langue de la requête (repli FR si absent). */
+  name: string;
   type: string;
   subtype: string | null;
   size: string; // French size code: T (Très petit), P (Petit), M (Moyen), G (Grand), TG (Très grand), Gig (Gigantesque), C (Colossal)
@@ -4511,6 +4639,8 @@ export interface Monster {
   hitDice: string | null;
   /** Speeds in meters (walk/swim/fly/climb/burrow). */
   speed: Partial<Record<'walk' | 'swim' | 'fly' | 'climb' | 'burrow', number>>;
+  /** Texte de vitesse localisé (pieds en EN) quand l'overlay existe — sinon l'UI formate `speed`. */
+  speedText?: string | null;
   abilities: { for: number; dex: number; con: number; int: number; sag: number; cha: number };
   savingThrows: string[]; // ability short codes that get a save bonus
   skills: MonsterSkill[];
@@ -4530,7 +4660,8 @@ export interface Monster {
 /** Light row for the picker/search (no prose). */
 export interface MonsterSummary {
   slug: string;
-  nameFr: string;
+  /** Localisé par l'API selon la langue de la requête (repli FR si absent). */
+  name: string;
   type: string;
   size: string;
   challengeRating: number;

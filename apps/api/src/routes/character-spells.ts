@@ -25,6 +25,7 @@ import {
   mapCharacterSpell,
   requireUser,
 } from './helpers.ts';
+import { langFromReq } from './lang.ts';
 
 interface AddCharacterSpellPayload {
   spellId: number;
@@ -231,7 +232,7 @@ export async function characterSpellRoutes(app: FastifyInstance) {
         action: 'stats',
         actorUserId: userId,
       });
-      return reply.code(201).send({ spell: mapCharacterSpell(row) });
+      return reply.code(201).send({ spell: mapCharacterSpell(row, langFromReq(req)) });
     },
   );
 
@@ -279,7 +280,7 @@ export async function characterSpellRoutes(app: FastifyInstance) {
         action: 'stats',
         actorUserId: userId,
       });
-      return reply.send({ spell: mapCharacterSpell(row) });
+      return reply.send({ spell: mapCharacterSpell(row, langFromReq(req)) });
     },
   );
 

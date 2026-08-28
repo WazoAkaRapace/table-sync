@@ -248,4 +248,28 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   eq(r.status, 404, 'delete item 404');
   r = await api(base, 'DELETE', `/api/items/${custom.id}`, { token: fx.gm.token });
   eq(r.status, 204, 'delete custom item');
+  // ---------- Découplage moteur/noms : clés de base + payload mono-locale ----------
+  const keyStats = srv.query(
+    `SELECT
+       SUM(CASE WHEN category = 'weapon' AND base_weapon IS NOT NULL THEN 1 ELSE 0 END) AS w,
+       SUM(CASE WHEN category = 'weapon' THEN 1 ELSE 0 END) AS wt,
+       SUM(CASE WHEN category = 'armor' AND (base_armor IS NOT NULL OR armor_family IS NOT NULL) THEN 1 ELSE 0 END) AS a,
+       SUM(CASE WHEN category = 'armor' THEN 1 ELSE 0 END) AS at
+     FROM items WHERE source = 'srd'`,
+  ) as { w: number; wt: number; a: number; at: number };
+  ok(keyStats.w >= keyStats.wt * 0.9, `weapon base keys backfilled (${keyStats.w}/${keyStats.wt})`);
+  ok(keyStats.a >= keyStats.at * 0.9, `armor base keys backfilled (${keyStats.a}/${keyStats.at})`);
+
+  const frItem = srv.query(
+    "SELECT id, COALESCE(name_fr, name) AS fr, name AS en FROM items WHERE srd_index = 'longsword'",
+  ) as { id: number; fr: string; en: string };
+  r = await api(base, 'GET', `/api/items/${frItem.id}`, { token: fx.player.token });
+  eq(r.data.item.name, frItem.fr, 'default lang serves French name');
+  ok(!('nameFr' in r.data.item), 'single-locale payload: no nameFr field');
+  ok(r.data.item.baseWeapon === 'Longsword', 'payload carries baseWeapon key');
+  r = await api(base, 'GET', `/api/items/${frItem.id}`, {
+    token: fx.player.token,
+    headers: { 'Accept-Language': 'en' },
+  });
+  eq(r.data.item.name, frItem.en, 'Accept-Language: en serves English name');
 }

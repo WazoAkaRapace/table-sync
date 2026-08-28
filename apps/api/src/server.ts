@@ -8,6 +8,7 @@ import jwt from '@fastify/jwt';
 import multipart from '@fastify/multipart';
 import websocket from '@fastify/websocket';
 import Fastify from 'fastify';
+import { backfillItemBases } from './db/backfill.ts';
 import { runDrizzleMigrations } from './db/drizzle.ts';
 import { migrate } from './db/index.ts';
 import { seedItems, seedMonsters, seedSpells } from './db/seed.ts';
@@ -149,6 +150,7 @@ async function start() {
   // Auto-migrate + seed on boot (idempotent)
   migrate();
   runDrizzleMigrations();
+  backfillItemBases();
   try {
     seedItems();
   } catch (err) {

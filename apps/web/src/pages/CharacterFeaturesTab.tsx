@@ -7,6 +7,7 @@ import {
   type Character,
   type CharacterFeature,
   CLASS_FEATURES,
+  CLASS_FEATURES_EN,
   CLASS_SUBCLASSES,
   type ClassFeatureDef,
   classesOf,
@@ -26,7 +27,28 @@ import { useCallback, useEffect, useState } from 'react';
 import api from '../api';
 import { SortableCard, SortableGrid } from '../components/SortableGrid';
 import { ConfirmButton, EmptyState, Modal } from '../components/ui';
+import { appLang } from '../i18n';
 import { useSyncEvent } from '../sync';
+
+// Affichage EN : le catalogue SRD a sa table anglaise (classFeatures.en.ts),
+// les lignes stockées restent FR — on superpose via catalogId.
+function featName(f: { title: string; catalogId?: string | null }): string {
+  return (
+    (appLang() === 'en' && f.catalogId ? CLASS_FEATURES_EN[f.catalogId]?.name : null) ?? f.title
+  );
+}
+function featDesc(f: { description: string | null; catalogId?: string | null }): string | null {
+  return (
+    (appLang() === 'en' && f.catalogId ? CLASS_FEATURES_EN[f.catalogId]?.description : null) ??
+    f.description
+  );
+}
+function defName(d: { id: string; name: string }): string {
+  return (appLang() === 'en' ? CLASS_FEATURES_EN[d.id]?.name : null) ?? d.name;
+}
+function defDesc(d: { id: string; description: string }): string {
+  return (appLang() === 'en' ? CLASS_FEATURES_EN[d.id]?.description : null) ?? d.description;
+}
 
 interface Props {
   character: Character;
@@ -298,14 +320,14 @@ export default function CharacterFeaturesTab({
                 className="grid gap-3 sm:grid-cols-2"
               >
                 {group.items.map((feature) => {
-                  const rendered = feature.description
-                    ? renderFeatureTemplate(feature.description, character)
+                  const rendered = featDesc(feature)
+                    ? renderFeatureTemplate(featDesc(feature) as string, character)
                     : null;
                   return (
                     <SortableCard
                       key={feature.id}
                       id={feature.id}
-                      label={`Déplacer ${feature.title}`}
+                      label={`Déplacer ${featName(feature)}`}
                     >
                       {(handle, isDragging) => (
                         <div
@@ -313,14 +335,14 @@ export default function CharacterFeaturesTab({
                         >
                           <div className="flex items-start justify-between gap-2">
                             <h3 className="font-display font-semibold text-ink-800">
-                              {feature.title}
+                              {featName(feature)}
                             </h3>
                             <div className="flex items-center gap-1 shrink-0">
                               <button
                                 type="button"
                                 onClick={() => openEdit(feature)}
                                 className="text-ink-400 hover:text-blood-600 text-sm p-1"
-                                aria-label={`Modifier ${feature.title}`}
+                                aria-label={`Modifier ${featName(feature)}`}
                               >
                                 ✎
                               </button>
@@ -328,8 +350,8 @@ export default function CharacterFeaturesTab({
                                 onConfirm={() => remove(feature.id)}
                                 className="text-ink-400 hover:text-red-500 text-sm p-1 rounded-full transition-colors"
                                 armedClassName="bg-red-600 hover:bg-red-700 text-white! px-2.5 py-1 font-semibold"
-                                title={`Supprimer ${feature.title}`}
-                                ariaLabel={`Supprimer ${feature.title}`}
+                                title={`Supprimer ${featName(feature)}`}
+                                ariaLabel={`Supprimer ${featName(feature)}`}
                                 confirmChildren="Supprimer ?"
                               >
                                 ×
@@ -750,7 +772,9 @@ function CatalogCard({
                       >
                         Niv {def.level}
                       </span>
-                      <span className="text-sm font-medium text-ink-800 truncate">{def.name}</span>
+                      <span className="text-sm font-medium text-ink-800 truncate">
+                        {defName(def)}
+                      </span>
                       {def.native && (
                         <span className="text-[10px] text-ink-400 italic shrink-0">
                           géré par la fiche
@@ -791,7 +815,7 @@ function CatalogCard({
                   </div>
                   {expanded && (
                     <p className="text-xs text-ink-600 px-3 pb-2.5 leading-relaxed whitespace-pre-line">
-                      {renderFeatureTemplate(def.description, character)}
+                      {renderFeatureTemplate(defDesc(def), character)}
                     </p>
                   )}
                 </div>
