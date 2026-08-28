@@ -91,3 +91,21 @@ export function monsterTypeLabel(type: string): string {
   const base = normalizeMonsterTypeFr(type);
   return MONSTER_TYPE_LABELS_EN[base] ?? base;
 }
+
+// Catalogues SRD (classes, espèces, historiques) — clés FR, affichage EN.
+import {
+  type CatalogEntryEn,
+  DND_BACKGROUNDS_EN,
+  DND_CLASSES_EN,
+  DND_RACES_EN,
+} from '@table-sync/shared';
+
+const enEntry = (table: Record<string, CatalogEntryEn>, frName: string): CatalogEntryEn | null =>
+  en() ? (table[frName] ?? null) : null;
+
+export const classInfo = (frName: string): CatalogEntryEn =>
+  enEntry(DND_CLASSES_EN, frName) ?? { name: frName };
+export const raceInfo = (frName: string): CatalogEntryEn =>
+  enEntry(DND_RACES_EN, frName) ?? { name: frName };
+export const backgroundInfo = (frName: string): CatalogEntryEn =>
+  enEntry(DND_BACKGROUNDS_EN, frName) ?? { name: frName };

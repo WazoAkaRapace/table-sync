@@ -38,7 +38,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../api';
 import { NumberField } from '../components/ui';
-import { abilityShort } from '../i18n/labels';
+import { abilityShort, backgroundInfo, classInfo, raceInfo } from '../i18n/labels';
 
 /** Marker for the « Autre… » free-text escape on every catalog picker. */
 const CUSTOM = '__custom__';
@@ -445,8 +445,8 @@ export default function CharacterCreatePage() {
               <OptionRow
                 key={c.name}
                 selected={classChoice === c.name}
-                title={c.name}
-                meta={c.description}
+                title={classInfo(c.name).name}
+                meta={classInfo(c.name).description}
                 sub={classSummary(c)}
                 onChoose={() => {
                   setClassChoice(c.name);
@@ -456,8 +456,8 @@ export default function CharacterCreatePage() {
             ))}
             <OptionRow
               selected={classChoice === CUSTOM}
-              title="Autre…"
-              meta="Classe maison ou hors catalogue."
+              title={t('create.autre')}
+              meta={t('create.classe.maison.meta')}
               onChoose={() => setClassChoice(CUSTOM)}
             />
             {classChoice === CUSTOM && (
@@ -485,8 +485,8 @@ export default function CharacterCreatePage() {
               <div key={r.name} className="space-y-2">
                 <OptionRow
                   selected={raceChoice === r.name}
-                  title={r.name}
-                  meta={r.description}
+                  title={raceInfo(r.name).name}
+                  meta={raceInfo(r.name).description ?? r.description}
                   onChoose={() => {
                     setRaceChoice(r.name);
                     setSubraceChoice(null);
@@ -498,8 +498,8 @@ export default function CharacterCreatePage() {
                       key={sub.name}
                       indent
                       selected={subraceChoice === sub.name}
-                      title={sub.name}
-                      meta={sub.description}
+                      title={raceInfo(sub.name).name}
+                      meta={raceInfo(sub.name).description ?? sub.description}
                       onChoose={() => setSubraceChoice(sub.name)}
                     />
                   ))}
@@ -507,8 +507,8 @@ export default function CharacterCreatePage() {
             ))}
             <OptionRow
               selected={raceChoice === CUSTOM}
-              title="Autre…"
-              meta="Espèce maison ou hors catalogue."
+              title={t('create.autre')}
+              meta={t('create.espece.maison.meta')}
               onChoose={() => setRaceChoice(CUSTOM)}
             />
             {raceChoice === CUSTOM && (
@@ -539,15 +539,15 @@ export default function CharacterCreatePage() {
               <OptionRow
                 key={b.name}
                 selected={bgChoice === b.name}
-                title={b.name}
-                meta={b.description}
+                title={backgroundInfo(b.name).name}
+                meta={backgroundInfo(b.name).description}
                 onChoose={() => setBgChoice(b.name)}
               />
             ))}
             <OptionRow
               selected={bgChoice === CUSTOM}
-              title="Autre…"
-              meta="Historique maison ou hors catalogue."
+              title={t('create.autre')}
+              meta={t('create.historique.maison.meta')}
               onChoose={() => setBgChoice(CUSTOM)}
             />
             {bgChoice === CUSTOM && (

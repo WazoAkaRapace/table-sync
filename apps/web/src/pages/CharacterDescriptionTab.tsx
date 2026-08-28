@@ -444,7 +444,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
               />
             </label>
             <label className="block">
-              <span className="label">Historique</span>
+              <span className="label">{t('desc.historique')}</span>
               <input
                 type="text"
                 className="input"
@@ -567,7 +567,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
 
       {/* Backstory (distinct de l'« Historique » de l'identité — le stat 5e « Sage ») */}
       <section className="card p-4 sm:p-5 space-y-3">
-        <h2 className="section-title">Historique</h2>
+        <h2 className="section-title">{t('desc.historique')}</h2>
         <label className="block">
           <span className="label">{t('desc.histoire.du.personnage')}</span>
           <textarea

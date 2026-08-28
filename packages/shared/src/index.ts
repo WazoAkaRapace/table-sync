@@ -14,6 +14,7 @@ import {
   songOfRestDie,
 } from './classFeatures.ts';
 
+export * from './catalogs.en.ts';
 export * from './classFeatures.en.ts';
 export * from './classFeatures.ts';
 export * from './labels.en.ts';

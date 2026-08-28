@@ -7,7 +7,7 @@ import { useAuth } from './auth';
 import CombatWidget from './components/CombatWidget';
 import ConcentrationAlert from './components/ConcentrationAlert';
 import { HeaderProvider, useHeaderState } from './headerContext';
-import './i18n';
+import i18next from './i18n';
 import { useSync, useSyncEvent } from './sync';
 
 // Route pages are code-split: each lazy() becomes its own chunk so the login
@@ -69,7 +69,7 @@ function useRouteTitle(pathname: string): { title: string; backTo?: string } | n
   if (partyMatch) {
     const sub = partyMatch[2];
     const partyBase = `/party/${partyMatch[1]}`;
-    if (sub === 'gm') return { title: '🛡 Table du MD', backTo: partyBase };
+    if (sub === 'gm') return { title: i18next.t('nav.table.du.md'), backTo: partyBase };
     if (sub === 'npcs') return { title: '🎭 PNJ', backTo: partyBase };
     if (sub === 'combat') return { title: '⚔ Combat', backTo: partyBase };
     if (sub === 'create') return { title: 'Nouveau personnage', backTo: partyBase };

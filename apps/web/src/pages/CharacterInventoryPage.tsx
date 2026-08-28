@@ -84,15 +84,21 @@ const CHARACTER_TABS: {
   primary: boolean;
   short?: string;
 }[] = [
-  { key: 'survival', label: 'Survie', icon: '🩸', primary: true, short: 'Survie' },
-  { key: 'stats', label: 'Caractéristiques', icon: '⚔️', primary: true, short: 'Caract.' },
-  { key: 'spells', label: 'Sorts', icon: '✨', primary: true, short: 'Sorts' },
-  { key: 'skills', label: 'Compétences', icon: '🎯', primary: true, short: 'Comp.' },
-  { key: 'inventory', label: 'Inventaire', icon: '🎒', primary: false },
-  { key: 'features', label: 'Traits', icon: '📋', primary: false, short: 'Traits' },
-  { key: 'description', label: 'Description', icon: '👤', primary: false },
-  { key: 'npcs', label: 'PNJ', icon: '🎭', primary: false },
-  { key: 'notes', label: 'Notes', icon: '📝', primary: false },
+  { key: 'survival', label: 'onglet.survie', icon: '🩸', primary: true, short: 'onglet.survie' },
+  {
+    key: 'stats',
+    label: 'onglet.caracteristiques',
+    icon: '⚔️',
+    primary: true,
+    short: 'onglet.caract',
+  },
+  { key: 'spells', label: 'onglet.sorts', icon: '✨', primary: true, short: 'onglet.sorts' },
+  { key: 'skills', label: 'onglet.competences', icon: '🎯', primary: true, short: 'onglet.comp' },
+  { key: 'inventory', label: 'onglet.inventaire', icon: '🎒', primary: false },
+  { key: 'features', label: 'onglet.traits', icon: '📋', primary: false, short: 'onglet.traits' },
+  { key: 'description', label: 'onglet.description', icon: '👤', primary: false },
+  { key: 'npcs', label: 'onglet.pnj', icon: '🎭', primary: false },
+  { key: 'notes', label: 'onglet.notes', icon: '📝', primary: false },
 ];
 const CATALOG_PAGE_SIZE = 30;
 

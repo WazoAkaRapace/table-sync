@@ -1,5 +1,5 @@
 {
-  "total": 1084,
+  "total": 1080,
   "perFile": {
     "App.tsx": 4,
     "auth.tsx": 3,
@@ -20,10 +20,10 @@
     "components/SpellDetailSheet.tsx": 3,
     "components/ui.tsx": 9,
     "pages/AccountPage.tsx": 10,
-    "pages/CharacterCreatePage.tsx": 35,
+    "pages/CharacterCreatePage.tsx": 34,
     "pages/CharacterDescriptionTab.tsx": 44,
     "pages/CharacterFeaturesTab.tsx": 35,
-    "pages/CharacterInventoryPage.tsx": 58,
+    "pages/CharacterInventoryPage.tsx": 55,
     "pages/CharacterNotesTab.tsx": 18,
     "pages/CharacterSkillsTab.tsx": 62,
     "pages/CharacterSpellsTab.tsx": 56,
