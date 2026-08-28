@@ -268,11 +268,9 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
         <div className="card p-4">
           <EmptyState
             icon="🎭"
-            title={npcs.length === 0 ? 'Aucun PNJ' : 'Aucun résultat'}
+            title={npcs.length === 0 ? t('pnj.aucun') : t('pnj.aucun.resultat')}
             hint={
-              npcs.length === 0
-                ? 'Ajoutez vos rencontres et alliés pour cette campagne.'
-                : 'Modifiez vos filtres ou votre recherche.'
+              npcs.length === 0 ? t('pnj.ajoutez.vos.rencontres') : t('pnj.modifiez.vos.filtres')
             }
           />
         </div>
@@ -672,7 +670,7 @@ function NpcFormModal({ open, onClose, partyId, npc, onSaved, onError }: NpcForm
             rows={3}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Apparence, comportement, rumeurs publiques…"
+            placeholder={t('pnj.apparence.placeholder')}
           />
         </div>
 

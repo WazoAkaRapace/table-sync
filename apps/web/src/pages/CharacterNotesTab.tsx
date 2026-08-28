@@ -230,11 +230,7 @@ export default function CharacterNotesTab({
 
       {notes.length === 0 ? (
         <div className="card p-8">
-          <EmptyState
-            icon="📝"
-            title={t('notes.aucune.note')}
-            hint="Crée des notes pour tes quêtes, rappels, lore, ou tout ce dont tu as besoin."
-          />
+          <EmptyState icon="📝" title={t('notes.aucune.note')} hint={t('notes.cree.des.notes')} />
         </div>
       ) : (
         <SortableGrid

@@ -37,26 +37,32 @@ interface Props {
 }
 
 // Fields that are simple text inputs
-const PHYSICAL_FIELDS: Array<{ key: keyof Character; label: string; placeholder?: string }> = [
-  { key: 'alignment', label: 'Alignement', placeholder: 'Loyal Bon' },
-  { key: 'sex', label: 'Sexe', placeholder: 'M / F' },
-  { key: 'age', label: 'Âge', placeholder: '125 ans' },
-  { key: 'height', label: 'Taille', placeholder: '1,80 m' },
-  { key: 'weight', label: 'Poids', placeholder: '80 kg' },
-  { key: 'skin', label: 'Peau', placeholder: 'Pâle' },
-  { key: 'eyes', label: 'Yeux', placeholder: 'Bleus' },
-  { key: 'hair', label: 'Cheveux', placeholder: 'Noirs, courts' },
-];
+const PHYSICAL_FIELDS: Array<{ key: keyof Character; labelKey: string; placeholderKey?: string }> =
+  [
+    { key: 'alignment', labelKey: 'desc.alignement', placeholderKey: 'desc.alignement.ph' },
+    { key: 'sex', labelKey: 'desc.sexe' },
+    { key: 'age', labelKey: 'desc.age', placeholderKey: 'desc.age.ph' },
+    { key: 'height', labelKey: 'desc.taille.physique', placeholderKey: 'desc.taille.ph' },
+    { key: 'weight', labelKey: 'desc.poids', placeholderKey: 'desc.poids.ph' },
+    { key: 'skin', labelKey: 'desc.peau', placeholderKey: 'desc.peau.ph' },
+    { key: 'eyes', labelKey: 'desc.yeux', placeholderKey: 'desc.yeux.ph' },
+    { key: 'hair', labelKey: 'desc.cheveux', placeholderKey: 'desc.cheveux.ph' },
+  ];
 
-const PERSONALITY_FIELDS: Array<{ key: keyof Character; label: string; placeholder: string }> = [
+// Clés i18n — résolues au rendu (la langue peut changer à chaud)
+const PERSONALITY_FIELDS: Array<{
+  key: keyof Character;
+  labelKey: string;
+  placeholderKey: string;
+}> = [
   {
     key: 'personalityTraits',
-    label: 'Traits de personnalité',
-    placeholder: "Je suis animé d'une curiosité insatiable…",
+    labelKey: 'desc.perso.traits',
+    placeholderKey: 'desc.perso.traits.ph',
   },
-  { key: 'ideals', label: 'Idéaux', placeholder: 'Le savoir est la plus grande richesse.' },
-  { key: 'bonds', label: 'Liens', placeholder: 'Je cherche mon maître disparu.' },
-  { key: 'flaws', label: 'Défauts', placeholder: 'Je suis incapable de résister à un mystère.' },
+  { key: 'ideals', labelKey: 'desc.perso.ideaux', placeholderKey: 'desc.perso.ideaux.ph' },
+  { key: 'bonds', labelKey: 'desc.perso.liens', placeholderKey: 'desc.perso.liens.ph' },
+  { key: 'flaws', labelKey: 'desc.perso.defauts', placeholderKey: 'desc.perso.defauts.ph' },
 ];
 
 /** Niveau d'acquisition du style de combat par classe (SRD). */
@@ -469,7 +475,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
 
       {/* Portrait + physical attributes */}
       <section className="card p-4 sm:p-5 space-y-3">
-        <h2 className="section-title">Apparence</h2>
+        <h2 className="section-title">{t('desc.apparence')}</h2>
 
         {/* Portrait */}
         <div className="flex items-center gap-4">
@@ -520,12 +526,12 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {PHYSICAL_FIELDS.map((f) => (
             <label key={f.key} className="block">
-              <span className="label">{f.label}</span>
+              <span className="label">{t(f.labelKey)}</span>
               <input
                 type="text"
                 className="input"
                 value={drafts[f.key] ?? ''}
-                placeholder={f.placeholder}
+                placeholder={f.placeholderKey ? t(f.placeholderKey) : undefined}
                 onChange={(e) => setDrafts((d) => ({ ...d, [f.key]: e.target.value }))}
                 onBlur={() => commitField(f.key)}
               />
@@ -552,11 +558,11 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
         <div className="space-y-3">
           {PERSONALITY_FIELDS.map((f) => (
             <label key={f.key} className="block">
-              <span className="label">{f.label}</span>
+              <span className="label">{t(f.labelKey)}</span>
               <textarea
                 className="input min-h-[60px] resize-y"
                 value={drafts[f.key] ?? ''}
-                placeholder={f.placeholder}
+                placeholder={f.placeholderKey ? t(f.placeholderKey) : undefined}
                 onChange={(e) => setDrafts((d) => ({ ...d, [f.key]: e.target.value }))}
                 onBlur={() => commitField(f.key)}
               />

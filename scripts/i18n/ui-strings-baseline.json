@@ -1,5 +1,5 @@
 {
-  "total": 1068,
+  "total": 1054,
   "perFile": {
     "App.tsx": 4,
     "auth.tsx": 3,
@@ -21,10 +21,10 @@
     "components/ui.tsx": 9,
     "pages/AccountPage.tsx": 10,
     "pages/CharacterCreatePage.tsx": 32,
-    "pages/CharacterDescriptionTab.tsx": 44,
+    "pages/CharacterDescriptionTab.tsx": 34,
     "pages/CharacterFeaturesTab.tsx": 35,
     "pages/CharacterInventoryPage.tsx": 54,
-    "pages/CharacterNotesTab.tsx": 18,
+    "pages/CharacterNotesTab.tsx": 16,
     "pages/CharacterSkillsTab.tsx": 60,
     "pages/CharacterSpellsTab.tsx": 56,
     "pages/CharacterStatsTab.tsx": 18,
@@ -32,7 +32,7 @@
     "pages/CombatPage.tsx": 116,
     "pages/GmDashboardPage.tsx": 82,
     "pages/LoginPage.tsx": 2,
-    "pages/NpcPage.tsx": 36,
+    "pages/NpcPage.tsx": 34,
     "pages/PartiesPage.tsx": 39,
     "pages/PartyPage.tsx": 19,
     "pages/RegisterPage.tsx": 6,
