@@ -8,8 +8,15 @@ interface AuthState {
   token: string | null;
   loading: boolean;
   login: (username: string, password: string) => Promise<void>;
-  register: (username: string, password: string, displayName: string) => Promise<void>;
+  register: (
+    username: string,
+    password: string,
+    displayName: string,
+    email: string,
+  ) => Promise<void>;
   logout: () => void;
+  /** Recharge l'utilisateur courant depuis /me (profil modifié ailleurs). */
+  refreshUser: () => Promise<User>;
 }
 
 const AuthContext = createContext<AuthState>(null!);
@@ -70,13 +77,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(u);
   }, []);
 
-  const register = useCallback(async (username: string, password: string, displayName: string) => {
-    const res = await api.post('/api/auth/register', { username, password, displayName });
-    const { token: t, user: u } = res.data;
-    localStorage.setItem('dnd-inv-token', t);
+  const register = useCallback(
+    async (username: string, password: string, displayName: string, email: string) => {
+      const res = await api.post('/api/auth/register', {
+        username,
+        password,
+        displayName,
+        email,
+      });
+      const { token: t, user: u } = res.data;
+      localStorage.setItem('dnd-inv-token', t);
+      localStorage.setItem('dnd-inv-user', JSON.stringify(u));
+      setToken(t);
+      setUser(u);
+    },
+    [],
+  );
+
+  const refreshUser = useCallback(async () => {
+    const res = await api.get('/api/auth/me');
+    const u = res.data.user as User;
     localStorage.setItem('dnd-inv-user', JSON.stringify(u));
-    setToken(t);
     setUser(u);
+    return u;
   }, []);
 
   const logout = useCallback(() => {
@@ -87,7 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

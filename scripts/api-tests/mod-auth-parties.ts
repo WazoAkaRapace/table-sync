@@ -20,12 +20,43 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   const eve = await registerUser(base, 'eve');
 
   let r = await api(base, 'POST', '/api/auth/register', {
-    body: { username: 'eve', password: 'password123', displayName: 'EVE' },
+    body: {
+      username: 'eve',
+      password: 'password123',
+      displayName: 'EVE',
+      email: 'eve.autre@example.com',
+    },
   });
   eq(r.status, 409, 'duplicate register → 409');
 
   r = await api(base, 'POST', '/api/auth/register', { body: { username: 'x' } });
   eq(r.status, 400, 'register missing fields → 400');
+
+  // — email : requis à l'inscription, validé, unique (normalisé minuscules) —
+  r = await api(base, 'POST', '/api/auth/register', {
+    body: { username: 'sans-email', password: 'password123', displayName: 'SANS' },
+  });
+  eq(r.status, 400, 'register without email → 400');
+
+  r = await api(base, 'POST', '/api/auth/register', {
+    body: {
+      username: 'email-invalide',
+      password: 'password123',
+      displayName: 'BAD',
+      email: 'pas-un-email',
+    },
+  });
+  eq(r.status, 400, 'register invalid email → 400');
+
+  r = await api(base, 'POST', '/api/auth/register', {
+    body: {
+      username: 'email-clash',
+      password: 'password123',
+      displayName: 'CLASH',
+      email: 'EVE@example.com',
+    },
+  });
+  eq(r.status, 409, 'register duplicate email (insensible à la casse) → 409');
 
   r = await api(base, 'POST', '/api/auth/login', {
     body: { username: 'eve', password: 'password123' },
@@ -44,6 +75,7 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   r = await api(base, 'GET', '/api/auth/me', { token: eve.token });
   eq(r.status, 200, 'me ok');
   eq(r.data.user.username, 'eve', 'me returns the user');
+  eq(r.data.user.email, 'eve@example.com', 'me returns the normalized email');
 
   r = await api(base, 'GET', '/api/auth/me', { token: mintToken(999_999) });
   eq(r.status, 404, 'me with forged token for deleted user → 404');
@@ -53,6 +85,89 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
 
   r = await api(base, 'POST', '/api/auth/logout', { token: eve.token });
   eq(r.status, 204, 'logout → 204');
+
+  // ---------- profil : PATCH /api/auth/me (nom affiché + email) ----------
+  r = await api(base, 'PATCH', '/api/auth/me', {
+    token: eve.token,
+    body: { displayName: 'Ève la Roublarde' },
+  });
+  eq(r.status, 200, 'patch me displayName → 200');
+  eq(r.data.user.displayName, 'Ève la Roublarde', 'patch me returns the new displayName');
+
+  r = await api(base, 'PATCH', '/api/auth/me', { token: eve.token, body: { displayName: '   ' } });
+  eq(r.status, 400, 'patch me blank displayName → 400');
+
+  r = await api(base, 'PATCH', '/api/auth/me', {
+    token: eve.token,
+    body: { email: 'eve.perso@example.com' },
+  });
+  eq(r.status, 200, 'patch me email → 200');
+  eq(r.data.user.email, 'eve.perso@example.com', 'patch me returns the new email');
+
+  r = await api(base, 'PATCH', '/api/auth/me', {
+    token: eve.token,
+    body: { email: 'EVE.PERSO@EXAMPLE.COM' },
+  });
+  eq(r.status, 200, 'patch me same email other case → 200 (pas d’autocollision)');
+
+  r = await api(base, 'PATCH', '/api/auth/me', {
+    token: eve.token,
+    body: { email: 'pas-un-email' },
+  });
+  eq(r.status, 400, 'patch me invalid email → 400');
+
+  r = await api(base, 'PATCH', '/api/auth/me', {
+    token: eve.token,
+    body: { email: `${fx.gm.username}@example.com` },
+  });
+  eq(r.status, 409, 'patch me email taken by another user → 409');
+
+  r = await api(base, 'PATCH', '/api/auth/me', { token: eve.token, body: { email: '' } });
+  eq(r.status, 200, 'patch me clear email → 200');
+  eq(r.data.user.email, null, 'cleared email is null');
+
+  r = await api(base, 'PATCH', '/api/auth/me', { token: eve.token, body: {} });
+  eq(r.status, 400, 'patch me empty body → 400');
+
+  r = await api(base, 'PATCH', '/api/auth/me', {});
+  eq(r.status, 401, 'patch me without token → 401');
+
+  // ---------- mot de passe : POST /api/auth/password ----------
+  const zora = await registerUser(base, 'zora');
+
+  r = await api(base, 'POST', '/api/auth/password', {
+    token: zora.token,
+    body: { currentPassword: 'faux', newPassword: 'nouveau-secret-1' },
+  });
+  eq(r.status, 400, 'password wrong current → 400');
+
+  r = await api(base, 'POST', '/api/auth/password', {
+    token: zora.token,
+    body: { currentPassword: 'password123', newPassword: 'abc' },
+  });
+  eq(r.status, 400, 'password short new → 400');
+
+  r = await api(base, 'POST', '/api/auth/password', {
+    token: zora.token,
+    body: { newPassword: 'abc' },
+  });
+  eq(r.status, 400, 'password missing current → 400');
+
+  r = await api(base, 'POST', '/api/auth/password', {
+    token: zora.token,
+    body: { currentPassword: 'password123', newPassword: 'nouveau-secret-1' },
+  });
+  eq(r.status, 200, 'password change → 200');
+
+  r = await api(base, 'POST', '/api/auth/login', {
+    body: { username: 'zora', password: 'password123' },
+  });
+  eq(r.status, 401, 'login old password after change → 401');
+
+  r = await api(base, 'POST', '/api/auth/login', {
+    body: { username: 'zora', password: 'nouveau-secret-1' },
+  });
+  eq(r.status, 200, 'login new password after change → 200');
 
   // ---------- parties: list / create / detail ----------
   r = await api(base, 'GET', '/api/parties', { token: fx.gm.token });

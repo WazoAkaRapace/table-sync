@@ -9,6 +9,7 @@ export default function RegisterPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -17,7 +18,7 @@ export default function RegisterPage() {
     setError('');
     setLoading(true);
     try {
-      await register(username, password, displayName);
+      await register(username, password, displayName, email.trim());
       nav('/parties');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Inscription échouée');
@@ -65,6 +66,26 @@ export default function RegisterPage() {
               minLength={3}
               required
             />
+          </div>
+          <div>
+            <label className="label" htmlFor="register-email">
+              Adresse e-mail
+            </label>
+            <input
+              id="register-email"
+              name="email"
+              type="email"
+              className="input"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="maître@table-sync.fr"
+              autoComplete="email"
+              inputMode="email"
+              required
+            />
+            <p className="text-xs text-ink-400 mt-1">
+              Pour retrouver votre compte si vous oubliez votre mot de passe.
+            </p>
           </div>
           <div>
             <label className="label" htmlFor="register-password">

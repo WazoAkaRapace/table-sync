@@ -260,7 +260,12 @@ export interface UserFix {
 
 export async function registerUser(base: string, username: string): Promise<UserFix> {
   const res = await api(base, 'POST', '/api/auth/register', {
-    body: { username, password: 'password123', displayName: username.toUpperCase() },
+    body: {
+      username,
+      password: 'password123',
+      displayName: username.toUpperCase(),
+      email: `${username}@example.com`,
+    },
   });
   ok(
     res.status === 201,

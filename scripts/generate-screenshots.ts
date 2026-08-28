@@ -275,7 +275,7 @@ async function register(apiPort: number, username: string, displayName: string):
   const { token, user } = await call<{ token: string; user: Session['user'] }>(
     'POST',
     '/api/auth/register',
-    { username, password: DEMO_PASSWORD, displayName },
+    { username, password: DEMO_PASSWORD, displayName, email: `${username}@demo.table-sync` },
   );
   return { token, user };
 }

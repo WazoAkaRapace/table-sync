@@ -73,7 +73,7 @@ async function addSpell(token: string, charId: number, nameFr: string, prepared:
 
 async function register(username: string, displayName: string): Promise<Session> {
   return call('POST', '/api/auth/register', {
-    body: { username, password: PASSWORD, displayName },
+    body: { username, password: PASSWORD, displayName, email: `${username}@e2e.table-sync` },
   });
 }
 

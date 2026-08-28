@@ -31,7 +31,12 @@ const AUTH_FAIL_MAX = parseInt(process.env.RATE_LIMIT_AUTH_FAIL_MAX || '5', 10);
 const TRUST_PROXY = process.env.TRUST_PROXY === 'true';
 
 // Routes whose FAILURES point at credential/invite guessing
-const TIGHT_ROUTES = new Set(['/api/auth/login', '/api/auth/register', '/api/parties/join']);
+const TIGHT_ROUTES = new Set([
+  '/api/auth/login',
+  '/api/auth/register',
+  '/api/auth/password',
+  '/api/parties/join',
+]);
 
 interface Bucket {
   count: number;

@@ -12,6 +12,7 @@ import { useSync, useSyncEvent } from './sync';
 // screen doesn't pay for the GM dashboard / combat tracker / spell catalog.
 // The dynamic-import paths MUST stay stable (wave-2 keeps every page's default
 // export at the same path).
+const AccountPage = lazy(() => import('./pages/AccountPage'));
 const CharacterCreatePage = lazy(() => import('./pages/CharacterCreatePage'));
 const CharacterInventoryPage = lazy(() => import('./pages/CharacterInventoryPage'));
 const ChroniclePage = lazy(() => import('./pages/ChroniclePage'));
@@ -138,13 +139,42 @@ function Nav() {
               <span className="sm:hidden">🏠</span>
             </Link>
           )}
-          <span className="text-sm text-parchment-200 hidden sm:inline">{user.displayName}</span>
+          {/* Le nom affiché mène au compte (desktop) ; sur /parties un bouton
+              icône prend le relais pour le mobile, où le nom est masqué. */}
+          <Link
+            to="/compte"
+            className="text-sm text-parchment-200 hidden sm:inline hover:text-parchment-50 hover:underline underline-offset-4"
+            title="Mon compte"
+          >
+            {user.displayName}
+          </Link>
           <SyncIndicator />
+          {loc.pathname === '/parties' && (
+            <Link
+              to="/compte"
+              className="btn-ghost text-parchment-50 hover:bg-ink-700 flex items-center justify-center w-11 h-11"
+              title="Mon compte"
+              aria-label="Mon compte"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                aria-hidden="true"
+                className="block w-5 h-5"
+              >
+                <circle cx="12" cy="8" r="4" />
+                <path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5" />
+              </svg>
+            </Link>
+          )}
           {loc.pathname === '/parties' && (
             <button
               type="button"
               onClick={logout}
-              className="btn-ghost text-parchment-50 hover:bg-ink-700 text-lg leading-none px-2"
+              className="btn-ghost text-parchment-50 hover:bg-ink-700 flex items-center justify-center w-11 h-11"
               title="Déconnexion"
               aria-label="Déconnexion"
             >
@@ -241,6 +271,14 @@ export default function App() {
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route
+              path="/compte"
+              element={
+                <ProtectedRoute>
+                  <AccountPage />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/parties"
               element={

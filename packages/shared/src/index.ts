@@ -113,6 +113,8 @@ export interface User {
   id: number;
   username: string;
   displayName: string;
+  /** Null pour les comptes créés avant l'ajout de l'email (optionnel pour eux). */
+  email: string | null;
   createdAt: string;
 }
 
@@ -125,11 +127,24 @@ export interface RegisterPayload {
   username: string;
   password: string;
   displayName: string;
+  email: string;
 }
 
 export interface LoginPayload {
   username: string;
   password: string;
+}
+
+/** PATCH /api/auth/me — champs omis = inchangés ; email null/'' = effacé. */
+export interface UpdateProfilePayload {
+  displayName?: string;
+  email?: string | null;
+}
+
+/** POST /api/auth/password */
+export interface ChangePasswordPayload {
+  currentPassword: string;
+  newPassword: string;
 }
 
 // ---------- Parties ----------
