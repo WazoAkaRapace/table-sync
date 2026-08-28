@@ -44,7 +44,7 @@ function SyncIndicator() {
   // (connecting/disconnected) so the state is never color-only.
   return (
     <span
-      className="inline-flex items-center gap-1.5 text-xs text-ink-400"
+      className="inline-flex items-center gap-1.5 text-xs text-ink-300"
       role="status"
       aria-live="polite"
     >
@@ -55,7 +55,7 @@ function SyncIndicator() {
         aria-label={labels[status]}
       />
       {status !== 'connected' && (
-        <span className={status === 'disconnected' ? 'text-red-600 font-medium' : ''}>
+        <span className={status === 'disconnected' ? 'text-red-400 font-medium' : ''}>
           {labels[status]}
         </span>
       )}
@@ -109,6 +109,7 @@ function Nav() {
                   type="button"
                   onClick={headerBack.onClick}
                   className="btn-ghost text-parchment-50 hover:bg-ink-700 text-sm shrink-0"
+                  aria-label={i18next.t('nav.retour')}
                 >
                   {headerBack.label}
                 </button>
@@ -116,6 +117,7 @@ function Nav() {
                 <Link
                   to={headerBack.to!}
                   className="btn-ghost text-parchment-50 hover:bg-ink-700 text-sm shrink-0"
+                  aria-label={i18next.t('nav.retour')}
                 >
                   {headerBack.label}
                 </Link>

@@ -178,6 +178,7 @@ export default function AccountPage() {
         <h2 id="account-lang-title" className="section-title mb-4">
           {t('account.langue')}
         </h2>
+        {/* biome-ignore lint/a11y/useSemanticElements: fieldset ajoute sa propre bordure/marge qui casse la rangée de pastilles compacte. */}
         <div
           className="inline-flex rounded-lg border border-ink-200 bg-parchment-100 p-1"
           role="group"

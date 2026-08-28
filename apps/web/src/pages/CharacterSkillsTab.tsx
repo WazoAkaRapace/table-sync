@@ -374,9 +374,7 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
                           type="button"
                           onClick={() => setExpandedSkill(expanded ? null : skill.key)}
                           aria-expanded={expanded}
-                          aria-controls={t('skills.skill.detail.skill.key', {
-                            skill_key: skill.key,
-                          })}
+                          aria-controls={`skill-detail-${skill.key}`}
                           className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg border transition-colors text-left ${
                             prof > 0
                               ? 'bg-blood-50 border-blood-300 hover:border-blood-400'

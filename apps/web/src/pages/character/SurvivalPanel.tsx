@@ -518,11 +518,11 @@ export function SurvivalPanel({
                 onError('Erreur');
               }
             }}
-            className={t('survie.inline.flex.items.center.gap.1', {
-              character_inspiration: character.inspiration
-                ? 'bg-gold-400/20 text-gold-500 border-gold-400'
-                : 'bg-parchment-100 text-ink-400 border-parchment-300 hover:border-gold-400',
-            })}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 max-[379px]:px-1 max-[379px]:gap-1 rounded-lg text-sm max-[379px]:text-xs font-medium transition-colors border ${
+              character.inspiration
+                ? 'bg-gold-400/20 text-gold-700 border-gold-400'
+                : 'bg-parchment-100 text-ink-400 border-parchment-300 hover:border-gold-400'
+            }`}
             aria-pressed={character.inspiration}
             title={t('survie.l.inspiration.permet.de.relancer.un')}
           >
@@ -572,7 +572,7 @@ export function SurvivalPanel({
                   onClick={() => removeCondition(cond)}
                   className="text-blood-500 hover:text-blood-700 font-semibold"
                   aria-label={t('survie.retirer.l.etat.conditionlabel.cond', {
-                    conditionLabel_cond: conditionLabel(cond),
+                    conditionLabel: conditionLabel(cond),
                   })}
                 >
                   ×
@@ -609,10 +609,9 @@ export function SurvivalPanel({
                   key={level}
                   type="button"
                   onClick={() => setExhaustionLevel(level)}
-                  className={t('survie.text.2xl.leading.none.transition.colors', {
-                    exhaustionColor_level: exhaustionColor(level),
-                    active____opacity_100: active ? 'opacity-100' : 'opacity-30 hover:opacity-60',
-                  })}
+                  className={`text-2xl leading-none transition-colors ${exhaustionColor(level)} ${
+                    active ? 'opacity-100' : 'opacity-30 hover:opacity-60'
+                  }`}
                   aria-pressed={level === exhaustion}
                   aria-label={t('survie.niveau.d.epuisement.level', { level: level })}
                   title={`Niveau ${level}${level > 0 ? ` — ${EXHAUSTION_EFFECTS_FR[level]}` : ' — Aucun effet'}`}
@@ -825,11 +824,11 @@ export function SurvivalPanel({
                       aria-pressed={(character.wildShapeUses ?? 2) >= n}
                       aria-label={t('survie.n.utilisation.n.1.s.de', {
                         n: n,
-                        n___1____s: n > 1 ? 's' : '',
+                        s: n > 1 ? 's' : '',
                       })}
                       title={t('survie.regler.a.n.utilisation.n.1', {
                         n: n,
-                        n___1____s: n > 1 ? 's' : '',
+                        s: n > 1 ? 's' : '',
                       })}
                     >
                       🐾
@@ -852,7 +851,11 @@ export function SurvivalPanel({
                       type="button"
                       onClick={() => setShapeStatBlock(character.wildShapeSlug)}
                       className="w-7 h-7 rounded-lg bg-parchment-100 hover:bg-gold-100 text-ink-500 hover:text-gold-600 border border-parchment-200 text-sm flex items-center justify-center transition-colors"
-                      aria-label={t('survie.voir.le.bloc.de.stats.de')}
+                      aria-label={t('survie.voir.le.bloc.de.stats.de', {
+                        f_name:
+                          shapeForms.find((f) => f.slug === character.wildShapeSlug)?.name ??
+                          character.wildShapeSlug,
+                      })}
                       title={t('survie.bloc.de.stats.de.la.forme')}
                     >
                       📜
@@ -1081,11 +1084,11 @@ export function SurvivalPanel({
                 <Chip
                   tone="blood"
                   title={t('survie.attaque.d20.formatmodifier.u.attackb.abilitylabel', {
-                    formatModifier_u_attackB: formatModifier(
+                    formatModifier: formatModifier(
                       u.attackBonus - proficiencyBonus(character.level ?? 1),
                     ),
                     abilityLabel: abilityLabel,
-                    proficiencyBonus_charact: proficiencyBonus(character.level ?? 1),
+                    proficiencyBonus: proficiencyBonus(character.level ?? 1),
                   })}
                 >
                   🎯 {formatModifier(u.attackBonus)}
@@ -1366,11 +1369,9 @@ export function SurvivalPanel({
                   addCondition(cond);
                   setConditionPickerOpen(false);
                 }}
-                className={t('survie.w.full.flex.items.center.gap', {
-                  active____opacity_60_cur: active
-                    ? 'opacity-60 cursor-not-allowed'
-                    : 'hover:border-blood-300',
-                })}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-left transition-colors bg-parchment-50 border-parchment-200 ${
+                  active ? 'opacity-60 cursor-not-allowed' : 'hover:border-blood-300'
+                }`}
               >
                 <span className="text-lg shrink-0" aria-hidden="true">
                   {CONDITION_ICONS[cond] ?? '❓'}

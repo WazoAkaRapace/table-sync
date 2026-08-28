@@ -936,7 +936,7 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
 
   const openEdit = (item: any) => {
     setEditing(item);
-    setName(item.name || item.name);
+    setName(item.name);
     setCategory(item.category);
     setWeight(item.weightKg !== null ? String(item.weightKg) : '');
     setDesc(item.description || '');
@@ -1058,13 +1058,13 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
                   onClick={() =>
                     setViewingImage({
                       id: item.id,
-                      name: item.name || item.name,
+                      name: item.name,
                       rev: item.imageRev ?? null,
                     })
                   }
                   className="shrink-0 overflow-hidden rounded-md border border-parchment-200"
                   aria-label={t('md.agrandir.l.illustration.de.item.name', {
-                    item_name____item_name: item.name || item.name,
+                    item_name: item.name,
                   })}
                 >
                   <img
@@ -1077,7 +1077,7 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
               ) : null}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-medium text-ink-800">{item.name || item.name}</span>
+                  <span className="font-medium text-ink-800">{item.name}</span>
                   <CategoryBadge category={item.category} />
                   {item.weightKg !== null && (
                     <span className="text-xs text-ink-400">{item.weightKg} kg</span>
@@ -1106,10 +1106,10 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
                   className="text-ink-400 hover:text-red-500 text-sm p-1 rounded-full transition-colors"
                   armedClassName="bg-red-600 hover:bg-red-700 text-white! px-2.5 py-1 font-semibold"
                   title={t('md.supprimer.item.name.item.name', {
-                    item_name____item_name: item.name || item.name,
+                    item_name: item.name,
                   })}
                   ariaLabel={t('md.supprimer.item.name.item.name', {
-                    item_name____item_name: item.name || item.name,
+                    item_name: item.name,
                   })}
                   confirmChildren="Supprimer ?"
                 >
@@ -1187,7 +1187,7 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
             onChange={setImageValue}
             existingItemId={editing?.id}
             existingRev={editing?.imageRev ?? undefined}
-            existingName={editing ? editing.name || editing.name : undefined}
+            existingName={editing ? editing.name : undefined}
           />
           {error && <div className="text-red-600 text-sm">{error}</div>}
           <div className="flex gap-2 pt-1">

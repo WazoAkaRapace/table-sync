@@ -69,8 +69,8 @@ export function DeathSaveTracker({
                       : 'bg-white border-green-300 text-green-300 hover:border-green-500 hover:scale-110'
                   }`}
                   aria-label={t('mort.succes.i.1.filled.coch.vide', {
-                    i___1: i + 1,
-                    filled____coch______vide: filled ? t('mort.coche') : t('mort.vide'),
+                    i: i + 1,
+                    filled: filled ? t('mort.coche') : t('mort.vide'),
                   })}
                 >
                   ✓
@@ -95,8 +95,8 @@ export function DeathSaveTracker({
                       : 'bg-white border-red-300 text-red-300 hover:border-red-500 hover:scale-110'
                   }`}
                   aria-label={t('mort.echec.i.1.filled.coch.vide', {
-                    i___1: i + 1,
-                    filled____coch______vide: filled ? t('mort.coche') : t('mort.vide'),
+                    i: i + 1,
+                    filled: filled ? t('mort.coche') : t('mort.vide'),
                   })}
                 >
                   ✗

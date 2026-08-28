@@ -323,7 +323,15 @@ export default function CombatWidget() {
                     setInitInput(e.target.value);
                     if (initError) setInitError(false);
                   }}
+                  onKeyDown={async (e) => {
+                    if (e.key !== 'Enter') return;
+                    const v = parseInt(initInput, 10);
+                    if (Number.isNaN(v)) return;
+                    const ok = await setInitiative(combat.encounter.id, combat.myCombatant!.id, v);
+                    if (ok) setInitInput('');
+                  }}
                   placeholder="—"
+                  aria-label={t('widget.mon.initiative')}
                   className="input input-compact text-sm py-1"
                   autoFocus
                 />

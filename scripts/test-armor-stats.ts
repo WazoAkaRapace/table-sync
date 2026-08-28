@@ -589,5 +589,23 @@ const keyedShield = {
 };
 check('Clé bouclier → shield', resolveMagicArmorBase(keyedShield as any).shield, true);
 
+// Régression mono-locale FR : Peau (Hide, AC 12, medium) avec `name` localisé
+// et sans nameFr — la clé doit donner le vrai type medium (plafond DEX +2),
+// pas le repli heuristique « acBase ≤ 12 → light ».
+const frHide = {
+  category: 'armor',
+  name: 'Peau',
+  nameFr: null,
+  description: null,
+  acBase: 12,
+  strMin: null,
+  baseWeapon: null,
+  baseArmor: 'Hide Armor',
+  armorFamily: 'medium',
+  magicBonus: null,
+};
+const hideAc = computeAC([{ item: frHide as any, equipped: true }], 4);
+check('Mono-locale FR + clé → Peau = medium (DEX 4 plafonné)', hideAc.ac, 14);
+
 console.log(failures === 0 ? '\n✅ All armor stats checks pass' : `\n❌ ${failures} failure(s)`);
 process.exit(failures === 0 ? 0 : 1);

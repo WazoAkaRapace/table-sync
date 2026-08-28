@@ -133,7 +133,7 @@ export function ItemImageField({
               <img
                 src={value.staged.previewUrl}
                 alt={t('champ.apercu.de.l.illustration.de.existingname', {
-                  existingName_____l_objet: existingName ?? 'l’objet',
+                  existingName: existingName ?? 'l’objet',
                 })}
                 className="mx-auto max-h-56 w-full object-contain"
               />
@@ -146,7 +146,7 @@ export function ItemImageField({
             <img
               src={itemImageUrl(existingItemId as number, existingRev ?? undefined)}
               alt={t('champ.illustration.actuelle.de.existingname.l.objet', {
-                existingName_____l_objet: existingName ?? 'l’objet',
+                existingName: existingName ?? 'l’objet',
               })}
               className="mx-auto max-h-56 w-full object-contain"
             />

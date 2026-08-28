@@ -331,7 +331,7 @@ export default function CharacterFeaturesTab({
                       key={feature.id}
                       id={feature.id}
                       label={t('traits.deplacer.featname.feature', {
-                        featName_feature: featName(feature),
+                        featName: featName(feature),
                       })}
                     >
                       {(handle, isDragging) => (
@@ -348,7 +348,7 @@ export default function CharacterFeaturesTab({
                                 onClick={() => openEdit(feature)}
                                 className="text-ink-400 hover:text-blood-600 text-sm p-1"
                                 aria-label={t('traits.modifier.featname.feature', {
-                                  featName_feature: featName(feature),
+                                  featName: featName(feature),
                                 })}
                               >
                                 ✎
@@ -358,10 +358,10 @@ export default function CharacterFeaturesTab({
                                 className="text-ink-400 hover:text-red-500 text-sm p-1 rounded-full transition-colors"
                                 armedClassName="bg-red-600 hover:bg-red-700 text-white! px-2.5 py-1 font-semibold"
                                 title={t('traits.supprimer.featname.feature', {
-                                  featName_feature: featName(feature),
+                                  featName: featName(feature),
                                 })}
                                 ariaLabel={t('traits.supprimer.featname.feature', {
-                                  featName_feature: featName(feature),
+                                  featName: featName(feature),
                                 })}
                                 confirmChildren="Supprimer ?"
                               >

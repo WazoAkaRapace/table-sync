@@ -523,7 +523,7 @@
   "image.agrandir.l.illustration.de.name": "Enlarge {{name}}'s illustration",
   "image.couleur.c.label": "Color {{c_label}}",
   "image.illustration.name": "Illustration — {{name}}",
-  "inv.d20.hubcombat.initiativebonu.dex": "d20 + {{hubCombat_initiativeBonus}} (DEX)",
+  "inv.d20.hubcombat.initiativebonu.dex": "d20 + {{initiativeBonus}} (DEX)",
   "md.agrandir.l.illustration.de.item.name": "Enlarge {{item_name}}'s illustration",
   "md.bannir.m.displayname.de.ce.groupe": "Ban {{m_displayName}} from this party",
   "md.debannir.u.displayname": "Unban {{u_displayName}}",
@@ -553,7 +553,7 @@
   "recherche.ajouter.item.name.item.name": "Add {{item_name}}",
   "sorts.depenser.un.emplacement.de.niveau.open": "Expend a level {{open_level}} slot",
   "sorts.lancer.name": "Cast {{name}}",
-  "sorts.niveau.lvl.remaining.emplacement.remaining.1": "Level {{lvl}}: {{remaining}} slot{{remaining___1____s}} available of {{max}} — fix",
+  "sorts.niveau.lvl.remaining.emplacement.remaining.1": "Level {{lvl}}: {{remaining}} slot{{s}} available of {{max}} — fix",
   "sorts.oublier.name": "Unlearn {{name}}",
   "sorts.restaurer.un.emplacement.de.niveau.open": "Restore a level {{open_level}} slot",
   "sorts.sorts.prepares.de.l.classkey.les": "Prepared spells of {{l_classKey}} — cantrips are always available",
@@ -849,5 +849,14 @@
   "desc.poids.ph": "180 lb",
   "desc.peau.ph": "Pale",
   "desc.yeux.ph": "Blue",
-  "desc.cheveux.ph": "Black, short"
+  "desc.cheveux.ph": "Black, short",
+  "err.titre": "An unexpected error occurred",
+  "err.corps": "The app hit a problem and can't display this page. Try again, or reload the page if the issue persists.",
+  "err.details": "Technical details",
+  "err.reessayer": "Try again",
+  "err.recharger": "Reload the page",
+  "nav.retour": "Back",
+  "widget.mon.initiative": "My initiative",
+  "recherche.toutes.categories": "All categories",
+  "recherche.toutes.raretes": "All rarities"
 }

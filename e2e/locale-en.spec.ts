@@ -26,6 +26,6 @@ playerTest('locale EN — survie : vitalité, états, repos', async ({ page }) =
 playerTest('locale EN — sorts de la fiche', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('dnd-inv-lang', 'en'));
   await page.goto(sheetUrl(seed().clerc.id));
-  await page.getByRole('button', { name: 'Sorts', exact: true }).click();
+  await page.getByRole('button', { name: 'Spells', exact: true }).click();
   await expect(page.getByText('Spell slots')).toBeVisible();
 });

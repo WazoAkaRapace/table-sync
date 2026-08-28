@@ -599,10 +599,7 @@ export default function CharacterCreatePage() {
               <div className="card grid grid-cols-2 gap-3 p-4 sm:p-5">
                 {DND_ABILITIES.map((abi) => (
                   <div key={abi.key}>
-                    <label
-                      className="label"
-                      htmlFor={t('create.create.score.abi.key', { abi_key: abi.key })}
-                    >
+                    <label className="label" htmlFor={`create-score-${abi.key}`}>
                       {abi.label}
                     </label>
                     <NumberField

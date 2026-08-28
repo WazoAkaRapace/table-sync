@@ -1,5 +1,6 @@
 import type { Item, ItemCategory, Rarity } from '@table-sync/shared';
 import { CATEGORY_LABELS_FR } from '@table-sync/shared';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   CategoryBadge,
@@ -12,21 +13,6 @@ import {
 import { categoryLabel, rarityLabel } from '../../i18n/labels';
 
 // ---------- Filter option sets ----------
-
-const CATEGORY_OPTIONS: { value: '' | ItemCategory; label: string }[] = [
-  { value: '', label: 'Toutes catégories' },
-  ...(Object.keys(CATEGORY_LABELS_FR) as ItemCategory[])
-    .filter((c) => c !== 'custom')
-    .map((c) => ({ value: c as ItemCategory, label: categoryLabel(c) })),
-];
-
-const RARITY_OPTIONS: { value: '' | Rarity; label: string }[] = [
-  { value: '', label: 'Toutes raretés' },
-  ...(['common', 'uncommon', 'rare', 'veryRare', 'legendary', 'artifact'] as Rarity[]).map((r) => ({
-    value: r,
-    label: rarityLabel(r),
-  })),
-];
 
 // ---------- Catalog search component ----------
 
@@ -70,6 +56,30 @@ export function CatalogSearch({
   onLoadMore,
 }: CatalogSearchProps) {
   const { t } = useTranslation();
+
+  // Options localisées au rendu (et non à l'import) : elles suivent le
+  // changement de langue du sélecteur sans rechargement.
+  const categoryOptions = useMemo(
+    () => [
+      { value: '' as const, label: t('recherche.toutes.categories') },
+      ...(Object.keys(CATEGORY_LABELS_FR) as ItemCategory[])
+        .filter((c) => c !== 'custom')
+        .map((c) => ({ value: c, label: categoryLabel(c) })),
+    ],
+    [t],
+  );
+  const rarityOptions = useMemo(
+    () => [
+      { value: '' as const, label: t('recherche.toutes.raretes') },
+      ...(['common', 'uncommon', 'rare', 'veryRare', 'legendary', 'artifact'] as Rarity[]).map(
+        (r) => ({
+          value: r,
+          label: rarityLabel(r),
+        }),
+      ),
+    ],
+    [t],
+  );
   const wanted = search.trim();
   const createCta = canCreateItem && wanted !== '' && !readOnly && onCreateItem && (
     <button
@@ -98,7 +108,7 @@ export function CatalogSearch({
             onChange={(e) => setCategory(e.target.value as '' | ItemCategory)}
             aria-label={t('recherche.filtrer.par.categorie')}
           >
-            {CATEGORY_OPTIONS.map((o) => (
+            {categoryOptions.map((o) => (
               <option key={o.value} value={o.value}>
                 {o.label}
               </option>
@@ -110,7 +120,7 @@ export function CatalogSearch({
             onChange={(e) => setRarity(e.target.value as '' | Rarity)}
             aria-label={t('recherche.filtrer.par.rarete')}
           >
-            {RARITY_OPTIONS.map((o) => (
+            {rarityOptions.map((o) => (
               <option key={o.value} value={o.value}>
                 {o.label}
               </option>
@@ -150,7 +160,7 @@ export function CatalogSearch({
               <li key={item.id} className="card p-3 flex items-center gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-medium truncate">{item.name || item.name}</span>
+                    <span className="font-medium truncate">{item.name}</span>
                     {item.rarity !== 'none' && <RarityBadge rarity={item.rarity} />}
                   </div>
                   <div className="flex items-center gap-3 mt-1 text-xs text-ink-500">
@@ -171,7 +181,7 @@ export function CatalogSearch({
                     disabled={addingItemId === item.id}
                     className="btn-primary text-sm px-3 py-2 shrink-0"
                     aria-label={t('recherche.ajouter.item.name.item.name', {
-                      item_name____item_name: item.name || item.name,
+                      item_name: item.name,
                     })}
                   >
                     {addingItemId === item.id ? '…' : '+ Ajouter'}

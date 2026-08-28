@@ -221,7 +221,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
                     if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
                   }}
                   aria-label={t('stats.score.de.abilitylabel.ability', {
-                    abilityLabel_ability: abilityLabel(ability),
+                    abilityLabel: abilityLabel(ability),
                   })}
                 />
               </div>
@@ -296,8 +296,8 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
               label={`DD de sort${castingLines.length > 1 ? ` · ${l.name}` : ''}`}
               value={String(l.dc)}
               hint={t('stats.attaque.formatmodifier.l.mod.p.abilityshort', {
-                formatModifier_l_mod___p: formatModifier(l.mod + profBonus),
-                abilityShort_l_ability: abilityShort(l.ability),
+                formatModifier: formatModifier(l.mod + profBonus),
+                abilityShort: abilityShort(l.ability),
               })}
             />
           ))}

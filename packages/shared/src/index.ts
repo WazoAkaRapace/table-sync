@@ -2006,8 +2006,12 @@ export function computeAC(
       magicBonus = magic.magicBonus;
     } else {
       // Mundane armor: look up its true type (acBase 12 is studded-leather
-      // light AND hide medium — the value alone can't tell them apart)
-      base = findMundaneArmorByName(entry.item.name, entry.item.nameFr);
+      // light AND hide medium — the value alone can't tell them apart).
+      // Clé stable d'abord : en mono-locale, `name` est localisé.
+      const keyedArmor = entry.item.baseArmor
+        ? MUNDANE_ARMORS.find((a) => a.nameEn === entry.item.baseArmor)
+        : undefined;
+      base = keyedArmor ?? findMundaneArmorByName(entry.item.name, entry.item.nameFr);
     }
 
     // Shield gives +2 and is tracked separately
@@ -3007,6 +3011,14 @@ export function computeWeaponStats(
   let magicBonus = 0;
   let presumedBase = false;
   let nameEn = item.name;
+
+  // Clé stable d'abord (docs/i18n-engine-refactor-plan.md) : en payload
+  // mono-locale, `name` est localisé (FR par défaut) — le moteur raisonne
+  // sur le nom anglais de la base, pour les armes mundane comme magiques.
+  if (item.baseWeapon) {
+    const keyed = MUNDANE_WEAPONS.find((m) => m.nameEn === item.baseWeapon);
+    if (keyed) nameEn = keyed.nameEn;
+  }
 
   if (!dice) {
     const magic = resolveMagicWeaponBase(item);

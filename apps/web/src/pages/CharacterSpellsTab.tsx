@@ -627,12 +627,14 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                     type="button"
                     onClick={() => setListFilter(active ? 'all' : `prep:${l.classKey}`)}
                     aria-pressed={active}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium tabular-nums transition-colors ${
                       active
                         ? over
                           ? 'bg-red-600 text-white'
                           : 'bg-blood-600 text-white'
-                        : 'bg-parchment-100 text-ink-600 hover:bg-parchment-200'
+                        : over
+                          ? 'bg-red-50 text-red-700 border border-red-300'
+                          : 'bg-parchment-100 text-ink-600 hover:bg-parchment-200'
                     }`}
                     title={t('sorts.sorts.prepares.de.l.classkey.les', { l_classKey: l.classKey })}
                   >
@@ -979,7 +981,7 @@ function SlotRail({
               aria-label={t('sorts.niveau.lvl.remaining.emplacement.remaining.1', {
                 lvl: lvl,
                 remaining: remaining,
-                remaining___1____s: remaining > 1 ? 's' : '',
+                s: remaining > 1 ? 's' : '',
                 max: max,
               })}
               className={`shrink-0 min-w-[56px] min-h-[48px] px-2.5 py-1.5 rounded-xl flex flex-col items-center justify-center gap-1.5 transition-colors ${

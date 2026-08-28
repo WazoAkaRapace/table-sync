@@ -1558,7 +1558,7 @@ function StagePanel({
         <div className="mt-4 flex flex-wrap items-center gap-2 rounded-lg border border-parchment-200 bg-parchment-50 p-2.5">
           <label
             className="text-sm font-medium text-ink-600"
-            htmlFor={t('combat.stage.init.combatant.id', { combatant_id: combatant.id })}
+            htmlFor={`stage-init-${combatant.id}`}
           >
             {t('combat.initiative')}
           </label>
@@ -1845,10 +1845,7 @@ function DamageSheet({
         <p className="mb-2 text-xs text-ink-400">Modification directe</p>
         <div className="flex items-end gap-2">
           <div className="flex-1">
-            <label
-              className="mb-1 block text-xs text-ink-500"
-              htmlFor={t('combat.hp.edit.combatant.id', { combatant_id: combatant.id })}
-            >
+            <label className="mb-1 block text-xs text-ink-500" htmlFor={`hp-edit-${combatant.id}`}>
               PV actuels
             </label>
             <input
@@ -1861,10 +1858,7 @@ function DamageSheet({
             />
           </div>
           <div className="flex-1">
-            <label
-              className="mb-1 block text-xs text-ink-500"
-              htmlFor={t('combat.hp.max.combatant.id', { combatant_id: combatant.id })}
-            >
+            <label className="mb-1 block text-xs text-ink-500" htmlFor={`hp-max-${combatant.id}`}>
               PV max
             </label>
             <input

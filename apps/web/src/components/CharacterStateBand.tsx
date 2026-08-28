@@ -530,7 +530,7 @@ export default function CharacterStateBand({
                           : 'bg-parchment-100 border-parchment-200 text-ink-600'
                       }`}
                       title={t('band.r.pact.magie.de.pacte.niveau', {
-                        r_pact____Magie_de_pacte: r.pact ? 'Magie de pacte' : 'Incantation',
+                        r_pact: r.pact ? t('sorts.magie.de.pacte') : t('sorts.incantation'),
                         r_level: r.level,
                         r_left: r.left,
                         r_max: r.max,
