@@ -637,5 +637,13 @@
   "traits.pre.coche.sur.la.regle.du": "Pré-coché sur la règle du catalogue — un choix identique continue de la suivre (elle évolue avec le niveau) ; seul un écart est mémorisé.",
   "traits.reorganisation.non.enregistree": "Réorganisation non enregistrée",
   "traits.repos.court.et.donc.long": "↻ Repos court (et donc long)",
-  "commun.pluriel.s": "s"
+  "commun.pluriel.s": "s",
+  "account.mon.compte": "Mon compte",
+  "account.profil": "Profil",
+  "account.membre": "Membre {{since}}",
+  "account.identifiant.servit.a.la": "L'identifiant @{{username}} sert à la connexion — il ne peut pas changer.",
+  "account.enregistrement": "Enregistrement…",
+  "account.enregistrer": "Enregistrer",
+  "account.langue": "Langue",
+  "account.langue.aide": "La langue de l'interface et du contenu (sorts, bestiaire, messages)."
 }

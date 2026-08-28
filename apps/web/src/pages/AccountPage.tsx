@@ -6,6 +6,7 @@ import api from '../api';
 import { useAuth } from '../auth';
 import { ErrorMsg, type Toast, ToastStack } from '../components/ui';
 import { useHeaderOverride } from '../headerContext';
+import { LANGUAGES, setAppLang } from '../i18n';
 import { formatSince } from '../utils';
 
 /**
@@ -14,7 +15,7 @@ import { formatSince } from '../utils';
  * lecture seule : il sert à la connexion et ne change pas.
  */
 export default function AccountPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user, refreshUser } = useAuth();
   const nav = useNavigate();
 
@@ -92,13 +93,13 @@ export default function AccountPage() {
   return (
     <div className="max-w-md mx-auto space-y-6">
       <h1 className="font-display text-2xl sm:text-3xl font-bold text-ink-900 text-center">
-        Mon compte
+        {t('account.mon.compte')}
       </h1>
 
       {/* ---------- Profil ---------- */}
       <section className="card p-5 sm:p-6" aria-labelledby="account-profil-title">
         <h2 id="account-profil-title" className="section-title mb-4">
-          Profil
+          {t('account.profil')}
         </h2>
         <div className="flex items-center gap-4">
           <span
@@ -110,11 +111,14 @@ export default function AccountPage() {
           <div className="min-w-0">
             <p className="text-lg font-medium text-ink-900 truncate">{user.displayName}</p>
             <p className="text-sm text-ink-400 truncate">@{user.username}</p>
-            <p className="text-xs text-ink-400">Membre {formatSince(user.createdAt)}</p>
+            <p className="text-xs text-ink-400">
+              {' '}
+              {t('account.membre', { since: formatSince(user.createdAt) })}
+            </p>
           </div>
         </div>
         <p className="text-xs text-ink-400 mt-2 mb-5">
-          L’identifiant @{user.username} sert à la connexion — il ne peut pas changer.
+          {t('account.identifiant.servit.a.la', { username: user.username })}
         </p>
         <form onSubmit={submitProfile} className="space-y-4">
           <div>
@@ -164,9 +168,38 @@ export default function AccountPage() {
             className="btn-primary w-full"
             disabled={!profileDirty || savingProfile}
           >
-            {savingProfile ? 'Enregistrement…' : 'Enregistrer'}
+            {savingProfile ? t('account.enregistrement') : t('account.enregistrer')}
           </button>
         </form>
+      </section>
+
+      {/* ---------- Langue ---------- */}
+      <section className="card p-5 sm:p-6" aria-labelledby="account-lang-title">
+        <h2 id="account-lang-title" className="section-title mb-4">
+          {t('account.langue')}
+        </h2>
+        <div
+          className="inline-flex rounded-lg border border-ink-200 bg-parchment-100 p-1"
+          role="group"
+          aria-label={t('account.langue')}
+        >
+          {LANGUAGES.map((l) => (
+            <button
+              key={l.code}
+              type="button"
+              onClick={() => setAppLang(l.code)}
+              aria-pressed={(i18n.resolvedLanguage ?? 'fr') === l.code}
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                (i18n.resolvedLanguage ?? 'fr') === l.code
+                  ? 'bg-ink-800 text-parchment-50 shadow-sm'
+                  : 'text-ink-600 hover:text-ink-900'
+              }`}
+            >
+              {l.label}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-ink-400 mt-3">{t('account.langue.aide')}</p>
       </section>
 
       {/* ---------- Mot de passe ---------- */}

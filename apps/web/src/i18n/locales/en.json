@@ -637,5 +637,13 @@
   "traits.pre.coche.sur.la.regle.du": "Pre-checked per the catalog rule — an identical choice keeps following it (it evolves with level); only a deviation is remembered.",
   "traits.reorganisation.non.enregistree": "Reorder not saved",
   "traits.repos.court.et.donc.long": "↻ Short rest (and thus long)",
-  "commun.pluriel.s": "s"
+  "commun.pluriel.s": "s",
+  "account.mon.compte": "My account",
+  "account.profil": "Profile",
+  "account.membre": "Member {{since}}",
+  "account.identifiant.servit.a.la": "The @{{username}} handle is used to sign in — it cannot change.",
+  "account.enregistrement": "Saving…",
+  "account.enregistrer": "Save",
+  "account.langue": "Language",
+  "account.langue.aide": "The language of the interface and content (spells, bestiary, messages)."
 }

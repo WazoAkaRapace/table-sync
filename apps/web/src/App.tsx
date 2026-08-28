@@ -8,7 +8,6 @@ import CombatWidget from './components/CombatWidget';
 import ConcentrationAlert from './components/ConcentrationAlert';
 import { HeaderProvider, useHeaderState } from './headerContext';
 import './i18n';
-import { LanguageSwitcher } from './components/LanguageSwitcher';
 import { useSync, useSyncEvent } from './sync';
 
 // Route pages are code-split: each lazy() becomes its own chunk so the login
@@ -159,7 +158,6 @@ function Nav() {
             {user.displayName}
           </Link>
           <SyncIndicator />
-          <LanguageSwitcher />
           {loc.pathname === '/parties' && (
             <Link
               to="/compte"
