@@ -38,6 +38,10 @@ export const users = sqliteTable('users', {
   username: text('username').notNull().unique('users_username_unique'),
   passwordHash: text('password_hash').notNull(),
   displayName: text('display_name').notNull(),
+  // Stocké normalisé (trim + minuscules) côté API ; les comptes existants
+  // restent sans email (nullable). Unique sans COLLATE NOCASE : la
+  // normalisation applicative suffit, pas de rebuild de table.
+  email: text('email').unique('users_email_unique'),
   createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
 });
 
