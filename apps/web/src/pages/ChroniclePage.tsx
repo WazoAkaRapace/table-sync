@@ -9,6 +9,7 @@
 import type { GmaLinkStatus, GmaRecapsResponse, GmaSession } from '@table-sync/shared';
 import { gmaMomentTypeLabel, gmaRecapStyleLabel } from '@table-sync/shared';
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../api';
 import { Chip, EmptyState, ErrorMsg, LoadingSpinner } from '../components/ui';
@@ -90,6 +91,7 @@ function momentStyle(type: string | null): MomentStyle {
 }
 
 export default function ChroniclePage() {
+  const { t } = useTranslation();
   const { partyId } = useParams();
   const navigate = useNavigate();
   const [link, setLink] = useState<GmaLinkStatus | null>(null);
@@ -175,7 +177,7 @@ export default function ChroniclePage() {
       <div className="mx-auto w-full max-w-xl">
         <EmptyState
           icon="📜"
-          title="Pas de chronique pour ce groupe"
+          title={t('chronique.pas.de.chronique.pour.ce.groupe')}
           hint="Le MD peut lier le groupe à une campagne GM Assistant depuis sa Table (onglet GM Assistant)."
         />
       </div>
@@ -187,7 +189,7 @@ export default function ChroniclePage() {
         <ErrorMsg message={error} />
         <div className="text-center">
           <button type="button" className="btn-secondary" onClick={() => loadSessions()}>
-            Réessayer
+            {t('chronique.reessayer')}
           </button>
         </div>
       </div>
@@ -201,13 +203,13 @@ export default function ChroniclePage() {
     return (
       <article className="mx-auto w-full max-w-3xl">
         <header className="register-rise pb-5 pt-2 text-center">
-          <p className="text-xs uppercase tracking-[0.2em] text-ink-300">Séance</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-ink-300">{t('chronique.seance')}</p>
           <h1 className="mt-1 font-display text-2xl font-bold sm:text-3xl">{open.title}</h1>
           <p className="mt-1.5 flex flex-wrap items-center justify-center gap-2 text-sm text-ink-400">
             <span>{playedAtLabel(open.playedAt)}</span>
             {recapsRes?.stale && (
               <Chip tone="amber" soft>
-                possiblement obsolète
+                {t('chronique.possiblement.obsolete')}
               </Chip>
             )}
           </p>
@@ -218,7 +220,10 @@ export default function ChroniclePage() {
         </div>
 
         {recaps.length > 1 && (
-          <nav className="flex flex-wrap justify-center gap-2 pt-5" aria-label="Styles de résumé">
+          <nav
+            className="flex flex-wrap justify-center gap-2 pt-5"
+            aria-label={t('chronique.styles.de.resume')}
+          >
             {recaps.map((r) => (
               <button
                 key={r.style}
@@ -243,7 +248,7 @@ export default function ChroniclePage() {
           {!recapsLoading && !recapsError && !active && (
             <EmptyState
               icon="🖋"
-              title="Aucun résumé pour cette séance"
+              title={t('chronique.aucun.resume.pour.cette.seance')}
               hint="Les résumés apparaîtront ici dès que le MD en produira un sur GM Assistant."
             />
           )}
@@ -265,9 +270,9 @@ export default function ChroniclePage() {
             teinté + voix propre (l'épique est gravé, le tragique s'éteint).
             La couche citation (« » + attributif) reste orthogonale au type. */}
         {(recapsRes?.moments?.length ?? 0) > 0 && (
-          <section className="register-rise pt-8" aria-label="Moments mémorables">
+          <section className="register-rise pt-8" aria-label={t('chronique.moments.memorables')}>
             <div className="flex items-center gap-3">
-              <h2 className="section-title text-base">Moments mémorables</h2>
+              <h2 className="section-title text-base">{t('chronique.moments.memorables')}</h2>
               <span
                 aria-hidden="true"
                 className="min-w-4 flex-1 self-center border-b border-parchment-200"
@@ -331,7 +336,7 @@ export default function ChroniclePage() {
           <span>{plural(ordered.length, 'séance')}</span>
           {stale && (
             <Chip tone="amber" soft>
-              possiblement obsolète
+              {t('chronique.possiblement.obsolete')}
             </Chip>
           )}
         </p>
@@ -345,7 +350,7 @@ export default function ChroniclePage() {
         <div className="pt-8">
           <EmptyState
             icon="📜"
-            title="Aucune séance pour l'instant"
+            title={t('chronique.aucune.seance.pour.l.instant')}
             hint="Les séances et leurs résumés apparaîtront ici dès que la campagne vivra sur GM Assistant."
           />
         </div>

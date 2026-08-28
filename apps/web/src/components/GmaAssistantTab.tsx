@@ -16,6 +16,7 @@ import type {
 } from '@table-sync/shared';
 import { GMA_PC_FIELD_LABELS_FR } from '@table-sync/shared';
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import api from '../api';
 import { plural } from '../utils';
 import { Chip, ConfirmButton, Modal } from './ui';
@@ -27,10 +28,11 @@ function errMessage(err: any): string {
 }
 
 function ScopeChip({ scope }: { scope: 'read' | 'full_access' | null }) {
+  const { t } = useTranslation();
   if (scope === 'full_access')
     return (
       <Chip tone="blue" soft>
-        Accès complet
+        {t('gma.acces.complet')}
       </Chip>
     );
   if (scope === 'read')
@@ -41,7 +43,7 @@ function ScopeChip({ scope }: { scope: 'read' | 'full_access' | null }) {
     );
   return (
     <Chip tone="amber" soft>
-      Portée inconnue
+      {t('gma.portee.inconnue')}
     </Chip>
   );
 }
@@ -96,6 +98,7 @@ export function GmaAssistantTab({
   /** Non-hidden sheet summaries — hidden (secret prep) never leaves the app. */
   characters: Array<{ id: number; name: string; ownerName: string | null; hidden: boolean }>;
 }) {
+  const { t } = useTranslation();
   const [account, setAccount] = useState<GmaAccountStatus | null>(null);
   const [link, setLink] = useState<GmaLinkStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -306,7 +309,7 @@ export function GmaAssistantTab({
               onClick={() => setShowKeyForm((v) => !v)}
               disabled={busy}
             >
-              Remplacer la clé
+              {t('gma.remplacer.la.cle')}
             </button>
             <button
               type="button"
@@ -327,7 +330,7 @@ export function GmaAssistantTab({
         {(!keyed || showKeyForm) && (
           <div className="space-y-2">
             <label htmlFor="gma-key" className="label">
-              Clé API GM Assistant
+              {t('gma.cle.api.gm.assistant')}
             </label>
             <input
               id="gma-key"
@@ -352,16 +355,13 @@ export function GmaAssistantTab({
           <h4 className="font-display text-base font-semibold text-ink-800">
             Liaison du groupe « {partyName} »
           </h4>
-          <p className="text-sm text-ink-500">
-            Deux chemins : créer une campagne toute prête depuis ce groupe, ou relier une campagne
-            déjà existante sur ton compte.
-          </p>
+          <p className="text-sm text-ink-500">{t('gma.deux.chemins.creer.une.campagne.toute')}</p>
           <div className="flex flex-wrap gap-2">
             <button type="button" className="btn-primary" onClick={() => setInitOpen(true)}>
-              ＋ Créer depuis ce groupe
+              {t('gma.creer.depuis.ce.groupe')}
             </button>
             <button type="button" className="btn-secondary" onClick={openPicker}>
-              Lier une campagne existante
+              {t('gma.lier.une.campagne.existante')}
             </button>
           </div>
         </div>
@@ -381,14 +381,13 @@ export function GmaAssistantTab({
               rel="noreferrer"
               className="text-xs text-ink-400 underline"
             >
-              Ouvrir sur gmassistant.app ↗
+              {t('gma.ouvrir.sur.gmassistant.app')}
             </a>
           </div>
 
           {keyExpired && (
             <p className="rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">
-              Clé expirée ou oubliée — la Chronique sert son dernier cachet. Ressaisis une clé pour
-              relancer la synchronisation.
+              {t('gma.cle.expiree.ou.oubliee.la.chronique')}
             </p>
           )}
 
@@ -399,7 +398,7 @@ export function GmaAssistantTab({
               onClick={refreshSessions}
               disabled={busy}
             >
-              ↺ Rafraîchir les séances
+              {t('gma.rafraichir.les.seances')}
             </button>
             <button
               type="button"
@@ -420,14 +419,11 @@ export function GmaAssistantTab({
               confirmChildren="Délier ?"
               className="btn-ghost text-xs px-2.5 py-1 text-red-600"
             >
-              Délier le groupe
+              {t('gma.delier.le.groupe')}
             </ConfirmButton>
           </div>
           {refreshNote && <p className="text-xs text-ink-500">{refreshNote}</p>}
-          <p className="text-[11px] text-ink-400">
-            Délier ne supprime rien chez GM Assistant — la campagne et ses personnages restent
-            là-bas.
-          </p>
+          <p className="text-[11px] text-ink-400">{t('gma.delier.ne.supprime.rien.chez.gm')}</p>
         </div>
       )}
 
@@ -449,16 +445,16 @@ export function GmaAssistantTab({
         <Modal
           open
           onClose={() => !busy && setPickerOpen(false)}
-          title="Lier une campagne existante"
+          title={t('gma.lier.une.campagne.existante')}
         >
           {campaigns === null && !pickerError && (
-            <p className="text-sm text-ink-400 animate-pulse">Chargement de tes campagnes…</p>
+            <p className="text-sm text-ink-400 animate-pulse">
+              {t('gma.chargement.de.tes.campagnes')}
+            </p>
           )}
           {pickerError && <p className="text-sm text-red-600">{pickerError}</p>}
           {campaigns !== null && campaigns.length === 0 && (
-            <p className="text-sm text-ink-500">
-              Aucune campagne sur ton compte GM Assistant — crée-en une depuis ce groupe.
-            </p>
+            <p className="text-sm text-ink-500">{t('gma.aucune.campagne.sur.ton.compte.gm')}</p>
           )}
           {campaigns !== null && campaigns.length > 0 && (
             <ul className="max-h-80 space-y-1 overflow-y-auto">
@@ -483,7 +479,7 @@ export function GmaAssistantTab({
         <Modal
           open
           onClose={() => !busy && setSyncOpen(false)}
-          title="Resynchroniser les personnages"
+          title={t('gma.resynchroniser.les.personnages')}
         >
           {diffLoading && <p className="text-sm text-ink-400 animate-pulse">Comparaison…</p>}
           {diffError && <p className="mb-2 text-sm text-red-600">{diffError}</p>}
@@ -517,7 +513,7 @@ export function GmaAssistantTab({
               onClick={() => setSyncOpen(false)}
               disabled={busy}
             >
-              Fermer
+              {t('gma.fermer')}
             </button>
             <button
               type="button"
@@ -533,10 +529,7 @@ export function GmaAssistantTab({
               {busy ? 'Application…' : 'Appliquer'}
             </button>
           </div>
-          <p className="mt-2 text-[11px] text-ink-400">
-            Le lot ne supprime jamais rien chez GM Assistant — les orphelins se suppriment un à un,
-            sur confirmation.
-          </p>
+          <p className="mt-2 text-[11px] text-ink-400">{t('gma.le.lot.ne.supprime.jamais.rien')}</p>
         </Modal>
       )}
     </div>
@@ -557,6 +550,7 @@ function InitModal({
   onClose: () => void;
   onDone: () => void;
 }) {
+  const { t } = useTranslation();
   const [checked, setChecked] = useState<Set<number>>(new Set(characters.map((c) => c.id)));
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -582,7 +576,7 @@ function InitModal({
 
   if (result) {
     return (
-      <Modal open onClose={onDone} title="Campagne créée">
+      <Modal open onClose={onDone} title={t('gma.campagne.creee')}>
         <p className="text-sm text-ink-700">
           « {result.campaign.title} » existe sur GM Assistant avec{' '}
           {plural(result.created.length, 'personnage')}.
@@ -597,7 +591,7 @@ function InitModal({
           La Chronique est disponible pour toute la table (annexes du groupe).
         </p>
         <button type="button" className="btn-primary mt-4 w-full" onClick={onDone}>
-          Terminé
+          {t('gma.termine')}
         </button>
       </Modal>
     );
@@ -611,7 +605,7 @@ function InitModal({
     >
       {confirming ? (
         <div className="space-y-3">
-          <p className="text-sm text-ink-700">Chez GM Assistant, il sera créé :</p>
+          <p className="text-sm text-ink-700">{t('gma.chez.gm.assistant.il.sera.cree')}</p>
           <ul className="space-y-1 rounded-md bg-parchment-100 px-3 py-2 text-sm text-ink-800">
             <li className="font-medium">📜 Campagne « {partyName} » (D&D 5e)</li>
             {selected.map((c) => (
@@ -703,6 +697,7 @@ function SyncDiffBody({
   setCreateIds: (ids: Set<number>) => void;
   onDeleteOrphan: (gmaPcId: string) => void;
 }) {
+  const { t } = useTranslation();
   const quiet =
     diff.toCreate.length === 0 &&
     diff.toUpdate.length === 0 &&
@@ -717,7 +712,9 @@ function SyncDiffBody({
       )}
       {diff.toCreate.length > 0 && (
         <section>
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-400">À créer</h4>
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-400">
+            {t('gma.a.creer')}
+          </h4>
           <ul>
             {diff.toCreate.map((c) => (
               <CandidateRow
@@ -743,7 +740,7 @@ function SyncDiffBody({
       {diff.toUpdate.length > 0 && (
         <section>
           <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-400">
-            À mettre à jour
+            {t('gma.a.mettre.a.jour')}
           </h4>
           <ul className="space-y-1.5">
             {diff.toUpdate.map((u) => (
@@ -768,7 +765,7 @@ function SyncDiffBody({
       {diff.orphans.length > 0 && (
         <section>
           <h4 className="text-xs font-semibold uppercase tracking-wide text-red-500">
-            Fiches supprimées ici
+            {t('gma.fiches.supprimees.ici')}
           </h4>
           <ul className="space-y-1.5">
             {diff.orphans.map((o) => (
@@ -779,7 +776,7 @@ function SyncDiffBody({
                 <span className="min-w-0 flex-1 truncate text-ink-700">
                   {o.nameAtSync}
                   <span className="block text-[11px] text-ink-400">
-                    encore présent chez GM Assistant
+                    {t('gma.encore.present.chez.gm.assistant')}
                   </span>
                 </span>
                 <ConfirmButton
@@ -787,7 +784,7 @@ function SyncDiffBody({
                   confirmChildren="Supprimer chez GM Assistant ?"
                   className="btn-ghost shrink-0 text-xs px-2.5 py-1 text-red-600"
                 >
-                  Supprimer
+                  {t('gma.supprimer')}
                 </ConfirmButton>
               </li>
             ))}
@@ -797,7 +794,7 @@ function SyncDiffBody({
       {diff.gmaOnly.length > 0 && (
         <section>
           <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-400">
-            Gérés sur GM Assistant
+            {t('gma.geres.sur.gm.assistant')}
           </h4>
           <p className="mt-1 text-xs text-ink-400">
             {diff.gmaOnly.map((g) => g.name ?? 'sans nom').join(' · ')} — ils ne deviennent pas des

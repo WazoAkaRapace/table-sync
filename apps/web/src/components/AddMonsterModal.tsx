@@ -7,6 +7,7 @@
 import type { MonsterSummary } from '@table-sync/shared';
 import { formatCR } from '@table-sync/shared';
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import api from '../api';
 import { monsterSizeLabel } from '../i18n/labels';
 import { Modal, NumberField } from './ui';
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export default function AddMonsterModal({ open, onClose, onAdd }: Props) {
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [results, setResults] = useState<MonsterSummary[]>([]);
   const [loading, setLoading] = useState(false);
@@ -63,7 +65,7 @@ export default function AddMonsterModal({ open, onClose, onAdd }: Props) {
   };
 
   return (
-    <Modal open={open} onClose={handleClose} title="Ajouter un monstre">
+    <Modal open={open} onClose={handleClose} title={t('ajmonstre.ajouter.un.monstre')}>
       {!selected ? (
         <>
           <input
@@ -71,12 +73,12 @@ export default function AddMonsterModal({ open, onClose, onAdd }: Props) {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher un monstre… (gobelin, dragon,…)"
+            placeholder={t('ajmonstre.rechercher.un.monstre.gobelin.dragon')}
             className="input w-full"
           />
           {loading && <p className="text-sm text-ink-400 mt-2">Recherche…</p>}
           {!loading && search.trim() && results.length === 0 && (
-            <p className="text-sm text-ink-400 mt-2">Aucun monstre trouvé.</p>
+            <p className="text-sm text-ink-400 mt-2">{t('ajmonstre.aucun.monstre.trouve')}</p>
           )}
           <div className="mt-3 max-h-[50vh] overflow-y-auto space-y-1">
             {results.map((m) => (
@@ -163,10 +165,10 @@ export default function AddMonsterModal({ open, onClose, onAdd }: Props) {
           </div>
           <div className="flex gap-2 mt-4">
             <button type="button" onClick={handleClose} className="btn-secondary flex-1">
-              Annuler
+              {t('ajmonstre.annuler')}
             </button>
             <button type="button" onClick={handleAdd} className="btn-primary flex-1">
-              + Ajouter
+              {t('ajmonstre.ajouter')}
             </button>
           </div>
         </>

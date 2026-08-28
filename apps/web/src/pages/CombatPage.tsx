@@ -28,6 +28,7 @@ import type {
   PartyDetail,
 } from '@table-sync/shared';
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../auth';
@@ -135,6 +136,7 @@ function feelingDot(c: Combatant): string | null {
 }
 
 export default function CombatPage() {
+  const { t } = useTranslation();
   const { partyId } = useParams();
   const { user } = useAuth();
   const [party, setParty] = useState<PartyDetail | null>(null);
@@ -555,10 +557,8 @@ export default function CombatPage() {
               />
             ) : (
               <div className="card p-6 text-center text-sm text-ink-400">
-                📜 Bloc de stats
-                <p className="mt-1 text-xs">
-                  Touchez 📜 sur un monstre pour l’amarrer ici pendant la rencontre.
-                </p>
+                {t('combat.bloc.de.stats')}
+                <p className="mt-1 text-xs">{t('combat.touchez.sur.un.monstre.pour.l')}</p>
               </div>
             )
           }
@@ -623,6 +623,7 @@ function NewEncounterForm({
   onCreate: (name: string) => void;
   autoFocus?: boolean;
 }) {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   return (
     <form
@@ -635,7 +636,7 @@ function NewEncounterForm({
     >
       <div>
         <label className="label" htmlFor="new-encounter-name">
-          Nom de la rencontre
+          {t('combat.nom.de.la.rencontre')}
         </label>
         <input
           id="new-encounter-name"
@@ -648,7 +649,7 @@ function NewEncounterForm({
         />
       </div>
       <button type="submit" className="btn-primary w-full" disabled={!name.trim()}>
-        Créer la rencontre
+        {t('combat.creer.la.rencontre')}
       </button>
     </form>
   );
@@ -669,6 +670,7 @@ function EncounterRegister({
   onCreate: (name: string) => void;
   onOpenModal: () => void;
 }) {
+  const { t } = useTranslation();
   // Lifecycle hierarchy: the live fight(s) first as expanded entries, then
   // prepared encounters, finished ones compacted at the foot of the page.
   const live = encounters.filter((e) => e.status === 'active');
@@ -682,7 +684,7 @@ function EncounterRegister({
       <div className="register-rise">
         <header className="pb-6 pt-2 text-center">
           <h1 className="font-display text-2xl font-bold sm:text-3xl">Rencontres</h1>
-          <p className="mt-1.5 text-ink-500">Le registre des combats du groupe est vierge.</p>
+          <p className="mt-1.5 text-ink-500">{t('combat.le.registre.des.combats.du.groupe')}</p>
         </header>
 
         <div aria-hidden="true">
@@ -692,11 +694,8 @@ function EncounterRegister({
 
         {isGM ? (
           <section className="mx-auto max-w-md py-8">
-            <h2 className="section-title">Ouvrir la première rencontre</h2>
-            <p className="mt-1 text-sm text-ink-400">
-              Chaque combat a sa page — nomme-la comme l'épisode de la soirée, puis ajoute monstres
-              et personnages sur le banc de préparation.
-            </p>
+            <h2 className="section-title">{t('combat.ouvrir.la.premiere.rencontre')}</h2>
+            <p className="mt-1 text-sm text-ink-400">{t('combat.chaque.combat.a.sa.page.nomme')}</p>
             <NewEncounterForm onCreate={onCreate} autoFocus />
           </section>
         ) : (
@@ -816,11 +815,11 @@ function EncounterRegister({
                     onConfirm={() => onDelete(enc.id)}
                     className="text-xs text-ink-400 hover:text-red-600"
                     armedClassName="font-semibold text-red-700"
-                    title="Supprimer la rencontre"
+                    title={t('combat.supprimer.la.rencontre')}
                     ariaLabel={`Supprimer la rencontre ${enc.name}`}
                     confirmChildren="Confirmer ?"
                   >
-                    Supprimer
+                    {t('combat.supprimer')}
                   </ConfirmButton>
                 </div>
               )}
@@ -899,6 +898,7 @@ function CombatTheatre({
   onOpenStatBlock?: (slug: string) => void;
   statDock: ReactNode;
 }) {
+  const { t } = useTranslation();
   const combatants = encounter.combatants;
   const status = encounter.status;
   const current = combatants[encounter.turnIndex];
@@ -976,7 +976,7 @@ function CombatTheatre({
           onClick={onEndMyTurn}
           disabled={endMyTurnBusy}
           className="btn-primary min-h-[44px] text-sm"
-          aria-label="Terminer mon tour — passer au combattant suivant"
+          aria-label={t('combat.terminer.mon.tour.passer.au.combattant')}
         >
           ✓ J'ai fini mon tour
         </button>
@@ -1034,7 +1034,7 @@ function CombatTheatre({
                     onClick={onRollAll}
                     disabled={rollingInit}
                     className="btn-secondary min-h-[44px] text-sm disabled:opacity-40"
-                    title="Lancer d20 + DEX pour toutes les initiatives manquantes"
+                    title={t('combat.lancer.d20.dex.pour.toutes.les')}
                   >
                     {rollingInit ? '🎲 Lancés…' : '🎲 Tout lancer'}
                   </button>
@@ -1066,7 +1066,7 @@ function CombatTheatre({
                       : 'Démarrer le combat — tour 1, premier combattant'
                   }
                 >
-                  ▶ Démarrer le combat
+                  {t('combat.demarrer.le.combat')}
                 </button>
               </div>
             </div>
@@ -1080,7 +1080,7 @@ function CombatTheatre({
               <h2 className="font-display text-2xl font-bold leading-tight">{encounter.name}</h2>
               {status === 'setup' && (
                 <span className="rounded-full bg-yellow-100 px-2.5 py-1 text-xs font-medium text-yellow-700">
-                  ⚪ Préparation
+                  {t('combat.preparation')}
                 </span>
               )}
               {status === 'active' && (
@@ -1281,6 +1281,7 @@ function DamageChipDock({
   onToggleHalf: () => void;
   onCancel: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className={`card p-2.5 ${applyMode ? 'ring-2 ring-blood-400' : ''}`} role="status">
       <div className="flex flex-wrap items-center gap-2">
@@ -1306,7 +1307,7 @@ function DamageChipDock({
               : 'bg-parchment-100 text-ink-600 hover:bg-parchment-200'
           }`}
           aria-pressed={chip.half}
-          title="Demi-dégâts (résistance, sauvegarde réussie)"
+          title={t('combat.demi.degats.resistance.sauvegarde.reussie')}
         >
           ½
         </button>
@@ -1314,7 +1315,7 @@ function DamageChipDock({
           type="button"
           onClick={onCancel}
           className="btn-ghost min-h-[44px] min-w-[44px] p-2 text-sm text-ink-400 hover:text-ink-700"
-          aria-label="Annuler la puce de dégâts"
+          aria-label={t('combat.annuler.la.puce.de.degats')}
         >
           ✕
         </button>
@@ -1383,6 +1384,7 @@ function StagePanel({
   onOpenStatBlock?: (slug: string) => void;
   footer?: ReactNode;
 }) {
+  const { t } = useTranslation();
   const [showDamage, setShowDamage] = useState(false);
   const [showConditions, setShowConditions] = useState(false);
   const [showColor, setShowColor] = useState(false);
@@ -1423,7 +1425,7 @@ function StagePanel({
             )}
             {status === 'setup' && (
               <span className="rounded-full bg-yellow-100 px-2.5 py-1 text-xs font-medium text-yellow-700">
-                ⚪ Préparation
+                {t('combat.preparation')}
               </span>
             )}
             {status === 'ended' && (
@@ -1445,7 +1447,7 @@ function StagePanel({
               <Link
                 to={sheetPath}
                 className="hover:text-blood-600 hover:underline"
-                title="Ouvrir la fiche du personnage"
+                title={t('combat.ouvrir.la.fiche.du.personnage')}
               >
                 {label}
               </Link>
@@ -1597,9 +1599,9 @@ function StagePanel({
             type="button"
             onClick={() => setShowDamage(true)}
             className="btn-secondary flex items-center justify-center gap-1 py-3 text-sm"
-            title="Dégâts / soins / PV"
+            title={t('combat.degats.soins.pv')}
           >
-            ⚔ <span>Dégâts</span>
+            ⚔ <span>{t('combat.degats')}</span>
           </button>
           {!combatant.defeated && (
             <button
@@ -1616,7 +1618,7 @@ function StagePanel({
               type="button"
               onClick={() => onOpenStatBlock?.(combatant.monsterSlug!)}
               className="btn-secondary flex items-center justify-center gap-1 py-3 text-sm"
-              title="Bloc de stats"
+              title={t('combat.bloc.de.stats')}
             >
               📜 <span>Stats</span>
             </button>
@@ -1625,7 +1627,7 @@ function StagePanel({
             type="button"
             onClick={() => setShowColor(true)}
             className="btn-secondary flex items-center justify-center gap-1 py-3 text-sm"
-            title="Marque de couleur (relier l'écran aux figurines)"
+            title={t('combat.marque.de.couleur.relier.l.ecran')}
           >
             🎨 <span>Marque</span>
           </button>
@@ -1672,7 +1674,7 @@ function StagePanel({
       <BottomSheet
         open={showColor}
         onClose={() => setShowColor(false)}
-        title="Marque de couleur"
+        title={t('combat.marque.de.couleur')}
         size="md"
         mobileOnly={false}
       >
@@ -1700,14 +1702,15 @@ function StagePanel({
                     : `Marque ${CARD_COLOR_NAMES[color] ?? 'de couleur'}`
                 }
               >
-                {color === null && <span className="text-xs text-ink-400">Défaut</span>}
+                {color === null && (
+                  <span className="text-xs text-ink-400">{t('combat.defaut')}</span>
+                )}
               </button>
             );
           })}
         </div>
         <p className="mt-3 text-xs text-ink-400">
-          La marque apparaît sur le combattant dans l'échelle d'initiative — même couleur que la
-          figurine sur la table.
+          {t('combat.la.marque.apparait.sur.le.combattant')}
         </p>
       </BottomSheet>
     </article>
@@ -1729,6 +1732,7 @@ function DamageSheet({
   label: string;
   onPatch: (id: number, patch: Partial<Combatant>) => void;
 }) {
+  const { t } = useTranslation();
   const [damageInput, setDamageInput] = useState('');
   const [editHp, setEditHp] = useState('');
   const [editMaxHp, setEditMaxHp] = useState('');
@@ -1793,7 +1797,7 @@ function DamageSheet({
         value={damageInput}
         onChange={(e) => setDamageInput(e.target.value)}
         placeholder="Montant"
-        aria-label="Montant (dégâts ou soins)"
+        aria-label={t('combat.montant.degats.ou.soins')}
         className="input mb-3 w-full text-center text-lg"
         autoFocus
       />
@@ -1803,15 +1807,15 @@ function DamageSheet({
           onClick={() => applyDamage(1)}
           className="btn-secondary bg-red-100 py-3 text-sm text-red-700 hover:bg-red-200"
         >
-          ⚔ Dégâts
+          {t('combat.degats')}
         </button>
         <button
           type="button"
           onClick={() => applyDamage(0.5)}
           className="btn-secondary bg-orange-100 py-3 text-sm text-orange-700 hover:bg-orange-200"
-          title="Résistance : demi-dégâts"
+          title={t('combat.resistance.demi.degats')}
         >
-          🛡 Résist
+          {t('combat.resist')}
         </button>
         <button
           type="button"

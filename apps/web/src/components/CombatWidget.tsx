@@ -11,6 +11,7 @@
 
 import type { Combatant, EncounterDetail } from '@table-sync/shared';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../auth';
@@ -30,6 +31,7 @@ function rollD20(bonus: number): number {
 }
 
 export default function CombatWidget() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const location = useLocation();
   const [combats, setCombats] = useState<ActiveCombat[]>([]);
@@ -262,7 +264,7 @@ export default function CombatWidget() {
             type="button"
             onClick={() => setCollapsed(true)}
             className="text-ink-400 hover:text-ink-700 text-sm"
-            title="Réduire"
+            title={t('widget.reduire')}
           >
             ◀
           </button>
@@ -280,14 +282,14 @@ export default function CombatWidget() {
           {isMyTurn && (
             <>
               <div className="text-center py-2 px-3 rounded-lg bg-blood-600 text-parchment-50 font-bold">
-                ⚔ À toi de jouer !
+                {t('widget.a.toi.de.jouer')}
               </div>
               <button
                 type="button"
                 onClick={() => endMyTurn(combat.encounter.id)}
                 disabled={endingTurn}
                 className="btn-primary w-full min-h-[44px] text-sm"
-                aria-label="Terminer mon tour — passer au combattant suivant"
+                aria-label={t('widget.terminer.mon.tour.passer.au.combattant')}
               >
                 ✓ J'ai fini mon tour
               </button>
@@ -297,7 +299,8 @@ export default function CombatWidget() {
           {/* Current actor (only during active combat) */}
           {combat.currentCombatant && !isMyTurn && !needsInitiative && (
             <div className="text-sm text-ink-600">
-              Au tour de : <strong>{combat.currentCombatant.name}</strong>
+              {t('widget.au.tour.de')}
+              <strong>{combat.currentCombatant.name}</strong>
               <span className="text-ink-400 ml-1">
                 (init {combat.currentCombatant.initiative ?? '—'})
               </span>
@@ -353,7 +356,7 @@ export default function CombatWidget() {
               </div>
               {initError && (
                 <p className="text-xs text-red-600 mt-1" role="alert">
-                  Échec de l'enregistrement — réessaie
+                  {t('widget.echec.de.l.enregistrement.reessaie')}
                 </p>
               )}
             </div>
@@ -377,7 +380,7 @@ export default function CombatWidget() {
             to={`/party/${combat.partyId}/combat?enc=${combat.encounter.id}`}
             className="block text-center text-xs text-blood-600 hover:text-blood-700 pt-1"
           >
-            Voir le combat →
+            {t('widget.voir.le.combat')}
           </Link>
         </div>
       </div>

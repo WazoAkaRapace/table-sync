@@ -6,6 +6,7 @@
 
 import type { CharacterSummary } from '@table-sync/shared';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Modal } from './ui';
 
 interface Props {
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export default function AddPlayerModal({ open, onClose, characters, onAdd }: Props) {
+  const { t } = useTranslation();
   const [selected, setSelected] = useState<Set<number>>(new Set());
 
   // Fresh selection each time the modal opens
@@ -45,7 +47,7 @@ export default function AddPlayerModal({ open, onClose, characters, onAdd }: Pro
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="Ajouter des personnages">
+    <Modal open={open} onClose={onClose} title={t('ajoutjoueur.ajouter.des.personnages')}>
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm text-ink-500">
           {selected.size === 0
@@ -90,7 +92,7 @@ export default function AddPlayerModal({ open, onClose, characters, onAdd }: Pro
       </div>
       <div className="flex gap-2 mt-4">
         <button type="button" onClick={onClose} className="btn-secondary flex-1">
-          Annuler
+          {t('ajoutjoueur.annuler')}
         </button>
         <button
           type="button"

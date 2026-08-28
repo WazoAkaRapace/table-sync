@@ -13,6 +13,7 @@ import {
   skillProficiencyLevel,
 } from '@table-sync/shared';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import api, { itemImageUrl } from '../api';
 import { useAuth } from '../auth';
@@ -51,6 +52,7 @@ interface Transaction {
 }
 
 export default function GmDashboardPage() {
+  const { t } = useTranslation();
   const { partyId } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -119,7 +121,7 @@ export default function GmDashboardPage() {
           Journal ({transactions.length})
         </TabButton>
         <TabButton active={tab === 'custom'} onClick={() => setTab('custom')}>
-          Objets custom
+          {t('md.objets.custom')}
         </TabButton>
         <TabButton active={tab === 'members'} onClick={() => setTab('members')}>
           Joueurs ({party.members.length})
@@ -129,7 +131,7 @@ export default function GmDashboardPage() {
         </TabButton>
         {isGm && (
           <TabButton active={tab === 'settings'} onClick={() => setTab('settings')}>
-            Réglages
+            {t('md.reglages')}
           </TabButton>
         )}
       </div>
@@ -187,6 +189,7 @@ function DisbandPartySection({
   name: string;
   onDone: () => void;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [confirmName, setConfirmName] = useState('');
   const [busy, setBusy] = useState(false);
@@ -209,7 +212,7 @@ function DisbandPartySection({
 
   return (
     <div className="rounded-lg border border-red-200 bg-red-50/60 p-4">
-      <h3 className="section-title text-red-700">Zone de danger</h3>
+      <h3 className="section-title text-red-700">{t('md.zone.de.danger')}</h3>
       <p className="mt-1 text-xs text-ink-500">
         Dissoudre « {name} » supprime définitivement la table et tout ce qui s'y rattache :
         personnages et leurs fiches, combats, PNJ, objets personnalisés, journal. Aucun retour en
@@ -224,7 +227,7 @@ function DisbandPartySection({
           setOpen(true);
         }}
       >
-        Dissoudre le groupe…
+        {t('md.dissoudre.le.groupe')}
       </button>
 
       {open && (
@@ -233,10 +236,7 @@ function DisbandPartySection({
           onClose={() => !busy && setOpen(false)}
           title={`Dissoudre « ${name} » ?`}
         >
-          <p className="mb-3 text-sm text-ink-500">
-            Tout le contenu du groupe sera supprimé, pour le MD comme pour les joueurs. Cette action
-            est définitive.
-          </p>
+          <p className="mb-3 text-sm text-ink-500">{t('md.tout.le.contenu.du.groupe.sera')}</p>
           <label className="block">
             <span className="label">Tape le nom du groupe ({name}) pour confirmer</span>
             <input
@@ -256,7 +256,7 @@ function DisbandPartySection({
               disabled={busy}
               className="btn-secondary flex-1"
             >
-              Annuler
+              {t('md.annuler')}
             </button>
             <button
               type="button"
@@ -306,6 +306,7 @@ function CharactersTab({
   partyId: string;
   onReload: () => void;
 }) {
+  const { t } = useTranslation();
   const [deleteTarget, setDeleteTarget] = useState<CharacterSummary | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [inventories, setInventories] = useState<Record<number, CharacterInventory>>({});
@@ -345,7 +346,7 @@ function CharactersTab({
     return (
       <EmptyState
         icon="🧙"
-        title="Aucun personnage"
+        title={t('md.aucun.personnage')}
         hint="Les joueurs doivent créer leurs personnages."
       />
     );
@@ -418,9 +419,9 @@ function CharactersTab({
                     {c.hidden && (
                       <span
                         className="shrink-0 rounded-full bg-ink-100 px-2 py-0.5 text-[11px] font-medium text-ink-600"
-                        title="Caché des autres joueurs par son propriétaire — inactif en combat"
+                        title={t('md.cache.des.autres.joueurs.par.son')}
                       >
-                        Caché
+                        {t('md.cache')}
                       </span>
                     )}
                   </h3>
@@ -440,7 +441,7 @@ function CharactersTab({
                 onClick={() => setDeleteTarget(c)}
                 className="text-ink-400 hover:text-red-600 text-sm shrink-0 p-1"
                 aria-label={`Supprimer ${c.name}`}
-                title="Supprimer le personnage"
+                title={t('md.supprimer.le.personnage')}
               >
                 🗑
               </button>
@@ -535,7 +536,7 @@ function CharactersTab({
           title={`Supprimer ${deleteTarget.name} ?`}
         >
           <p className="text-sm text-ink-500 mb-4">
-            Cette action est irréversible. Tout l'inventaire et la monnaie seront perdus.
+            {t('md.cette.action.est.irreversible.tout.l')}
           </p>
           <div className="flex gap-2">
             <button
@@ -544,7 +545,7 @@ function CharactersTab({
               disabled={deleting}
               className="btn-secondary flex-1"
             >
-              Annuler
+              {t('md.annuler')}
             </button>
             <button
               type="button"
@@ -619,6 +620,7 @@ function MembersTab({
   partyId: string;
   onReload: (silent?: boolean) => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState('');
@@ -657,9 +659,7 @@ function MembersTab({
 
   return (
     <div className="space-y-4">
-      <p className="text-xs text-ink-400">
-        Retirer libère le siège — le code d'invitation reste valable. Bannir verrouille le code.
-      </p>
+      <p className="text-xs text-ink-400">{t('md.retirer.libere.le.siege.le.code')}</p>
       <div className="card divide-y divide-parchment-100">
         {members.map((m) => (
           <div key={m.userId} className="flex items-center gap-3 p-3">
@@ -736,7 +736,7 @@ function MembersTab({
                   }}
                   aria-label={`Débannir ${u.displayName}`}
                 >
-                  Débannir
+                  {t('md.debannir')}
                 </button>
               </div>
             ))}
@@ -759,7 +759,7 @@ function MembersTab({
               disabled={busy}
               className="btn-secondary flex-1"
             >
-              Annuler
+              {t('md.annuler')}
             </button>
             <button
               type="button"
@@ -826,6 +826,7 @@ function TransactionsTab({ transactions }: { transactions: Transaction[] }) {
 }
 
 function CustomItemsTab({ partyId }: { partyId: string }) {
+  const { t } = useTranslation();
   const [customItems, setCustomItems] = useState<any[]>([]);
   const [loadingItems, setLoadingItems] = useState(true);
   // Party setting: may players create items themselves? + member names to
@@ -1007,7 +1008,7 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
           <span className="text-ink-400 text-sm font-normal">({customItems.length})</span>
         </h3>
         <button type="button" onClick={openCreate} className="btn-primary text-sm px-3 py-1.5">
-          + Ajouter
+          {t('md.ajouter')}
         </button>
       </div>
 
@@ -1023,10 +1024,9 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
           disabled={playersCreate === null || togglingPlayersCreate}
         />
         <label htmlFor="gm-players-create-items" className="text-sm font-medium text-ink-700">
-          Les joueurs peuvent créer des objets
+          {t('md.les.joueurs.peuvent.creer.des.objets')}
           <span className="mt-0.5 block text-xs font-normal text-ink-400">
-            Depuis la recherche de leur inventaire, un objet introuvable se crée en une touche — il
-            rejoint cette liste pour relecture et retouche.
+            {t('md.depuis.la.recherche.de.leur.inventaire')}
           </span>
         </label>
       </div>
@@ -1037,7 +1037,7 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
         <div className="card p-8">
           <EmptyState
             icon="✨"
-            title="Aucun objet personnalisé"
+            title={t('md.aucun.objet.personnalise')}
             hint="Crée des objets non-SRD : trésors spéciaux, objets de quête, armes uniques…"
           />
         </div>
@@ -1090,7 +1090,7 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
                   type="button"
                   onClick={() => openEdit(item)}
                   className="text-ink-400 hover:text-blood-600 text-sm p-1"
-                  aria-label="Modifier"
+                  aria-label={t('md.modifier')}
                 >
                   ✎
                 </button>
@@ -1129,22 +1129,22 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
                 className="input"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Épée du Héros"
+                placeholder={t('md.epee.du.heros')}
                 autoFocus
               />
             </label>
             <label className="block">
-              <span className="label">Catégorie</span>
+              <span className="label">{t('md.categorie')}</span>
               <select
                 className="input"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
               >
-                <option value="custom">Personnalisé</option>
+                <option value="custom">{t('md.personnalise')}</option>
                 <option value="weapon">Arme</option>
                 <option value="armor">Armure</option>
-                <option value="gear">Équipement</option>
-                <option value="magic">Objet magique</option>
+                <option value="gear">{t('md.equipement')}</option>
+                <option value="magic">{t('md.objet.magique')}</option>
               </select>
             </label>
           </div>
@@ -1166,7 +1166,7 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
               rows={2}
               value={desc}
               onChange={(e) => setDesc(e.target.value)}
-              placeholder="Une lame brillant d'une lumière dorée…"
+              placeholder={t('md.une.lame.brillant.d.une.lumiere')}
             />
           </label>
           {/* L'image est le second contenu de l'objet — après la description,
@@ -1193,7 +1193,7 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
               onClick={() => setShowModal(false)}
               className="btn-ghost text-ink-700"
             >
-              Annuler
+              {t('md.annuler')}
             </button>
           </div>
         </div>

@@ -9,6 +9,7 @@ import type { Monster, MonsterAction } from '@table-sync/shared';
 import { abilityModifier, formatCR, formatModifier } from '@table-sync/shared';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../api';
 import { appLocale } from '../i18n';
 import { monsterSizeLabel } from '../i18n/labels';
@@ -98,6 +99,7 @@ export default function MonsterStatBlock({
   onDamageRolled,
   variant = 'modal',
 }: Props) {
+  const { t } = useTranslation();
   const [monster, setMonster] = useState<Monster | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -141,7 +143,7 @@ export default function MonsterStatBlock({
         type="button"
         onClick={onClose}
         className="btn-ghost text-ink-500 p-1 shrink-0"
-        aria-label="Fermer"
+        aria-label={t('bestiaire.fermer')}
       >
         ✕
       </button>
@@ -151,7 +153,9 @@ export default function MonsterStatBlock({
   const body = (
     <div className="overflow-y-auto p-4 flex-1">
       {loading && (
-        <p className="text-sm text-ink-400 text-center py-8">Chargement du stat block…</p>
+        <p className="text-sm text-ink-400 text-center py-8">
+          {t('bestiaire.chargement.du.stat.block')}
+        </p>
       )}
       {!loading && !monster && (
         <p className="text-sm text-ink-400 text-center py-8">Monstre introuvable.</p>
@@ -215,6 +219,7 @@ function StatBlockBody({
   onOpenSpell: (id: number) => void;
   onDamageRolled?: (total: number, source: string) => void;
 }) {
+  const { t } = useTranslation();
   const sizeLabel = monsterSizeLabel(monster.size);
   const typeLine = [
     monster.type,
@@ -242,7 +247,7 @@ function StatBlockBody({
           </span>
         </div>
         <div className="flex items-baseline gap-2">
-          <span className="font-semibold text-sm">❤ Points de vie</span>
+          <span className="font-semibold text-sm">{t('bestiaire.points.de.vie')}</span>
           <span className="text-sm">
             {monster.hitPoints}
             {monster.hitDice && <span className="text-ink-400"> ({monster.hitDice})</span>}
@@ -273,13 +278,13 @@ function StatBlockBody({
       <div className="space-y-1.5 text-sm">
         {monster.savingThrows.length > 0 && (
           <div>
-            <span className="font-semibold">Jets de sauvegarde</span>
+            <span className="font-semibold">{t('bestiaire.jets.de.sauvegarde')}</span>
             <span className="text-ink-600 ml-2">{monster.savingThrows.join(', ')}</span>
           </div>
         )}
         {monster.skills.length > 0 && (
           <div>
-            <span className="font-semibold">Compétences</span>
+            <span className="font-semibold">{t('bestiaire.competences')}</span>
             <span className="text-ink-600 ml-2">
               {monster.skills.map((s) => `${s.name}${s.isExpert ? ' (expert)' : ''}`).join(', ')}
             </span>
@@ -315,19 +320,19 @@ function StatBlockBody({
         <div className="space-y-1.5 text-sm">
           {monster.damageResistances && monster.damageResistances.length > 0 && (
             <div>
-              <span className="font-semibold">Résistances aux dégâts</span>
+              <span className="font-semibold">{t('bestiaire.resistances.aux.degats')}</span>
               <span className="text-ink-600 ml-2">{monster.damageResistances.join(', ')}</span>
             </div>
           )}
           {monster.damageImmunities && monster.damageImmunities.length > 0 && (
             <div>
-              <span className="font-semibold">Immunités aux dégâts</span>
+              <span className="font-semibold">{t('bestiaire.immunites.aux.degats')}</span>
               <span className="text-ink-600 ml-2">{monster.damageImmunities.join(', ')}</span>
             </div>
           )}
           {monster.conditionImmunities && monster.conditionImmunities.length > 0 && (
             <div>
-              <span className="font-semibold">Immunités aux états</span>
+              <span className="font-semibold">{t('bestiaire.immunites.aux.etats')}</span>
               <span className="text-ink-600 ml-2">{monster.conditionImmunities.join(', ')}</span>
             </div>
           )}
@@ -337,7 +342,7 @@ function StatBlockBody({
       {/* Traits */}
       {monster.traits.length > 0 && (
         <ActionSection
-          title="Capacités"
+          title={t('bestiaire.capacites')}
           actions={monster.traits}
           spellCatalog={spellCatalog}
           onOpenSpell={onOpenSpell}
@@ -359,7 +364,7 @@ function StatBlockBody({
       {/* Legendary actions */}
       {monster.legendaryActions.length > 0 && (
         <ActionSection
-          title="Actions légendaires"
+          title={t('bestiaire.actions.legendaires')}
           actions={monster.legendaryActions}
           spellCatalog={spellCatalog}
           onOpenSpell={onOpenSpell}
@@ -454,6 +459,7 @@ function ActionEntry({
   onOpenSpell: (id: number) => void;
   onDamageRolled?: (total: number, source: string) => void;
 }) {
+  const { t } = useTranslation();
   const [attackResult, setAttackResult] = useState<{
     roll: number;
     natural: number;
@@ -501,7 +507,7 @@ function ActionEntry({
             type="button"
             onClick={handleAttack}
             className="px-1.5 py-0.5 rounded text-xs font-mono bg-red-100 text-red-700 shrink-0 hover:bg-red-200 active:scale-95 transition-all cursor-pointer"
-            title="Cliquer pour lancer le jet d'attaque (d20)"
+            title={t('bestiaire.cliquer.pour.lancer.le.jet.d')}
           >
             🎲 +{action.attackBonus}
           </button>
@@ -512,7 +518,7 @@ function ActionEntry({
             type="button"
             onClick={handleDamage}
             className="px-1.5 py-0.5 rounded text-xs font-mono bg-orange-100 text-orange-700 shrink-0 hover:bg-orange-200 active:scale-95 transition-all cursor-pointer"
-            title="Cliquer pour lancer les dégâts"
+            title={t('bestiaire.cliquer.pour.lancer.les.degats')}
           >
             🎲 {action.damageDice}
             {action.damageType ? ` ${action.damageType}` : ''}
