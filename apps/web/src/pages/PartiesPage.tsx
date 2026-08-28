@@ -274,7 +274,7 @@ export default function PartiesPage() {
       <header className="register-rise pb-6 pt-2 text-center">
         <h1 className="font-display text-2xl font-bold sm:text-3xl">{t('parties.mes.groupes')}</h1>
         <p className="mt-1.5 text-sm text-ink-400">
-          {plural(parties.length, 'groupe')} au registre
+          {t('parties.au.registre', { count: parties.length })}
         </p>
       </header>
 
@@ -334,10 +334,10 @@ export default function PartiesPage() {
                 })}
               >
                 {copiedId === current.id
-                  ? 'Copié ✓'
+                  ? t('commun.copie.ok')
                   : copyFailedId === current.id
-                    ? 'Copie impossible'
-                    : 'Copier'}
+                    ? t('commun.copie.impossible')
+                    : t('commun.copier')}
               </button>
             </div>
           )}

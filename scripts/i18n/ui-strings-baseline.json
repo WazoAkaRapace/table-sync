@@ -1,5 +1,5 @@
 {
-  "total": 1087,
+  "total": 1084,
   "perFile": {
     "App.tsx": 4,
     "auth.tsx": 3,
@@ -33,8 +33,8 @@
     "pages/GmDashboardPage.tsx": 82,
     "pages/LoginPage.tsx": 2,
     "pages/NpcPage.tsx": 36,
-    "pages/PartiesPage.tsx": 41,
-    "pages/PartyPage.tsx": 20,
+    "pages/PartiesPage.tsx": 39,
+    "pages/PartyPage.tsx": 19,
     "pages/RegisterPage.tsx": 6,
     "pages/character/CatalogSearch.tsx": 13,
     "pages/character/DeathSaveTracker.tsx": 1,

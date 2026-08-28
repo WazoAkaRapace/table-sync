@@ -265,7 +265,7 @@ export default function AccountPage() {
             className="btn-primary w-full"
             disabled={!passwordReady || savingPassword}
           >
-            {savingPassword ? 'Changement…' : 'Changer le mot de passe'}
+            {savingPassword ? t('account.changement') : t('account.changer.le.mot.de.passe')}
           </button>
         </form>
       </section>

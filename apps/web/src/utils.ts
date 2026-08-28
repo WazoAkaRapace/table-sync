@@ -30,7 +30,7 @@ export function formatSince(createdAt: string): string {
   const d = new Date(normalized);
   if (Number.isNaN(d.getTime())) return '';
   const fmt = new Intl.DateTimeFormat(appLocale(), { month: 'short', year: 'numeric' });
-  return `depuis ${fmt.format(d)}`;
+  return `${appLocale().startsWith('en') ? 'since' : 'depuis'} ${fmt.format(d)}`;
 }
 
 /** Neutral creation stamp for finished things — no « depuis », the entity is over. */

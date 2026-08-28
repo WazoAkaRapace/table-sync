@@ -761,5 +761,21 @@
   "traits.classe": "Classe",
   "traits.repos.long.uniquement": "↻ Repos long uniquement",
   "widget.j.ai.fini.mon.tour": "✓ J'ai fini mon tour",
-  "widget.lance.ton.initiative": "🎲 Lance ton initiative !"
+  "widget.lance.ton.initiative": "🎲 Lance ton initiative !",
+  "role.md": "MD",
+  "role.joueur": "Joueur",
+  "party.compteurs": "{{players}} · {{characters}}",
+  "party.compteurs.joueur_one": "1 joueur",
+  "party.compteurs.joueur_other": "{{count}} joueurs",
+  "party.compteurs.personnage_one": "1 personnage",
+  "party.compteurs.personnage_other": "{{count}} personnages",
+  "parties.au.registre_one": "1 groupe au registre",
+  "parties.au.registre_other": "{{count}} groupes au registre",
+  "commun.copier": "Copier",
+  "commun.copie.ok": "Copié ✓",
+  "commun.copie.impossible": "Copie impossible",
+  "account.changer.le.mot.de.passe": "Changer le mot de passe",
+  "account.changement": "Changement…",
+  "commun.depuis": "depuis",
+  "commun.since": "since"
 }

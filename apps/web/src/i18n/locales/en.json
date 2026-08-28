@@ -761,5 +761,22 @@
   "traits.classe": "Class",
   "traits.repos.long.uniquement": "↻ Long rest only",
   "widget.j.ai.fini.mon.tour": "✓ My turn is done",
-  "widget.lance.ton.initiative": "🎲 Roll your initiative!"
+  "widget.lance.ton.initiative": "🎲 Roll your initiative!",
+  "role.md": "DM",
+  "role.joueur": "Player",
+  "party.compteurs": "{{players}} · {{characters}}",
+  "party.compteurs.joueur_one": "1 player",
+  "party.compteurs.joueur_other": "{{count}} players",
+  "party.compteurs.personnage_one": "1 character",
+  "party.compteurs.personnage_other": "{{count}} characters",
+  "parties.au.registre": "{{count}} parties on the register",
+  "parties.au.registre_one": "1 party on the register",
+  "parties.au.registre_other": "{{count}} parties on the register",
+  "commun.copier": "Copy",
+  "commun.copie.ok": "Copied ✓",
+  "commun.copie.impossible": "Copy failed",
+  "account.changer.le.mot.de.passe": "Change password",
+  "account.changement": "Changing…",
+  "commun.depuis": "since",
+  "commun.since": "since"
 }

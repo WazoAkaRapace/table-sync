@@ -24,18 +24,19 @@ import api from '../api';
 import { useAuth } from '../auth';
 import { ErrorMsg, LoadingSpinner } from '../components/ui';
 import { useSyncEvent } from '../sync';
-import { copyText, plural } from '../utils';
+import { copyText } from '../utils';
 
 // ---------- Small pieces of the contents ----------
 
 function RoleBadge({ role }: { role: PartyRole }) {
+  const { t } = useTranslation();
   return (
     <span
       className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${
         role === 'gm' ? 'bg-blood-600 text-white' : 'bg-parchment-200 text-ink-700'
       }`}
     >
-      {role === 'gm' ? 'MD' : 'Joueur'}
+      {role === 'gm' ? t('role.md') : t('role.joueur')}
     </span>
   );
 }
@@ -360,8 +361,9 @@ export default function PartyPage() {
       <header className="register-rise pb-6 pt-2 text-center">
         <h1 className="font-display text-2xl font-bold sm:text-3xl">{party.party.name}</h1>
         <p className="mt-1.5 text-sm text-ink-400">
-          {plural(party.members.length, 'joueur')} · {plural(party.characters.length, 'personnage')}{' '}
-          · {encumbranceLabel(party.party.encumbranceMode)}
+          {t('party.compteurs.joueur', { count: party.members.length })} ·{' '}
+          {t('party.compteurs.personnage', { count: party.characters.length })} ·{' '}
+          {encumbranceLabel(party.party.encumbranceMode)}
         </p>
       </header>
       <div aria-hidden="true">
@@ -486,7 +488,11 @@ export default function PartyPage() {
                   party_party_inviteCode: party.party.inviteCode,
                 })}
               >
-                {inviteCopied ? 'Copié ✓' : inviteCopyFailed ? 'Copie impossible' : 'Copier'}
+                {inviteCopied
+                  ? t('commun.copie.ok')
+                  : inviteCopyFailed
+                    ? t('commun.copie.impossible')
+                    : t('commun.copier')}
               </button>
             </li>
           )}
