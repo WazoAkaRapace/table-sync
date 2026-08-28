@@ -284,7 +284,7 @@ export default function CharacterFeaturesTab({
   const addedCatalogIds = new Set(features.map((f) => f.catalogId).filter(Boolean) as string[]);
 
   if (loading) {
-    return <p className="text-sm text-ink-400 animate-pulse">Chargement…</p>;
+    return <p className="text-sm text-ink-400 animate-pulse">{t('traits.chargement')}</p>;
   }
 
   return (
@@ -305,7 +305,7 @@ export default function CharacterFeaturesTab({
         <div className="card p-8">
           <EmptyState
             icon="📋"
-            title="Aucun trait"
+            title={t('traits.aucun.trait')}
             hint="Ajoute tes capacités de classe, traits raciaux, dons, ou toute autre caractéristique de ton personnage."
           />
         </div>
@@ -549,7 +549,7 @@ export default function CharacterFeaturesTab({
                   }}
                   className="w-4 h-4 accent-blood-600"
                 />
-                ↻ Repos long uniquement
+                {t('traits.repos.long.uniquement')}
               </label>
               {editing?.catalogId && (
                 <p className="text-[11px] text-ink-400 italic">
@@ -722,7 +722,7 @@ function CatalogCard({
         <div className="mt-3 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
             <label className="flex items-center gap-1.5 text-xs text-ink-500">
-              Classe
+              {t('traits.classe')}
               <select
                 className="input py-1 text-xs w-auto"
                 value={cls}

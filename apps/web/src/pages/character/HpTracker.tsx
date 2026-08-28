@@ -1,8 +1,8 @@
 import type { Character, ConcentrationCheck } from '@table-sync/shared';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import api from '../../api';
 import { HpBar, NumberField } from '../../components/ui';
-
 import type { SheetActionProps } from './types';
 
 interface HpTrackerProps extends SheetActionProps {
@@ -19,6 +19,7 @@ export function HpTracker({
   onError,
   onConcentrationCheck,
 }: HpTrackerProps) {
+  const { t } = useTranslation();
   // Empty-while-editing lives inside NumberField — these stay pure numbers.
   const [maxHp, setMaxHp] = useState<number>(character.maxHp);
   const [currentHp, setCurrentHp] = useState<number>(character.currentHp);
@@ -146,7 +147,7 @@ export function HpTracker({
             type="button"
             onClick={() => damage(5)}
             className="w-11 h-11 max-[379px]:hidden rounded-lg bg-red-100 hover:bg-red-200 text-red-700 font-semibold flex items-center justify-center transition-colors"
-            aria-label="Blesser de 5"
+            aria-label={t('hp.blesser.de.5')}
           >
             −5
           </button>
@@ -154,7 +155,7 @@ export function HpTracker({
             type="button"
             onClick={() => damage(1)}
             className="w-11 h-11 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 font-semibold flex items-center justify-center transition-colors"
-            aria-label="Blesser de 1"
+            aria-label={t('hp.blesser.de.1')}
           >
             <span className="max-[379px]:hidden">−1</span>
             <span className="hidden max-[379px]:inline">−</span>
@@ -165,7 +166,7 @@ export function HpTracker({
             min={0}
             onChange={setCurrentHp}
             onBlur={() => commit('currentHp', currentHp, setCurrentHp)}
-            aria-label="Points de vie actuels"
+            aria-label={t('hp.points.de.vie.actuels')}
           />
           <span className="text-ink-400 font-semibold">/</span>
           <NumberField
@@ -174,13 +175,13 @@ export function HpTracker({
             min={1}
             onChange={setMaxHp}
             onBlur={() => commit('maxHp', maxHp, setMaxHp)}
-            aria-label="Points de vie maximum"
+            aria-label={t('hp.points.de.vie.maximum')}
           />
           <button
             type="button"
             onClick={() => heal(1)}
             className="w-11 h-11 rounded-lg bg-green-100 hover:bg-green-200 text-green-700 font-semibold flex items-center justify-center transition-colors"
-            aria-label="Soigner de 1"
+            aria-label={t('hp.soigner.de.1')}
           >
             <span className="max-[379px]:hidden">+1</span>
             <span className="hidden max-[379px]:inline">+</span>
@@ -189,7 +190,7 @@ export function HpTracker({
             type="button"
             onClick={() => heal(5)}
             className="w-11 h-11 max-[379px]:hidden rounded-lg bg-green-100 hover:bg-green-200 text-green-700 font-semibold flex items-center justify-center transition-colors"
-            aria-label="Soigner de 5"
+            aria-label={t('hp.soigner.de.5')}
           >
             +5
           </button>
@@ -208,13 +209,13 @@ export function HpTracker({
             min={0}
             onChange={setTempHp}
             onBlur={() => commit('tempHp', tempHp, setTempHp)}
-            aria-label="Points de vie temporaires"
+            aria-label={t('hp.points.de.vie.temporaires')}
           />
           <button
             type="button"
             onClick={() => stepTemp(1)}
             className="w-10 h-10 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm font-medium flex items-center justify-center transition-colors"
-            aria-label="Ajouter 1 PV temp"
+            aria-label={t('hp.ajouter.1.pv.temp')}
           >
             +
           </button>

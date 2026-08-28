@@ -63,7 +63,7 @@ export function NewLocationModal({ open, onClose, onCreate }: NewLocationModalPr
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="Nouveau transport">
+    <Modal open={open} onClose={onClose} title={t('empl.nouveau.transport')}>
       <form onSubmit={submit} className="space-y-4">
         {/* Type selector — two pills */}
         <div className="grid grid-cols-2 gap-2">
@@ -77,7 +77,7 @@ export function NewLocationModal({ open, onClose, onCreate }: NewLocationModalPr
             }`}
             aria-pressed={type === 'mount'}
           >
-            🐴 Monture
+            {t('empl.monture')}
           </button>
           <button
             type="button"
@@ -94,7 +94,7 @@ export function NewLocationModal({ open, onClose, onCreate }: NewLocationModalPr
         </div>
 
         <label className="block">
-          <span className="label">Nom</span>
+          <span className="label">{t('empl.nom')}</span>
           <input
             type="text"
             className="input"
@@ -140,7 +140,7 @@ export function NewLocationModal({ open, onClose, onCreate }: NewLocationModalPr
         ) : (
           <>
             <label className="block">
-              <span className="label">Capacité (kg)</span>
+              <span className="label">{t('empl.capacite.kg')}</span>
               <input
                 type="number"
                 min={0}
@@ -153,7 +153,7 @@ export function NewLocationModal({ open, onClose, onCreate }: NewLocationModalPr
               />
             </label>
             <label className="block">
-              <span className="label">Poids à vide (kg)</span>
+              <span className="label">{t('empl.poids.a.vide.kg')}</span>
               <input
                 type="number"
                 min={0}

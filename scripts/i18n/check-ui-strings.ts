@@ -14,6 +14,8 @@ const ROOT = resolve(HERE, '../../apps/web/src');
 const BASELINE = resolve(HERE, 'ui-strings-baseline.json');
 
 const ACC = /[àâçéèêëîïôùûüœÀÂÇÉÈÊËÎÏÔÙÛÜŒ]/g;
+// FR non accentué — mots SÛRS (aucune collision EN/Tailwind)
+const FR_UI = /\b(fermer|ajouter|annuler|enregistrer|supprimer|modifier|rechercher|créer|retirer|nouvelle?|aucun|aucune|rencontres?|monstres?|joueurs?|combattants?|maîtrises?|compétences?|sous-classe|personnages?|groupes?|sauvegarde|épuisement|encombrement|encombré|portage|utilisations?|inspiration|concentration|initiative|dégâts|quantité|poids|niveaux|disposition|invitations?|langues?|armures?)\b/gi;
 
 function walk(dir: string): string[] {
   const out: string[] = [];
@@ -37,7 +39,7 @@ for (const file of walk(ROOT)) {
       l.replace(/'[^']*'/g, "''"),
     )
     .replace(/case '[^']*':/g, "case '':");
-  const n = [...src.matchAll(ACC)].length;
+  const n = [...src.matchAll(ACC)].length + [...src.matchAll(FR_UI)].length;
   if (n > 0) perFile[file.replace(`${ROOT}/`, '')] = n;
 }
 const total = Object.values(perFile).reduce((a, b) => a + b, 0);

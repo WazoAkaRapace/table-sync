@@ -216,7 +216,7 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
             onChange={(e) => setDispositionFilter(e.target.value as '' | NpcDisposition)}
             aria-label={t('pnj.filtrer.par.disposition')}
           >
-            <option value="">Toutes dispositions</option>
+            <option value="">{t('pnj.toutes.dispositions')}</option>
             {DISPOSITION_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
                 {o.label}
@@ -573,7 +573,7 @@ function NpcFormModal({ open, onClose, partyId, npc, onSaved, onError }: NpcForm
       <form onSubmit={submit} className="space-y-3">
         <div>
           <label className="label" htmlFor="npc-name">
-            Nom *
+            {t('pnj.nom')}
           </label>
           <input
             id="npc-name"

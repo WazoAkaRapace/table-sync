@@ -862,7 +862,7 @@ export default function CharacterInventoryPage() {
               className="block w-full px-3 py-1.5 text-xs font-semibold text-ink-900"
               aria-expanded={hubInitOpen}
             >
-              🎲 Lance ton initiative !
+              {t('inv.lance.ton.initiative')}
             </button>
             {hubInitOpen && (
               <>
@@ -879,7 +879,7 @@ export default function CharacterInventoryPage() {
                     placeholder="—"
                     className="input input-compact text-sm py-1"
                     autoFocus
-                    aria-label="Ton initiative"
+                    aria-label={t('inv.ton.initiative')}
                   />
                   <button
                     type="button"
@@ -1442,7 +1442,7 @@ export default function CharacterInventoryPage() {
       >
         <form onSubmit={submitCreateItem} className="space-y-3">
           <label className="block">
-            <span className="label">Nom *</span>
+            <span className="label">{t('inv.nom')}</span>
             <input
               className="input"
               value={createItemName}
@@ -1461,14 +1461,14 @@ export default function CharacterInventoryPage() {
                 onChange={(e) => setCreateItemCategory(e.target.value)}
               >
                 <option value="custom">{t('inv.personnalise')}</option>
-                <option value="weapon">Arme</option>
-                <option value="armor">Armure</option>
+                <option value="weapon">{t('inv.arme')}</option>
+                <option value="armor">{t('inv.armure')}</option>
                 <option value="gear">{t('inv.equipement')}</option>
                 <option value="magic">{t('inv.objet.magique')}</option>
               </select>
             </label>
             <label className="block">
-              <span className="label">Poids (kg)</span>
+              <span className="label">{t('inv.poids.kg')}</span>
               <input
                 type="number"
                 step="0.01"

@@ -158,7 +158,9 @@ export default function MonsterStatBlock({
         </p>
       )}
       {!loading && !monster && (
-        <p className="text-sm text-ink-400 text-center py-8">Monstre introuvable.</p>
+        <p className="text-sm text-ink-400 text-center py-8">
+          {t('bestiaire.monstre.introuvable')}
+        </p>
       )}
       {monster && (
         <StatBlockBody
@@ -240,7 +242,7 @@ function StatBlockBody({
       {/* Core stats: AC, HP, Speed */}
       <div className="space-y-1.5">
         <div className="flex items-baseline gap-2">
-          <span className="font-semibold text-sm">🛡 Classe d'armure</span>
+          <span className="font-semibold text-sm">{t('bestiaire.classe.d.armure')}</span>
           <span className="text-sm">
             {monster.armorClass}
             {monster.armorDesc && <span className="text-ink-400"> ({monster.armorDesc})</span>}
@@ -300,7 +302,7 @@ function StatBlockBody({
           </div>
         )}
         <div>
-          <span className="font-semibold">Langues</span>
+          <span className="font-semibold">{t('bestiaire.langues')}</span>
           <span className="text-ink-600 ml-2">
             {monster.languages.length > 0 ? monster.languages.join(', ') : '—'}
           </span>
@@ -353,7 +355,7 @@ function StatBlockBody({
       {/* Actions */}
       {monster.actions.length > 0 && (
         <ActionSection
-          title="Actions"
+          title={t('bestiaire.actions')}
           actions={monster.actions}
           spellCatalog={spellCatalog}
           onOpenSpell={onOpenSpell}

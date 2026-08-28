@@ -76,7 +76,7 @@ export default function AddMonsterModal({ open, onClose, onAdd }: Props) {
             placeholder={t('ajmonstre.rechercher.un.monstre.gobelin.dragon')}
             className="input w-full"
           />
-          {loading && <p className="text-sm text-ink-400 mt-2">Recherche…</p>}
+          {loading && <p className="text-sm text-ink-400 mt-2">{t('ajmonstre.recherche')}</p>}
           {!loading && search.trim() && results.length === 0 && (
             <p className="text-sm text-ink-400 mt-2">{t('ajmonstre.aucun.monstre.trouve')}</p>
           )}
@@ -119,7 +119,7 @@ export default function AddMonsterModal({ open, onClose, onAdd }: Props) {
                 onClick={() => setSelected(null)}
                 className="text-ink-400 hover:text-ink-700 text-sm"
               >
-                ← Retour
+                {t('ajmonstre.retour')}
               </button>
             </div>
             <div className="flex gap-4 mt-3 text-sm">
@@ -133,7 +133,7 @@ export default function AddMonsterModal({ open, onClose, onAdd }: Props) {
           </div>
           <div className="mt-4">
             <label className="label" htmlFor="monster-count">
-              Quantité (groupe)
+              {t('ajmonstre.quantite.groupe')}
             </label>
             <div className="flex items-center gap-2">
               <button

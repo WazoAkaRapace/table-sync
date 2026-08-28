@@ -584,7 +584,7 @@ export default function CombatPage() {
       <Modal
         open={showNewEncounter}
         onClose={() => setShowNewEncounter(false)}
-        title="Nouvelle rencontre"
+        title={t('combat.nouvelle.rencontre')}
       >
         <NewEncounterForm onCreate={createEncounter} />
       </Modal>
@@ -683,7 +683,7 @@ function EncounterRegister({
     return (
       <div className="register-rise">
         <header className="pb-6 pt-2 text-center">
-          <h1 className="font-display text-2xl font-bold sm:text-3xl">Rencontres</h1>
+          <h1 className="font-display text-2xl font-bold sm:text-3xl">{t('combat.rencontres')}</h1>
           <p className="mt-1.5 text-ink-500">{t('combat.le.registre.des.combats.du.groupe')}</p>
         </header>
 
@@ -701,7 +701,7 @@ function EncounterRegister({
         ) : (
           <EmptyState
             icon="⚔"
-            title="Aucune rencontre"
+            title={t('combat.aucune.rencontre')}
             hint="Le MD n'a pas encore ouvert le registre des combats."
           />
         )}
@@ -715,7 +715,7 @@ function EncounterRegister({
   return (
     <div>
       <header className="register-rise pb-6 pt-2 text-center">
-        <h1 className="font-display text-2xl font-bold sm:text-3xl">Rencontres</h1>
+        <h1 className="font-display text-2xl font-bold sm:text-3xl">{t('combat.rencontres')}</h1>
         <p className="mt-1.5 text-sm text-ink-400">
           {plural(encounters.length, 'rencontre')} au registre
           {live.length > 0 && ` — ${plural(live.length, 'combat')} en cours`}
@@ -831,7 +831,7 @@ function EncounterRegister({
       {isGM && (
         <div className="flex items-center justify-center pt-6">
           <button type="button" className="btn-ghost text-ink-500" onClick={onOpenModal}>
-            ＋ Nouvelle rencontre
+            {t('combat.nouvelle.rencontre')}
           </button>
         </div>
       )}
@@ -954,7 +954,7 @@ function CombatTheatre({
           ⏹ Fin
         </button>
         <button type="button" onClick={onAddMonster} className="btn-secondary min-h-[44px] text-sm">
-          + Monstre
+          {t('combat.monstre')}
         </button>
         {canAddPlayer && (
           <button
@@ -1044,7 +1044,7 @@ function CombatTheatre({
                   onClick={onAddMonster}
                   className="btn-secondary min-h-[44px] text-sm"
                 >
-                  + Monstre
+                  {t('combat.monstre')}
                 </button>
                 {canAddPlayer && (
                   <button
@@ -1091,7 +1091,7 @@ function CombatTheatre({
             </div>
             <EmptyState
               icon="🎭"
-              title="Aucun combattant"
+              title={t('combat.aucun.combattant')}
               hint={
                 isGM
                   ? 'Ajoute des monstres et des personnages pour commencer.'
@@ -1170,8 +1170,8 @@ function InitiativeRail({
     (currentRef.groupId !== null ? c.groupId === currentRef.groupId : c.id === currentRef.id);
 
   return (
-    <nav aria-label="Ordre d'initiative">
-      <h2 className="section-title mb-2 hidden text-base lg:block">Initiative</h2>
+    <nav aria-label={t('combat.ordre.d.initiative')}>
+      <h2 className="section-title mb-2 hidden text-base lg:block">{t('combat.initiative')}</h2>
       <ol className="list-none flex gap-1.5 overflow-x-auto pb-1 lg:flex-col lg:gap-1 lg:overflow-visible lg:pb-0">
         {combatants.map((c, idx) => {
           const label = labels[idx];
@@ -1460,14 +1460,14 @@ function StagePanel({
         <div className="flex shrink-0 items-center gap-2">
           <span
             className="rounded-lg border border-parchment-200 bg-parchment-100 px-2 py-1 font-mono text-sm font-semibold text-ink-700"
-            title="Initiative"
+            title={t('combat.initiative')}
           >
             Init {combatant.initiative ?? '—'}
           </span>
           {combatant.armorClass !== null && (
             <span
               className="flex items-center gap-1 rounded-lg border border-parchment-200 bg-parchment-100 px-2 py-1 font-mono text-sm font-semibold text-ink-700"
-              title="Classe d'armure"
+              title={t('combat.classe.d.armure')}
             >
               <span aria-hidden="true">🛡</span>
               {combatant.armorClass}
@@ -1558,9 +1558,9 @@ function StagePanel({
         <div className="mt-4 flex flex-wrap items-center gap-2 rounded-lg border border-parchment-200 bg-parchment-50 p-2.5">
           <label
             className="text-sm font-medium text-ink-600"
-            htmlFor={`stage-init-${combatant.id}`}
+            htmlFor={t('combat.stage.init.combatant.id', { combatant_id: combatant.id })}
           >
-            Initiative
+            {t('combat.initiative')}
           </label>
           <input
             id={`stage-init-${combatant.id}`}
@@ -1571,14 +1571,14 @@ function StagePanel({
             onKeyDown={(e) => e.key === 'Enter' && submitInitiative()}
             placeholder="—"
             className="input input-compact w-20 text-center"
-            title="Saisir l'initiative"
+            title={t('combat.saisir.l.initiative')}
           />
           {isGM && (
             <button
               type="button"
               onClick={() => onSetInitiative(combatant.id, rollD20(combatant.initiativeBonus))}
               className="btn-secondary text-sm"
-              title="Lancer l'initiative (d20 + DEX)"
+              title={t('combat.lancer.l.initiative.d20.dex')}
             >
               🎲 Lancer
             </button>
@@ -1826,7 +1826,7 @@ function DamageSheet({
           onClick={applyHeal}
           className="btn-secondary bg-green-100 py-3 text-sm text-green-700 hover:bg-green-200"
         >
-          ❤ Soins
+          {t('combat.soins')}
         </button>
         <button
           type="button"
@@ -1845,7 +1845,10 @@ function DamageSheet({
         <p className="mb-2 text-xs text-ink-400">Modification directe</p>
         <div className="flex items-end gap-2">
           <div className="flex-1">
-            <label className="mb-1 block text-xs text-ink-500" htmlFor={`hp-edit-${combatant.id}`}>
+            <label
+              className="mb-1 block text-xs text-ink-500"
+              htmlFor={t('combat.hp.edit.combatant.id', { combatant_id: combatant.id })}
+            >
               PV actuels
             </label>
             <input
@@ -1858,7 +1861,10 @@ function DamageSheet({
             />
           </div>
           <div className="flex-1">
-            <label className="mb-1 block text-xs text-ink-500" htmlFor={`hp-max-${combatant.id}`}>
+            <label
+              className="mb-1 block text-xs text-ink-500"
+              htmlFor={t('combat.hp.max.combatant.id', { combatant_id: combatant.id })}
+            >
               PV max
             </label>
             <input

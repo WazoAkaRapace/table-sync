@@ -357,7 +357,7 @@ export default function CharacterStateBand({
                       onClick={() => onNavigate('survival')}
                       className="shrink-0 hover:scale-110 transition-transform"
                       aria-label={t('band.en.concentration.ouvrir.la.survie')}
-                      title="Concentration en cours"
+                      title={t('band.concentration.en.cours')}
                     >
                       🌀
                     </button>
@@ -365,8 +365,8 @@ export default function CharacterStateBand({
                   {character.inspiration && (
                     <span
                       className="shrink-0"
-                      title="Inspiration"
-                      aria-label="Inspiration acquise"
+                      title={t('band.inspiration')}
+                      aria-label={t('band.inspiration.acquise')}
                       role="img"
                     >
                       ✨
@@ -507,7 +507,7 @@ export default function CharacterStateBand({
                     💧 {character.waterDays} j sans eau
                   </Chip>
                 )}
-                {character.inspiration && <Chip tone="gold">✨ Inspiration</Chip>}
+                {character.inspiration && <Chip tone="gold">{t('band.inspiration')}</Chip>}
                 {canEdit && stateCount > 0 && (
                   <button
                     type="button"
@@ -697,7 +697,7 @@ function CombatLine({
             onClick={onOpenInitiative}
             className="btn-primary w-full py-2 lg:hidden"
           >
-            🎲 Lance ton initiative !
+            {t('band.lance.ton.initiative')}
           </button>
           {combatHref && (
             <Link to={combatHref} className="btn-primary hidden lg:flex justify-center flex-1 py-2">

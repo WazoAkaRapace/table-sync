@@ -104,7 +104,7 @@ function CreatePartyForm({ onCreated }: { onCreated: () => void }) {
       </div>
       <div>
         <label className="label" htmlFor="create-party-mode">
-          Mode d'encombrement
+          {t('parties.mode.d.encombrement')}
         </label>
         <select
           id="create-party-mode"
@@ -127,6 +127,7 @@ function CreatePartyForm({ onCreated }: { onCreated: () => void }) {
 }
 
 function JoinPartyForm({ onJoined }: { onJoined: () => void }) {
+  const { t } = useTranslation();
   const [inviteCode, setInviteCode] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -150,7 +151,7 @@ function JoinPartyForm({ onJoined }: { onJoined: () => void }) {
     <form onSubmit={submit} className="mt-4 flex flex-1 flex-col gap-4">
       <div>
         <label className="label" htmlFor="join-party-code">
-          Code d'invitation
+          {t('parties.code.d.invitation')}
         </label>
         <input
           id="join-party-code"
@@ -228,7 +229,9 @@ export default function PartiesPage() {
     return (
       <div className="register-rise mx-auto w-full max-w-3xl">
         <header className="pb-6 pt-2 text-center">
-          <h1 className="font-display text-2xl font-bold sm:text-3xl">Mes groupes</h1>
+          <h1 className="font-display text-2xl font-bold sm:text-3xl">
+            {t('parties.mes.groupes')}
+          </h1>
           <p className="mt-1.5 text-ink-500">
             Bienvenue{user ? `, ${user.displayName}` : ''}. Ton registre est encore vierge —
             ouvre-le d'une de ces deux façons.
@@ -269,7 +272,7 @@ export default function PartiesPage() {
   return (
     <div className="mx-auto w-full max-w-3xl">
       <header className="register-rise pb-6 pt-2 text-center">
-        <h1 className="font-display text-2xl font-bold sm:text-3xl">Mes groupes</h1>
+        <h1 className="font-display text-2xl font-bold sm:text-3xl">{t('parties.mes.groupes')}</h1>
         <p className="mt-1.5 text-sm text-ink-400">
           {plural(parties.length, 'groupe')} au registre
         </p>
@@ -318,7 +321,7 @@ export default function PartiesPage() {
           </Link>
           {current.role === 'gm' && (
             <div className="flex flex-wrap items-center gap-2 pb-6 pl-14 text-sm">
-              <span className="text-ink-400">Code d'invitation</span>
+              <span className="text-ink-400">{t('parties.code.d.invitation')}</span>
               <code className="rounded-lg border border-parchment-200 bg-parchment-100 px-2.5 py-1 font-mono font-semibold tracking-[0.2em]">
                 {current.inviteCode}
               </code>

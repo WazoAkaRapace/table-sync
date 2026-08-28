@@ -86,7 +86,8 @@ export default function AddClassSheet({ open, onClose, character, currentClasses
       footer={
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs text-ink-500">
-            Niveau total&nbsp;<span className="font-mono">{totalLevel}</span> →{' '}
+            {t('classe.niveau.total.nbsp')}
+            <span className="font-mono">{totalLevel}</span> →{' '}
             <span className="font-mono">{Math.min(20, totalLevel + (info ? level : 0))}</span> / 20
           </p>
           <button
@@ -104,7 +105,7 @@ export default function AddClassSheet({ open, onClose, character, currentClasses
         {/* 1 — choix de la classe */}
         <section className="space-y-2">
           <p className="text-xs font-semibold text-ink-400 uppercase tracking-wide">
-            Nouvelle classe
+            {t('classe.nouvelle.classe')}
           </p>
           <div className="grid grid-cols-2 gap-2">
             {DND_CLASSES.map((c) => {
@@ -167,7 +168,7 @@ export default function AddClassSheet({ open, onClose, character, currentClasses
                         const ok = score >= 13;
                         return (
                           <span key={a} className="flex items-center gap-1">
-                            {i > 0 && <span className="text-ink-400">et</span>}
+                            {i > 0 && <span className="text-ink-400">{t('classe.et')}</span>}
                             <span className={ok ? 'text-ink-700' : 'text-orange-600'}>
                               {ABILITY_LABELS[a]} <span className="font-mono">{score}</span>
                               {!ok && (

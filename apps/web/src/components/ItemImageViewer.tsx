@@ -999,7 +999,7 @@ export function ItemImageViewer({
                 onClick={() => setDiscardConfirm(false)}
                 className="font-semibold text-parchment-50 underline"
               >
-                rester
+                {t('image.rester')}
               </button>
             </p>
           )}
@@ -1104,7 +1104,9 @@ export function ItemImageViewer({
       </div>
       {!loaded && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <span className="animate-pulse text-sm text-parchment-50/70">Chargement…</span>
+          <span className="animate-pulse text-sm text-parchment-50/70">
+            {t('image.chargement')}
+          </span>
         </div>
       )}
       <div aria-live="polite" className="sr-only">

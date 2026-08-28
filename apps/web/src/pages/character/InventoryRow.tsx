@@ -120,7 +120,7 @@ export function InventoryRow({
                 onClick={onConfirmDelete}
                 className="btn-primary text-sm bg-red-600 hover:bg-red-700"
               >
-                Retirer
+                {t('rangee.retirer')}
               </button>
             </div>
           </div>

@@ -214,13 +214,14 @@ export default function CharacterNotesTab({
     }
   };
 
-  if (loading) return <p className="text-sm text-ink-400 animate-pulse">Chargement…</p>;
+  if (loading) return <p className="text-sm text-ink-400 animate-pulse">{t('notes.chargement')}</p>;
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="section-title">
-          Notes <span className="text-ink-400 text-sm font-normal">({notes.length})</span>
+          {t('notes.notes')}
+          <span className="text-ink-400 text-sm font-normal">({notes.length})</span>
         </h2>
         <button type="button" onClick={openCreate} className="btn-primary text-sm px-3 py-1.5">
           {t('notes.ajouter')}
@@ -231,7 +232,7 @@ export default function CharacterNotesTab({
         <div className="card p-8">
           <EmptyState
             icon="📝"
-            title="Aucune note"
+            title={t('notes.aucune.note')}
             hint="Crée des notes pour tes quêtes, rappels, lore, ou tout ce dont tu as besoin."
           />
         </div>

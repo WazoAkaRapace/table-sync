@@ -21,10 +21,20 @@ import unicodedata
 PENDING = pathlib.Path('scripts/i18n/ui-strings-pending.json')
 ACC = r'[àâçéèêëîïôùûüœÀÂÇÉÈÊËÎÏÔÙÛÜŒ]'
 FR_WORDS = re.compile(
-  r'\b(dans|avec|pour|les|des|une|est|sont|pas|vous|votre|votre|sur|son|ses|qui|que|quoi|donc|'
-  r'ou|où|ni|car|ce|cet|cette|ces|au|aux|du|de|la|le|un|par|plus|tout|toute|tous|tres|très|'
-  r'ajouter|fermer|annuler|enregistrer|supprimer|modifier|rechercher|charger|erreur|'
-  r'requis|obligatoire|personnage|groupe|campagne|sorts|objet|objets|fiche|feuille)\b', re.I)
+  r'\b(fermer|ajouter|annuler|enregistrer|supprimer|modifier|rechercher|créer|voir|ouvrir|retirer|'
+  r'afficher|valider|envoyer|confirmer|quitter|rester|retour|nouveau|nouvelle|aucun|aucune|'
+  r'tous|toutes|vide|prêt|chargement|erreur|nom|niveau|niveaux|valeur|valeurs|quantité|poids|'
+  r'taille|rôle|sorts?|objets?|armes?|armures?|outils?|langues?|maîtrises?|compétences?|'
+  r'classe|classes|sous-classe|personnages?|groupes?|combattants?|rencontres?|monstres?|'
+  r'bêtes?|joueurs?|adresse|compte|mot de passe|invitations?|membres?|listes?|recherche|'
+  r'filtre|filtrer|résultats?|disponible|disponibles|actif|inactif|caché|visible|'
+  r'préparation|réaction|rounds?|initiative|dégâts|soins|points de vie|'
+  r'sauvegarde|sauvegardes|repos|courte?|longue?|inspiration|concentration|états?|'
+  r'épuisement|formes?|sauvage|montures?|équipement|équipé|équiper|déséquiper|portage|'
+  r'encombré|encombrement|maximum|minimum|libre|restant|restants|restantes|utilisé|utilisée|'
+  r'utilisations?|jour|semaine|mois|heures?|minutes?|permanent|permanente|temporaire|'
+  r'dans|avec|pour|vous|votre|sur|son|ses|qui|que|quoi|donc|où|ni|car|ce|cet|cette|ces|'
+  r'au|aux|du|par|plus|tout|toute|sont|une|des|le|la|les|ne)\b', re.I)
 
 CONTRACTION = re.compile(r"[lndms]'[a-zà-ÿ]")
 
@@ -117,8 +127,8 @@ def main():
 
     # v2 — template literal interpolé en position JSX {`…`} ou prop label={`…`}
     def repl_expr_tmpl(m):
-      tmpl = m.group(2)
-      if not is_fr(tmpl):
+      tmpl = m.group(1)
+      if not is_fr(tmpl) or re.search(r'\b(rounded|px-|py-|bg-|border-|hover:|active:|flex|shrink|font-|transition)', tmpl):
         return m.group(0)
       key, vars = tmpl_to_key(domain, tmpl, pairs)
       args = ', '.join(f'{k}: {v}' for k, v in vars.items())

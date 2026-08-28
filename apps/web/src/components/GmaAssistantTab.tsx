@@ -277,7 +277,7 @@ export function GmaAssistantTab({
     }
   }
 
-  if (loading) return <p className="text-sm text-ink-400 animate-pulse">Chargement…</p>;
+  if (loading) return <p className="text-sm text-ink-400 animate-pulse">{t('gma.chargement')}</p>;
   if (error) return <div className="card p-4 text-sm text-red-600">{error}</div>;
 
   const keyed = !!account?.linked;
@@ -619,7 +619,7 @@ function InitModal({
               onClick={() => setConfirming(false)}
               disabled={busy}
             >
-              Retour
+              {t('gma.retour')}
             </button>
             <button type="button" className="btn-primary flex-1" onClick={create} disabled={busy}>
               {busy ? 'Création…' : 'Créer'}

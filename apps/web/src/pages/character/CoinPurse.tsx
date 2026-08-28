@@ -64,7 +64,7 @@ export function CoinPurse({ coins, readOnly = false, onChange, onBlur }: CoinPur
           <div className="mt-4">
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
               {COIN_FIELDS.map(({ key, unit, color }) => (
-                <label key={key} className="block" htmlFor={`coin-${key}`}>
+                <label key={key} className="block" htmlFor={t('bourse.coin.key', { key: key })}>
                   <span className="label flex items-center gap-1.5">
                     <span
                       className="inline-block w-3 h-3 rounded-full border border-parchment-300 shrink-0"

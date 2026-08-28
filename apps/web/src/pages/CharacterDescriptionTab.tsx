@@ -280,11 +280,12 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
                 {t('desc.lignes.de.classe')}
               </p>
               <p className="text-xs text-ink-500">
-                Niveau total&nbsp;<span className="font-mono">{totalLevel}</span>/20
+                {t('desc.niveau.total.nbsp')}
+                <span className="font-mono">{totalLevel}</span>/20
               </p>
             </div>
             {totalLevel >= 20 && (
-              <p className="text-sm text-orange-600">Niveau total maximal atteint (20).</p>
+              <p className="text-sm text-orange-600">{t('desc.niveau.total.maximal.atteint.20')}</p>
             )}
             <div className="space-y-3">
               {classLines.map((entry, index) => {
@@ -340,7 +341,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
                             aria-label={t('desc.retirer.la.classe.name', { name: name })}
                             onClick={() => removeClass(name)}
                           >
-                            Retirer
+                            {t('desc.retirer')}
                           </button>
                         )}
                       </div>

@@ -364,7 +364,9 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
                           type="button"
                           onClick={() => setExpandedSkill(expanded ? null : skill.key)}
                           aria-expanded={expanded}
-                          aria-controls={`skill-detail-${skill.key}`}
+                          aria-controls={t('skills.skill.detail.skill.key', {
+                            skill_key: skill.key,
+                          })}
                           className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg border transition-colors text-left ${
                             prof > 0
                               ? 'bg-blood-50 border-blood-300 hover:border-blood-400'
@@ -426,7 +428,7 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
 
           {/* Tools — read mode shows only what is mastered */}
           <section className="card p-4 sm:p-5 space-y-3">
-            <h2 className="section-title">Outils</h2>
+            <h2 className="section-title">{t('skills.outils')}</h2>
             {hasAutomaticToolExpertise(character) && (
               <p className="text-xs text-ink-500 flex items-center gap-2">
                 <span className="text-sm leading-none">⭐</span>
@@ -498,7 +500,7 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
 
           {/* Languages — read mode shows known tongues only */}
           <section className="card p-4 sm:p-5 space-y-3">
-            <h2 className="section-title">Langues</h2>
+            <h2 className="section-title">{t('skills.langues')}</h2>
             {editMode ? (
               <>
                 <div className="flex flex-wrap gap-1.5">
@@ -524,13 +526,13 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
                 </div>
                 <form onSubmit={addLanguage} className="flex gap-2">
                   <label htmlFor="new-language" className="sr-only">
-                    Nouvelle langue
+                    {t('skills.nouvelle.langue')}
                   </label>
                   <input
                     id="new-language"
                     value={newLang}
                     onChange={(e) => setNewLang(e.target.value)}
-                    placeholder="Autre langue…"
+                    placeholder={t('skills.autre.langue')}
                     maxLength={40}
                     className="flex-1 px-3 py-2 rounded-lg border bg-parchment-50 border-parchment-200 placeholder:text-ink-400 text-sm text-ink-700"
                   />
@@ -636,7 +638,8 @@ function WeaponMasteryCard({
               className={chip(effective.simple)}
               aria-pressed={effective.simple}
             >
-              <span aria-hidden="true">🗡</span> Armes simples
+              <span aria-hidden="true">🗡</span>
+              {t('skills.armes.simples')}
             </button>
             <button
               type="button"

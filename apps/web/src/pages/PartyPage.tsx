@@ -310,7 +310,7 @@ export default function PartyPage() {
         <p className="text-sm text-ink-400">{t('party.le.md.a.ferme.la.table')}</p>
         <div>
           <Link to="/parties" className="btn-secondary inline-block">
-            Mes groupes
+            {t('party.mes.groupes')}
           </Link>
         </div>
       </div>
@@ -323,7 +323,7 @@ export default function PartyPage() {
         <p className="text-sm text-ink-400">{t('party.le.md.t.a.retire.de')}</p>
         <div>
           <Link to="/parties" className="btn-secondary inline-block">
-            Mes groupes
+            {t('party.mes.groupes')}
           </Link>
         </div>
       </div>
@@ -409,7 +409,9 @@ export default function PartyPage() {
                       </span>
                     )}
                   </span>
-                  <span className="shrink-0 text-sm font-medium text-blood-600">Ouvrir →</span>
+                  <span className="shrink-0 text-sm font-medium text-blood-600">
+                    {t('party.ouvrir')}
+                  </span>
                 </Link>
               </li>
             ))}
@@ -457,7 +459,7 @@ export default function PartyPage() {
 
       {/* III — Outils & annexes */}
       <section className="register-rise pt-8" style={{ animationDelay: '180ms' }}>
-        <TocHeader numeral="III" title="Outils & annexes" id="toc-tools" />
+        <TocHeader numeral="III" title={t('party.outils.annexes')} id="toc-tools" />
         <ul className="list-none">
           {isGM && <TocLink to={`/party/${partyId}/gm`} label="Table du MD" glyph="🛡" />}
           <TocLink to={`/party/${partyId}/combat`} label="Combat" glyph="⚔" />
@@ -465,7 +467,9 @@ export default function PartyPage() {
           <TocLink to={`/party/${partyId}/npcs`} label="PNJ" glyph="🎭" />
           {isGM && (
             <li className="flex items-center border-b border-parchment-200 py-3.5 pl-3 pr-3">
-              <span className="text-sm font-medium text-ink-800">Code d'invitation</span>
+              <span className="text-sm font-medium text-ink-800">
+                {t('party.code.d.invitation')}
+              </span>
               <DotLeader />
               <code className="shrink-0 font-mono text-sm font-semibold tracking-[0.2em] text-ink-800">
                 {party.party.inviteCode}

@@ -236,7 +236,9 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {/* Armor Class — computed or overridden */}
           <div className="bg-parchment-100 rounded-xl p-3 text-center">
-            <div className="text-xs font-medium text-ink-500 mb-1">Classe d'armure</div>
+            <div className="text-xs font-medium text-ink-500 mb-1">
+              {t('stats.classe.d.armure')}
+            </div>
             {editingAC ? (
               <input
                 type="number"
@@ -250,7 +252,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
                   if (e.key === 'Escape') setEditingAC(false);
                 }}
                 placeholder={String(acResult.ac)}
-                aria-label="Classe d'armure"
+                aria-label={t('stats.classe.d.armure')}
                 autoFocus
               />
             ) : (
@@ -328,7 +330,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
           <DerivedStat label="Bonus de maîtrise" value={formatModifier(profBonus)} />
           {/* Portage max — FOR × 7,5 kg × multiplicateur (feuille dédiée) */}
           <div className="bg-parchment-100 rounded-xl p-3 text-center">
-            <div className="text-xs font-medium text-ink-500 mb-1">Portage max</div>
+            <div className="text-xs font-medium text-ink-500 mb-1">{t('stats.portage.max')}</div>
             <button
               type="button"
               onClick={openPortage}
@@ -393,7 +395,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
       <BottomSheet
         open={portageOpen}
         onClose={() => setPortageOpen(false)}
-        title="Portage maximum"
+        title={t('stats.portage.maximum')}
         mobileOnly={false}
         size="md"
         footer={

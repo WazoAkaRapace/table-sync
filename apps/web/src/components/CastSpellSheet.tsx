@@ -146,7 +146,7 @@ export default function CastSpellSheet({
 
         {concConflict && (
           <div className="rounded-lg bg-amber-50 border border-amber-300 p-3 mb-3 text-sm text-amber-900">
-            <p className="font-semibold">⚠️ Concentration en cours</p>
+            <p className="font-semibold">{t('cast.concentration.en.cours')}</p>
             <p className="mt-0.5">
               {t('cast.tu.concentres.deja.un.sort.lancer')}
               <strong>{spell.name}</strong>

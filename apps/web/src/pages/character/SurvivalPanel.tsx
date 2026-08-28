@@ -518,18 +518,18 @@ export function SurvivalPanel({
                 onError('Erreur');
               }
             }}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 max-[379px]:px-1 max-[379px]:gap-1 rounded-lg text-sm max-[379px]:text-xs font-medium transition-colors border ${
-              character.inspiration
+            className={t('survie.inline.flex.items.center.gap.1', {
+              character_inspiration: character.inspiration
                 ? 'bg-gold-400/20 text-gold-500 border-gold-400'
-                : 'bg-parchment-100 text-ink-400 border-parchment-300 hover:border-gold-400'
-            }`}
+                : 'bg-parchment-100 text-ink-400 border-parchment-300 hover:border-gold-400',
+            })}
             aria-pressed={character.inspiration}
             title={t('survie.l.inspiration.permet.de.relancer.un')}
           >
             <span className="inline-block w-5 text-center shrink-0 text-base max-[379px]:text-sm">
               {character.inspiration ? '✨' : '✧'}
             </span>
-            Inspiration
+            {t('survie.inspiration')}
           </button>
           <button
             type="button"
@@ -547,7 +547,7 @@ export function SurvivalPanel({
             <span className="inline-block w-5 text-center shrink-0 text-base max-[379px]:text-sm">
               {character.concentrating ? '🌀' : '◌'}
             </span>
-            Concentration
+            {t('survie.concentration')}
           </button>
         </div>
       </section>
@@ -609,9 +609,10 @@ export function SurvivalPanel({
                   key={level}
                   type="button"
                   onClick={() => setExhaustionLevel(level)}
-                  className={`text-2xl leading-none transition-colors ${exhaustionColor(level)} ${
-                    active ? 'opacity-100' : 'opacity-30 hover:opacity-60'
-                  }`}
+                  className={t('survie.text.2xl.leading.none.transition.colors', {
+                    exhaustionColor_level: exhaustionColor(level),
+                    active____opacity_100: active ? 'opacity-100' : 'opacity-30 hover:opacity-60',
+                  })}
                   aria-pressed={level === exhaustion}
                   aria-label={t('survie.niveau.d.epuisement.level', { level: level })}
                   title={`Niveau ${level}${level > 0 ? ` — ${EXHAUSTION_EFFECTS_FR[level]}` : ' — Aucun effet'}`}
@@ -703,7 +704,7 @@ export function SurvivalPanel({
 
       {/* ---------- 4. Repos — dés de vie et boutons réunis (l'économie de récupération) ---------- */}
       <section className="card p-4 sm:p-5 space-y-3">
-        <h2 className="section-title">🎲 Repos</h2>
+        <h2 className="section-title">{t('survie.repos')}</h2>
         {(() => {
           // Dés de vie PAR LIGNE DE CLASSE (multiclassage SRD : le pool garde
           // ses types de dés). Le compteur dénormalisé suit la somme.
@@ -777,7 +778,7 @@ export function SurvivalPanel({
               className="btn-rest-short"
               title={t('survie.emplacements.de.pacte.forme.sauvage.ressources')}
             >
-              ⛺ Repos court
+              {t('survie.repos.court')}
             </button>
             <button
               type="button"
@@ -785,7 +786,7 @@ export function SurvivalPanel({
               className="btn-rest-long"
               title={t('survie.pv.au.maximum.tous.les.emplacements')}
             >
-              🌙 Repos long
+              {t('survie.repos.long')}
             </button>
           </div>
         )}
@@ -799,7 +800,7 @@ export function SurvivalPanel({
           return (
             <section className="card p-4 sm:p-5 space-y-2">
               <div className="flex items-center justify-between gap-2">
-                <h2 className="section-title">🐾 Forme sauvage</h2>
+                <h2 className="section-title">{t('survie.forme.sauvage')}</h2>
                 {/* biome-ignore lint/a11y/useSemanticElements: fieldset would add its own border/margin styling and break the compact pips row. */}
                 <span
                   className="flex items-center gap-0.5"
@@ -1068,7 +1069,7 @@ export function SurvivalPanel({
             <div className="bg-parchment-50 rounded-lg px-3 py-2 border border-parchment-200 space-y-1">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-sm font-medium text-ink-800 truncate">
-                  ✊ Frappe sans arme
+                  {t('survie.frappe.sans.arme')}
                 </span>
                 {u.monk && (
                   <span className="text-[10px] font-semibold text-indigo-600 shrink-0">
@@ -1100,7 +1101,7 @@ export function SurvivalPanel({
                 </Chip>
                 {u.bonusActionAttack && (
                   <Chip tone="indigo" title={t('survie.arts.martiaux.une.frappe.sans.arme')}>
-                    ⚡ action bonus
+                    {t('survie.action.bonus')}
                   </Chip>
                 )}
               </div>
@@ -1163,7 +1164,7 @@ export function SurvivalPanel({
       <BottomSheet
         open={restSheet === 'short'}
         onClose={() => setRestSheet(null)}
-        title="⛺ Repos court (1 h)"
+        title={t('survie.repos.court.1.h')}
         mobileOnly={false}
         size="md"
         footer={
@@ -1258,7 +1259,7 @@ export function SurvivalPanel({
       <BottomSheet
         open={restSheet === 'long'}
         onClose={() => setRestSheet(null)}
-        title="🌙 Repos long (8 h)"
+        title={t('survie.repos.long.8.h')}
         mobileOnly={false}
         size="md"
         footer={
@@ -1365,9 +1366,11 @@ export function SurvivalPanel({
                   addCondition(cond);
                   setConditionPickerOpen(false);
                 }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-left transition-colors bg-parchment-50 border-parchment-200 ${
-                  active ? 'opacity-60 cursor-not-allowed' : 'hover:border-blood-300'
-                }`}
+                className={t('survie.w.full.flex.items.center.gap', {
+                  active____opacity_60_cur: active
+                    ? 'opacity-60 cursor-not-allowed'
+                    : 'hover:border-blood-300',
+                })}
               >
                 <span className="text-lg shrink-0" aria-hidden="true">
                   {CONDITION_ICONS[cond] ?? '❓'}

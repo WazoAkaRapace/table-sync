@@ -144,7 +144,7 @@ function Nav() {
           )}
           {loc.pathname.startsWith('/party/') && !routeTitle?.backTo && (
             <Link to="/parties" className="btn-ghost text-parchment-50 hover:bg-ink-700 text-sm">
-              <span className="hidden sm:inline">Mes groupes</span>
+              <span className="hidden sm:inline">{t('app.mes.groupes')}</span>
               <span className="sm:hidden">🏠</span>
             </Link>
           )}
@@ -153,7 +153,7 @@ function Nav() {
           <Link
             to="/compte"
             className="text-sm text-parchment-200 hidden sm:inline hover:text-parchment-50 hover:underline underline-offset-4"
-            title="Mon compte"
+            title={t('app.mon.compte')}
           >
             {user.displayName}
           </Link>
@@ -162,8 +162,8 @@ function Nav() {
             <Link
               to="/compte"
               className="btn-ghost text-parchment-50 hover:bg-ink-700 flex items-center justify-center w-11 h-11"
-              title="Mon compte"
-              aria-label="Mon compte"
+              title={t('app.mon.compte')}
+              aria-label={t('app.mon.compte')}
             >
               <svg
                 viewBox="0 0 24 24"
@@ -210,11 +210,12 @@ function Nav() {
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation();
   const { user, loading } = useAuth();
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-ink-400 animate-pulse">Chargement…</div>
+        <div className="text-ink-400 animate-pulse">{t('app.chargement')}</div>
       </div>
     );
   }
@@ -264,9 +265,10 @@ function PartyOpenTracker() {
 
 /** Suspense fallback shown while a lazy route chunk downloads. */
 function RouteFallback() {
+  const { t } = useTranslation();
   return (
     <div className="card max-w-xs mx-auto mt-16 p-6 text-center" role="status" aria-live="polite">
-      <span className="text-ink-400 animate-pulse">Chargement…</span>
+      <span className="text-ink-400 animate-pulse">{t('app.chargement')}</span>
     </div>
   );
 }

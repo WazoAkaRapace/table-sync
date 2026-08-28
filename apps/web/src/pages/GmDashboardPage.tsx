@@ -693,7 +693,7 @@ function MembersTab({
                     m_displayName: m.displayName,
                   })}
                 >
-                  Retirer
+                  {t('md.retirer')}
                 </button>
                 <button
                   type="button"
@@ -781,11 +781,12 @@ function MembersTab({
 }
 
 function TransactionsTab({ transactions }: { transactions: Transaction[] }) {
+  const { t } = useTranslation();
   if (transactions.length === 0) {
     return (
       <EmptyState
         icon="📋"
-        title="Aucune transaction"
+        title={t('md.aucune.transaction')}
         hint="Les modifications d'inventaire apparaîtront ici."
       />
     );
@@ -1036,7 +1037,7 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
       </div>
 
       {loadingItems ? (
-        <p className="text-sm text-ink-400 animate-pulse">Chargement…</p>
+        <p className="text-sm text-ink-400 animate-pulse">{t('md.chargement')}</p>
       ) : customItems.length === 0 ? (
         <div className="card p-8">
           <EmptyState
@@ -1134,7 +1135,7 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
         <div className="space-y-3">
           <div className="grid sm:grid-cols-2 gap-3">
             <label className="block">
-              <span className="label">Nom *</span>
+              <span className="label">{t('md.nom')}</span>
               <input
                 className="input"
                 value={name}
@@ -1151,15 +1152,15 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
                 onChange={(e) => setCategory(e.target.value)}
               >
                 <option value="custom">{t('md.personnalise')}</option>
-                <option value="weapon">Arme</option>
-                <option value="armor">Armure</option>
+                <option value="weapon">{t('md.arme')}</option>
+                <option value="armor">{t('md.armure')}</option>
                 <option value="gear">{t('md.equipement')}</option>
                 <option value="magic">{t('md.objet.magique')}</option>
               </select>
             </label>
           </div>
           <label className="block">
-            <span className="label">Poids (kg)</span>
+            <span className="label">{t('md.poids.kg')}</span>
             <input
               type="number"
               step="0.01"

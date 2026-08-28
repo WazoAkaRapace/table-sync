@@ -33,7 +33,7 @@ export function DeathSaveTracker({
       await api.patch(`/api/characters/${charId}`, { [field]: clamped });
       await onSaved();
     } catch {
-      onError('Erreur de mise à jour');
+      onError(t('mort.erreur.de.mise.a.jour'));
     }
   };
 

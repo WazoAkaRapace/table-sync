@@ -395,7 +395,7 @@ export default function CharacterCreatePage() {
           <div className="card space-y-4 p-4 sm:p-5">
             <div>
               <label className="label" htmlFor="create-name">
-                Nom *
+                {t('create.nom')}
               </label>
               <input
                 id="create-name"
@@ -409,7 +409,7 @@ export default function CharacterCreatePage() {
             </div>
             <div className="max-w-40">
               <label className="label" htmlFor="create-level">
-                Niveau
+                {t('create.niveau')}
               </label>
               <NumberField
                 id="create-level"
@@ -463,14 +463,14 @@ export default function CharacterCreatePage() {
             {classChoice === CUSTOM && (
               <div className="pl-6">
                 <label htmlFor="create-custom-class" className="label">
-                  Classe
+                  {t('create.classe')}
                 </label>
                 <input
                   id="create-custom-class"
                   className="input"
                   value={customClass}
                   onChange={(e) => setCustomClass(e.target.value)}
-                  placeholder="Ma classe maison…"
+                  placeholder={t('create.ma.classe.maison')}
                   maxLength={40}
                 />
               </div>
@@ -599,7 +599,10 @@ export default function CharacterCreatePage() {
               <div className="card grid grid-cols-2 gap-3 p-4 sm:p-5">
                 {DND_ABILITIES.map((abi) => (
                   <div key={abi.key}>
-                    <label className="label" htmlFor={`create-score-${abi.key}`}>
+                    <label
+                      className="label"
+                      htmlFor={t('create.create.score.abi.key', { abi_key: abi.key })}
+                    >
                       {abi.label}
                     </label>
                     <NumberField
@@ -756,7 +759,7 @@ export default function CharacterCreatePage() {
             </div>
 
             <div className="card space-y-3 p-4 sm:p-5">
-              <h3 className="section-title text-base">Langues</h3>
+              <h3 className="section-title text-base">{t('create.langues')}</h3>
               <p className="text-xs text-ink-400">{t('create.ajoute.celles.que.t.offrent.ton')}</p>
               <div className="flex flex-wrap gap-1.5">
                 {[...DND_LANGUAGES, ...customLangs].map((lang) => {
@@ -781,13 +784,13 @@ export default function CharacterCreatePage() {
               </div>
               <form onSubmit={addCustomLang} className="flex gap-2">
                 <label htmlFor="create-new-language" className="sr-only">
-                  Nouvelle langue
+                  {t('create.nouvelle.langue')}
                 </label>
                 <input
                   id="create-new-language"
                   value={newLang}
                   onChange={(e) => setNewLang(e.target.value)}
-                  placeholder="Autre langue…"
+                  placeholder={t('create.autre.langue')}
                   maxLength={40}
                   className="flex-1 rounded-lg border border-parchment-200 bg-parchment-50 px-3 py-2 text-sm text-ink-700 placeholder:text-ink-400"
                 />
@@ -821,7 +824,7 @@ export default function CharacterCreatePage() {
 
             <div className="card space-y-2 p-4 sm:p-5">
               <div className="flex items-center">
-                <span className="text-sm font-medium text-ink-700">Classe</span>
+                <span className="text-sm font-medium text-ink-700">{t('create.classe')}</span>
                 <DotLeader />
                 <span className="text-sm text-ink-800">
                   {effectiveClass ? `${effectiveClass} ${level}` : 'sans classe'}
@@ -838,7 +841,7 @@ export default function CharacterCreatePage() {
                 <span className="text-sm text-ink-800">{effectiveBackground ?? '—'}</span>
               </div>
               <div className="flex items-center">
-                <span className="text-sm font-medium text-ink-700">Sauvegardes</span>
+                <span className="text-sm font-medium text-ink-700">{t('create.sauvegardes')}</span>
                 <DotLeader />
                 <span className="flex flex-wrap justify-end gap-1.5">
                   {DND_ABILITIES.map((abi) => {
@@ -861,7 +864,7 @@ export default function CharacterCreatePage() {
                 </span>
               </div>
               <div className="flex items-center">
-                <span className="text-sm font-medium text-ink-700">Armes</span>
+                <span className="text-sm font-medium text-ink-700">{t('create.armes')}</span>
                 <DotLeader />
                 <span className="text-right text-sm text-ink-800">
                   {weaponSummary(effectiveClass || null)}
@@ -886,11 +889,13 @@ export default function CharacterCreatePage() {
                 </div>
               )}
               <div className="flex items-center">
-                <span className="shrink-0 text-sm font-medium text-ink-700">Langues</span>
+                <span className="shrink-0 text-sm font-medium text-ink-700">
+                  {t('create.langues')}
+                </span>
                 <DotLeader />
                 <span className="flex flex-wrap justify-end gap-1.5">
                   {langs.length === 0 ? (
-                    <span className="text-sm text-ink-400">aucune</span>
+                    <span className="text-sm text-ink-400">{t('create.aucune')}</span>
                   ) : (
                     langs.map((lang) => (
                       <span
@@ -921,7 +926,7 @@ export default function CharacterCreatePage() {
       <div className="sticky bottom-3 mt-6 flex gap-3 rounded-2xl border border-parchment-200 bg-parchment-50/95 p-2 shadow-[0_4px_12px_rgba(42,31,20,0.08)] backdrop-blur-sm">
         {step > 0 && (
           <button type="button" className="btn-secondary flex-1" onClick={() => goTo(step - 1)}>
-            ← Retour
+            {t('create.retour')}
           </button>
         )}
         {step < RECAP ? (

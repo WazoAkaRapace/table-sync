@@ -214,13 +214,14 @@ export default function CombatWidget() {
       <button
         type="button"
         onClick={() => setCollapsed(false)}
-        className={`hidden lg:flex fixed left-0 top-1/2 -translate-y-1/2 z-40 w-10 h-16 rounded-r-xl rounded-l-none shadow-lg items-center justify-center text-xl leading-none transition-all active:scale-95 border-2 border-l-0 border-parchment-50 ${
-          isMyTurn
+        className={t('widget.hidden.lg.flex.fixed.left.0', {
+          isMyTurn: isMyTurn
             ? 'bg-blood-600 hover:bg-blood-700 text-parchment-50'
             : needsInitiative
               ? 'bg-yellow-500 hover:bg-yellow-600 text-ink-900'
-              : 'bg-ink-900 hover:bg-ink-800 text-parchment-50'
-        } ${glowColor}`}
+              : 'bg-ink-900 hover:bg-ink-800 text-parchment-50',
+          glowColor: glowColor,
+        })}
         title={
           isMyTurn
             ? 'À toi de jouer !'
@@ -274,7 +275,7 @@ export default function CombatWidget() {
           {/* Initiative request banner */}
           {needsInitiative && (
             <div className="text-center py-2 px-3 rounded-lg bg-yellow-400 text-ink-900 font-bold">
-              🎲 Lance ton initiative !
+              {t('widget.lance.ton.initiative')}
             </div>
           )}
 
@@ -291,7 +292,7 @@ export default function CombatWidget() {
                 className="btn-primary w-full min-h-[44px] text-sm"
                 aria-label={t('widget.terminer.mon.tour.passer.au.combattant')}
               >
-                ✓ J'ai fini mon tour
+                {t('widget.j.ai.fini.mon.tour')}
               </button>
             </>
           )}
