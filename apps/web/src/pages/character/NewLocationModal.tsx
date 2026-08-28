@@ -1,5 +1,6 @@
 import type { StorageType } from '@table-sync/shared';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Modal } from '../../components/ui';
 import type { NewLocationPayload } from './types';
 
@@ -12,6 +13,7 @@ interface NewLocationModalProps {
 }
 
 export function NewLocationModal({ open, onClose, onCreate }: NewLocationModalProps) {
+  const { t } = useTranslation();
   const [type, setType] = useState<StorageType>('mount');
   const [name, setName] = useState('');
   const [strength, setStrength] = useState('10');
@@ -101,7 +103,7 @@ export function NewLocationModal({ open, onClose, onCreate }: NewLocationModalPr
             onChange={(e) => setName(e.target.value)}
             required
             autoFocus
-            aria-label="Nom du transport"
+            aria-label={t('empl.nom.du.transport')}
           />
         </label>
 
@@ -116,7 +118,7 @@ export function NewLocationModal({ open, onClose, onCreate }: NewLocationModalPr
                 className="input"
                 value={strength}
                 onChange={(e) => setStrength(e.target.value)}
-                aria-label="Force de la monture"
+                aria-label={t('empl.force.de.la.monture')}
               />
             </label>
             <label className="block">
@@ -128,7 +130,7 @@ export function NewLocationModal({ open, onClose, onCreate }: NewLocationModalPr
                 className="input"
                 value={multiplier}
                 onChange={(e) => setMultiplier(e.target.value)}
-                aria-label="Multiplicateur de capacité"
+                aria-label={t('empl.multiplicateur.de.capacite')}
               />
               <span className="text-xs text-ink-400 mt-1 block">
                 Bête de somme = 2 (capacité doublée).
@@ -147,7 +149,7 @@ export function NewLocationModal({ open, onClose, onCreate }: NewLocationModalPr
                 value={capacityKg}
                 onChange={(e) => setCapacityKg(e.target.value)}
                 placeholder="Ex. 30"
-                aria-label="Capacité du conteneur en kg"
+                aria-label={t('empl.capacite.du.conteneur.en.kg')}
               />
             </label>
             <label className="block">
@@ -159,10 +161,10 @@ export function NewLocationModal({ open, onClose, onCreate }: NewLocationModalPr
                 className="input"
                 value={ownWeightKg}
                 onChange={(e) => setOwnWeightKg(e.target.value)}
-                aria-label="Poids à vide du conteneur en kg"
+                aria-label={t('empl.poids.a.vide.du.conteneur.en')}
               />
               <span className="text-xs text-ink-400 mt-1 block">
-                Ce poids s'ajoute à ce que porte le personnage.
+                {t('empl.ce.poids.s.ajoute.a.ce')}
               </span>
             </label>
           </>

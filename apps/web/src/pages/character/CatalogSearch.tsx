@@ -1,5 +1,6 @@
 import type { Item, ItemCategory, Rarity } from '@table-sync/shared';
 import { CATEGORY_LABELS_FR } from '@table-sync/shared';
+import { useTranslation } from 'react-i18next';
 import {
   CategoryBadge,
   CostBadge,
@@ -68,6 +69,7 @@ export function CatalogSearch({
   onAdd,
   onLoadMore,
 }: CatalogSearchProps) {
+  const { t } = useTranslation();
   const wanted = search.trim();
   const createCta = canCreateItem && wanted !== '' && !readOnly && onCreateItem && (
     <button
@@ -84,17 +86,17 @@ export function CatalogSearch({
         <input
           type="search"
           className="input"
-          placeholder="Rechercher un objet…"
+          placeholder={t('recherche.rechercher.un.objet')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          aria-label="Rechercher dans le catalogue"
+          aria-label={t('recherche.rechercher.dans.le.catalogue')}
         />
         <div className="grid grid-cols-2 gap-2">
           <select
             className="input"
             value={category}
             onChange={(e) => setCategory(e.target.value as '' | ItemCategory)}
-            aria-label="Filtrer par catégorie"
+            aria-label={t('recherche.filtrer.par.categorie')}
           >
             {CATEGORY_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
@@ -106,7 +108,7 @@ export function CatalogSearch({
             className="input"
             value={rarity}
             onChange={(e) => setRarity(e.target.value as '' | Rarity)}
-            aria-label="Filtrer par rareté"
+            aria-label={t('recherche.filtrer.par.rarete')}
           >
             {RARITY_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
@@ -123,7 +125,7 @@ export function CatalogSearch({
             <>
               <EmptyState
                 icon="🔍"
-                title="Aucun objet trouvé"
+                title={t('recherche.aucun.objet.trouve')}
                 hint={
                   wanted && canCreateItem
                     ? `« ${wanted} » n'existe pas encore — tu peux le créer.`
@@ -135,7 +137,7 @@ export function CatalogSearch({
           ) : (
             <EmptyState
               icon="📝"
-              title="Recherchez un objet"
+              title={t('recherche.recherchez.un.objet')}
               hint="Tapez le nom d'un objet pour l'ajouter à votre sac à dos."
             />
           )}

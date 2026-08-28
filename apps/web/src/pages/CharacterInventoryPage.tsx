@@ -18,6 +18,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../auth';
@@ -98,6 +99,7 @@ const CATALOG_PAGE_SIZE = 30;
 // ---------- Main component ----------
 
 export default function CharacterInventoryPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { partyId, charId } = useParams<{ partyId: string; charId: string }>();
   const queryClient = useQueryClient();
@@ -920,7 +922,7 @@ export default function CharacterInventoryPage() {
                 </div>
                 {hubInitError && (
                   <p className="px-3 pb-2 text-xs text-red-600" role="alert">
-                    Échec de l'enregistrement — réessaie
+                    {t('inv.echec.de.l.enregistrement.reessaie')}
                   </p>
                 )}
               </>
@@ -934,7 +936,7 @@ export default function CharacterInventoryPage() {
           // Agir line speaks at the instant the turn becomes yours.
           <div className="band-rise relative mb-[-6px] mx-auto w-fit max-w-full rounded-t-xl rounded-b-md shadow-md border border-b-0 bg-blood-600 border-blood-700 combat-turn-glow overflow-hidden">
             <div className="relative px-3 py-1.5 text-xs font-bold text-parchment-50 text-center">
-              ⚔ À toi de jouer !
+              {t('inv.a.toi.de.jouer')}
               <TurnSlash active={turnSlash} />
             </div>
             <div className="flex items-center gap-2 px-2 py-1.5 bg-parchment-50 border-t border-blood-300">
@@ -943,7 +945,7 @@ export default function CharacterInventoryPage() {
                 onClick={endMyTurn}
                 disabled={endingTurn}
                 className="btn-primary min-h-[44px] flex-1 px-4 text-sm whitespace-nowrap"
-                aria-label="Terminer mon tour — passer au combattant suivant"
+                aria-label={t('inv.terminer.mon.tour.passer.au.combattant')}
               >
                 ✓ J'ai fini mon tour
               </button>
@@ -951,7 +953,7 @@ export default function CharacterInventoryPage() {
                 to={`/party/${hubCombat.partyId}/combat?enc=${hubCombat.encounterId}`}
                 className="btn-secondary min-h-[44px] px-3 text-xs whitespace-nowrap"
               >
-                Voir le combat
+                {t('inv.voir.le.combat')}
               </Link>
             </div>
           </div>
@@ -960,7 +962,7 @@ export default function CharacterInventoryPage() {
             <Link
               to={`/party/${hubCombat.partyId}/combat?enc=${hubCombat.encounterId}`}
               className="relative block mb-[-6px] mx-auto w-fit max-w-full px-3 py-1.5 rounded-t-xl rounded-b-md text-xs font-semibold shadow-md border border-b-0 transition-colors bg-ink-900 text-parchment-200 border-ink-700"
-              aria-label="Combat en cours — ouvrir le traqueur"
+              aria-label={t('inv.combat.en.cours.ouvrir.le.traqueur')}
             >
               {hubCombat.currentCombatantName
                 ? `⚔ ${hubCombat.currentCombatantName}`
@@ -1263,8 +1265,8 @@ export default function CharacterInventoryPage() {
                     type="button"
                     onClick={() => setShowNewLocationModal(true)}
                     className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium border border-dashed border-parchment-300 text-ink-500 hover:border-blood-400 hover:text-blood-600 transition-colors"
-                    aria-label="Ajouter un transport"
-                    title="Ajouter un transport"
+                    aria-label={t('inv.ajouter.un.transport')}
+                    title={t('inv.ajouter.un.transport')}
                   >
                     <span aria-hidden="true">+</span> Transport
                   </button>
@@ -1287,7 +1289,7 @@ export default function CharacterInventoryPage() {
                   type="button"
                   onClick={dismissError}
                   className="btn-ghost text-ink-500 text-sm shrink-0"
-                  aria-label="Fermer l'erreur"
+                  aria-label={t('inv.fermer.l.erreur')}
                 >
                   ✕
                 </button>
@@ -1304,9 +1306,9 @@ export default function CharacterInventoryPage() {
                   <div className="flex-1">
                     <p className="font-medium text-ink-900">Bienvenue !</p>
                     <p className="text-sm text-ink-700 mt-1">
-                      Appuie sur le bouton <strong>+ Ajouter</strong> en bas de l'écran pour
-                      chercher un objet dans le catalogue, puis suivez la barre de poids pour voir
-                      si votre personnage est encombré.
+                      {t('inv.appuie.sur.le.bouton')}
+                      <strong>{t('inv.ajouter')}</strong>
+                      {t('inv.en.bas.de.l.ecran.pour')}
                     </p>
                     <button
                       type="button"
@@ -1431,7 +1433,11 @@ export default function CharacterInventoryPage() {
       />
 
       {/* ---------- Custom item creation modal (players too, party setting) ---------- */}
-      <Modal open={createItemOpen} onClose={() => setCreateItemOpen(false)} title="Créer un objet">
+      <Modal
+        open={createItemOpen}
+        onClose={() => setCreateItemOpen(false)}
+        title={t('inv.creer.un.objet')}
+      >
         <form onSubmit={submitCreateItem} className="space-y-3">
           <label className="block">
             <span className="label">Nom *</span>
@@ -1446,17 +1452,17 @@ export default function CharacterInventoryPage() {
           </label>
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
-              <span className="label">Catégorie</span>
+              <span className="label">{t('inv.categorie')}</span>
               <select
                 className="input"
                 value={createItemCategory}
                 onChange={(e) => setCreateItemCategory(e.target.value)}
               >
-                <option value="custom">Personnalisé</option>
+                <option value="custom">{t('inv.personnalise')}</option>
                 <option value="weapon">Arme</option>
                 <option value="armor">Armure</option>
-                <option value="gear">Équipement</option>
-                <option value="magic">Objet magique</option>
+                <option value="gear">{t('inv.equipement')}</option>
+                <option value="magic">{t('inv.objet.magique')}</option>
               </select>
             </label>
             <label className="block">
@@ -1479,7 +1485,7 @@ export default function CharacterInventoryPage() {
               rows={3}
               value={createItemDesc}
               onChange={(e) => setCreateItemDesc(e.target.value)}
-              placeholder="À quoi ça sert ?"
+              placeholder={t('inv.a.quoi.ca.sert')}
             />
           </label>
           {/* L'illustration est le second contenu de l'objet — après la
@@ -1492,10 +1498,7 @@ export default function CharacterInventoryPage() {
           >
             {creatingItem ? '…' : '✨ Créer et ajouter'}
           </button>
-          <p className="text-xs text-ink-400">
-            L’objet rejoint le catalogue du groupe — le MD pourra le retoucher dans son tableau de
-            bord.
-          </p>
+          <p className="text-xs text-ink-400">{t('inv.l.objet.rejoint.le.catalogue.du')}</p>
         </form>
       </Modal>
 

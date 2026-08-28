@@ -27,6 +27,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { type ReactNode, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 /** Handle wiring derived from the hook that produces it (no deep imports). */
 type SortableApi = ReturnType<typeof useSortable>;
@@ -170,13 +171,14 @@ function DragHandle({
   listeners: SortableApi['listeners'];
   activatorRef: SortableApi['setActivatorNodeRef'];
 }) {
+  const { t } = useTranslation();
   return (
     <button
       type="button"
       ref={activatorRef}
       // -m-2 p-3: ~40 px hit area for a glyph the size of ✎/×
       className="-m-2 p-3 rounded-md text-ink-400 hover:text-ink-700 cursor-grab active:cursor-grabbing touch-none"
-      title="Glisser pour réordonner"
+      title={t('tri.glisser.pour.reordonner')}
       {...attributes}
       {...listeners}
       aria-label={label}

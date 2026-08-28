@@ -26,6 +26,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import api, { itemImageUrl } from '../api';
 import { ConfirmButton } from './ui';
 
@@ -50,6 +51,7 @@ export function ItemVignette({
   imageRev?: string | null;
   editableEntryId?: number;
 }) {
+  const { t } = useTranslation();
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
   const [bust, setBust] = useState(0);
@@ -71,7 +73,7 @@ export function ItemVignette({
         <div className="flex h-40 flex-col items-center justify-center gap-2 rounded-lg border border-parchment-300 bg-parchment-50 p-1.5 shadow-sm">
           <span className="text-xs text-ink-400">Illustration indisponible</span>
           <button type="button" onClick={retry} className="btn-ghost text-xs">
-            ↻ Réessayer
+            {t('image.reessayer')}
           </button>
         </div>
       ) : (
@@ -100,7 +102,7 @@ export function ItemVignette({
             />
             {!loaded && (
               <span className="absolute animate-pulse text-xs text-ink-400">
-                Chargement de l'illustration…
+                {t('image.chargement.de.l.illustration')}
               </span>
             )}
             {loaded && (
@@ -114,7 +116,7 @@ export function ItemVignette({
           </span>
         </button>
       )}
-      <p className="mt-1 text-center text-[11px] text-ink-400">Touche pour agrandir</p>
+      <p className="mt-1 text-center text-[11px] text-ink-400">{t('image.touche.pour.agrandir')}</p>
       {viewerOpen && (
         <ItemImageViewer
           name={name}
@@ -214,6 +216,7 @@ export function ItemImageViewer({
   /** Id de la ligne d'inventaire — présent = outils d'annotation (le MD ouvre en lecture seule). */
   editableEntryId?: number;
 }) {
+  const { t } = useTranslation();
   const editable = editableEntryId != null;
   const [view, setView] = useState<View>(VIEW_1X);
   const [loaded, setLoaded] = useState(false);
@@ -862,7 +865,7 @@ export function ItemImageViewer({
           ref={closeBtnRef}
           type="button"
           onClick={() => requestCloseRef.current()}
-          aria-label="Fermer"
+          aria-label={t('image.fermer')}
           className="pointer-events-auto flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xl text-parchment-50 transition-colors hover:bg-white/10"
         >
           ✕
@@ -947,8 +950,8 @@ export function ItemImageViewer({
           type="text"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="Écris ta note"
-          aria-label="Texte de la note"
+          placeholder={t('image.ecris.ta.note')}
+          aria-label={t('image.texte.de.la.note')}
           className="fixed z-10 w-44 select-text rounded-lg border border-gold-400 bg-parchment-50 px-2 py-1.5 text-sm text-ink-900 shadow-xl"
           style={{
             left: Math.min(pendingText.sx, window.innerWidth - 180),
@@ -988,7 +991,7 @@ export function ItemImageViewer({
                 onClick={() => onCloseRef.current()}
                 className="font-semibold text-gold-300 underline"
               >
-                quitter quand même
+                {t('image.quitter.quand.meme')}
               </button>{' '}
               ou{' '}
               <button
@@ -1047,7 +1050,7 @@ export function ItemImageViewer({
             {toolButton('text', 'Écrire', 'T')}
             <button
               type="button"
-              aria-label="Annuler la dernière annotation"
+              aria-label={t('image.annuler.la.derniere.annotation')}
               disabled={annotations.length === 0}
               onClick={() => setAnnotations((list) => list.slice(0, -1))}
               className="flex h-11 w-11 items-center justify-center rounded-full text-lg text-parchment-50 transition-colors hover:bg-white/10 disabled:opacity-40"
@@ -1084,14 +1087,18 @@ export function ItemImageViewer({
           jamais en flux (l'image ne doit pas être repoussée). */}
       <div className="pointer-events-none absolute inset-x-0 bottom-1 z-0 pb-[env(safe-area-inset-bottom)] pt-2 text-center">
         {loaded && tool === 'navigate' && !zoomed && (
-          <p className="text-[11px] text-parchment-50/70">Touche deux fois pour zoomer</p>
+          <p className="text-[11px] text-parchment-50/70">
+            {t('image.touche.deux.fois.pour.zoomer')}
+          </p>
         )}
         {loaded && tool === 'draw' && (
-          <p className="text-[11px] text-parchment-50/70">Trace ton doigt sur l'image</p>
+          <p className="text-[11px] text-parchment-50/70">
+            {t('image.trace.ton.doigt.sur.l.image')}
+          </p>
         )}
         {loaded && tool === 'text' && !pendingText && (
           <p className="text-[11px] text-parchment-50/70">
-            Touche l'image pour poser un texte — glisse une note pour la déplacer
+            {t('image.touche.l.image.pour.poser.un')}
           </p>
         )}
       </div>

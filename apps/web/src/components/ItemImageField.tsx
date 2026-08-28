@@ -10,6 +10,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { itemImageUrl } from '../api';
 import { downscaleImage } from '../utils';
 import { ConfirmButton } from './ui';
@@ -53,6 +54,7 @@ export function ItemImageField({
   existingRev?: string | null;
   existingName?: string;
 }) {
+  const { t } = useTranslation();
   const [processing, setProcessing] = useState(false);
   const [fileError, setFileError] = useState('');
   const [dragOver, setDragOver] = useState(false);
@@ -160,7 +162,7 @@ export function ItemImageField({
             setDragOver(false);
             handleFile(e.dataTransfer.files?.[0]);
           }}
-          aria-label="Ajouter une illustration"
+          aria-label={t('champ.ajouter.une.illustration')}
           className={`flex w-full flex-col items-center gap-1 rounded-lg border border-dashed py-5 transition-colors ${
             dragOver
               ? 'border-blood-400 bg-blood-50/40'
@@ -174,7 +176,7 @@ export function ItemImageField({
             {dragOver ? 'Glisse une image ici' : 'Ajouter une illustration'}
           </span>
           <span className="text-xs text-ink-400">
-            Une carte, une lettre, un document — photo ou fichier
+            {t('champ.une.carte.une.lettre.un.document')}
           </span>
         </button>
       )}
@@ -202,7 +204,7 @@ export function ItemImageField({
             ariaLabel="Supprimer l'illustration"
             confirmChildren="Supprimer l'illustration ?"
           >
-            Supprimer
+            {t('champ.supprimer')}
           </ConfirmButton>
         </div>
       )}

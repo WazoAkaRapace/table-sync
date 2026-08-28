@@ -7,6 +7,7 @@ import {
   resolveMagicArmorBase,
 } from '@table-sync/shared';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ItemVignette } from '../../components/ItemImageViewer';
 import { Chip, RarityBadge, WeightBadge } from '../../components/ui';
 import { weaponPropertyLabel } from '../../i18n/labels';
@@ -53,6 +54,7 @@ export function InventoryRow({
   onTransfer,
   onMoveLocation,
 }: InventoryRowProps) {
+  const { t } = useTranslation();
   const { item, quantity } = entry;
   // Empty waterskins weigh only the leather (~0.268 kg), not the full 2.268 kg.
   // The backend applies this override to the encumbrance total; mirror it here so
@@ -111,7 +113,7 @@ export function InventoryRow({
                 onClick={onCancelDelete}
                 className="btn-ghost text-ink-700 text-sm"
               >
-                Annuler
+                {t('rangee.annuler')}
               </button>
               <button
                 type="button"
@@ -166,7 +168,7 @@ export function InventoryRow({
                   {item.hasImage && (
                     <span
                       aria-hidden="true"
-                      title="Illustration — touche la ligne pour la voir"
+                      title={t('rangee.illustration.touche.la.ligne.pour.la')}
                       className="ml-0.5 text-sm text-ink-400"
                     >
                       🗺
@@ -298,7 +300,7 @@ export function InventoryRow({
                   className="text-ink-400 hover:text-blood-600 underline"
                   aria-label={`Transférer ${itemName}`}
                 >
-                  ↗ Transférer
+                  {t('rangee.transferer')}
                 </button>
               )}
             </div>
@@ -366,7 +368,7 @@ export function InventoryRow({
                               </Chip>
                             )}
                             {stats.versatileDamageStr && (
-                              <Chip tone="orange" soft title="Dégâts à deux mains">
+                              <Chip tone="orange" soft title={t('rangee.degats.a.deux.mains')}>
                                 {stats.versatileDamageStr} · deux mains
                               </Chip>
                             )}
@@ -376,7 +378,9 @@ export function InventoryRow({
                               </Chip>
                             )}
                             {stats.presumedBase && (
-                              <span className="text-[10px] text-ink-400 italic">base présumée</span>
+                              <span className="text-[10px] text-ink-400 italic">
+                                {t('rangee.base.presumee')}
+                              </span>
                             )}
                           </div>
                         );
@@ -386,7 +390,7 @@ export function InventoryRow({
                         entry.equipped &&
                         !isProficientWithArmor(item, character) && (
                           <span className="font-semibold text-amber-600">
-                            ⚠ armure non maîtrisée
+                            {t('rangee.armure.non.maitrisee')}
                           </span>
                         )}
                       {item.acBase !== null && <span>🛡 CA : {item.acBase}</span>}
@@ -405,7 +409,9 @@ export function InventoryRow({
                           );
                         })()}
                       {item.strMin !== null && <span>💪 FOR min. : {item.strMin}</span>}
-                      {item.stealthDisadvantage && <span>🤫 Désavantage Discrétion</span>}
+                      {item.stealthDisadvantage && (
+                        <span>{t('rangee.desavantage.discretion')}</span>
+                      )}
                       {item.properties &&
                         item.properties.filter((p) => p !== 'monk').length > 0 && (
                           <span>
@@ -423,7 +429,7 @@ export function InventoryRow({
                     {/* Move to another storage location */}
                     {canMove && canEdit && (
                       <label className="flex items-center gap-2 pt-1 text-sm text-ink-600">
-                        <span className="shrink-0">Déplacer vers :</span>
+                        <span className="shrink-0">{t('rangee.deplacer.vers')}</span>
                         <select
                           className="input py-1 text-sm flex-1 min-w-0"
                           value=""
@@ -457,7 +463,7 @@ export function InventoryRow({
                           className="btn-ghost text-sm text-red-600 hover:bg-red-50"
                           aria-label={`Retirer ${itemName}`}
                         >
-                          Retirer du sac
+                          {t('rangee.retirer.du.sac')}
                         </button>
                       </div>
                     )}

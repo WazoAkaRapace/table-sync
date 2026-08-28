@@ -1,5 +1,6 @@
 import type { CharacterSummary, InventoryEntry, PartyDetail } from '@table-sync/shared';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import api from '../../api';
 import { EmptyState, LoadingSpinner, Modal, NumberField } from '../../components/ui';
 
@@ -24,6 +25,7 @@ export function TransferModal({
   onTransferred,
   onError,
 }: TransferModalProps) {
+  const { t } = useTranslation();
   const [party, setParty] = useState<PartyDetail | null>(null);
   const [loadingParty, setLoadingParty] = useState(false);
   const [targetId, setTargetId] = useState<number | null>(null);
@@ -89,7 +91,7 @@ export function TransferModal({
       ) : others.length === 0 ? (
         <EmptyState
           icon="👤"
-          title="Aucun autre personnage"
+          title={t('transfert.aucun.autre.personnage')}
           hint="Aucun destinataire dans ce groupe."
         />
       ) : (
