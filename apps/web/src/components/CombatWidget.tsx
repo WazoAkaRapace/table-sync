@@ -214,14 +214,13 @@ export default function CombatWidget() {
       <button
         type="button"
         onClick={() => setCollapsed(false)}
-        className={t('widget.hidden.lg.flex.fixed.left.0', {
-          isMyTurn: isMyTurn
+        className={`hidden lg:flex fixed left-0 top-1/2 -translate-y-1/2 z-40 w-10 h-16 rounded-r-xl rounded-l-none shadow-lg items-center justify-center text-xl leading-none transition-all active:scale-95 border-2 border-l-0 border-parchment-50 ${
+          isMyTurn
             ? 'bg-blood-600 hover:bg-blood-700 text-parchment-50'
             : needsInitiative
               ? 'bg-yellow-500 hover:bg-yellow-600 text-ink-900'
-              : 'bg-ink-900 hover:bg-ink-800 text-parchment-50',
-          glowColor: glowColor,
-        })}
+              : 'bg-ink-900 hover:bg-ink-800 text-parchment-50'
+        } ${glowColor}`}
         title={
           isMyTurn
             ? 'À toi de jouer !'

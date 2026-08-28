@@ -846,7 +846,7 @@ export default function CharacterInventoryPage() {
               aria-pressed={activeTab === tab.key}
             >
               <span aria-hidden="true">{tab.icon}</span>
-              <span>{tab.label}</span>
+              <span>{t(tab.label)}</span>
             </button>
           ))}
         </div>
@@ -1004,13 +1004,13 @@ export default function CharacterInventoryPage() {
                   active ? 'text-white' : 'text-ink-400 hover:text-ink-700'
                 }`}
                 aria-pressed={active}
-                aria-label={tab.label}
+                aria-label={t(tab.label)}
               >
                 <span className="text-lg leading-none" aria-hidden="true">
                   {tab.icon}
                 </span>
                 <span className="text-[9px] font-medium leading-none">
-                  {tab.short ?? tab.label}
+                  {tab.short ? t(tab.short) : t(tab.label)}
                 </span>
               </button>
             );
@@ -1123,7 +1123,7 @@ export default function CharacterInventoryPage() {
                         <span className="text-lg leading-none" aria-hidden="true">
                           {tab.icon}
                         </span>
-                        {tab.label}
+                        {t(tab.label)}
                       </button>
                     );
                   })}
