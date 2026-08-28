@@ -58,7 +58,7 @@ export default function GmDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [tab, setTab] = useState<
-    'characters' | 'transactions' | 'custom' | 'members' | 'assistant'
+    'characters' | 'transactions' | 'custom' | 'members' | 'assistant' | 'settings'
   >('characters');
 
   const load = useCallback(
@@ -100,6 +100,9 @@ export default function GmDashboardPage() {
   if (error) return <ErrorMsg message={error} />;
   if (!party) return <ErrorMsg message="Groupe introuvable" />;
 
+  // Zone de danger — tab Réglages visible au MD seulement (l'API vérifie aussi)
+  const isGm = party.members.some((m) => m.userId === user?.id && m.role === 'gm');
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
@@ -123,6 +126,11 @@ export default function GmDashboardPage() {
         <TabButton active={tab === 'assistant'} onClick={() => setTab('assistant')}>
           GM Assistant
         </TabButton>
+        {isGm && (
+          <TabButton active={tab === 'settings'} onClick={() => setTab('settings')}>
+            Réglages
+          </TabButton>
+        )}
       </div>
 
       {tab === 'characters' && (
@@ -151,8 +159,7 @@ export default function GmDashboardPage() {
         />
       )}
 
-      {/* Danger zone — visible to the GM only (the API enforces it too) */}
-      {party.members.some((m) => m.userId === user?.id && m.role === 'gm') && (
+      {tab === 'settings' && isGm && (
         <DisbandPartySection
           partyId={partyId!}
           name={party.party.name}
@@ -200,7 +207,7 @@ function DisbandPartySection({
   }
 
   return (
-    <div className="mt-8 rounded-lg border border-red-200 bg-red-50/60 p-4">
+    <div className="rounded-lg border border-red-200 bg-red-50/60 p-4">
       <h3 className="section-title text-red-700">Zone de danger</h3>
       <p className="mt-1 text-xs text-ink-500">
         Dissoudre « {name} » supprime définitivement la table et tout ce qui s'y rattache :
