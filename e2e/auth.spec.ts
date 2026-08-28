@@ -12,11 +12,11 @@ test.describe('Authentification', () => {
     await page.getByLabel('Mot de passe').fill('mauvais-mot-de-passe');
     await page.getByRole('button', { name: 'Se connecter' }).click();
 
-    // Le message exact vient de l'API (« invalid credentials ») ; on accepte
+    // Le message exact vient de l'API (« identifiants invalides ») ; on accepte
     // aussi le repli générique du client au cas où la formulation évolue.
     const alert = page.getByRole('alert');
     await expect(alert).toBeVisible();
-    await expect(alert).toContainText(/invalid credentials|connexion échouée/i);
+    await expect(alert).toContainText(/identifiants invalides|connexion échouée/i);
     await expect(page).toHaveURL(/\/login$/);
   });
 
