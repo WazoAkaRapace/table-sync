@@ -119,7 +119,7 @@ export async function itemRoutes(app: FastifyInstance) {
       ).n;
 
       return reply.send({
-        items: rows.map(mapItem),
+        items: rows.map((r: any) => mapItem(r, langFromReq(req))),
         total,
         limit: lim,
         offset: off,

@@ -136,7 +136,7 @@ export async function characterSpellRoutes(app: FastifyInstance) {
         )
         .all();
 
-      return reply.send({ spells: rows.map(mapCharacterSpell) });
+      return reply.send({ spells: rows.map((r: any) => mapCharacterSpell(r, langFromReq(req))) });
     },
   );
 

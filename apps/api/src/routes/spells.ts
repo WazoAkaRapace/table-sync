@@ -97,7 +97,7 @@ export async function spellRoutes(app: FastifyInstance) {
       ).n;
 
       return reply.send({
-        spells: rows.map(mapSpell),
+        spells: rows.map((r: any) => mapSpell(r, langFromReq(req))),
         total,
         limit: lim,
         offset: off,
