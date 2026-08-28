@@ -1,0 +1,2904 @@
+{
+  "total": 964,
+  "matched": 603,
+  "manual": 35,
+  "residual": 361,
+  "methods": {
+    "slug": 125,
+    "fingerprint": 374,
+    "named": 33,
+    "named-lenient": 7,
+    "fuzzy-unique": 25,
+    "fuzzy-named": 3
+  },
+  "residual_list": [
+    {
+      "slug": "arbeyach",
+      "nameFr": "Arbeyach",
+      "source": "Livre des monstres",
+      "cr": 21,
+      "type": "Fiélon",
+      "size": "G"
+    },
+    {
+      "slug": "arbre-feuilledragon",
+      "nameFr": "Arbre feuilledragon",
+      "source": "Livre des monstres",
+      "cr": 8,
+      "type": "Plante",
+      "size": "G"
+    },
+    {
+      "slug": "arbre-pare-fees",
+      "nameFr": "Arbre pare-fées",
+      "source": "Livre des monstres",
+      "cr": 8,
+      "type": "Créature artificielle",
+      "size": "TG"
+    },
+    {
+      "slug": "archer-veteran-elfique",
+      "nameFr": "Archer vétéran elfique",
+      "source": "Livre des monstres",
+      "cr": 3,
+      "type": "Humanoïde",
+      "size": "M"
+    },
+    {
+      "slug": "asanbosam",
+      "nameFr": "Asanbosam",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Aberration",
+      "size": "G"
+    },
+    {
+      "slug": "automate-bibliothecaire",
+      "nameFr": "Automate bibliothécaire",
+      "source": "Livre des monstres",
+      "cr": 0.5,
+      "type": "Créature artificielle",
+      "size": "P"
+    },
+    {
+      "slug": "autruche-de-guerre",
+      "nameFr": "Autruche de guerre",
+      "source": "Livre des monstres",
+      "cr": 0.5,
+      "type": "Bête",
+      "size": "G"
+    },
+    {
+      "slug": "avatar-de-boree",
+      "nameFr": "Avatar de Borée",
+      "source": "Livre des monstres",
+      "cr": 17,
+      "type": "Élémentaire",
+      "size": "M"
+    },
+    {
+      "slug": "bagiennik",
+      "nameFr": "Bagiennik",
+      "source": "Livre des monstres",
+      "cr": 3,
+      "type": "Aberration",
+      "size": "M"
+    },
+    {
+      "slug": "beaute-abominable",
+      "nameFr": "Beauté abominable",
+      "source": "Livre des monstres",
+      "cr": 11,
+      "type": "Fée",
+      "size": "M"
+    },
+    {
+      "slug": "behtu",
+      "nameFr": "Behtu",
+      "source": "Livre des monstres",
+      "cr": 2,
+      "type": "Humanoïde",
+      "size": "P"
+    },
+    {
+      "slug": "beli",
+      "nameFr": "Béli",
+      "source": "Livre des monstres",
+      "cr": 2,
+      "type": "Fée",
+      "size": "P"
+    },
+    {
+      "slug": "belle-noyee",
+      "nameFr": "Belle noyée",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Mort-vivant",
+      "size": "M"
+    },
+    {
+      "slug": "bereginyas",
+      "nameFr": "Béreginyas",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Fée",
+      "size": "TP"
+    },
+    {
+      "slug": "bete-d-ombre",
+      "nameFr": "Bête d'ombre",
+      "source": "Livre des monstres",
+      "cr": 7,
+      "type": "Fée",
+      "size": "M"
+    },
+    {
+      "slug": "blemmye",
+      "nameFr": "Blemmye",
+      "source": "Livre des monstres",
+      "cr": 8,
+      "type": "Créature monstrueuse",
+      "size": "G"
+    },
+    {
+      "slug": "boloti",
+      "nameFr": "Boloti",
+      "source": "Livre des monstres",
+      "cr": 1,
+      "type": "Fée",
+      "size": "TP"
+    },
+    {
+      "slug": "bondisseur-aquatique",
+      "nameFr": "Bondisseur aquatique",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Créature monstrueuse",
+      "size": "G"
+    },
+    {
+      "slug": "boucca",
+      "nameFr": "Boucca",
+      "source": "Livre des monstres",
+      "cr": 0.5,
+      "type": "Fée",
+      "size": "TP"
+    },
+    {
+      "slug": "bouda",
+      "nameFr": "Bouda",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Fiélon",
+      "size": "M"
+    },
+    {
+      "slug": "bouffon-macabre",
+      "nameFr": "Bouffon macabre",
+      "source": "Livre des monstres",
+      "cr": 11,
+      "type": "Mort-vivant",
+      "size": "M"
+    },
+    {
+      "slug": "bouraq",
+      "nameFr": "Bouraq",
+      "source": "Livre des monstres",
+      "cr": 11,
+      "type": "Céleste",
+      "size": "M"
+    },
+    {
+      "slug": "camazotz",
+      "nameFr": "Camazotz",
+      "source": "Livre des monstres",
+      "cr": 22,
+      "type": "Fiélon",
+      "size": "G"
+    },
+    {
+      "slug": "cambium",
+      "nameFr": "Cambium",
+      "source": "Livre des monstres",
+      "cr": 14,
+      "type": "Fiélon",
+      "size": "G"
+    },
+    {
+      "slug": "canitaupe",
+      "nameFr": "Canitaupe",
+      "source": "Livre des monstres",
+      "cr": 1,
+      "type": "Bête",
+      "size": "M"
+    },
+    {
+      "slug": "canitaupe-juggernaut",
+      "nameFr": "Canitaupe juggernaut",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Créature monstrueuse",
+      "size": "G"
+    },
+    {
+      "slug": "capitaine-du-guet",
+      "nameFr": "Capitaine du guet",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Humanoïde",
+      "size": "M"
+    },
+    {
+      "slug": "cavalier-de-baba-yaga-jour-eclatant",
+      "nameFr": "Cavalier de Baba-Yaga, Jour éclatant",
+      "source": "Livre des monstres",
+      "cr": 11,
+      "type": "Fée",
+      "size": "M"
+    },
+    {
+      "slug": "cavalier-de-baba-yaga-nuit-noire",
+      "nameFr": "Cavalier de Baba-Yaga, Nuit noire",
+      "source": "Livre des monstres",
+      "cr": 11,
+      "type": "Fée",
+      "size": "M"
+    },
+    {
+      "slug": "cavalier-de-baba-yaga-soleil-rouge",
+      "nameFr": "Cavalier de Baba-Yaga, Soleil rouge",
+      "source": "Livre des monstres",
+      "cr": 11,
+      "type": "Fée",
+      "size": "M"
+    },
+    {
+      "slug": "chapeau-rouge",
+      "nameFr": "Chapeau rouge",
+      "source": "Livre des monstres",
+      "cr": 6,
+      "type": "Fée",
+      "size": "M"
+    },
+    {
+      "slug": "chat-du-temple-de-bastet",
+      "nameFr": "Chat du temple de Bastet",
+      "source": "Livre des monstres",
+      "cr": 1,
+      "type": "Créature monstrueuse",
+      "size": "P"
+    },
+    {
+      "slug": "chauve-souris-de-peau",
+      "nameFr": "Chauve-souris de peau",
+      "source": "Livre des monstres",
+      "cr": 0.5,
+      "type": "Mort-vivant",
+      "size": "P"
+    },
+    {
+      "slug": "chef-du-culte-de-l-ordre-d-emeraude",
+      "nameFr": "Chef du culte de l'Ordre d'émeraude",
+      "source": "Livre des monstres",
+      "cr": 8,
+      "type": "Humanoïde",
+      "size": "M"
+    },
+    {
+      "slug": "chelicere",
+      "nameFr": "Chélicère",
+      "source": "Livre des monstres",
+      "cr": 7,
+      "type": "Aberration",
+      "size": "G"
+    },
+    {
+      "slug": "chernomoi",
+      "nameFr": "Chernomoï",
+      "source": "Livre des monstres",
+      "cr": 1,
+      "type": "Fée",
+      "size": "TP"
+    },
+    {
+      "slug": "chevalier-fantome",
+      "nameFr": "Chevalier fantôme",
+      "source": "Livre des monstres",
+      "cr": 6,
+      "type": "Mort-vivant",
+      "size": "M"
+    },
+    {
+      "slug": "chien-du-temple",
+      "nameFr": "Chien du temple",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Céleste",
+      "size": "M"
+    },
+    {
+      "slug": "chien-anguille",
+      "nameFr": "Chien-anguille",
+      "source": "Livre des monstres",
+      "cr": 2,
+      "type": "Fée",
+      "size": "M"
+    },
+    {
+      "slug": "chiot-mastodonte",
+      "nameFr": "Chiot mastodonte",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Fée",
+      "size": "TG"
+    },
+    {
+      "slug": "chort",
+      "nameFr": "Chort",
+      "source": "Livre des monstres",
+      "cr": 12,
+      "type": "Fiélon",
+      "size": "M"
+    },
+    {
+      "slug": "chronomentaire",
+      "nameFr": "Chronomentaire",
+      "source": "Livre des monstres",
+      "cr": 8,
+      "type": "Élémentaire",
+      "size": "G"
+    },
+    {
+      "slug": "cikavak",
+      "nameFr": "Cikavak",
+      "source": "Livre des monstres",
+      "cr": 0.125,
+      "type": "Fée",
+      "size": "TP"
+    },
+    {
+      "slug": "claquepiege",
+      "nameFr": "Claquepiège",
+      "source": "Livre des monstres",
+      "cr": 6,
+      "type": "Créature artificielle",
+      "size": "P"
+    },
+    {
+      "slug": "clurichaun",
+      "nameFr": "Clurichaun",
+      "source": "Livre des monstres",
+      "cr": 0.25,
+      "type": "Fée",
+      "size": "TP"
+    },
+    {
+      "slug": "colonne-possedee",
+      "nameFr": "Colonne possédée",
+      "source": "Livre des monstres",
+      "cr": 7,
+      "type": "Créature artificielle",
+      "size": "G"
+    },
+    {
+      "slug": "commandant-des-chevaliers-noirs",
+      "nameFr": "Commandant des chevaliers noirs",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Humanoïde",
+      "size": "M"
+    },
+    {
+      "slug": "conglomerat-osseux",
+      "nameFr": "Conglomérat osseux",
+      "source": "Livre des monstres",
+      "cr": 8,
+      "type": "Mort-vivant",
+      "size": "P"
+    },
+    {
+      "slug": "coquicape",
+      "nameFr": "Coquicape",
+      "source": "Livre des monstres",
+      "cr": 2,
+      "type": "Fée",
+      "size": "M"
+    },
+    {
+      "slug": "couveteux",
+      "nameFr": "Couveteux",
+      "source": "Livre des monstres",
+      "cr": 1,
+      "type": "Créature artificielle",
+      "size": "TP"
+    },
+    {
+      "slug": "crabe-garrotteur",
+      "nameFr": "Crabe garrotteur",
+      "source": "Livre des monstres",
+      "cr": 0.25,
+      "type": "Bête",
+      "size": "TP"
+    },
+    {
+      "slug": "crabe-osseux",
+      "nameFr": "Crabe osseux",
+      "source": "Livre des monstres",
+      "cr": 0.5,
+      "type": "Bête",
+      "size": "P"
+    },
+    {
+      "slug": "croco-de-verre",
+      "nameFr": "Croco de verre",
+      "source": "Livre des monstres",
+      "cr": 1,
+      "type": "Bête",
+      "size": "G"
+    },
+    {
+      "slug": "cynome",
+      "nameFr": "Cynome",
+      "source": "Livre des monstres",
+      "cr": 0.5,
+      "type": "Humanoïde",
+      "size": "P"
+    },
+    {
+      "slug": "demoiselle-glacee",
+      "nameFr": "Demoiselle glacée",
+      "source": "Livre des monstres",
+      "cr": 6,
+      "type": "Fée",
+      "size": "M"
+    },
+    {
+      "slug": "demon-de-seve",
+      "nameFr": "Démon de sève",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Vase",
+      "size": "P"
+    },
+    {
+      "slug": "derro-antipaladin-des-ombres",
+      "nameFr": "Derro, antipaladin des ombres",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Humanoïde",
+      "size": "P"
+    },
+    {
+      "slug": "derro-savant-foetal",
+      "nameFr": "Derro, savant fœtal",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Humanoïde",
+      "size": "TP"
+    },
+    {
+      "slug": "devoreur-d-ames",
+      "nameFr": "Dévoreur d'âmes",
+      "source": "Livre des monstres",
+      "cr": 7,
+      "type": "Fiélon",
+      "size": "M"
+    },
+    {
+      "slug": "diable-automate",
+      "nameFr": "Diable automate",
+      "source": "Livre des monstres",
+      "cr": 10,
+      "type": "Fiélon",
+      "size": "G"
+    },
+    {
+      "slug": "diable-cristallin",
+      "nameFr": "Diable cristallin",
+      "source": "Livre des monstres",
+      "cr": 6,
+      "type": "Fiélon",
+      "size": "M"
+    },
+    {
+      "slug": "diable-d-encre",
+      "nameFr": "Diable d'encre",
+      "source": "Livre des monstres",
+      "cr": 2,
+      "type": "Fiélon",
+      "size": "P"
+    },
+    {
+      "slug": "diable-de-sel",
+      "nameFr": "Diable de sel",
+      "source": "Livre des monstres",
+      "cr": 6,
+      "type": "Fiélon",
+      "size": "M"
+    },
+    {
+      "slug": "diable-dore",
+      "nameFr": "Diable doré",
+      "source": "Livre des monstres",
+      "cr": 7,
+      "type": "Fiélon",
+      "size": "M"
+    },
+    {
+      "slug": "diable-lunaire",
+      "nameFr": "Diable lunaire",
+      "source": "Livre des monstres",
+      "cr": 8,
+      "type": "Fiélon",
+      "size": "G"
+    },
+    {
+      "slug": "dipsa",
+      "nameFr": "Dipsa",
+      "source": "Livre des monstres",
+      "cr": 0.25,
+      "type": "Vase",
+      "size": "TP"
+    },
+    {
+      "slug": "dissimortuum",
+      "nameFr": "Dissimortuum",
+      "source": "Livre des monstres",
+      "cr": 7,
+      "type": "Mort-vivant",
+      "size": "M"
+    },
+    {
+      "slug": "domovoi",
+      "nameFr": "Domovoï",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Fée",
+      "size": "M"
+    },
+    {
+      "slug": "doppelrat",
+      "nameFr": "Doppelrat",
+      "source": "Livre des monstres",
+      "cr": 2,
+      "type": "Créature monstrueuse",
+      "size": "TP"
+    },
+    {
+      "slug": "dorreq",
+      "nameFr": "Dorreq",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Aberration",
+      "size": "M"
+    },
+    {
+      "slug": "dragon-de-flammes-adulte",
+      "nameFr": "Dragon de flammes, adulte",
+      "source": "Livre des monstres",
+      "cr": 16,
+      "type": "Dragon",
+      "size": "TG"
+    },
+    {
+      "slug": "dragon-de-flammes-dragonnet",
+      "nameFr": "Dragon de flammes, dragonnet",
+      "source": "Livre des monstres",
+      "cr": 3,
+      "type": "Dragon",
+      "size": "M"
+    },
+    {
+      "slug": "dragon-de-flammes-jeune",
+      "nameFr": "Dragon de flammes, jeune",
+      "source": "Livre des monstres",
+      "cr": 9,
+      "type": "Dragon",
+      "size": "G"
+    },
+    {
+      "slug": "dragon-de-flammes-venerable",
+      "nameFr": "Dragon de flammes, vénérable",
+      "source": "Livre des monstres",
+      "cr": 24,
+      "type": "Dragon",
+      "size": "Gig"
+    },
+    {
+      "slug": "dragon-de-mithral-adulte",
+      "nameFr": "Dragon de mithral, adulte",
+      "source": "Livre des monstres",
+      "cr": 14,
+      "type": "Dragon",
+      "size": "TG"
+    },
+    {
+      "slug": "dragon-de-mithral-jeune",
+      "nameFr": "Dragon de mithral, jeune",
+      "source": "Livre des monstres",
+      "cr": 6,
+      "type": "Dragon",
+      "size": "M"
+    },
+    {
+      "slug": "dragon-de-mithral-venerable",
+      "nameFr": "Dragon de mithral, vénérable",
+      "source": "Livre des monstres",
+      "cr": 18,
+      "type": "Dragon",
+      "size": "Gig"
+    },
+    {
+      "slug": "dragon-des-cavernes-adulte",
+      "nameFr": "Dragon des cavernes, adulte",
+      "source": "Livre des monstres",
+      "cr": 16,
+      "type": "Dragon",
+      "size": "TG"
+    },
+    {
+      "slug": "dragon-des-cavernes-dragonnet",
+      "nameFr": "Dragon des cavernes, dragonnet",
+      "source": "Livre des monstres",
+      "cr": 2,
+      "type": "Dragon",
+      "size": "M"
+    },
+    {
+      "slug": "dragon-des-cavernes-jeune",
+      "nameFr": "Dragon des cavernes, jeune",
+      "source": "Livre des monstres",
+      "cr": 8,
+      "type": "Dragon",
+      "size": "G"
+    },
+    {
+      "slug": "dragon-du-vent-adulte",
+      "nameFr": "Dragon du vent, adulte",
+      "source": "Livre des monstres",
+      "cr": 17,
+      "type": "Dragon",
+      "size": "TG"
+    },
+    {
+      "slug": "dragon-du-vent-dragonnet",
+      "nameFr": "Dragon du vent, dragonnet",
+      "source": "Livre des monstres",
+      "cr": 1,
+      "type": "Dragon",
+      "size": "M"
+    },
+    {
+      "slug": "dragon-du-vent-jeune",
+      "nameFr": "Dragon du vent, jeune",
+      "source": "Livre des monstres",
+      "cr": 6,
+      "type": "Dragon",
+      "size": "G"
+    },
+    {
+      "slug": "dragon-du-vent-venerable",
+      "nameFr": "Dragon du vent, vénérable",
+      "source": "Livre des monstres",
+      "cr": 22,
+      "type": "Dragon",
+      "size": "Gig"
+    },
+    {
+      "slug": "dragon-du-vide-adulte",
+      "nameFr": "Dragon du vide, adulte",
+      "source": "Livre des monstres",
+      "cr": 14,
+      "type": "Dragon",
+      "size": "TG"
+    },
+    {
+      "slug": "dragon-du-vide-dragonnet",
+      "nameFr": "Dragon du vide, dragonnet",
+      "source": "Livre des monstres",
+      "cr": 2,
+      "type": "Dragon",
+      "size": "M"
+    },
+    {
+      "slug": "dragon-du-vide-jeune",
+      "nameFr": "Dragon du vide, jeune",
+      "source": "Livre des monstres",
+      "cr": 9,
+      "type": "Dragon",
+      "size": "G"
+    },
+    {
+      "slug": "dragon-du-vide-venerable",
+      "nameFr": "Dragon du vide, vénérable",
+      "source": "Livre des monstres",
+      "cr": 24,
+      "type": "Dragon",
+      "size": "Gig"
+    },
+    {
+      "slug": "dragon-marin-adulte",
+      "nameFr": "Dragon marin, adulte",
+      "source": "Livre des monstres",
+      "cr": 16,
+      "type": "Dragon",
+      "size": "TG"
+    },
+    {
+      "slug": "dragon-marin-dragonnet",
+      "nameFr": "Dragon marin, dragonnet",
+      "source": "Livre des monstres",
+      "cr": 2,
+      "type": "Dragon",
+      "size": "M"
+    },
+    {
+      "slug": "dragon-marin-jeune",
+      "nameFr": "Dragon marin, jeune",
+      "source": "Livre des monstres",
+      "cr": 9,
+      "type": "Dragon",
+      "size": "G"
+    },
+    {
+      "slug": "dragon-marin-venerable",
+      "nameFr": "Dragon marin, vénérable",
+      "source": "Livre des monstres",
+      "cr": 22,
+      "type": "Dragon",
+      "size": "Gig"
+    },
+    {
+      "slug": "dragon-murene",
+      "nameFr": "Dragon murène",
+      "source": "Livre des monstres",
+      "cr": 12,
+      "type": "Dragon",
+      "size": "TG"
+    },
+    {
+      "slug": "dragonette-lanterne",
+      "nameFr": "Dragonette lanterne",
+      "source": "Livre des monstres",
+      "cr": 0.5,
+      "type": "Dragon",
+      "size": "TP"
+    },
+    {
+      "slug": "drake-de-cendres",
+      "nameFr": "Drake de cendres",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Dragon",
+      "size": "P"
+    },
+    {
+      "slug": "drake-de-corail",
+      "nameFr": "Drake de corail",
+      "source": "Livre des monstres",
+      "cr": 7,
+      "type": "Dragon",
+      "size": "M"
+    },
+    {
+      "slug": "drake-de-papier",
+      "nameFr": "Drake de papier",
+      "source": "Livre des monstres",
+      "cr": 2,
+      "type": "Dragon",
+      "size": "P"
+    },
+    {
+      "slug": "drake-de-rouille",
+      "nameFr": "Drake de rouille",
+      "source": "Livre des monstres",
+      "cr": 8,
+      "type": "Dragon",
+      "size": "M"
+    },
+    {
+      "slug": "drake-des-ombres-ancien",
+      "nameFr": "Drake des ombres, ancien",
+      "source": "Livre des monstres",
+      "cr": 7,
+      "type": "Dragon",
+      "size": "G"
+    },
+    {
+      "slug": "drake-des-profondeurs",
+      "nameFr": "Drake des profondeurs",
+      "source": "Livre des monstres",
+      "cr": 9,
+      "type": "Dragon",
+      "size": "G"
+    },
+    {
+      "slug": "drake-des-tavernes",
+      "nameFr": "Drake des tavernes",
+      "source": "Livre des monstres",
+      "cr": 0.5,
+      "type": "Dragon",
+      "size": "TP"
+    },
+    {
+      "slug": "drake-pourpre",
+      "nameFr": "Drake pourpre",
+      "source": "Livre des monstres",
+      "cr": 1,
+      "type": "Dragon",
+      "size": "TP"
+    },
+    {
+      "slug": "drake-stellaire",
+      "nameFr": "Drake stellaire",
+      "source": "Livre des monstres",
+      "cr": 15,
+      "type": "Dragon",
+      "size": "G"
+    },
+    {
+      "slug": "drakon",
+      "nameFr": "Drakon",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Bête",
+      "size": "G"
+    },
+    {
+      "slug": "dryade-epine-du-crepuscule",
+      "nameFr": "Dryade épine-du-crépuscule",
+      "source": "Livre des monstres",
+      "cr": 3,
+      "type": "Fée",
+      "size": "M"
+    },
+    {
+      "slug": "eala",
+      "nameFr": "Eala",
+      "source": "Livre des monstres",
+      "cr": 2,
+      "type": "Créature monstrueuse",
+      "size": "P"
+    },
+    {
+      "slug": "edimmu",
+      "nameFr": "Edimmu",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Mort-vivant",
+      "size": "M"
+    },
+    {
+      "slug": "einherjar",
+      "nameFr": "Einherjar",
+      "source": "Livre des monstres",
+      "cr": 7,
+      "type": "Humanoïde",
+      "size": "M"
+    },
+    {
+      "slug": "eleinomae",
+      "nameFr": "Eleinomae",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Fée",
+      "size": "M"
+    },
+    {
+      "slug": "empoigneur-arboricole",
+      "nameFr": "Empoigneur arboricole",
+      "source": "Livre des monstres",
+      "cr": 3,
+      "type": "Aberration",
+      "size": "M"
+    },
+    {
+      "slug": "enfant-des-bruyeres",
+      "nameFr": "Enfant des bruyères",
+      "source": "Livre des monstres",
+      "cr": 1,
+      "type": "Plante",
+      "size": "TP"
+    },
+    {
+      "slug": "erina-defenseur",
+      "nameFr": "Erina, défenseur",
+      "source": "Livre des monstres",
+      "cr": 1,
+      "type": "Humanoïde",
+      "size": "P"
+    },
+    {
+      "slug": "erina-ecornifleur",
+      "nameFr": "Erina, écornifleur",
+      "source": "Livre des monstres",
+      "cr": 0.25,
+      "type": "Humanoïde",
+      "size": "P"
+    },
+    {
+      "slug": "esclave-putresprit",
+      "nameFr": "Esclave putresprit",
+      "source": "Livre des monstres",
+      "cr": 3,
+      "type": "Plante",
+      "size": "M"
+    },
+    {
+      "slug": "esprit-du-feu",
+      "nameFr": "Esprit du feu",
+      "source": "Livre des monstres",
+      "cr": 2,
+      "type": "Élémentaire",
+      "size": "P"
+    },
+    {
+      "slug": "esprit-verdoyant",
+      "nameFr": "Esprit verdoyant",
+      "source": "Tome of Heroes",
+      "cr": 0,
+      "type": "Plante",
+      "size": "TP"
+    },
+    {
+      "slug": "etincelle",
+      "nameFr": "Étincelle",
+      "source": "Livre des monstres",
+      "cr": 7,
+      "type": "Élémentaire",
+      "size": "TP"
+    },
+    {
+      "slug": "fanatique-du-scorpion",
+      "nameFr": "Fanatique du scorpion",
+      "source": "Livre des monstres",
+      "cr": 0.5,
+      "type": "Humanoïde",
+      "size": "M"
+    },
+    {
+      "slug": "fangeux",
+      "nameFr": "Fangeux",
+      "source": "Livre des monstres",
+      "cr": 0.5,
+      "type": "Fée",
+      "size": "P"
+    },
+    {
+      "slug": "far-darrig",
+      "nameFr": "Far darrig",
+      "source": "Livre des monstres",
+      "cr": 3,
+      "type": "Fée",
+      "size": "P"
+    },
+    {
+      "slug": "fee-des-ombres",
+      "nameFr": "Fée des ombres",
+      "source": "Livre des monstres",
+      "cr": 0.25,
+      "type": "Humanoïde",
+      "size": "M"
+    },
+    {
+      "slug": "fee-des-ombres-chasseur-forestier",
+      "nameFr": "Fée des ombres, chasseur forestier",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Humanoïde",
+      "size": "M"
+    },
+    {
+      "slug": "fee-des-ombres-duelliste",
+      "nameFr": "Fée des ombres, duelliste",
+      "source": "Livre des monstres",
+      "cr": 6,
+      "type": "Humanoïde",
+      "size": "M"
+    },
+    {
+      "slug": "fee-des-ombres-enchanteresse",
+      "nameFr": "Fée des ombres, enchanteresse",
+      "source": "Livre des monstres",
+      "cr": 7,
+      "type": "Humanoïde",
+      "size": "M"
+    },
+    {
+      "slug": "fee-des-ombres-gardien",
+      "nameFr": "Fée des ombres, gardien",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Humanoïde",
+      "size": "G"
+    },
+    {
+      "slug": "felforge",
+      "nameFr": "Felforgé",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Créature artificielle",
+      "size": "M"
+    },
+    {
+      "slug": "ferocien",
+      "nameFr": "Férocien",
+      "source": "Livre des monstres",
+      "cr": 8,
+      "type": "Bête",
+      "size": "G"
+    },
+    {
+      "slug": "fext",
+      "nameFr": "Fext",
+      "source": "Livre des monstres",
+      "cr": 6,
+      "type": "Mort-vivant",
+      "size": "M"
+    },
+    {
+      "slug": "fils-de-fenris",
+      "nameFr": "Fils de Fenris",
+      "source": "Livre des monstres",
+      "cr": 12,
+      "type": "Créature monstrueuse",
+      "size": "TG"
+    },
+    {
+      "slug": "forgepeur",
+      "nameFr": "Forgepeur",
+      "source": "Livre des monstres",
+      "cr": 10,
+      "type": "Fée",
+      "size": "M"
+    },
+    {
+      "slug": "fourmi-geante",
+      "nameFr": "Fourmi géante",
+      "source": "Livre des monstres",
+      "cr": 2,
+      "type": "Bête",
+      "size": "G"
+    },
+    {
+      "slug": "fraughashar",
+      "nameFr": "Fraughashar",
+      "source": "Livre des monstres",
+      "cr": 0.5,
+      "type": "Fée",
+      "size": "P"
+    },
+    {
+      "slug": "gardien-spectral",
+      "nameFr": "Gardien spectral",
+      "source": "Livre des monstres",
+      "cr": 6,
+      "type": "Mort-vivant",
+      "size": "M"
+    },
+    {
+      "slug": "geant-du-desert",
+      "nameFr": "Géant du désert",
+      "source": "Livre des monstres",
+      "cr": 9,
+      "type": "Géant",
+      "size": "TG"
+    },
+    {
+      "slug": "geant-jotun",
+      "nameFr": "Géant jotun",
+      "source": "Livre des monstres",
+      "cr": 22,
+      "type": "Géant",
+      "size": "Gig"
+    },
+    {
+      "slug": "geant-obese",
+      "nameFr": "Géant obèse",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Géant",
+      "size": "G"
+    },
+    {
+      "slug": "geant-thursir",
+      "nameFr": "Géant thursir",
+      "source": "Livre des monstres",
+      "cr": 3,
+      "type": "Géant",
+      "size": "G"
+    },
+    {
+      "slug": "genie-al-aeshma",
+      "nameFr": "Génie al-Aeshma",
+      "source": "Livre des monstres",
+      "cr": 9,
+      "type": "Élémentaire",
+      "size": "G"
+    },
+    {
+      "slug": "gerride",
+      "nameFr": "Gerridé",
+      "source": "Livre des monstres",
+      "cr": 1,
+      "type": "Fée",
+      "size": "G"
+    },
+    {
+      "slug": "gnoll-vif-ravageur",
+      "nameFr": "Gnoll, Vif ravageur",
+      "source": "Livre des monstres",
+      "cr": 3,
+      "type": "Humanoïde",
+      "size": "M"
+    },
+    {
+      "slug": "gobelin-poussiereux",
+      "nameFr": "Gobelin poussiéreux",
+      "source": "Livre des monstres",
+      "cr": 0.25,
+      "type": "Humanoïde",
+      "size": "P"
+    },
+    {
+      "slug": "golem-a-vapeur",
+      "nameFr": "Golem à vapeur",
+      "source": "Livre des monstres",
+      "cr": 13,
+      "type": "Créature artificielle",
+      "size": "G"
+    },
+    {
+      "slug": "golem-de-sel",
+      "nameFr": "Golem de sel",
+      "source": "Livre des monstres",
+      "cr": 10,
+      "type": "Créature artificielle",
+      "size": "G"
+    },
+    {
+      "slug": "golem-smaragdin",
+      "nameFr": "Golem smaragdin",
+      "source": "Livre des monstres",
+      "cr": 14,
+      "type": "Créature artificielle",
+      "size": "G"
+    },
+    {
+      "slug": "golem-tresor",
+      "nameFr": "Golem trésor",
+      "source": "Livre des monstres",
+      "cr": 12,
+      "type": "Créature artificielle",
+      "size": "TG"
+    },
+    {
+      "slug": "goule-darakhule",
+      "nameFr": "Goule darakhule",
+      "source": "Livre des monstres",
+      "cr": 3,
+      "type": "Mort-vivant",
+      "size": "M"
+    },
+    {
+      "slug": "goule-de-fer",
+      "nameFr": "Goule de fer",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Mort-vivant",
+      "size": "M"
+    },
+    {
+      "slug": "goule-imperiale",
+      "nameFr": "Goule impériale",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Mort-vivant",
+      "size": "M"
+    },
+    {
+      "slug": "goule-mendiante",
+      "nameFr": "Goule mendiante",
+      "source": "Livre des monstres",
+      "cr": 0.5,
+      "type": "Mort-vivant",
+      "size": "M"
+    },
+    {
+      "slug": "goule-poudre-d-os",
+      "nameFr": "Goule poudre d'os",
+      "source": "Livre des monstres",
+      "cr": 12,
+      "type": "Mort-vivant",
+      "size": "P"
+    },
+    {
+      "slug": "goule-empereur",
+      "nameFr": "Goule, Empereur",
+      "source": "Livre des monstres",
+      "cr": 20,
+      "type": "Mort-vivant",
+      "size": "M"
+    },
+    {
+      "slug": "grand-veneur",
+      "nameFr": "Grand veneur",
+      "source": "Livre des monstres",
+      "cr": 18,
+      "type": "Fée",
+      "size": "M"
+    },
+    {
+      "slug": "gremlin-azza",
+      "nameFr": "Gremlin azza",
+      "source": "Livre des monstres",
+      "cr": 0.25,
+      "type": "Fée",
+      "size": "P"
+    },
+    {
+      "slug": "gremlin-rhume",
+      "nameFr": "Gremlin rhumé",
+      "source": "Livre des monstres",
+      "cr": 0.5,
+      "type": "Fée",
+      "size": "TP"
+    },
+    {
+      "slug": "guenaude-des-sables",
+      "nameFr": "Guenaude des sables",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Créature monstrueuse",
+      "size": "M"
+    },
+    {
+      "slug": "guenaude-miroir",
+      "nameFr": "Guenaude miroir",
+      "source": "Livre des monstres",
+      "cr": 6,
+      "type": "Fée",
+      "size": "M"
+    },
+    {
+      "slug": "guenaude-rouge",
+      "nameFr": "Guenaude rouge",
+      "source": "Livre des monstres",
+      "cr": 7,
+      "type": "Fée",
+      "size": "M"
+    },
+    {
+      "slug": "guenaude-sanglante",
+      "nameFr": "Guenaude sanglante",
+      "source": "Livre des monstres",
+      "cr": 11,
+      "type": "Fée",
+      "size": "M"
+    },
+    {
+      "slug": "gug",
+      "nameFr": "Gug",
+      "source": "Livre des monstres",
+      "cr": 12,
+      "type": "Géant",
+      "size": "TG"
+    },
+    {
+      "slug": "habitant-de-leng",
+      "nameFr": "Habitant de Leng",
+      "source": "Livre des monstres",
+      "cr": 2,
+      "type": "Humanoïde",
+      "size": "M"
+    },
+    {
+      "slug": "harpie-chouette",
+      "nameFr": "Harpie chouette",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Créature monstrueuse",
+      "size": "M"
+    },
+    {
+      "slug": "heraut-des-tenebres",
+      "nameFr": "Héraut des ténèbres",
+      "source": "Livre des monstres",
+      "cr": 7,
+      "type": "Fiélon",
+      "size": "G"
+    },
+    {
+      "slug": "heraut-du-sang",
+      "nameFr": "Héraut du sang",
+      "source": "Livre des monstres",
+      "cr": 12,
+      "type": "Fiélon",
+      "size": "TG"
+    },
+    {
+      "slug": "homme-cafard-escarmoucheur",
+      "nameFr": "Homme-cafard, escarmoucheur",
+      "source": "Livre des monstres",
+      "cr": 0.25,
+      "type": "Humanoïde",
+      "size": "P"
+    },
+    {
+      "slug": "homme-cafard-seigneur",
+      "nameFr": "Homme-cafard, seigneur",
+      "source": "Livre des monstres",
+      "cr": 2,
+      "type": "Humanoïde",
+      "size": "P"
+    },
+    {
+      "slug": "homme-chevre",
+      "nameFr": "Homme-chèvre",
+      "source": "Livre des monstres",
+      "cr": 3,
+      "type": "Créature monstrueuse",
+      "size": "M"
+    },
+    {
+      "slug": "homme-corbeau-combattant",
+      "nameFr": "Homme-corbeau, combattant",
+      "source": "Livre des monstres",
+      "cr": 3,
+      "type": "Humanoïde",
+      "size": "M"
+    },
+    {
+      "slug": "homme-corbeau-croasseur-funeste",
+      "nameFr": "Homme-corbeau, croasseur funeste",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Humanoïde",
+      "size": "M"
+    },
+    {
+      "slug": "homme-corbeau-eclaireur",
+      "nameFr": "Homme-corbeau, éclaireur",
+      "source": "Livre des monstres",
+      "cr": 0.5,
+      "type": "Humanoïde",
+      "size": "M"
+    },
+    {
+      "slug": "homme-lemurien",
+      "nameFr": "Homme-lémurien",
+      "source": "Livre des monstres",
+      "cr": 0.25,
+      "type": "Humanoïde",
+      "size": "P"
+    },
+    {
+      "slug": "homme-lemurien-fourrure-grise",
+      "nameFr": "Homme-lémurien, fourrure grise",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Humanoïde",
+      "size": "P"
+    },
+    {
+      "slug": "homme-ours",
+      "nameFr": "Homme-ours",
+      "source": "Livre des monstres",
+      "cr": 3,
+      "type": "Humanoïde",
+      "size": "M"
+    },
+    {
+      "slug": "homme-rat",
+      "nameFr": "Homme-rat",
+      "source": "Livre des monstres",
+      "cr": 0.25,
+      "type": "Humanoïde",
+      "size": "P"
+    },
+    {
+      "slug": "homme-rat-roublard",
+      "nameFr": "Homme-rat, roublard",
+      "source": "Livre des monstres",
+      "cr": 1,
+      "type": "Humanoïde",
+      "size": "P"
+    },
+    {
+      "slug": "hraesvelgr",
+      "nameFr": "Hraesvelgr",
+      "source": "Livre des monstres",
+      "cr": 19,
+      "type": "Géant",
+      "size": "TG"
+    },
+    {
+      "slug": "ia-affrat",
+      "nameFr": "Ia'Affrat",
+      "source": "Livre des monstres",
+      "cr": 15,
+      "type": "Élémentaire",
+      "size": "G"
+    },
+    {
+      "slug": "idole-divine",
+      "nameFr": "Idole divine",
+      "source": "Livre des monstres",
+      "cr": 8,
+      "type": "Créature artificielle",
+      "size": "P"
+    },
+    {
+      "slug": "isonade",
+      "nameFr": "Isonade",
+      "source": "Livre des monstres",
+      "cr": 14,
+      "type": "Créature monstrueuse",
+      "size": "Gig"
+    },
+    {
+      "slug": "jaculus",
+      "nameFr": "Jaculus",
+      "source": "Livre des monstres",
+      "cr": 3,
+      "type": "Dragon",
+      "size": "P"
+    },
+    {
+      "slug": "kalke",
+      "nameFr": "Kalke",
+      "source": "Livre des monstres",
+      "cr": 0.25,
+      "type": "Fiélon",
+      "size": "P"
+    },
+    {
+      "slug": "kikimore",
+      "nameFr": "Kikimore",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Fée",
+      "size": "M"
+    },
+    {
+      "slug": "kishi",
+      "nameFr": "Kishi",
+      "source": "Livre des monstres",
+      "cr": 8,
+      "type": "Fiélon",
+      "size": "M"
+    },
+    {
+      "slug": "kobold-alchimiste",
+      "nameFr": "Kobold, Alchimiste",
+      "source": "Livre des monstres",
+      "cr": 2,
+      "type": "Humanoïde",
+      "size": "P"
+    },
+    {
+      "slug": "kobold-chef",
+      "nameFr": "Kobold, Chef",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Humanoïde",
+      "size": "P"
+    },
+    {
+      "slug": "kobold-forgepiege",
+      "nameFr": "Kobold, Forgepiège",
+      "source": "Livre des monstres",
+      "cr": 1,
+      "type": "Humanoïde",
+      "size": "P"
+    },
+    {
+      "slug": "kongamato",
+      "nameFr": "Kongamato",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Bête",
+      "size": "G"
+    },
+    {
+      "slug": "koralk",
+      "nameFr": "Koralk",
+      "source": "Livre des monstres",
+      "cr": 11,
+      "type": "Fiélon",
+      "size": "G"
+    },
+    {
+      "slug": "koschei",
+      "nameFr": "Koschei",
+      "source": "Livre des monstres",
+      "cr": 17,
+      "type": "Fiélon",
+      "size": "M"
+    },
+    {
+      "slug": "kot-bayun",
+      "nameFr": "Kot bayun",
+      "source": "Livre des monstres",
+      "cr": 2,
+      "type": "Créature monstrueuse",
+      "size": "M"
+    },
+    {
+      "slug": "larve-stellaire-de-cthulhu",
+      "nameFr": "Larve stellaire de Cthulhu",
+      "source": "Livre des monstres",
+      "cr": 15,
+      "type": "Fiélon",
+      "size": "G"
+    },
+    {
+      "slug": "lechy",
+      "nameFr": "Léchy",
+      "source": "Livre des monstres",
+      "cr": 1,
+      "type": "Créature monstrueuse",
+      "size": "M"
+    },
+    {
+      "slug": "lente-tempete",
+      "nameFr": "Lente tempête",
+      "source": "Livre des monstres",
+      "cr": 15,
+      "type": "Élémentaire",
+      "size": "TG"
+    },
+    {
+      "slug": "liche-canine",
+      "nameFr": "Liche canine",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Mort-vivant",
+      "size": "M"
+    },
+    {
+      "slug": "likho",
+      "nameFr": "Likho",
+      "source": "Livre des monstres",
+      "cr": 6,
+      "type": "Créature monstrueuse",
+      "size": "M"
+    },
+    {
+      "slug": "limon-des-sarcophages",
+      "nameFr": "Limon des sarcophages",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Mort-vivant",
+      "size": "M"
+    },
+    {
+      "slug": "linceul",
+      "nameFr": "Linceul",
+      "source": "Livre des monstres",
+      "cr": 0.125,
+      "type": "Mort-vivant",
+      "size": "M"
+    },
+    {
+      "slug": "lindwurm",
+      "nameFr": "Lindwurm",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Dragon",
+      "size": "G"
+    },
+    {
+      "slug": "liosalfar",
+      "nameFr": "Liosalfar",
+      "source": "Livre des monstres",
+      "cr": 8,
+      "type": "Élémentaire",
+      "size": "G"
+    },
+    {
+      "slug": "locus-elementaire",
+      "nameFr": "Locus élémentaire",
+      "source": "Livre des monstres",
+      "cr": 17,
+      "type": "Élémentaire",
+      "size": "Gig"
+    },
+    {
+      "slug": "lorelei",
+      "nameFr": "Lorelei",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Fée",
+      "size": "M"
+    },
+    {
+      "slug": "loxoda",
+      "nameFr": "Loxoda",
+      "source": "Livre des monstres",
+      "cr": 6,
+      "type": "Créature monstrueuse",
+      "size": "TG"
+    },
+    {
+      "slug": "lynx-vaporeux",
+      "nameFr": "Lynx vaporeux",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Créature monstrueuse",
+      "size": "G"
+    },
+    {
+      "slug": "mahoru",
+      "nameFr": "Mahoru",
+      "source": "Livre des monstres",
+      "cr": 3,
+      "type": "Créature monstrueuse",
+      "size": "G"
+    },
+    {
+      "slug": "malakbel",
+      "nameFr": "Malakbel",
+      "source": "Livre des monstres",
+      "cr": 9,
+      "type": "Fiélon",
+      "size": "M"
+    },
+    {
+      "slug": "mallqui",
+      "nameFr": "Mallqui",
+      "source": "Livre des monstres",
+      "cr": 8,
+      "type": "Mort-vivant",
+      "size": "M"
+    },
+    {
+      "slug": "malphas-corbeau-de-tempete",
+      "nameFr": "Malphas (Corbeau de tempête)",
+      "source": "Livre des monstres",
+      "cr": 6,
+      "type": "Fée",
+      "size": "M"
+    },
+    {
+      "slug": "mamura",
+      "nameFr": "Mamura",
+      "source": "Livre des monstres",
+      "cr": 6,
+      "type": "Aberration",
+      "size": "P"
+    },
+    {
+      "slug": "mangedestin",
+      "nameFr": "Mangedestin",
+      "source": "Livre des monstres",
+      "cr": 6,
+      "type": "Aberration",
+      "size": "M"
+    },
+    {
+      "slug": "mangepoussiere-yakat-shi",
+      "nameFr": "Mangepoussière (Yakat-shi)",
+      "source": "Livre des monstres",
+      "cr": 9,
+      "type": "Aberration",
+      "size": "M"
+    },
+    {
+      "slug": "mangereve",
+      "nameFr": "Mangerêve",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Fiélon",
+      "size": "M"
+    },
+    {
+      "slug": "manteau-vide",
+      "nameFr": "Manteau vide",
+      "source": "Livre des monstres",
+      "cr": 0.5,
+      "type": "Créature artificielle",
+      "size": "M"
+    },
+    {
+      "slug": "maraudeur-des-forets",
+      "nameFr": "Maraudeur des forêts",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Géant",
+      "size": "G"
+    },
+    {
+      "slug": "marchand-de-sable",
+      "nameFr": "Marchand de sable",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Céleste",
+      "size": "M"
+    },
+    {
+      "slug": "marchefleche",
+      "nameFr": "Marcheflèche",
+      "source": "Livre des monstres",
+      "cr": 3,
+      "type": "Fée",
+      "size": "TP"
+    },
+    {
+      "slug": "marionnette-des-lianes",
+      "nameFr": "Marionnette des lianes",
+      "source": "Livre des monstres",
+      "cr": 2,
+      "type": "Plante",
+      "size": "M"
+    },
+    {
+      "slug": "mavka",
+      "nameFr": "Mavka",
+      "source": "Livre des monstres",
+      "cr": 12,
+      "type": "Mort-vivant",
+      "size": "M"
+    },
+    {
+      "slug": "mbielu",
+      "nameFr": "Mbielu",
+      "source": "Livre des monstres",
+      "cr": 3,
+      "type": "Bête",
+      "size": "TG"
+    },
+    {
+      "slug": "mecanique-abomination",
+      "nameFr": "Mécanique, Abomination",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Créature artificielle",
+      "size": "G"
+    },
+    {
+      "slug": "mecanique-araignee-tisseuse",
+      "nameFr": "Mécanique, Araignée tisseuse",
+      "source": "Livre des monstres",
+      "cr": 1,
+      "type": "Créature artificielle",
+      "size": "TP"
+    },
+    {
+      "slug": "mecanique-chasseur",
+      "nameFr": "Mécanique, Chasseur",
+      "source": "Livre des monstres",
+      "cr": 3,
+      "type": "Créature artificielle",
+      "size": "M"
+    },
+    {
+      "slug": "mecanique-chien",
+      "nameFr": "Mécanique, Chien",
+      "source": "Livre des monstres",
+      "cr": 2,
+      "type": "Créature artificielle",
+      "size": "M"
+    },
+    {
+      "slug": "mecanique-gendarme",
+      "nameFr": "Mécanique, Gendarme",
+      "source": "Livre des monstres",
+      "cr": 0.5,
+      "type": "Créature artificielle",
+      "size": "M"
+    },
+    {
+      "slug": "mecanique-myrmidon",
+      "nameFr": "Mécanique, Myrmidon",
+      "source": "Livre des monstres",
+      "cr": 6,
+      "type": "Créature artificielle",
+      "size": "G"
+    },
+    {
+      "slug": "mecanique-scarabee",
+      "nameFr": "Mécanique, Scarabée",
+      "source": "Livre des monstres",
+      "cr": 0.5,
+      "type": "Créature artificielle",
+      "size": "TP"
+    },
+    {
+      "slug": "meche-vivante",
+      "nameFr": "Mèche vivante",
+      "source": "Livre des monstres",
+      "cr": 0.25,
+      "type": "Créature artificielle",
+      "size": "P"
+    },
+    {
+      "slug": "mechuiti",
+      "nameFr": "Mechuiti",
+      "source": "Livre des monstres",
+      "cr": 27,
+      "type": "Fiélon",
+      "size": "Gig"
+    },
+    {
+      "slug": "medazur-a-defenses",
+      "nameFr": "Médazur à défenses",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Aberration",
+      "size": "G"
+    },
+    {
+      "slug": "melasse",
+      "nameFr": "Mélasse",
+      "source": "Livre des monstres",
+      "cr": 0.25,
+      "type": "Vase",
+      "size": "TP"
+    },
+    {
+      "slug": "mi-go",
+      "nameFr": "Mi-go",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Plante",
+      "size": "M"
+    },
+    {
+      "slug": "mimique-carte",
+      "nameFr": "Mimique carte",
+      "source": "Livre des monstres",
+      "cr": 0.25,
+      "type": "Créature monstrueuse",
+      "size": "TP"
+    },
+    {
+      "slug": "mimique-des-dunes",
+      "nameFr": "Mimique des dunes",
+      "source": "Livre des monstres",
+      "cr": 8,
+      "type": "Créature monstrueuse",
+      "size": "TG"
+    },
+    {
+      "slug": "mirageur",
+      "nameFr": "Mirageur",
+      "source": "Livre des monstres",
+      "cr": 3,
+      "type": "Fée",
+      "size": "M"
+    },
+    {
+      "slug": "mngwa",
+      "nameFr": "Mngwa",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Aberration",
+      "size": "M"
+    },
+    {
+      "slug": "molosse-nocturne",
+      "nameFr": "Molosse nocturne",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Créature monstrueuse",
+      "size": "G"
+    },
+    {
+      "slug": "momie-venimeuse",
+      "nameFr": "Momie venimeuse",
+      "source": "Livre des monstres",
+      "cr": 3,
+      "type": "Mort-vivant",
+      "size": "M"
+    },
+    {
+      "slug": "monolithique-champion",
+      "nameFr": "Monolithique, Champion",
+      "source": "Livre des monstres",
+      "cr": 8,
+      "type": "Créature artificielle",
+      "size": "G"
+    },
+    {
+      "slug": "montagne-de-cadavres",
+      "nameFr": "Montagne de cadavres",
+      "source": "Livre des monstres",
+      "cr": 11,
+      "type": "Mort-vivant",
+      "size": "TG"
+    },
+    {
+      "slug": "morphoi",
+      "nameFr": "Morphoï",
+      "source": "Livre des monstres",
+      "cr": 0.5,
+      "type": "Plante",
+      "size": "M"
+    },
+    {
+      "slug": "mort-follet",
+      "nameFr": "Mort follet",
+      "source": "Livre des monstres",
+      "cr": 7,
+      "type": "Mort-vivant",
+      "size": "M"
+    },
+    {
+      "slug": "mousse-luminescente-des-cavernes",
+      "nameFr": "Mousse luminescente des cavernes",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Plante",
+      "size": "G"
+    },
+    {
+      "slug": "myling",
+      "nameFr": "Myling",
+      "source": "Livre des monstres",
+      "cr": 2,
+      "type": "Mort-vivant",
+      "size": "P"
+    },
+    {
+      "slug": "nain-loup-ravageur",
+      "nameFr": "Nain, Loup ravageur",
+      "source": "Livre des monstres",
+      "cr": 3,
+      "type": "Humanoïde",
+      "size": "M"
+    },
+    {
+      "slug": "nain-mage-des-anneaux",
+      "nameFr": "Nain, Mage des anneaux",
+      "source": "Livre des monstres",
+      "cr": 7,
+      "type": "Humanoïde",
+      "size": "M"
+    },
+    {
+      "slug": "naina",
+      "nameFr": "Naïna",
+      "source": "Livre des monstres",
+      "cr": 11,
+      "type": "Dragon",
+      "size": "G"
+    },
+    {
+      "slug": "necrophage-masque",
+      "nameFr": "Nécrophage masqué",
+      "source": "Livre des monstres",
+      "cr": 13,
+      "type": "Mort-vivant",
+      "size": "M"
+    },
+    {
+      "slug": "ngobou",
+      "nameFr": "Ngobou",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Bête",
+      "size": "G"
+    },
+    {
+      "slug": "nichny",
+      "nameFr": "Nichny",
+      "source": "Livre des monstres",
+      "cr": 6,
+      "type": "Fée",
+      "size": "M"
+    },
+    {
+      "slug": "nihileth",
+      "nameFr": "Nihileth",
+      "source": "Livre des monstres",
+      "cr": 12,
+      "type": "Mort-vivant",
+      "size": "G"
+    },
+    {
+      "slug": "nkosi",
+      "nameFr": "Nkosi",
+      "source": "Livre des monstres",
+      "cr": 0.5,
+      "type": "Humanoïde",
+      "size": "M"
+    },
+    {
+      "slug": "nkosi-chef-de-meute",
+      "nameFr": "Nkosi, Chef de meute",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Humanoïde",
+      "size": "M"
+    },
+    {
+      "slug": "noctegarm",
+      "nameFr": "Noctegarm",
+      "source": "Livre des monstres",
+      "cr": 6,
+      "type": "Créature monstrueuse",
+      "size": "G"
+    },
+    {
+      "slug": "noctin",
+      "nameFr": "Noctin",
+      "source": "Livre des monstres",
+      "cr": 2,
+      "type": "Humanoïde",
+      "size": "M"
+    },
+    {
+      "slug": "nuee-d-esprits-lupins",
+      "nameFr": "Nuée d'esprits lupins",
+      "source": "Livre des monstres",
+      "cr": 6,
+      "type": "Mort-vivant",
+      "size": "G"
+    },
+    {
+      "slug": "nuee-d-yeux",
+      "nameFr": "Nuée d'yeux",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Aberration",
+      "size": "G"
+    },
+    {
+      "slug": "nuee-de-danseflammes",
+      "nameFr": "Nuée de danseflammes",
+      "source": "Livre des monstres",
+      "cr": 7,
+      "type": "Élémentaire",
+      "size": "M"
+    },
+    {
+      "slug": "nuee-de-papillons-de-mort",
+      "nameFr": "Nuée de papillons de mort",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Bête",
+      "size": "G"
+    },
+    {
+      "slug": "nuee-de-papillons-de-mort-grande",
+      "nameFr": "Nuée de papillons de mort, Grande",
+      "source": "Livre des monstres",
+      "cr": 6,
+      "type": "Bête",
+      "size": "TG"
+    },
+    {
+      "slug": "nuee-de-rodeurs-des-quais",
+      "nameFr": "Nuée de rôdeurs des quais",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Bête",
+      "size": "G"
+    },
+    {
+      "slug": "nuee-de-scarabees-manavores",
+      "nameFr": "Nuée de scarabées manavores",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Bête",
+      "size": "M"
+    },
+    {
+      "slug": "nuee-de-scarabees-mecaniques",
+      "nameFr": "Nuée de scarabées mécaniques",
+      "source": "Livre des monstres",
+      "cr": 3,
+      "type": "Créature artificielle",
+      "size": "G"
+    },
+    {
+      "slug": "nuee-de-scarabees-prismatiques",
+      "nameFr": "Nuée de scarabées prismatiques",
+      "source": "Livre des monstres",
+      "cr": 3,
+      "type": "Bête",
+      "size": "M"
+    },
+    {
+      "slug": "nuee-de-sluaghs",
+      "nameFr": "Nuée de sluaghs",
+      "source": "Livre des monstres",
+      "cr": 3,
+      "type": "Fée",
+      "size": "M"
+    },
+    {
+      "slug": "nuee-osseuse",
+      "nameFr": "Nuée osseuse",
+      "source": "Livre des monstres",
+      "cr": 10,
+      "type": "Mort-vivant",
+      "size": "G"
+    },
+    {
+      "slug": "oeil-d-emeraude",
+      "nameFr": "Œil d'émeraude",
+      "source": "Livre des monstres",
+      "cr": 1,
+      "type": "Créature artificielle",
+      "size": "TP"
+    },
+    {
+      "slug": "ogre-chef-corrompu",
+      "nameFr": "Ogre, Chef corrompu",
+      "source": "Livre des monstres",
+      "cr": 6,
+      "type": "Géant",
+      "size": "G"
+    },
+    {
+      "slug": "oiseau-de-feu",
+      "nameFr": "Oiseau de feu",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Céleste",
+      "size": "P"
+    },
+    {
+      "slug": "orobas",
+      "nameFr": "Orobas",
+      "source": "Livre des monstres",
+      "cr": 14,
+      "type": "Fiélon",
+      "size": "G"
+    },
+    {
+      "slug": "ostinato",
+      "nameFr": "Ostinato",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Aberration",
+      "size": "M"
+    },
+    {
+      "slug": "ovasis",
+      "nameFr": "Ovasis",
+      "source": "Livre des monstres",
+      "cr": 9,
+      "type": "Vase",
+      "size": "Gig"
+    },
+    {
+      "slug": "pavenuee",
+      "nameFr": "Pavenuée",
+      "source": "Livre des monstres",
+      "cr": 2,
+      "type": "Bête",
+      "size": "G"
+    },
+    {
+      "slug": "piege-caustique",
+      "nameFr": "Piège caustique",
+      "source": "Livre des monstres",
+      "cr": 15,
+      "type": "Aberration",
+      "size": "Gig"
+    },
+    {
+      "slug": "pombero",
+      "nameFr": "Pombero",
+      "source": "Livre des monstres",
+      "cr": 3,
+      "type": "Fée",
+      "size": "M"
+    },
+    {
+      "slug": "pourceau-des-failles",
+      "nameFr": "Pourceau des failles",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Aberration",
+      "size": "G"
+    },
+    {
+      "slug": "primate-blanc",
+      "nameFr": "Primate blanc",
+      "source": "Livre des monstres",
+      "cr": 6,
+      "type": "Créature monstrueuse",
+      "size": "G"
+    },
+    {
+      "slug": "profanateur-maudit",
+      "nameFr": "Profanateur maudit",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Mort-vivant",
+      "size": "M"
+    },
+    {
+      "slug": "profond",
+      "nameFr": "Profond",
+      "source": "Livre des monstres",
+      "cr": 2,
+      "type": "Humanoïde",
+      "size": "M"
+    },
+    {
+      "slug": "profond-archimandrite",
+      "nameFr": "Profond, Archimandrite",
+      "source": "Livre des monstres",
+      "cr": 8,
+      "type": "Humanoïde",
+      "size": "G"
+    },
+    {
+      "slug": "profond-pretre-hybride",
+      "nameFr": "Profond, Prêtre hybride",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Humanoïde",
+      "size": "M"
+    },
+    {
+      "slug": "psoglav",
+      "nameFr": "Psoglav",
+      "source": "Livre des monstres",
+      "cr": 7,
+      "type": "Fiélon",
+      "size": "G"
+    },
+    {
+      "slug": "qorgeth",
+      "nameFr": "Qorgeth",
+      "source": "Livre des monstres",
+      "cr": 23,
+      "type": "Fiélon",
+      "size": "Gig"
+    },
+    {
+      "slug": "qwyllion",
+      "nameFr": "Qwyllion",
+      "source": "Livre des monstres",
+      "cr": 8,
+      "type": "Aberration",
+      "size": "M"
+    },
+    {
+      "slug": "ramag",
+      "nameFr": "Ramag",
+      "source": "Livre des monstres",
+      "cr": 0.25,
+      "type": "Humanoïde",
+      "size": "M"
+    },
+    {
+      "slug": "ratatosk",
+      "nameFr": "Ratatosk",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Céleste",
+      "size": "TP"
+    },
+    {
+      "slug": "ravageur-trollien",
+      "nameFr": "Ravageur trollien",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Humanoïde",
+      "size": "M"
+    },
+    {
+      "slug": "ravenala",
+      "nameFr": "Ravenala",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Plante",
+      "size": "G"
+    },
+    {
+      "slug": "reine-de-la-nuit-et-de-la-magie",
+      "nameFr": "Reine de la Nuit et de la Magie",
+      "source": "Livre des monstres",
+      "cr": 21,
+      "type": "Fée",
+      "size": "M"
+    },
+    {
+      "slug": "reine-des-neiges",
+      "nameFr": "Reine des neiges",
+      "source": "Livre des monstres",
+      "cr": 16,
+      "type": "Fée",
+      "size": "M"
+    },
+    {
+      "slug": "reine-des-sorcieres",
+      "nameFr": "Reine des sorcières",
+      "source": "Livre des monstres",
+      "cr": 17,
+      "type": "Fée",
+      "size": "G"
+    },
+    {
+      "slug": "rejeton-d-akyishigal",
+      "nameFr": "Rejeton d'Akyishigal",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Fiélon",
+      "size": "M"
+    },
+    {
+      "slug": "rejeton-d-arbeyach",
+      "nameFr": "Rejeton d'Arbeyach",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Fiélon",
+      "size": "M"
+    },
+    {
+      "slug": "rodeur-des-quais",
+      "nameFr": "Rôdeur des quais",
+      "source": "Livre des monstres",
+      "cr": 0.125,
+      "type": "Bête",
+      "size": "TP"
+    },
+    {
+      "slug": "rodeur-moussu",
+      "nameFr": "Rôdeur moussu",
+      "source": "Livre des monstres",
+      "cr": 1,
+      "type": "Humanoïde",
+      "size": "P"
+    },
+    {
+      "slug": "roi-baigne-de-lune",
+      "nameFr": "Roi Baigné de Lune",
+      "source": "Livre des monstres",
+      "cr": 17,
+      "type": "Fée",
+      "size": "M"
+    },
+    {
+      "slug": "roi-des-ours",
+      "nameFr": "Roi des Ours",
+      "source": "Livre des monstres",
+      "cr": 12,
+      "type": "Fée",
+      "size": "M"
+    },
+    {
+      "slug": "roi-des-rats",
+      "nameFr": "Roi des rats",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Créature monstrueuse",
+      "size": "M"
+    },
+    {
+      "slug": "roi-des-rivieres",
+      "nameFr": "Roi des Rivières",
+      "source": "Livre des monstres",
+      "cr": 16,
+      "type": "Fée",
+      "size": "M"
+    },
+    {
+      "slug": "roussalka",
+      "nameFr": "Roussalka",
+      "source": "Livre des monstres",
+      "cr": 6,
+      "type": "Mort-vivant",
+      "size": "M"
+    },
+    {
+      "slug": "rubezahl",
+      "nameFr": "Rübezahl",
+      "source": "Livre des monstres",
+      "cr": 10,
+      "type": "Fiélon",
+      "size": "M"
+    },
+    {
+      "slug": "saccageur-releve",
+      "nameFr": "Saccageur relevé",
+      "source": "Livre des monstres",
+      "cr": 7,
+      "type": "Mort-vivant",
+      "size": "G"
+    },
+    {
+      "slug": "sarcoptere",
+      "nameFr": "Sarcoptère",
+      "source": "Livre des monstres",
+      "cr": 12,
+      "type": "Mort-vivant",
+      "size": "G"
+    },
+    {
+      "slug": "scheznyki",
+      "nameFr": "Scheznyki",
+      "source": "Livre des monstres",
+      "cr": 6,
+      "type": "Fée",
+      "size": "P"
+    },
+    {
+      "slug": "scorpion-nocturne",
+      "nameFr": "Scorpion nocturne",
+      "source": "Livre des monstres",
+      "cr": 3,
+      "type": "Bête",
+      "size": "G"
+    },
+    {
+      "slug": "scorpion-stygien-a-large-queue",
+      "nameFr": "Scorpion stygien à large queue",
+      "source": "Livre des monstres",
+      "cr": 3,
+      "type": "Bête",
+      "size": "TP"
+    },
+    {
+      "slug": "seigneur-des-bandits",
+      "nameFr": "Seigneur des bandits",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Humanoïde",
+      "size": "M"
+    },
+    {
+      "slug": "seigneur-des-lianes",
+      "nameFr": "Seigneur des lianes",
+      "source": "Livre des monstres",
+      "cr": 7,
+      "type": "Plante",
+      "size": "M"
+    },
+    {
+      "slug": "selang",
+      "nameFr": "Sélang",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Fée",
+      "size": "M"
+    },
+    {
+      "slug": "shabti",
+      "nameFr": "Shabti",
+      "source": "Livre des monstres",
+      "cr": 8,
+      "type": "Créature artificielle",
+      "size": "M"
+    },
+    {
+      "slug": "shadhavar",
+      "nameFr": "Shadhavar",
+      "source": "Livre des monstres",
+      "cr": 2,
+      "type": "Créature monstrueuse",
+      "size": "G"
+    },
+    {
+      "slug": "shoggoth",
+      "nameFr": "Shoggoth",
+      "source": "Livre des monstres",
+      "cr": 19,
+      "type": "Aberration",
+      "size": "TG"
+    },
+    {
+      "slug": "silhouette-de-sable",
+      "nameFr": "Silhouette de sable",
+      "source": "Livre des monstres",
+      "cr": 6,
+      "type": "Mort-vivant",
+      "size": "M"
+    },
+    {
+      "slug": "sorcelueur",
+      "nameFr": "Sorcelueur",
+      "source": "Livre des monstres",
+      "cr": 0.25,
+      "type": "Créature artificielle",
+      "size": "TP"
+    },
+    {
+      "slug": "sorciere-de-l-echeveau",
+      "nameFr": "Sorcière de l'écheveau",
+      "source": "Livre des monstres",
+      "cr": 12,
+      "type": "Céleste",
+      "size": "M"
+    },
+    {
+      "slug": "sphinx-gypsosphinx",
+      "nameFr": "Sphinx, Gypsosphinx",
+      "source": "Livre des monstres",
+      "cr": 14,
+      "type": "Créature monstrueuse",
+      "size": "G"
+    },
+    {
+      "slug": "spinosaure",
+      "nameFr": "Spinosaure",
+      "source": "Livre des monstres",
+      "cr": 13,
+      "type": "Bête",
+      "size": "Gig"
+    },
+    {
+      "slug": "spinosaure-jeune",
+      "nameFr": "Spinosaure, jeune",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Bête",
+      "size": "TG"
+    },
+    {
+      "slug": "squelette-de-troll-des-lianes",
+      "nameFr": "Squelette de troll des lianes",
+      "source": "Livre des monstres",
+      "cr": 9,
+      "type": "Plante",
+      "size": "G"
+    },
+    {
+      "slug": "squelette-en-machoires-de-requin",
+      "nameFr": "Squelette en mâchoires de requin",
+      "source": "Livre des monstres",
+      "cr": 1,
+      "type": "Mort-vivant",
+      "size": "G"
+    },
+    {
+      "slug": "stuhac",
+      "nameFr": "Stuhac",
+      "source": "Livre des monstres",
+      "cr": 13,
+      "type": "Fiélon",
+      "size": "M"
+    },
+    {
+      "slug": "suffragan-coeur-de-vers",
+      "nameFr": "Suffragan cœur-de-vers",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Mort-vivant",
+      "size": "M"
+    },
+    {
+      "slug": "sutureuse",
+      "nameFr": "Sutureuse",
+      "source": "Livre des monstres",
+      "cr": 0.25,
+      "type": "Bête",
+      "size": "TP"
+    },
+    {
+      "slug": "sylvanien-pleureur",
+      "nameFr": "Sylvanien pleureur",
+      "source": "Livre des monstres",
+      "cr": 6,
+      "type": "Plante",
+      "size": "TG"
+    },
+    {
+      "slug": "templier-mecaforge",
+      "nameFr": "Templier mécaforgé",
+      "source": "Livre des monstres",
+      "cr": 6,
+      "type": "Humanoïde",
+      "size": "M"
+    },
+    {
+      "slug": "thuellai",
+      "nameFr": "Thuellai",
+      "source": "Livre des monstres",
+      "cr": 10,
+      "type": "Élémentaire",
+      "size": "TG"
+    },
+    {
+      "slug": "titan-antique",
+      "nameFr": "Titan antique",
+      "source": "Livre des monstres",
+      "cr": 12,
+      "type": "Céleste",
+      "size": "Gig"
+    },
+    {
+      "slug": "titan-degenere",
+      "nameFr": "Titan dégénéré",
+      "source": "Livre des monstres",
+      "cr": 8,
+      "type": "Géant",
+      "size": "TG"
+    },
+    {
+      "slug": "titanoboa",
+      "nameFr": "Titanoboa",
+      "source": "Livre des monstres",
+      "cr": 12,
+      "type": "Bête",
+      "size": "Gig"
+    },
+    {
+      "slug": "tophet",
+      "nameFr": "Tophet",
+      "source": "Livre des monstres",
+      "cr": 8,
+      "type": "Créature artificielle",
+      "size": "TG"
+    },
+    {
+      "slug": "tosculi-archer-pillard-d-elite",
+      "nameFr": "Tosculi, Archer pillard d'élite",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Créature monstrueuse",
+      "size": "M"
+    },
+    {
+      "slug": "tosculi-combattant",
+      "nameFr": "Tosculi, Combattant",
+      "source": "Livre des monstres",
+      "cr": 2,
+      "type": "Créature monstrueuse",
+      "size": "P"
+    },
+    {
+      "slug": "tosculi-faux-bourdon",
+      "nameFr": "Tosculi, Faux-bourdon",
+      "source": "Livre des monstres",
+      "cr": 0.5,
+      "type": "Créature monstrueuse",
+      "size": "P"
+    },
+    {
+      "slug": "totivillus",
+      "nameFr": "Totivillus",
+      "source": "Livre des monstres",
+      "cr": 24,
+      "type": "Fiélon",
+      "size": "M"
+    },
+    {
+      "slug": "troll-lacustre",
+      "nameFr": "Troll lacustre",
+      "source": "Livre des monstres",
+      "cr": 7,
+      "type": "Géant",
+      "size": "G"
+    },
+    {
+      "slug": "ukavac",
+      "nameFr": "Ukavac",
+      "source": "Livre des monstres",
+      "cr": 9,
+      "type": "Créature monstrueuse",
+      "size": "G"
+    },
+    {
+      "slug": "uraeus",
+      "nameFr": "Uraeus",
+      "source": "Livre des monstres",
+      "cr": 2,
+      "type": "Céleste",
+      "size": "TP"
+    },
+    {
+      "slug": "urochar-guetteur-etrangleur",
+      "nameFr": "Urochar (Guetteur étrangleur)",
+      "source": "Livre des monstres",
+      "cr": 17,
+      "type": "Aberration",
+      "size": "TG"
+    },
+    {
+      "slug": "ushabti",
+      "nameFr": "Ushabti",
+      "source": "Livre des monstres",
+      "cr": 9,
+      "type": "Créature artificielle",
+      "size": "G"
+    },
+    {
+      "slug": "ushabti-imy-ut",
+      "nameFr": "Ushabti, Imy-ut",
+      "source": "Livre des monstres",
+      "cr": 3,
+      "type": "Créature monstrueuse",
+      "size": "M"
+    },
+    {
+      "slug": "vaettir",
+      "nameFr": "Vættir",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Mort-vivant",
+      "size": "M"
+    },
+    {
+      "slug": "vagabond-eonique",
+      "nameFr": "Vagabond éonique",
+      "source": "Livre des monstres",
+      "cr": 1,
+      "type": "Humanoïde",
+      "size": "M"
+    },
+    {
+      "slug": "valkyrie",
+      "nameFr": "Valkyrie",
+      "source": "Livre des monstres",
+      "cr": 11,
+      "type": "Céleste",
+      "size": "M"
+    },
+    {
+      "slug": "vampire-umbral",
+      "nameFr": "Vampire umbral",
+      "source": "Livre des monstres",
+      "cr": 7,
+      "type": "Fiélon",
+      "size": "M"
+    },
+    {
+      "slug": "vase-corruptrice",
+      "nameFr": "Vase corruptrice",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Vase",
+      "size": "G"
+    },
+    {
+      "slug": "vent-putrefacteur",
+      "nameFr": "Vent putrefacteur",
+      "source": "Livre des monstres",
+      "cr": 6,
+      "type": "Mort-vivant",
+      "size": "G"
+    },
+    {
+      "slug": "ver-givre-larve",
+      "nameFr": "Ver givré, larve",
+      "source": "Livre des monstres",
+      "cr": 1,
+      "type": "Élémentaire",
+      "size": "M"
+    },
+    {
+      "slug": "ver-pecheur",
+      "nameFr": "Ver pêcheur",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Créature monstrueuse",
+      "size": "TG"
+    },
+    {
+      "slug": "ver-sathaq",
+      "nameFr": "Ver sathaq",
+      "source": "Livre des monstres",
+      "cr": 10,
+      "type": "Élémentaire",
+      "size": "TG"
+    },
+    {
+      "slug": "vesiculose",
+      "nameFr": "Vésiculose",
+      "source": "Livre des monstres",
+      "cr": 11,
+      "type": "Plante",
+      "size": "Gig"
+    },
+    {
+      "slug": "vidien",
+      "nameFr": "Vidien",
+      "source": "Livre des monstres",
+      "cr": 11,
+      "type": "Aberration",
+      "size": "G"
+    },
+    {
+      "slug": "vil-barbier-siabhre",
+      "nameFr": "Vil barbier (Siabhre)",
+      "source": "Livre des monstres",
+      "cr": 2,
+      "type": "Fée",
+      "size": "P"
+    },
+    {
+      "slug": "vila",
+      "nameFr": "Vila",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Fée",
+      "size": "M"
+    },
+    {
+      "slug": "vipere-de-zanskaran",
+      "nameFr": "Vipère de Zanskaran",
+      "source": "Livre des monstres",
+      "cr": 1,
+      "type": "Bête",
+      "size": "G"
+    },
+    {
+      "slug": "vipere-du-marais",
+      "nameFr": "Vipère du marais",
+      "source": "Livre des monstres",
+      "cr": 0.25,
+      "type": "Bête",
+      "size": "P"
+    },
+    {
+      "slug": "voile-de-givre",
+      "nameFr": "Voile-de-givre",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Plante",
+      "size": "M"
+    },
+    {
+      "slug": "wampus-feline",
+      "nameFr": "Wampus féline",
+      "source": "Livre des monstres",
+      "cr": 1,
+      "type": "Créature monstrueuse",
+      "size": "M"
+    },
+    {
+      "slug": "wyrm-des-sables",
+      "nameFr": "Wyrm des sables",
+      "source": "Livre des monstres",
+      "cr": 6,
+      "type": "Dragon",
+      "size": "G"
+    },
+    {
+      "slug": "xanka",
+      "nameFr": "Xanka",
+      "source": "Livre des monstres",
+      "cr": 0.25,
+      "type": "Créature artificielle",
+      "size": "P"
+    },
+    {
+      "slug": "xhkarsh",
+      "nameFr": "Xhkarsh",
+      "source": "Livre des monstres",
+      "cr": 8,
+      "type": "Aberration",
+      "size": "G"
+    },
+    {
+      "slug": "ychen-bannog",
+      "nameFr": "Ychen bannog",
+      "source": "Livre des monstres",
+      "cr": 11,
+      "type": "Bête",
+      "size": "Gig"
+    },
+    {
+      "slug": "zimwi",
+      "nameFr": "Zimwi",
+      "source": "Livre des monstres",
+      "cr": 4,
+      "type": "Géant",
+      "size": "M"
+    },
+    {
+      "slug": "zmey",
+      "nameFr": "Zmey",
+      "source": "Livre des monstres",
+      "cr": 14,
+      "type": "Dragon",
+      "size": "TG"
+    },
+    {
+      "slug": "zmey-bebecephale",
+      "nameFr": "Zmey, Bébécéphale",
+      "source": "Livre des monstres",
+      "cr": 5,
+      "type": "Dragon",
+      "size": "M"
+    }
+  ]
+}
