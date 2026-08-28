@@ -32,6 +32,7 @@ import {
 } from '../db/schema.ts';
 import { bus } from '../sync/bus.ts';
 import { isPartyGM, requireUser } from './helpers.ts';
+import { apiMsg } from './messages.ts';
 
 /** Ligne Druide du personnage : niveau de CLASSE + cercle (multiclassage SRD). */
 function druidLine(char: any): { level: number; circle: string | null } {
@@ -157,10 +158,10 @@ export async function wildShapeRoutes(app: FastifyInstance) {
       const userId = requireUser(req, reply);
       if (userId === null) return;
       const char = getCharacter(Number(req.params.id));
-      if (!char) return reply.code(404).send({ error: 'Personnage introuvable' });
+      if (!char) return reply.code(404).send({ error: apiMsg(req, 'Personnage introuvable') });
       const gm = isPartyGM(char.party_id, userId);
       if (char.owner_id !== userId && !gm) {
-        return reply.code(403).send({ error: 'Réservé au propriétaire ou au MD' });
+        return reply.code(403).send({ error: apiMsg(req, 'Réservé au propriétaire ou au MD') });
       }
 
       const { level, circle } = druidLine(char);
@@ -246,13 +247,13 @@ export async function wildShapeRoutes(app: FastifyInstance) {
       const userId = requireUser(req, reply);
       if (userId === null) return;
       const char = getCharacter(Number(req.params.id));
-      if (!char) return reply.code(404).send({ error: 'Personnage introuvable' });
+      if (!char) return reply.code(404).send({ error: apiMsg(req, 'Personnage introuvable') });
       const gm = isPartyGM(char.party_id, userId);
       if (char.owner_id !== userId && !gm) {
-        return reply.code(403).send({ error: 'Réservé au propriétaire ou au MD' });
+        return reply.code(403).send({ error: apiMsg(req, 'Réservé au propriétaire ou au MD') });
       }
       if (char.wild_shape_slug) {
-        return reply.code(400).send({ error: 'Déjà sous forme animale' });
+        return reply.code(400).send({ error: apiMsg(req, 'Déjà sous forme animale') });
       }
       // Archidruide (niveau 20) : forme sauvage illimitée
       if ((char.wild_shape_uses ?? 2) <= 0 && druidLine(char).level < 20) {
@@ -266,7 +267,8 @@ export async function wildShapeRoutes(app: FastifyInstance) {
         .where(eq(monsters.slug, req.body?.slug ?? ''))
         .get() as any;
       // monsters are French-only in the catalog
-      if (!beast) return reply.code(404).send({ error: 'Forme introuvable dans le bestiaire' });
+      if (!beast)
+        return reply.code(404).send({ error: apiMsg(req, 'Forme introuvable dans le bestiaire') });
 
       // SRD: the druid must have seen the beast before
       let seenList: string[] = [];
@@ -294,7 +296,7 @@ export async function wildShapeRoutes(app: FastifyInstance) {
           (!speed.fly || wildShapeCanFly(level)) &&
           (!speed.swim || wildShapeCanSwim(level)));
       if (!eligible) {
-        return reply.code(400).send({ error: 'Forme non autorisée à ce niveau' });
+        return reply.code(400).send({ error: apiMsg(req, 'Forme non autorisée à ce niveau') });
       }
 
       // Roll the beast's HP from its hit dice
@@ -365,13 +367,13 @@ export async function wildShapeRoutes(app: FastifyInstance) {
       const userId = requireUser(req, reply);
       if (userId === null) return;
       const char = getCharacter(Number(req.params.id));
-      if (!char) return reply.code(404).send({ error: 'Personnage introuvable' });
+      if (!char) return reply.code(404).send({ error: apiMsg(req, 'Personnage introuvable') });
       const gm = isPartyGM(char.party_id, userId);
       if (char.owner_id !== userId && !gm) {
-        return reply.code(403).send({ error: 'Réservé au propriétaire ou au MD' });
+        return reply.code(403).send({ error: apiMsg(req, 'Réservé au propriétaire ou au MD') });
       }
       if (!char.wild_shape_slug) {
-        return reply.code(400).send({ error: 'Pas sous forme animale' });
+        return reply.code(400).send({ error: apiMsg(req, 'Pas sous forme animale') });
       }
 
       // SRD: return to the pre-shape HP; excess damage when dropped to 0 carries over

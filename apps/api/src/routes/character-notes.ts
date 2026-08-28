@@ -17,6 +17,7 @@ import { cols } from '../db/projections.ts';
 import { characterNotes, characters } from '../db/schema.ts';
 import { bus } from '../sync/bus.ts';
 import { characterVisibleTo, isPartyGM, isPartyMember, requireUser } from './helpers.ts';
+import { apiMsg } from './messages.ts';
 
 function mapNote(row: any): CharacterNote {
   return {
@@ -66,12 +67,12 @@ export async function characterNoteRoutes(app: FastifyInstance) {
     const charId = Number((req.params as any).id);
     const drizzle = getDrizzle();
     const char = getCharacter(drizzle, charId);
-    if (!char) return reply.code(404).send({ error: 'Character not found' });
+    if (!char) return reply.code(404).send({ error: apiMsg(req, 'Character not found') });
     if (!isPartyMember(char.party_id, userId))
-      return reply.code(403).send({ error: 'Not a party member' });
+      return reply.code(403).send({ error: apiMsg(req, 'Not a party member') });
     // Hidden character: 404 for everyone but its owner and the GM
     if (!characterVisibleTo(char, userId))
-      return reply.code(404).send({ error: 'Character not found' });
+      return reply.code(404).send({ error: apiMsg(req, 'Character not found') });
 
     const rows = drizzle
       .select(cols(characterNotes))
@@ -88,15 +89,15 @@ export async function characterNoteRoutes(app: FastifyInstance) {
     const charId = Number((req.params as any).id);
     const drizzle = getDrizzle();
     const char = getCharacter(drizzle, charId);
-    if (!char) return reply.code(404).send({ error: 'Character not found' });
+    if (!char) return reply.code(404).send({ error: apiMsg(req, 'Character not found') });
     if (!isPartyMember(char.party_id, userId))
-      return reply.code(403).send({ error: 'Not a party member' });
+      return reply.code(403).send({ error: apiMsg(req, 'Not a party member') });
     if (!isOwnerOrGM(char, userId))
-      return reply.code(403).send({ error: 'Only the owner or GM can modify' });
+      return reply.code(403).send({ error: apiMsg(req, 'Only the owner or GM can modify') });
 
     const body = req.body as CreateCharacterNotePayload;
     const title = body?.title?.trim();
-    if (!title) return reply.code(400).send({ error: 'Title is required' });
+    if (!title) return reply.code(400).send({ error: apiMsg(req, 'Title is required') });
 
     const nextSort = (
       drizzle
@@ -134,19 +135,19 @@ export async function characterNoteRoutes(app: FastifyInstance) {
     if (!userId) return;
     const noteId = Number((req.params as any).noteId);
     const pair = getNoteWithCharacter(noteId);
-    if (!pair) return reply.code(404).send({ error: 'Note not found' });
+    if (!pair) return reply.code(404).send({ error: apiMsg(req, 'Note not found') });
     const { note, char } = pair;
     if (!isPartyMember(char.party_id, userId))
-      return reply.code(403).send({ error: 'Not a party member' });
+      return reply.code(403).send({ error: apiMsg(req, 'Not a party member') });
     if (!isOwnerOrGM(char, userId))
-      return reply.code(403).send({ error: 'Only the owner or GM can modify' });
+      return reply.code(403).send({ error: apiMsg(req, 'Only the owner or GM can modify') });
 
     const body = req.body as PatchCharacterNotePayload;
     const values: Record<string, unknown> = {};
     if (body.title !== undefined) values.title = body.title.trim();
     if (body.content !== undefined) values.content = body.content;
     if (Object.keys(values).length === 0) {
-      return reply.code(400).send({ error: 'No fields to update' });
+      return reply.code(400).send({ error: apiMsg(req, 'No fields to update') });
     }
     values.updatedAt = sql`datetime('now')`;
 
@@ -179,11 +180,11 @@ export async function characterNoteRoutes(app: FastifyInstance) {
     const charId = Number((req.params as any).id);
     const drizzle = getDrizzle();
     const char = getCharacter(drizzle, charId);
-    if (!char) return reply.code(404).send({ error: 'Character not found' });
+    if (!char) return reply.code(404).send({ error: apiMsg(req, 'Character not found') });
     if (!isPartyMember(char.party_id, userId))
-      return reply.code(403).send({ error: 'Not a party member' });
+      return reply.code(403).send({ error: apiMsg(req, 'Not a party member') });
     if (!isOwnerOrGM(char, userId))
-      return reply.code(403).send({ error: 'Only the owner or GM can modify' });
+      return reply.code(403).send({ error: apiMsg(req, 'Only the owner or GM can modify') });
 
     const body = req.body as ReorderPayload;
     const order = [
@@ -191,7 +192,8 @@ export async function characterNoteRoutes(app: FastifyInstance) {
         (Array.isArray(body?.order) ? body.order : []).map(Number).filter(Number.isInteger),
       ),
     ];
-    if (order.length === 0) return reply.code(400).send({ error: 'Order is required' });
+    if (order.length === 0)
+      return reply.code(400).send({ error: apiMsg(req, 'Order is required') });
 
     // Every id must belong to this character — a foreign id would silently
     // rewrite another sheet's ordering
@@ -205,7 +207,7 @@ export async function characterNoteRoutes(app: FastifyInstance) {
       ).map((r) => r.id),
     );
     if (order.some((id) => !owned.has(id))) {
-      return reply.code(400).send({ error: 'Note does not belong to this character' });
+      return reply.code(400).send({ error: apiMsg(req, 'Note does not belong to this character') });
     }
 
     getDb().transaction(() => {
@@ -233,12 +235,12 @@ export async function characterNoteRoutes(app: FastifyInstance) {
     if (!userId) return;
     const noteId = Number((req.params as any).noteId);
     const pair = getNoteWithCharacter(noteId);
-    if (!pair) return reply.code(404).send({ error: 'Note not found' });
+    if (!pair) return reply.code(404).send({ error: apiMsg(req, 'Note not found') });
     const { note, char } = pair;
     if (!isPartyMember(char.party_id, userId))
-      return reply.code(403).send({ error: 'Not a party member' });
+      return reply.code(403).send({ error: apiMsg(req, 'Not a party member') });
     if (!isOwnerOrGM(char, userId))
-      return reply.code(403).send({ error: 'Only the owner or GM can modify' });
+      return reply.code(403).send({ error: apiMsg(req, 'Only the owner or GM can modify') });
 
     getDrizzle().delete(characterNotes).where(eq(characterNotes.id, noteId)).run();
     bus.emitChange({

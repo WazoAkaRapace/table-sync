@@ -1,5 +1,6 @@
 import type { Character } from '@table-sync/shared';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { NumberField } from '../../components/ui';
 import { coinLabel } from '../../i18n/labels';
 import type { CoinsState } from './types';
@@ -28,6 +29,7 @@ interface CoinPurseProps {
 }
 
 export function CoinPurse({ coins, readOnly = false, onChange, onBlur }: CoinPurseProps) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const totalCp =
     coins.copper +
@@ -75,7 +77,9 @@ export function CoinPurse({ coins, readOnly = false, onChange, onBlur }: CoinPur
                     <div
                       className="input bg-parchment-100 text-ink-700 flex items-center justify-between"
                       role="img"
-                      aria-label={`Quantité de ${coinLabel(unit)}`}
+                      aria-label={t('bourse.quantite.de.coinlabel.unit', {
+                        coinLabel_unit: coinLabel(unit),
+                      })}
                     >
                       <span>{coins[key]}</span>
                       <span className="text-xs text-ink-400">{unit}</span>
@@ -89,7 +93,9 @@ export function CoinPurse({ coins, readOnly = false, onChange, onBlur }: CoinPur
                       zeroAsEmpty
                       onChange={(n) => onChange(key, n)}
                       onBlur={onBlur}
-                      aria-label={`Quantité de ${coinLabel(unit)}`}
+                      aria-label={t('bourse.quantite.de.coinlabel.unit', {
+                        coinLabel_unit: coinLabel(unit),
+                      })}
                     />
                   )}
                 </label>

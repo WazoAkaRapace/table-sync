@@ -588,7 +588,7 @@ function ActionEntry({
               key={s.id}
               onClick={() => onOpenSpell(s.id)}
               className="px-2 py-0.5 rounded-full text-xs bg-indigo-100 text-indigo-700 hover:bg-indigo-200 active:scale-95 transition-all"
-              title={`Voir le sort : ${s.name}`}
+              title={t('bestiaire.voir.le.sort.s.name', { s_name: s.name })}
             >
               ✨ {s.name}
             </button>

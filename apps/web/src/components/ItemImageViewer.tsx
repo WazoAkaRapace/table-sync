@@ -81,7 +81,7 @@ export function ItemVignette({
           type="button"
           onClick={() => setViewerOpen(true)}
           className="block w-full cursor-zoom-in rounded-lg border border-parchment-300 bg-parchment-50 p-1.5 shadow-sm transition-transform active:scale-[0.98]"
-          aria-label={`Agrandir l'illustration de ${name}`}
+          aria-label={t('image.agrandir.l.illustration.de.name', { name: name })}
         >
           <span className={`relative flex items-center justify-center ${loaded ? '' : 'h-40'}`}>
             {/* h-40 w-full avant le chargement : l'image garde une vraie boîte
@@ -637,7 +637,7 @@ export function ItemImageViewer({
       ref={rootRef}
       role="dialog"
       aria-modal="true"
-      aria-label={`Illustration — ${name}`}
+      aria-label={t('image.illustration.name', { name: name })}
       className={`viewer-enter fixed inset-0 z-50 flex h-dvh touch-none select-none flex-col bg-black/85 ${
         tool === 'draw'
           ? 'cursor-crosshair'
@@ -1009,7 +1009,7 @@ export function ItemImageViewer({
                 <button
                   type="button"
                   key={c.value}
-                  aria-label={`Couleur ${c.label}`}
+                  aria-label={t('image.couleur.c.label', { c_label: c.label })}
                   aria-pressed={color === c.value}
                   onClick={() => setColor(c.value)}
                   className="flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-white/10"

@@ -326,7 +326,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
       await api.patch(`/api/character-spells/${linkId}`, { prepared: !prepared });
       await fetchCharSpells();
     } catch {
-      onError('Erreur de mise à jour');
+      onError(t('sorts.erreur.de.mise.a.jour'));
     }
   };
 
@@ -340,7 +340,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
       await api.patch(`/api/characters/${charId}`, { spellSlotsUsed: used });
       await onSaved();
     } catch {
-      onError('Erreur de mise à jour');
+      onError(t('sorts.erreur.de.mise.a.jour'));
     }
   };
 
@@ -353,7 +353,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
       await api.patch(`/api/characters/${charId}`, { spellSlotsUsed: used });
       await onSaved();
     } catch {
-      onError('Erreur de mise à jour');
+      onError(t('sorts.erreur.de.mise.a.jour'));
     }
   };
 
@@ -366,7 +366,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
       await api.patch(`/api/characters/${charId}`, { pactSlotsUsed: used });
       await onSaved();
     } catch {
-      onError('Erreur de mise à jour');
+      onError(t('sorts.erreur.de.mise.a.jour'));
     }
   };
 
@@ -379,7 +379,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
       await api.patch(`/api/characters/${charId}`, { pactSlotsUsed: used });
       await onSaved();
     } catch {
-      onError('Erreur de mise à jour');
+      onError(t('sorts.erreur.de.mise.a.jour'));
     }
   };
 
@@ -391,7 +391,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
       });
       await onSaved();
     } catch {
-      onError('Erreur de mise à jour');
+      onError(t('sorts.erreur.de.mise.a.jour'));
     }
   };
 
@@ -636,7 +636,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                           ? 'bg-red-50 text-red-700 border border-red-300'
                           : 'bg-parchment-100 text-ink-600 hover:bg-parchment-200'
                     }`}
-                    title={`Sorts préparés de ${l.classKey} — les tours de magie sont toujours disponibles`}
+                    title={t('sorts.sorts.prepares.de.l.classkey.les', { l_classKey: l.classKey })}
                   >
                     {limits.length > 1 ? `${l.classKey} ` : ''}Préparés {count} / {l.limit}
                   </button>
@@ -715,7 +715,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                             <SwipeToReveal
                               reveal={canRemove}
                               onAction={() => removeSpell(cs.id)}
-                              actionLabel={`Oublier ${name}`}
+                              actionLabel={t('sorts.oublier.name', { name: name })}
                             >
                               <div className="bg-parchment-50 border border-parchment-200 rounded-lg flex items-center gap-1 pl-2 pr-1.5 py-1 min-h-[52px]">
                                 <span
@@ -795,7 +795,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                                   type="button"
                                   onClick={() => startCast(spell, cs.id)}
                                   className="w-11 h-11 shrink-0 rounded-xl bg-parchment-100 hover:bg-gold-100 border border-parchment-200 text-ink-500 hover:text-gold-600 flex items-center justify-center text-base transition-colors"
-                                  aria-label={`Lancer ${name}`}
+                                  aria-label={t('sorts.lancer.name', { name: name })}
                                   title={t('sorts.lancer.le.sort')}
                                 >
                                   🪄
@@ -949,6 +949,7 @@ function SlotRail({
   /** Pact pool rides the gold accent (or = magie). */
   tone?: 'default' | 'gold';
 }) {
+  const { t } = useTranslation();
   const [openLevel, setOpenLevel] = useState<number | null>(null);
   const levels = slots
     .map((max, i) => ({ level: i + 1, max, used: slotsUsed[i] ?? 0 }))
@@ -977,7 +978,12 @@ function SlotRail({
               type="button"
               onClick={() => setOpenLevel(openLevel === lvl ? null : lvl)}
               aria-pressed={openLevel === lvl}
-              aria-label={`Niveau ${lvl} : ${remaining} emplacement${remaining > 1 ? 's' : ''} disponible${remaining > 1 ? 's' : ''} sur ${max} — corriger`}
+              aria-label={t('sorts.niveau.lvl.remaining.emplacement.remaining.1', {
+                lvl: lvl,
+                remaining: remaining,
+                remaining___1____s: remaining > 1 ? 's' : '',
+                max: max,
+              })}
               className={`shrink-0 min-w-[56px] min-h-[48px] px-2.5 py-1.5 rounded-xl flex flex-col items-center justify-center gap-1.5 transition-colors ${
                 tone === 'gold' ? 'ring-1 ring-gold-300' : ''
               } ${
@@ -1010,7 +1016,9 @@ function SlotRail({
               onClick={() => onRestore(open.level)}
               disabled={open.used <= 0}
               className="w-9 h-9 rounded-lg bg-parchment-200 hover:bg-parchment-300 disabled:opacity-30 text-base font-medium flex items-center justify-center transition-colors"
-              aria-label={`Restaurer un emplacement de niveau ${open.level}`}
+              aria-label={t('sorts.restaurer.un.emplacement.de.niveau.open', {
+                open_level: open.level,
+              })}
             >
               −
             </button>
@@ -1019,7 +1027,9 @@ function SlotRail({
               onClick={() => onSpend(open.level)}
               disabled={open.max - open.used <= 0}
               className="w-9 h-9 rounded-lg bg-parchment-200 hover:bg-parchment-300 disabled:opacity-30 text-base font-medium flex items-center justify-center transition-colors"
-              aria-label={`Dépenser un emplacement de niveau ${open.level}`}
+              aria-label={t('sorts.depenser.un.emplacement.de.niveau.open', {
+                open_level: open.level,
+              })}
             >
               +
             </button>

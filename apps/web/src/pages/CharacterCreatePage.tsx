@@ -354,7 +354,10 @@ export default function CharacterCreatePage() {
               key={s.numeral}
               onClick={() => goTo(i)}
               aria-current={state === 'current' ? 'step' : undefined}
-              aria-label={`Étape ${s.numeral} — ${s.title}`}
+              aria-label={t('create.etape.s.numeral.s.title', {
+                s_numeral: s.numeral,
+                s_title: s.title,
+              })}
               title={s.title}
               className={`flex-1 py-2.5 font-display text-sm transition-colors ${
                 state === 'current'
@@ -428,8 +431,7 @@ export default function CharacterCreatePage() {
               <label htmlFor="create-hidden" className="text-sm font-medium text-ink-700">
                 {t('create.personnage.secret')}
                 <span className="mt-0.5 block text-xs font-normal text-ink-400">
-                  Prépare-le à l’abri des regards : invisible des autres joueurs et inactif (ni
-                  liste, ni combat). Toi et le MD le voyez toujours.
+                  {t('create.prepare.le.a.l.abri.des')}
                 </span>
               </label>
             </div>
@@ -611,7 +613,7 @@ export default function CharacterCreatePage() {
                   </div>
                 ))}
                 <p className="col-span-2 text-xs text-ink-400">
-                  Pose les valeurs annoncées à ta table (méthode du MD, jets déjà faits…).
+                  {t('create.pose.les.valeurs.annoncees.a.ta')}
                 </p>
               </div>
             ) : (
@@ -755,10 +757,7 @@ export default function CharacterCreatePage() {
 
             <div className="card space-y-3 p-4 sm:p-5">
               <h3 className="section-title text-base">Langues</h3>
-              <p className="text-xs text-ink-400">
-                Ajoute celles que t’offrent ton espèce et ton historique (le rappel figure sur leurs
-                descriptions).
-              </p>
+              <p className="text-xs text-ink-400">{t('create.ajoute.celles.que.t.offrent.ton')}</p>
               <div className="flex flex-wrap gap-1.5">
                 {[...DND_LANGUAGES, ...customLangs].map((lang) => {
                   const on = langs.includes(lang);

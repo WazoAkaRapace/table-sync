@@ -132,7 +132,9 @@ export function ItemImageField({
             <>
               <img
                 src={value.staged.previewUrl}
-                alt={`Aperçu de l'illustration de ${existingName ?? 'l’objet'}`}
+                alt={t('champ.apercu.de.l.illustration.de.existingname', {
+                  existingName_____l_objet: existingName ?? 'l’objet',
+                })}
                 className="mx-auto max-h-56 w-full object-contain"
               />
               <p className="mt-1.5 text-center font-mono text-xs text-ink-400">
@@ -143,7 +145,9 @@ export function ItemImageField({
           ) : (
             <img
               src={itemImageUrl(existingItemId as number, existingRev ?? undefined)}
-              alt={`Illustration actuelle de ${existingName ?? 'l’objet'}`}
+              alt={t('champ.illustration.actuelle.de.existingname.l.objet', {
+                existingName_____l_objet: existingName ?? 'l’objet',
+              })}
               className="mx-auto max-h-56 w-full object-contain"
             />
           )}

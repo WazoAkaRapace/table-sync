@@ -112,7 +112,7 @@ function CreatePartyForm({ onCreated }: { onCreated: () => void }) {
           value={mode}
           onChange={(e) => setMode(e.target.value as EncumbranceMode)}
         >
-          <option value="variant">Variante — 3 paliers de poids (recommandé)</option>
+          <option value="variant">{t('parties.variante.3.paliers.de.poids.recommande')}</option>
           <option value="standard">{t('parties.standard.un.seul.seuil.max')}</option>
           <option value="slots">{t('parties.emplacements.ignorant.le.poids')}</option>
         </select>
@@ -290,7 +290,7 @@ export default function PartiesPage() {
           <Link
             to={`/party/${current.id}`}
             className="-mx-3 block rounded-lg px-3 py-6 transition-colors hover:bg-parchment-100/70"
-            aria-label={`Ouvrir le groupe ${current.name}`}
+            aria-label={t('parties.ouvrir.le.groupe.current.name', { current_name: current.name })}
           >
             <div className="flex items-start gap-4">
               <span
@@ -326,7 +326,9 @@ export default function PartiesPage() {
                 type="button"
                 className="text-blood-600 hover:underline"
                 onClick={() => copyCode(current.id, current.inviteCode)}
-                aria-label={`Copier le code d'invitation ${current.inviteCode}`}
+                aria-label={t('parties.copier.le.code.d.invitation.current', {
+                  current_inviteCode: current.inviteCode,
+                })}
               >
                 {copiedId === current.id
                   ? 'Copié ✓'
@@ -348,7 +350,7 @@ export default function PartiesPage() {
             <Link
               to={`/party/${p.id}`}
               className="-mx-3 flex items-start gap-4 rounded-lg px-3 py-4 transition-colors hover:bg-parchment-100/70"
-              aria-label={`Ouvrir le groupe ${p.name}`}
+              aria-label={t('parties.ouvrir.le.groupe.p.name', { p_name: p.name })}
             >
               <span
                 aria-hidden="true"

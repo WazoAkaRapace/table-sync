@@ -11,6 +11,7 @@ import { cols } from '../db/projections.ts';
 import { monsters } from '../db/schema.ts';
 import { requireUser } from './helpers.ts';
 import { type AppLang, langFromReq, pickLocalized } from './lang.ts';
+import { apiMsg } from './messages.ts';
 
 interface MonsterQuery {
   search?: string;
@@ -184,7 +185,7 @@ export async function monsterRoutes(app: FastifyInstance) {
         .from(monsters)
         .where(eq(monsters.slug, req.params.slug))
         .get() as any;
-      if (!row) return reply.code(404).send({ error: 'Monstre introuvable' });
+      if (!row) return reply.code(404).send({ error: apiMsg(req, 'Monstre introuvable') });
 
       return reply.send({ monster: mapMonster(row, langFromReq(req)) });
     },

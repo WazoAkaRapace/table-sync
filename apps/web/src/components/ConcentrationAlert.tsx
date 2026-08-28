@@ -1,6 +1,7 @@
 import type { ConcentrationCheck } from '@table-sync/shared';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../api';
 
 /**
@@ -25,6 +26,7 @@ export default function ConcentrationAlert({
    */
   onBreak?: () => Promise<void> | void;
 }) {
+  const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
 
   const breakConcentration = async () => {
@@ -55,25 +57,27 @@ export default function ConcentrationAlert({
       >
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-display text-base font-semibold text-blood-800 flex items-center gap-2">
-            <span aria-hidden="true">🌀</span> Jet de concentration
+            <span aria-hidden="true">🌀</span>
+            {t('concentration.jet.de.concentration')}
           </h3>
           <button
             type="button"
             onClick={onDone}
             className="text-blood-400 hover:text-blood-700 text-lg leading-none px-1"
-            aria-label="Fermer"
+            aria-label={t('concentration.fermer')}
           >
             ✕
           </button>
         </div>
         <p className="text-sm text-blood-900">
-          <strong>{check.characterName}</strong> subit <strong>{check.damage} dégâts</strong> tout
-          en concentrant un sort.
+          <strong>{check.characterName}</strong> subit <strong>{check.damage} dégâts</strong>
+          {t('concentration.tout.en.concentrant.un.sort')}
         </p>
         <p className="text-sm text-blood-900">
-          Jet de sauvegarde de <strong>Constitution DD {check.dc}</strong>{' '}
-          <span className="text-blood-600 text-xs">(10 ou ½ dégâts, le plus élevé)</span> pour
-          maintenir la concentration.
+          {t('concentration.jet.de.sauvegarde.de')}
+          <strong>Constitution DD {check.dc}</strong>{' '}
+          <span className="text-blood-600 text-xs">(10 ou ½ dégâts, le plus élevé)</span>
+          {t('concentration.pour.maintenir.la.concentration')}
         </p>
         <div className="flex gap-2">
           <button
@@ -81,7 +85,7 @@ export default function ConcentrationAlert({
             onClick={onDone}
             className="flex-1 px-3 py-2 rounded-lg text-sm font-semibold bg-white text-green-700 border border-green-300 hover:bg-green-50 transition-colors"
           >
-            ✅ Réussi — je maintiens
+            {t('concentration.reussi.je.maintiens')}
           </button>
           <button
             type="button"
@@ -89,7 +93,7 @@ export default function ConcentrationAlert({
             disabled={busy}
             className="flex-1 px-3 py-2 rounded-lg text-sm font-semibold bg-blood-600 text-white border border-blood-700 hover:bg-blood-700 disabled:opacity-50 transition-colors"
           >
-            💔 Raté — rompre
+            {t('concentration.rate.rompre')}
           </button>
         </div>
       </div>

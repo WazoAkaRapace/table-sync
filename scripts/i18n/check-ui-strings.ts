@@ -30,6 +30,13 @@ const perFile: Record<string, number> = {};
 for (const file of walk(ROOT)) {
   let src = readFileSync(file, 'utf8');
   src = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
+  // Liste blanche : littéraux FR qui sont des CLÉS de logique/données (noms de
+  // classe comparés, conditions stockées, listes SRD) — pas de l'affichage.
+  src = src
+    .replace(/(?:===|!==|==|\.includes\(|\.indexOf\(|\.filter\()[^\n]*/g, (l) =>
+      l.replace(/'[^']*'/g, "''"),
+    )
+    .replace(/case '[^']*':/g, "case '':");
   const n = [...src.matchAll(ACC)].length;
   if (n > 0) perFile[file.replace(`${ROOT}/`, '')] = n;
 }

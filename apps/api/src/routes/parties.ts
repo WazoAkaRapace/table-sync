@@ -23,6 +23,7 @@ import {
   mapCharacterSummary,
   requireUser,
 } from './helpers.ts';
+import { apiMsg } from './messages.ts';
 
 export async function partyRoutes(app: FastifyInstance) {
   // ---------- List my parties ----------
@@ -105,7 +106,7 @@ export async function partyRoutes(app: FastifyInstance) {
       const userId = requireUser(req, reply);
       if (userId === null) return;
       const { name, encumbranceMode } = req.body || { name: '', encumbranceMode: 'variant' };
-      if (!name?.trim()) return reply.code(400).send({ error: 'name is required' });
+      if (!name?.trim()) return reply.code(400).send({ error: apiMsg(req, 'name is required') });
       const mode = (
         ['variant', 'standard', 'slots'].includes(encumbranceMode) ? encumbranceMode : 'variant'
       ) as EncumbranceMode;
@@ -147,7 +148,8 @@ export async function partyRoutes(app: FastifyInstance) {
       const userId = requireUser(req, reply);
       if (userId === null) return;
       const partyId = Number(req.params.id);
-      if (!isPartyMember(partyId, userId)) return reply.code(403).send({ error: 'not a member' });
+      if (!isPartyMember(partyId, userId))
+        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
 
       const drizzle = getDrizzle();
       const party = drizzle
@@ -155,7 +157,7 @@ export async function partyRoutes(app: FastifyInstance) {
         .from(parties)
         .where(eq(parties.id, partyId))
         .get() as any;
-      if (!party) return reply.code(404).send({ error: 'party not found' });
+      if (!party) return reply.code(404).send({ error: apiMsg(req, 'party not found') });
 
       const members = drizzle
         .select({
@@ -228,7 +230,8 @@ export async function partyRoutes(app: FastifyInstance) {
       const userId = requireUser(req, reply);
       if (userId === null) return;
       const partyId = Number(req.params.id);
-      if (!isPartyMember(partyId, userId)) return reply.code(403).send({ error: 'not a member' });
+      if (!isPartyMember(partyId, userId))
+        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
 
       const drizzle = getDrizzle();
       drizzle
@@ -248,7 +251,8 @@ export async function partyRoutes(app: FastifyInstance) {
       const userId = requireUser(req, reply);
       if (userId === null) return;
       const { inviteCode } = req.body || {};
-      if (!inviteCode) return reply.code(400).send({ error: 'inviteCode is required' });
+      if (!inviteCode)
+        return reply.code(400).send({ error: apiMsg(req, 'inviteCode is required') });
 
       const drizzle = getDrizzle();
       const party = drizzle
@@ -256,21 +260,22 @@ export async function partyRoutes(app: FastifyInstance) {
         .from(parties)
         .where(eq(parties.inviteCode, String(inviteCode).toUpperCase()))
         .get() as any;
-      if (!party) return reply.code(404).send({ error: 'invalid invite code' });
+      if (!party) return reply.code(404).send({ error: apiMsg(req, 'invalid invite code') });
 
       const banned = drizzle
         .select({ one: sql`1` })
         .from(partyBans)
         .where(and(eq(partyBans.partyId, party.id), eq(partyBans.userId, userId)))
         .get();
-      if (banned) return reply.code(403).send({ error: 'banned from this party' });
+      if (banned) return reply.code(403).send({ error: apiMsg(req, 'banned from this party') });
 
       const already = drizzle
         .select({ one: sql`1` })
         .from(partyMembers)
         .where(and(eq(partyMembers.partyId, party.id), eq(partyMembers.userId, userId)))
         .get();
-      if (already) return reply.code(409).send({ error: 'already a member', partyId: party.id });
+      if (already)
+        return reply.code(409).send({ error: apiMsg(req, 'already a member'), partyId: party.id });
 
       // Joining counts as an open — the fresh table leads the register.
       drizzle
@@ -296,7 +301,8 @@ export async function partyRoutes(app: FastifyInstance) {
       if (userId === null) return;
       const partyId = Number(req.params.id);
       const targetId = Number(req.params.userId);
-      if (!isPartyGM(partyId, userId)) return reply.code(403).send({ error: 'GM only' });
+      if (!isPartyGM(partyId, userId))
+        return reply.code(403).send({ error: apiMsg(req, 'GM only') });
 
       const drizzle = getDrizzle();
       const target = drizzle
@@ -304,8 +310,9 @@ export async function partyRoutes(app: FastifyInstance) {
         .from(partyMembers)
         .where(and(eq(partyMembers.partyId, partyId), eq(partyMembers.userId, targetId)))
         .get() as any;
-      if (!target) return reply.code(404).send({ error: 'member not found' });
-      if (target.role === 'gm') return reply.code(403).send({ error: 'cannot remove the GM' });
+      if (!target) return reply.code(404).send({ error: apiMsg(req, 'member not found') });
+      if (target.role === 'gm')
+        return reply.code(403).send({ error: apiMsg(req, 'cannot remove the GM') });
 
       drizzle
         .delete(partyMembers)
@@ -331,8 +338,9 @@ export async function partyRoutes(app: FastifyInstance) {
       if (userId === null) return;
       const partyId = Number(req.params.id);
       const targetId = Number(req.body?.userId);
-      if (!targetId) return reply.code(400).send({ error: 'userId is required' });
-      if (!isPartyGM(partyId, userId)) return reply.code(403).send({ error: 'GM only' });
+      if (!targetId) return reply.code(400).send({ error: apiMsg(req, 'userId is required') });
+      if (!isPartyGM(partyId, userId))
+        return reply.code(403).send({ error: apiMsg(req, 'GM only') });
 
       const drizzle = getDrizzle();
       const target = drizzle
@@ -340,8 +348,9 @@ export async function partyRoutes(app: FastifyInstance) {
         .from(partyMembers)
         .where(and(eq(partyMembers.partyId, partyId), eq(partyMembers.userId, targetId)))
         .get() as any;
-      if (!target) return reply.code(404).send({ error: 'member not found' });
-      if (target.role === 'gm') return reply.code(403).send({ error: 'cannot ban the GM' });
+      if (!target) return reply.code(404).send({ error: apiMsg(req, 'member not found') });
+      if (target.role === 'gm')
+        return reply.code(403).send({ error: apiMsg(req, 'cannot ban the GM') });
 
       getDb().transaction(() => {
         drizzle
@@ -376,14 +385,15 @@ export async function partyRoutes(app: FastifyInstance) {
       if (userId === null) return;
       const partyId = Number(req.params.id);
       const targetId = Number(req.params.userId);
-      if (!isPartyGM(partyId, userId)) return reply.code(403).send({ error: 'GM only' });
+      if (!isPartyGM(partyId, userId))
+        return reply.code(403).send({ error: apiMsg(req, 'GM only') });
 
       const drizzle = getDrizzle();
       const info = drizzle
         .delete(partyBans)
         .where(and(eq(partyBans.partyId, partyId), eq(partyBans.userId, targetId)))
         .run();
-      if (info.changes === 0) return reply.code(404).send({ error: 'not banned' });
+      if (info.changes === 0) return reply.code(404).send({ error: apiMsg(req, 'not banned') });
 
       bus.emitChange({
         type: 'party:change',
@@ -413,23 +423,27 @@ export async function partyRoutes(app: FastifyInstance) {
       const userId = requireUser(req, reply);
       if (userId === null) return;
       const partyId = Number(req.params.id);
-      if (!isPartyGM(partyId, userId)) return reply.code(403).send({ error: 'GM only' });
+      if (!isPartyGM(partyId, userId))
+        return reply.code(403).send({ error: apiMsg(req, 'GM only') });
 
       const { name, encumbranceMode, playersCreateItems } = req.body || {};
       const drizzle = getDrizzle();
       if (name !== undefined) {
-        if (!name.trim()) return reply.code(400).send({ error: 'name cannot be empty' });
+        if (!name.trim())
+          return reply.code(400).send({ error: apiMsg(req, 'name cannot be empty') });
         drizzle.update(parties).set({ name: name.trim() }).where(eq(parties.id, partyId)).run();
       }
       if (encumbranceMode !== undefined) {
         if (!['variant', 'standard', 'slots'].includes(encumbranceMode)) {
-          return reply.code(400).send({ error: 'invalid encumbranceMode' });
+          return reply.code(400).send({ error: apiMsg(req, 'invalid encumbranceMode') });
         }
         drizzle.update(parties).set({ encumbranceMode }).where(eq(parties.id, partyId)).run();
       }
       if (playersCreateItems !== undefined) {
         if (typeof playersCreateItems !== 'boolean') {
-          return reply.code(400).send({ error: 'playersCreateItems must be a boolean' });
+          return reply
+            .code(400)
+            .send({ error: apiMsg(req, 'playersCreateItems must be a boolean') });
         }
         drizzle
           .update(parties)
@@ -475,8 +489,9 @@ export async function partyRoutes(app: FastifyInstance) {
         .from(parties)
         .where(eq(parties.id, partyId))
         .get() as any;
-      if (!party) return reply.code(404).send({ error: 'party not found' });
-      if (!isPartyGM(partyId, userId)) return reply.code(403).send({ error: 'GM only' });
+      if (!party) return reply.code(404).send({ error: apiMsg(req, 'party not found') });
+      if (!isPartyGM(partyId, userId))
+        return reply.code(403).send({ error: apiMsg(req, 'GM only') });
 
       drizzle.delete(parties).where(eq(parties.id, partyId)).run();
 

@@ -85,7 +85,11 @@ export function TransferModal({
   };
 
   return (
-    <Modal open={open} onClose={onClose} title={`Transférer — ${itemName}`}>
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={t('transfert.transferer.itemname', { itemName: itemName })}
+    >
       {loadingParty ? (
         <LoadingSpinner label="Chargement du groupe…" />
       ) : others.length === 0 ? (

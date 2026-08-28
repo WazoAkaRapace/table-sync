@@ -137,7 +137,10 @@ export function InventoryRow({
                   className={`shrink-0 mt-0.5 text-lg leading-none transition-colors ${
                     entry.equipped ? 'text-gold-600' : 'text-ink-400/40 hover:text-ink-400'
                   }`}
-                  aria-label={`${entry.equipped ? 'Déséquiper' : 'Équiper'} ${itemName}`}
+                  aria-label={t('rangee.equip.desequip.itemname', {
+                    entry_equipped: entry.equipped ? t('rangee.desequiper') : t('rangee.equiper'),
+                    itemName: itemName,
+                  })}
                   aria-pressed={entry.equipped}
                   title={entry.equipped ? 'Équipé' : 'Non équipé'}
                 >
@@ -158,9 +161,12 @@ export function InventoryRow({
                 onClick={canExpand ? onToggleExpand : undefined}
                 className="min-w-0 flex-1 text-left"
                 aria-expanded={expanded}
-                aria-label={`${itemName}, ${quantity} exemplaire${quantity > 1 ? 's' : ''}${
-                  item.hasImage ? ', illustré' : ''
-                }`}
+                aria-label={t('rangee.itemname.quantity.exemplaire.quantity.1.s', {
+                  itemName: itemName,
+                  quantity: quantity,
+                  s: quantity > 1 ? t('commun.pluriel.s') : '',
+                  illus: item.hasImage ? `, ${t('rangee.illustre')}` : '',
+                })}
               >
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-medium truncate">{itemName}</span>
@@ -192,7 +198,7 @@ export function InventoryRow({
                     onClick={() => onStep(-1)}
                     disabled={busy}
                     className="w-8 h-8 rounded-lg bg-parchment-200 hover:bg-parchment-300 disabled:opacity-50 text-sm font-medium flex items-center justify-center transition-colors"
-                    aria-label={`Diminuer ${itemName}`}
+                    aria-label={t('rangee.diminuer.itemname', { itemName: itemName })}
                   >
                     −
                   </button>
@@ -207,14 +213,14 @@ export function InventoryRow({
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
                     }}
-                    aria-label={`Quantité de ${itemName}`}
+                    aria-label={t('rangee.quantite.de.itemname', { itemName: itemName })}
                   />
                   <button
                     type="button"
                     onClick={() => onStep(1)}
                     disabled={busy}
                     className="w-8 h-8 rounded-lg bg-parchment-200 hover:bg-parchment-300 disabled:opacity-50 text-sm font-medium flex items-center justify-center transition-colors"
-                    aria-label={`Augmenter ${itemName}`}
+                    aria-label={t('rangee.augmenter.itemname', { itemName: itemName })}
                   >
                     +
                   </button>
@@ -239,7 +245,7 @@ export function InventoryRow({
                     onClick={onTransfer}
                     disabled={busy}
                     className="text-ink-400 hover:text-blood-600 text-xs underline"
-                    aria-label={`Transférer ${itemName}`}
+                    aria-label={t('rangee.transferer.itemname', { itemName: itemName })}
                   >
                     ↗
                   </button>
@@ -252,7 +258,7 @@ export function InventoryRow({
                     onClick={() => onStep(-1)}
                     disabled={busy}
                     className="w-7 h-7 rounded-lg bg-parchment-200 hover:bg-parchment-300 disabled:opacity-50 text-sm font-medium flex items-center justify-center transition-colors"
-                    aria-label={`Diminuer ${itemName}`}
+                    aria-label={t('rangee.diminuer.itemname', { itemName: itemName })}
                   >
                     −
                   </button>
@@ -267,14 +273,14 @@ export function InventoryRow({
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
                     }}
-                    aria-label={`Quantité de ${itemName}`}
+                    aria-label={t('rangee.quantite.de.itemname', { itemName: itemName })}
                   />
                   <button
                     type="button"
                     onClick={() => onStep(1)}
                     disabled={busy}
                     className="w-7 h-7 rounded-lg bg-parchment-200 hover:bg-parchment-300 disabled:opacity-50 text-sm font-medium flex items-center justify-center transition-colors"
-                    aria-label={`Augmenter ${itemName}`}
+                    aria-label={t('rangee.augmenter.itemname', { itemName: itemName })}
                   >
                     +
                   </button>
@@ -298,7 +304,7 @@ export function InventoryRow({
                   onClick={onTransfer}
                   disabled={busy}
                   className="text-ink-400 hover:text-blood-600 underline"
-                  aria-label={`Transférer ${itemName}`}
+                  aria-label={t('rangee.transferer.itemname', { itemName: itemName })}
                 >
                   {t('rangee.transferer')}
                 </button>
@@ -398,7 +404,7 @@ export function InventoryRow({
                         item.category === 'armor' &&
                         (() => {
                           const magic = resolveMagicArmorBase(item);
-                          if (magic.shield) return <span>🛡 Bouclier (+2 à la CA)</span>;
+                          if (magic.shield) return <span>{t('rangee.bouclier.2.a.la.ca')}</span>;
                           if (!magic.base) return null;
                           return (
                             <span>
@@ -440,7 +446,9 @@ export function InventoryRow({
                             // Reset so the same target can be re-selected later
                             e.target.value = '';
                           }}
-                          aria-label={`Déplacer ${itemName} vers un autre emplacement`}
+                          aria-label={t('rangee.deplacer.itemname.vers.un.autre.emplacement', {
+                            itemName: itemName,
+                          })}
                         >
                           <option value="" disabled>
                             — Choisir —
@@ -461,7 +469,7 @@ export function InventoryRow({
                           onClick={() => onStep(-1)}
                           disabled={busy}
                           className="btn-ghost text-sm text-red-600 hover:bg-red-50"
-                          aria-label={`Retirer ${itemName}`}
+                          aria-label={t('rangee.retirer.itemname', { itemName: itemName })}
                         >
                           {t('rangee.retirer.du.sac')}
                         </button>

@@ -30,6 +30,7 @@ import {
   mapCharacter,
   requireUser,
 } from './helpers.ts';
+import { apiMsg } from './messages.ts';
 
 export async function restRoutes(app: FastifyInstance) {
   app.post(
@@ -49,13 +50,13 @@ export async function restRoutes(app: FastifyInstance) {
         .from(characters)
         .where(eq(characters.id, Number(req.params.id)))
         .get() as any;
-      if (!char) return reply.code(404).send({ error: 'character not found' });
+      if (!char) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
       const isGM = isPartyGM(char.party_id, userId);
       if (!isPartyMember(char.party_id, userId)) {
-        return reply.code(403).send({ error: 'not a member' });
+        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
       }
       if (char.owner_id !== userId && !isGM) {
-        return reply.code(403).send({ error: 'only the owner or GM can rest' });
+        return reply.code(403).send({ error: apiMsg(req, 'only the owner or GM can rest') });
       }
 
       const body = req.body || {};
@@ -63,13 +64,13 @@ export async function restRoutes(app: FastifyInstance) {
         return reply.code(400).send({ error: "type doit valoir 'short' ou 'long'" });
       }
       if (body.hitDiceSpent !== undefined && !Number.isInteger(body.hitDiceSpent)) {
-        return reply.code(400).send({ error: 'hitDiceSpent doit être un entier' });
+        return reply.code(400).send({ error: apiMsg(req, 'hitDiceSpent doit être un entier') });
       }
       if (
         body.healedHp !== undefined &&
         (typeof body.healedHp !== 'number' || !Number.isFinite(body.healedHp) || body.healedHp < 0)
       ) {
-        return reply.code(400).send({ error: 'healedHp doit être un nombre positif' });
+        return reply.code(400).send({ error: apiMsg(req, 'healedHp doit être un nombre positif') });
       }
 
       const featureRows = drizzle

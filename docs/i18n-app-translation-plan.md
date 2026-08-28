@@ -98,6 +98,24 @@ du lot en cours — les lots font descendre la jauge vers 0. C'est la garantie
 - Définition of done du chantier : bascule EN → aucun français visible dans les
   flux couverts (checker §4 à zéro hors liste blanche) + e2e FR 43/43 + e2e EN vert.
 
+## État après exécution (2026-08-28, branche `i18n/app-ui`)
+
+- **L0–L6 livrés** : catalogues fr/en à **~590 clés**, tous les flux principaux
+  (auth, feuille complète, sorts, inventaire, MD au complet), prose longue
+  (épuisement, indices d'états) en tableaux de catalogue.
+- **Sweep complémentaire** : extracteur v2/v3 (attributs interpolés, gabarits
+  `\${…}`, littéraux de réceptacles d'affichage), ternaires embarqués traduits
+  par `t()` imbriqués. Résidu ratchet : **531 caractères** (de 685), liste
+  blanche des clés de logique en place — le solde est un filet de chaînes
+  rejetées par les gardes de sécurité de l'extracteur (à vider par touches
+  manuelles, le ratchet verrouille tout retour en arrière).
+- **L7 livré avec une variante assumée** : plutôt que des codes stables traduits
+  côté client, **l'API localise ses messages par requête** (`apiMsg(req, …)` +
+  dictionnaire FR→EN dans `routes/messages.ts`, 306 sites convertis) — plus
+  cohérent avec le principe mono-locale des payloads. test-api 14/14 vert.
+- Gates : biome ✓ · tsc web ✓ · test-api 14/14 ✓ · e2e **46/46** (43 FR + 3
+  smoke EN) ✓.
+
 ## 6. Hors périmètre (suivis déjà tracés)
 
 - Clés stables en base pour conditions/langues (audit P0) — l'affichage par map

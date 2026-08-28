@@ -319,7 +319,7 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
         <Modal
           open={true}
           onClose={() => !deleteBusy && setDeleting(null)}
-          title={`Supprimer ${deleting.name} ?`}
+          title={t('pnj.supprimer.deleting.name', { deleting_name: deleting.name })}
         >
           <p className="text-sm text-ink-500 mb-4">
             {t('pnj.cette.action.est.irreversible.le.pnj')}
@@ -455,7 +455,7 @@ function NpcCard({
               type="button"
               onClick={onEdit}
               className="text-xs px-2 py-1 rounded-lg text-ink-600 hover:bg-parchment-100"
-              aria-label={`Modifier ${npc.name}`}
+              aria-label={t('pnj.modifier.npc.name', { npc_name: npc.name })}
             >
               {t('pnj.modifier')}
             </button>
@@ -463,7 +463,7 @@ function NpcCard({
               type="button"
               onClick={onDelete}
               className="text-xs px-2 py-1 rounded-lg text-red-600 hover:bg-red-50"
-              aria-label={`Supprimer ${npc.name}`}
+              aria-label={t('pnj.supprimer.npc.name', { npc_name: npc.name })}
             >
               🗑
             </button>
@@ -703,7 +703,7 @@ function NpcFormModal({ open, onClose, partyId, npc, onSaved, onError }: NpcForm
           <span className="text-sm font-medium text-ink-700">
             {t('pnj.partage.avec.le.groupe')}
           </span>
-          <span className="text-xs text-ink-400">(sinon, visible par le créateur et le MD)</span>
+          <span className="text-xs text-ink-400">{t('pnj.sinon.visible.par.le.createur.et')}</span>
         </label>
 
         <button type="submit" disabled={submitting} className="btn-primary w-full">

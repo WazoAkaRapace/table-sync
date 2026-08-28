@@ -247,7 +247,7 @@ export function SurvivalPanel({
       setShapeForms((prev) => prev.map((f) => (f.slug === slug ? { ...f, seen: !seen } : f)));
       await onSaved();
     } catch {
-      onError('Erreur de mise à jour');
+      onError(t('survie.erreur.de.mise.a.jour'));
     }
   };
 
@@ -346,7 +346,7 @@ export function SurvivalPanel({
       setSmiteOpen(false);
       await onSaved();
     } catch {
-      onError('Erreur lors du Châtiment divin');
+      onError(t('survie.erreur.lors.du.chatiment.divin'));
     } finally {
       setSmiteBusy(false);
     }
@@ -365,7 +365,7 @@ export function SurvivalPanel({
       );
       await onSaved();
     } catch {
-      onError('Erreur de mise à jour');
+      onError(t('survie.erreur.de.mise.a.jour'));
     }
   };
 
@@ -571,7 +571,9 @@ export function SurvivalPanel({
                   type="button"
                   onClick={() => removeCondition(cond)}
                   className="text-blood-500 hover:text-blood-700 font-semibold"
-                  aria-label={`Retirer l'état ${conditionLabel(cond)}`}
+                  aria-label={t('survie.retirer.l.etat.conditionlabel.cond', {
+                    conditionLabel_cond: conditionLabel(cond),
+                  })}
                 >
                   ×
                 </button>
@@ -611,7 +613,7 @@ export function SurvivalPanel({
                     active ? 'opacity-100' : 'opacity-30 hover:opacity-60'
                   }`}
                   aria-pressed={level === exhaustion}
-                  aria-label={`Niveau d'épuisement ${level}`}
+                  aria-label={t('survie.niveau.d.epuisement.level', { level: level })}
                   title={`Niveau ${level}${level > 0 ? ` — ${EXHAUSTION_EFFECTS_FR[level]}` : ' — Aucun effet'}`}
                 >
                   {active ? '◆' : '◇'}
@@ -665,7 +667,9 @@ export function SurvivalPanel({
                       onClick={() => stepResource(feature, current - 1)}
                       disabled={current <= 0}
                       className="w-7 h-7 rounded-lg bg-parchment-200 hover:bg-parchment-300 disabled:opacity-30 text-sm font-medium flex items-center justify-center"
-                      aria-label={`Dépenser ${feature.title}`}
+                      aria-label={t('survie.depenser.feature.title', {
+                        feature_title: feature.title,
+                      })}
                     >
                       −
                     </button>
@@ -682,7 +686,9 @@ export function SurvivalPanel({
                       onClick={() => stepResource(feature, current + 1)}
                       disabled={current >= max}
                       className="w-7 h-7 rounded-lg bg-parchment-200 hover:bg-parchment-300 disabled:opacity-30 text-sm font-medium flex items-center justify-center"
-                      aria-label={`Récupérer ${feature.title}`}
+                      aria-label={t('survie.recuperer.feature.title', {
+                        feature_title: feature.title,
+                      })}
                       title={resetTitle}
                     >
                       +
@@ -713,7 +719,7 @@ export function SurvivalPanel({
               });
               await onSaved();
             } catch {
-              onError('Erreur de mise à jour');
+              onError(t('survie.erreur.de.mise.a.jour'));
             }
           };
           return (
@@ -811,13 +817,19 @@ export function SurvivalPanel({
                           await api.patch(`/api/characters/${charId}`, { wildShapeUses: n });
                           await onSaved();
                         } catch {
-                          onError('Erreur de mise à jour');
+                          onError(t('survie.erreur.de.mise.a.jour'));
                         }
                       }}
                       className={`text-base leading-none px-0.5 transition-opacity ${(character.wildShapeUses ?? 2) >= n ? 'opacity-100' : 'opacity-25 hover:opacity-60'}`}
                       aria-pressed={(character.wildShapeUses ?? 2) >= n}
-                      aria-label={`${n} utilisation${n > 1 ? 's' : ''} de forme sauvage`}
-                      title={`Régler à ${n} utilisation${n > 1 ? 's' : ''} (récupérées après un repos court ou long)`}
+                      aria-label={t('survie.n.utilisation.n.1.s.de', {
+                        n: n,
+                        n___1____s: n > 1 ? 's' : '',
+                      })}
+                      title={t('survie.regler.a.n.utilisation.n.1', {
+                        n: n,
+                        n___1____s: n > 1 ? 's' : '',
+                      })}
                     >
                       🐾
                     </button>
@@ -850,7 +862,7 @@ export function SurvivalPanel({
                     onClick={revertShape}
                     className="btn-secondary text-xs w-full py-1.5"
                   >
-                    ↩ Revenir à la forme normale (action bonus)
+                    {t('survie.revenir.a.la.forme.normale.action')}
                   </button>
                 </>
               ) : (
@@ -939,7 +951,7 @@ export function SurvivalPanel({
                     <div className="flex flex-wrap items-center gap-1.5">
                       <Chip
                         tone={stats.proficient ? 'blood' : 'amber'}
-                        title={`Attaque : ${breakdown}`}
+                        title={t('survie.attaque.breakdown', { breakdown: breakdown })}
                       >
                         🎯 {formatModifier(stats.attackBonus)}
                       </Chip>
@@ -947,13 +959,21 @@ export function SurvivalPanel({
                         <Chip
                           tone="blood"
                           className="font-semibold"
-                          title={`${nAttacks} attaques par action d'attaque`}
+                          title={t('survie.nattacks.attaques.par.action.d.attaque', {
+                            nAttacks: nAttacks,
+                          })}
                         >
                           ×{nAttacks}
                         </Chip>
                       )}
                       {stats.damageStr && (
-                        <Chip tone="orange" title={`Dégâts : ${stats.damageStr} (${abilityLabel})`}>
+                        <Chip
+                          tone="orange"
+                          title={t('survie.degats.stats.damagestr.abilitylabel', {
+                            stats_damageStr: stats.damageStr,
+                            abilityLabel: abilityLabel,
+                          })}
+                        >
                           ⚔ {stats.damageStr}
                           {stats.damageTypeFr ? ` ${stats.damageTypeFr}` : ''}
                         </Chip>
@@ -972,7 +992,9 @@ export function SurvivalPanel({
                         <Chip
                           tone="blood"
                           soft
-                          title={`Critique amélioré (Champion) : touche critique sur ${stats.critRange}-20`}
+                          title={t('survie.critique.ameliore.champion.touche.critique.sur', {
+                            stats_critRange: stats.critRange,
+                          })}
                         >
                           🩸 crit {stats.critRange}-20
                         </Chip>
@@ -1057,11 +1079,23 @@ export function SurvivalPanel({
               <div className="flex flex-wrap items-center gap-1.5">
                 <Chip
                   tone="blood"
-                  title={`Attaque : d20 ${formatModifier(u.attackBonus - proficiencyBonus(character.level ?? 1))} (${abilityLabel}) + ${proficiencyBonus(character.level ?? 1)} (maîtrise)`}
+                  title={t('survie.attaque.d20.formatmodifier.u.attackb.abilitylabel', {
+                    formatModifier_u_attackB: formatModifier(
+                      u.attackBonus - proficiencyBonus(character.level ?? 1),
+                    ),
+                    abilityLabel: abilityLabel,
+                    proficiencyBonus_charact: proficiencyBonus(character.level ?? 1),
+                  })}
                 >
                   🎯 {formatModifier(u.attackBonus)}
                 </Chip>
-                <Chip tone="orange" title={`Dégâts : ${u.damageStr} (${abilityLabel})`}>
+                <Chip
+                  tone="orange"
+                  title={t('survie.degats.u.damagestr.abilitylabel', {
+                    u_damageStr: u.damageStr,
+                    abilityLabel: abilityLabel,
+                  })}
+                >
                   ⚔ {u.damageStr} {u.damageTypeFr}
                 </Chip>
                 {u.bonusActionAttack && (
@@ -1153,10 +1187,7 @@ export function SurvivalPanel({
         }
       >
         <div className="space-y-3 text-sm text-ink-700">
-          <p>
-            Récupéré après un repos court : emplacements de pacte (Occultiste), utilisations de
-            forme sauvage, ressources marquées « repos court », et dés de vie dépensés pour soigner.
-          </p>
+          <p>{t('survie.recupere.apres.un.repos.court.emplacements')}</p>
           {(() => {
             const dice = hitDiceByClassOf(character).filter((d) => d.max > 0);
             const die = dice.length === 1 ? dice[0].die : 8;
@@ -1213,8 +1244,7 @@ export function SurvivalPanel({
                       inputMode="numeric"
                     />
                     <span className="text-[10px] text-ink-400 block mt-1">
-                      Le compteur de dés est mis à jour et le soin appliqué (plafonné aux PV max) ;
-                      tout PV récupéré efface les sauvegardes de mort.
+                      {t('survie.le.compteur.de.des.est.mis')}
                     </span>
                   </label>
                 )}
@@ -1252,9 +1282,9 @@ export function SurvivalPanel({
         }
       >
         <div className="space-y-3 text-sm text-ink-700">
-          <p>Après un repos long (au plus un par 24 h), tu récupères :</p>
+          <p>{t('survie.apres.un.repos.long.au.plus')}</p>
           <ul className="list-disc pl-5 space-y-1 text-sm">
-            <li>Tous tes PV (les PV temporaires disparaissent)</li>
+            <li>{t('survie.tous.tes.pv.les.pv.temporaires')}</li>
             <li>{t('survie.tous.tes.emplacements.de.sort')}</li>
             <li>
               {Math.max(1, Math.floor((character.level ?? 1) / 2))} dés de vie (la moitié de ton
@@ -1448,7 +1478,7 @@ export function SurvivalPanel({
                     type="button"
                     onClick={() => setShapeStatBlock(f.slug)}
                     className="shrink-0 w-8 h-8 rounded-lg bg-parchment-100 hover:bg-gold-100 text-ink-500 hover:text-gold-600 border border-parchment-200 text-sm flex items-center justify-center transition-colors"
-                    aria-label={`Voir le bloc de stats de ${f.name}`}
+                    aria-label={t('survie.voir.le.bloc.de.stats.de', { f_name: f.name })}
                     title={t('survie.bloc.de.stats')}
                   >
                     📜
@@ -1478,8 +1508,7 @@ export function SurvivalPanel({
             )}
             {shapeForms.length > 0 && shapeForms.every((f) => !f.seen) && shapeSeenOnly && (
               <p className="text-xs text-ink-400 italic text-center py-3">
-                Aucune bête marquée comme vue — désactivez « Vues » et marquez-en avec 👁 (formes
-                déjà rencontrées par votre druide).
+                {t('survie.aucune.bete.marquee.comme.vue.desactivez')}
               </p>
             )}
           </div>

@@ -210,7 +210,7 @@ export default function CharacterNotesTab({
       await api.patch(`/api/characters/${charId}/notes/order`, { order: nextIds });
     } catch {
       setNotes(prev);
-      onError('Réorganisation non enregistrée');
+      onError(t('notes.reorganisation.non.enregistree'));
     }
   };
 
@@ -243,7 +243,11 @@ export default function CharacterNotesTab({
           className="grid gap-3 sm:grid-cols-2"
         >
           {notes.map((note) => (
-            <SortableCard key={note.id} id={note.id} label={`Déplacer ${note.title}`}>
+            <SortableCard
+              key={note.id}
+              id={note.id}
+              label={t('notes.deplacer.note.title', { note_title: note.title })}
+            >
               {(handle, isDragging) => (
                 <div
                   className={`card p-4 flex flex-col gap-2 ${isDragging ? 'card-dragging' : ''}`}
@@ -255,7 +259,7 @@ export default function CharacterNotesTab({
                         type="button"
                         onClick={() => openEdit(note)}
                         className="text-ink-400 hover:text-blood-600 text-sm p-1"
-                        aria-label={`Modifier ${note.title}`}
+                        aria-label={t('notes.modifier.note.title', { note_title: note.title })}
                       >
                         ✎
                       </button>
@@ -263,8 +267,8 @@ export default function CharacterNotesTab({
                         onConfirm={() => remove(note.id)}
                         className="text-ink-400 hover:text-red-500 text-sm p-1 rounded-full transition-colors"
                         armedClassName="bg-red-600 hover:bg-red-700 text-white! px-2.5 py-1 font-semibold"
-                        title={`Supprimer ${note.title}`}
-                        ariaLabel={`Supprimer ${note.title}`}
+                        title={t('notes.supprimer.note.title', { note_title: note.title })}
+                        ariaLabel={t('notes.supprimer.note.title', { note_title: note.title })}
                         confirmChildren="Supprimer ?"
                       >
                         ×
@@ -350,8 +354,8 @@ export default function CharacterNotesTab({
 
           <div className="bg-parchment-50 rounded-lg p-2 border border-parchment-200">
             <p className="text-[11px] text-ink-500">
-              <strong>Formatage :</strong> `**gras**` · `*italique*` · `` `code` `` · `# Titre` · `-
-              liste` · `&gt; citation` · `---` séparateur
+              <strong>Formatage :</strong>
+              {t('notes.gras.italique.code.titre.liste.gt')}
             </p>
           </div>
 

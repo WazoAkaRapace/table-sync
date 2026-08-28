@@ -816,7 +816,7 @@ function EncounterRegister({
                     className="text-xs text-ink-400 hover:text-red-600"
                     armedClassName="font-semibold text-red-700"
                     title={t('combat.supprimer.la.rencontre')}
-                    ariaLabel={`Supprimer la rencontre ${enc.name}`}
+                    ariaLabel={t('combat.supprimer.la.rencontre.enc.name', { enc_name: enc.name })}
                     confirmChildren="Confirmer ?"
                   >
                     {t('combat.supprimer')}
@@ -1152,6 +1152,7 @@ function InitiativeRail({
   targetMode: boolean;
   onApplyDamage: (id: number) => void;
 }) {
+  const { t } = useTranslation();
   // Number group members ("Gobelin 1", "Gobelin 2"…) in sorted order.
   const labels = useMemo(() => {
     const counters = new Map<number, number>();
@@ -1239,7 +1240,7 @@ function InitiativeRail({
                     <span
                       aria-hidden="true"
                       className={`h-1.5 w-1.5 shrink-0 rounded-full ${feelingDot(c)}`}
-                      title={`État apparent : ${phrase}`}
+                      title={t('combat.etat.apparent.phrase', { phrase: phrase })}
                     />
                   )}
                   {c.defeated && (
@@ -1642,7 +1643,10 @@ function StagePanel({
             className="text-xs text-ink-400 hover:text-red-600"
             armedClassName="font-semibold text-red-700"
             title={groupMembers.length > 1 ? 'Supprimer le groupe' : 'Retirer du combat'}
-            ariaLabel={`Retirer ${label}${groupMembers.length > 1 ? ' et son groupe' : ''} du combat`}
+            ariaLabel={t('combat.retirer.label.groupmembers.length.1.du', {
+              label: label,
+              grp: groupMembers.length > 1 ? ` ${t('combat.et.son.groupe')}` : '',
+            })}
             confirmChildren="Sûr ?"
           >
             {groupMembers.length > 1 ? 'Retirer le groupe' : 'Retirer du combat'}

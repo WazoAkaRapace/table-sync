@@ -189,7 +189,7 @@ function MemberCharacters({
           <Link
             to={`/party/${partyId}/character/${c.id}`}
             className="group -mx-2 flex items-center gap-3 rounded-md px-2 py-1.5 transition-colors hover:bg-parchment-100/70"
-            aria-label={`Ouvrir la fiche de ${c.name}`}
+            aria-label={t('party.ouvrir.la.fiche.de.c.name', { c_name: c.name })}
           >
             <Portrait c={c} size="sm" />
             <span className="min-w-0 flex-1">
@@ -386,7 +386,7 @@ export default function PartyPage() {
                 <Link
                   to={`/party/${partyId}/character/${c.id}`}
                   className="-mx-3 flex items-center gap-4 rounded-lg px-3 py-4 transition-colors hover:bg-parchment-100/70"
-                  aria-label={`Ouvrir la fiche de ${c.name}`}
+                  aria-label={t('party.ouvrir.la.fiche.de.c.name', { c_name: c.name })}
                 >
                   <Portrait c={c} own />
                   <span className="min-w-0 flex-1">
@@ -478,7 +478,9 @@ export default function PartyPage() {
                     : 'border-parchment-300 text-ink-700 hover:border-blood-600 hover:text-blood-600'
                 }`}
                 onClick={copyInvite}
-                aria-label={`Copier le code d'invitation ${party.party.inviteCode}`}
+                aria-label={t('party.copier.le.code.d.invitation.party', {
+                  party_party_inviteCode: party.party.inviteCode,
+                })}
               >
                 {inviteCopied ? 'Copié ✓' : inviteCopyFailed ? 'Copie impossible' : 'Copier'}
               </button>

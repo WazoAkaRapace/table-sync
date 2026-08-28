@@ -36,6 +36,7 @@ import {
 } from '../db/schema.ts';
 import { bus } from '../sync/bus.ts';
 import { type AppLang, pickLocalized } from './lang.ts';
+import { apiMsg } from './messages.ts';
 
 /** Parse a JSON column that's guaranteed to be an array; never throws. */
 function parseJsonArray(raw: any, fallback: any[] = []): any[] {
@@ -60,7 +61,7 @@ export function getUserId(req: FastifyRequest): number | null {
 export function requireUser(req: FastifyRequest, reply: FastifyReply): number | null {
   const id = getUserId(req);
   if (id === null) {
-    reply.code(401).send({ error: 'unauthorized' });
+    reply.code(401).send({ error: apiMsg(req, 'unauthorized') });
     return null;
   }
   return id;
@@ -152,7 +153,7 @@ export function validateClassEntries(
   raw: unknown,
 ): { ok: true; entries: CharacterClassEntry[] } | { ok: false; error: string } {
   if (!Array.isArray(raw) || raw.length === 0) {
-    return { ok: false, error: 'classes doit être un tableau non vide' };
+    return { ok: false, error: apiMsg(req, 'classes doit être un tableau non vide') };
   }
   const seen = new Set<string>();
   let total = 0;

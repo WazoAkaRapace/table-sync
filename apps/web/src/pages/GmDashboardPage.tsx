@@ -234,7 +234,7 @@ function DisbandPartySection({
         <Modal
           open={open}
           onClose={() => !busy && setOpen(false)}
-          title={`Dissoudre « ${name} » ?`}
+          title={t('md.dissoudre.name', { name: name })}
         >
           <p className="mb-3 text-sm text-ink-500">{t('md.tout.le.contenu.du.groupe.sera')}</p>
           <label className="block">
@@ -440,7 +440,7 @@ function CharactersTab({
                 type="button"
                 onClick={() => setDeleteTarget(c)}
                 className="text-ink-400 hover:text-red-600 text-sm shrink-0 p-1"
-                aria-label={`Supprimer ${c.name}`}
+                aria-label={t('md.supprimer.c.name', { c_name: c.name })}
                 title={t('md.supprimer.le.personnage')}
               >
                 🗑
@@ -533,7 +533,7 @@ function CharactersTab({
         <Modal
           open={!!deleteTarget}
           onClose={() => !deleting && setDeleteTarget(null)}
-          title={`Supprimer ${deleteTarget.name} ?`}
+          title={t('md.supprimer.deletetarget.name', { deleteTarget_name: deleteTarget.name })}
         >
           <p className="text-sm text-ink-500 mb-4">
             {t('md.cette.action.est.irreversible.tout.l')}
@@ -650,7 +650,7 @@ function MembersTab({
         setPending(null);
         await onReload(true);
       } else {
-        setActionError('Action impossible — vérifie la connexion.');
+        setActionError(t('md.action.impossible.verifie.la.connexion'));
       }
     } finally {
       setBusy(false);
@@ -689,7 +689,9 @@ function MembersTab({
                     setActionError('');
                     setPending({ kind: 'remove', member: m });
                   }}
-                  aria-label={`Retirer ${m.displayName} de la table`}
+                  aria-label={t('md.retirer.m.displayname.de.la.table', {
+                    m_displayName: m.displayName,
+                  })}
                 >
                   Retirer
                 </button>
@@ -700,7 +702,9 @@ function MembersTab({
                     setActionError('');
                     setPending({ kind: 'ban', member: m });
                   }}
-                  aria-label={`Bannir ${m.displayName} de ce groupe`}
+                  aria-label={t('md.bannir.m.displayname.de.ce.groupe', {
+                    m_displayName: m.displayName,
+                  })}
                 >
                   Bannir
                 </button>
@@ -734,7 +738,7 @@ function MembersTab({
                     setActionError('');
                     setPending({ kind: 'unban', user: u });
                   }}
-                  aria-label={`Débannir ${u.displayName}`}
+                  aria-label={t('md.debannir.u.displayname', { u_displayName: u.displayName })}
                 >
                   {t('md.debannir')}
                 </button>
@@ -1058,7 +1062,9 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
                     })
                   }
                   className="shrink-0 overflow-hidden rounded-md border border-parchment-200"
-                  aria-label={`Agrandir l'illustration de ${item.name || item.name}`}
+                  aria-label={t('md.agrandir.l.illustration.de.item.name', {
+                    item_name____item_name: item.name || item.name,
+                  })}
                 >
                   <img
                     src={itemImageUrl(item.id, item.imageRev)}
@@ -1098,8 +1104,12 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
                   onConfirm={() => remove(item.id)}
                   className="text-ink-400 hover:text-red-500 text-sm p-1 rounded-full transition-colors"
                   armedClassName="bg-red-600 hover:bg-red-700 text-white! px-2.5 py-1 font-semibold"
-                  title={`Supprimer ${item.name || item.name}`}
-                  ariaLabel={`Supprimer ${item.name || item.name}`}
+                  title={t('md.supprimer.item.name.item.name', {
+                    item_name____item_name: item.name || item.name,
+                  })}
+                  ariaLabel={t('md.supprimer.item.name.item.name', {
+                    item_name____item_name: item.name || item.name,
+                  })}
                   confirmChildren="Supprimer ?"
                 >
                   ×

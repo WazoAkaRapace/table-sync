@@ -38,6 +38,7 @@ import {
 } from './helpers.ts';
 import { INVENTORY_WITH_ITEM } from './inventory.ts';
 import { langFromReq } from './lang.ts';
+import { apiMsg } from './messages.ts';
 
 /** Hard upload ceiling — the client downscales to 1280px JPEG (~150-400 ko);
  * anything bigger than this is a client that skipped the canvas step. */
@@ -62,7 +63,7 @@ function getItem(itemId: number): any {
  */
 function rejectImageMutation(item: any, userId: number, reply: FastifyReply): FastifyReply | null {
   if (item.source !== 'custom') {
-    return reply.code(403).send({ error: 'can only modify custom items' });
+    return reply.code(403).send({ error: apiMsg(req, 'can only modify custom items') });
   }
   if (isPartyGM(item.party_id, userId)) return null;
   const allowed =
@@ -70,7 +71,7 @@ function rejectImageMutation(item: any, userId: number, reply: FastifyReply): Fa
     !!getDrizzle().select(cols(parties)).from(parties).where(eq(parties.id, item.party_id)).get()
       ?.players_create_items;
   if (!allowed) {
-    return reply.code(403).send({ error: 'only the GM can modify items' });
+    return reply.code(403).send({ error: apiMsg(req, 'only the GM can modify items') });
   }
   return null;
 }
@@ -82,25 +83,25 @@ export async function itemImageRoutes(app: FastifyInstance) {
     async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
       const token = (req.query as any)?.token;
       if (typeof token !== 'string' || token === '') {
-        return reply.code(401).send({ error: 'unauthorized' });
+        return reply.code(401).send({ error: apiMsg(req, 'unauthorized') });
       }
       let userId: number;
       try {
         const payload = (app as any).jwt.verify(token);
         userId = payload.sub;
       } catch {
-        return reply.code(401).send({ error: 'unauthorized' });
+        return reply.code(401).send({ error: apiMsg(req, 'unauthorized') });
       }
 
       const row = getItem(Number(req.params.id));
-      if (!row) return reply.code(404).send({ error: 'item not found' });
+      if (!row) return reply.code(404).send({ error: apiMsg(req, 'item not found') });
       // Same visibility rule as GET /items/:id: custom items stay in-party.
       if (row.party_id != null && !isPartyMember(row.party_id, userId)) {
-        return reply.code(403).send({ error: 'not a member' });
+        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
       }
-      if (!row.image_url) return reply.code(404).send({ error: 'no image' });
+      if (!row.image_url) return reply.code(404).send({ error: apiMsg(req, 'no image') });
       const filePath = join(getItemImagesDir(), String(row.image_url));
-      if (!existsSync(filePath)) return reply.code(404).send({ error: 'no image' });
+      if (!existsSync(filePath)) return reply.code(404).send({ error: apiMsg(req, 'no image') });
 
       const buffer = readFileSync(filePath);
       // The column stores what was uploaded (client sends JPEG; a raw PNG is
@@ -141,19 +142,19 @@ export async function itemImageRoutes(app: FastifyInstance) {
       if (userId === null) return;
       const itemId = Number(req.params.id);
       const item = getItem(itemId);
-      if (!item) return reply.code(404).send({ error: 'item not found' });
+      if (!item) return reply.code(404).send({ error: apiMsg(req, 'item not found') });
       const rejected = rejectImageMutation(item, userId, reply);
       if (rejected) return rejected;
 
       const data = (await req.file()) as MultipartFile | undefined;
-      if (!data) return reply.code(400).send({ error: 'image field is required' });
+      if (!data) return reply.code(400).send({ error: apiMsg(req, 'image field is required') });
       const buffer = await data.toBuffer();
 
       if (buffer.length === 0 || buffer.length > MAX_IMAGE_BYTES) {
-        return reply.code(413).send({ error: 'image must be at most 2 MB' });
+        return reply.code(413).send({ error: apiMsg(req, 'image must be at most 2 MB') });
       }
       if (!sniffImageMime(buffer)) {
-        return reply.code(400).send({ error: 'file is not a JPEG or PNG image' });
+        return reply.code(400).send({ error: apiMsg(req, 'file is not a JPEG or PNG image') });
       }
 
       const dir = getItemImagesDir();
@@ -184,7 +185,7 @@ export async function itemImageRoutes(app: FastifyInstance) {
       if (userId === null) return;
       const itemId = Number(req.params.id);
       const item = getItem(itemId);
-      if (!item) return reply.code(404).send({ error: 'item not found' });
+      if (!item) return reply.code(404).send({ error: apiMsg(req, 'item not found') });
       const rejected = rejectImageMutation(item, userId, reply);
       if (rejected) return rejected;
 
@@ -231,29 +232,29 @@ export async function itemImageRoutes(app: FastifyInstance) {
       const drizzle = getDrizzle();
 
       const entry = getEntryWithItem(Number(req.params.id));
-      if (!entry) return reply.code(404).send({ error: 'inventory entry not found' });
+      if (!entry) return reply.code(404).send({ error: apiMsg(req, 'inventory entry not found') });
       const char = drizzle
         .select(cols(characters))
         .from(characters)
         .where(eq(characters.id, entry.character_id))
         .get() as any;
-      if (!char) return reply.code(404).send({ error: 'character not found' });
+      if (!char) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
       if (!isOwnerOrGM(char, userId)) {
-        return reply.code(403).send({ error: 'only the owner or GM can annotate' });
+        return reply.code(403).send({ error: apiMsg(req, 'only the owner or GM can annotate') });
       }
       // Annoter n'a de sens que sur un objet illustré — on dessine SUR l'image.
       if (!entry.i_image_url) {
-        return reply.code(400).send({ error: 'item has no illustration to annotate' });
+        return reply.code(400).send({ error: apiMsg(req, 'item has no illustration to annotate') });
       }
 
       const data = (await req.file()) as MultipartFile | undefined;
-      if (!data) return reply.code(400).send({ error: 'image field is required' });
+      if (!data) return reply.code(400).send({ error: apiMsg(req, 'image field is required') });
       const buffer = await data.toBuffer();
       if (buffer.length === 0 || buffer.length > MAX_IMAGE_BYTES) {
-        return reply.code(413).send({ error: 'image must be at most 2 MB' });
+        return reply.code(413).send({ error: apiMsg(req, 'image must be at most 2 MB') });
       }
       if (!sniffImageMime(buffer)) {
-        return reply.code(400).send({ error: 'file is not a JPEG or PNG image' });
+        return reply.code(400).send({ error: apiMsg(req, 'file is not a JPEG or PNG image') });
       }
 
       // L'objet porté : dérivé existant (écrasement) ou objet de base (dérivation).
@@ -364,20 +365,20 @@ export async function itemImageRoutes(app: FastifyInstance) {
       const drizzle = getDrizzle();
 
       const entry = getEntryWithItem(Number(req.params.id));
-      if (!entry) return reply.code(404).send({ error: 'inventory entry not found' });
+      if (!entry) return reply.code(404).send({ error: apiMsg(req, 'inventory entry not found') });
       const char = drizzle
         .select(cols(characters))
         .from(characters)
         .where(eq(characters.id, entry.character_id))
         .get() as any;
-      if (!char) return reply.code(404).send({ error: 'character not found' });
+      if (!char) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
       if (!isOwnerOrGM(char, userId)) {
-        return reply.code(403).send({ error: 'only the owner or GM can annotate' });
+        return reply.code(403).send({ error: apiMsg(req, 'only the owner or GM can annotate') });
       }
       const derived = getItem(entry.item_id);
       // Base supprimée entre-temps → SET NULL → la ligne n'est plus « annotée ».
       if (!derived || derived.derived_from_item_id == null) {
-        return reply.code(400).send({ error: 'entry is not annotated' });
+        return reply.code(400).send({ error: apiMsg(req, 'entry is not annotated') });
       }
       const baseId = derived.derived_from_item_id;
 
@@ -389,7 +390,9 @@ export async function itemImageRoutes(app: FastifyInstance) {
         .where(and(eq(inventory.itemId, entry.item_id), ne(inventory.id, entry.id)))
         .all();
       if (otherRows.length > 0) {
-        return reply.code(409).send({ error: 'annotated copy is referenced elsewhere' });
+        return reply
+          .code(409)
+          .send({ error: apiMsg(req, 'annotated copy is referenced elsewhere') });
       }
 
       let updatedEntryId = entry.id;

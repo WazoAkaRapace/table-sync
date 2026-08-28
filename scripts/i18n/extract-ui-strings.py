@@ -39,6 +39,35 @@ def slug_key(domain, text):
   key = '.'.join(words)[:60]
   return f'{domain}.{key}'
 
+
+def repl_prop_tmpl(m, domain, pairs):
+  prop, tmpl = m.group(1), m.group(2)
+  key, vars = tmpl_to_key(domain, tmpl, pairs)
+  args = ', '.join(f'{k}: {v}' for k, v in vars.items())
+  return "{prop}={{t('{key}', {{ {args} }})}}".format(prop=prop, key=key, args=args)
+
+
+def tmpl_to_key(domain, tmpl, pairs):
+  """`${`expr`}` → `{{var}}` avec un nom dérivé ; retourne (key, vars)."""
+  vars = {}
+
+  def sub_expr(m):
+    expr = m.group(1).strip()
+    name = re.sub(r'[^a-zA-Z0-9]', '_', expr)[:24].strip('_') or 'v'
+    if not re.match(r'[a-zA-Z]', name):
+      name = f'v_{name}'
+    var, n = name, 2
+    while var in vars.values():
+      var = f'{name}{n}'
+      n += 1
+    vars[var] = expr
+    return '{{' + var + '}}'
+
+  iw = re.sub(r'\$\{([^}]+)\}', sub_expr, tmpl)
+  key = slug_key(domain, iw)
+  pairs[key] = tmpl
+  return key, vars
+
 def main():
   args = [a for a in sys.argv[1:] if not a.startswith('--')]
   domain = 'app'
@@ -53,9 +82,9 @@ def main():
 
     def repl_jsx(m):
       text = m.group(1)
-      # texte JSX seulement : aucun code (parenthèses, =, ;) et le < suivant
-      # ouvre bien une balise — sinon ce sont des génériques TypeScript.
-      if re.search(r'[()=;{}"]', text):
+      # texte JSX : le lookahead « < ouvre une balise » garantit la position
+      # JSX (les génériques TS ne peuvent y apparaître).
+      if re.search(r'[{}=/]', text) or '/*' in text or '*/' in text:
         return m.group(0)
       stripped = ' '.join(text.split())
       if not stripped or not is_fr(stripped):
@@ -74,6 +103,45 @@ def main():
 
     s = re.sub(r'>([^<>{}]*?)<(?=[/A-Za-z])', repl_jsx, s)
     s = re.sub(r'(aria-label|title|placeholder|alt)="([^"]*)"', repl_attr, s)
+
+    # v2 — attributs en template literal interpolé : aria-label={`X ${y} Z`}
+    def repl_attr_tmpl(m):
+      attr, tmpl = m.group(1), m.group(2)
+      if not is_fr(tmpl):
+        return m.group(0)
+      key, vars = tmpl_to_key(domain, tmpl, pairs)
+      args = ', '.join(f'{k}: {v}' for k, v in vars.items())
+      return "{attr}={{t('{key}', {{ {args} }})}}".format(attr=attr, key=key, args=args)
+
+    s = re.sub(r'(aria-label|title|placeholder|alt)=\{`([^`]*)`\}', repl_attr_tmpl, s)
+
+    # v2 — template literal interpolé en position JSX {`…`} ou prop label={`…`}
+    def repl_expr_tmpl(m):
+      tmpl = m.group(2)
+      if not is_fr(tmpl):
+        return m.group(0)
+      key, vars = tmpl_to_key(domain, tmpl, pairs)
+      args = ', '.join(f'{k}: {v}' for k, v in vars.items())
+      return "{{t('{key}', {{ {args} }})}}".format(key=key, args=args)
+
+    s = re.sub(r'(\w+)=\{`([^`]*)`\}', lambda m: m.group(0) if m.group(1) in ('className', 'style', 'key', 'to', 'id', 'value', 'onChange', 'onClick', 'src', 'href') else repl_prop_tmpl(m, domain, pairs), s)
+    s = re.sub(r'\{`([^`]*)`\}', lambda m: m.group(0) if not is_fr(m.group(1)) else repl_expr_tmpl(m), s)
+
+    # v3 — littéraux simples dans des réceptacles d'affichage connus :
+    # onNotice('…'), setToast('…'), label: '…', text: '…', title: '…', hint: '…'
+    s = re.sub(r"((?:onNotice|onError|onSuccess|setToast|setNotice)\()([^'\n]*)('\))", lambda m: m.group(0), s)  # no-op garde
+    def repl_sink_call(m):
+      val = m.group(2)
+      if not is_fr(val):
+        return m.group(0)
+      key = slug_key(domain, val)
+      pairs[key] = val
+      return m.group(1) + "(t('%s'))" % key
+    s = re.sub(
+      r"(onNotice|onError|onSuccess)\((?:\w+, )?('[^']*[àâçéèêëîïôùûüœ][^']*')\)",
+      repl_sink_call,
+      s,
+    )
 
     pathlib.Path(path).write_text(s)
     pending.update(pairs)

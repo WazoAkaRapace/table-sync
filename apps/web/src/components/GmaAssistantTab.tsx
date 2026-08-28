@@ -321,10 +321,7 @@ export function GmaAssistantTab({
             </button>
           </div>
         ) : (
-          <p className="text-sm text-ink-500">
-            Crée un compte sur gmassistant.app, puis une clé API (réglages → Developer). Elle reste
-            sur ce serveur, chiffrée — jamais dans le navigateur.
-          </p>
+          <p className="text-sm text-ink-500">{t('gma.cree.un.compte.sur.gmassistant.app')}</p>
         )}
 
         {(!keyed || showKeyForm) && (
@@ -588,7 +585,7 @@ function InitModal({
           </p>
         )}
         <p className="mt-2 text-xs text-ink-400">
-          La Chronique est disponible pour toute la table (annexes du groupe).
+          {t('gma.la.chronique.est.disponible.pour.toute')}
         </p>
         <button type="button" className="btn-primary mt-4 w-full" onClick={onDone}>
           {t('gma.termine')}

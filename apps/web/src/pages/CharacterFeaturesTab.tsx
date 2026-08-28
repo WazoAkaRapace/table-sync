@@ -224,7 +224,7 @@ export default function CharacterFeaturesTab({
       await api.patch(`/api/character-features/${feature.id}`, { counterCurrent: next });
       await load();
     } catch {
-      onError('Erreur de mise à jour');
+      onError(t('traits.erreur.de.mise.a.jour'));
     }
   };
 
@@ -252,7 +252,7 @@ export default function CharacterFeaturesTab({
       await api.patch(`/api/characters/${charId}/features/order`, { order: nextIds });
     } catch {
       setFeatures(prev);
-      onError('Réorganisation non enregistrée');
+      onError(t('traits.reorganisation.non.enregistree'));
     }
   };
 
@@ -330,7 +330,9 @@ export default function CharacterFeaturesTab({
                     <SortableCard
                       key={feature.id}
                       id={feature.id}
-                      label={`Déplacer ${featName(feature)}`}
+                      label={t('traits.deplacer.featname.feature', {
+                        featName_feature: featName(feature),
+                      })}
                     >
                       {(handle, isDragging) => (
                         <div
@@ -345,7 +347,9 @@ export default function CharacterFeaturesTab({
                                 type="button"
                                 onClick={() => openEdit(feature)}
                                 className="text-ink-400 hover:text-blood-600 text-sm p-1"
-                                aria-label={`Modifier ${featName(feature)}`}
+                                aria-label={t('traits.modifier.featname.feature', {
+                                  featName_feature: featName(feature),
+                                })}
                               >
                                 ✎
                               </button>
@@ -353,8 +357,12 @@ export default function CharacterFeaturesTab({
                                 onConfirm={() => remove(feature.id)}
                                 className="text-ink-400 hover:text-red-500 text-sm p-1 rounded-full transition-colors"
                                 armedClassName="bg-red-600 hover:bg-red-700 text-white! px-2.5 py-1 font-semibold"
-                                title={`Supprimer ${featName(feature)}`}
-                                ariaLabel={`Supprimer ${featName(feature)}`}
+                                title={t('traits.supprimer.featname.feature', {
+                                  featName_feature: featName(feature),
+                                })}
+                                ariaLabel={t('traits.supprimer.featname.feature', {
+                                  featName_feature: featName(feature),
+                                })}
                                 confirmChildren="Supprimer ?"
                               >
                                 ×
@@ -496,7 +504,7 @@ export default function CharacterFeaturesTab({
 
           {/* Charge counter (optional) */}
           <label className="block">
-            <span className="label">Compteur de charges (optionnel)</span>
+            <span className="label">{t('traits.compteur.de.charges.optionnel')}</span>
             <input
               type="number"
               min={0}
@@ -517,7 +525,7 @@ export default function CharacterFeaturesTab({
           {counterMax.trim() !== '' && Number(counterMax) > 0 && (
             <div className="bg-parchment-50 rounded-lg p-3 border border-parchment-200 space-y-1.5">
               <span className="text-xs font-medium text-ink-500 block">
-                Le compteur se restaure aux repos (boutons de l’onglet Survie) :
+                {t('traits.le.compteur.se.restaure.aux.repos')}
               </span>
               <label className="flex items-center gap-2 text-sm text-ink-700">
                 <input
@@ -529,7 +537,7 @@ export default function CharacterFeaturesTab({
                   }}
                   className="w-4 h-4 accent-blood-600"
                 />
-                ↻ Repos court (et donc long)
+                {t('traits.repos.court.et.donc.long')}
               </label>
               <label className="flex items-center gap-2 text-sm text-ink-700">
                 <input
@@ -545,8 +553,7 @@ export default function CharacterFeaturesTab({
               </label>
               {editing?.catalogId && (
                 <p className="text-[11px] text-ink-400 italic">
-                  Pré-coché sur la règle du catalogue — un choix identique continue de la suivre
-                  (elle évolue avec le niveau) ; seul un écart est mémorisé.
+                  {t('traits.pre.coche.sur.la.regle.du')}
                 </p>
               )}
               {!resetShort && !resetLong && (

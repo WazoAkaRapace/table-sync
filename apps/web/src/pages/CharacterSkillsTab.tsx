@@ -117,10 +117,10 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
         await api.patch(`/api/characters/${charId}`, payload);
         await onSaved();
       } catch {
-        onError('Erreur de mise à jour');
+        onError(t('skills.erreur.de.mise.a.jour'));
       }
     },
-    [charId, onSaved, onError],
+    [charId, onSaved, onError, t],
   );
 
   const toggleSkill = (skillKey: SkillKey) => {
@@ -430,9 +430,7 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
             {hasAutomaticToolExpertise(character) && (
               <p className="text-xs text-ink-500 flex items-center gap-2">
                 <span className="text-sm leading-none">⭐</span>
-                <span>
-                  Maîtrise des outils (niv 6) : bonus de maîtrise doublé sur tous les outils.
-                </span>
+                <span>{t('skills.maitrise.des.outils.niv.6.bonus')}</span>
               </p>
             )}
             {editMode ? (

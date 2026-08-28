@@ -152,7 +152,7 @@ export default function AddClassSheet({ open, onClose, character, currentClasses
             {/* 2 — prérequis (⚠ jamais bloquant) */}
             <section className="rounded-xl border border-parchment-300 bg-parchment-50 p-3 space-y-1.5">
               <p className="text-xs font-semibold text-ink-400 uppercase tracking-wide">
-                Prérequis (SRD)
+                {t('classe.prerequis.srd')}
               </p>
               {prereqGroups.length === 0 ? (
                 <p className="text-sm text-ink-600">
@@ -170,7 +170,9 @@ export default function AddClassSheet({ open, onClose, character, currentClasses
                             {i > 0 && <span className="text-ink-400">et</span>}
                             <span className={ok ? 'text-ink-700' : 'text-orange-600'}>
                               {ABILITY_LABELS[a]} <span className="font-mono">{score}</span>
-                              {!ok && <span className="text-orange-600">(13 requis)</span>}
+                              {!ok && (
+                                <span className="text-orange-600">{t('classe.13.requis')}</span>
+                              )}
                             </span>
                           </span>
                         );
@@ -199,10 +201,7 @@ export default function AddClassSheet({ open, onClose, character, currentClasses
                   <li key={line}>{line}</li>
                 ))}
               </ul>
-              <p className="text-xs text-ink-500">
-                Votre classe de départ garde ses maîtrises complètes — la nouvelle classe n'accorde
-                que cette liste (SRD).
-              </p>
+              <p className="text-xs text-ink-500">{t('classe.votre.classe.de.depart.garde.ses')}</p>
             </section>
 
             {/* 4 — niveau de départ + sous-classe */}
@@ -241,7 +240,7 @@ export default function AddClassSheet({ open, onClose, character, currentClasses
                     classe.
                   </span>
                 ) : (
-                  <span className="text-ink-400">à choisir après l'ajout (voie de classe).</span>
+                  <span className="text-ink-400">{t('classe.a.choisir.apres.l.ajout.voie')}</span>
                 )}
               </p>
             </section>

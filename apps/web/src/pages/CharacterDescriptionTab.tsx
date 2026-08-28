@@ -319,7 +319,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
                         <button
                           type="button"
                           className="btn-secondary w-11 h-11 text-lg"
-                          aria-label={`Retirer un niveau de ${name}`}
+                          aria-label={t('desc.retirer.un.niveau.de.name', { name: name })}
                           onClick={() => bumpLevel(name, -1)}
                         >
                           −
@@ -328,7 +328,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
                         <button
                           type="button"
                           className="btn-secondary w-11 h-11 text-lg"
-                          aria-label={`Ajouter un niveau de ${name}`}
+                          aria-label={t('desc.ajouter.un.niveau.de.name', { name: name })}
                           onClick={() => bumpLevel(name, 1)}
                         >
                           +
@@ -337,7 +337,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
                           <button
                             type="button"
                             className="text-xs text-red-500 hover:text-red-700 px-2 h-11"
-                            aria-label={`Retirer la classe ${name}`}
+                            aria-label={t('desc.retirer.la.classe.name', { name: name })}
                             onClick={() => removeClass(name)}
                           >
                             Retirer
@@ -359,7 +359,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
                           onChange={(e) =>
                             setSubclass(name, e.target.value === '' ? null : e.target.value)
                           }
-                          aria-label={`Voie de classe de ${name}`}
+                          aria-label={t('desc.voie.de.classe.de.name', { name: name })}
                         >
                           <option value="">—</option>
                           {subclassOptions.map((s) => (
@@ -406,7 +406,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
                               e.target.value === '' ? null : (e.target.value as FightingStyle),
                             )
                           }
-                          aria-label={`Style de combat de ${name}`}
+                          aria-label={t('desc.style.de.combat.de.name', { name: name })}
                         >
                           <option value="">—</option>
                           {(Object.keys(FIGHTING_STYLE_LABELS_FR) as FightingStyle[]).map((s) => (

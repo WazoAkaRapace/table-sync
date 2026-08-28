@@ -170,7 +170,9 @@ export function CatalogSearch({
                     onClick={() => onAdd(item)}
                     disabled={addingItemId === item.id}
                     className="btn-primary text-sm px-3 py-2 shrink-0"
-                    aria-label={`Ajouter ${item.name || item.name}`}
+                    aria-label={t('recherche.ajouter.item.name.item.name', {
+                      item_name____item_name: item.name || item.name,
+                    })}
                   >
                     {addingItemId === item.id ? '…' : '+ Ajouter'}
                   </button>

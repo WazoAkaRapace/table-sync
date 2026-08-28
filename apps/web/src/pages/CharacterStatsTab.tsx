@@ -220,7 +220,9 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
                   }}
-                  aria-label={`Score de ${abilityLabel(ability)}`}
+                  aria-label={t('stats.score.de.abilitylabel.ability', {
+                    abilityLabel_ability: abilityLabel(ability),
+                  })}
                 />
               </div>
             );
@@ -291,7 +293,10 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
               key={l.name}
               label={`DD de sort${castingLines.length > 1 ? ` · ${l.name}` : ''}`}
               value={String(l.dc)}
-              hint={`Attaque ${formatModifier(l.mod + profBonus)} · ${abilityShort(l.ability)}`}
+              hint={t('stats.attaque.formatmodifier.l.mod.p.abilityshort', {
+                formatModifier_l_mod___p: formatModifier(l.mod + profBonus),
+                abilityShort_l_ability: abilityShort(l.ability),
+              })}
             />
           ))}
           <DerivedStat label="Perception passive" value={String(passPerc)} />
@@ -368,13 +373,17 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
                     ? 'bg-blood-600 text-white'
                     : 'bg-parchment-100 text-ink-600 hover:bg-parchment-200'
                 }`}
-                title={`${o.label}${o.shieldForbidden ? ' — sans bouclier' : ''} · CA ${o.ac}`}
+                title={t('stats.o.label.o.shieldforbidden.ca.o', {
+                  o_label: o.label,
+                  o_shieldForbidden: o.shieldForbidden ? ` — ${t('stats.sans.bouclier')}` : '',
+                  o_ac: o.ac,
+                })}
               >
                 {o.classKey} <span className="font-mono">{o.ac}</span>
               </button>
             ))}
             <span className="text-[11px] text-ink-400">
-              une seule se cumule (SRD) — la meilleure s'applique par défaut
+              {t('stats.une.seule.se.cumule.srd.la')}
             </span>
           </div>
         )}
@@ -419,13 +428,12 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
           </label>
           <div className="text-xs text-ink-600 bg-parchment-50 border border-parchment-200 rounded-lg p-3 space-y-1.5">
             <p>
-              <strong>×1 (défaut)</strong>
+              <strong>{t('stats.1.defaut')}</strong>
               {t('stats.creature.de.taille.m.sans.capacite')}
             </p>
             <p>
-              <strong>×2</strong> : Construction massive (Goliath, Firbolg, Demi-Orc, Bugbear, Orc,
-              Loxodon) ou créature de taille G. Le personnage compte comme une catégorie de taille
-              supérieure pour le calcul du poids transportable.
+              <strong>×2</strong>
+              {t('stats.construction.massive.goliath.firbolg.demi.orc')}
             </p>
             <p>
               <strong>×3</strong>
@@ -435,11 +443,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
               <strong>×4</strong>
               {t('stats.creature.de.taille.gig')}
             </p>
-            <p className="text-ink-500">
-              Ce multiplicateur s'applique aux trois paliers (encombré, lourdement encombré, max).
-              Modifie-le si ton personnage a un trait qui augmente sa capacité de portage. La barre
-              d'encombrement du bandeau suit automatiquement.
-            </p>
+            <p className="text-ink-500">{t('stats.ce.multiplicateur.s.applique.aux.trois')}</p>
           </div>
         </div>
       </BottomSheet>

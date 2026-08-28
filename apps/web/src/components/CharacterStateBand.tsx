@@ -180,10 +180,10 @@ export default function CharacterStateBand({
     if (!trimmed || trimmed === character.name) return;
     try {
       await api.patch(`/api/characters/${character.id}`, { name: trimmed });
-      onNotice('Nom mis à jour');
+      onNotice(t('band.nom.mis.a.jour'));
       await onSaved();
     } catch {
-      onError('Erreur de mise à jour');
+      onError(t('band.erreur.de.mise.a.jour'));
     }
   };
 
@@ -211,7 +211,7 @@ export default function CharacterStateBand({
       }
       await onSaved();
     } catch {
-      onError('Erreur de mise à jour');
+      onError(t('band.erreur.de.mise.a.jour'));
     } finally {
       setHpPending(null);
       setTempPending(null);
@@ -396,7 +396,10 @@ export default function CharacterStateBand({
               {shaped && (
                 <Chip
                   tone="green"
-                  title={`PV réels du personnage : ${character.currentHp}/${character.maxHp}`}
+                  title={t('band.pv.reels.du.personnage.character.currenthp', {
+                    character_currentHp: character.currentHp,
+                    character_maxHp: character.maxHp,
+                  })}
                 >
                   🐺 {character.currentHp}
                 </Chip>
@@ -412,7 +415,9 @@ export default function CharacterStateBand({
                   onClick={() => onNavigate('stats')}
                   className="font-mono text-sm font-semibold text-ink-800 bg-parchment-100 border border-parchment-200 rounded-md px-2 py-1 hover:border-blood-400 transition-colors"
                   title={character.armorClassOverride ? 'CA manuelle' : acResult.source}
-                  aria-label={`Classe d'armure ${effectiveAC} — ouvrir les caractéristiques`}
+                  aria-label={t('band.classe.d.armure.effectiveac.ouvrir.les', {
+                    effectiveAC: effectiveAC,
+                  })}
                 >
                   🛡 {effectiveAC}
                 </button>
@@ -429,8 +434,14 @@ export default function CharacterStateBand({
                   type="button"
                   onClick={() => onNavigate('spells')}
                   className="font-mono text-sm font-semibold text-gold-700 bg-gold-100/70 border border-gold-300 rounded-md px-2 py-1 hover:border-gold-500 transition-colors"
-                  title={`${slotsLeft} emplacements de sort disponibles sur ${slotsTotal} — ouvrir les sorts`}
-                  aria-label={`${slotsLeft} emplacements de sort sur ${slotsTotal} — ouvrir les sorts`}
+                  title={t('band.slotsleft.emplacements.de.sort.disponibles.sur', {
+                    slotsLeft: slotsLeft,
+                    slotsTotal: slotsTotal,
+                  })}
+                  aria-label={t('band.slotsleft.emplacements.de.sort.sur.slotstotal', {
+                    slotsLeft: slotsLeft,
+                    slotsTotal: slotsTotal,
+                  })}
                 >
                   ✨ {slotsLeft}/{slotsTotal}
                 </button>
@@ -518,9 +529,12 @@ export default function CharacterStateBand({
                           ? 'bg-gold-100 border-gold-300 text-gold-700'
                           : 'bg-parchment-100 border-parchment-200 text-ink-600'
                       }`}
-                      title={`${
-                        r.pact ? 'Magie de pacte' : 'Incantation'
-                      } — niveau ${r.level} : ${r.left}/${r.max} emplacements`}
+                      title={t('band.r.pact.magie.de.pacte.niveau', {
+                        r_pact____Magie_de_pacte: r.pact ? 'Magie de pacte' : 'Incantation',
+                        r_level: r.level,
+                        r_left: r.left,
+                        r_max: r.max,
+                      })}
                     >
                       {r.pact ? '☾' : 'N'}
                       {r.level} {r.left}/{r.max}
@@ -612,7 +626,10 @@ export default function CharacterStateBand({
                   <div className="flex items-center gap-1.5 ml-auto shrink-0">
                     <span
                       className="w-24 sm:w-28 shrink-0"
-                      title={`Points de vie : ${displayHp}/${hpMax}`}
+                      title={t('band.points.de.vie.displayhp.hpmax', {
+                        displayHp: displayHp,
+                        hpMax: hpMax,
+                      })}
                     >
                       <HpBar
                         current={displayHp}

@@ -50,6 +50,7 @@ import {
 } from '../gma/client.ts';
 import { bus } from '../sync/bus.ts';
 import { attachCharacterClasses, isPartyGM, isPartyMember, requireUser } from './helpers.ts';
+import { apiMsg } from './messages.ts';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -114,15 +115,30 @@ function requirePartyGM(req: FastifyRequest, reply: FastifyReply, partyId: numbe
   const userId = requireUser(req, reply);
   if (userId === null) return false;
   if (!Number.isInteger(partyId) || partyId <= 0) {
-    reply.code(400).send({ error: 'bad_request', message: 'Identifiant de groupe invalide.' });
+    reply
+      .code(400)
+      .send({
+        error: apiMsg(req, 'bad_request'),
+        message: apiMsg(req, 'Identifiant de groupe invalide.'),
+      });
     return false;
   }
   if (!isPartyMember(partyId, userId)) {
-    reply.code(403).send({ error: 'not a member', message: 'Tu n’es pas membre de ce groupe.' });
+    reply
+      .code(403)
+      .send({
+        error: apiMsg(req, 'not a member'),
+        message: apiMsg(req, 'Tu n’es pas membre de ce groupe.'),
+      });
     return false;
   }
   if (!isPartyGM(partyId, userId)) {
-    reply.code(403).send({ error: 'gm only', message: 'Seul le MD peut gérer GM Assistant.' });
+    reply
+      .code(403)
+      .send({
+        error: apiMsg(req, 'gm only'),
+        message: apiMsg(req, 'Seul le MD peut gérer GM Assistant.'),
+      });
     return false;
   }
   return true;
@@ -420,8 +436,8 @@ export async function gmaRoutes(app: FastifyInstance) {
       const { apiKey } = req.body || { apiKey: '' };
       if (typeof apiKey !== 'string' || apiKey.trim().length < 8 || apiKey.length > 500) {
         return reply.code(400).send({
-          error: 'invalid_key',
-          message: 'Colle la clé GM Assistant (elle commence par « gma_ »).',
+          error: apiMsg(req, 'invalid_key'),
+          message: apiMsg(req, 'Colle la clé GM Assistant (elle commence par « gma_ »).'),
         });
       }
       const trimmed = apiKey.trim();
@@ -456,12 +472,12 @@ export async function gmaRoutes(app: FastifyInstance) {
       } catch (err) {
         if (err instanceof GmaError && err.status === 401) {
           return reply.code(401).send({
-            error: 'invalid_key',
-            message: 'GM Assistant refuse cette clé (invalide ou révoquée).',
+            error: apiMsg(req, 'invalid_key'),
+            message: apiMsg(req, 'GM Assistant refuse cette clé (invalide ou révoquée).'),
           });
         }
         const { status, message } = gmaErrorToResponse(err);
-        return reply.code(status).send({ error: 'gma', message });
+        return reply.code(status).send({ error: apiMsg(req, 'gma'), message });
       }
     },
   );
@@ -484,7 +500,10 @@ export async function gmaRoutes(app: FastifyInstance) {
       if (!isPartyMember(partyId, userId)) {
         return reply
           .code(403)
-          .send({ error: 'not a member', message: 'Tu n’es pas membre de ce groupe.' });
+          .send({
+            error: apiMsg(req, 'not a member'),
+            message: apiMsg(req, 'Tu n’es pas membre de ce groupe.'),
+          });
       }
       const link = getPartyLink(partyId);
       if (!link) return reply.send({ linked: false, campaign: null, accountOk: false });
@@ -510,8 +529,8 @@ export async function gmaRoutes(app: FastifyInstance) {
       const key = decryptUserKey(getUserKeyRow(userId));
       if (!key) {
         return reply.code(400).send({
-          error: 'no_key',
-          message: 'Enregistre d’abord ta clé GM Assistant ci-dessus.',
+          error: apiMsg(req, 'no_key'),
+          message: apiMsg(req, 'Enregistre d’abord ta clé GM Assistant ci-dessus.'),
         });
       }
       try {
@@ -526,7 +545,7 @@ export async function gmaRoutes(app: FastifyInstance) {
         });
       } catch (err) {
         const { status, message } = gmaErrorToResponse(err);
-        return reply.code(status).send({ error: 'gma', message });
+        return reply.code(status).send({ error: apiMsg(req, 'gma'), message });
       }
     },
   );
@@ -543,22 +562,22 @@ export async function gmaRoutes(app: FastifyInstance) {
       if (!requirePartyGM(req, reply, partyId)) return;
       if (getPartyLink(partyId)) {
         return reply.code(409).send({
-          error: 'already_linked',
-          message: 'Ce groupe est déjà lié à une campagne GM Assistant.',
+          error: apiMsg(req, 'already_linked'),
+          message: apiMsg(req, 'Ce groupe est déjà lié à une campagne GM Assistant.'),
         });
       }
       const key = decryptUserKey(getUserKeyRow(userId));
       if (!key) {
         return reply.code(400).send({
-          error: 'no_key',
-          message: 'Enregistre d’abord ta clé GM Assistant ci-dessus.',
+          error: apiMsg(req, 'no_key'),
+          message: apiMsg(req, 'Enregistre d’abord ta clé GM Assistant ci-dessus.'),
         });
       }
       const { campaignId } = req.body || { campaignId: '' };
       if (typeof campaignId !== 'string' || !UUID_RE.test(campaignId)) {
         return reply.code(400).send({
-          error: 'invalid_campaign',
-          message: 'Identifiant de campagne invalide.',
+          error: apiMsg(req, 'invalid_campaign'),
+          message: apiMsg(req, 'Identifiant de campagne invalide.'),
         });
       }
       let campaign: any;
@@ -568,7 +587,7 @@ export async function gmaRoutes(app: FastifyInstance) {
         });
       } catch (err) {
         const { status, message } = gmaErrorToResponse(err);
-        return reply.code(status).send({ error: 'gma', message });
+        return reply.code(status).send({ error: apiMsg(req, 'gma'), message });
       }
       try {
         getDrizzle()
@@ -583,8 +602,8 @@ export async function gmaRoutes(app: FastifyInstance) {
       } catch {
         // UNIQUE hit: the campaign belongs to another group (or a concurrent link).
         return reply.code(409).send({
-          error: 'campaign_taken',
-          message: 'Cette campagne GM Assistant est déjà liée à un autre groupe.',
+          error: apiMsg(req, 'campaign_taken'),
+          message: apiMsg(req, 'Cette campagne GM Assistant est déjà liée à un autre groupe.'),
         });
       }
       emitGma(partyId, userId, 'link');
@@ -604,8 +623,8 @@ export async function gmaRoutes(app: FastifyInstance) {
       if (!requirePartyGM(req, reply, partyId)) return;
       if (!getPartyLink(partyId)) {
         return reply.code(404).send({
-          error: 'not_linked',
-          message: 'Ce groupe n’est pas lié à une campagne GM Assistant.',
+          error: apiMsg(req, 'not_linked'),
+          message: apiMsg(req, 'Ce groupe n’est pas lié à une campagne GM Assistant.'),
         });
       }
       getDb().transaction(() => {
@@ -635,15 +654,15 @@ export async function gmaRoutes(app: FastifyInstance) {
       if (!requirePartyGM(req, reply, partyId)) return;
       if (getPartyLink(partyId)) {
         return reply.code(409).send({
-          error: 'already_linked',
-          message: 'Ce groupe est déjà lié à une campagne GM Assistant.',
+          error: apiMsg(req, 'already_linked'),
+          message: apiMsg(req, 'Ce groupe est déjà lié à une campagne GM Assistant.'),
         });
       }
       const key = decryptUserKey(getUserKeyRow(userId));
       if (!key) {
         return reply.code(400).send({
-          error: 'no_key',
-          message: 'Enregistre d’abord ta clé GM Assistant ci-dessus.',
+          error: apiMsg(req, 'no_key'),
+          message: apiMsg(req, 'Enregistre d’abord ta clé GM Assistant ci-dessus.'),
         });
       }
       const party = getDrizzle()
@@ -652,7 +671,9 @@ export async function gmaRoutes(app: FastifyInstance) {
         .where(eq(parties.id, partyId))
         .get() as any;
       if (!party) {
-        return reply.code(404).send({ error: 'not_found', message: 'Groupe introuvable.' });
+        return reply
+          .code(404)
+          .send({ error: apiMsg(req, 'not_found'), message: apiMsg(req, 'Groupe introuvable.') });
       }
       const requested = Array.isArray(req.body?.characterIds)
         ? new Set(req.body.characterIds.filter((n: unknown) => Number.isInteger(n)))
@@ -673,7 +694,7 @@ export async function gmaRoutes(app: FastifyInstance) {
       } catch (err) {
         noteScope(userId, err);
         const { status, message } = gmaErrorToResponse(err);
-        return reply.code(status).send({ error: 'gma', message });
+        return reply.code(status).send({ error: apiMsg(req, 'gma'), message });
       }
       getDrizzle()
         .update(userGmaLinks)
@@ -750,15 +771,15 @@ export async function gmaRoutes(app: FastifyInstance) {
       const link = getPartyLink(partyId);
       if (!link) {
         return reply.code(404).send({
-          error: 'not_linked',
-          message: 'Ce groupe n’est pas lié à une campagne GM Assistant.',
+          error: apiMsg(req, 'not_linked'),
+          message: apiMsg(req, 'Ce groupe n’est pas lié à une campagne GM Assistant.'),
         });
       }
       const key = resolveLinkKey(link);
       if (!key) {
         return reply.code(400).send({
-          error: 'no_key',
-          message: 'Clé GM Assistant expirée — le MD doit la ressaisir.',
+          error: apiMsg(req, 'no_key'),
+          message: apiMsg(req, 'Clé GM Assistant expirée — le MD doit la ressaisir.'),
         });
       }
       const payload = req.body ?? {};
@@ -778,7 +799,7 @@ export async function gmaRoutes(app: FastifyInstance) {
         });
       } catch (err) {
         const { status, message } = gmaErrorToResponse(err);
-        return reply.code(status).send({ error: 'gma', message });
+        return reply.code(status).send({ error: apiMsg(req, 'gma'), message });
       }
 
       const chars = loadPartyCharacters(partyId);
@@ -959,8 +980,8 @@ export async function gmaRoutes(app: FastifyInstance) {
       const link = getPartyLink(partyId);
       if (!link) {
         return reply.code(404).send({
-          error: 'not_linked',
-          message: 'Ce groupe n’est pas lié à une campagne GM Assistant.',
+          error: apiMsg(req, 'not_linked'),
+          message: apiMsg(req, 'Ce groupe n’est pas lié à une campagne GM Assistant.'),
         });
       }
       const row = getDrizzle()
@@ -970,15 +991,15 @@ export async function gmaRoutes(app: FastifyInstance) {
         .get() as any;
       if (!row) {
         return reply.code(404).send({
-          error: 'unknown_pc',
-          message: 'Ce personnage n’est pas géré par la synchronisation GM Assistant.',
+          error: apiMsg(req, 'unknown_pc'),
+          message: apiMsg(req, 'Ce personnage n’est pas géré par la synchronisation GM Assistant.'),
         });
       }
       const key = resolveLinkKey(link);
       if (!key) {
         return reply.code(400).send({
-          error: 'no_key',
-          message: 'Clé GM Assistant expirée — le MD doit la ressaisir.',
+          error: apiMsg(req, 'no_key'),
+          message: apiMsg(req, 'Clé GM Assistant expirée — le MD doit la ressaisir.'),
         });
       }
       try {
@@ -989,7 +1010,7 @@ export async function gmaRoutes(app: FastifyInstance) {
         );
       } catch (err) {
         const { status, message } = gmaErrorToResponse(err);
-        return reply.code(status).send({ error: 'gma', message });
+        return reply.code(status).send({ error: apiMsg(req, 'gma'), message });
       }
       getDrizzle().delete(gmaPcLinks).where(eq(gmaPcLinks.id, row.id)).run();
       emitGma(partyId, userId, 'sync');
@@ -1011,13 +1032,16 @@ export async function gmaRoutes(app: FastifyInstance) {
       if (!isPartyMember(partyId, userId)) {
         return reply
           .code(403)
-          .send({ error: 'not a member', message: 'Tu n’es pas membre de ce groupe.' });
+          .send({
+            error: apiMsg(req, 'not a member'),
+            message: apiMsg(req, 'Tu n’es pas membre de ce groupe.'),
+          });
       }
       const link = getPartyLink(partyId);
       if (!link) {
         return reply.code(404).send({
-          error: 'not_linked',
-          message: 'Aucune campagne GM Assistant liée à ce groupe.',
+          error: apiMsg(req, 'not_linked'),
+          message: apiMsg(req, 'Aucune campagne GM Assistant liée à ce groupe.'),
         });
       }
       let rows = cachedSessions(partyId);
@@ -1038,7 +1062,7 @@ export async function gmaRoutes(app: FastifyInstance) {
           } catch (err) {
             if (rows.length === 0) {
               const { status, message } = gmaErrorToResponse(err);
-              return reply.code(status).send({ error: 'gma', message });
+              return reply.code(status).send({ error: apiMsg(req, 'gma'), message });
             }
             stale = true; // stale-on-error: keep the table reading
           }
@@ -1073,13 +1097,16 @@ export async function gmaRoutes(app: FastifyInstance) {
       if (!isPartyMember(partyId, userId)) {
         return reply
           .code(403)
-          .send({ error: 'not a member', message: 'Tu n’es pas membre de ce groupe.' });
+          .send({
+            error: apiMsg(req, 'not a member'),
+            message: apiMsg(req, 'Tu n’es pas membre de ce groupe.'),
+          });
       }
       const link = getPartyLink(partyId);
       if (!link) {
         return reply.code(404).send({
-          error: 'not_linked',
-          message: 'Aucune campagne GM Assistant liée à ce groupe.',
+          error: apiMsg(req, 'not_linked'),
+          message: apiMsg(req, 'Aucune campagne GM Assistant liée à ce groupe.'),
         });
       }
       let session = cachedSessionRow(partyId, sessionId);
@@ -1097,8 +1124,8 @@ export async function gmaRoutes(app: FastifyInstance) {
       }
       if (!session) {
         return reply.code(404).send({
-          error: 'unknown_session',
-          message: 'Séance inconnue dans la chronique — actualise la liste.',
+          error: apiMsg(req, 'unknown_session'),
+          message: apiMsg(req, 'Séance inconnue dans la chronique — actualise la liste.'),
         });
       }
       let rows = cachedRecaps(partyId, sessionId);
@@ -1115,7 +1142,7 @@ export async function gmaRoutes(app: FastifyInstance) {
           } catch (err) {
             if (rows.length === 0 && wantRefresh) {
               const { status, message } = gmaErrorToResponse(err);
-              return reply.code(status).send({ error: 'gma', message });
+              return reply.code(status).send({ error: apiMsg(req, 'gma'), message });
             }
             stale = true; // serve whatever cache we have
           }

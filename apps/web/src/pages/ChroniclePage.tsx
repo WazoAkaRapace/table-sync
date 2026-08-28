@@ -362,7 +362,9 @@ export default function ChroniclePage() {
                 type="button"
                 onClick={() => openSession(latest)}
                 className="-mx-3 block w-full rounded-lg px-3 text-left transition-colors hover:bg-parchment-100/70"
-                aria-label={`Lire le résumé : ${latest.title}`}
+                aria-label={t('chronique.lire.le.resume.latest.title', {
+                  latest_title: latest.title,
+                })}
               >
                 <span className="flex items-start gap-4">
                   <span
@@ -399,7 +401,7 @@ export default function ChroniclePage() {
                 type="button"
                 onClick={() => openSession(s)}
                 className="-mx-3 block w-full rounded-lg px-3 text-left transition-colors hover:bg-parchment-100/70"
-                aria-label={`Lire le résumé : ${s.title}`}
+                aria-label={t('chronique.lire.le.resume.s.title', { s_title: s.title })}
               >
                 <span className="flex items-baseline gap-4">
                   <span

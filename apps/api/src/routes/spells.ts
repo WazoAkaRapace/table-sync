@@ -11,6 +11,7 @@ import { cols } from '../db/projections.ts';
 import { spells } from '../db/schema.ts';
 import { mapSpell, requireUser } from './helpers.ts';
 import { langFromReq, pickLocalized } from './lang.ts';
+import { apiMsg } from './messages.ts';
 
 interface SpellQuery {
   class?: string;
@@ -136,7 +137,7 @@ export async function spellRoutes(app: FastifyInstance) {
         .from(spells)
         .where(eq(spells.id, Number(req.params.id)))
         .get() as any;
-      if (!row) return reply.code(404).send({ error: 'spell not found' });
+      if (!row) return reply.code(404).send({ error: apiMsg(req, 'spell not found') });
       return reply.send({ spell: mapSpell(row, langFromReq(req)) });
     },
   );

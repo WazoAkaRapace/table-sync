@@ -915,7 +915,9 @@ export default function CharacterInventoryPage() {
                       if (hubInitError) setHubInitError(false);
                     }}
                     className="btn-secondary text-xs px-2 py-1"
-                    title={`d20 + ${hubCombat.initiativeBonus} (DEX)`}
+                    title={t('inv.d20.hubcombat.initiativebonu.dex', {
+                      hubCombat_initiativeBonu: hubCombat.initiativeBonus,
+                    })}
                   >
                     🎲
                   </button>

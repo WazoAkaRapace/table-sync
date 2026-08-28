@@ -123,7 +123,7 @@ export default function CastSpellSheet({
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-label={`Lancer ${spell.name}`}
+        aria-label={t('cast.lancer.spell.name', { spell_name: spell.name })}
       >
         <div className="flex items-start justify-between gap-2 mb-3">
           <div>

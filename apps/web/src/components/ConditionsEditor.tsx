@@ -76,7 +76,7 @@ export default function ConditionsEditor({
     <BottomSheet
       open={open}
       onClose={onClose}
-      title={`Conditions — ${combatantName}`}
+      title={t('conds.conditions.combatantname', { combatantName: combatantName })}
       size="md"
       mobileOnly={false}
       bodyClassName="space-y-2"
