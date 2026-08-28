@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth';
 import { ErrorMsg } from '../components/ui';
+import { useTranslation } from 'react-i18next';
 
 export default function RegisterPage() {
+  const { t } = useTranslation();
   const { register } = useAuth();
   const nav = useNavigate();
   const [username, setUsername] = useState('');
@@ -32,12 +34,14 @@ export default function RegisterPage() {
       <div className="card w-full max-w-sm p-6 sm:p-8">
         <div className="text-center mb-6">
           <img src="/icon-seal.svg" alt="" aria-hidden="true" className="w-20 h-20 mx-auto mb-3" />
-          <h1 className="font-display text-2xl font-bold text-blood-700">Créer un compte</h1>
+          <h1 className="font-display text-2xl font-bold text-blood-700">
+            {t('register.creer.un.compte')}
+          </h1>
         </div>
         <form onSubmit={submit} className="space-y-4">
           <div>
             <label className="label" htmlFor="register-display-name">
-              Nom affiché
+              {t('register.nom.affiche')}
             </label>
             <input
               id="register-display-name"
@@ -45,7 +49,7 @@ export default function RegisterPage() {
               className="input"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Le MD"
+              placeholder={t('register.le.md')}
               autoComplete="nickname"
               required
             />
@@ -78,13 +82,13 @@ export default function RegisterPage() {
               className="input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="maître@table-sync.fr"
+              placeholder={t('register.maitre.table.sync.fr')}
               autoComplete="email"
               inputMode="email"
               required
             />
             <p className="text-xs text-ink-400 mt-1">
-              Pour retrouver votre compte si vous oubliez votre mot de passe.
+              {t('register.pour.retrouver.votre.compte.si.vous')}
             </p>
           </div>
           <div>

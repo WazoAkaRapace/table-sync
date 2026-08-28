@@ -24,6 +24,7 @@ import { useAuth } from '../auth';
 import { ErrorMsg, LoadingSpinner } from '../components/ui';
 import { useSyncEvent } from '../sync';
 import { copyText, plural } from '../utils';
+import { useTranslation } from 'react-i18next';
 
 // ---------- Small pieces of the contents ----------
 
@@ -153,8 +154,9 @@ function MemberCharacters({
   isGM: boolean;
   partyId: string;
 }) {
+  const { t } = useTranslation();
   if (characters.length === 0) {
-    return <p className="mt-1.5 text-xs italic text-ink-400">sans personnage</p>;
+    return <p className="mt-1.5 text-xs italic text-ink-400">{t('party.sans.personnage')}</p>;
   }
   if (!isGM) {
     return (
@@ -171,7 +173,7 @@ function MemberCharacters({
             <span
               aria-hidden="true"
               className="shrink-0 text-xs text-ink-300"
-              title="Seul son joueur peut ouvrir cette fiche"
+              title={t('party.seul.son.joueur.peut.ouvrir.cette')}
             >
               🔒
             </span>
@@ -212,6 +214,7 @@ function MemberCharacters({
 // ---------- The volume's table of contents ----------
 
 export default function PartyPage() {
+  const { t } = useTranslation();
   const { partyId } = useParams();
   const { user } = useAuth();
   const [party, setParty] = useState<PartyDetail | null>(null);
@@ -303,10 +306,8 @@ export default function PartyPage() {
   if (disbanded) {
     return (
       <div className="mx-auto w-full max-w-xl space-y-4 pt-10 text-center">
-        <h1 className="font-display text-2xl font-bold">Le groupe a été dissous</h1>
-        <p className="text-sm text-ink-400">
-          Le MD a fermé la table : personnages, combats, PNJ et objets ont été supprimés avec elle.
-        </p>
+        <h1 className="font-display text-2xl font-bold">{t('party.le.groupe.a.ete.dissous')}</h1>
+        <p className="text-sm text-ink-400">{t('party.le.md.a.ferme.la.table')}</p>
         <div>
           <Link to="/parties" className="btn-secondary inline-block">
             Mes groupes
@@ -318,10 +319,8 @@ export default function PartyPage() {
   if (notMember) {
     return (
       <div className="mx-auto w-full max-w-xl space-y-4 pt-10 text-center">
-        <h1 className="font-display text-2xl font-bold">Tu ne fais plus partie de ce groupe</h1>
-        <p className="text-sm text-ink-400">
-          Le MD t'a retiré de la table. Pour revenir, il te faudra un code d'invitation valide.
-        </p>
+        <h1 className="font-display text-2xl font-bold">{t('party.tu.ne.fais.plus.partie.de')}</h1>
+        <p className="text-sm text-ink-400">{t('party.le.md.t.a.retire.de')}</p>
         <div>
           <Link to="/parties" className="btn-secondary inline-block">
             Mes groupes
@@ -336,7 +335,7 @@ export default function PartyPage() {
         <ErrorMsg message="Le groupe n'a pas pu être ouvert — vérifie la connexion." />
         <div className="text-center">
           <button type="button" className="btn-secondary" onClick={() => load()}>
-            Réessayer
+            {t('party.reessayer')}
           </button>
         </div>
       </div>
@@ -372,12 +371,12 @@ export default function PartyPage() {
 
       {/* I — Ton personnage : la seule porte en sang de la page */}
       <section className="register-rise pt-6" style={{ animationDelay: '60ms' }}>
-        <TocHeader numeral="I" title="Ton personnage" id="toc-mine" />
+        <TocHeader numeral="I" title={t('party.ton.personnage')} id="toc-mine" />
         {myCharacters.length === 0 ? (
           <div className="border-b border-parchment-200 py-5">
-            <p className="text-sm text-ink-500">Tu n'as pas encore de personnage dans ce groupe.</p>
+            <p className="text-sm text-ink-500">{t('party.tu.n.as.pas.encore.de')}</p>
             <Link to={`/party/${partyId}/create`} className="btn-primary mt-4 inline-block">
-              ＋ Créer mon personnage
+              {t('party.creer.mon.personnage')}
             </Link>
           </div>
         ) : (
@@ -398,9 +397,9 @@ export default function PartyPage() {
                       {c.hidden && (
                         <span
                           className="shrink-0 rounded-full bg-ink-100 px-2 py-0.5 text-[11px] font-medium text-ink-600"
-                          title="Invisible des autres joueurs (le MD le voit) — actif nulle part : ni liste, ni combat"
+                          title={t('party.invisible.des.autres.joueurs.le.md')}
                         >
-                          Caché
+                          {t('party.cache')}
                         </span>
                       )}
                     </span>
@@ -419,7 +418,7 @@ export default function PartyPage() {
         {myCharacters.length > 0 && (
           <div className="pt-3">
             <Link to={`/party/${partyId}/create`} className="btn-ghost inline-block text-ink-500">
-              ＋ Nouveau personnage
+              {t('party.nouveau.personnage')}
             </Link>
           </div>
         )}
@@ -427,10 +426,10 @@ export default function PartyPage() {
 
       {/* II — La table : visible de tous, ouvrable par son joueur seul */}
       <section className="register-rise pt-8" style={{ animationDelay: '120ms' }}>
-        <TocHeader numeral="II" title="La table" id="toc-table" />
+        <TocHeader numeral="II" title={t('party.la.table')} id="toc-table" />
         {others.length === 0 ? (
           <p className="border-b border-parchment-200 py-5 text-sm text-ink-400">
-            Personne d'autre à la table pour l'instant — le code d'invitation t'attend en annexes.
+            {t('party.personne.d.autre.a.la.table')}
           </p>
         ) : (
           <ul className="list-none">

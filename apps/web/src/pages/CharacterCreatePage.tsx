@@ -38,6 +38,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import api from '../api';
 import { NumberField } from '../components/ui';
 import { abilityShort } from '../i18n/labels';
+import { useTranslation } from 'react-i18next';
 
 /** Marker for the « Autre… » free-text escape on every catalog picker. */
 const CUSTOM = '__custom__';
@@ -182,6 +183,7 @@ function StatTile({ label, value, note }: { label: string; value: string; note: 
 }
 
 export default function CharacterCreatePage() {
+  const { t } = useTranslation();
   const { partyId } = useParams();
   const navigate = useNavigate();
 
@@ -327,10 +329,11 @@ export default function CharacterCreatePage() {
     <div className="mx-auto w-full max-w-3xl pb-8">
       {/* Volume title over the head rule */}
       <header className="register-rise pb-6 pt-2 text-center">
-        <h1 className="font-display text-2xl font-bold sm:text-3xl">Nouveau personnage</h1>
+        <h1 className="font-display text-2xl font-bold sm:text-3xl">
+          {t('create.nouveau.personnage')}
+        </h1>
         <p className="mt-1.5 text-sm text-ink-400">
-          Six entrées au registre — la fiche sort jouable : PV, CA, sauvegardes et maîtrises dérivés
-          d’emblée.
+          {t('create.six.entrees.au.registre.la.fiche')}
         </p>
       </header>
       <div aria-hidden="true">
@@ -339,7 +342,10 @@ export default function CharacterCreatePage() {
       </div>
 
       {/* Numeral strip — the ink rises as entries are answered */}
-      <nav aria-label="Étapes de création" className="flex border-b border-parchment-200">
+      <nav
+        aria-label={t('create.etapes.de.creation')}
+        className="flex border-b border-parchment-200"
+      >
         {STEPS.map((s, i) => {
           const state = i === step ? 'current' : i < step ? 'done' : 'todo';
           return (
@@ -366,8 +372,8 @@ export default function CharacterCreatePage() {
           type="button"
           onClick={() => goTo(RECAP)}
           aria-current={step === RECAP ? 'step' : undefined}
-          aria-label="Récapitulatif"
-          title="Récapitulatif"
+          aria-label={t('create.recapitulatif')}
+          title={t('create.recapitulatif')}
           className={`flex-1 py-2.5 font-display text-sm transition-colors ${
             step === RECAP
               ? 'border-b-2 border-blood-600 font-bold text-blood-600'
@@ -420,7 +426,7 @@ export default function CharacterCreatePage() {
                 onChange={(e) => setSecret(e.target.checked)}
               />
               <label htmlFor="create-hidden" className="text-sm font-medium text-ink-700">
-                Personnage secret
+                {t('create.personnage.secret')}
                 <span className="mt-0.5 block text-xs font-normal text-ink-400">
                   Prépare-le à l’abri des regards : invisible des autres joueurs et inactif (ni
                   liste, ni combat). Toi et le MD le voyez toujours.
@@ -506,21 +512,20 @@ export default function CharacterCreatePage() {
             {raceChoice === CUSTOM && (
               <div className="pl-6">
                 <label htmlFor="create-custom-race" className="label">
-                  Espèce
+                  {t('create.espece')}
                 </label>
                 <input
                   id="create-custom-race"
                   className="input"
                   value={customRace}
                   onChange={(e) => setCustomRace(e.target.value)}
-                  placeholder="Mon espèce maison…"
+                  placeholder={t('create.mon.espece.maison')}
                   maxLength={40}
                 />
               </div>
             )}
             <p className="pt-1 text-xs text-ink-400">
-              Les traits cités sont un rappel des règles — rien n’est appliqué automatiquement,
-              règle-les ensuite sur la fiche avec ta table.
+              {t('create.les.traits.cites.sont.un.rappel')}
             </p>
           </div>
         )}
@@ -559,8 +564,7 @@ export default function CharacterCreatePage() {
               </div>
             )}
             <p className="pt-1 text-xs text-ink-400">
-              L’historique offre aussi deux compétences et des langues — ajoute-les à l’étape
-              suivante ou sur la fiche.
+              {t('create.l.historique.offre.aussi.deux.competences')}
             </p>
           </div>
         )}
@@ -613,10 +617,10 @@ export default function CharacterCreatePage() {
             ) : (
               <div className="card space-y-4 p-4 sm:p-5">
                 <div>
-                  <p className="label">Tableau standard — à répartir</p>
+                  <p className="label">{t('create.tableau.standard.a.repartir')}</p>
                   <div className="flex flex-wrap gap-2">
                     {pool.length === 0 && (
-                      <span className="text-sm text-ink-400">Tout est posé ✓</span>
+                      <span className="text-sm text-ink-400">{t('create.tout.est.pose')}</span>
                     )}
                     {pool.map((v) => (
                       <button
@@ -635,8 +639,7 @@ export default function CharacterCreatePage() {
                     ))}
                   </div>
                   <p className="mt-2 text-xs text-ink-400">
-                    Touche une valeur, puis la caractéristique qui la reçoit — elle s’enchaîne toute
-                    seule.
+                    {t('create.touche.une.valeur.puis.la.caracteristique')}
                   </p>
                 </div>
                 <div className="space-y-1.5">
@@ -687,11 +690,13 @@ export default function CharacterCreatePage() {
                     className="btn-ghost text-sm text-ink-500"
                     onClick={resetScores}
                   >
-                    Réinitialiser
+                    {t('create.reinitialiser')}
                   </button>
                 </div>
                 {!abilitiesComplete && (
-                  <p className="text-xs text-ink-400">Pose les 6 scores pour continuer.</p>
+                  <p className="text-xs text-ink-400">
+                    {t('create.pose.les.6.scores.pour.continuer')}
+                  </p>
                 )}
               </div>
             )}
@@ -743,7 +748,7 @@ export default function CharacterCreatePage() {
               </div>
               {skills.length >= skillChoice.count && (
                 <p className="text-xs text-ink-400">
-                  Plafond atteint — touche une compétence ● pour la retirer d’abord.
+                  {t('create.plafond.atteint.touche.une.competence.pour')}
                 </p>
               )}
             </div>
@@ -791,7 +796,7 @@ export default function CharacterCreatePage() {
                   type="submit"
                   className="rounded-lg border border-parchment-200 bg-parchment-100 px-3 py-2 text-sm font-medium text-ink-600 hover:border-parchment-300"
                 >
-                  Ajouter
+                  {t('create.ajouter')}
                 </button>
               </form>
             </div>
@@ -824,7 +829,7 @@ export default function CharacterCreatePage() {
                 </span>
               </div>
               <div className="flex items-center">
-                <span className="text-sm font-medium text-ink-700">Espèce</span>
+                <span className="text-sm font-medium text-ink-700">{t('create.espece')}</span>
                 <DotLeader />
                 <span className="text-sm text-ink-800">{effectiveRace ?? '—'}</span>
               </div>
@@ -865,7 +870,9 @@ export default function CharacterCreatePage() {
               </div>
               {skills.length > 0 && (
                 <div className="flex items-center">
-                  <span className="shrink-0 text-sm font-medium text-ink-700">Compétences</span>
+                  <span className="shrink-0 text-sm font-medium text-ink-700">
+                    {t('create.competences')}
+                  </span>
                   <DotLeader />
                   <span className="flex flex-wrap justify-end gap-1.5">
                     {skills.map((key) => (
@@ -900,8 +907,7 @@ export default function CharacterCreatePage() {
             </div>
 
             <p className="text-center text-xs text-ink-400">
-              L’équipement et les sorts t’attendent sur la fiche — Inventaire et Sorts s’ouvrent dès
-              l’arrivée.
+              {t('create.l.equipement.et.les.sorts.t')}
             </p>
             {createError && (
               <p role="alert" className="text-center text-sm text-red-600">

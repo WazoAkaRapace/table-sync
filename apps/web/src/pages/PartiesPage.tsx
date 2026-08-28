@@ -21,6 +21,7 @@ import api from '../api';
 import { useAuth } from '../auth';
 import { ErrorMsg, LoadingSpinner, Modal } from '../components/ui';
 import { copyText, formatSince, plural, toRoman } from '../utils';
+import { useTranslation } from 'react-i18next';
 
 // ---------- Small helpers ----------
 
@@ -65,6 +66,7 @@ const MODE_HELPERS: Record<EncumbranceMode, string> = {
 };
 
 function CreatePartyForm({ onCreated }: { onCreated: () => void }) {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [mode, setMode] = useState<EncumbranceMode>('variant');
   const [error, setError] = useState('');
@@ -89,14 +91,14 @@ function CreatePartyForm({ onCreated }: { onCreated: () => void }) {
     <form onSubmit={submit} className="mt-4 flex flex-1 flex-col gap-4">
       <div>
         <label className="label" htmlFor="create-party-name">
-          Nom du groupe
+          {t('parties.nom.du.groupe')}
         </label>
         <input
           id="create-party-name"
           className="input"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Les Héros de Chult"
+          placeholder={t('parties.les.heros.de.chult')}
           required
         />
       </div>
@@ -111,14 +113,14 @@ function CreatePartyForm({ onCreated }: { onCreated: () => void }) {
           onChange={(e) => setMode(e.target.value as EncumbranceMode)}
         >
           <option value="variant">Variante — 3 paliers de poids (recommandé)</option>
-          <option value="standard">Standard — un seul seuil max</option>
-          <option value="slots">Emplacements — ignorant le poids</option>
+          <option value="standard">{t('parties.standard.un.seul.seuil.max')}</option>
+          <option value="slots">{t('parties.emplacements.ignorant.le.poids')}</option>
         </select>
         <p className="mt-1.5 text-xs text-ink-400">{MODE_HELPERS[mode]}</p>
       </div>
       {error && <div className="text-sm text-red-600">{error}</div>}
       <button type="submit" className="btn-primary" disabled={busy}>
-        Créer le groupe
+        {t('parties.creer.le.groupe')}
       </button>
     </form>
   );
@@ -172,6 +174,7 @@ function JoinPartyForm({ onJoined }: { onJoined: () => void }) {
 // ---------- The register ----------
 
 export default function PartiesPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [parties, setParties] = useState<PartyListRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -213,7 +216,7 @@ export default function PartiesPage() {
         <ErrorMsg message="Le registre n'a pas pu être ouvert — vérifie la connexion." />
         <div className="text-center">
           <button type="button" className="btn-secondary" onClick={load}>
-            Réessayer
+            {t('parties.reessayer')}
           </button>
         </div>
       </div>
@@ -241,16 +244,14 @@ export default function PartiesPage() {
         {/* Two ruled entry paths — flat on the parchment, split by a rule, no cards */}
         <div className="grid divide-y divide-parchment-300 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
           <section className="flex flex-col py-6 sm:py-8 sm:pr-10">
-            <h2 className="section-title">Créer un groupe</h2>
-            <p className="mt-1 text-sm text-ink-400">
-              Tu animeras la table en tant que MD, avec un code d'invitation à donner à tes joueurs.
-            </p>
+            <h2 className="section-title">{t('parties.creer.un.groupe')}</h2>
+            <p className="mt-1 text-sm text-ink-400">{t('parties.tu.animeras.la.table.en.tant')}</p>
             <CreatePartyForm onCreated={load} />
           </section>
           <section className="flex flex-col py-6 sm:py-8 sm:pl-10">
-            <h2 className="section-title">Rejoindre avec un code</h2>
+            <h2 className="section-title">{t('parties.rejoindre.avec.un.code')}</h2>
             <p className="mt-1 text-sm text-ink-400">
-              Ta table te donne six lettres — entre-les pour t'asseoir.
+              {t('parties.ta.table.te.donne.six.lettres')}
             </p>
             <JoinPartyForm onJoined={load} />
           </section>
@@ -386,17 +387,21 @@ export default function PartiesPage() {
           className="btn-ghost text-ink-500"
           onClick={() => setShowCreate(true)}
         >
-          ＋ Nouveau groupe
+          {t('parties.nouveau.groupe')}
         </button>
         <span aria-hidden="true" className="text-parchment-400">
           ·
         </span>
         <button type="button" className="btn-ghost text-ink-500" onClick={() => setShowJoin(true)}>
-          Rejoindre par code
+          {t('parties.rejoindre.par.code')}
         </button>
       </div>
 
-      <Modal open={showCreate} onClose={() => setShowCreate(false)} title="Nouveau groupe">
+      <Modal
+        open={showCreate}
+        onClose={() => setShowCreate(false)}
+        title={t('parties.nouveau.groupe')}
+      >
         <CreatePartyForm
           onCreated={() => {
             setShowCreate(false);
@@ -404,7 +409,11 @@ export default function PartiesPage() {
           }}
         />
       </Modal>
-      <Modal open={showJoin} onClose={() => setShowJoin(false)} title="Rejoindre un groupe">
+      <Modal
+        open={showJoin}
+        onClose={() => setShowJoin(false)}
+        title={t('parties.rejoindre.un.groupe')}
+      >
         <JoinPartyForm
           onJoined={() => {
             setShowJoin(false);

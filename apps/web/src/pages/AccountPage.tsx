@@ -6,6 +6,7 @@ import { useAuth } from '../auth';
 import { ErrorMsg, type Toast, ToastStack } from '../components/ui';
 import { useHeaderOverride } from '../headerContext';
 import { formatSince } from '../utils';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Mon compte — nom affiché, adresse e-mail (optionnelle pour les comptes
@@ -13,6 +14,7 @@ import { formatSince } from '../utils';
  * lecture seule : il sert à la connexion et ne change pas.
  */
 export default function AccountPage() {
+  const { t } = useTranslation();
   const { user, refreshUser } = useAuth();
   const nav = useNavigate();
 
@@ -117,7 +119,7 @@ export default function AccountPage() {
         <form onSubmit={submitProfile} className="space-y-4">
           <div>
             <label className="label" htmlFor="account-display-name">
-              Nom affiché
+              {t('account.nom.affiche')}
             </label>
             <input
               id="account-display-name"
@@ -129,7 +131,7 @@ export default function AccountPage() {
               autoComplete="nickname"
               required
             />
-            <p className="text-xs text-ink-400 mt-1">C’est le nom que voit la table.</p>
+            <p className="text-xs text-ink-400 mt-1">{t('account.c.est.le.nom.que.voit')}</p>
           </div>
           <div>
             <label className="label" htmlFor="account-email">
@@ -142,16 +144,17 @@ export default function AccountPage() {
               className="input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="vous@exemple.fr"
+              placeholder={t('account.vous.exemple.fr')}
               autoComplete="email"
               inputMode="email"
             />
             {user.email ? (
-              <p className="text-xs text-ink-400 mt-1">Laissez vide pour retirer votre adresse.</p>
+              <p className="text-xs text-ink-400 mt-1">
+                {t('account.laissez.vide.pour.retirer.votre.adresse')}
+              </p>
             ) : (
               <p className="text-xs text-ink-400 mt-1">
-                Optionnelle — elle servira à retrouver votre compte si vous oubliez votre mot de
-                passe.
+                {t('account.optionnelle.elle.servira.a.retrouver.votre')}
               </p>
             )}
           </div>
@@ -169,12 +172,12 @@ export default function AccountPage() {
       {/* ---------- Mot de passe ---------- */}
       <section className="card p-5 sm:p-6" aria-labelledby="account-password-title">
         <h2 id="account-password-title" className="section-title mb-4">
-          Mot de passe
+          {t('account.mot.de.passe')}
         </h2>
         <form onSubmit={submitPassword} className="space-y-4">
           <div>
             <label className="label" htmlFor="account-password-current">
-              Mot de passe actuel
+              {t('account.mot.de.passe.actuel')}
             </label>
             <input
               id="account-password-current"
@@ -205,7 +208,7 @@ export default function AccountPage() {
           </div>
           <div>
             <label className="label" htmlFor="account-password-confirm">
-              Confirmer le nouveau mot de passe
+              {t('account.confirmer.le.nouveau.mot.de.passe')}
             </label>
             <input
               id="account-password-confirm"
@@ -219,7 +222,7 @@ export default function AccountPage() {
             />
             {!passwordsMatch && (
               <p className="text-xs text-red-600 mt-1">
-                Les deux nouveaux mots de passe ne correspondent pas.
+                {t('account.les.deux.nouveaux.mots.de.passe')}
               </p>
             )}
           </div>
