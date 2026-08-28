@@ -1,5 +1,5 @@
 import type { Item, ItemCategory, Rarity } from '@table-sync/shared';
-import { CATEGORY_LABELS_FR, RARITY_LABELS_FR } from '@table-sync/shared';
+import { CATEGORY_LABELS_FR } from '@table-sync/shared';
 import {
   CategoryBadge,
   CostBadge,
@@ -8,6 +8,7 @@ import {
   RarityBadge,
   WeightBadge,
 } from '../../components/ui';
+import { categoryLabel, rarityLabel } from '../../i18n/labels';
 
 // ---------- Filter option sets ----------
 
@@ -15,14 +16,14 @@ const CATEGORY_OPTIONS: { value: '' | ItemCategory; label: string }[] = [
   { value: '', label: 'Toutes catégories' },
   ...(Object.keys(CATEGORY_LABELS_FR) as ItemCategory[])
     .filter((c) => c !== 'custom')
-    .map((c) => ({ value: c as ItemCategory, label: CATEGORY_LABELS_FR[c] })),
+    .map((c) => ({ value: c as ItemCategory, label: categoryLabel(c) })),
 ];
 
 const RARITY_OPTIONS: { value: '' | Rarity; label: string }[] = [
   { value: '', label: 'Toutes raretés' },
   ...(['common', 'uncommon', 'rare', 'veryRare', 'legendary', 'artifact'] as Rarity[]).map((r) => ({
     value: r,
-    label: RARITY_LABELS_FR[r],
+    label: rarityLabel(r),
   })),
 ];
 

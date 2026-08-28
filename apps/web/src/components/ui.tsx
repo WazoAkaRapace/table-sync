@@ -1,19 +1,14 @@
 import type { CostUnit, EncumbranceState, ItemCategory, Rarity } from '@table-sync/shared';
-import {
-  CATEGORY_LABELS_FR,
-  COIN_LABELS_FR,
-  ENCUMBRANCE_LABELS_FR,
-  RARITY_LABELS_FR,
-} from '@table-sync/shared';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { categoryLabel, coinLabel, encumbranceLabel, rarityLabel } from '../i18n/labels';
 
 export function RarityBadge({ rarity }: { rarity: Rarity }) {
   const cls = `rarity-${rarity}`;
   return (
     <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium ${cls}`}>
-      {RARITY_LABELS_FR[rarity]}
+      {rarityLabel(rarity)}
     </span>
   );
 }
@@ -21,7 +16,7 @@ export function RarityBadge({ rarity }: { rarity: Rarity }) {
 export function CategoryBadge({ category }: { category: ItemCategory }) {
   return (
     <span className="inline-block text-xs px-2 py-0.5 rounded-full bg-parchment-100 text-ink-500 font-medium">
-      {CATEGORY_LABELS_FR[category]}
+      {categoryLabel(category)}
     </span>
   );
 }
@@ -247,7 +242,7 @@ export function CostBadge({ qty, unit }: { qty: number | null; unit: CostUnit | 
   if (!qty || !unit) return null;
   return (
     <span className="text-xs text-ink-500">
-      {qty} {COIN_LABELS_FR[unit]}
+      {qty} {coinLabel(unit)}
     </span>
   );
 }
@@ -275,7 +270,7 @@ export function EncumbranceBar({
         aria-valuenow={Math.round(totalWeightKg * 100) / 100}
         aria-valuemin={0}
         aria-valuemax={maxCarryKg}
-        aria-valuetext={`${totalWeightKg.toFixed(1)} kg sur ${maxCarryKg} kg, ${ENCUMBRANCE_LABELS_FR[tier]}`}
+        aria-valuetext={`${totalWeightKg.toFixed(1)} kg sur ${maxCarryKg} kg, ${encumbranceLabel(tier)}`}
       >
         <div className="flex items-center gap-2">
           <div className="relative h-1.5 flex-1 bg-parchment-200 rounded-full overflow-hidden">
@@ -300,7 +295,7 @@ export function EncumbranceBar({
             {totalWeightKg.toFixed(1)} / {maxCarryKg} kg
           </span>
           <span className={`text-[11px] font-medium shrink-0 ${tierColor(tier)}`}>
-            {ENCUMBRANCE_LABELS_FR[tier]}
+            {encumbranceLabel(tier)}
           </span>
         </div>
         {tier !== 'unencumbered' && (
@@ -319,15 +314,13 @@ export function EncumbranceBar({
       aria-valuenow={Math.round(totalWeightKg * 100) / 100}
       aria-valuemin={0}
       aria-valuemax={maxCarryKg}
-      aria-valuetext={`${totalWeightKg.toFixed(1)} kg sur ${maxCarryKg} kg, ${ENCUMBRANCE_LABELS_FR[tier]}`}
+      aria-valuetext={`${totalWeightKg.toFixed(1)} kg sur ${maxCarryKg} kg, ${encumbranceLabel(tier)}`}
     >
       <div className="flex items-baseline justify-between">
         <span className="font-display text-sm font-semibold text-ink-900">
           {totalWeightKg.toFixed(1)} / {maxCarryKg} kg
         </span>
-        <span className={`text-xs font-medium ${tierColor(tier)}`}>
-          {ENCUMBRANCE_LABELS_FR[tier]}
-        </span>
+        <span className={`text-xs font-medium ${tierColor(tier)}`}>{encumbranceLabel(tier)}</span>
       </div>
       <div className="relative h-3 bg-parchment-200 rounded-full overflow-hidden">
         <div

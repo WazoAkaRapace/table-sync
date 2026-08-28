@@ -1,7 +1,7 @@
 import type { Character } from '@table-sync/shared';
-import { COIN_LABELS_FR } from '@table-sync/shared';
 import { useState } from 'react';
 import { NumberField } from '../../components/ui';
+import { coinLabel } from '../../i18n/labels';
 import type { CoinsState } from './types';
 
 // ---------- Coin purse (auto-save, distinct colored glyphs) ----------
@@ -69,13 +69,13 @@ export function CoinPurse({ coins, readOnly = false, onChange, onBlur }: CoinPur
                       style={{ backgroundColor: color }}
                       aria-hidden="true"
                     />
-                    {COIN_LABELS_FR[unit]}
+                    {coinLabel(unit)}
                   </span>
                   {readOnly ? (
                     <div
                       className="input bg-parchment-100 text-ink-700 flex items-center justify-between"
                       role="img"
-                      aria-label={`Quantité de ${COIN_LABELS_FR[unit]}`}
+                      aria-label={`Quantité de ${coinLabel(unit)}`}
                     >
                       <span>{coins[key]}</span>
                       <span className="text-xs text-ink-400">{unit}</span>
@@ -89,7 +89,7 @@ export function CoinPurse({ coins, readOnly = false, onChange, onBlur }: CoinPur
                       zeroAsEmpty
                       onChange={(n) => onChange(key, n)}
                       onBlur={onBlur}
-                      aria-label={`Quantité de ${COIN_LABELS_FR[unit]}`}
+                      aria-label={`Quantité de ${coinLabel(unit)}`}
                     />
                   )}
                 </label>

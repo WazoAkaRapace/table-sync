@@ -5,11 +5,11 @@ import {
   isProficientWithArmor,
   proficiencyBonus,
   resolveMagicArmorBase,
-  WEAPON_PROPERTY_LABELS_FR,
 } from '@table-sync/shared';
 import { useEffect, useState } from 'react';
 import { ItemVignette } from '../../components/ItemImageViewer';
 import { Chip, RarityBadge, WeightBadge } from '../../components/ui';
+import { weaponPropertyLabel } from '../../i18n/labels';
 import { LOCATION_TYPE_ICON } from './types';
 
 // ---------- Inventory row ----------
@@ -412,7 +412,7 @@ export function InventoryRow({
                             Propriétés :{' '}
                             {item.properties
                               .filter((p) => p !== 'monk')
-                              .map((p) => WEAPON_PROPERTY_LABELS_FR[p] ?? p)
+                              .map((p) => weaponPropertyLabel(p) ?? p)
                               .join(', ')}
                           </span>
                         )}

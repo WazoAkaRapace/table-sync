@@ -5,9 +5,10 @@
  */
 
 import type { MonsterSummary } from '@table-sync/shared';
-import { formatCR, MONSTER_SIZE_LABELS_FR } from '@table-sync/shared';
+import { formatCR } from '@table-sync/shared';
 import { useCallback, useEffect, useState } from 'react';
 import api from '../api';
+import { monsterSizeLabel } from '../i18n/labels';
 import { Modal, NumberField } from './ui';
 
 interface Props {
@@ -107,7 +108,7 @@ export default function AddMonsterModal({ open, onClose, onAdd }: Props) {
               <div>
                 <h3 className="section-title">{selected.name}</h3>
                 <p className="text-sm text-ink-500">
-                  {selected.type} · {MONSTER_SIZE_LABELS_FR[selected.size] ?? selected.size} · FP{' '}
+                  {selected.type} · {monsterSizeLabel(selected.size)} · CR{' '}
                   {formatCR(selected.challengeRating)}
                 </p>
               </div>

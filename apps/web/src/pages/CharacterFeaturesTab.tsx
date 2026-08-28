@@ -28,6 +28,7 @@ import api from '../api';
 import { SortableCard, SortableGrid } from '../components/SortableGrid';
 import { ConfirmButton, EmptyState, Modal } from '../components/ui';
 import { appLang } from '../i18n';
+import { featureCategoryLabel } from '../i18n/labels';
 import { useSyncEvent } from '../sync';
 
 // Affichage EN : le catalogue SRD a sa table anglaise (classFeatures.en.ts),
@@ -311,7 +312,7 @@ export default function CharacterFeaturesTab({
           {grouped.map((group) => (
             <div key={group.category}>
               <div className="text-xs font-semibold text-ink-400 uppercase tracking-wide mb-2">
-                {FEATURE_CATEGORY_LABELS_FR[group.category]} ({group.items.length})
+                {featureCategoryLabel(group.category)} ({group.items.length})
               </div>
               <SortableGrid
                 ids={group.items.map((f) => f.id)}
@@ -435,7 +436,7 @@ export default function CharacterFeaturesTab({
                           <span
                             className={`inline-block self-start text-[10px] px-2 py-0.5 rounded-full border ${CATEGORY_COLORS[feature.category]}`}
                           >
-                            {FEATURE_CATEGORY_LABELS_FR[feature.category]}
+                            {featureCategoryLabel(feature.category)}
                           </span>
                         </div>
                       )}
@@ -475,7 +476,7 @@ export default function CharacterFeaturesTab({
             >
               {categories.map((cat) => (
                 <option key={cat} value={cat}>
-                  {FEATURE_CATEGORY_LABELS_FR[cat]}
+                  {featureCategoryLabel(cat)}
                 </option>
               ))}
             </select>

@@ -7,8 +7,6 @@
  */
 
 import {
-  ABILITY_LABELS_FR,
-  ABILITY_SHORT_FR,
   type AbilityKey,
   abilityModifier,
   type Character,
@@ -30,6 +28,7 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 import api from '../api';
 import { BottomSheet } from '../components/ui';
+import { abilityLabel, abilityShort } from '../i18n/labels';
 
 interface Props {
   character: Character;
@@ -204,9 +203,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
             const draftVal = abilityDrafts[ability] ?? String(score);
             return (
               <div key={ability} className="bg-parchment-100 rounded-xl p-3 text-center">
-                <div className="text-xs font-medium text-ink-500 mb-1">
-                  {ABILITY_LABELS_FR[ability]}
-                </div>
+                <div className="text-xs font-medium text-ink-500 mb-1">{abilityLabel(ability)}</div>
                 <div className="text-2xl font-bold tabular-nums text-ink-800 mb-1">
                   {formatModifier(mod)}
                 </div>
@@ -221,7 +218,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
                   }}
-                  aria-label={`Score de ${ABILITY_LABELS_FR[ability]}`}
+                  aria-label={`Score de ${abilityLabel(ability)}`}
                 />
               </div>
             );
@@ -292,7 +289,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
               key={l.name}
               label={`DD de sort${castingLines.length > 1 ? ` · ${l.name}` : ''}`}
               value={String(l.dc)}
-              hint={`Attaque ${formatModifier(l.mod + profBonus)} · ${ABILITY_SHORT_FR[l.ability]}`}
+              hint={`Attaque ${formatModifier(l.mod + profBonus)} · ${abilityShort(l.ability)}`}
             />
           ))}
           <DerivedStat label="Perception passive" value={String(passPerc)} />
@@ -343,11 +340,10 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
         </div>
         {classInfo && (
           <p className="text-xs text-ink-500">
-            Sauvegardes maîtrisées :{' '}
-            {classInfo.savingThrows.map((s) => ABILITY_SHORT_FR[s]).join(', ')}
+            Sauvegardes maîtrisées : {classInfo.savingThrows.map((s) => abilityShort(s)).join(', ')}
             {castingLines.length > 0 &&
               ` · Incantation : ${castingLines
-                .map((l) => `${l.name} (${ABILITY_SHORT_FR[l.ability]})`)
+                .map((l) => `${l.name} (${abilityShort(l.ability)})`)
                 .join(', ')}`}
           </p>
         )}

@@ -5,7 +5,7 @@
  */
 
 import {
-  ABILITY_SHORT_FR,
+  type ABILITY_SHORT_FR,
   abilityModifier,
   type Character,
   type CharacterSpell,
@@ -27,6 +27,7 @@ import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import api from '../api';
 import CastSpellSheet from '../components/CastSpellSheet';
 import { BottomSheet, Chip, ErrorMsg } from '../components/ui';
+import { abilityShort, schoolLabel } from '../i18n/labels';
 
 interface Props {
   character: Character;
@@ -552,15 +553,12 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
               <p className="text-xs text-ink-500">
                 DD <span className="font-mono font-semibold">{castingLines[0].dc}</span> · Attaque{' '}
                 <span className="font-mono font-semibold">{castingLines[0].atk}</span> ·{' '}
-                {ABILITY_SHORT_FR[castingLines[0].ability]}
+                {abilityShort(castingLines[0].ability)}
               </p>
             ) : (
               <p className="text-xs text-ink-500 leading-relaxed">
                 {castingLines
-                  .map(
-                    (l) =>
-                      `${l.name} : DD ${l.dc} · att. ${l.atk} · ${ABILITY_SHORT_FR[l.ability]}`,
-                  )
+                  .map((l) => `${l.name} : DD ${l.dc} · att. ${l.atk} · ${abilityShort(l.ability)}`)
                   .join(' — ')}
               </p>
             ))}
@@ -723,10 +721,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                                   className={`h-2.5 w-2.5 rounded-full shrink-0 ${
                                     SCHOOL_DOT[spell.school] ?? 'bg-parchment-400'
                                   }`}
-                                  title={
-                                    SPELL_SCHOOL_LABELS_FR[spell.school as SpellSchool] ??
-                                    spell.school
-                                  }
+                                  title={schoolLabel(spell.school as SpellSchool) ?? spell.school}
                                   aria-hidden="true"
                                 />
                                 {isDomain ? (
@@ -1109,7 +1104,7 @@ function SpellStatBadges({
           {dc.dc_type?.index && (
             <span className="text-blue-500">
               ·{' '}
-              {ABILITY_SHORT_FR[dc.dc_type.index as keyof typeof ABILITY_SHORT_FR] ??
+              {abilityShort(dc.dc_type.index as keyof typeof ABILITY_SHORT_FR) ??
                 dc.dc_type.index.toUpperCase()}
             </span>
           )}
@@ -1161,11 +1156,11 @@ function spellDurationLabel(spell: Spell): string | null {
 /** One sober typographic line: school · range · duration · components (+ ritual tint). */
 function SpellMetaLine({ spell }: { spell: Spell }) {
   const parts: Array<[string, React.ReactNode]> = [];
-  const schoolLabel = SPELL_SCHOOL_LABELS_FR[spell.school as SpellSchool] ?? spell.school;
+  const schoolText = schoolLabel(spell.school as SpellSchool) ?? spell.school;
   parts.push([
     'school',
     <span key="school" className={`font-medium ${SCHOOL_TEXT[spell.school] ?? 'text-ink-600'}`}>
-      {schoolLabel}
+      {schoolText}
     </span>,
   ]);
   if (spell.rangeText) parts.push(['range', <span key="range">{spell.rangeText}</span>]);
@@ -1348,7 +1343,7 @@ function SpellCatalog({
                       className={`h-2.5 w-2.5 rounded-full shrink-0 ${
                         SCHOOL_DOT[spell.school] ?? 'bg-parchment-400'
                       }`}
-                      title={SPELL_SCHOOL_LABELS_FR[spell.school as SpellSchool] ?? spell.school}
+                      title={schoolLabel(spell.school as SpellSchool) ?? spell.school}
                       aria-hidden="true"
                     />
                     <button

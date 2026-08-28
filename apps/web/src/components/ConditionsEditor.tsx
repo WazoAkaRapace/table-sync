@@ -6,6 +6,7 @@
 import type { CombatantCondition } from '@table-sync/shared';
 import { DND_CONDITIONS_FR } from '@table-sync/shared';
 import { useState } from 'react';
+import { conditionLabel } from '../i18n/labels';
 import { BottomSheet } from './ui';
 
 interface Props {
@@ -111,11 +112,11 @@ export default function ConditionsEditor({
               className={`w-9 h-9 rounded-lg flex items-center justify-center text-lg shrink-0 transition-colors ${
                 active ? 'bg-blood-100' : 'bg-parchment-100 hover:bg-parchment-200'
               }`}
-              aria-label={cond}
+              aria-label={conditionLabel(cond)}
             >
               {CONDITION_ICONS[cond] ?? '❓'}
             </button>
-            <span className="flex-1 text-sm font-medium">{cond}</span>
+            <span className="flex-1 text-sm font-medium">{conditionLabel(cond)}</span>
             {active && (
               <div className="flex items-center gap-1">
                 <input

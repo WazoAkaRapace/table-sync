@@ -6,16 +6,12 @@
  */
 
 import type { Monster, MonsterAction } from '@table-sync/shared';
-import {
-  abilityModifier,
-  formatCR,
-  formatModifier,
-  MONSTER_SIZE_LABELS_FR,
-} from '@table-sync/shared';
+import { abilityModifier, formatCR, formatModifier } from '@table-sync/shared';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import api from '../api';
 import { appLocale } from '../i18n';
+import { monsterSizeLabel } from '../i18n/labels';
 import SpellDetailSheet from './SpellDetailSheet';
 
 interface Props {
@@ -219,7 +215,7 @@ function StatBlockBody({
   onOpenSpell: (id: number) => void;
   onDamageRolled?: (total: number, source: string) => void;
 }) {
-  const sizeLabel = MONSTER_SIZE_LABELS_FR[monster.size] ?? monster.size;
+  const sizeLabel = monsterSizeLabel(monster.size);
   const typeLine = [
     monster.type,
     monster.subtype && `(${monster.subtype})`,

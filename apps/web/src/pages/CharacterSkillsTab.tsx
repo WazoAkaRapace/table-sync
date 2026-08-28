@@ -10,7 +10,6 @@
  */
 
 import {
-  ABILITY_SHORT_FR,
   type AbilityKey,
   abilityModifier,
   auraOfProtectionBonus,
@@ -44,6 +43,7 @@ import {
 } from '@table-sync/shared';
 import { type FormEvent, Fragment, useCallback, useState } from 'react';
 import api from '../api';
+import { abilityShort, fightingStyleLabel, toolCategoryLabel } from '../i18n/labels';
 
 interface Props {
   character: Character;
@@ -77,7 +77,7 @@ function skillBreakdownSegments(
 ): BreakdownSegment[] {
   const mod = abilityModifier(abilityScore(character, ability));
   const segments: BreakdownSegment[] = [
-    { text: `${ABILITY_SHORT_FR[ability]} ${formatModifier(mod)}`, className: 'text-ink-600' },
+    { text: `${abilityShort(ability)} ${formatModifier(mod)}`, className: 'text-ink-600' },
   ];
   if (prof === 2) {
     segments.push({
@@ -324,7 +324,7 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
             {skillsByAbility.map((group) => (
               <div key={group.ability}>
                 <div className="text-xs font-semibold text-ink-500 uppercase tracking-wide mb-1.5">
-                  {ABILITY_SHORT_FR[group.ability as AbilityKey]} — {group.label}
+                  {abilityShort(group.ability as AbilityKey)} — {group.label}
                 </div>
                 <div className="space-y-1.5">
                   {group.skills.map((skill) => {
@@ -437,7 +437,7 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
               TOOL_CATEGORIES.map((cat) => (
                 <div key={cat}>
                   <div className="text-xs font-semibold text-ink-500 uppercase tracking-wide mb-1.5">
-                    {TOOL_CATEGORY_LABELS_FR[cat]}
+                    {toolCategoryLabel(cat)}
                   </div>
                   <div className="grid grid-cols-2 gap-1.5">
                     {DND_TOOLS.filter((t) => t.category === cat).map((tool) => {
@@ -581,9 +581,7 @@ function WeaponMasteryCard({
   const hasFightingStyle = (FIGHTING_STYLE_CLASSES as readonly string[]).includes(
     character.characterClass ?? '',
   );
-  const styleLabel = character.fightingStyle
-    ? FIGHTING_STYLE_LABELS_FR[character.fightingStyle]
-    : null;
+  const styleLabel = character.fightingStyle ? fightingStyleLabel(character.fightingStyle) : null;
 
   const toggle = (token: 'simple' | 'martial') => {
     // Materialize the effective list (class defaults when untouched), then flip

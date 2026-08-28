@@ -156,3 +156,60 @@ export const FEATURE_CATEGORY_LABELS_EN: Record<FeatureCategory, string> = {
 export function labelTable<T>(frTable: T, enTable: T, lang: string): T {
   return lang === 'en' ? enTable : frTable;
 }
+
+/** Langues SRD : les valeurs stockées sont FR (DND_LANGUAGES) — affichage EN. */
+export const LANGUAGES_EN: Record<string, string> = {
+  commun: 'Common',
+  elfique: 'Elvish',
+  nain: 'Dwarvish',
+  'nain (profond)': 'Deep Dwarvish',
+  orc: 'Orc',
+  géant: 'Giant',
+  gnome: 'Gnomish',
+  gobelin: 'Goblin',
+  halfelin: 'Halfling',
+  draconique: 'Draconic',
+  primordial: 'Primordial',
+  infernal: 'Infernal',
+  céleste: 'Celestial',
+  sylvestre: 'Sylvan',
+  profond: 'Deep Speech',
+  abyssal: 'Abyssal',
+  'commun des profondeurs': 'Undercommon',
+  'argot des voleurs': "Thieves' cant",
+  druidique: 'Druidic',
+};
+
+/** Types de monstres : base FR (prose 5e-drs nettoyée) → EN. */
+export const MONSTER_TYPE_LABELS_EN: Record<string, string> = {
+  Humanoïde: 'Humanoid',
+  Bête: 'Beast',
+  Fiélon: 'Fiend',
+  Démon: 'Fiend',
+  'Mort-vivant': 'Undead',
+  Vase: 'Ooze',
+  Plante: 'Plant',
+  Géant: 'Giant',
+  Monstruosité: 'Monstrosity',
+  'Créature monstrueuse': 'Monstrosity',
+  Aberration: 'Aberration',
+  Céleste: 'Celestial',
+  Élémentaire: 'Elemental',
+  Fée: 'Fey',
+  Dragon: 'Dragon',
+  Artificiel: 'Construct',
+  'Créature artificielle': 'Construct',
+  Nuée: 'Swarm',
+};
+
+/**
+ * Dépouille la prose OCR du type (« Dragon (chromatique) de taille Gig,
+ * chaotique mauvais » → « Dragon ») — l'affichage EN mappe ensuite la base.
+ * Retourne le texte intact si rien ne correspond (valeurs exotiques).
+ */
+export function normalizeMonsterTypeFr(type: string): string {
+  let t = type.split('(')[0];
+  t = t.replace(/de (Très )?(Grande|Petite) taille/g, '').replace(/de taille \S+/g, '');
+  t = t.split(',')[0].replace(/\s+/g, ' ').trim();
+  return t || type;
+}

@@ -26,6 +26,7 @@ import api from '../api';
 import { useAuth } from '../auth';
 import AddClassSheet from '../components/AddClassSheet';
 import { BottomSheet, ConfirmButton } from '../components/ui';
+import { fightingStyleLabel } from '../i18n/labels';
 
 interface Props {
   character: Character;
@@ -406,7 +407,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
                           <option value="">—</option>
                           {(Object.keys(FIGHTING_STYLE_LABELS_FR) as FightingStyle[]).map((s) => (
                             <option key={s} value={s}>
-                              {FIGHTING_STYLE_LABELS_FR[s]}
+                              {fightingStyleLabel(s as FightingStyle)}
                             </option>
                           ))}
                         </select>

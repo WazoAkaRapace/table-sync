@@ -5,9 +5,9 @@
  */
 
 import type { Spell, SpellSchool } from '@table-sync/shared';
-import { SPELL_SCHOOL_LABELS_FR } from '@table-sync/shared';
 import { useEffect, useState } from 'react';
 import api from '../api';
+import { schoolLabel } from '../i18n/labels';
 import { BottomSheet } from './ui';
 
 interface Props {
@@ -56,8 +56,7 @@ export default function SpellDetailSheet({ open, spellId, onClose }: Props) {
           {/* Level + school */}
           <p className="text-sm italic text-ink-500">
             {levelLabel}
-            {spell.school &&
-              ` de ${SPELL_SCHOOL_LABELS_FR[spell.school as SpellSchool] ?? spell.school}`}
+            {spell.school && ` de ${schoolLabel(spell.school as SpellSchool)}`}
           </p>
 
           {/* Badges */}

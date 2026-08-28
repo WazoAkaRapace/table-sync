@@ -31,6 +31,7 @@ import api from '../../api';
 import { CONDITION_ICONS } from '../../components/ConditionsEditor';
 import MonsterStatBlock from '../../components/MonsterStatBlock';
 import { BottomSheet, Chip, HpBar } from '../../components/ui';
+import { conditionLabel } from '../../i18n/labels';
 import { DeathSaveTracker } from './DeathSaveTracker';
 import { DeprivationBox } from './DeprivationBox';
 import { HpTracker } from './HpTracker';
@@ -569,7 +570,7 @@ export function SurvivalPanel({
                   type="button"
                   onClick={() => removeCondition(cond)}
                   className="text-blood-500 hover:text-blood-700 font-semibold"
-                  aria-label={`Retirer l'état ${cond}`}
+                  aria-label={`Retirer l'état ${conditionLabel(cond)}`}
                 >
                   ×
                 </button>
@@ -1340,7 +1341,7 @@ export function SurvivalPanel({
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-medium text-ink-800">
-                    {cond}
+                    {conditionLabel(cond)}
                     {active && <span className="text-ink-400 font-normal"> · déjà actif</span>}
                   </span>
                   <span className="block text-xs text-ink-500">{CONDITION_HINTS_FR[cond]}</span>

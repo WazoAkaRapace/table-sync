@@ -17,7 +17,6 @@
 
 import type { AbilityKey, ClassInfo, CreateCharacterPayload, SkillKey } from '@table-sync/shared';
 import {
-  ABILITY_SHORT_FR,
   abilityModifier,
   averageMaxHp,
   classSkillChoices,
@@ -38,6 +37,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../api';
 import { NumberField } from '../components/ui';
+import { abilityShort } from '../i18n/labels';
 
 /** Marker for the « Autre… » free-text escape on every catalog picker. */
 const CUSTOM = '__custom__';
@@ -63,8 +63,8 @@ const DEFAULT_SCORES: Record<AbilityKey, number> = {
 
 /** One-line class teaching: hit die, saves, spellcasting nature. */
 function classSummary(cls: ClassInfo): string {
-  const saves = cls.savingThrows.map((a) => ABILITY_SHORT_FR[a]).join(' & ');
-  const castAbility = ABILITY_SHORT_FR[cls.spellcastingAbility ?? 'charisma'];
+  const saves = cls.savingThrows.map((a) => abilityShort(a)).join(' & ');
+  const castAbility = abilityShort(cls.spellcastingAbility ?? 'charisma');
   const cast =
     cls.spellcasting === 'none'
       ? 'aucune magie'
@@ -648,7 +648,7 @@ export default function CharacterCreatePage() {
                         key={abi.key}
                         onClick={() => assignTo(abi.key)}
                         disabled={pickedValue == null}
-                        aria-label={`${abi.label} (${ABILITY_SHORT_FR[abi.key]}) — ${
+                        aria-label={`${abi.label} (${abilityShort(abi.key)}) — ${
                           value != null
                             ? `${value}, ${formatModifier(abilityModifier(value))}`
                             : 'poser ici'
@@ -662,7 +662,7 @@ export default function CharacterCreatePage() {
                         <span className="min-w-0 flex-1 text-sm font-medium text-ink-800">
                           {abi.label}
                           <span className="ml-1.5 text-xs font-normal text-ink-400">
-                            {ABILITY_SHORT_FR[abi.key]}
+                            {abilityShort(abi.key)}
                           </span>
                         </span>
                         {value != null ? (
@@ -850,7 +850,7 @@ export default function CharacterCreatePage() {
                         }`}
                       >
                         {prof && <span className="mr-0.5 text-[10px] text-blood-600">●</span>}
-                        {ABILITY_SHORT_FR[abi.key]} {formatModifier(total)}
+                        {abilityShort(abi.key)} {formatModifier(total)}
                       </span>
                     );
                   })}
