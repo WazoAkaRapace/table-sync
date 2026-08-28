@@ -1,12 +1,12 @@
 import type { ChangePasswordPayload, UpdateProfilePayload } from '@table-sync/shared';
 import { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../auth';
 import { ErrorMsg, type Toast, ToastStack } from '../components/ui';
 import { useHeaderOverride } from '../headerContext';
 import { formatSince } from '../utils';
-import { useTranslation } from 'react-i18next';
 
 /**
  * Mon compte — nom affiché, adresse e-mail (optionnelle pour les comptes

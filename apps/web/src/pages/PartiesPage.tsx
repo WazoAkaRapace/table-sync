@@ -16,12 +16,12 @@
 
 import type { EncumbranceMode, PartyListRow, PartyRole } from '@table-sync/shared';
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../auth';
 import { ErrorMsg, LoadingSpinner, Modal } from '../components/ui';
 import { copyText, formatSince, plural, toRoman } from '../utils';
-import { useTranslation } from 'react-i18next';
 
 // ---------- Small helpers ----------
 

@@ -42,6 +42,7 @@ import {
   toolProficiencyLevel,
 } from '@table-sync/shared';
 import { type FormEvent, Fragment, useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import api from '../api';
 import { abilityShort, fightingStyleLabel, toolCategoryLabel } from '../i18n/labels';
 
@@ -95,6 +96,7 @@ function skillBreakdownSegments(
 const TOOL_CATEGORIES = Object.keys(TOOL_CATEGORY_LABELS_FR) as ToolCategory[];
 
 export default function CharacterSkillsTab({ character, charId, onSaved, onError }: Props) {
+  const { t } = useTranslation();
   const level = character.level ?? 1;
   const profBonus = proficiencyBonus(level);
   const className = findClass(character.characterClass)?.name ?? null;
@@ -235,7 +237,7 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
           >
             <p className="text-xs text-gold-700 flex items-center gap-2">
               <span className="text-sm leading-none">✎</span>
-              <span>Mode édition — touche une ligne pour cycler ○ maîtrise → ◉ expertise</span>
+              <span>{t('skills.mode.edition.touche.une.ligne.pour')}</span>
             </p>
             <p className="text-xs text-ink-600 flex items-center gap-2">
               <span className="text-sm leading-none">⭐</span>
@@ -244,7 +246,7 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
           </div>
         ) : (
           <p className="flex-1 min-w-0 text-xs text-ink-500">
-            Lecture — touche une compétence pour voir le détail de son bonus.
+            {t('skills.lecture.touche.une.competence.pour.voir')}
           </p>
         )}
         <button
@@ -265,7 +267,7 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
           {/* Saving throws — the tab's hero: the most-rolled numbers */}
           <section className="card p-4 sm:p-5 space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="section-title">Jets de sauvegarde</h2>
+              <h2 className="section-title">{t('skills.jets.de.sauvegarde')}</h2>
               <span className="text-xs text-ink-400">
                 Bonus de maîtrise {formatModifier(profBonus)}
               </span>
@@ -320,7 +322,7 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
 
           {/* Skills grouped by ability — full-width rows, breakdown on tap */}
           <section className="card p-4 sm:p-5 space-y-3">
-            <h2 className="section-title">Compétences</h2>
+            <h2 className="section-title">{t('skills.competences')}</h2>
             {skillsByAbility.map((group) => (
               <div key={group.ability}>
                 <div className="text-xs font-semibold text-ink-500 uppercase tracking-wide mb-1.5">
@@ -491,7 +493,7 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
               </div>
             ) : (
               <p className="text-sm text-ink-500">
-                Aucune maîtrise d'outil — ✎ Modifier pour en choisir.
+                {t('skills.aucune.maitrise.d.outil.modifier.pour')}
               </p>
             )}
           </section>
@@ -538,7 +540,7 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
                     type="submit"
                     className="px-3 py-2 rounded-lg border bg-parchment-100 border-parchment-200 hover:border-parchment-300 text-sm font-medium text-ink-600"
                   >
-                    Ajouter
+                    {t('skills.ajouter')}
                   </button>
                 </form>
               </>
@@ -555,7 +557,9 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-ink-500">Aucune langue — ✎ Modifier pour en ajouter.</p>
+              <p className="text-sm text-ink-500">
+                {t('skills.aucune.langue.modifier.pour.en.ajouter')}
+              </p>
             )}
           </section>
         </div>
@@ -575,6 +579,7 @@ function WeaponMasteryCard({
   editMode: boolean;
   patch: (payload: PatchCharacterPayload) => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const effective = effectiveWeaponProficiencies(character);
   const isCustom = character.weaponProficiencies != null;
   const classDefault = classWeaponProficiencies(character.characterClass);
@@ -612,15 +617,15 @@ function WeaponMasteryCard({
   return (
     <section className="card p-4 sm:p-5 space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="section-title">Maîtrise d'armes</h2>
+        <h2 className="section-title">{t('skills.maitrise.d.armes')}</h2>
         {editMode && isCustom && (
           <button
             type="button"
             onClick={() => patch({ weaponProficiencies: null })}
             className="text-xs text-blood-600 hover:underline"
-            title="Revenir aux maîtrises par défaut de la classe"
+            title={t('skills.revenir.aux.maitrises.par.defaut.de')}
           >
-            ↺ Selon la classe
+            {t('skills.selon.la.classe')}
           </button>
         )}
       </div>
@@ -641,12 +646,13 @@ function WeaponMasteryCard({
               className={chip(effective.martial)}
               aria-pressed={effective.martial}
             >
-              <span aria-hidden="true">⚔️</span> Armes de guerre
+              <span aria-hidden="true">⚔️</span>
+              {t('skills.armes.de.guerre')}
             </button>
           </div>
           {specificFr.length > 0 && (
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-xs text-ink-400">Spécifiques :</span>
+              <span className="text-xs text-ink-400">{t('skills.specifiques')}</span>
               {specificFr.map((fr) => (
                 <span
                   key={fr}
@@ -659,7 +665,9 @@ function WeaponMasteryCard({
           )}
           {hasFightingStyle && (
             <label className="flex items-center justify-between gap-3">
-              <span className="text-sm font-medium text-ink-700">Style de combat</span>
+              <span className="text-sm font-medium text-ink-700">
+                {t('skills.style.de.combat')}
+              </span>
               <select
                 className="input py-1.5 text-sm w-auto max-w-[60%]"
                 value={character.fightingStyle ?? ''}
@@ -668,7 +676,7 @@ function WeaponMasteryCard({
                     fightingStyle: e.target.value === '' ? null : (e.target.value as FightingStyle),
                   })
                 }
-                aria-label="Style de combat"
+                aria-label={t('skills.style.de.combat')}
               >
                 <option value="">—</option>
                 {Object.entries(FIGHTING_STYLE_LABELS_FR).map(([value, label]) => (
@@ -696,12 +704,13 @@ function WeaponMasteryCard({
             </div>
           ) : (
             <p className="text-sm text-ink-500">
-              Aucune maîtrise d'arme — ✎ Modifier pour en choisir.
+              {t('skills.aucune.maitrise.d.arme.modifier.pour')}
             </p>
           )}
           {styleLabel && (
             <p className="text-sm text-ink-700">
-              Style de combat : <strong>{styleLabel}</strong>
+              {t('skills.style.de.combat')}
+              <strong>{styleLabel}</strong>
             </p>
           )}
         </>
@@ -742,6 +751,7 @@ function ArmorMasteryCard({
   editMode: boolean;
   patch: (payload: PatchCharacterPayload) => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const effective = effectiveArmorProficiencies(character);
   const isCustom = character.armorProficiencies != null;
   const classDefault = classArmorProficiencies(character.characterClass);
@@ -766,15 +776,15 @@ function ArmorMasteryCard({
   return (
     <section className="card p-4 sm:p-5 space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="section-title">Maîtrise d'armures</h2>
+        <h2 className="section-title">{t('skills.maitrise.d.armures')}</h2>
         {editMode && isCustom && (
           <button
             type="button"
             onClick={() => patch({ armorProficiencies: null })}
             className="text-xs text-blood-600 hover:underline"
-            title="Revenir aux maîtrises par défaut de la classe"
+            title={t('skills.revenir.aux.maitrises.par.defaut.de')}
           >
-            ↺ Selon la classe
+            {t('skills.selon.la.classe')}
           </button>
         )}
       </div>
@@ -814,9 +824,7 @@ function ArmorMasteryCard({
           ))}
         </div>
       ) : (
-        <p className="text-sm text-ink-500">
-          Aucune maîtrise d'armure — ✎ Modifier pour en choisir.
-        </p>
+        <p className="text-sm text-ink-500">{t('skills.aucune.maitrise.d.armure.modifier.pour')}</p>
       )}
       <p className="text-xs text-ink-400">
         {isCustom

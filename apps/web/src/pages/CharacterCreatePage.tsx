@@ -34,11 +34,11 @@ import {
   STANDARD_ARRAY,
 } from '@table-sync/shared';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../api';
 import { NumberField } from '../components/ui';
 import { abilityShort } from '../i18n/labels';
-import { useTranslation } from 'react-i18next';
 
 /** Marker for the « Autre… » free-text escape on every catalog picker. */
 const CUSTOM = '__custom__';

@@ -6,6 +6,7 @@
 import type { CombatantCondition } from '@table-sync/shared';
 import { DND_CONDITIONS_FR } from '@table-sync/shared';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { conditionLabel } from '../i18n/labels';
 import { BottomSheet } from './ui';
 
@@ -43,6 +44,7 @@ export default function ConditionsEditor({
   onSave,
   combatantName,
 }: Props) {
+  const { t } = useTranslation();
   const [draft, setDraft] = useState<CombatantCondition[]>(conditions);
 
   // Reset draft when modal opens
@@ -81,7 +83,7 @@ export default function ConditionsEditor({
       footer={
         <>
           <button type="button" onClick={onClose} className="btn-secondary flex-1">
-            Annuler
+            {t('conds.annuler')}
           </button>
           <button
             type="button"
@@ -130,7 +132,7 @@ export default function ConditionsEditor({
                     setDuration(cond, v === '' ? null : Math.max(1, parseInt(v, 10)));
                   }}
                   className="input w-14 text-center text-sm"
-                  title="Durée en tours (vide = jusqu'à dissipation)"
+                  title={t('conds.duree.en.tours.vide.jusqu.a')}
                 />
                 <span className="text-xs text-ink-400 w-12">
                   {entry?.duration == null ? 'tours ∞' : 'tours'}

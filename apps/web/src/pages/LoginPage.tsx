@@ -1,8 +1,8 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth';
 import { ErrorMsg } from '../components/ui';
-import { useTranslation } from 'react-i18next';
 
 export default function LoginPage() {
   const { t } = useTranslation();

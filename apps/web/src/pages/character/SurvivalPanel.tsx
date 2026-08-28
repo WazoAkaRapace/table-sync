@@ -27,6 +27,7 @@ import {
   wildShapeMaxCR,
 } from '@table-sync/shared';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import api from '../../api';
 import { CONDITION_ICONS } from '../../components/ConditionsEditor';
 import MonsterStatBlock from '../../components/MonsterStatBlock';
@@ -101,6 +102,7 @@ export function SurvivalPanel({
   onNotice,
   onConcentrationCheck,
 }: SurvivalPanelProps) {
+  const { t } = useTranslation();
   const [exhaustion, setExhaustion] = useState(character.exhaustion);
   const [conditions, setConditions] = useState<string[]>(character.conditions);
   const [conditionPickerOpen, setConditionPickerOpen] = useState(false);
@@ -371,7 +373,7 @@ export function SurvivalPanel({
     <>
       {/* ---------- 1. Vitalité — PV, mort, inspiration/concentration ---------- */}
       <section className="card p-4 sm:p-5 space-y-3">
-        <h2 className="section-title">❤️ Vitalité</h2>
+        <h2 className="section-title">{t('survie.vitalite')}</h2>
         {/* While shaped, the hero tracks the beast's HP (routed server-side to wild_shape_hp) */}
         {character.wildShapeSlug ? (
           (() => {
@@ -421,7 +423,7 @@ export function SurvivalPanel({
                     type="button"
                     onClick={() => stepShapeHp(-5)}
                     className="w-11 h-11 max-[379px]:hidden rounded-lg bg-red-100 hover:bg-red-200 text-red-700 font-semibold flex items-center justify-center transition-colors"
-                    aria-label="Blesser la forme de 5"
+                    aria-label={t('survie.blesser.la.forme.de.5')}
                   >
                     −5
                   </button>
@@ -429,7 +431,7 @@ export function SurvivalPanel({
                     type="button"
                     onClick={() => stepShapeHp(-1)}
                     className="w-11 h-11 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 font-semibold flex items-center justify-center transition-colors"
-                    aria-label="Blesser la forme de 1"
+                    aria-label={t('survie.blesser.la.forme.de.1')}
                   >
                     <span className="max-[379px]:hidden">−1</span>
                     <span className="hidden max-[379px]:inline">−</span>
@@ -443,13 +445,13 @@ export function SurvivalPanel({
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
                     }}
-                    aria-label="Points de vie de la forme"
+                    aria-label={t('survie.points.de.vie.de.la.forme')}
                   />
                   <button
                     type="button"
                     onClick={() => stepShapeHp(1)}
                     className="w-11 h-11 rounded-lg bg-green-100 hover:bg-green-200 text-green-700 font-semibold flex items-center justify-center transition-colors"
-                    aria-label="Soigner la forme de 1"
+                    aria-label={t('survie.soigner.la.forme.de.1')}
                   >
                     <span className="max-[379px]:hidden">+1</span>
                     <span className="hidden max-[379px]:inline">+</span>
@@ -458,7 +460,7 @@ export function SurvivalPanel({
                     type="button"
                     onClick={() => stepShapeHp(5)}
                     className="w-11 h-11 max-[379px]:hidden rounded-lg bg-green-100 hover:bg-green-200 text-green-700 font-semibold flex items-center justify-center transition-colors"
-                    aria-label="Soigner la forme de 5"
+                    aria-label={t('survie.soigner.la.forme.de.5')}
                   >
                     +5
                   </button>
@@ -473,8 +475,7 @@ export function SurvivalPanel({
                   trackClassName="bg-green-100 border border-green-200"
                 />
                 <p className="text-[10px] text-green-700 italic text-center">
-                  À 0 PV : retour automatique à la forme normale, les dégâts excédentaires
-                  s'appliquent.
+                  {t('survie.a.0.pv.retour.automatique.a')}
                 </p>
               </div>
             );
@@ -523,7 +524,7 @@ export function SurvivalPanel({
                 : 'bg-parchment-100 text-ink-400 border-parchment-300 hover:border-gold-400'
             }`}
             aria-pressed={character.inspiration}
-            title="L'inspiration permet de relancer un d20 et de garder le meilleur résultat"
+            title={t('survie.l.inspiration.permet.de.relancer.un')}
           >
             <span className="inline-block w-5 text-center shrink-0 text-base max-[379px]:text-sm">
               {character.inspiration ? '✨' : '✧'}
@@ -541,7 +542,7 @@ export function SurvivalPanel({
                 : 'bg-parchment-100 text-ink-400 border-parchment-300 hover:border-indigo-400'
             }`}
             aria-pressed={character.concentrating}
-            title="Tu concentres un sort. Si tu subis des dégâts : jet de sauvegarde de Constitution DD 10 ou ½ dégâts (le plus élevé) pour le maintenir."
+            title={t('survie.tu.concentres.un.sort.si.tu')}
           >
             <span className="inline-block w-5 text-center shrink-0 text-base max-[379px]:text-sm">
               {character.concentrating ? '🌀' : '◌'}
@@ -553,12 +554,12 @@ export function SurvivalPanel({
 
       {/* ---------- 2. États — conditions + épuisement ---------- */}
       <section className="card p-4 sm:p-5 space-y-4">
-        <h2 className="section-title">🎭 États</h2>
+        <h2 className="section-title">{t('survie.etats')}</h2>
         <div>
           <span className="text-sm font-medium text-ink-700 block mb-1.5">Conditions</span>
           <div className="flex flex-wrap items-center gap-2">
             {conditions.length === 0 && (
-              <span className="text-xs text-ink-400 italic">Aucun état actif</span>
+              <span className="text-xs text-ink-400 italic">{t('survie.aucun.etat.actif')}</span>
             )}
             {conditions.map((cond) => (
               <span
@@ -582,19 +583,23 @@ export function SurvivalPanel({
               className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border border-parchment-300 bg-parchment-100 text-ink-500 hover:border-blood-300 hover:text-blood-700 transition-colors"
               aria-haspopup="dialog"
             >
-              + Ajouter un état…
+              {t('survie.ajouter.un.etat')}
             </button>
           </div>
         </div>
         <div>
           <div className="flex items-baseline justify-between mb-1.5">
-            <span className="text-sm font-medium text-ink-700">Épuisement</span>
+            <span className="text-sm font-medium text-ink-700">{t('survie.epuisement')}</span>
             <span className={`text-xs font-semibold ${exhaustionColor(exhaustion)}`}>
               Niveau {exhaustion}/6
             </span>
           </div>
           {/* biome-ignore lint/a11y/useSemanticElements: fieldset would add its own border/margin styling and break the compact pips row. */}
-          <div className="flex items-center gap-1" role="group" aria-label="Niveau d'épuisement">
+          <div
+            className="flex items-center gap-1"
+            role="group"
+            aria-label={t('survie.niveau.d.epuisement')}
+          >
             {[0, 1, 2, 3, 4, 5, 6].map((level) => {
               const active = level <= exhaustion && level > 0;
               return (
@@ -623,7 +628,7 @@ export function SurvivalPanel({
       {/* ---------- 3. Ressources de classe — traits du catalogue avec compteur ---------- */}
       {resourceFeatures.length > 0 && (
         <section className="card p-4 sm:p-5 space-y-3">
-          <h2 className="section-title">⚡ Ressources de classe</h2>
+          <h2 className="section-title">{t('survie.ressources.de.classe')}</h2>
           <div className="space-y-1.5">
             {resourceFeatures.map((feature) => {
               const def = findClassFeature(feature.catalogId ?? '');
@@ -729,8 +734,8 @@ export function SurvivalPanel({
                   onClick={() => step(1)}
                   disabled={remaining <= 0}
                   className="w-7 h-7 rounded-lg bg-parchment-200 hover:bg-parchment-300 disabled:opacity-30 text-sm font-medium flex items-center justify-center"
-                  aria-label="Dépenser un dé de vie"
-                  title="Dépenser un dé de vie (repos court)"
+                  aria-label={t('survie.depenser.un.de.de.vie')}
+                  title={t('survie.depenser.un.de.de.vie.repos')}
                 >
                   −
                 </button>
@@ -745,8 +750,8 @@ export function SurvivalPanel({
                   onClick={() => step(-1)}
                   disabled={used <= 0}
                   className="w-7 h-7 rounded-lg bg-parchment-200 hover:bg-parchment-300 disabled:opacity-30 text-sm font-medium flex items-center justify-center"
-                  aria-label="Récupérer un dé de vie"
-                  title="Récupérer un dé (repos long : niveau/2 dés, min 1)"
+                  aria-label={t('survie.recuperer.un.de.de.vie')}
+                  title={t('survie.recuperer.un.de.repos.long.niveau')}
                 >
                   +
                 </button>
@@ -764,7 +769,7 @@ export function SurvivalPanel({
                 setRestSheet('short');
               }}
               className="btn-rest-short"
-              title="Emplacements de pacte, forme sauvage, ressources « repos court » ; dés de vie lancés par le joueur"
+              title={t('survie.emplacements.de.pacte.forme.sauvage.ressources')}
             >
               ⛺ Repos court
             </button>
@@ -772,7 +777,7 @@ export function SurvivalPanel({
               type="button"
               onClick={() => setRestSheet('long')}
               className="btn-rest-long"
-              title="PV au maximum, tous les emplacements, la moitié du niveau en dés de vie (min 1), épuisement −1, toutes les ressources"
+              title={t('survie.pv.au.maximum.tous.les.emplacements')}
             >
               🌙 Repos long
             </button>
@@ -793,7 +798,7 @@ export function SurvivalPanel({
                 <span
                   className="flex items-center gap-0.5"
                   role="group"
-                  aria-label="Utilisations de forme sauvage"
+                  aria-label={t('survie.utilisations.de.forme.sauvage')}
                 >
                   {[1, 2].map((n) => (
                     <button
@@ -834,8 +839,8 @@ export function SurvivalPanel({
                       type="button"
                       onClick={() => setShapeStatBlock(character.wildShapeSlug)}
                       className="w-7 h-7 rounded-lg bg-parchment-100 hover:bg-gold-100 text-ink-500 hover:text-gold-600 border border-parchment-200 text-sm flex items-center justify-center transition-colors"
-                      aria-label="Voir le bloc de stats de la forme"
-                      title="Bloc de stats de la forme actuelle"
+                      aria-label={t('survie.voir.le.bloc.de.stats.de')}
+                      title={t('survie.bloc.de.stats.de.la.forme')}
                     >
                       📜
                     </button>
@@ -878,7 +883,7 @@ export function SurvivalPanel({
                     disabled={(character.wildShapeUses ?? 2) <= 0}
                     className="btn-primary text-xs w-full py-1.5 disabled:opacity-40"
                   >
-                    🐾 Prendre une forme
+                    {t('survie.prendre.une.forme')}
                   </button>
                 </>
               )}
@@ -904,7 +909,7 @@ export function SurvivalPanel({
                       className="flex items-center justify-between bg-parchment-50 rounded-lg px-3 py-2 border border-parchment-200"
                     >
                       <span className="text-sm font-medium text-ink-800 truncate">{itemName}</span>
-                      <span className="text-xs text-ink-400">arme non résolue</span>
+                      <span className="text-xs text-ink-400">{t('survie.arme.non.resolue')}</span>
                     </div>
                   );
                 }
@@ -927,7 +932,7 @@ export function SurvivalPanel({
                       <span className="text-sm font-medium text-ink-800 truncate">{itemName}</span>
                       {!stats.proficient && (
                         <span className="text-[10px] font-semibold text-amber-600 shrink-0">
-                          ⚠ non qualifié
+                          {t('survie.non.qualifie')}
                         </span>
                       )}
                     </div>
@@ -954,7 +959,7 @@ export function SurvivalPanel({
                         </Chip>
                       )}
                       {stats.versatileDamageStr && (
-                        <Chip tone="orange" soft title="Dégâts à deux mains">
+                        <Chip tone="orange" soft title={t('survie.degats.a.deux.mains')}>
                           {stats.versatileDamageStr} · deux mains
                         </Chip>
                       )}
@@ -980,13 +985,15 @@ export function SurvivalPanel({
                             type="button"
                             onClick={() => setSmiteOpen(true)}
                             className="text-[11px] px-2 py-1 rounded-md border border-purple-300 bg-purple-50 text-purple-800 hover:border-purple-500 transition-colors"
-                            title="Dépenser un emplacement de sort : +2d8 dégâts radiants (+1d8/niveau, +1d8 vs morts-vivants et fiélons)"
+                            title={t('survie.depenser.un.emplacement.de.sort.2d8')}
                           >
-                            ✨ Châtiment divin
+                            {t('survie.chatiment.divin')}
                           </button>
                         )}
                       {stats.presumedBase && (
-                        <span className="text-[10px] text-ink-400 italic">base présumée</span>
+                        <span className="text-[10px] text-ink-400 italic">
+                          {t('survie.base.presumee')}
+                        </span>
                       )}
                     </div>
                   </div>
@@ -1013,18 +1020,15 @@ export function SurvivalPanel({
                   </span>
                   {!hasFinesseWeapon && (
                     <span className="text-[10px] text-ink-400 shrink-0">
-                      arme de finesse ou à distance requise
+                      {t('survie.arme.de.finesse.ou.a.distance')}
                     </span>
                   )}
                 </div>
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <Chip
-                    tone="orange"
-                    title="Une fois par tour, avec avantage ou un allié adjacent à la cible — dégâts du type de l'arme"
-                  >
+                  <Chip tone="orange" title={t('survie.une.fois.par.tour.avec.avantage')}>
                     ⚔ {sneakAttackDice(classLevelOf(character, 'Roublard'))} dégâts de l'arme
                   </Chip>
-                  <span className="text-[10px] text-ink-400">une fois par tour</span>
+                  <span className="text-[10px] text-ink-400">{t('survie.une.fois.par.tour')}</span>
                 </div>
               </div>
             );
@@ -1061,10 +1065,7 @@ export function SurvivalPanel({
                   ⚔ {u.damageStr} {u.damageTypeFr}
                 </Chip>
                 {u.bonusActionAttack && (
-                  <Chip
-                    tone="indigo"
-                    title="Arts martiaux : une frappe sans arme supplémentaire en action bonus après une attaque"
-                  >
+                  <Chip tone="indigo" title={t('survie.arts.martiaux.une.frappe.sans.arme')}>
                     ⚡ action bonus
                   </Chip>
                 )}
@@ -1146,7 +1147,7 @@ export function SurvivalPanel({
               onClick={() => setRestSheet(null)}
               className="btn-ghost text-ink-700"
             >
-              Annuler
+              {t('survie.annuler')}
             </button>
           </>
         }
@@ -1176,7 +1177,7 @@ export function SurvivalPanel({
                       onClick={() => setRestHitDice((n) => Math.max(0, n - 1))}
                       disabled={restHitDice <= 0}
                       className="w-7 h-7 rounded-lg bg-parchment-200 hover:bg-parchment-300 disabled:opacity-30 font-medium"
-                      aria-label="Un dé de vie de moins"
+                      aria-label={t('survie.un.de.de.vie.de.moins')}
                     >
                       −
                     </button>
@@ -1189,7 +1190,7 @@ export function SurvivalPanel({
                       onClick={() => setRestHitDice((n) => Math.min(remaining, n + 1))}
                       disabled={restHitDice >= remaining}
                       className="w-7 h-7 rounded-lg bg-parchment-200 hover:bg-parchment-300 disabled:opacity-30 font-medium"
-                      aria-label="Un dé de vie de plus"
+                      aria-label={t('survie.un.de.de.vie.de.plus')}
                     >
                       +
                     </button>
@@ -1208,7 +1209,7 @@ export function SurvivalPanel({
                       className="input py-1.5 text-sm mt-1"
                       value={restHealed}
                       onChange={(e) => setRestHealed(e.target.value)}
-                      placeholder="PV regagnés (ex. 23)"
+                      placeholder={t('survie.pv.regagnes.ex.23')}
                       inputMode="numeric"
                     />
                     <span className="text-[10px] text-ink-400 block mt-1">
@@ -1245,7 +1246,7 @@ export function SurvivalPanel({
               onClick={() => setRestSheet(null)}
               className="btn-ghost text-ink-700"
             >
-              Annuler
+              {t('survie.annuler')}
             </button>
           </>
         }
@@ -1254,18 +1255,18 @@ export function SurvivalPanel({
           <p>Après un repos long (au plus un par 24 h), tu récupères :</p>
           <ul className="list-disc pl-5 space-y-1 text-sm">
             <li>Tous tes PV (les PV temporaires disparaissent)</li>
-            <li>Tous tes emplacements de sort</li>
+            <li>{t('survie.tous.tes.emplacements.de.sort')}</li>
             <li>
               {Math.max(1, Math.floor((character.level ?? 1) / 2))} dés de vie (la moitié de ton
               niveau, min 1)
             </li>
-            {character.exhaustion > 0 && <li>1 niveau d'épuisement en moins</li>}
-            <li>Forme sauvage et toutes les ressources de classe</li>
-            {(character.concentrating ?? false) && <li>La concentration prend fin</li>}
+            {character.exhaustion > 0 && <li>{t('survie.1.niveau.d.epuisement.en.moins')}</li>}
+            <li>{t('survie.forme.sauvage.et.toutes.les.ressources')}</li>
+            {(character.concentrating ?? false) && (
+              <li>{t('survie.la.concentration.prend.fin')}</li>
+            )}
           </ul>
-          <p className="text-xs text-ink-400">
-            Les états et la soif/faim ne sont pas touchés — gérés séparément dans l'onglet Survie.
-          </p>
+          <p className="text-xs text-ink-400">{t('survie.les.etats.et.la.soif.faim')}</p>
         </div>
       </BottomSheet>
 
@@ -1273,18 +1274,20 @@ export function SurvivalPanel({
       <BottomSheet
         open={smiteOpen}
         onClose={() => setSmiteOpen(false)}
-        title="✨ Châtiment divin"
+        title={t('survie.chatiment.divin')}
         mobileOnly={false}
         size="md"
       >
         <div className="space-y-3 text-sm text-ink-700">
           <p>
-            Quand tu touches avec une arme de mêlée, dépense un emplacement de sort :
-            <strong className="text-purple-800"> 2d8 dégâts radiants</strong>, +1d8 par niveau
-            d'emplacement au-delà de 1, et +1d8 contre les morts-vivants et les fiélons.
+            {t('survie.quand.tu.touches.avec.une.arme')}
+            <strong className="text-purple-800">{t('survie.2d8.degats.radiants')}</strong>
+            {t('survie.1d8.par.niveau.d.emplacement.au')}
           </p>
           {smiteAvailable.length === 0 ? (
-            <p className="text-ink-400 italic">Aucun emplacement disponible — repos long requis.</p>
+            <p className="text-ink-400 italic">
+              {t('survie.aucun.emplacement.disponible.repos.long.requis')}
+            </p>
           ) : (
             <div className="grid grid-cols-2 gap-2">
               {smiteAvailable.map((s) => (
@@ -1315,7 +1318,7 @@ export function SurvivalPanel({
       <BottomSheet
         open={conditionPickerOpen}
         onClose={() => setConditionPickerOpen(false)}
-        title="🎭 Ajouter un état"
+        title={t('survie.ajouter.un.etat')}
         mobileOnly={false}
         size="md"
       >
@@ -1342,14 +1345,16 @@ export function SurvivalPanel({
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-medium text-ink-800">
                     {conditionLabel(cond)}
-                    {active && <span className="text-ink-400 font-normal"> · déjà actif</span>}
+                    {active && (
+                      <span className="text-ink-400 font-normal">{t('survie.deja.actif')}</span>
+                    )}
                   </span>
                   <span className="block text-xs text-ink-500">{CONDITION_HINTS_FR[cond]}</span>
                 </span>
                 {breaksConcentration && (
                   <span
                     className="text-sm shrink-0 text-indigo-600"
-                    title="Interrompt la concentration"
+                    title={t('survie.interrompt.la.concentration')}
                   >
                     🌀
                   </span>
@@ -1364,7 +1369,7 @@ export function SurvivalPanel({
       <BottomSheet
         open={shapePickerOpen}
         onClose={() => setShapePickerOpen(false)}
-        title="🐾 Choisir une forme"
+        title={t('survie.choisir.une.forme')}
         mobileOnly={false}
         size="md"
       >
@@ -1373,7 +1378,7 @@ export function SurvivalPanel({
             <input
               type="text"
               className="input flex-1"
-              placeholder="Rechercher une bête…"
+              placeholder={t('survie.rechercher.une.bete')}
               value={shapeSearch}
               onChange={(e) => setShapeSearch(e.target.value)}
               autoFocus
@@ -1387,7 +1392,7 @@ export function SurvivalPanel({
                   : 'bg-parchment-100 text-ink-500 border-parchment-300'
               }`}
               aria-pressed={shapeSeenOnly}
-              title="Filtrer sur les bêtes déjà vues (SRD)"
+              title={t('survie.filtrer.sur.les.betes.deja.vues')}
             >
               👁 Vues
             </button>
@@ -1444,7 +1449,7 @@ export function SurvivalPanel({
                     onClick={() => setShapeStatBlock(f.slug)}
                     className="shrink-0 w-8 h-8 rounded-lg bg-parchment-100 hover:bg-gold-100 text-ink-500 hover:text-gold-600 border border-parchment-200 text-sm flex items-center justify-center transition-colors"
                     aria-label={`Voir le bloc de stats de ${f.name}`}
-                    title="Bloc de stats"
+                    title={t('survie.bloc.de.stats')}
                   >
                     📜
                   </button>
@@ -1468,7 +1473,7 @@ export function SurvivalPanel({
               ))}
             {shapeForms.length === 0 && (
               <p className="text-sm text-ink-400 italic text-center py-4">
-                Aucune forme disponible à ce niveau.
+                {t('survie.aucune.forme.disponible.a.ce.niveau')}
               </p>
             )}
             {shapeForms.length > 0 && shapeForms.every((f) => !f.seen) && shapeSeenOnly && (

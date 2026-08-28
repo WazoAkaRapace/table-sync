@@ -18,13 +18,13 @@
 
 import type { CharacterSummary, PartyDetail, PartyRole } from '@table-sync/shared';
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../auth';
 import { ErrorMsg, LoadingSpinner } from '../components/ui';
 import { useSyncEvent } from '../sync';
 import { copyText, plural } from '../utils';
-import { useTranslation } from 'react-i18next';
 
 // ---------- Small pieces of the contents ----------
 

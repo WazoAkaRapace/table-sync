@@ -26,6 +26,7 @@ import {
   unarmoredDefensesOf,
 } from '@table-sync/shared';
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import api from '../api';
 import { BottomSheet } from '../components/ui';
 import { abilityLabel, abilityShort } from '../i18n/labels';
@@ -49,6 +50,7 @@ const ABILITY_FIELDS: { key: keyof Character; ability: AbilityKey }[] = [
 ];
 
 export default function CharacterStatsTab({ character, charId, entries, onSaved, onError }: Props) {
+  const { t } = useTranslation();
   // Drafts for ability scores (auto-save on blur)
   const [abilityDrafts, setAbilityDrafts] = useState<Record<string, string>>({});
   const [speedDraft, setSpeedDraft] = useState(String(character.speed ?? 9));
@@ -195,7 +197,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
     <div className="space-y-4">
       {/* Ability scores */}
       <section className="card p-4 sm:p-5 space-y-3">
-        <h2 className="section-title">Caractéristiques</h2>
+        <h2 className="section-title">{t('stats.caracteristiques')}</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {ABILITY_FIELDS.map(({ key, ability }) => {
             const score = (character[key as keyof Character] as number) ?? 10;
@@ -228,7 +230,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
 
       {/* Derived stats */}
       <section className="card p-4 sm:p-5 space-y-3">
-        <h2 className="section-title">Statistiques dérivées</h2>
+        <h2 className="section-title">{t('stats.statistiques.derivees')}</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {/* Armor Class — computed or overridden */}
           <div className="bg-parchment-100 rounded-xl p-3 text-center">
@@ -257,7 +259,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
                   setEditingAC(true);
                 }}
                 className="w-full min-h-11 flex items-center justify-center gap-1.5 text-2xl font-bold tabular-nums text-ink-800 hover:text-blood-600 transition-colors"
-                aria-label="Modifier la classe d'armure"
+                aria-label={t('stats.modifier.la.classe.d.armure')}
               >
                 {effectiveAC}
                 <span className="text-sm font-normal text-ink-500" aria-hidden="true">
@@ -326,7 +328,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
               type="button"
               onClick={openPortage}
               className="w-full min-h-11 flex items-center justify-center gap-1.5 text-2xl font-bold tabular-nums text-ink-800 hover:text-blood-600 transition-colors"
-              aria-label="Modifier le multiplicateur de portage"
+              aria-label={t('stats.modifier.le.multiplicateur.de.portage')}
             >
               {portageMaxKg} kg
               <span className="px-1.5 py-0.5 rounded-full bg-blood-50 border border-blood-200 text-blood-700 text-[11px] font-semibold">
@@ -349,7 +351,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
         )}
         {defenseOptions.length > 1 && acOverride === null && (
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs text-ink-500">Défense sans armure :</span>
+            <span className="text-xs text-ink-500">{t('stats.defense.sans.armure')}</span>
             {defenseOptions.map((o) => (
               <button
                 key={o.key}
@@ -387,7 +389,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
         size="md"
         footer={
           <button type="button" onClick={saveMult} className="btn-primary flex-1">
-            Enregistrer
+            {t('stats.enregistrer')}
           </button>
         }
       >
@@ -402,7 +404,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
             </div>
           </div>
           <label className="block">
-            <span className="label">Multiplicateur de portage</span>
+            <span className="label">{t('stats.multiplicateur.de.portage')}</span>
             <input
               type="number"
               min={1}
@@ -417,7 +419,8 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
           </label>
           <div className="text-xs text-ink-600 bg-parchment-50 border border-parchment-200 rounded-lg p-3 space-y-1.5">
             <p>
-              <strong>×1 (défaut)</strong> : créature de taille M sans capacité spéciale.
+              <strong>×1 (défaut)</strong>
+              {t('stats.creature.de.taille.m.sans.capacite')}
             </p>
             <p>
               <strong>×2</strong> : Construction massive (Goliath, Firbolg, Demi-Orc, Bugbear, Orc,
@@ -425,10 +428,12 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
               supérieure pour le calcul du poids transportable.
             </p>
             <p>
-              <strong>×3</strong> : Créature de taille TG.
+              <strong>×3</strong>
+              {t('stats.creature.de.taille.tg')}
             </p>
             <p>
-              <strong>×4</strong> : Créature de taille Gig.
+              <strong>×4</strong>
+              {t('stats.creature.de.taille.gig')}
             </p>
             <p className="text-ink-500">
               Ce multiplicateur s'applique aux trois paliers (encombré, lourdement encombré, max).

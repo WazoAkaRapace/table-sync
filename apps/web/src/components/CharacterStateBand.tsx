@@ -30,6 +30,7 @@ import {
   type InventoryEntry,
 } from '@table-sync/shared';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import api from '../api';
 import { Chip, EncumbranceBar, HpBar } from './ui';
@@ -80,6 +81,7 @@ export default function CharacterStateBand({
   onNotice,
   onConcentrationCheck,
 }: Props) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
 
   // Inline name editing (moved from the old header card)
@@ -294,7 +296,7 @@ export default function CharacterStateBand({
   return (
     <>
       <section
-        aria-label="État du personnage"
+        aria-label={t('band.etat.du.personnage')}
         className="-mx-4 px-4 sm:mx-0 sm:px-0 border-b border-parchment-200"
       >
         <div className="py-2 sm:py-2.5 space-y-1.5">
@@ -322,7 +324,7 @@ export default function CharacterStateBand({
                         if (e.key === 'Escape') setEditingName(false);
                       }}
                       autoFocus
-                      aria-label="Nom du personnage"
+                      aria-label={t('band.nom.du.personnage')}
                     />
                   ) : canEdit ? (
                     <button
@@ -332,7 +334,7 @@ export default function CharacterStateBand({
                         setEditingName(true);
                       }}
                       className="hover:text-blood-600 transition-colors truncate"
-                      title="Cliquer pour renommer"
+                      title={t('band.cliquer.pour.renommer')}
                     >
                       {character.name}
                     </button>
@@ -354,7 +356,7 @@ export default function CharacterStateBand({
                       type="button"
                       onClick={() => onNavigate('survival')}
                       className="shrink-0 hover:scale-110 transition-transform"
-                      aria-label="En concentration — ouvrir la survie"
+                      aria-label={t('band.en.concentration.ouvrir.la.survie')}
                       title="Concentration en cours"
                     >
                       🌀
@@ -400,8 +402,8 @@ export default function CharacterStateBand({
                 </Chip>
               )}
               {character.currentHp <= 0 && (character.tempHp ?? 0) <= 0 && (
-                <Chip tone="red" title="0 PV — jets de sauvegarde contre la mort (onglet Survie)">
-                  💀 À terre
+                <Chip tone="red" title={t('band.0.pv.jets.de.sauvegarde.contre')}>
+                  {t('band.a.terre')}
                 </Chip>
               )}
               {canEdit ? (
@@ -443,7 +445,7 @@ export default function CharacterStateBand({
                 onClick={() => setExpanded((e) => !e)}
                 className="shrink-0 w-8 h-8 rounded-lg text-ink-500 hover:bg-parchment-100 transition-colors flex items-center justify-center"
                 aria-expanded={expanded}
-                aria-label="Détails de l'état du personnage"
+                aria-label={t('band.details.de.l.etat.du.personnage')}
               >
                 {expanded ? '⌃' : '⌄'}
               </button>
@@ -472,7 +474,7 @@ export default function CharacterStateBand({
             <div className="border-t border-parchment-200 pt-2 space-y-2">
               <div className="flex flex-wrap items-center gap-1.5">
                 {conditions.length === 0 && exhaustion === 0 && stateCount === 0 && (
-                  <span className="text-xs text-ink-500">Aucun état actif</span>
+                  <span className="text-xs text-ink-500">{t('band.aucun.etat.actif')}</span>
                 )}
                 {conditions.map((c) => (
                   <Chip key={c} tone="amber">
@@ -480,7 +482,7 @@ export default function CharacterStateBand({
                   </Chip>
                 ))}
                 {exhaustion > 0 && (
-                  <Chip tone="red" title="Épuisement — malus cumulés (onglet Survie)">
+                  <Chip tone="red" title={t('band.epuisement.malus.cumules.onglet.survie')}>
                     Épuisement {exhaustion}
                   </Chip>
                 )}
@@ -501,7 +503,7 @@ export default function CharacterStateBand({
                     onClick={() => onNavigate('survival')}
                     className="btn-ghost text-xs px-2 py-1"
                   >
-                    Gérer les états →
+                    {t('band.gerer.les.etats')}
                   </button>
                 )}
               </div>
@@ -535,7 +537,7 @@ export default function CharacterStateBand({
                     type="button"
                     onClick={() => damageHp(5)}
                     className="w-11 h-11 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 font-semibold flex items-center justify-center transition-colors"
-                    aria-label="Blesser de 5"
+                    aria-label={t('band.blesser.de.5')}
                   >
                     −5
                   </button>
@@ -543,7 +545,7 @@ export default function CharacterStateBand({
                     type="button"
                     onClick={() => damageHp(1)}
                     className="w-11 h-11 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 font-semibold flex items-center justify-center transition-colors"
-                    aria-label="Blesser de 1"
+                    aria-label={t('band.blesser.de.1')}
                   >
                     −1
                   </button>
@@ -565,7 +567,7 @@ export default function CharacterStateBand({
                     type="button"
                     onClick={() => queueHp(displayHp + 1)}
                     className="w-11 h-11 rounded-lg bg-green-100 hover:bg-green-200 text-green-700 font-semibold flex items-center justify-center transition-colors"
-                    aria-label="Soigner de 1"
+                    aria-label={t('band.soigner.de.1')}
                   >
                     +1
                   </button>
@@ -573,7 +575,7 @@ export default function CharacterStateBand({
                     type="button"
                     onClick={() => queueHp(displayHp + 5)}
                     className="w-11 h-11 rounded-lg bg-green-100 hover:bg-green-200 text-green-700 font-semibold flex items-center justify-center transition-colors"
-                    aria-label="Soigner de 5"
+                    aria-label={t('band.soigner.de.5')}
                   >
                     +5
                   </button>
@@ -592,7 +594,7 @@ export default function CharacterStateBand({
         <div className="band-drop fixed top-14 inset-x-0 z-20">
           <div className="max-w-6xl mx-auto px-4">
             <section
-              aria-label="État du personnage (épinglé)"
+              aria-label={t('band.etat.du.personnage.epingle')}
               className="-mx-4 px-4 sm:mx-0 sm:px-0 bg-parchment-50/95 backdrop-blur border-b border-parchment-200 shadow-md"
             >
               <div className="py-1.5 space-y-1.5">
@@ -667,6 +669,7 @@ function CombatLine({
   isCaster: boolean;
   live?: boolean;
 }) {
+  const { t } = useTranslation();
   if (!combat) return null;
   return (
     <div role={live ? 'status' : undefined} aria-live={live ? 'polite' : undefined}>
@@ -681,7 +684,7 @@ function CombatLine({
           </button>
           {combatHref && (
             <Link to={combatHref} className="btn-primary hidden lg:flex justify-center flex-1 py-2">
-              🎲 Initiative — ouvrir le combat
+              {t('band.initiative.ouvrir.le.combat')}
             </Link>
           )}
         </div>
@@ -692,12 +695,12 @@ function CombatLine({
         <div
           className={`band-rise grid gap-2 lg:flex lg:w-fit ${isCaster ? 'grid-cols-2' : 'grid-cols-1'}`}
         >
-          <span className="sr-only">À toi de jouer</span>
+          <span className="sr-only">{t('band.a.toi.de.jouer')}</span>
           <button
             type="button"
             onClick={() => onNavigate('survival')}
             className="btn-secondary py-2"
-            aria-label="Attaquer — ouvrir les attaques"
+            aria-label={t('band.attaquer.ouvrir.les.attaques')}
           >
             ⚔ Attaquer
           </button>
@@ -706,9 +709,9 @@ function CombatLine({
               type="button"
               onClick={() => onNavigate('spells')}
               className="btn-secondary py-2"
-              aria-label="Lancer un sort — ouvrir les sorts"
+              aria-label={t('band.lancer.un.sort.ouvrir.les.sorts')}
             >
-              ✨ Lancer un sort
+              {t('band.lancer.un.sort')}
             </button>
           )}
         </div>
