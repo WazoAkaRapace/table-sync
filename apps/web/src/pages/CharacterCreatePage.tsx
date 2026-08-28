@@ -323,7 +323,7 @@ export default function CharacterCreatePage() {
 
   if (!partyId) return null;
 
-  const current = step === RECAP ? { numeral: '✒', title: 'Récapitulatif' } : STEPS[step];
+  const current = step === RECAP ? { numeral: '✒', title: t('create.recap.titre') } : STEPS[step];
 
   return (
     <div className="mx-auto w-full max-w-3xl pb-8">
@@ -945,7 +945,7 @@ export default function CharacterCreatePage() {
             disabled={creating}
             onClick={submit}
           >
-            {creating ? 'Inscription…' : '✒ Créer le personnage'}
+            {creating ? t('create.inscription') : t('create.creer.le.personnage')}
           </button>
         )}
       </div>

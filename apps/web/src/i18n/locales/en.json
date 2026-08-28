@@ -807,5 +807,17 @@
   "onglet.espece": "Species",
   "onglet.historique": "Background",
   "onglet.maitrises": "Proficiencies",
-  "create.espece.maison.meta": "Homebrew species or off-catalog."
+  "create.espece.maison.meta": "Homebrew species or off-catalog.",
+  "create.recap.titre": "Summary",
+  "create.inscription": "Inscribing…",
+  "create.creer.le.personnage": "✒ Create the character",
+  "stats.des.de.vie": "Hit dice",
+  "stats.bonus.de.maitrise": "Proficiency bonus",
+  "stats.sauvegardes.maitrisees": "Proficient saves",
+  "skills.bonus.de.maitrise": "Proficiency bonus",
+  "survie.des.de.vie": "🎲 Hit dice",
+  "survie.nourriture.et.eau": "🍖 Food & water",
+  "inv.sac.a.dos.vide": "Empty backpack",
+  "inv.aucun.objet.ici": "No item here",
+  "inv.appuie.sur.ajouter": "Tap + Add to search an item."
 }

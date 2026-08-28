@@ -44,7 +44,14 @@ import {
 import { type FormEvent, Fragment, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../api';
-import { abilityShort, fightingStyleLabel, toolCategoryLabel } from '../i18n/labels';
+import {
+  abilityLabel,
+  abilityShort,
+  fightingStyleLabel,
+  skillInfoLabel,
+  toolCategoryLabel,
+  toolInfoLabel,
+} from '../i18n/labels';
 
 interface Props {
   character: Character;
@@ -269,7 +276,7 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
             <div className="flex items-center justify-between">
               <h2 className="section-title">{t('skills.jets.de.sauvegarde')}</h2>
               <span className="text-xs text-ink-400">
-                Bonus de maîtrise {formatModifier(profBonus)}
+                {t('skills.bonus.de.maitrise')} {formatModifier(profBonus)}
               </span>
             </div>
             {auraOfProtection > 0 && (
@@ -326,7 +333,8 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
             {skillsByAbility.map((group) => (
               <div key={group.ability}>
                 <div className="text-xs font-semibold text-ink-500 uppercase tracking-wide mb-1.5">
-                  {abilityShort(group.ability as AbilityKey)} — {group.label}
+                  {abilityShort(group.ability as AbilityKey)} —{' '}
+                  {abilityLabel(group.ability as AbilityKey)}
                 </div>
                 <div className="space-y-1.5">
                   {group.skills.map((skill) => {
@@ -350,7 +358,9 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
                             <span className={`text-xs w-4 shrink-0 ${profDotClass(prof)}`}>
                               {profDotGlyph(prof)}
                             </span>
-                            <span className="text-sm text-ink-700 truncate">{skill.label}</span>
+                            <span className="text-sm text-ink-700 truncate">
+                              {skillInfoLabel(skill)}
+                            </span>
                           </span>
                           <span className="font-bold text-ink-800 shrink-0">
                             {formatModifier(total)}
@@ -377,7 +387,9 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
                             <span className={`text-xs w-4 shrink-0 ${profDotClass(prof)}`}>
                               {profDotGlyph(prof)}
                             </span>
-                            <span className="text-sm text-ink-700 truncate">{skill.label}</span>
+                            <span className="text-sm text-ink-700 truncate">
+                              {skillInfoLabel(skill)}
+                            </span>
                           </span>
                           <span className="flex items-center gap-1.5 shrink-0">
                             <span className="font-bold text-ink-800">{formatModifier(total)}</span>
@@ -459,7 +471,9 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
                           <span className={`text-xs w-4 shrink-0 ${profDotClass(prof)}`}>
                             {profDotGlyph(prof)}
                           </span>
-                          <span className="text-sm text-ink-700 truncate">{tool.label}</span>
+                          <span className="text-sm text-ink-700 truncate">
+                            {toolInfoLabel(tool)}
+                          </span>
                         </button>
                       );
                     })}

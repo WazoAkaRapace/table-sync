@@ -1347,8 +1347,8 @@ export default function CharacterInventoryPage() {
                           ? '🎒'
                           : LOCATION_TYPE_ICON[activeLocation?.type ?? 'carried']
                       }
-                      title={isActiveCarried ? 'Sac à dos vide' : 'Aucun objet ici'}
-                      hint="Appuie sur + Ajouter pour chercher un objet."
+                      title={isActiveCarried ? t('inv.sac.a.dos.vide') : t('inv.aucun.objet.ici')}
+                      hint={t('inv.appuie.sur.ajouter')}
                     />
                   </div>
                 ) : (

@@ -109,3 +109,11 @@ export const raceInfo = (frName: string): CatalogEntryEn =>
   enEntry(DND_RACES_EN, frName) ?? { name: frName };
 export const backgroundInfo = (frName: string): CatalogEntryEn =>
   enEntry(DND_BACKGROUNDS_EN, frName) ?? { name: frName };
+
+import { DND_SKILLS_EN, DND_TOOLS_EN } from '@table-sync/shared';
+
+export const skillLabel = (key: string): string => (en() ? DND_SKILLS_EN[key] : undefined) ?? key;
+export const skillInfoLabel = (skill: { key: string; label: string }): string =>
+  (en() ? DND_SKILLS_EN[skill.key] : undefined) ?? skill.label;
+export const toolInfoLabel = (tool: { key: string; label: string }): string =>
+  (en() ? DND_TOOLS_EN[tool.key] : undefined) ?? tool.label;

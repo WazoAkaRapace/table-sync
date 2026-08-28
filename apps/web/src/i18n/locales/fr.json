@@ -806,5 +806,17 @@
   "onglet.espece": "Espèce",
   "onglet.historique": "Historique",
   "onglet.maitrises": "Maîtrises",
-  "create.espece.maison.meta": "Espèce maison ou hors catalogue."
+  "create.espece.maison.meta": "Espèce maison ou hors catalogue.",
+  "create.recap.titre": "Récapitulatif",
+  "create.inscription": "Inscription…",
+  "create.creer.le.personnage": "✒ Créer le personnage",
+  "stats.des.de.vie": "Dés de vie",
+  "stats.bonus.de.maitrise": "Bonus de maîtrise",
+  "stats.sauvegardes.maitrisees": "Sauvegardes maîtrisées",
+  "skills.bonus.de.maitrise": "Bonus de maîtrise",
+  "survie.des.de.vie": "🎲 Dés de vie",
+  "survie.nourriture.et.eau": "🍖 Nourriture & eau",
+  "inv.sac.a.dos.vide": "Sac à dos vide",
+  "inv.aucun.objet.ici": "Aucun objet ici",
+  "inv.appuie.sur.ajouter": "Appuie sur + Ajouter pour chercher un objet."
 }

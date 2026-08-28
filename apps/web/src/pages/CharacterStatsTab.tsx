@@ -317,7 +317,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
           />
           {hitDice.length > 0 && hitDice[0].classKey !== '' && (
             <DerivedStat
-              label="Dés de vie"
+              label={t('stats.des.de.vie')}
               value={
                 hitDice.length === 1
                   ? `d${hitDice[0].die} · ${Math.max(0, hitDice[0].max - hitDice[0].used)}/${hitDice[0].max}`
@@ -327,7 +327,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
               }
             />
           )}
-          <DerivedStat label="Bonus de maîtrise" value={formatModifier(profBonus)} />
+          <DerivedStat label={t('stats.bonus.de.maitrise')} value={formatModifier(profBonus)} />
           {/* Portage max — FOR × 7,5 kg × multiplicateur (feuille dédiée) */}
           <div className="bg-parchment-100 rounded-xl p-3 text-center">
             <div className="text-xs font-medium text-ink-500 mb-1">{t('stats.portage.max')}</div>
@@ -349,7 +349,8 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
         </div>
         {classInfo && (
           <p className="text-xs text-ink-500">
-            Sauvegardes maîtrisées : {classInfo.savingThrows.map((s) => abilityShort(s)).join(', ')}
+            {t('stats.sauvegardes.maitrisees')} :{' '}
+            {classInfo.savingThrows.map((s) => abilityShort(s)).join(', ')}
             {castingLines.length > 0 &&
               ` · Incantation : ${castingLines
                 .map((l) => `${l.name} (${abilityShort(l.ability)})`)

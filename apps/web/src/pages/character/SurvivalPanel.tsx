@@ -726,7 +726,7 @@ export function SurvivalPanel({
           return (
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <span className="text-sm font-medium text-ink-700 flex items-center gap-1.5">
-                🎲 Dés de vie
+                {t('survie.des.de.vie')}
                 {dice.length === 1 ? (
                   <span className="text-xs font-normal text-ink-400">d{dice[0].die}</span>
                 ) : (
@@ -1112,7 +1112,7 @@ export function SurvivalPanel({
 
       {/* ---------- 7. Nourriture & eau ---------- */}
       <section className="card p-4 sm:p-5 space-y-3">
-        <h2 className="section-title">🍖 Nourriture & eau</h2>
+        <h2 className="section-title">{t('survie.nourriture.et.eau')}</h2>
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1">
             <DeprivationBox
@@ -1199,7 +1199,7 @@ export function SurvivalPanel({
               <div className="bg-parchment-100 rounded-lg p-3 space-y-2">
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-medium">
-                    🎲 Dés de vie dépensés (d
+                    {t('survie.des.de.vie')} dépensés (d
                     {dice.length === 1 ? die : dice.map((d) => `d${d.die}`).join('+')}
                     {conMod !== 0 ? ` ${conMod > 0 ? '+' : ''}${conMod}` : ''})
                   </span>
