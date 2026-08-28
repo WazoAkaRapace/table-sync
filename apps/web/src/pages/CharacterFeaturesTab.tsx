@@ -24,6 +24,7 @@ import {
   TEMPLATE_VARIABLES,
 } from '@table-sync/shared';
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import api from '../api';
 import { SortableCard, SortableGrid } from '../components/SortableGrid';
 import { ConfirmButton, EmptyState, Modal } from '../components/ui';
@@ -74,6 +75,7 @@ export default function CharacterFeaturesTab({
   onSaved,
   onError,
 }: Props) {
+  const { t } = useTranslation();
   const [features, setFeatures] = useState<CharacterFeature[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -292,7 +294,7 @@ export default function CharacterFeaturesTab({
           Traits <span className="text-ink-400 text-sm font-normal">({features.length})</span>
         </h2>
         <button type="button" onClick={openCreate} className="btn-primary text-sm px-3 py-1.5">
-          + Ajouter
+          {t('traits.ajouter')}
         </button>
       </div>
 
@@ -462,13 +464,13 @@ export default function CharacterFeaturesTab({
               className="input"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Récupération arcanique"
+              placeholder={t('traits.recuperation.arcanique')}
               autoFocus
             />
           </label>
 
           <label className="block">
-            <span className="label">Catégorie</span>
+            <span className="label">{t('traits.categorie')}</span>
             <select
               className="input"
               value={category}
@@ -488,7 +490,7 @@ export default function CharacterFeaturesTab({
               className="input min-h-[120px] resize-y"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Une fois par jour lors d'un repos court, récupérez {{level}} emplacements de sort. DD de sort : {{save_dc}}."
+              placeholder={t('traits.une.fois.par.jour.lors.d')}
             />
           </label>
 
@@ -501,7 +503,7 @@ export default function CharacterFeaturesTab({
               className="input"
               value={counterMax}
               onChange={(e) => setCounterMax(e.target.value)}
-              placeholder="Laisser vide pour aucun compteur"
+              placeholder={t('traits.laisser.vide.pour.aucun.compteur')}
             />
             <p className="text-xs text-ink-400 mt-1">
               Pour les points de Ki, utilisations de rage, pool de soins, etc.
@@ -549,7 +551,7 @@ export default function CharacterFeaturesTab({
               )}
               {!resetShort && !resetLong && (
                 <p className="text-xs text-ink-400">
-                  Aucune case cochée : rechargement manuel uniquement.
+                  {t('traits.aucune.case.cochee.rechargement.manuel.uniquement')}
                 </p>
               )}
             </div>
@@ -558,7 +560,9 @@ export default function CharacterFeaturesTab({
           {/* Live preview */}
           {description.trim() && (
             <div className="bg-parchment-100 rounded-lg p-3">
-              <span className="text-xs font-medium text-ink-400 block mb-1">Aperçu</span>
+              <span className="text-xs font-medium text-ink-400 block mb-1">
+                {t('traits.apercu')}
+              </span>
               <p className="text-sm text-ink-700 whitespace-pre-line">
                 {renderFeatureTemplate(description, character)}
               </p>
@@ -606,7 +610,7 @@ export default function CharacterFeaturesTab({
               onClick={() => setShowModal(false)}
               className="btn-ghost text-ink-700"
             >
-              Annuler
+              {t('traits.annuler')}
             </button>
           </div>
         </div>
@@ -641,6 +645,7 @@ function CatalogCard({
   addedCatalogIds: Set<string>;
   onAdd: (def: ClassFeatureDef) => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const ownLines = classesOf(character);
   const charClassName =
@@ -688,7 +693,8 @@ function CatalogCard({
           className="flex items-center gap-2 text-sm font-semibold text-ink-700 hover:text-blood-700 transition-colors"
           aria-expanded={open}
         >
-          <span aria-hidden="true">📚</span> Catalogue de classe
+          <span aria-hidden="true">📚</span>
+          {t('traits.catalogue.de.classe')}
           <span className="text-xs font-normal text-ink-400">{open ? '▼' : '▶'}</span>
         </button>
         {nextGains.length > 0 && (
@@ -717,7 +723,7 @@ function CatalogCard({
                   setCls(e.target.value);
                   setSubFilter('base');
                 }}
-                aria-label="Classe du catalogue"
+                aria-label={t('traits.classe.du.catalogue')}
               >
                 {DND_CLASSES.map((c) => (
                   <option key={c.name} value={c.name}>
@@ -733,9 +739,9 @@ function CatalogCard({
                   className="input py-1 text-xs w-auto"
                   value={subFilter}
                   onChange={(e) => setSubFilter(e.target.value)}
-                  aria-label="Sous-classe du catalogue"
+                  aria-label={t('traits.sous.classe.du.catalogue')}
                 >
-                  <option value="base">Classe de base</option>
+                  <option value="base">{t('traits.classe.de.base')}</option>
                   {subclasses.map((s) => (
                     <option key={s.key} value={s.key}>
                       {s.label}
@@ -748,7 +754,9 @@ function CatalogCard({
 
           <div className="divide-y divide-parchment-100 rounded-lg border border-parchment-200 overflow-hidden">
             {sorted.length === 0 && (
-              <p className="text-xs text-ink-400 p-3">Aucune capacité cataloguée ici.</p>
+              <p className="text-xs text-ink-400 p-3">
+                {t('traits.aucune.capacite.cataloguee.ici')}
+              </p>
             )}
             {sorted.map((def) => {
               const added = addedCatalogIds.has(def.id);
@@ -778,7 +786,7 @@ function CatalogCard({
                       </span>
                       {def.native && (
                         <span className="text-[10px] text-ink-400 italic shrink-0">
-                          géré par la fiche
+                          {t('traits.gere.par.la.fiche')}
                         </span>
                       )}
                       {reset && (
@@ -796,7 +804,7 @@ function CatalogCard({
                     </button>
                     {added ? (
                       <span className="text-xs text-green-700 font-semibold shrink-0">
-                        ✓ ajouté
+                        {t('traits.ajoute')}
                       </span>
                     ) : (
                       <button
@@ -823,10 +831,7 @@ function CatalogCard({
               );
             })}
           </div>
-          <p className="text-[10px] text-ink-400">
-            * le compteur se recharge via les boutons Repos de l'onglet Survie. Le maximum est
-            recalculé à ton niveau actuel lors de l'ajout.
-          </p>
+          <p className="text-[10px] text-ink-400">{t('traits.le.compteur.se.recharge.via.les')}</p>
         </div>
       )}
     </div>

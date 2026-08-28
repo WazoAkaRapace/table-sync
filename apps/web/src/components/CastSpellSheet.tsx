@@ -7,6 +7,7 @@ import {
 } from '@table-sync/shared';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import { Chip } from './ui';
 
 /**
@@ -50,6 +51,7 @@ export default function CastSpellSheet({
    * choisit (un emplacement de pacte lance le sort au niveau de SON dé). */
   onCast: (level: number, ritual?: boolean, pool?: 'spellcasting' | 'pact') => Promise<void> | void;
 }) {
+  const { t } = useTranslation();
   const isCantrip = spell.level === 0;
   const canUpcast = !!(spell.higherLevel || spell.higherLevel);
 
@@ -136,7 +138,7 @@ export default function CastSpellSheet({
             type="button"
             onClick={onClose}
             className="text-ink-400 hover:text-ink-700 text-lg leading-none px-1"
-            aria-label="Fermer"
+            aria-label={t('cast.fermer')}
           >
             ✕
           </button>
@@ -146,23 +148,24 @@ export default function CastSpellSheet({
           <div className="rounded-lg bg-amber-50 border border-amber-300 p-3 mb-3 text-sm text-amber-900">
             <p className="font-semibold">⚠️ Concentration en cours</p>
             <p className="mt-0.5">
-              Tu concentres déjà un sort. Lancer <strong>{spell.name}</strong> mettra fin au sort
-              précédent.
+              {t('cast.tu.concentres.deja.un.sort.lancer')}
+              <strong>{spell.name}</strong>
+              {t('cast.mettra.fin.au.sort.precedent')}
             </p>
           </div>
         )}
 
         {isCantrip ? (
           <p className="text-sm text-ink-600 bg-parchment-100 rounded-lg p-3">
-            Les tours de magie se lancent à volonté — aucun emplacement à dépenser.
+            {t('cast.les.tours.de.magie.se.lancent')}
           </p>
         ) : castOptions.length === 0 ? (
           <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3">
-            Aucun emplacement de sort disponible. Il te faut un repos.
+            {t('cast.aucun.emplacement.de.sort.disponible.il')}
           </p>
         ) : (
           <div className="space-y-1.5">
-            <p className="text-xs font-medium text-ink-500">Emplacement à dépenser :</p>
+            <p className="text-xs font-medium text-ink-500">{t('cast.emplacement.a.depenser')}</p>
             {castOptions.map((opt) => {
               const selected = chosenKey === opt.key;
               const isUpcast = opt.level > spell.level && canUpcast;
@@ -185,13 +188,13 @@ export default function CastSpellSheet({
                       <span
                         className={`text-[10px] font-semibold uppercase ${selected ? 'text-gold-300' : 'text-blood-500'}`}
                       >
-                        supérieur
+                        {t('cast.superieur')}
                       </span>
                     )}
                     {isPact && (
                       <span
                         className={`text-[10px] font-semibold uppercase ${selected ? 'text-gold-300' : 'text-gold-600'}`}
-                        title="Emplacement de magie de pacte — recharge au repos court (SRD : les deux pools sont interchangeables)"
+                        title={t('cast.emplacement.de.magie.de.pacte.recharge')}
                       >
                         ☾ pacte
                       </span>
@@ -201,7 +204,7 @@ export default function CastSpellSheet({
                     className={`shrink-0 ${selected ? 'text-parchment-100' : isPact ? 'text-gold-600' : 'text-ink-400'}`}
                   >
                     {isPact ? (
-                      <span title="Emplacement de pacte (recharge au repos court) — SRD magie de pacte">
+                      <span title={t('cast.emplacement.de.pacte.recharge.au.repos')}>
                         ☾ {pactRemaining()} restant{pactRemaining() > 1 ? 's' : ''} · repos court
                       </span>
                     ) : (

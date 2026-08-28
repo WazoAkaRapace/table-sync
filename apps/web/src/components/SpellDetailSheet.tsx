@@ -6,6 +6,7 @@
 
 import type { Spell, SpellSchool } from '@table-sync/shared';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import api from '../api';
 import { schoolLabel } from '../i18n/labels';
 import { BottomSheet } from './ui';
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export default function SpellDetailSheet({ open, spellId, onClose }: Props) {
+  const { t } = useTranslation();
   const [spell, setSpell] = useState<Spell | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -47,7 +49,9 @@ export default function SpellDetailSheet({ open, spellId, onClose }: Props) {
       size="md"
       mobileOnly={false}
     >
-      {loading && <p className="text-sm text-ink-400 text-center py-8">Chargement du sort…</p>}
+      {loading && (
+        <p className="text-sm text-ink-400 text-center py-8">{t('detail.chargement.du.sort')}</p>
+      )}
       {!loading && !spell && (
         <p className="text-sm text-ink-400 text-center py-8">Sort introuvable.</p>
       )}
@@ -83,7 +87,7 @@ export default function SpellDetailSheet({ open, spellId, onClose }: Props) {
             )}
             {spell.rangeText && (
               <div>
-                <span className="font-semibold">Portée</span>
+                <span className="font-semibold">{t('detail.portee')}</span>
                 <span className="text-ink-600 ml-2">{spell.rangeText}</span>
               </div>
             )}
@@ -96,7 +100,7 @@ export default function SpellDetailSheet({ open, spellId, onClose }: Props) {
             </div>
             {spell.duration && (
               <div>
-                <span className="font-semibold">Durée</span>
+                <span className="font-semibold">{t('detail.duree')}</span>
                 <span className="text-ink-600 ml-2">{spell.duration}</span>
               </div>
             )}
@@ -113,7 +117,7 @@ export default function SpellDetailSheet({ open, spellId, onClose }: Props) {
           {/* At higher levels */}
           {(spell.higherLevel || spell.higherLevel) && (
             <div className="text-sm">
-              <span className="font-semibold">Aux niveaux supérieurs.</span>{' '}
+              <span className="font-semibold">{t('detail.aux.niveaux.superieurs')}</span>{' '}
               <span className="text-ink-600">{spell.higherLevel || spell.higherLevel}</span>
             </div>
           )}

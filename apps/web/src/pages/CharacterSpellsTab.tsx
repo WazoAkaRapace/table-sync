@@ -24,6 +24,7 @@ import {
   spellSaveDC,
 } from '@table-sync/shared';
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import api from '../api';
 import CastSpellSheet from '../components/CastSpellSheet';
 import { BottomSheet, Chip, ErrorMsg } from '../components/ui';
@@ -65,6 +66,7 @@ const SCHOOL_TEXT: Record<string, string> = {
 };
 
 export default function CharacterSpellsTab({ character, charId, onSaved, onError }: Props) {
+  const { t } = useTranslation();
   const [charSpells, setCharSpells] = useState<CharacterSpell[]>([]);
   const [loadingSpells, setLoadingSpells] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -498,11 +500,8 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
     return (
       <div className="card p-8 text-center space-y-3">
         <p className="text-4xl">✨</p>
-        <p className="text-ink-500">Cette classe ne lance pas de sorts.</p>
-        <p className="text-xs text-ink-400">
-          Définissez une classe de lanceur de sorts dans l'onglet Caractéristiques pour accéder aux
-          sorts.
-        </p>
+        <p className="text-ink-500">{t('sorts.cette.classe.ne.lance.pas.de')}</p>
+        <p className="text-xs text-ink-400">{t('sorts.definissez.une.classe.de.lanceur.de')}</p>
       </div>
     );
   }
@@ -539,13 +538,13 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
       {isCaster && (
         <section className="card p-4 sm:p-5 space-y-2.5">
           <div className="flex items-center justify-between gap-2">
-            <h2 className="section-title">Emplacements de sort</h2>
+            <h2 className="section-title">{t('sorts.emplacements.de.sort')}</h2>
             <button
               type="button"
               onClick={restoreAll}
               className="text-xs text-blood-600 hover:underline px-1.5 py-1.5 -mr-1.5"
             >
-              ↻ Restaurer tout
+              {t('sorts.restaurer.tout')}
             </button>
           </div>
           {castingLines.length > 0 &&
@@ -600,7 +599,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
               onClick={() => setCatalogOpen(true)}
               className="btn-primary text-sm px-3 py-1.5 lg:hidden"
             >
-              + Ajouter
+              {t('sorts.ajouter')}
             </button>
           </div>
 
@@ -616,7 +615,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                     : 'bg-parchment-100 text-ink-600 hover:bg-parchment-200'
                 }`}
               >
-                Tous
+                {t('sorts.tous')}
               </button>
               {limits.map((l) => {
                 const count = preparedCountFor(l.classKey);
@@ -654,11 +653,11 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                 onClick={() => fetchCharSpells()}
                 className="btn-ghost text-blood-600 text-sm px-3 py-1.5"
               >
-                Réessayer
+                {t('sorts.reessayer')}
               </button>
             </div>
           ) : loadingSpells ? (
-            <div role="status" aria-label="Chargement des sorts" className="space-y-1.5">
+            <div role="status" aria-label={t('sorts.chargement.des.sorts')} className="space-y-1.5">
               {[0, 1, 2].map((i) => (
                 <SpellRowSkeleton key={i} />
               ))}
@@ -688,7 +687,9 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                         {group.level === 0 ? 'Tours de magie' : `Niveau ${group.level}`}
                       </span>
                       {group.level === 0
-                        ? isCaster && <span className="text-[11px] text-ink-500">à volonté</span>
+                        ? isCaster && (
+                            <span className="text-[11px] text-ink-500">{t('sorts.a.volonte')}</span>
+                          )
                         : maxSlots > 0 && (
                             <span className="text-[11px] text-ink-500">
                               <span className="font-mono">
@@ -727,9 +728,9 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                                 {isDomain ? (
                                   <span
                                     className="w-11 h-11 flex items-center justify-center text-lg text-gold-600 shrink-0"
-                                    title="Sort de domaine — toujours préparé, ne compte pas dans la limite"
+                                    title={t('sorts.sort.de.domaine.toujours.prepare.ne')}
                                     role="img"
-                                    aria-label="Sort de domaine toujours préparé"
+                                    aria-label={t('sorts.sort.de.domaine.toujours.prepare')}
                                   >
                                     ◆
                                   </span>
@@ -775,7 +776,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                                     {spell.concentration && (
                                       <span
                                         className="shrink-0 text-indigo-500 text-[11px]"
-                                        title="Nécessite de la concentration"
+                                        title={t('sorts.necessite.de.la.concentration')}
                                       >
                                         🌀
                                       </span>
@@ -783,7 +784,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                                     {spell.ritual && (
                                       <span
                                         className="shrink-0 text-purple-600 text-[11px]"
-                                        title="Lançable en rituel"
+                                        title={t('sorts.lancable.en.rituel')}
                                       >
                                         ⚗
                                       </span>
@@ -795,7 +796,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                                   onClick={() => startCast(spell, cs.id)}
                                   className="w-11 h-11 shrink-0 rounded-xl bg-parchment-100 hover:bg-gold-100 border border-parchment-200 text-ink-500 hover:text-gold-600 flex items-center justify-center text-base transition-colors"
                                   aria-label={`Lancer ${name}`}
-                                  title="Lancer le sort"
+                                  title={t('sorts.lancer.le.sort')}
                                 >
                                   🪄
                                 </button>
@@ -805,7 +806,8 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                                   <p>{spell.description}</p>
                                   {spell.higherLevel && (
                                     <p className="text-ink-400 italic">
-                                      <strong>Aux niveaux supérieurs :</strong> {spell.higherLevel}
+                                      <strong>{t('sorts.aux.niveaux.superieurs')}</strong>{' '}
+                                      {spell.higherLevel}
                                     </p>
                                   )}
                                   <SpellStatBadges
@@ -825,14 +827,14 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                                             onClick={cancelForget}
                                             className="text-[11px] text-ink-400 hover:text-ink-600 px-1.5 py-1.5"
                                           >
-                                            Annuler
+                                            {t('sorts.annuler')}
                                           </button>
                                           <button
                                             type="button"
                                             onClick={() => removeSpell(cs.id)}
                                             className="px-2.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold pulse-warn"
                                           >
-                                            Oublier définitivement
+                                            {t('sorts.oublier.definitivement')}
                                           </button>
                                         </span>
                                       ) : (
@@ -841,7 +843,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                                           onClick={() => armForget(cs.id)}
                                           className="text-[11px] text-blood-600 hover:underline px-1.5 py-1.5"
                                         >
-                                          Oublier ce sort
+                                          {t('sorts.oublier.ce.sort')}
                                         </button>
                                       )}
                                     </div>
@@ -1239,6 +1241,7 @@ function SpellCatalog({
   onRetry: () => void;
   onLoadMore: () => void;
 }) {
+  const { t } = useTranslation();
   const [expandedSpellId, setExpandedSpellId] = useState<number | null>(null);
 
   return (
@@ -1248,7 +1251,7 @@ function SpellCatalog({
         <input
           type="text"
           className="input"
-          placeholder="Rechercher un sort…"
+          placeholder={t('sorts.rechercher.un.sort')}
           value={search}
           onChange={(e) => onSearch(e.target.value)}
         />
@@ -1256,7 +1259,7 @@ function SpellCatalog({
           className="input py-1.5 text-sm w-full"
           value={selectedClass}
           onChange={(e) => onClass(e.target.value)}
-          aria-label="Filtrer par classe"
+          aria-label={t('sorts.filtrer.par.classe')}
         >
           <option value="">Toutes classes</option>
           {DND_CLASSES.map((c) => (
@@ -1270,9 +1273,9 @@ function SpellCatalog({
             className="input py-1.5 text-sm flex-1"
             value={level}
             onChange={(e) => onLevel(e.target.value)}
-            aria-label="Filtrer par niveau"
+            aria-label={t('sorts.filtrer.par.niveau')}
           >
-            <option value="">Tous niveaux</option>
+            <option value="">{t('sorts.tous.niveaux')}</option>
             {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((l) => (
               <option key={l} value={String(l)}>
                 {l === 0 ? 'Tours de magie' : `Niveau ${l}`}
@@ -1283,9 +1286,9 @@ function SpellCatalog({
             className="input py-1.5 text-sm flex-1"
             value={school}
             onChange={(e) => onSchool(e.target.value)}
-            aria-label="Filtrer par école"
+            aria-label={t('sorts.filtrer.par.ecole')}
           >
-            <option value="">Toutes écoles</option>
+            <option value="">{t('sorts.toutes.ecoles')}</option>
             {Object.entries(SPELL_SCHOOL_LABELS_FR).map(([key, label]) => (
               <option key={key} value={key}>
                 {label}
@@ -1304,25 +1307,25 @@ function SpellCatalog({
             onClick={onRetry}
             className="btn-ghost text-blood-600 text-sm px-3 py-1.5"
           >
-            Réessayer
+            {t('sorts.reessayer')}
           </button>
         </div>
       ) : loading ? (
-        <div role="status" aria-label="Chargement du grimoire" className="space-y-1.5">
+        <div role="status" aria-label={t('sorts.chargement.du.grimoire')} className="space-y-1.5">
           {[0, 1, 2].map((i) => (
             <SpellRowSkeleton key={i} />
           ))}
         </div>
       ) : spells.length === 0 ? (
         search.trim() || level !== '' || school ? (
-          <p className="text-sm text-ink-400 italic text-center py-4">Aucun sort trouvé.</p>
+          <p className="text-sm text-ink-400 italic text-center py-4">
+            {t('sorts.aucun.sort.trouve')}
+          </p>
         ) : (
           <div className="text-center py-8 space-y-1">
             <p className="text-3xl">📝</p>
-            <p className="text-sm text-ink-400">Recherchez un sort</p>
-            <p className="text-xs text-ink-400">
-              Tapez le nom d'un sort ou filtrez par niveau/école.
-            </p>
+            <p className="text-sm text-ink-400">{t('sorts.recherchez.un.sort')}</p>
+            <p className="text-xs text-ink-400">{t('sorts.tapez.le.nom.d.un.sort')}</p>
           </div>
         )
       ) : (
@@ -1362,7 +1365,7 @@ function SpellCatalog({
                         {spell.concentration && (
                           <span
                             className="shrink-0 text-indigo-500 text-[11px]"
-                            title="Nécessite de la concentration"
+                            title={t('sorts.necessite.de.la.concentration')}
                           >
                             🌀
                           </span>
@@ -1370,7 +1373,7 @@ function SpellCatalog({
                         {spell.ritual && (
                           <span
                             className="shrink-0 text-purple-600 text-[11px]"
-                            title="Lançable en rituel"
+                            title={t('sorts.lancable.en.rituel')}
                           >
                             ⚗
                           </span>
@@ -1391,7 +1394,7 @@ function SpellCatalog({
                       <p>{spell.description}</p>
                       {spell.higherLevel && (
                         <p className="text-ink-400 italic">
-                          <strong>Aux niveaux supérieurs :</strong> {spell.higherLevel}
+                          <strong>{t('sorts.aux.niveaux.superieurs')}</strong> {spell.higherLevel}
                         </p>
                       )}
                       <SpellStatBadges
@@ -1445,6 +1448,7 @@ function SwipeToReveal({
   actionLabel: string;
   children: React.ReactNode;
 }) {
+  const { t } = useTranslation();
   const WIDTH = 76; // revealed action width in px
   const [dx, setDx] = useState(0);
   const [open, setOpen] = useState(false);
@@ -1529,7 +1533,7 @@ function SwipeToReveal({
         onPointerCancel={onPointerUp}
         className={`relative touch-pan-y select-none ${dragging ? '' : 'transition-transform duration-200'}`}
         style={{ transform: `translateX(${dx}px)` }}
-        title="Glisser vers la gauche pour oublier le sort"
+        title={t('sorts.glisser.vers.la.gauche.pour.oublier')}
       >
         {children}
       </div>

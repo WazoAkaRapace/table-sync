@@ -17,6 +17,7 @@ import {
   MULTICLASS_PROFICIENCIES_GAINED,
 } from '@table-sync/shared';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { BottomSheet } from './ui';
 
 interface Props {
@@ -38,6 +39,7 @@ const ABILITY_LABELS: Record<string, string> = {
 };
 
 export default function AddClassSheet({ open, onClose, character, currentClasses, onAdd }: Props) {
+  const { t } = useTranslation();
   const totalLevel = currentClasses.reduce((sum, c) => sum + c.level, 0);
   const remaining = 20 - totalLevel;
   const takenKeys = new Set(currentClasses.map((c) => findClass(c.classKey)?.name ?? c.classKey));
@@ -79,7 +81,7 @@ export default function AddClassSheet({ open, onClose, character, currentClasses
     <BottomSheet
       open={open}
       onClose={close}
-      title="Ajouter une classe"
+      title={t('classe.ajouter.une.classe')}
       mobileOnly={false}
       footer={
         <div className="flex items-center justify-between gap-3">
@@ -93,7 +95,7 @@ export default function AddClassSheet({ open, onClose, character, currentClasses
             disabled={!info || remaining < 1}
             onClick={confirm}
           >
-            Ajouter
+            {t('classe.ajouter')}
           </button>
         </div>
       }
@@ -153,7 +155,9 @@ export default function AddClassSheet({ open, onClose, character, currentClasses
                 Prérequis (SRD)
               </p>
               {prereqGroups.length === 0 ? (
-                <p className="text-sm text-ink-600">Aucun prérequis de caractéristique.</p>
+                <p className="text-sm text-ink-600">
+                  {t('classe.aucun.prerequis.de.caracteristique')}
+                </p>
               ) : (
                 <ul className="space-y-1">
                   {prereqGroups.map((group) => (
@@ -172,7 +176,7 @@ export default function AddClassSheet({ open, onClose, character, currentClasses
                         );
                       })}
                       {group === prereqGroups[0] && prereqGroups.length > 1 && (
-                        <span className="text-ink-400">ou…</span>
+                        <span className="text-ink-400">{t('classe.ou')}</span>
                       )}
                     </li>
                   ))}
@@ -180,7 +184,7 @@ export default function AddClassSheet({ open, onClose, character, currentClasses
               )}
               {!prereqSatisfied && (
                 <p className="text-xs text-orange-600">
-                  ⚠ Prérequis non satisfait — la fiche t'avertit, à toi et au MD de décider.
+                  {t('classe.prerequis.non.satisfait.la.fiche.t')}
                 </p>
               )}
             </section>
@@ -188,7 +192,7 @@ export default function AddClassSheet({ open, onClose, character, currentClasses
             {/* 3 — maîtrises acquises (table SRD) */}
             <section className="rounded-xl border border-parchment-300 bg-parchment-50 p-3 space-y-1">
               <p className="text-xs font-semibold text-ink-400 uppercase tracking-wide">
-                Maîtrises acquises
+                {t('classe.maitrises.acquises')}
               </p>
               <ul className="text-sm text-ink-700 space-y-0.5">
                 {gained?.linesFr.map((line) => (
@@ -204,12 +208,12 @@ export default function AddClassSheet({ open, onClose, character, currentClasses
             {/* 4 — niveau de départ + sous-classe */}
             <section className="space-y-3">
               <div className="flex items-center justify-between gap-3">
-                <span className="label mb-0">Niveaux de départ</span>
+                <span className="label mb-0">{t('classe.niveaux.de.depart')}</span>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     className="btn-secondary w-11 h-11 text-lg"
-                    aria-label="Retirer un niveau"
+                    aria-label={t('classe.retirer.un.niveau')}
                     onClick={() => setLevel((l) => Math.max(1, l - 1))}
                   >
                     −
@@ -220,7 +224,7 @@ export default function AddClassSheet({ open, onClose, character, currentClasses
                   <button
                     type="button"
                     className="btn-secondary w-11 h-11 text-lg"
-                    aria-label="Ajouter un niveau"
+                    aria-label={t('classe.ajouter.un.niveau')}
                     onClick={() => setLevel((l) => Math.min(maxLevel, l + 1))}
                   >
                     +

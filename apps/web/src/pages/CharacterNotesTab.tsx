@@ -5,6 +5,7 @@
 
 import type { Character, CharacterNote } from '@table-sync/shared';
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import api from '../api';
 import { SortableCard, SortableGrid } from '../components/SortableGrid';
 import { ConfirmButton, EmptyState, Modal } from '../components/ui';
@@ -112,6 +113,7 @@ export default function CharacterNotesTab({
   onSaved,
   onError,
 }: Props) {
+  const { t } = useTranslation();
   const [notes, setNotes] = useState<CharacterNote[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -221,7 +223,7 @@ export default function CharacterNotesTab({
           Notes <span className="text-ink-400 text-sm font-normal">({notes.length})</span>
         </h2>
         <button type="button" onClick={openCreate} className="btn-primary text-sm px-3 py-1.5">
-          + Ajouter
+          {t('notes.ajouter')}
         </button>
       </div>
 
@@ -300,7 +302,7 @@ export default function CharacterNotesTab({
               className="input"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Mes quêtes en cours"
+              placeholder={t('notes.mes.quetes.en.cours')}
               autoFocus
             />
           </label>
@@ -314,14 +316,14 @@ export default function CharacterNotesTab({
                   onClick={() => setPreviewMode(false)}
                   className={`text-xs px-2 py-0.5 rounded ${!previewMode ? 'bg-blood-600 text-white' : 'bg-parchment-200 text-ink-500'}`}
                 >
-                  ✏️ Éditer
+                  {t('notes.editer')}
                 </button>
                 <button
                   type="button"
                   onClick={() => setPreviewMode(true)}
                   className={`text-xs px-2 py-0.5 rounded ${previewMode ? 'bg-blood-600 text-white' : 'bg-parchment-200 text-ink-500'}`}
                 >
-                  👁 Aperçu
+                  {t('notes.apercu')}
                 </button>
               </div>
             </div>
@@ -331,7 +333,7 @@ export default function CharacterNotesTab({
                   // biome-ignore lint/security/noDangerouslySetInnerHtml: renderMarkdown escapes <, > and & in inline() before injecting its own trusted tags — no user HTML reaches the DOM.
                   <div dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }} />
                 ) : (
-                  <span className="text-ink-400 italic">Rien à prévisualiser</span>
+                  <span className="text-ink-400 italic">{t('notes.rien.a.previsualiser')}</span>
                 )}
               </div>
             ) : (
@@ -367,7 +369,7 @@ export default function CharacterNotesTab({
               onClick={() => setShowModal(false)}
               className="btn-ghost text-ink-700"
             >
-              Annuler
+              {t('notes.annuler')}
             </button>
           </div>
         </div>

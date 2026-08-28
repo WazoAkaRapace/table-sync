@@ -22,6 +22,7 @@ import {
   type PatchCharacterPayload,
 } from '@table-sync/shared';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import api from '../api';
 import { useAuth } from '../auth';
 import AddClassSheet from '../components/AddClassSheet';
@@ -74,6 +75,7 @@ function subclassLabel(entry: CharacterClassEntry): string | null {
 }
 
 export default function CharacterDescriptionTab({ character, charId, onSaved, onError }: Props) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const isOwner = user?.id === character.ownerId;
   const [drafts, setDrafts] = useState<Record<string, string>>({});
@@ -235,13 +237,13 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
       {/* Identity & class — summary card, full editor in bottom sheet */}
       <section className="card p-4 sm:p-5 space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="section-title">Identité & classe</h2>
+          <h2 className="section-title">{t('desc.identite.classe')}</h2>
           <button
             type="button"
             onClick={() => setIdentityOpen(true)}
             className="btn-secondary text-sm px-3 py-2"
           >
-            ✎ Modifier
+            {t('desc.modifier')}
           </button>
         </div>
         <div className="space-y-1">
@@ -267,7 +269,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
       <BottomSheet
         open={identityOpen}
         onClose={closeIdentity}
-        title="Identité & classe"
+        title={t('desc.identite.classe')}
         mobileOnly={false}
       >
         <div className="space-y-4">
@@ -275,7 +277,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
           <section className="space-y-3">
             <div className="flex items-center justify-between gap-3">
               <p className="text-xs font-semibold text-ink-400 uppercase tracking-wide">
-                Lignes de classe
+                {t('desc.lignes.de.classe')}
               </p>
               <p className="text-xs text-ink-500">
                 Niveau total&nbsp;<span className="font-mono">{totalLevel}</span>/20
@@ -303,7 +305,9 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
                         <p className="text-sm font-semibold text-ink-800 truncate">
                           {name}
                           {index === 0 && (
-                            <span className="text-xs font-normal text-ink-400"> · départ</span>
+                            <span className="text-xs font-normal text-ink-400">
+                              {t('desc.depart')}
+                            </span>
                           )}
                           <span className="text-xs font-normal text-ink-400">
                             {' '}
@@ -348,7 +352,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
                     )}
                     {subclassOptions.length > 0 && (
                       <label className="flex items-center justify-between gap-3">
-                        <span className="label mb-0 text-xs">Voie de classe</span>
+                        <span className="label mb-0 text-xs">{t('desc.voie.de.classe')}</span>
                         <select
                           className="input py-1.5 text-sm w-auto max-w-[60%]"
                           value={entry.subclassKey ?? ''}
@@ -369,7 +373,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
                     )}
                     {name === 'Druide' && entry.subclassKey === 'terre' && (
                       <label className="flex items-center justify-between gap-3">
-                        <span className="label mb-0 text-xs">Terrain du cercle</span>
+                        <span className="label mb-0 text-xs">{t('desc.terrain.du.cercle')}</span>
                         <select
                           className="input py-1.5 text-sm w-auto max-w-[60%]"
                           value={character.landCircle ?? ''}
@@ -379,7 +383,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
                               'Erreur de mise à jour',
                             )
                           }
-                          aria-label="Terrain du cercle"
+                          aria-label={t('desc.terrain.du.cercle')}
                         >
                           <option value="">—</option>
                           {LAND_CIRCLES.map((t) => (
@@ -392,7 +396,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
                     )}
                     {styleEligible && (
                       <label className="flex items-center justify-between gap-3">
-                        <span className="label mb-0 text-xs">Style de combat</span>
+                        <span className="label mb-0 text-xs">{t('desc.style.de.combat')}</span>
                         <select
                           className="input py-1.5 text-sm w-auto max-w-[60%]"
                           value={entry.fightingStyle ?? ''}
@@ -422,7 +426,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
               className="btn-ghost text-sm px-3 py-2"
               onClick={() => setAddClassOpen(true)}
             >
-              ＋ Ajouter une classe
+              {t('desc.ajouter.une.classe')}
             </button>
           </section>
 
@@ -502,10 +506,10 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
                 className="text-xs text-red-500 hover:text-red-700"
                 armedClassName="font-semibold text-red-700!"
                 confirmChildren="Confirmer ?"
-                title="Supprimer le portrait"
+                title={t('desc.supprimer.le.portrait')}
                 ariaLabel="Supprimer le portrait"
               >
-                Supprimer
+                {t('desc.supprimer')}
               </ConfirmButton>
             )}
           </div>
@@ -534,7 +538,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
           <textarea
             className="input min-h-[80px] resize-y"
             value={drafts.appearance ?? ''}
-            placeholder="Un elfe élancé portant une robe d'érudit usée…"
+            placeholder={t('desc.un.elfe.elance.portant.une.robe')}
             onChange={(e) => setDrafts((d) => ({ ...d, appearance: e.target.value }))}
             onBlur={() => commitField('appearance')}
           />
@@ -543,7 +547,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
 
       {/* Personality */}
       <section className="card p-4 sm:p-5 space-y-3">
-        <h2 className="section-title">Personnalité</h2>
+        <h2 className="section-title">{t('desc.personnalite')}</h2>
         <div className="space-y-3">
           {PERSONALITY_FIELDS.map((f) => (
             <label key={f.key} className="block">
@@ -564,11 +568,11 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
       <section className="card p-4 sm:p-5 space-y-3">
         <h2 className="section-title">Historique</h2>
         <label className="block">
-          <span className="label">Histoire du personnage</span>
+          <span className="label">{t('desc.histoire.du.personnage')}</span>
           <textarea
             className="input min-h-[120px] resize-y"
             value={drafts.backstory ?? ''}
-            placeholder="Née dans un village de pêcheurs, elle quitta tout lorsque la flotte mourut…"
+            placeholder={t('desc.nee.dans.un.village.de.pecheurs')}
             onChange={(e) => setDrafts((d) => ({ ...d, backstory: e.target.value }))}
             onBlur={() => commitField('backstory')}
           />
@@ -577,13 +581,13 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
 
       {/* Allies & organizations */}
       <section className="card p-4 sm:p-5 space-y-3">
-        <h2 className="section-title">Alliés et organisations</h2>
+        <h2 className="section-title">{t('desc.allies.et.organisations')}</h2>
         <label className="block">
-          <span className="label">Alliés, mentors, guildes et factions</span>
+          <span className="label">{t('desc.allies.mentors.guildes.et.factions')}</span>
           <textarea
             className="input min-h-[80px] resize-y"
             value={drafts.alliesOrganizations ?? ''}
-            placeholder="La Confrérie du Givre, Harshnag le géant…"
+            placeholder={t('desc.la.confrerie.du.givre.harshnag.le')}
             onChange={(e) => setDrafts((d) => ({ ...d, alliesOrganizations: e.target.value }))}
             onBlur={() => commitField('alliesOrganizations')}
           />
@@ -593,18 +597,20 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
       {/* Visibility — the owner's call alone (secret prep) */}
       {isOwner && (
         <section className="card p-4 sm:p-5 space-y-3">
-          <h2 className="section-title">Visibilité</h2>
+          <h2 className="section-title">{t('desc.visibilite')}</h2>
           <p className="text-sm text-ink-500">
             {character.hidden ? (
               <>
-                🙈 Ce personnage est <strong>caché</strong> : les autres joueurs ne le voient nulle
-                part et il ne peut pas rejoindre les combats. Toi et le MD y avez toujours accès.
+                {t('desc.ce.personnage.est')}
+                <strong>{t('desc.cache')}</strong>
+                {t('desc.les.autres.joueurs.ne.le.voient')}
               </>
             ) : (
               <>
                 Ce personnage est visible de toute la table. Cache-le pour préparer une surprise —
                 il disparaît des listes des autres joueurs, quitte les combats en cours, et «{' '}
-                <em>Ma fiche</em> » pointe sur ton personnage actif.
+                <em>{t('desc.ma.fiche')}</em>
+                {t('desc.pointe.sur.ton.personnage.actif')}
               </>
             )}
           </p>
