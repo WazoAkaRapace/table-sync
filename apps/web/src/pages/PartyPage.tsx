@@ -467,7 +467,7 @@ export default function PartyPage() {
       <section className="register-rise pt-8" style={{ animationDelay: '180ms' }}>
         <TocHeader numeral="III" title={t('party.outils.annexes')} id="toc-tools" />
         <ul className="list-none">
-          {isGM && <TocLink to={`/party/${partyId}/gm`} label={t('nav.table.du.md')} glyph="🛡" />}
+          {isGM && <TocLink to={`/party/${partyId}/gm`} label={t('party.toc.md')} glyph="🛡" />}
           <TocLink to={`/party/${partyId}/combat`} label={t('party.toc.combat')} glyph="⚔" />
           {gmaLinked && (
             <TocLink

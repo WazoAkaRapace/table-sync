@@ -1593,5 +1593,6 @@
   "transfert.aucun.destinataire.dans.ce.groupe": "No recipient in this party.",
   "transfert.quantite.max": "Quantity (max {{maxQty}})",
   "transfert.transfert": "Transferring…",
-  "transfert.transferer": "Transfer"
+  "transfert.transferer": "Transfer",
+  "party.toc.md": "DM’s Table"
 }

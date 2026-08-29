@@ -1592,5 +1592,6 @@
   "transfert.aucun.destinataire.dans.ce.groupe": "Aucun destinataire dans ce groupe.",
   "transfert.quantite.max": "Quantité (max {{maxQty}})",
   "transfert.transfert": "Transfert…",
-  "transfert.transferer": "Transférer"
+  "transfert.transferer": "Transférer",
+  "party.toc.md": "Table du MD"
 }
