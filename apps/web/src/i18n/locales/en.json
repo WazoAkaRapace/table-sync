@@ -813,7 +813,7 @@
   "create.creer.le.personnage": "✒ Create the character",
   "stats.des.de.vie": "Hit dice",
   "stats.bonus.de.maitrise": "Proficiency bonus",
-  "stats.sauvegardes.maitrisees": "Proficient saves",
+  "stats.sauvegardes.maitrisees": "Proficient saves:",
   "skills.bonus.de.maitrise": "Proficiency bonus",
   "survie.des.de.vie": "🎲 Hit dice",
   "survie.nourriture.et.eau": "🍖 Food & water",
@@ -1558,5 +1558,8 @@
   "traits.var.initiative": "Initiative (+2)",
   "traits.var.speed": "Speed in meters (9, or 7.5 for Small races)",
   "traits.var.max.hp": "Maximum HP",
-  "cast.degats.de.type": "{{type}} damage"
+  "cast.degats.de.type": "{{type}} damage",
+  "hp.pv.temp": "Temp HP",
+  "deprivation.diminuer": "Decrease {{label}} days",
+  "deprivation.augmenter": "Increase {{label}} days"
 }

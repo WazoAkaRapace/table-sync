@@ -812,7 +812,7 @@
   "create.creer.le.personnage": "✒ Créer le personnage",
   "stats.des.de.vie": "Dés de vie",
   "stats.bonus.de.maitrise": "Bonus de maîtrise",
-  "stats.sauvegardes.maitrisees": "Sauvegardes maîtrisées",
+  "stats.sauvegardes.maitrisees": "Sauvegardes maîtrisées :",
   "skills.bonus.de.maitrise": "Bonus de maîtrise",
   "survie.des.de.vie": "🎲 Dés de vie",
   "survie.nourriture.et.eau": "🍖 Nourriture & eau",
@@ -1557,5 +1557,8 @@
   "traits.var.initiative": "Initiative (+2)",
   "traits.var.speed": "Vitesse en mètres (9, ou 7.5 pour les petites races)",
   "traits.var.max.hp": "PV maximum",
-  "cast.degats.de.type": "dégâts {{type}}"
+  "cast.degats.de.type": "dégâts {{type}}",
+  "hp.pv.temp": "PV temp",
+  "deprivation.diminuer": "Diminuer les jours {{label}}",
+  "deprivation.augmenter": "Augmenter les jours {{label}}"
 }

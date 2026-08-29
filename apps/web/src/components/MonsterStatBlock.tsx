@@ -298,7 +298,7 @@ function StatBlockBody({
       <div className="space-y-1.5 text-sm">
         {monster.savingThrows.length > 0 && (
           <div>
-            <span className="font-semibold">{t('bestiaire.jets.de.sauvegarde')}</span>
+            <span className="font-semibold">{t('bestiaire.jets.de.sauvegarde')}</span>{' '}
             <span className="text-ink-600 ml-2">
               {monster.savingThrows.map(monsterSave).join(', ')}
             </span>
@@ -306,7 +306,7 @@ function StatBlockBody({
         )}
         {monster.skills.length > 0 && (
           <div>
-            <span className="font-semibold">{t('bestiaire.competences')}</span>
+            <span className="font-semibold">{t('bestiaire.competences')}</span>{' '}
             <span className="text-ink-600 ml-2">
               {monster.skills
                 .map((s) => `${monsterSkill(s.name)}${s.isExpert ? t('bestiaire.expert') : ''}`)
@@ -316,7 +316,7 @@ function StatBlockBody({
         )}
         {monster.senses && (
           <div>
-            <span className="font-semibold">{t('bestiaire.sens')}</span>
+            <span className="font-semibold">{t('bestiaire.sens')}</span>{' '}
             <span className="text-ink-600 ml-2">{monster.senses}</span>
             {monster.telepathy && (
               <span className="text-ink-600">
@@ -326,13 +326,13 @@ function StatBlockBody({
           </div>
         )}
         <div>
-          <span className="font-semibold">{t('bestiaire.langues')}</span>
+          <span className="font-semibold">{t('bestiaire.langues')}</span>{' '}
           <span className="text-ink-600 ml-2">
             {monster.languages.length > 0 ? monster.languages.join(', ') : '—'}
           </span>
         </div>
         <div>
-          <span className="font-semibold">{t('bestiaire.puissance')}</span>
+          <span className="font-semibold">{t('bestiaire.puissance')}</span>{' '}
           <span className="text-ink-600 ml-2">
             {formatCR(monster.challengeRating)} ({monster.xp.toLocaleString(appLocale())}{' '}
             {t('bestiaire.px')})

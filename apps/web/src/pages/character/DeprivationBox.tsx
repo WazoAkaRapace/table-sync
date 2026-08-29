@@ -1,4 +1,4 @@
-// Pure presentational — no imports needed.
+import { useTranslation } from 'react-i18next';
 
 interface DeprivationBoxProps {
   label: string;
@@ -8,6 +8,7 @@ interface DeprivationBoxProps {
 }
 
 export function DeprivationBox({ label, days, icon, onStep }: DeprivationBoxProps) {
+  const { t } = useTranslation();
   // Amber at 3+, red at 5+
   const tone =
     days >= 5
@@ -29,7 +30,7 @@ export function DeprivationBox({ label, days, icon, onStep }: DeprivationBoxProp
           type="button"
           onClick={() => onStep(-1)}
           className="w-7 h-7 rounded-lg bg-white/70 hover:bg-white text-sm font-medium flex items-center justify-center"
-          aria-label={`Diminuer les jours ${label.toLowerCase()}`}
+          aria-label={t('deprivation.diminuer', { label: label.toLowerCase() })}
         >
           −
         </button>
@@ -37,7 +38,7 @@ export function DeprivationBox({ label, days, icon, onStep }: DeprivationBoxProp
           type="button"
           onClick={() => onStep(1)}
           className="w-7 h-7 rounded-lg bg-white/70 hover:bg-white text-sm font-medium flex items-center justify-center"
-          aria-label={`Augmenter les jours ${label.toLowerCase()}`}
+          aria-label={t('deprivation.augmenter', { label: label.toLowerCase() })}
         >
           +
         </button>

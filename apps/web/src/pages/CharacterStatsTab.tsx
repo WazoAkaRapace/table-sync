@@ -362,7 +362,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
         </div>
         {classInfo && (
           <p className="text-xs text-ink-500">
-            {t('stats.sauvegardes.maitrisees')} :{' '}
+            {t('stats.sauvegardes.maitrisees')}{' '}
             {classInfo.savingThrows.map((s) => abilityShort(s)).join(', ')}
             {castingLines.length > 0 &&
               t('stats.incantation.liste', {
