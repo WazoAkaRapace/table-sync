@@ -14,7 +14,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import api from '../api';
 import { Chip, EmptyState, ErrorMsg, LoadingSpinner } from '../components/ui';
 import { useHeaderOverride } from '../headerContext';
-import { appLocale } from '../i18n';
+import { appLang, appLocale } from '../i18n';
 import { useSyncEvent } from '../sync';
 import { toRoman } from '../utils';
 
@@ -237,7 +237,7 @@ export default function ChroniclePage() {
                     : 'border-parchment-300 text-ink-500 hover:border-ink-400 hover:text-ink-700'
                 }`}
               >
-                {gmaRecapStyleLabel(r.style)}
+                {gmaRecapStyleLabel(r.style, appLang())}
               </button>
             ))}
           </nav>
@@ -310,7 +310,7 @@ export default function ChroniclePage() {
                         </p>
                         {(m.type || m.context) && (
                           <p className="mt-1.5 text-[11px] uppercase tracking-wide text-ink-300">
-                            {gmaMomentTypeLabel(m.type)}
+                            {gmaMomentTypeLabel(m.type, appLang())}
                             {m.context ? ` · ${m.context}` : ''}
                           </p>
                         )}

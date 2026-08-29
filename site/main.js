@@ -1,13 +1,156 @@
 // Site marketing — Table Sync
+// 0) la langue du site (FR par défaut · EN au choix)
 // 1) la démo temps réel (le MD frappe, la fiche répond)
 // 2) les entrées du registre se posent une fois (register-rise)
 // 3) copier les commandes d'auto-hébergement
+//
+// ----- Langue : mécanisme retenu -----
+// Le HTML porte des PAIRES d'éléments [lang="fr"]/[lang="en"] ; styles.css
+// masque la langue inactive selon <html lang>. Choix retenu (plutôt que des
+// data-attributs échangés par JS) : la page reste intégralement lisible en
+// français sans JS, chaque langue garde sa ponctuation et ses entités
+// propres, et les lecteurs d'écran prononcent l'anglais avec la bonne voix.
+// La langue est posée AVANT le premier rendu par le script inline de <head>
+// (localStorage « site-lang », clé distincte de l'app, ou ?lang=en partageable).
+// Ce module gère le reste : bascule FR|EN, attributs (alt, aria-label),
+// captures EN (assets/screenshots-en/), légendes des postes, <title>/meta
+// et les chaînes pilotées par JS (démo, bouton copier).
 
 (() => {
   // Le JS s'annonce : sans lui, .rise reste visible (le contenu ne se cache jamais par défaut)
   document.documentElement.classList.add('js');
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- Langue du site ---------- */
+
+  const LANG_KEY = 'site-lang';
+  let lang = document.documentElement.lang === 'en' ? 'en' : 'fr';
+
+  const STRINGS = {
+    fr: {
+      title: 'Table Sync — le compagnon de campagne partagé, pour le MD et les joueurs',
+      description:
+        'Table Sync — le compagnon de campagne partagé, pour le MD et les joueurs. Fiches, inventaire en kg et combat D&D 5e, 100 % français, synchronisés en temps réel. Auto-hébergé.',
+      hpReadGm: (hpNow) => `Lyra · ${hpNow}/${MAX_HP} PV`,
+      hpReadPlayer: (hpNow) => `${hpNow}/${MAX_HP} PV`,
+      hpValueText: (hpNow) => `${hpNow} sur ${MAX_HP} points de vie`,
+      copyIdle: 'Copier',
+      copyOk: 'Copié ✓',
+      copyFail: 'Copie impossible',
+    },
+    en: {
+      title: 'Table Sync — the shared campaign companion, for the GM and the players',
+      description:
+        'Table Sync — the shared campaign companion, for the GM and the players. Character sheets, kilogram-based inventory and D&D 5e combat, synced in real time. Self-hosted.',
+      hpReadGm: (hpNow) => `Lyra · ${hpNow}/${MAX_HP} HP`,
+      hpReadPlayer: (hpNow) => `${hpNow}/${MAX_HP} HP`,
+      hpValueText: (hpNow) => `${hpNow} of ${MAX_HP} hit points`,
+      copyIdle: 'Copy',
+      copyOk: 'Copied ✓',
+      copyFail: 'Copy failed',
+    },
+  };
+
+  const SHOT_DIR = { fr: 'assets/screenshots/', en: 'assets/screenshots-en/' };
+
+  // Attributs bilingues : la valeur FR vit dans l'attribut réel, la valeur EN
+  // dans data-en-*. Le premier échange recopie l'original dans data-fr-* pour
+  // pouvoir revenir en arrière sans dérive.
+  const ATTR_SWAPS = [
+    { selector: '[data-en-alt]', attr: 'alt', fr: 'data-fr-alt', en: 'data-en-alt' },
+    {
+      selector: '[data-en-aria-label]',
+      attr: 'aria-label',
+      fr: 'data-fr-aria-label',
+      en: 'data-en-aria-label',
+    },
+  ];
+
+  const captionFor = (pill) =>
+    lang === 'en'
+      ? (pill.dataset.enCaption ?? pill.dataset.caption ?? '')
+      : (pill.dataset.caption ?? '');
+
+  const applyToggle = () => {
+    document.querySelectorAll('.lang-toggle [data-lang]').forEach((btn) => {
+      const active = btn.dataset.lang === lang;
+      btn.classList.toggle('is-active', active);
+      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+  };
+
+  const applyAttrs = () => {
+    for (const swap of ATTR_SWAPS) {
+      document.querySelectorAll(swap.selector).forEach((el) => {
+        if (!el.hasAttribute(swap.fr)) {
+          el.setAttribute(swap.fr, el.getAttribute(swap.attr) ?? '');
+        }
+        el.setAttribute(swap.attr, el.getAttribute(lang === 'en' ? swap.en : swap.fr) ?? '');
+      });
+    }
+  };
+
+  // Les captures EN vivent en assets/screenshots-en/<même nom> (copiées au
+  // déploiement depuis docs/screenshots-en/) — un seul <img> par vue, le src
+  // est échangé, jamais le DOM dupliqué.
+  const applyShots = () => {
+    document.querySelectorAll('.shot-frame img, .portrait-frame img').forEach((img) => {
+      const src = img.getAttribute('src') ?? '';
+      const name = src.split('/').pop();
+      if (src.startsWith('assets/screenshots')) {
+        const next = SHOT_DIR[lang] + name;
+        if (next !== src) {
+          img.setAttribute('src', next);
+        }
+      }
+    });
+    // la visionneuse, si elle vient d'être ouverte, suit la langue active
+    if (viewerImg) {
+      viewerImg.src = viewerImg.src.replace(
+        /\/assets\/screenshots(-en)?\//,
+        `/assets/${lang === 'en' ? 'screenshots-en' : 'screenshots'}/`,
+      );
+    }
+  };
+
+  const applyCaptions = () => {
+    document.querySelectorAll('.phonepost').forEach((post) => {
+      const caption = post.querySelector('.phonepost-caption');
+      const active = post.querySelector('.phonepost-dock button.is-active');
+      if (caption && active) {
+        caption.textContent = captionFor(active);
+      }
+    });
+  };
+
+  const applyStrings = () => {
+    document.title = STRINGS[lang].title;
+    document
+      .querySelector('meta[name="description"]')
+      ?.setAttribute('content', STRINGS[lang].description);
+  };
+
+  function applyLang(next, { persist = false } = {}) {
+    lang = next === 'en' ? 'en' : 'fr';
+    document.documentElement.lang = lang;
+    if (persist) {
+      try {
+        window.localStorage.setItem(LANG_KEY, lang);
+      } catch {
+        /* stockage indisponible — la préférence ne survivra pas au rechargement */
+      }
+    }
+    applyToggle();
+    applyAttrs();
+    applyShots();
+    applyCaptions();
+    applyStrings();
+    if (copyBtn && Date.now() >= copyFlashUntil) {
+      copyBtn.textContent = STRINGS[lang].copyIdle;
+    }
+    localizeDemo();
+  }
 
   /* ---------- Démo temps réel ---------- */
 
@@ -35,12 +178,12 @@
     const tier = tierOf(hpNow);
     reads?.forEach((read) => {
       read.textContent = read.textContent.includes('Lyra')
-        ? `Lyra · ${hpNow}/${MAX_HP} PV`
-        : `${hpNow}/${MAX_HP} PV`;
+        ? STRINGS[lang].hpReadGm(hpNow)
+        : STRINGS[lang].hpReadPlayer(hpNow);
     });
     bars?.forEach((bar) => {
       bar.setAttribute('aria-valuenow', String(hpNow));
-      bar.setAttribute('aria-valuetext', `${hpNow} sur ${MAX_HP} points de vie`);
+      bar.setAttribute('aria-valuetext', STRINGS[lang].hpValueText(hpNow));
     });
     fills?.forEach((fill) => {
       fill.style.width = `${pct}%`;
@@ -51,6 +194,15 @@
       }
     });
   };
+
+  // Traduit l'état statique de la démo sans rejouer la séquence : la valeur
+  // affichée (aria-valuenow) fait foi, pas le compteur interne (prêt à frapper).
+  function localizeDemo() {
+    if (!demo) return;
+    const bar = demo.querySelector('[data-hp-bar]');
+    const shown = Number.parseInt(bar?.getAttribute('aria-valuenow') ?? String(hp), 10);
+    render(Number.isNaN(shown) ? hp : shown);
+  }
 
   const strike = () => {
     if (!demo || strikeTimer) return; // une frappe à la fois
@@ -126,14 +278,14 @@
           p.classList.toggle('is-active', active);
           p.setAttribute('aria-pressed', active ? 'true' : 'false');
         });
-        if (caption && pill.dataset.caption) {
-          caption.textContent = pill.dataset.caption;
+        if (caption && (pill.dataset.caption || pill.dataset.enCaption)) {
+          caption.textContent = captionFor(pill);
         }
       });
     });
   });
 
-  /* ---------- La plume inscrit la page ----------
+  /* ---------- La plume inscrit la page -----
      Chaque bloc reçoit .reveal + --reveal-delay ; l'observateur déclenche
      .is-risen quand l'entrée entre à l'écran. Une seule liste réglée en
      stagger par entrée (le geste du registre de l'app), délais plafonnés. */
@@ -292,12 +444,15 @@
 
   const copyBtn = document.querySelector('[data-copy]');
   const code = document.querySelector('.terminal code');
+  let copyFlashUntil = 0;
 
   // État de retour honnête, comme le tampon copier de l'app
   const flashCopied = (ok) => {
-    copyBtn.textContent = ok ? 'Copié ✓' : 'Copie impossible';
+    copyBtn.textContent = ok ? STRINGS[lang].copyOk : STRINGS[lang].copyFail;
+    copyFlashUntil = Date.now() + 2000;
     window.setTimeout(() => {
-      copyBtn.textContent = 'Copier';
+      copyBtn.textContent = STRINGS[lang].copyIdle;
+      copyFlashUntil = 0;
     }, 2000);
   };
 
@@ -313,7 +468,7 @@
     }
   });
 
-  /* ---------- Visionneuse plein écran ----------
+  /* ---------- Visionneuse plein écran -----
      Le vocabulaire de l'app : fondu du rideau, l'image se pose depuis 0.96,
      le zoom lui-même ne s'anime jamais (outil de lecture). */
 
@@ -376,4 +531,19 @@
       }
     });
   }
+
+  /* ---------- Bascule FR|EN + synchronisation initiale ---------- */
+
+  document.querySelectorAll('.lang-toggle [data-lang]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const next = btn.dataset.lang === 'en' ? 'en' : 'fr';
+      if (next !== lang) {
+        applyLang(next, { persist: true });
+      }
+    });
+  });
+
+  // État initial idempotent : aligne bascule, attributs, légendes, <title>
+  // et démo sur la langue posée avant rendu par le script de <head>.
+  applyLang(lang);
 })();

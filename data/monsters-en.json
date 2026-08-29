@@ -14908,9 +14908,10 @@
     ]
   },
   "gobelin": {
-    "name": "Dum-Dum Goblin",
-    "source": "AWM",
-    "speed": "walk 30 ft.",
+    "name": "Goblin",
+    "speed": "30 ft.",
+    "senses": "darkvision 60 ft., passive Perception 9",
+    "languages": "Common, Goblin",
     "traits": [
       {
         "name": "Nimble Escape",
@@ -14919,20 +14920,14 @@
     ],
     "actions": [
       {
-        "name": "Catch me if you can!",
-        "desc": "Dum-Dum Goblins will opt to run and hide before fighting! A DC 15 Dexterity check must be made before they can be attacked."
-      },
-      {
         "name": "Scimitar",
-        "desc": "mw 4 to hit, one target. {@h}3 (1d6 +2) slashing damage."
+        "desc": "Melee Weapon Attack: +4 to hit, reach 5 ft., one target. Hit: 5 (1d6 + 2) slashing damage."
       },
       {
         "name": "Shortbow",
-        "desc": "rw 4 to hit, one target. {@h}6 (1d6 + 2) piercing damage."
+        "desc": "Ranged Weapon Attack: +4 to hit, range 80/320 ft., one target. Hit: 5 (1d6 + 2) piercing damage."
       }
-    ],
-    "senses": "darkvision 60 ft.",
-    "languages": "Common, Goblin"
+    ]
   },
   "gobelin-blanc": {
     "name": "White Goblin",
@@ -32638,7 +32633,7 @@
     ]
   },
   "zombi": {
-    "name": "Ash Zombie",
+    "name": "Zombie",
     "source": "LMoP",
     "speed": "walk 20 ft.",
     "senses": [

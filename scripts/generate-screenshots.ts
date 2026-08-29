@@ -1,5 +1,6 @@
 /**
- * Régénère les captures d'écran du README (docs/screenshots/*.png).
+ * Régénère les captures d'écran du README (docs/screenshots/*.png en FR,
+ * docs/screenshots-en/*.png via --lang en).
  *
  * Monte une stack jetable entièrement isolée (aucun risque pour les vraies
  * campagnes) puis pilote Chromium via Playwright en viewport mobile 390×844 :
@@ -20,10 +21,20 @@
  *              et moments de démo injectés dans le mock.
  *   4. Shots — chaque capture reproduit l'état documenté dans le README.
  *
+ * Bilingue : `--lang en` produit les mêmes 17 captures en anglais vers
+ * docs/screenshots-en/ — l'API reçoit ?lang=en sur chaque appel du seed
+ * (payloads mono-locale : `name` devient anglais), Chromium démarre en
+ * locale en-US avec localStorage dnd-inv-lang=en, et tous les sélecteurs /
+ * textes attendus passent par S(fr, en) avec les chaînes EXACTES du
+ * catalogue EN (apps/web/src/i18n/locales/en.json — ne pas inventer).
+ * Les PV des monstres restent lancés aux dés (randomité volontaire : les
+ * captures 11–13 peuvent différer entre deux runs d'une même langue).
+ *
  * Usage :
- *   npm run screenshots                  # régénère les 17 captures
- *   npm run screenshots -- --only 03,07  # seulement certaines (numéros ou noms)
- *   npm run screenshots -- --keep        # laisser les serveurs tourner (debug)
+ *   npm run screenshots                    # régénère les 17 captures (FR)
+ *   npm run screenshots -- --only 03,07    # seulement certaines (numéros ou noms)
+ *   npm run screenshots -- --lang en       # version anglaise → docs/screenshots-en/
+ *   npm run screenshots -- --keep          # laisser les serveurs tourner (debug)
  *
  * Prérequis : `npx playwright install chromium` une fois par machine
  * (les navigateurs sont déjà en cache si Playwright a déjà servi).
@@ -38,7 +49,6 @@ import { type Browser, type BrowserContext, chromium, type Page } from 'playwrig
 import { type MockGmaHandle, startMockGma } from './api-tests/mock-gma.ts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const OUT_DIR = path.join(ROOT, 'docs', 'screenshots');
 const DB_PATH = path.join(ROOT, 'data', 'db', 'screenshots-demo.sqlite');
 const DEMO_PASSWORD = 'demo1234';
 
@@ -47,7 +57,7 @@ const DEMO_PASSWORD = 'demo1234';
 // ---------------------------------------------------------------------------
 
 function parseArgs(argv: string[]) {
-  const opts = { only: [] as string[], keep: false };
+  const opts = { only: [] as string[], keep: false, lang: 'fr' as 'fr' | 'en' };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--keep') opts.keep = true;
@@ -55,8 +65,17 @@ function parseArgs(argv: string[]) {
     else if (a === '--only') {
       opts.only = (argv[i + 1] ?? '').split(',');
       i++;
+    } else if (a === '--lang' || a.startsWith('--lang=')) {
+      const v = a.startsWith('--lang=') ? a.slice(7) : (argv[++i] ?? '');
+      if (v !== 'fr' && v !== 'en') {
+        console.error(`--lang attend « fr » ou « en » (reçu : « ${v} »)`);
+        process.exit(1);
+      }
+      opts.lang = v;
     } else if (a === '-h' || a === '--help') {
-      console.log('Usage: tsx scripts/generate-screenshots.ts [--only 01,03-arme…] [--keep]');
+      console.log(
+        'Usage: tsx scripts/generate-screenshots.ts [--lang fr|en] [--only 01,03-arme…] [--keep]',
+      );
       process.exit(0);
     } else {
       console.error(`Argument inconnu : ${a}`);
@@ -66,6 +85,23 @@ function parseArgs(argv: string[]) {
   opts.only = opts.only.map((s) => s.trim()).filter(Boolean);
   return opts;
 }
+
+const opts = parseArgs(process.argv.slice(2));
+
+/** Langue des captures : 'fr' (défaut → docs/screenshots/) ou 'en'
+ * (→ docs/screenshots-en/). Pilote l'API (?lang=en), Chromium (locale +
+ * localStorage) et tous les sélecteurs via S(). */
+const lang = opts.lang;
+const OUT_DIR = path.join(ROOT, 'docs', lang === 'en' ? 'screenshots-en' : 'screenshots');
+
+/** Sélecteur/texte bilingue : la valeur FR, ou la traduction EXACTE du
+ * catalogue EN (apps/web/src/i18n/locales/en.json + libellés partagés
+ * CATEGORY_LABELS_EN) quand --lang en. */
+const S = <T>(fr: T, en: T): T => (lang === 'en' ? en : fr);
+
+/** Titre de la dernière séance de la chronique de démo — semé dans le mock
+ * GMA puis attendu par les captures 16 et 17. */
+const LAST_SESSION_TITLE = S('Le campement des batiri', 'The Batiri campsite');
 
 // ---------------------------------------------------------------------------
 // Processus : lancement + arrêt en groupe
@@ -252,7 +288,11 @@ type Api = ReturnType<typeof makeApi>;
 function makeApi(apiPort: number, token?: string) {
   const base = `http://127.0.0.1:${apiPort}`;
   return async function call<T = any>(method: string, p: string, body?: unknown): Promise<T> {
-    const res = await fetch(`${base}${p}`, {
+    // Payloads mono-locale : en EN chaque appel du seed porte ?lang=en pour
+    // que noms stockés/calculés (recherches catalogue notamment) soient
+    // anglais — le champ `name` EST alors le nom anglais.
+    const url = lang === 'en' ? `${base}${p}${p.includes('?') ? '&' : '?'}lang=en` : `${base}${p}`;
+    const res = await fetch(url, {
       method,
       headers: {
         // Sans body, content-type: application/json ferait rejeter la requête
@@ -280,21 +320,22 @@ async function register(apiPort: number, username: string, displayName: string):
   return { token, user };
 }
 
-/** Résout l'id numérique d'un objet/sort du catalogue par son nom français exact.
- * Payloads mono-locale : sans Accept-Language, `name` EST le nom français. */
-async function catalogId(api: Api, kind: 'items' | 'spells', nameFr: string): Promise<number> {
+/** Résout l'id numérique d'un objet/sort du catalogue par son nom exact dans
+ * la langue active (FR par défaut ; EN via ?lang=en — `name` est alors le
+ * nom anglais, la recherche doit donc l'être aussi). */
+async function catalogId(api: Api, kind: 'items' | 'spells', name: string): Promise<number> {
   const key = kind === 'items' ? 'items' : 'spells';
   const res = await api<{ [k: string]: { id: number; name: string }[] }>(
     'GET',
-    `/api/${kind}?search=${encodeURIComponent(nameFr)}&limit=25`,
+    `/api/${kind}?search=${encodeURIComponent(name)}&limit=25`,
   );
-  const hit = res[key].find((r) => r.name === nameFr);
-  if (!hit) throw new Error(`${kind} introuvable dans le catalogue : « ${nameFr} »`);
+  const hit = res[key].find((r) => r.name === name);
+  if (!hit) throw new Error(`${kind} introuvable dans le catalogue : « ${name} »`);
   return hit.id;
 }
 
-async function addItem(api: Api, charId: number, nameFr: string, equipped: boolean, qty = 1) {
-  const itemId = await catalogId(api, 'items', nameFr);
+async function addItem(api: Api, charId: number, name: string, equipped: boolean, qty = 1) {
+  const itemId = await catalogId(api, 'items', name);
   await api('POST', `/api/characters/${charId}/inventory`, {
     itemId,
     quantity: qty,
@@ -302,9 +343,18 @@ async function addItem(api: Api, charId: number, nameFr: string, equipped: boole
   });
 }
 
-async function addSpell(api: Api, charId: number, nameFr: string, prepared: boolean) {
-  const spellId = await catalogId(api, 'spells', nameFr);
+async function addSpell(api: Api, charId: number, name: string, prepared: boolean) {
+  const spellId = await catalogId(api, 'spells', name);
   await api('POST', `/api/characters/${charId}/spells`, { spellId, prepared });
+}
+
+/** EN : l'emplacement porté par défaut est créé par l'API avec un nom figé
+ * « Sur moi » (non localisé) — on pré-crée « On me » (type carried) pour que
+ * la fiche anglaise n'affiche pas de français ; l'API réutilise l'existant
+ * plutôt que d'en recréer un. No-op en FR. */
+async function ensureEnCarriedLocation(api: Api, charId: number) {
+  if (lang !== 'en') return;
+  await api('POST', `/api/characters/${charId}/locations`, { name: 'On me', type: 'carried' });
 }
 
 interface SeedRefs {
@@ -328,7 +378,7 @@ async function seed(
   const { party } = await mdCall<{ party: { id: number; inviteCode: string } }>(
     'POST',
     '/api/parties',
-    { name: 'Les Héros de Chult' },
+    { name: S('Les Héros de Chult', 'The Heroes of Chult') },
   );
   await auCall('POST', '/api/parties/join', { inviteCode: party.inviteCode });
   await baCall('POST', '/api/parties/join', { inviteCode: party.inviteCode });
@@ -341,7 +391,7 @@ async function seed(
       name: 'Lyra Feuillenoire',
       characterClass: 'Druide',
       level: 5,
-      race: 'Elfe des bois',
+      race: S('Elfe des bois', 'Wood Elf'),
       background: 'Ermite',
     },
   );
@@ -359,25 +409,26 @@ async function seed(
     gold: 24,
     copper: 60,
   });
+  await ensureEnCarriedLocation(auCall, lyra.id);
   for (const [name, equipped, qty] of [
-    ['Bâton', true, 1],
-    ['Cuir', true, 1],
-    ['Brin de gui', true, 1],
-    ['Potion de soin', false, 2],
-    ['Rations (1 jour)', false, 5],
-    ['Gourde', false, 1],
-    ['Torche', false, 3],
+    [S('Bâton', 'Quarterstaff'), true, 1],
+    [S('Cuir', 'Leather Armor'), true, 1],
+    [S('Brin de gui', 'Sprig of mistletoe'), true, 1],
+    [S('Potion de soin', 'Potion of Healing'), false, 2],
+    [S('Rations (1 jour)', 'Rations (1 day)'), false, 5],
+    [S('Gourde', 'Waterskin'), false, 1],
+    [S('Torche', 'Torch'), false, 3],
   ] as const) {
     await addItem(auCall, lyra.id, name, equipped, qty);
   }
   for (const [name, prepared] of [
-    ['Flammes', true],
-    ['Fouet épineux', true],
-    ['Vague tonnante', true],
-    ['Lueurs féeriques', true],
-    ['Mot de guérison', false],
-    ['Rayon de lune', true],
-    ['Appel de la foudre', true],
+    [S('Flammes', 'Produce Flame'), true],
+    [S('Fouet épineux', 'Thorn whip'), true],
+    [S('Vague tonnante', 'Thunderwave'), true],
+    [S('Lueurs féeriques', 'Faerie Fire'), true],
+    [S('Mot de guérison', 'Healing Word'), false],
+    [S('Rayon de lune', 'Moonbeam'), true],
+    [S('Appel de la foudre', 'Call Lightning'), true],
   ] as const) {
     await addSpell(auCall, lyra.id, name, prepared);
   }
@@ -390,7 +441,7 @@ async function seed(
       name: 'Kael Aubemarteau',
       characterClass: 'Guerrier',
       level: 5,
-      race: 'Humain',
+      race: S('Humain', 'Human'),
       background: 'Soldat',
     },
   );
@@ -406,14 +457,15 @@ async function seed(
     fightingStyle: 'dueling',
     gold: 31,
   });
+  await ensureEnCarriedLocation(baCall, kael.id);
   for (const [name, equipped] of [
-    ['Épée longue', true],
-    ['Arme +1', true],
-    ['Bouclier', true],
-    ['Cotte de mailles', true],
-    ['Dague', false],
-    ['Potion de soin', false],
-    ['Rations (1 jour)', false],
+    [S('Épée longue', 'Longsword'), true],
+    [S('Arme +1', 'Weapon, +1'), true],
+    [S('Bouclier', 'Shield'), true],
+    [S('Cotte de mailles', 'Chain Mail'), true],
+    [S('Dague', 'Dagger'), false],
+    [S('Potion de soin', 'Potion of Healing'), false],
+    [S('Rations (1 jour)', 'Rations (1 day)'), false],
   ] as const) {
     await addItem(baCall, kael.id, name, equipped, equipped ? 1 : 2);
   }
@@ -426,7 +478,7 @@ async function seed(
       name: 'Mira Aubedouce',
       characterClass: 'Clerc',
       level: 5,
-      race: 'Halfelin',
+      race: S('Halfelin', 'Halfling'),
       background: 'Acolyte',
     },
   );
@@ -441,11 +493,12 @@ async function seed(
     currentHp: 40,
     gold: 17,
   });
+  await ensureEnCarriedLocation(auCall, mira.id);
   for (const [name, equipped] of [
-    ["Masse d'armes", true],
-    ['Bouclier', true],
-    ["Cotte d'écailles", true],
-    ['Potion de soin', false],
+    [S("Masse d'armes", 'Mace'), true],
+    [S('Bouclier', 'Shield'), true],
+    [S("Cotte d'écailles", 'Scale Mail'), true],
+    [S('Potion de soin', 'Potion of Healing'), false],
   ] as const) {
     await addItem(auCall, mira.id, name, equipped);
   }
@@ -454,12 +507,16 @@ async function seed(
   const { encounter } = await mdCall<{ encounter: { id: number } }>(
     'POST',
     `/api/parties/${party.id}/encounters`,
-    { name: 'Embuscade gobeline' },
+    { name: S('Embuscade gobeline', 'Goblin Ambush') },
   );
   const enc = encounter.id;
   await mdCall('POST', `/api/encounters/${enc}/combatants/monster`, {
     monsterSlug: 'gobelin',
     count: 3,
+    // Le nom du combattant est stocké au POST depuis name_fr (« Gobelin 1… »)
+    // sans re-localisation à la lecture — en EN on nomme « Goblin » (l'overlay
+    // EN du slug « gobelin » est d'ailleurs erroné en base : « Dum-Dum Goblin »).
+    name: S('Gobelin', 'Goblin'),
   });
   await mdCall('POST', `/api/encounters/${enc}/combatants/monster`, {
     monsterSlug: 'ogre',
@@ -488,7 +545,7 @@ async function seed(
 
   // — Vesper, Occultiste 5 (fielon) / Magicien 3 (évocation) : la fiche
   // multiclassée de la capture 14 — DEUX pools d'emplacements (incantation
-  // + magie de pacte), DD par classe lancante, sorts à classe d'origine.
+  // + magie de pacte), DD par classe lancente, sorts à classe d'origine.
   const { character: vesper } = await baCall<{ character: { id: number } }>(
     'POST',
     `/api/parties/${party.id}/characters`,
@@ -512,14 +569,14 @@ async function seed(
     spellSlotsUsed: [2, 1, 0, 0, 0, 0, 0, 0, 0],
     pactSlotsUsed: [0, 1, 0, 0, 0, 0, 0, 0, 0],
   });
-  for (const [nameFr, classSource] of [
-    ['Décharge occulte', 'Occultiste'],
-    ['Maléfice', 'Occultiste'],
-    ['Trait de feu', 'Magicien'],
-    ['Flèche acide de Melf', 'Magicien'],
-    ['Boule de feu', 'Magicien'],
+  for (const [name, classSource] of [
+    [S('Décharge occulte', 'Eldritch Blast'), 'Occultiste'],
+    [S('Maléfice', 'Hex'), 'Occultiste'],
+    [S('Trait de feu', 'Fire Bolt'), 'Magicien'],
+    [S('Flèche acide de Melf', 'Acid Arrow'), 'Magicien'],
+    [S('Boule de feu', 'Fireball'), 'Magicien'],
   ] as const) {
-    const id = await catalogId(baCall, 'spells', nameFr);
+    const id = await catalogId(baCall, 'spells', name);
     await baCall('POST', `/api/characters/${vesper.id}/spells`, {
       spellId: id,
       classSource,
@@ -546,7 +603,7 @@ async function seed(
   await patchC(goblins[0].id, { hitPoints: 3 });
   await patchC(goblins[1].id, {
     hitPoints: 5,
-    conditions: [{ name: 'Effrayé', duration: 1 }],
+    conditions: [{ name: S('Effrayé', 'Frightened'), duration: 1 }],
   });
   await patchC(ogre!.id, { hitPoints: 41, cardColor: '#fee2e2' });
 
@@ -562,31 +619,55 @@ async function seed(
 
   // Chronique de démo, directement dans l'état du mock : trois séances,
   // résumés multi-styles et moments de chaque type pour l'enluminure.
+  // (Contenu de démo bilingue : la prose anglaise ne vit dans aucun
+  // catalogue — elle est semée ici pour des captures EN cohérentes.)
   const iso = () => new Date().toISOString();
   gmaMock.sessions.set(campaign.id, [
-    { id: 'demo-1', title: "L'arrivée à Port Nyanzaru", played_at: '2026-06-12', order: 0 },
-    { id: 'demo-2', title: 'La jungle éternelle', played_at: '2026-06-26', order: 1 },
-    { id: 'demo-3', title: 'Le campement des batiri', played_at: '2026-07-10', order: 2 },
+    {
+      id: 'demo-1',
+      title: S("L'arrivée à Port Nyanzaru", 'Arrival at Port Nyanzaru'),
+      played_at: '2026-06-12',
+      order: 0,
+    },
+    {
+      id: 'demo-2',
+      title: S('La jungle éternelle', 'The endless jungle'),
+      played_at: '2026-06-26',
+      order: 1,
+    },
+    { id: 'demo-3', title: LAST_SESSION_TITLE, played_at: '2026-07-10', order: 2 },
   ]);
   gmaMock.recaps.set('demo-3', [
     {
       style: 'short_summary',
-      text: 'Négociation tendue au campement batiri : une idole brisée, un passage gagné.',
+      text: S(
+        'Négociation tendue au campement batiri : une idole brisée, un passage gagné.',
+        'Tense negotiation at the Batiri camp: a shattered idol, safe passage won.',
+      ),
       updated_at: iso(),
     },
     {
       style: 'sonnet_summary',
-      text: 'Sous la pluie de Chult, le pont tenait peu,\nLe chamane brandissait un crâne qui crie ;\nMira frappa l’idole au signe de la foi,\nEt le passage s’ouvrit pour la compagnie.',
+      text: S(
+        'Sous la pluie de Chult, le pont tenait peu,\nLe chamane brandissait un crâne qui crie ;\nMira frappa l’idole au signe de la foi,\nEt le passage s’ouvrit pour la compagnie.',
+        'Under Chult’s rain the bridge barely held,\nThe shaman raised a shrieking skull on high;\nMira struck the idol where the faith was sealed,\nAnd passage opened for the company.',
+      ),
       updated_at: iso(),
     },
     {
       style: 'classic_summary',
-      text: 'Oyez, oyez ! Par la bruine et la liane, nos héros approachèrent du camp batiri. Là, Kael le Marteau tint tête au chamane au crâne hurlant, tandis que dame Mira, d’un coup nourri, brisa l’idole impie — et le passage fut gagné contre promesse de tribut !',
+      text: S(
+        'Oyez, oyez ! Par la bruine et la liane, nos héros approachèrent du camp batiri. Là, Kael le Marteau tint tête au chamane au crâne hurlant, tandis que dame Mira, d’un coup nourri, brisa l’idole impie — et le passage fut gagné contre promesse de tribut !',
+        'Hear ye, hear ye! Through drizzle and liana our heroes came upon the Batiri camp. There Kael the Hammer stood fast against the shrieking-skull shaman, while Lady Mira, with one mighty blow, shattered the unholy idol — and passage was won against the promise of tribute!',
+      ),
       updated_at: iso(),
     },
     {
       style: 'default',
-      text: "Après trois jours de marche dans la bruine, les héros atteignent le campement batiri signalé par le guide. Kael négocie le passage du pont pendant que Lyra, changée en panthère, repère les sentinelles depuis la rive. Quand le chamane brandit un crâne hurlant, la table bascule : Mira brise l'idole d'un coup de masse au signe sacré et le campement s'ouvre enfin — contre la promesse d'un tribut à discuter demain. Dans la nuit, la jungle garde un œil sur le camp.",
+      text: S(
+        "Après trois jours de marche dans la bruine, les héros atteignent le campement batiri signalé par le guide. Kael négocie le passage du pont pendant que Lyra, changée en panthère, repère les sentinelles depuis la rive. Quand le chamane brandit un crâne hurlant, la table bascule : Mira brise l'idole d'un coup de masse au signe sacré et le campement s'ouvre enfin — contre la promesse d'un tribut à discuter demain. Dans la nuit, la jungle garde un œil sur le camp.",
+        'After three days of marching through drizzle, the heroes reach the Batiri camp their guide described. Kael negotiates passage over the bridge while Lyra, shifted into a panther, scouts the sentries from the riverbank. When the shaman brandishes a shrieking skull, the table turns: Mira smashes the idol with a sacred-sigil blow of her mace and the camp finally opens — against the promise of a tribute to be discussed tomorrow. In the night, the jungle keeps an eye on the camp.',
+      ),
       updated_at: iso(),
     },
   ]);
@@ -595,17 +676,22 @@ async function seed(
       id: 'demo-m1',
       is_quote: true,
       type: 'epic',
-      description: 'Je ne paie pas deux fois le même pont.',
+      description: S(
+        'Je ne paie pas deux fois le même pont.',
+        "I won't pay twice for the same bridge.",
+      ),
       speaker: 'Kael Aubemarteau',
-      context: 'Le pont de rondins',
+      context: S('Le pont de rondins', 'The log bridge'),
       order: 0,
     },
     {
       id: 'demo-m2',
       is_quote: false,
       type: 'funny',
-      description:
+      description: S(
         'Vesper tente de vendre au chamane un crâne identique à son idole — la négociation ne survit pas au premier éternuement.',
+        'Vesper tries to sell the shaman a skull identical to his idol — the negotiation does not survive the first sneeze.',
+      ),
       speaker: null,
       context: null,
       order: 1,
@@ -614,16 +700,22 @@ async function seed(
       id: 'demo-m3',
       is_quote: true,
       type: 'dramatic',
-      description: 'Le crâne a crié votre nom avant votre arrivée.',
-      speaker: 'Le chamane batiri',
-      context: 'Le feu de camp',
+      description: S(
+        'Le crâne a crié votre nom avant votre arrivée.',
+        'The skull screamed your name before you arrived.',
+      ),
+      speaker: S('Le chamane batiri', 'The Batiri shaman'),
+      context: S('Le feu de camp', 'The campfire'),
       order: 2,
     },
     {
       id: 'demo-m4',
       is_quote: false,
       type: 'tragic',
-      description: 'La mule Emmeline s’enfonce dans la mangrove avec trois jours de rations.',
+      description: S(
+        'La mule Emmeline s’enfonce dans la mangrove avec trois jours de rations.',
+        'The mule Emmeline sinks into the mangrove with three days of rations.',
+      ),
       speaker: null,
       context: null,
       order: 3,
@@ -632,7 +724,10 @@ async function seed(
       id: 'demo-m5',
       is_quote: true,
       type: 'intriguing',
-      description: 'Quelque chose suit notre trace depuis la rivière.',
+      description: S(
+        'Quelque chose suit notre trace depuis la rivière.',
+        'Something has been tracking us since the river.',
+      ),
       speaker: 'Lyra Feuillenoire',
       context: null,
       order: 4,
@@ -657,26 +752,30 @@ async function newSession(browser: Browser, session: Session): Promise<BrowserCo
     deviceScaleFactor: 1,
     isMobile: true,
     hasTouch: true,
-    locale: 'fr-FR',
+    locale: lang === 'en' ? 'en-US' : 'fr-FR',
     timezoneId: 'Europe/Paris',
     colorScheme: 'light',
   });
   await ctx.addInitScript(
-    ({ token, user }) => {
+    ({ token, user, langCode }) => {
       localStorage.setItem('dnd-inv-token', token);
       localStorage.setItem('dnd-inv-user', JSON.stringify(user));
       localStorage.setItem('dnd-inv-tour-seen', '1');
+      // Interface EN : i18next lit cette clé au chargement, et l'axios de
+      // l'app en déduit l'en-tête Accept-Language des payloads mono-locale.
+      if (langCode === 'en') localStorage.setItem('dnd-inv-lang', 'en');
     },
-    { token: session.token, user: session.user },
+    { token: session.token, user: session.user, langCode: lang },
   );
   return ctx;
 }
 
 async function settle(page: Page, extraMs = 450) {
   await page.waitForLoadState('networkidle').catch(() => {});
-  // Le point de synchro de l'en-tête passe à « Synchronisé » une fois la WS OK.
+  // Le point de synchro de l'en-tête passe à « Synchronisé » / « Synced »
+  // une fois la WS OK.
   await page
-    .getByText('Synchronisé', { exact: false })
+    .getByText(S('Synchronisé', 'Synced'), { exact: false })
     .first()
     .waitFor({ timeout: 6000 })
     .catch(() => {});
@@ -708,8 +807,8 @@ async function openTab(page: Page, label: string) {
   } else {
     // Pendant un combat actif, le hub s'appelle « Combat en cours ».
     const hub = page
-      .getByRole('button', { name: 'Autres onglets' })
-      .or(page.getByRole('button', { name: 'Combat en cours' }))
+      .getByRole('button', { name: S('Autres onglets', 'Other tabs') })
+      .or(page.getByRole('button', { name: S('Combat en cours', 'Combat in progress') }))
       .first();
     await hub.click();
     await page.waitForTimeout(400); // animation d'ouverture du hub
@@ -724,9 +823,12 @@ async function expandInventoryCategories(page: Page) {
   const header = page
     .locator('button[aria-expanded="false"]')
     .filter({
-      // En-tête rendu sans espaces internes : « ▼Arme(3)3.9 kg ».
-      hasText:
+      // En-tête rendu sans espaces internes : « ▼Arme(3)3.9 kg » /
+      // « ▼Weapon(3)3.9 kg » (libellés CATEGORY_LABELS_FR/_EN du shared).
+      hasText: S(
         /(Arme|Armure|Équipement|Outil|Monture|Munitions|Objet magique|Personnalisé)\s*\(\s*\d+\s*\)/,
+        /(Weapon|Armor|Ammunition|Gear|Tool|Mount|Magic|Custom)\s*\(\s*\d+\s*\)/,
+      ),
     })
     .first();
   for (let guard = 0; guard < 10; guard++) {
@@ -766,7 +868,10 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
       const page = await md.newPage();
       await page.goto(webUrl(webPort, '/parties'), { waitUntil: 'networkidle', timeout: 90_000 });
       await settle(page, 600);
-      await page.getByText('Les Héros de Chult').first().waitFor({ timeout: 10_000 });
+      await page
+        .getByText(S('Les Héros de Chult', 'The Heroes of Chult'))
+        .first()
+        .waitFor({ timeout: 10_000 });
       await shoot(page, '01-parties.png');
       await page.close();
     },
@@ -775,9 +880,12 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
     file: '02-inventaire.png',
     async run(c) {
       const page = await openSheet(c.aurore, c.webPort, c.refs.partyId, c.refs.chars.lyra);
-      await openTab(page, 'Inventaire');
+      await openTab(page, S('Inventaire', 'Inventory'));
       await expandInventoryCategories(page);
-      await page.getByText('Brin de gui').first().waitFor({ timeout: 10_000 });
+      await page
+        .getByText(S('Brin de gui', 'Sprig of mistletoe'))
+        .first()
+        .waitFor({ timeout: 10_000 });
       await shoot(page, '02-inventaire.png');
       await page.close();
     },
@@ -786,9 +894,13 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
     file: '03-arme-calcul.png',
     async run(c) {
       const page = await openSheet(c.bastien, c.webPort, c.refs.partyId, c.refs.chars.kael);
-      await openTab(page, 'Inventaire');
+      await openTab(page, S('Inventaire', 'Inventory'));
       await expandInventoryCategories(page);
-      const row = page.getByRole('button', { name: 'Épée longue, 1 exemplaire' });
+      // Libellé accessible de la ligne : FR « Épée longue, 1 exemplaire » /
+      // EN « Longsword × 1 » (clé rangee.itemname.quantity.exemplaire…).
+      const row = page.getByRole('button', {
+        name: S('Épée longue, 1 exemplaire', 'Longsword × 1'),
+      });
       await row.waitFor({ timeout: 10_000 });
       await row.evaluate((el) => el.scrollIntoView({ block: 'center' }));
       await row.click(); // déploie description + puces 🎯 ⚔ ✨
@@ -803,8 +915,8 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
     file: '04-survie-attaques.png',
     async run(c) {
       const page = await openSheet(c.bastien, c.webPort, c.refs.partyId, c.refs.chars.kael);
-      await openTab(page, 'Survie');
-      const section = page.getByText('⚔ Attaques').first();
+      await openTab(page, S('Survie', 'Survival'));
+      const section = page.getByText(S('⚔ Attaques', '⚔ Attacks')).first();
       await section.waitFor({ timeout: 10_000 });
       await section.scrollIntoViewIfNeeded();
       await page.waitForTimeout(250);
@@ -817,7 +929,10 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
     async run(c) {
       // Tour de Lyra : la carte de combat au-dessus du dock clignote « À toi ».
       const page = await openSheet(c.aurore, c.webPort, c.refs.partyId, c.refs.chars.lyra);
-      await page.getByText('⚔ À toi de jouer !').first().waitFor({ timeout: 10_000 });
+      await page
+        .getByText(S('⚔ À toi de jouer !', '⚔ Your turn!'))
+        .first()
+        .waitFor({ timeout: 10_000 });
       // animations: 'allow' — la lueur pulsée combat-turn-glow fait partie de la démo
       await shoot(page, '05-widget-combat.png', { animations: 'allow' });
       await page.close();
@@ -827,8 +942,8 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
     file: '06-sorts.png',
     async run(c) {
       const page = await openSheet(c.aurore, c.webPort, c.refs.partyId, c.refs.chars.lyra);
-      await openTab(page, 'Sorts');
-      await page.getByText('Vague tonnante').first().waitFor({ timeout: 10_000 });
+      await openTab(page, S('Sorts', 'Spells'));
+      await page.getByText(S('Vague tonnante', 'Thunderwave')).first().waitFor({ timeout: 10_000 });
       await shoot(page, '06-sorts.png');
       await page.close();
     },
@@ -837,16 +952,21 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
     file: '07-lancer-sort.png',
     async run(c) {
       const page = await openSheet(c.aurore, c.webPort, c.refs.partyId, c.refs.chars.lyra);
-      await openTab(page, 'Sorts');
-      const cast = page.getByRole('button', { name: 'Lancer Vague tonnante' }).first();
+      await openTab(page, S('Sorts', 'Spells'));
+      const cast = page
+        .getByRole('button', { name: S('Lancer Vague tonnante', 'Cast Thunderwave') })
+        .first();
       await cast.waitFor({ timeout: 10_000 });
       await cast.click();
       const dialog = page.getByRole('dialog');
       await dialog.waitFor({ timeout: 10_000 });
       // Incantation supérieure : emplacement de niveau 2 → dégâts à l'échelle
-      await dialog.getByRole('button', { name: 'Niveau 2' }).first().click();
+      await dialog
+        .getByRole('button', { name: S('Niveau 2', 'Level 2') })
+        .first()
+        .click();
       await page.waitForTimeout(300);
-      await dialog.getByText('Au niveau 2').first().waitFor({ timeout: 5000 });
+      await dialog.getByText(S('Au niveau 2', 'At level 2')).first().waitFor({ timeout: 5000 });
       await shoot(page, '07-lancer-sort.png');
       await page.close();
     },
@@ -855,8 +975,11 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
     file: '08-caracteristiques.png',
     async run(c) {
       const page = await openSheet(c.aurore, c.webPort, c.refs.partyId, c.refs.chars.lyra);
-      await openTab(page, 'Caractéristiques');
-      await page.getByText('Statistiques dérivées').first().waitFor({ timeout: 10_000 });
+      await openTab(page, S('Caractéristiques', 'Abilities'));
+      await page
+        .getByText(S('Statistiques dérivées', 'Derived statistics'))
+        .first()
+        .waitFor({ timeout: 10_000 });
       await shoot(page, '08-caracteristiques.png');
       await page.close();
     },
@@ -865,8 +988,8 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
     file: '09-forme-sauvage.png',
     async run(c) {
       const page = await openSheet(c.aurore, c.webPort, c.refs.partyId, c.refs.chars.lyra);
-      await openTab(page, 'Survie');
-      const section = page.getByText('🐾 Forme sauvage').first();
+      await openTab(page, S('Survie', 'Survival'));
+      const section = page.getByText(S('🐾 Forme sauvage', '🐾 Wild shape')).first();
       await section.waitFor({ timeout: 10_000 });
       await section.scrollIntoViewIfNeeded();
       await page.waitForTimeout(250);
@@ -878,17 +1001,19 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
     file: '10-formes.png',
     async run(c) {
       const page = await openSheet(c.aurore, c.webPort, c.refs.partyId, c.refs.chars.lyra);
-      await openTab(page, 'Survie');
-      const take = page.getByRole('button', { name: '🐾 Prendre une forme' });
+      await openTab(page, S('Survie', 'Survival'));
+      const take = page.getByRole('button', {
+        name: S('🐾 Prendre une forme', '🐾 Take a form'),
+      });
       await take.waitFor({ timeout: 10_000 });
       await take.scrollIntoViewIfNeeded();
       await take.click();
       const dialog = page.getByRole('dialog');
       await dialog.waitFor({ timeout: 10_000 });
       // Filtre « bêtes déjà vues » — la liste emblématique du README
-      await dialog.getByRole('button', { name: '👁 Vues' }).click();
+      await dialog.getByRole('button', { name: S('👁 Vues', '👁 Seen') }).click();
       await page.waitForTimeout(400);
-      await dialog.getByText('Loup').first().waitFor({ timeout: 5000 });
+      await dialog.getByText(S('Loup', 'Wolf')).first().waitFor({ timeout: 5000 });
       await shoot(page, '10-formes.png');
       await page.close();
     },
@@ -916,7 +1041,7 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
         { waitUntil: 'networkidle', timeout: 90_000 },
       );
       await settle(page, 600);
-      await page.getByText('Tour suivant').first().waitFor({ timeout: 10_000 });
+      await page.getByText(S('Tour suivant', 'Next turn')).first().waitFor({ timeout: 10_000 });
       await page.getByText('Ogre').first().waitFor({ timeout: 10_000 });
       await shoot(page, '12-traqueur.png');
       await page.close();
@@ -961,9 +1086,13 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
       // Incantation (4/2, 2+1 dépensés) et Magie de pacte en or (2× niv. 2,
       // 1 dépensé), bandeau DD par classe, sorts à classe d'origine.
       const page = await openSheet(c.bastien, c.webPort, c.refs.partyId, c.refs.chars.vesper);
-      await openTab(page, 'Sorts');
-      await page.getByText('Magie de pacte', { exact: true }).waitFor({ timeout: 10_000 });
-      const rail = page.getByRole('heading', { name: 'Emplacements de sort' });
+      await openTab(page, S('Sorts', 'Spells'));
+      await page
+        .getByText(S('Magie de pacte', 'Pact magic'), { exact: true })
+        .waitFor({ timeout: 10_000 });
+      const rail = page.getByRole('heading', {
+        name: S('Emplacements de sort', 'Spell slots'),
+      });
       await rail.waitFor({ timeout: 10_000 });
       await rail.scrollIntoViewIfNeeded();
       await page.waitForTimeout(250);
@@ -983,9 +1112,11 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
       });
       await settle(page, 600);
       await page.getByRole('button', { name: 'GM Assistant' }).click();
-      await page.getByRole('button', { name: '↺ Rafraîchir les séances' }).waitFor({
-        timeout: 10_000,
-      });
+      await page
+        .getByRole('button', { name: S('↺ Rafraîchir les séances', '↺ Refresh the sessions') })
+        .waitFor({
+          timeout: 10_000,
+        });
       await page.waitForTimeout(300);
       await shoot(page, '15-gm-assistant.png');
       await page.close();
@@ -1002,7 +1133,7 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
         timeout: 90_000,
       });
       await settle(page, 600);
-      await page.getByText('Le campement des batiri').first().waitFor({ timeout: 10_000 });
+      await page.getByText(LAST_SESSION_TITLE).first().waitFor({ timeout: 10_000 });
       await page.waitForTimeout(400); // register-rise décalé
       await shoot(page, '16-chronique.png');
       await page.close();
@@ -1019,10 +1150,23 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
         timeout: 90_000,
       });
       await settle(page, 600);
-      await page.getByRole('button', { name: 'Lire le résumé : Le campement des batiri' }).click();
-      await page.getByRole('heading', { name: 'Moments mémorables' }).waitFor({ timeout: 10_000 });
+      await page
+        .getByRole('button', {
+          // FR « Lire le résumé : … » (espace avant le deux-points) /
+          // EN « Read the summary: … » (clé chronique.lire.le.resume.s.title).
+          name: S(
+            `Lire le résumé : ${LAST_SESSION_TITLE}`,
+            `Read the summary: ${LAST_SESSION_TITLE}`,
+          ),
+        })
+        .click();
+      await page
+        .getByRole('heading', { name: S('Moments mémorables', 'Memorable moments') })
+        .waitFor({ timeout: 10_000 });
       await page.waitForTimeout(400); // register-rise de la section
-      await page.getByRole('heading', { name: 'Moments mémorables' }).scrollIntoViewIfNeeded();
+      await page
+        .getByRole('heading', { name: S('Moments mémorables', 'Memorable moments') })
+        .scrollIntoViewIfNeeded();
       await page.waitForTimeout(250);
       await shoot(page, '17-moments.png');
       await page.close();
@@ -1034,8 +1178,6 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
 // Main
 // ---------------------------------------------------------------------------
 
-const opts = parseArgs(process.argv.slice(2));
-
 async function main() {
   await mkdir(OUT_DIR, { recursive: true });
 
@@ -1043,6 +1185,9 @@ async function main() {
   const stack = await bootStack();
   console.log(`   API : http://127.0.0.1:${stack.apiPort}`);
   console.log(`   Web : http://127.0.0.1:${stack.webPort}`);
+  console.log(
+    `   Langue : ${lang === 'en' ? 'anglaise (EN → docs/screenshots-en/)' : 'française (FR → docs/screenshots/)'}`,
+  );
 
   let exitCode = 0;
   try {
