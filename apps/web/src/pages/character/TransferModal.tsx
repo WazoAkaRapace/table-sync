@@ -50,7 +50,7 @@ export function TransferModal({
     return () => {
       cancelled = true;
     };
-  }, [open, partyId, onError]);
+  }, [open, partyId, onError, t]);
 
   useEffect(() => {
     if (open && entry) {
