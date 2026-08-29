@@ -84,12 +84,13 @@ const ABILITY_INFO: { key: keyof Monster['abilities']; short: string; savePrefix
   { key: 'cha', short: 'CHA', savePrefix: 'Cha' },
 ];
 
+// Modes de vitesse — clés i18n (la marche n'a pas de libellé : "9 m" seul).
 const SPEED_LABELS: Record<string, string> = {
   walk: '',
-  swim: 'nage',
-  fly: 'vol',
-  climb: 'escalade',
-  burrow: 'creusement',
+  swim: 'bestiaire.vitesse.nage',
+  fly: 'bestiaire.vitesse.vol',
+  climb: 'bestiaire.vitesse.escalade',
+  burrow: 'bestiaire.vitesse.creusement',
 };
 
 export default function MonsterStatBlock({
@@ -137,7 +138,7 @@ export default function MonsterStatBlock({
   const header = (
     <div className="flex items-center justify-between p-4 border-b border-parchment-200 shrink-0">
       <h2 className="section-title truncate">
-        {monster?.name ?? (loading ? 'Chargement…' : 'Monstre')}
+        {monster?.name ?? (loading ? t('app.chargement') : t('monster.one'))}
       </h2>
       <button
         type="button"
@@ -223,13 +224,16 @@ function StatBlockBody({
 }) {
   const { t } = useTranslation();
   const sizeLabel = monsterSizeLabel(monster.size);
-  const typeLine = [
-    monster.type,
-    monster.subtype && `(${monster.subtype})`,
-    sizeLabel && `de taille ${sizeLabel}`,
-  ]
-    .filter(Boolean)
-    .join(' ');
+  // Ligne de type : l'ordre taille/type s'inverse en EN (stat block 5e).
+  const typeLine = monster.subtype
+    ? t('bestiaire.ligne.type.soustype', {
+        type: monster.type,
+        subtype: monster.subtype,
+        size: sizeLabel,
+      })
+    : sizeLabel
+      ? t('bestiaire.ligne.type', { type: monster.type, size: sizeLabel })
+      : monster.type;
 
   return (
     <div className="space-y-4">
@@ -256,8 +260,8 @@ function StatBlockBody({
           </span>
         </div>
         <div className="flex items-baseline gap-2">
-          <span className="font-semibold text-sm">🏃 Vitesse</span>
-          <span className="text-sm">{formatSpeed(monster)}</span>
+          <span className="font-semibold text-sm">{t('bestiaire.vitesse')}</span>
+          <span className="text-sm">{formatSpeed(monster, t)}</span>
         </div>
       </div>
 
@@ -288,16 +292,20 @@ function StatBlockBody({
           <div>
             <span className="font-semibold">{t('bestiaire.competences')}</span>
             <span className="text-ink-600 ml-2">
-              {monster.skills.map((s) => `${s.name}${s.isExpert ? ' (expert)' : ''}`).join(', ')}
+              {monster.skills
+                .map((s) => `${s.name}${s.isExpert ? t('bestiaire.expert') : ''}`)
+                .join(', ')}
             </span>
           </div>
         )}
         {monster.senses && (
           <div>
-            <span className="font-semibold">Sens</span>
+            <span className="font-semibold">{t('bestiaire.sens')}</span>
             <span className="text-ink-600 ml-2">{monster.senses}</span>
             {monster.telepathy && (
-              <span className="text-ink-600">, télépathie {monster.telepathy} m</span>
+              <span className="text-ink-600">
+                {t('bestiaire.telepathie', { metres: monster.telepathy })}
+              </span>
             )}
           </div>
         )}
@@ -308,9 +316,10 @@ function StatBlockBody({
           </span>
         </div>
         <div>
-          <span className="font-semibold">Puissance</span>
+          <span className="font-semibold">{t('bestiaire.puissance')}</span>
           <span className="text-ink-600 ml-2">
-            {formatCR(monster.challengeRating)} ({monster.xp.toLocaleString(appLocale())} PX)
+            {formatCR(monster.challengeRating)} ({monster.xp.toLocaleString(appLocale())}{' '}
+            {t('bestiaire.px')})
           </span>
         </div>
       </div>
@@ -410,12 +419,13 @@ function ActionSection({
   );
 }
 
-function formatSpeed(monster: Monster): string {
+function formatSpeed(monster: Monster, t: (key: string) => string): string {
   const parts: string[] = [];
   for (const [mode, value] of Object.entries(monster.speed)) {
     const num = Number(value);
     if (Number.isNaN(num) || num === 0) continue;
-    const label = SPEED_LABELS[mode];
+    const labelKey = SPEED_LABELS[mode];
+    const label = labelKey ? t(labelKey) : '';
     parts.push(label ? `${label} ${num} m` : `${num} m`);
   }
   return parts.length > 0 ? parts.join(', ') : '—';
@@ -542,9 +552,9 @@ function ActionEntry({
                     : 'bg-red-50 text-red-700'
               }`}
             >
-              {isCrit && '🎯 Critique ! '}
-              {isFumble && '💥 Échec ! '}
-              {attackResult.total} à l'attaque
+              {isCrit && t('bestiaire.critique')}
+              {isFumble && t('bestiaire.echec')}
+              {attackResult.total} {t('bestiaire.a.l.attaque')}
               <span className="text-xs font-normal ml-1 opacity-70">
                 (d20: {attackResult.natural})
               </span>
@@ -558,7 +568,8 @@ function ActionEntry({
               }`}
             >
               {isCrit && '🎯 '}
-              {damageResult.total} dégâts{action.damageType ? ` ${action.damageType}` : ''}
+              {damageResult.total} {t('bestiaire.degats')}
+              {action.damageType ? ` ${action.damageType}` : ''}
               {isCrit && <span className="text-xs font-normal ml-1">×2!</span>}
               <span className="text-xs font-normal ml-1 opacity-70">
                 ({damageResult.rolls.join('+')})

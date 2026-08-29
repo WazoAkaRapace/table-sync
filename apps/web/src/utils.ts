@@ -1,9 +1,6 @@
 /* Small helpers shared by the register (group list) and the table of contents (party page). */
 
-import { appLocale } from './i18n';
-export function plural(n: number, word: string): string {
-  return `${n} ${word}${n > 1 ? 's' : ''}`;
-}
+import i18next, { appLocale } from './i18n';
 
 export function toRoman(n: number): string {
   const table: Array<[number, string]> = [
@@ -24,22 +21,27 @@ export function toRoman(n: number): string {
   return out || 'I';
 }
 
-/** SQLite timestamps are space-separated; Safari rejects those in Date(). */
+/** SQLite timestamps are space-separated; Safari rejects those in Date().
+ *  The « depuis/since » prefix reads the active language through the i18next
+ *  singleton (keys commun.depuis / commun.since) — signature unchanged for
+ *  callers outside this zone. */
 export function formatSince(createdAt: string): string {
   const normalized = createdAt.includes(' ') ? createdAt.replace(' ', 'T') : createdAt;
   const d = new Date(normalized);
   if (Number.isNaN(d.getTime())) return '';
   const fmt = new Intl.DateTimeFormat(appLocale(), { month: 'short', year: 'numeric' });
-  return `${appLocale().startsWith('en') ? 'since' : 'depuis'} ${fmt.format(d)}`;
+  return `${i18next.t('commun.depuis')} ${fmt.format(d)}`;
 }
 
-/** Neutral creation stamp for finished things — no « depuis », the entity is over. */
-export function formatCreated(createdAt: string): string {
+/** Neutral creation stamp for finished things — no « depuis », the entity is over.
+ *  The prefix (FR « créée », EN « created ») is passed by the caller via t() so it
+ *  follows the active language (i18n fragments). */
+export function formatCreated(createdAt: string, prefix: string): string {
   const normalized = createdAt.includes(' ') ? createdAt.replace(' ', 'T') : createdAt;
   const d = new Date(normalized);
   if (Number.isNaN(d.getTime())) return '';
   const fmt = new Intl.DateTimeFormat(appLocale(), { month: 'short', year: 'numeric' });
-  return `créée ${fmt.format(d)}`;
+  return `${prefix} ${fmt.format(d)}`;
 }
 
 /** Clipboard write with a legacy fallback — embedded browsers often deny the async API. */

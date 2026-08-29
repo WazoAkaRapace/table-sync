@@ -43,7 +43,7 @@ export default function AccountPage() {
   const onBack = useCallback(() => {
     nav('/parties');
   }, [nav]);
-  useHeaderOverride('Mon compte', onBack);
+  useHeaderOverride(t('account.mon.compte'), onBack);
 
   if (!user) return null;
 
@@ -64,9 +64,9 @@ export default function AccountPage() {
       if (mail !== (user!.email ?? '')) body.email = mail; // vide = retirer l’adresse
       await api.patch('/api/auth/me', body);
       await refreshUser();
-      pushToast('Profil enregistré');
+      pushToast(t('account.profil.enregistre'));
     } catch (err: any) {
-      setProfileError(err.response?.data?.error || 'Enregistrement impossible — réessayez.');
+      setProfileError(err.response?.data?.error || t('account.enregistrement.impossible'));
     } finally {
       setSavingProfile(false);
     }
@@ -82,9 +82,9 @@ export default function AccountPage() {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      pushToast('Mot de passe mis à jour');
+      pushToast(t('account.mot.de.passe.mis.a.jour'));
     } catch (err: any) {
-      setPasswordError(err.response?.data?.error || 'Changement impossible — réessayez.');
+      setPasswordError(err.response?.data?.error || t('account.changement.impossible'));
     } finally {
       setSavingPassword(false);
     }
@@ -139,7 +139,7 @@ export default function AccountPage() {
           </div>
           <div>
             <label className="label" htmlFor="account-email">
-              Adresse e-mail
+              {t('auth.adresse.e.mail')}
             </label>
             <input
               id="account-email"
@@ -226,7 +226,7 @@ export default function AccountPage() {
           </div>
           <div>
             <label className="label" htmlFor="account-password-new">
-              Nouveau mot de passe (≥ 6 caractères)
+              {t('auth.nouveau.mot.de.passe.min')}
             </label>
             <input
               id="account-password-new"

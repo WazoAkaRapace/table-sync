@@ -87,7 +87,7 @@ export function CatalogSearch({
       onClick={() => onCreateItem(wanted)}
       className="btn-secondary w-full text-sm"
     >
-      + Créer « {wanted} »
+      {t('recherche.creer', { name: wanted })}
     </button>
   );
   return (
@@ -138,8 +138,8 @@ export function CatalogSearch({
                 title={t('recherche.aucun.objet.trouve')}
                 hint={
                   wanted && canCreateItem
-                    ? `« ${wanted} » n'existe pas encore — tu peux le créer.`
-                    : 'Modifiez votre recherche ou vos filtres.'
+                    ? t('recherche.n.existe.pas.encore', { name: wanted })
+                    : t('recherche.modifiez.votre.recherche.ou.vos.filtres')
                 }
               />
               {wanted && createCta}
@@ -148,13 +148,15 @@ export function CatalogSearch({
             <EmptyState
               icon="📝"
               title={t('recherche.recherchez.un.objet')}
-              hint="Tapez le nom d'un objet pour l'ajouter à votre sac à dos."
+              hint={t('recherche.tapez.le.nom.d.un.objet')}
             />
           )}
         </div>
       ) : (
         <>
-          <p className="text-xs text-ink-400 px-1">{total} objet(s)</p>
+          <p className="text-xs text-ink-400 px-1">
+            {t('recherche.total.objets', { total: total })}
+          </p>
           <ul className="space-y-2">
             {items.map((item) => (
               <li key={item.id} className="card p-3 flex items-center gap-3">
@@ -170,7 +172,7 @@ export function CatalogSearch({
                   </div>
                   {item.aliases && item.aliases.length > 0 && (
                     <p className="text-[11px] text-ink-400 mt-0.5">
-                      Aussi : {item.aliases.join(', ')}
+                      {t('recherche.aussi', { aliases: item.aliases.join(', ') })}
                     </p>
                   )}
                 </div>
@@ -184,14 +186,14 @@ export function CatalogSearch({
                       item_name: item.name,
                     })}
                   >
-                    {addingItemId === item.id ? '…' : '+ Ajouter'}
+                    {addingItemId === item.id ? '…' : t('inv.ajouter')}
                   </button>
                 )}
               </li>
             ))}
           </ul>
 
-          {loading && <LoadingSpinner label="Recherche…" />}
+          {loading && <LoadingSpinner label={t('recherche.recherche')} />}
 
           {/* The exact item may still be missing among the hits — creation
               stays one tap away even with results on screen. */}
@@ -199,7 +201,7 @@ export function CatalogSearch({
 
           {offset + items.length < total && !loading && (
             <button type="button" onClick={onLoadMore} className="btn-secondary w-full">
-              Charger plus ({total - offset - items.length} restants)
+              {t('recherche.charger.plus', { n: total - offset - items.length })}
             </button>
           )}
         </>

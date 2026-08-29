@@ -14,21 +14,22 @@ import { useNavigate, useParams } from 'react-router-dom';
 import api from '../api';
 import { Chip, EmptyState, ErrorMsg, LoadingSpinner } from '../components/ui';
 import { useHeaderOverride } from '../headerContext';
+import { appLocale } from '../i18n';
 import { useSyncEvent } from '../sync';
-import { plural, toRoman } from '../utils';
+import { toRoman } from '../utils';
 
-function playedAtLabel(playedAt: string | null): string {
-  if (!playedAt) return 'date inconnue';
+function playedAtLabel(playedAt: string | null, t: (key: string) => string): string {
+  if (!playedAt) return t('chronique.date.inconnue');
   const d = new Date(playedAt);
   if (Number.isNaN(d.getTime())) return playedAt;
-  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  return d.toLocaleDateString(appLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 function fetchedAtLabel(fetchedAt: string | null): string | null {
   if (!fetchedAt) return null;
   const d = new Date(fetchedAt);
   if (Number.isNaN(d.getTime())) return null;
-  return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleTimeString(appLocale(), { hour: '2-digit', minute: '2-digit' });
 }
 
 // ---------- Enluminure des moments : une identité par type ----------
@@ -121,15 +122,15 @@ export default function ChroniclePage() {
           setStale(sessRes.data.stale);
           setError('');
         } else if ((linkRes.data as GmaLinkStatus).linked) {
-          setError('La chronique n’a pas pu être ouverte — vérifie la connexion.');
+          setError(t('chronique.pas.pu.etre.ouverte'));
         }
       } catch (err: any) {
-        setError(err.response?.data?.message || 'Erreur');
+        setError(err.response?.data?.message || t('chronique.erreur'));
       } finally {
         setLoading(false);
       }
     },
-    [partyId],
+    [partyId, t],
   );
 
   useEffect(() => {
@@ -147,10 +148,10 @@ export default function ChroniclePage() {
       api
         .get(`/api/parties/${partyId}/gma/sessions/${session.id}/recap`)
         .then((res: any) => setRecapsRes(res.data))
-        .catch((err: any) => setRecapsError(err.response?.data?.message || 'Erreur'))
+        .catch((err: any) => setRecapsError(err.response?.data?.message || t('chronique.erreur')))
         .finally(() => setRecapsLoading(false));
     },
-    [partyId],
+    [partyId, t],
   );
 
   // Live sync: the MD refreshed/resynced — reopen the current data.
@@ -169,16 +170,16 @@ export default function ChroniclePage() {
     else navigate(`/party/${partyId}`);
   }, [open, navigate, partyId]);
 
-  useHeaderOverride('Chronique', onBack);
+  useHeaderOverride(t('chronique.titre'), onBack);
 
-  if (loading) return <LoadingSpinner label="Ouverture de la chronique…" />;
+  if (loading) return <LoadingSpinner label={t('chronique.ouverture')} />;
   if (!link?.linked) {
     return (
       <div className="mx-auto w-full max-w-xl">
         <EmptyState
           icon="📜"
           title={t('chronique.pas.de.chronique.pour.ce.groupe')}
-          hint="Le MD peut lier le groupe à une campagne GM Assistant depuis sa Table (onglet GM Assistant)."
+          hint={t('chronique.lier.hint')}
         />
       </div>
     );
@@ -206,7 +207,7 @@ export default function ChroniclePage() {
           <p className="text-xs uppercase tracking-[0.2em] text-ink-300">{t('chronique.seance')}</p>
           <h1 className="mt-1 font-display text-2xl font-bold sm:text-3xl">{open.title}</h1>
           <p className="mt-1.5 flex flex-wrap items-center justify-center gap-2 text-sm text-ink-400">
-            <span>{playedAtLabel(open.playedAt)}</span>
+            <span>{playedAtLabel(open.playedAt, t)}</span>
             {recapsRes?.stale && (
               <Chip tone="amber" soft>
                 {t('chronique.possiblement.obsolete')}
@@ -243,13 +244,15 @@ export default function ChroniclePage() {
         )}
 
         <div className="pt-5">
-          {recapsLoading && <p className="text-sm text-ink-400 animate-pulse">Lecture…</p>}
+          {recapsLoading && (
+            <p className="text-sm text-ink-400 animate-pulse">{t('chronique.lecture')}</p>
+          )}
           {recapsError && <ErrorMsg message={recapsError} />}
           {!recapsLoading && !recapsError && !active && (
             <EmptyState
               icon="🖋"
               title={t('chronique.aucun.resume.pour.cette.seance')}
-              hint="Les résumés apparaîtront ici dès que le MD en produira un sur GM Assistant."
+              hint={t('chronique.recaps.hint')}
             />
           )}
           {active && (
@@ -259,7 +262,9 @@ export default function ChroniclePage() {
               </p>
               {fetchedAtLabel(recapsRes?.fetchedAt ?? null) && (
                 <p className="mt-4 text-[11px] text-ink-300">
-                  synchronisé à {fetchedAtLabel(recapsRes?.fetchedAt ?? null)}
+                  {t('chronique.synchronise.a', {
+                    heure: fetchedAtLabel(recapsRes?.fetchedAt ?? null),
+                  })}
                 </p>
               )}
             </div>
@@ -329,11 +334,11 @@ export default function ChroniclePage() {
   return (
     <div className="mx-auto w-full max-w-3xl">
       <header className="register-rise pb-6 pt-2 text-center">
-        <h1 className="font-display text-2xl font-bold sm:text-3xl">Chronique</h1>
+        <h1 className="font-display text-2xl font-bold sm:text-3xl">{t('chronique.titre')}</h1>
         <p className="mt-1.5 flex flex-wrap items-center justify-center gap-2 text-sm text-ink-400">
           <span>{link.campaign?.title}</span>
           <span aria-hidden="true">·</span>
-          <span>{plural(ordered.length, 'séance')}</span>
+          <span>{t('chronique.seances', { count: ordered.length })}</span>
           {stale && (
             <Chip tone="amber" soft>
               {t('chronique.possiblement.obsolete')}
@@ -351,7 +356,7 @@ export default function ChroniclePage() {
           <EmptyState
             icon="📜"
             title={t('chronique.aucune.seance.pour.l.instant')}
-            hint="Les séances et leurs résumés apparaîtront ici dès que la campagne vivra sur GM Assistant."
+            hint={t('chronique.seances.hint')}
           />
         </div>
       ) : (
@@ -378,14 +383,14 @@ export default function ChroniclePage() {
                       {latest.title}
                     </span>
                     <span className="mt-1 block text-sm text-ink-400">
-                      {playedAtLabel(latest.playedAt)}
+                      {playedAtLabel(latest.playedAt, t)}
                     </span>
                   </span>
                   <span
                     aria-hidden="true"
                     className="shrink-0 pt-1.5 text-sm font-medium text-blood-600"
                   >
-                    Lire →
+                    {t('chronique.lire')}
                   </span>
                 </span>
               </button>
@@ -415,7 +420,7 @@ export default function ChroniclePage() {
                       {s.title}
                     </span>
                     <span className="mt-0.5 block truncate text-xs text-ink-400">
-                      {playedAtLabel(s.playedAt)}
+                      {playedAtLabel(s.playedAt, t)}
                     </span>
                   </span>
                   <span

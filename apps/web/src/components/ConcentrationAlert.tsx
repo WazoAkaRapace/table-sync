@@ -1,7 +1,7 @@
 import type { ConcentrationCheck } from '@table-sync/shared';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import api from '../api';
 
 /**
@@ -70,14 +70,21 @@ export default function ConcentrationAlert({
           </button>
         </div>
         <p className="text-sm text-blood-900">
-          <strong>{check.characterName}</strong> subit <strong>{check.damage} dégâts</strong>
-          {t('concentration.tout.en.concentrant.un.sort')}
+          <Trans
+            i18nKey="concentration.subit.des.degats.tout.en.concentrant"
+            values={{ name: check.characterName, damage: check.damage }}
+            components={{ n: <strong />, d: <strong /> }}
+          />
         </p>
         <p className="text-sm text-blood-900">
-          {t('concentration.jet.de.sauvegarde.de')}
-          <strong>Constitution DD {check.dc}</strong>{' '}
-          <span className="text-blood-600 text-xs">(10 ou ½ dégâts, le plus élevé)</span>
-          {t('concentration.pour.maintenir.la.concentration')}
+          <Trans
+            i18nKey="concentration.jet.de.sauvegarde.constitution.dd"
+            values={{ dc: check.dc }}
+            components={{
+              s: <strong />,
+              n: <span className="text-blood-600 text-xs" />,
+            }}
+          />
         </p>
         <div className="flex gap-2">
           <button

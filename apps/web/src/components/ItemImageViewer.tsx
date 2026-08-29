@@ -71,7 +71,7 @@ export function ItemVignette({
       {failed ? (
         // Échec : le plateau reste à hauteur fixe, le panneau reste utilisable.
         <div className="flex h-40 flex-col items-center justify-center gap-2 rounded-lg border border-parchment-300 bg-parchment-50 p-1.5 shadow-sm">
-          <span className="text-xs text-ink-400">Illustration indisponible</span>
+          <span className="text-xs text-ink-400">{t('image.illustration.indisponible')}</span>
           <button type="button" onClick={retry} className="btn-ghost text-xs">
             {t('image.reessayer')}
           </button>
@@ -157,14 +157,14 @@ type Annotation =
 
 /** Palette du plan : mêmes valeurs que les tokens @theme d'index.css. */
 const STROKE_COLORS = [
-  { value: '#7a1f1f', label: 'rouge sang' }, // blood-600
-  { value: '#2a1f14', label: 'encre' }, // ink-900
-  { value: '#b8975a', label: 'or' }, // gold-500
-  { value: '#fdfaf3', label: 'ivoire' }, // parchment-50
+  { value: '#7a1f1f', i18n: 'image.couleur.rouge.sang' }, // blood-600
+  { value: '#2a1f14', i18n: 'image.couleur.encre' }, // ink-900
+  { value: '#b8975a', i18n: 'image.couleur.or' }, // gold-500
+  { value: '#fdfaf3', i18n: 'image.couleur.ivoire' }, // parchment-50
 ];
 const STROKE_WIDTHS = [
-  { value: 4, label: 'Trait fin' },
-  { value: 9, label: 'Trait épais' },
+  { value: 4, i18n: 'image.trait.fin' },
+  { value: 9, i18n: 'image.trait.epais' },
 ];
 
 /** Taille de texte relative à l'image affichée (≈ 22 caractères par largeur). */
@@ -300,7 +300,9 @@ export function ItemImageViewer({
         y: py - cy - (py - cy - v.y) * k,
       });
     });
-    setAnnounce(scale === 1 ? 'Taille d’écran' : `Zoom ${Math.round(scale * 100)} %`);
+    setAnnounce(
+      scale === 1 ? t('image.taille.d.ecran') : t('image.zoom.pct', { n: Math.round(scale * 100) }),
+    );
   };
 
   // ---------- Canvas overlay : rejoue traits + trait en cours ----------
@@ -538,7 +540,7 @@ export function ItemImageViewer({
       onCloseRef.current();
     } catch {
       // Jamais de perte silencieuse : les annotations restent en session.
-      setSaveError('Enregistrement impossible — réessaie');
+      setSaveError(t('image.enregistrement.impossible'));
     } finally {
       setSaving(false);
     }
@@ -614,18 +616,18 @@ export function ItemImageViewer({
   };
 
   const zoomed = view.scale > 1.01;
-  const toolButton = (t: Tool, label: string, glyph: string) => (
+  const toolButton = (toolId: Tool, label: string, glyph: string) => (
     <button
       type="button"
       aria-label={label}
-      aria-pressed={tool === t}
+      aria-pressed={tool === toolId}
       onClick={() => {
-        setTool(t);
+        setTool(toolId);
         setPendingText(null);
         setDraft('');
       }}
       className={`flex h-11 w-11 items-center justify-center rounded-full text-lg text-parchment-50 transition-colors hover:bg-white/10 ${
-        tool === t ? 'bg-white/20' : ''
+        tool === toolId ? 'bg-white/20' : ''
       }`}
     >
       {glyph}
@@ -757,8 +759,8 @@ export function ItemImageViewer({
           pinchRef.current = null;
           setAnnounce(
             viewRef.current.scale <= 1.01
-              ? 'Taille d’écran'
-              : `Zoom ${Math.round(viewRef.current.scale * 100)} %`,
+              ? t('image.taille.d.ecran')
+              : t('image.zoom.pct', { n: Math.round(viewRef.current.scale * 100) }),
           );
           // Un doigt reste : il devient un pan (en navigation) depuis l'état
           // courant — jamais une tape, le geste est déjà consommé.
@@ -985,7 +987,7 @@ export function ItemImageViewer({
               role="alert"
               className="pointer-events-auto rounded-full bg-ink-900/85 px-4 py-2 text-sm text-parchment-50 backdrop-blur"
             >
-              Annotations non enregistrées —{' '}
+              {t('image.annotations.non.enregistrees')}{' '}
               <button
                 type="button"
                 onClick={() => onCloseRef.current()}
@@ -993,7 +995,7 @@ export function ItemImageViewer({
               >
                 {t('image.quitter.quand.meme')}
               </button>{' '}
-              ou{' '}
+              {t('image.ou')}{' '}
               <button
                 type="button"
                 onClick={() => setDiscardConfirm(false)}
@@ -1009,7 +1011,7 @@ export function ItemImageViewer({
                 <button
                   type="button"
                   key={c.value}
-                  aria-label={t('image.couleur.c.label', { c_label: c.label })}
+                  aria-label={t('image.couleur.c.label', { c_label: t(c.i18n) })}
                   aria-pressed={color === c.value}
                   onClick={() => setColor(c.value)}
                   className="flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-white/10"
@@ -1029,7 +1031,7 @@ export function ItemImageViewer({
                   <button
                     type="button"
                     key={w.value}
-                    aria-label={w.label}
+                    aria-label={t(w.i18n)}
                     aria-pressed={strokeWidth === w.value}
                     onClick={() => setStrokeWidth(w.value)}
                     className={`flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-white/10 ${
@@ -1045,9 +1047,9 @@ export function ItemImageViewer({
             </div>
           )}
           <div className="pointer-events-auto flex items-center gap-1 rounded-full bg-ink-900/70 p-1.5 backdrop-blur">
-            {toolButton('navigate', 'Naviguer', '🖐')}
-            {toolButton('draw', 'Dessiner', '✏️')}
-            {toolButton('text', 'Écrire', 'T')}
+            {toolButton('navigate', t('image.outil.naviguer'), '🖐')}
+            {toolButton('draw', t('image.outil.dessiner'), '✏️')}
+            {toolButton('text', t('image.outil.ecrire'), 'T')}
             <button
               type="button"
               aria-label={t('image.annuler.la.derniere.annotation')}
@@ -1059,8 +1061,8 @@ export function ItemImageViewer({
             </button>
             <ConfirmButton
               onConfirm={() => setAnnotations([])}
-              ariaLabel="Effacer les annotations"
-              confirmChildren={<span className="text-xs">Effacer ?</span>}
+              ariaLabel={t('image.effacer.les.annotations')}
+              confirmChildren={<span className="text-xs">{t('image.effacer.confirm')}</span>}
               className="flex h-11 min-w-11 items-center justify-center rounded-full px-1 text-base text-parchment-50 transition-colors hover:bg-white/10"
               armedClassName="bg-red-600"
             >
@@ -1072,7 +1074,7 @@ export function ItemImageViewer({
               disabled={annotations.length === 0 || saving}
               className="h-11 rounded-full bg-blood-600 px-4 text-sm font-medium text-white transition-colors hover:bg-blood-700 disabled:opacity-40"
             >
-              {saving ? 'Enregistrement…' : 'Enregistrer'}
+              {saving ? t('image.enregistrement') : t('image.enregistrer')}
             </button>
           </div>
           {saveError && (

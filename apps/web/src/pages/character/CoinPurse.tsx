@@ -49,9 +49,10 @@ export function CoinPurse({ coins, readOnly = false, onChange, onBlur }: CoinPur
         aria-expanded={expanded}
       >
         <h2 className="section-title">
-          Bourse{' '}
+          {t('bourse.titre')}{' '}
           <span className="text-ink-400 text-sm font-normal">
-            ({totalGp} PO{remCp > 0 ? ` ${remCp} PC` : ''})
+            ({t('bourse.total.po', { gp: totalGp })}
+            {remCp > 0 ? t('bourse.total.pc', { cp: remCp }) : ''})
           </span>
         </h2>
         <span className={`text-ink-400 text-sm chevron ${expanded ? 'is-open' : 'is-closed'}`}>

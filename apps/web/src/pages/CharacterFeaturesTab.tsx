@@ -29,7 +29,7 @@ import api from '../api';
 import { SortableCard, SortableGrid } from '../components/SortableGrid';
 import { ConfirmButton, EmptyState, Modal } from '../components/ui';
 import { appLang } from '../i18n';
-import { featureCategoryLabel } from '../i18n/labels';
+import { classNameLabel, featureCategoryLabel } from '../i18n/labels';
 import { useSyncEvent } from '../sync';
 
 // Affichage EN : le catalogue SRD a sa table anglaise (classFeatures.en.ts),
@@ -160,7 +160,7 @@ export default function CharacterFeaturesTab({
 
   const save = async () => {
     if (!title.trim()) {
-      onError('Le titre est requis');
+      onError(t('traits.le.titre.est.requis'));
       return;
     }
     const cm = counterMax.trim() ? Math.max(0, Number(counterMax)) : null;
@@ -209,7 +209,7 @@ export default function CharacterFeaturesTab({
       await load();
       await onSaved();
     } catch {
-      onError('Erreur lors de la sauvegarde');
+      onError(t('traits.erreur.lors.de.la.sauvegarde'));
     } finally {
       setSaving(false);
     }
@@ -234,7 +234,7 @@ export default function CharacterFeaturesTab({
       await load();
       await onSaved();
     } catch {
-      onError('Erreur lors de la suppression');
+      onError(t('traits.erreur.lors.de.la.suppression'));
     }
   };
 
@@ -268,7 +268,7 @@ export default function CharacterFeaturesTab({
       await load();
       await onSaved();
     } catch {
-      onError("Erreur d'ajout depuis le catalogue");
+      onError(t('traits.erreur.d.ajout.depuis.le.catalogue'));
     }
   };
 
@@ -291,7 +291,8 @@ export default function CharacterFeaturesTab({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="section-title">
-          Traits <span className="text-ink-400 text-sm font-normal">({features.length})</span>
+          {t('traits.traits')}{' '}
+          <span className="text-ink-400 text-sm font-normal">({features.length})</span>
         </h2>
         <button type="button" onClick={openCreate} className="btn-primary text-sm px-3 py-1.5">
           {t('traits.ajouter')}
@@ -306,7 +307,7 @@ export default function CharacterFeaturesTab({
           <EmptyState
             icon="📋"
             title={t('traits.aucun.trait')}
-            hint="Ajoute tes capacités de classe, traits raciaux, dons, ou toute autre caractéristique de ton personnage."
+            hint={t('traits.ajoute.tes.capacites.de.classe.traits.raciaux.dons.ou.toute')}
           />
         </div>
       ) : (
@@ -363,7 +364,7 @@ export default function CharacterFeaturesTab({
                                 ariaLabel={t('traits.supprimer.featname.feature', {
                                   featName: featName(feature),
                                 })}
-                                confirmChildren="Supprimer ?"
+                                confirmChildren={t('traits.supprimer')}
                               >
                                 ×
                               </ConfirmButton>
@@ -385,7 +386,7 @@ export default function CharacterFeaturesTab({
                                 current === 0
                                   ? 'bg-red-500'
                                   : pct <= 50
-                                    ? 'bg-amber-500'
+                                    ? 'bg-yellow-500'
                                     : 'bg-green-500';
                               return (
                                 <div className="flex items-center gap-2 bg-parchment-50 rounded-lg p-2">
@@ -394,7 +395,7 @@ export default function CharacterFeaturesTab({
                                     onClick={() => adjustCounter(feature, -1)}
                                     disabled={current <= 0}
                                     className="w-7 h-7 rounded-md bg-parchment-200 hover:bg-parchment-300 disabled:opacity-30 text-sm font-medium flex items-center justify-center shrink-0"
-                                    aria-label="Diminuer"
+                                    aria-label={t('traits.diminuer')}
                                   >
                                     −
                                   </button>
@@ -407,11 +408,18 @@ export default function CharacterFeaturesTab({
                                     onClick={() => adjustCounter(feature, 1)}
                                     disabled={current >= max}
                                     className="w-7 h-7 rounded-md bg-parchment-200 hover:bg-parchment-300 disabled:opacity-30 text-sm font-medium flex items-center justify-center shrink-0"
-                                    aria-label="Augmenter"
+                                    aria-label={t('traits.augmenter')}
                                   >
                                     +
                                   </button>
-                                  <div className="flex-1 h-2 bg-parchment-200 rounded-full overflow-hidden">
+                                  <div
+                                    className="flex-1 h-2 bg-parchment-200 rounded-full overflow-hidden"
+                                    role="progressbar"
+                                    aria-valuenow={current}
+                                    aria-valuemin={0}
+                                    aria-valuemax={max}
+                                    aria-valuetext={`${current} / ${max}`}
+                                  >
                                     <div
                                       className={`h-full ${barColor} transition-all rounded-full`}
                                       style={{ width: `${pct}%` }}
@@ -434,11 +442,14 @@ export default function CharacterFeaturesTab({
                                   className="self-start text-[10px] px-2 py-0.5 rounded-full border bg-indigo-50 text-indigo-700 border-indigo-200"
                                   title={
                                     eff === 'short'
-                                      ? 'Se recharge après un repos court ou long'
-                                      : 'Se recharge après un repos long'
+                                      ? t('traits.se.recharge.apres.un.repos.court.ou.long')
+                                      : t('traits.se.recharge.apres.un.repos.long')
                                   }
                                 >
-                                  ↻ {eff === 'short' ? 'repos court' : 'repos long'}
+                                  ↻{' '}
+                                  {eff === 'short'
+                                    ? t('traits.repos.court')
+                                    : t('traits.repos.long')}
                                 </span>
                               );
                             })()}
@@ -463,11 +474,11 @@ export default function CharacterFeaturesTab({
       <Modal
         open={showModal}
         onClose={() => setShowModal(false)}
-        title={editing ? 'Modifier le trait' : 'Nouveau trait'}
+        title={editing ? t('traits.modifier.le.trait') : t('traits.nouveau.trait')}
       >
         <div className="space-y-3">
           <label className="block">
-            <span className="label">Titre *</span>
+            <span className="label">{t('traits.titre')}</span>
             <input
               className="input"
               value={title}
@@ -493,7 +504,7 @@ export default function CharacterFeaturesTab({
           </label>
 
           <label className="block">
-            <span className="label">Description</span>
+            <span className="label">{t('traits.description')}</span>
             <textarea
               className="input min-h-[120px] resize-y"
               value={description}
@@ -514,8 +525,10 @@ export default function CharacterFeaturesTab({
               placeholder={t('traits.laisser.vide.pour.aucun.compteur')}
             />
             <p className="text-xs text-ink-400 mt-1">
-              Pour les points de Ki, utilisations de rage, pool de soins, etc.
-              {counterMax && Number(counterMax) > 0 ? ' Le compteur démarre au maximum.' : ''}
+              {t('traits.pour.les.points.de.ki.utilisations')}
+              {counterMax && Number(counterMax) > 0
+                ? ` ${t('traits.le.compteur.demarre.au.maximum')}`
+                : ''}
             </p>
           </label>
 
@@ -582,13 +595,14 @@ export default function CharacterFeaturesTab({
             onClick={() => setShowTemplateHelp((s) => !s)}
             className="text-xs text-blood-600 hover:underline"
           >
-            {showTemplateHelp ? '▼' : '▶'} Variables de modèle
+            {showTemplateHelp ? '▼' : '▶'} {t('traits.variables.de.modele')}
           </button>
           {showTemplateHelp && (
             <div className="bg-parchment-50 rounded-lg p-3 border border-parchment-200">
               <p className="text-xs text-ink-500 mb-2">
-                Utilisez <code className="bg-parchment-200 px-1 rounded">{'{{variable}}'}</code>{' '}
-                pour insérer une valeur calculée depuis votre fiche :
+                {t('traits.utilisez')}{' '}
+                <code className="bg-parchment-200 px-1 rounded">{'{{variable}}'}</code>{' '}
+                {t('traits.pour.inserer.une.valeur.calculee.depuis.votre')}
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
                 {TEMPLATE_VARIABLES.map((v) => (
@@ -610,7 +624,7 @@ export default function CharacterFeaturesTab({
               disabled={saving || !title.trim()}
               className="btn-primary flex-1 disabled:opacity-50"
             >
-              {saving ? '…' : editing ? 'Enregistrer' : 'Créer'}
+              {saving ? '…' : editing ? t('common.save') : t('traits.creer')}
             </button>
             <button
               type="button"
@@ -628,7 +642,11 @@ export default function CharacterFeaturesTab({
 
 // ---------- Catalogue SRD (capacités par classe/niveau) ----------
 
-function resetLabel(def: ClassFeatureDef, character: Character): string | null {
+function resetLabel(
+  def: ClassFeatureDef,
+  character: Character,
+  t: (key: string) => string,
+): string | null {
   if (!def.resource) return null;
   const owner = findClassFeatureClass(def.id);
   const ownerLevel = owner
@@ -639,8 +657,9 @@ function resetLabel(def: ClassFeatureDef, character: Character): string | null {
   const short =
     def.resource.reset === 'short' ||
     (def.resource.shortFromLevel !== undefined && ownerLevel >= def.resource.shortFromLevel);
-  const unit = def.resource.unit === 'PV' ? ' PV' : '';
-  return short ? `${unit || 'util.'} / repos court*` : `${unit || 'util.'} / repos long`;
+  const unit = def.resource.unit === 'PV' ? ` ${t('sorts.pv')}` : '';
+  const rest = short ? t('traits.recharge.court') : t('traits.recharge.long');
+  return `${unit || t('traits.util')}${rest}`;
 }
 
 function CatalogCard({
@@ -709,7 +728,7 @@ function CatalogCard({
             {nextGains
               .map(
                 (g) =>
-                  `${ownLines.length > 1 ? `${g.classKey} ` : ''}niv. ${g.nextLevel} : ${g.features
+                  `${ownLines.length > 1 ? `${classNameLabel(g.classKey)} ` : ''}${t('traits.niveau.abrege', { level: g.nextLevel })} : ${g.features
                     .map((f) => f.name)
                     .join(', ')}`,
               )
@@ -741,7 +760,7 @@ function CatalogCard({
             </label>
             {subclasses.length > 0 && (
               <label className="flex items-center gap-1.5 text-xs text-ink-500">
-                Voie
+                {t('traits.voie')}
                 <select
                   className="input py-1 text-xs w-auto"
                   value={subFilter}
@@ -769,7 +788,7 @@ function CatalogCard({
               const added = addedCatalogIds.has(def.id);
               const locked = isOwnClass && def.level > level;
               const expanded = expandedId === def.id;
-              const reset = resetLabel(def, character);
+              const reset = resetLabel(def, character, t);
               return (
                 <div key={def.id} className="bg-parchment-50/60">
                   <div className="flex items-center gap-2 px-3 py-2">
@@ -786,7 +805,7 @@ function CatalogCard({
                             : 'bg-parchment-200 text-ink-500'
                         }`}
                       >
-                        Niv {def.level}
+                        {t('traits.niv.level', { level: def.level })}
                       </span>
                       <span className="text-sm font-medium text-ink-800 truncate">
                         {defName(def)}
@@ -801,8 +820,8 @@ function CatalogCard({
                           className="text-[10px] text-blood-600 shrink-0"
                           title={
                             def.resource?.reset === 'short'
-                              ? 'Récupéré après un repos court ou long'
-                              : 'Récupéré après un repos long'
+                              ? t('traits.recupere.apres.un.repos.court.ou.long')
+                              : t('traits.recupere.apres.un.repos.long')
                           }
                         >
                           ↻ {reset}
@@ -823,9 +842,17 @@ function CatalogCard({
                             ? 'bg-parchment-200 text-ink-400 cursor-not-allowed'
                             : 'bg-blood-600 text-white hover:bg-blood-700 disabled:opacity-50'
                         }`}
-                        title={locked ? `Nécessite le niveau ${def.level}` : 'Ajouter aux traits'}
+                        title={
+                          locked
+                            ? t('traits.necessite.le.niveau', { level: def.level })
+                            : t('traits.ajouter.aux.traits')
+                        }
                       >
-                        {locked ? `Niv ${def.level}` : addingId === def.id ? '…' : '+ Ajouter'}
+                        {locked
+                          ? t('traits.niv.level', { level: def.level })
+                          : addingId === def.id
+                            ? '…'
+                            : t('traits.ajouter')}
                       </button>
                     )}
                   </div>

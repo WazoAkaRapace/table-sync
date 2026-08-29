@@ -27,7 +27,7 @@ import api from '../api';
 import { useAuth } from '../auth';
 import AddClassSheet from '../components/AddClassSheet';
 import { BottomSheet, ConfirmButton } from '../components/ui';
-import { fightingStyleLabel } from '../i18n/labels';
+import { classNameLabel, fightingStyleLabel } from '../i18n/labels';
 
 interface Props {
   character: Character;
@@ -123,9 +123,9 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
   /** Remplace l'ensemble des lignes de classe (PATCH atomique côté API). */
   const patchClasses = useCallback(
     (entries: CharacterClassEntry[]) => {
-      patchCharacter({ classes: entries }, 'Impossible de mettre à jour les classes');
+      patchCharacter({ classes: entries }, t('desc.impossible.de.mettre.a.jour.les.classes'));
     },
-    [patchCharacter],
+    [patchCharacter, t],
   );
 
   const bumpLevel = (classKey: string, delta: number) => {
@@ -166,7 +166,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
     const draftVal = drafts[key];
     const currentVal = (character[key as keyof Character] as string) ?? '';
     if (draftVal === undefined || draftVal === currentVal) return;
-    patchCharacter({ [key]: draftVal.trim() || null }, 'Erreur de mise à jour');
+    patchCharacter({ [key]: draftVal.trim() || null }, t('desc.erreur.de.mise.a.jour'));
   };
 
   const handlePortraitUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -194,7 +194,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
         if (!ctx) return;
         ctx.drawImage(img, 0, 0, width, height);
         const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-        patchCharacter({ portraitUrl: dataUrl }, 'Erreur lors du téléversement');
+        patchCharacter({ portraitUrl: dataUrl }, t('desc.erreur.lors.du.televersement'));
       };
       img.src = ev.target?.result as string;
     };
@@ -202,17 +202,17 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
   };
 
   const removePortrait = () => {
-    patchCharacter({ portraitUrl: null }, 'Erreur de mise à jour');
+    patchCharacter({ portraitUrl: null }, t('desc.erreur.de.mise.a.jour'));
   };
 
   const commitRace = () => {
     if (raceDraft === (character.race ?? '')) return;
-    patchCharacter({ race: raceDraft.trim() || null }, 'Erreur de mise à jour');
+    patchCharacter({ race: raceDraft.trim() || null }, t('desc.erreur.de.mise.a.jour'));
   };
 
   const commitBackground = () => {
     if (bgDraft === (character.background ?? '')) return;
-    patchCharacter({ background: bgDraft.trim() || null }, 'Erreur de mise à jour');
+    patchCharacter({ background: bgDraft.trim() || null }, t('desc.erreur.de.mise.a.jour'));
   };
 
   const closeIdentity = () => {
@@ -224,8 +224,8 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
   // Ligne résumé : « Guerrier 5 / Magicien 3 » + sous-classes
   const summaryClass =
     classLines.length > 0
-      ? classLines.map((c) => `${c.classKey} ${c.level}`).join(' / ')
-      : `Niveau ${character.level ?? 1} · classe non définie`;
+      ? classLines.map((c) => `${classNameLabel(c.classKey)} ${c.level}`).join(' / ')
+      : t('desc.niveau.level.classe.non.definie', { level: character.level ?? 1 });
   const subclassLine = classLines
     .map((c) => {
       const label = subclassLabel(c);
@@ -257,7 +257,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
             {classLines.length > 1
               ? classLines.map((c) => (
                   <span key={c.classKey}>
-                    {c.classKey} <span className="font-mono">{c.level}</span>
+                    {classNameLabel(c.classKey)} <span className="font-mono">{c.level}</span>
                     {c !== classLines[classLines.length - 1] ? ' / ' : ''}
                   </span>
                 ))
@@ -266,7 +266,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
           {subclassLine && <p className="text-sm text-ink-700">{subclassLine}</p>}
           <p className="text-sm text-ink-500">
             {[character.race, character.background].filter(Boolean).join(' · ') ||
-              'Race et historique non définies'}
+              t('desc.race.et.historique.non.definies')}
           </p>
         </div>
       </section>
@@ -354,7 +354,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
                     </div>
                     {issue && !issue.satisfied && (
                       <p className="text-xs text-orange-600">
-                        ⚠ Prérequis ({issue.details.join(' / ')}) — à valider avec le MD.
+                        {t('desc.prerequis', { details: issue.details.join(' / ') })}
                       </p>
                     )}
                     {subclassOptions.length > 0 && (
@@ -372,7 +372,9 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
                           {subclassOptions.map((s) => (
                             <option key={s.key} value={s.key} disabled={s.level > entry.level}>
                               {s.label}
-                              {s.level > entry.level ? ` (niv. ${s.level})` : ''}
+                              {s.level > entry.level
+                                ? ` ${t('desc.niv.level', { level: s.level })}`
+                                : ''}
                             </option>
                           ))}
                         </select>
@@ -387,7 +389,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
                           onChange={(e) =>
                             patchCharacter(
                               { landCircle: e.target.value === '' ? null : e.target.value },
-                              'Erreur de mise à jour',
+                              t('desc.erreur.de.mise.a.jour'),
                             )
                           }
                           aria-label={t('desc.terrain.du.cercle')}
@@ -439,14 +441,14 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
 
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
-              <span className="label">Race</span>
+              <span className="label">{t('desc.race')}</span>
               <input
                 type="text"
                 className="input"
                 value={raceDraft}
                 onChange={(e) => setRaceDraft(e.target.value)}
                 onBlur={commitRace}
-                placeholder="Haut-elfe"
+                placeholder={t('desc.haut.elfe')}
               />
             </label>
             <label className="block">
@@ -457,7 +459,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
                 value={bgDraft}
                 onChange={(e) => setBgDraft(e.target.value)}
                 onBlur={commitBackground}
-                placeholder="Sage"
+                placeholder={t('desc.sage')}
               />
             </label>
           </div>
@@ -505,16 +507,16 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
               onClick={() => fileInputRef.current?.click()}
               className="btn-primary text-sm px-3 py-1.5"
             >
-              📷 {character.portraitUrl ? 'Changer' : 'Téléverser'}
+              📷 {character.portraitUrl ? t('desc.changer') : t('desc.televerser')}
             </button>
             {character.portraitUrl && (
               <ConfirmButton
                 onConfirm={removePortrait}
                 className="text-xs text-red-500 hover:text-red-700"
                 armedClassName="font-semibold text-red-700!"
-                confirmChildren="Confirmer ?"
+                confirmChildren={t('desc.confirmer')}
                 title={t('desc.supprimer.le.portrait')}
-                ariaLabel="Supprimer le portrait"
+                ariaLabel={t('desc.supprimer.le.portrait')}
               >
                 {t('desc.supprimer')}
               </ConfirmButton>
@@ -541,7 +543,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
 
         {/* Appearance textarea */}
         <label className="block">
-          <span className="label">Description physique</span>
+          <span className="label">{t('desc.description.physique')}</span>
           <textarea
             className="input min-h-[80px] resize-y"
             value={drafts.appearance ?? ''}
@@ -614,9 +616,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
               </>
             ) : (
               <>
-                Ce personnage est visible de toute la table. Cache-le pour préparer une surprise —
-                il disparaît des listes des autres joueurs, quitte les combats en cours, et «{' '}
-                <em>{t('desc.ma.fiche')}</em>
+                {t('desc.ce.personnage.est.visible.de.toute')} <em>{t('desc.ma.fiche')}</em>
                 {t('desc.pointe.sur.ton.personnage.actif')}
               </>
             )}
@@ -626,10 +626,15 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
               type="button"
               className={character.hidden ? 'btn-primary' : 'btn-secondary'}
               onClick={() =>
-                patchCharacter({ hidden: !character.hidden }, 'Impossible de changer la visibilité')
+                patchCharacter(
+                  { hidden: !character.hidden },
+                  t('desc.impossible.de.changer.la.visibilite'),
+                )
               }
             >
-              {character.hidden ? '👁 Révéler à la table' : '🙈 Cacher des autres joueurs'}
+              {character.hidden
+                ? t('desc.reveler.a.la.table')
+                : t('desc.cacher.des.autres.joueurs')}
             </button>
           </div>
         </section>

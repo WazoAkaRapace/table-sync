@@ -126,7 +126,7 @@ export default function CharacterInventoryPage() {
   const data = inventoryQuery.data ?? null;
   const loading = inventoryQuery.isPending;
   const error = inventoryQuery.error
-    ? apiError(inventoryQuery.error, "Impossible de charger l'inventaire")
+    ? apiError(inventoryQuery.error, t('inv.impossible.de.charger.l.inventaire'))
     : '';
   // The in-tab banner is dismissible; remembering WHICH message was dismissed
   // re-arms it automatically when a different error lands.
@@ -294,7 +294,7 @@ export default function CharacterInventoryPage() {
             event.toCharacterId === currentCharId &&
             event.itemName
           ) {
-            pushToast(`Objet reçu : ${event.itemName}`);
+            pushToast(t('inv.objet.recu', { name: event.itemName }));
           }
         }
       } else if (event.type === 'character:change') {
@@ -433,7 +433,7 @@ export default function CharacterInventoryPage() {
         await patchEntryMutation.mutateAsync({ id: entry.id, patch: { quantity: next } });
         await refreshInventory(entry.id);
       } catch (err) {
-        pushToast(apiError(err, 'Erreur de mise à jour'), 'error');
+        pushToast(apiError(err, t('inv.erreur.de.mise.a.jour')), 'error');
       }
     });
   };
@@ -451,7 +451,7 @@ export default function CharacterInventoryPage() {
         await patchEntryMutation.mutateAsync({ id: entry.id, patch: { quantity: qty } });
         await refreshInventory(entry.id);
       } catch (err) {
-        pushToast(apiError(err, 'Erreur'), 'error');
+        pushToast(apiError(err, t('inv.erreur')), 'error');
       }
     });
   };
@@ -464,9 +464,9 @@ export default function CharacterInventoryPage() {
         await deleteEntryMutation.mutateAsync(entry.id);
         if (expandedId === entry.id) setExpandedId(null);
         await refreshInventory();
-        pushToast(`${entry.item.name || entry.item.name} retiré du sac à dos`);
+        pushToast(t('inv.retire.du.sac.a.dos', { name: entry.item.name || entry.item.name }));
       } catch (err) {
-        pushToast(apiError(err, 'Erreur de suppression'), 'error');
+        pushToast(apiError(err, t('inv.erreur.de.suppression')), 'error');
       }
     });
   };
@@ -485,7 +485,7 @@ export default function CharacterInventoryPage() {
         });
         await refreshInventory(entry.id);
       } catch (err) {
-        pushToast(apiError(err, 'Erreur'), 'error');
+        pushToast(apiError(err, t('inv.erreur')), 'error');
       }
     });
   };
@@ -500,9 +500,9 @@ export default function CharacterInventoryPage() {
         storageLocationId: activeLocationId,
       });
       await refreshInventory();
-      pushToast(`+1 ${item.name} ajouté au sac à dos`);
+      pushToast(t('inv.ajoute.au.sac.a.dos', { name: item.name }));
     } catch (err) {
-      pushToast(apiError(err, "Impossible d'ajouter l'objet"), 'error');
+      pushToast(apiError(err, t('inv.impossible.d.ajouter.l.objet')), 'error');
     } finally {
       setAddingItemId(null);
     }
@@ -545,16 +545,16 @@ export default function CharacterInventoryPage() {
             headers: { 'Content-Type': 'multipart/form-data' },
           });
         } catch {
-          pushToast('Illustration non envoyée — réessaie depuis Modifier', 'error');
+          pushToast(t('inv.illustration.non.envoyee'), 'error');
         }
       }
       setCreateItemImage(EMPTY_ITEM_IMAGE);
       await queryClient.invalidateQueries({ queryKey: ['catalog'] });
-      pushToast(`« ${created.name} » créé`);
+      pushToast(t('inv.cree', { name: created.name }));
       // The search was meant to ADD the item — land it in the bag right away.
       addFromCatalog(created);
     } catch (err) {
-      pushToast(apiError(err, "Impossible de créer l'objet"), 'error');
+      pushToast(apiError(err, t('inv.impossible.de.creer.l.objet')), 'error');
     } finally {
       setCreatingItem(false);
     }
@@ -569,10 +569,10 @@ export default function CharacterInventoryPage() {
       await refreshInventory();
       // Auto-select the newly created tab
       setActiveLocationId(res.data.location.id);
-      pushToast(`Transport ajouté : ${payload.name}`);
+      pushToast(t('inv.transport.ajoute', { name: payload.name }));
       setShowNewLocationModal(false);
     } catch (err) {
-      pushToast(apiError(err, "Impossible d'ajouter le transport"), 'error');
+      pushToast(apiError(err, t('inv.impossible.d.ajouter.le.transport')), 'error');
     }
   };
 
@@ -585,9 +585,9 @@ export default function CharacterInventoryPage() {
       const carried = findCarriedLocation(data?.locations ?? []);
       if (carried) setActiveLocationId(carried.id);
       await refreshInventory();
-      pushToast(`${location.name} supprimé — objets replacés sur le personnage`);
+      pushToast(t('inv.transport.supprime', { name: location.name }));
     } catch (err) {
-      pushToast(apiError(err, 'Erreur de suppression'), 'error');
+      pushToast(apiError(err, t('inv.erreur.de.suppression')), 'error');
     }
   };
 
@@ -601,10 +601,13 @@ export default function CharacterInventoryPage() {
         await refreshInventory(entry.id);
         const target = data?.locations.find((l) => l.id === locationId);
         pushToast(
-          `${entry.item.name || entry.item.name} déplacé vers ${target?.name ?? "l'emplacement"}`,
+          t('inv.deplace.vers', {
+            name: entry.item.name || entry.item.name,
+            target: target?.name ?? t('inv.l.emplacement'),
+          }),
         );
       } catch (err) {
-        pushToast(apiError(err, 'Erreur lors du déplacement'), 'error');
+        pushToast(apiError(err, t('inv.erreur.lors.du.deplacement')), 'error');
       }
     });
   };
@@ -617,11 +620,11 @@ export default function CharacterInventoryPage() {
       await saveCoinsMutation.mutateAsync(coins);
       setCoinsDirty(false);
       await refreshInventory();
-      pushToast('Bourse mise à jour');
+      pushToast(t('inv.bourse.mise.a.jour'));
     } catch (err) {
-      pushToast(apiError(err, 'Erreur de sauvegarde'), 'error');
+      pushToast(apiError(err, t('inv.erreur.de.sauvegarde')), 'error');
     }
-  }, [coins, coinsDirty, pushToast, refreshInventory, markLocalMutation, saveCoinsMutation]);
+  }, [coins, coinsDirty, pushToast, refreshInventory, markLocalMutation, saveCoinsMutation, t]);
 
   const dismissError = () => setDismissedError(error);
 
@@ -722,7 +725,7 @@ export default function CharacterInventoryPage() {
       setCombatRefresh((n) => n + 1);
     } catch {
       // Most likely the MD advanced the same turn a beat earlier
-      pushToast('Le tour a déjà changé', 'error');
+      pushToast(t('inv.le.tour.a.deja.change'), 'error');
       setCombatRefresh((n) => n + 1);
     } finally {
       setEndingTurn(false);
@@ -730,9 +733,9 @@ export default function CharacterInventoryPage() {
   };
 
   // ---------- Render guards ----------
-  if (loading) return <LoadingSpinner label="Chargement du sac à dos…" />;
+  if (loading) return <LoadingSpinner label={t('inv.chargement.du.sac.a.dos')} />;
   if (error && !data) return <ErrorMsg message={error} />;
-  if (!data) return <ErrorMsg message="Personnage introuvable" />;
+  if (!data) return <ErrorMsg message={t('inv.personnage.introuvable')} />;
 
   const { character, encumbrance, locations, locationWeights } = data;
 
@@ -955,7 +958,7 @@ export default function CharacterInventoryPage() {
                 className="btn-primary min-h-[44px] flex-1 px-4 text-sm whitespace-nowrap"
                 aria-label={t('inv.terminer.mon.tour.passer.au.combattant')}
               >
-                ✓ J'ai fini mon tour
+                {t('inv.j.ai.fini.mon.tour')}
               </button>
               <Link
                 to={`/party/${hubCombat.partyId}/combat?enc=${hubCombat.encounterId}`}
@@ -974,7 +977,7 @@ export default function CharacterInventoryPage() {
             >
               {hubCombat.currentCombatantName
                 ? `⚔ ${hubCombat.currentCombatantName}`
-                : '⚔ Combat en préparation'}
+                : t('inv.combat.en.preparation')}
               <TurnSlash active={turnSlash} />
             </Link>
           )
@@ -1046,10 +1049,10 @@ export default function CharacterInventoryPage() {
                 aria-expanded={moreOpen}
                 aria-label={
                   hubCombat
-                    ? 'Combat en cours'
+                    ? t('inv.hub.combat.en.cours')
                     : moreOpen
-                      ? 'Fermer les autres onglets'
-                      : 'Autres onglets'
+                      ? t('inv.hub.fermer.les.autres.onglets')
+                      : t('inv.hub.autres.onglets')
                 }
               >
                 <span
@@ -1256,10 +1259,12 @@ export default function CharacterInventoryPage() {
                           }`}
                           aria-label={
                             isConfirming
-                              ? `Confirmer la suppression de ${loc.name}`
-                              : `Supprimer ${loc.name}`
+                              ? t('inv.confirmer.la.suppression.de.name', { name: loc.name })
+                              : t('inv.supprimer.name', { name: loc.name })
                           }
-                          title={isConfirming ? 'Confirmer ?' : 'Supprimer ce transport'}
+                          title={
+                            isConfirming ? t('inv.confirmer') : t('inv.supprimer.ce.transport')
+                          }
                         >
                           {isConfirming ? '✓' : '🗑'}
                         </button>
@@ -1276,7 +1281,7 @@ export default function CharacterInventoryPage() {
                     aria-label={t('inv.ajouter.un.transport')}
                     title={t('inv.ajouter.un.transport')}
                   >
-                    <span aria-hidden="true">+</span> Transport
+                    <span aria-hidden="true">+</span> {t('inv.transport')}
                   </button>
                 )}
               </div>
@@ -1312,7 +1317,7 @@ export default function CharacterInventoryPage() {
                     🎲
                   </span>
                   <div className="flex-1">
-                    <p className="font-medium text-ink-900">Bienvenue !</p>
+                    <p className="font-medium text-ink-900">{t('inv.bienvenue')}</p>
                     <p className="text-sm text-ink-700 mt-1">
                       {t('inv.appuie.sur.le.bouton')}
                       <strong>{t('inv.ajouter')}</strong>
@@ -1323,7 +1328,7 @@ export default function CharacterInventoryPage() {
                       onClick={dismissTour}
                       className="btn-primary text-sm mt-2 px-3 py-1.5"
                     >
-                      Compris
+                      {t('inv.compris')}
                     </button>
                   </div>
                 </div>
@@ -1335,7 +1340,7 @@ export default function CharacterInventoryPage() {
               {/* ---------- LEFT: inventory grouped by category ---------- */}
               <section className="space-y-3">
                 <h2 className="section-title">
-                  {activeLocation ? activeLocation.name : 'Sac à dos'}{' '}
+                  {activeLocation ? activeLocation.name : t('inv.sac.a.dos')}{' '}
                   <span className="text-ink-400 text-sm font-normal">({entries.length})</span>
                 </h2>
 
@@ -1382,7 +1387,7 @@ export default function CharacterInventoryPage() {
 
               {/* ---------- RIGHT: catalog (desktop only — mobile uses FAB + bottom sheet) ---------- */}
               <section className="hidden lg:block space-y-3">
-                <h2 className="section-title">Catalogue</h2>
+                <h2 className="section-title">{t('inv.catalogue')}</h2>
                 {catalogContent}
               </section>
             </div>
@@ -1407,14 +1412,18 @@ export default function CharacterInventoryPage() {
       {activeTab === 'inventory' && canEdit && (
         <Fab
           onClick={() => setCatalogOpen(true)}
-          label="Ajouter un objet au catalogue"
+          label={t('inv.ajouter.un.objet.au.catalogue')}
           mobileOnly
           raised
         />
       )}
 
       {/* ---------- Mobile catalog bottom sheet ---------- */}
-      <BottomSheet open={catalogOpen} onClose={() => setCatalogOpen(false)} title="Catalogue">
+      <BottomSheet
+        open={catalogOpen}
+        onClose={() => setCatalogOpen(false)}
+        title={t('inv.catalogue')}
+      >
         {catalogContent}
       </BottomSheet>
 
@@ -1428,7 +1437,7 @@ export default function CharacterInventoryPage() {
         onTransferred={async (itemName: string) => {
           setTransferEntry(null);
           await refreshInventory();
-          pushToast(`${itemName} transféré`);
+          pushToast(t('inv.transfere', { name: itemName }));
         }}
         onError={(msg) => pushToast(msg, 'error')}
       />
@@ -1487,7 +1496,7 @@ export default function CharacterInventoryPage() {
             </label>
           </div>
           <label className="block">
-            <span className="label">Description</span>
+            <span className="label">{t('onglet.description')}</span>
             <textarea
               className="input"
               rows={3}
@@ -1504,7 +1513,7 @@ export default function CharacterInventoryPage() {
             disabled={creatingItem || !createItemName.trim()}
             className="btn-primary w-full"
           >
-            {creatingItem ? '…' : '✨ Créer et ajouter'}
+            {creatingItem ? '…' : t('inv.creer.et.ajouter')}
           </button>
           <p className="text-xs text-ink-400">{t('inv.l.objet.rejoint.le.catalogue.du')}</p>
         </form>

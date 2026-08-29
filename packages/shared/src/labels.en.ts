@@ -161,6 +161,7 @@ export function labelTable<T>(frTable: T, enTable: T, lang: string): T {
 export const LANGUAGES_EN: Record<string, string> = {
   commun: 'Common',
   elfique: 'Elvish',
+  elfe: 'Elvish',
   nain: 'Dwarvish',
   'nain (profond)': 'Deep Dwarvish',
   orc: 'Orc',

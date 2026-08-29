@@ -70,11 +70,13 @@ function useRouteTitle(pathname: string): { title: string; backTo?: string } | n
     const sub = partyMatch[2];
     const partyBase = `/party/${partyMatch[1]}`;
     if (sub === 'gm') return { title: i18next.t('nav.table.du.md'), backTo: partyBase };
-    if (sub === 'npcs') return { title: '🎭 PNJ', backTo: partyBase };
-    if (sub === 'combat') return { title: '⚔ Combat', backTo: partyBase };
-    if (sub === 'create') return { title: 'Nouveau personnage', backTo: partyBase };
-    if (sub.startsWith('character/')) return { title: 'Personnage', backTo: partyBase };
-    return { title: 'Groupe', backTo: '/parties' };
+    if (sub === 'npcs') return { title: i18next.t('nav.pnj'), backTo: partyBase };
+    if (sub === 'combat') return { title: i18next.t('nav.combat'), backTo: partyBase };
+    if (sub === 'create')
+      return { title: i18next.t('create.nouveau.personnage'), backTo: partyBase };
+    if (sub.startsWith('character/'))
+      return { title: i18next.t('nav.personnage'), backTo: partyBase };
+    return { title: i18next.t('nav.groupe'), backTo: '/parties' };
   }
   return null;
 }

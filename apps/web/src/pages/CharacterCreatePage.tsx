@@ -33,23 +33,34 @@ import {
   proficiencyBonus,
   STANDARD_ARRAY,
 } from '@table-sync/shared';
+import type { TFunction } from 'i18next';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../api';
 import { NumberField } from '../components/ui';
-import { abilityShort, backgroundInfo, classInfo, raceInfo } from '../i18n/labels';
+import {
+  abilityLabel,
+  abilityShort,
+  backgroundInfo,
+  classInfo,
+  classNameLabel,
+  languageLabel,
+  raceInfo,
+  skillInfoLabel,
+} from '../i18n/labels';
 
 /** Marker for the « Autre… » free-text escape on every catalog picker. */
 const CUSTOM = '__custom__';
 
+// Titres d'étapes résolus via t() dans le composant (clés du catalogue).
 const STEPS = [
-  { numeral: 'I', title: 'Identité' },
-  { numeral: 'II', title: 'Classe' },
-  { numeral: 'III', title: 'Espèce' },
-  { numeral: 'IV', title: 'Historique' },
-  { numeral: 'V', title: 'Caractéristiques' },
-  { numeral: 'VI', title: 'Maîtrises' },
+  { numeral: 'I', titleKey: 'create.step.identite' },
+  { numeral: 'II', titleKey: 'create.step.classe' },
+  { numeral: 'III', titleKey: 'create.step.espece' },
+  { numeral: 'IV', titleKey: 'create.step.historique' },
+  { numeral: 'V', titleKey: 'create.step.caracteristiques' },
+  { numeral: 'VI', titleKey: 'create.step.maitrises' },
 ] as const;
 const RECAP = STEPS.length; // step index of the signing screen
 
@@ -63,28 +74,28 @@ const DEFAULT_SCORES: Record<AbilityKey, number> = {
 };
 
 /** One-line class teaching: hit die, saves, spellcasting nature. */
-function classSummary(cls: ClassInfo): string {
+function classSummary(t: TFunction, cls: ClassInfo): string {
   const saves = cls.savingThrows.map((a) => abilityShort(a)).join(' & ');
   const castAbility = abilityShort(cls.spellcastingAbility ?? 'charisma');
   const cast =
     cls.spellcasting === 'none'
-      ? 'aucune magie'
+      ? t('create.aucune.magie')
       : cls.spellcasting === 'pact'
-        ? `magie de pacte (${castAbility})`
+        ? t('create.magie.de.pacte.abil', { ability: castAbility })
         : cls.spellcasting === 'artificier'
-          ? `magie d’artificier (${castAbility})`
+          ? t('create.magie.d.artificier.abil', { ability: castAbility })
           : cls.preparesSpells
-            ? `sorts préparés (${castAbility})`
-            : `sorts connus (${castAbility})`;
-  return `dé de vie d${cls.hitDie} · sauvegardes ${saves} · ${cast}`;
+            ? t('create.sorts.prepares.abil', { ability: castAbility })
+            : t('create.sorts.connus.abil', { ability: castAbility });
+  return t('create.class.summary', { hitDie: cls.hitDie, saves, cast });
 }
 
-function weaponSummary(className: string | null): string {
+function weaponSummary(t: TFunction, className: string | null): string {
   const set = classWeaponProficiencies(className);
-  if (set.simple && set.martial) return 'armes simples et de guerre';
-  if (set.simple) return 'armes simples';
-  if (set.specific.length > 0) return 'quelques armes précises (voir la fiche)';
-  return 'aucune par défaut (voir la fiche)';
+  if (set.simple && set.martial) return t('create.armes.simples.et.de.guerre');
+  if (set.simple) return t('create.armes.simples');
+  if (set.specific.length > 0) return t('create.quelques.armes.precises');
+  return t('create.aucune.armes.par.defaut');
 }
 
 /** The dotted run between a register label and its trailing value. */
@@ -290,7 +301,7 @@ export default function CharacterCreatePage() {
 
   async function submit() {
     if (!name.trim()) {
-      setCreateError('Donne un nom au personnage.');
+      setCreateError(t('create.donne.un.nom.au.personnage'));
       return;
     }
     setCreating(true);
@@ -316,14 +327,15 @@ export default function CharacterCreatePage() {
       const res = await api.post(`/api/parties/${partyId}/characters`, payload);
       navigate(`/party/${partyId}/character/${res.data.character.id}`);
     } catch {
-      setCreateError('Création impossible — vérifie la connexion.');
+      setCreateError(t('create.creation.impossible'));
       setCreating(false);
     }
   }
 
   if (!partyId) return null;
 
-  const current = step === RECAP ? { numeral: '✒', title: t('create.recap.titre') } : STEPS[step];
+  const steps = STEPS.map((s) => ({ numeral: s.numeral, title: t(s.titleKey) }));
+  const current = step === RECAP ? { numeral: '✒', title: t('create.recap.titre') } : steps[step];
 
   return (
     <div className="mx-auto w-full max-w-3xl pb-8">
@@ -346,7 +358,7 @@ export default function CharacterCreatePage() {
         aria-label={t('create.etapes.de.creation')}
         className="flex border-b border-parchment-200"
       >
-        {STEPS.map((s, i) => {
+        {steps.map((s, i) => {
           const state = i === step ? 'current' : i < step ? 'done' : 'todo';
           return (
             <button
@@ -402,7 +414,7 @@ export default function CharacterCreatePage() {
                 className="input"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Kaelen Vesse"
+                placeholder={t('create.ex.nom')}
                 maxLength={60}
                 autoComplete="off"
               />
@@ -447,7 +459,7 @@ export default function CharacterCreatePage() {
                 selected={classChoice === c.name}
                 title={classInfo(c.name).name}
                 meta={classInfo(c.name).description}
-                sub={classSummary(c)}
+                sub={classSummary(t, c)}
                 onChoose={() => {
                   setClassChoice(c.name);
                   setSkills([]); // lists differ per class
@@ -553,14 +565,14 @@ export default function CharacterCreatePage() {
             {bgChoice === CUSTOM && (
               <div className="pl-6">
                 <label htmlFor="create-custom-background" className="label">
-                  Historique
+                  {t('create.step.historique')}
                 </label>
                 <input
                   id="create-custom-background"
                   className="input"
                   value={customBackground}
                   onChange={(e) => setCustomBackground(e.target.value)}
-                  placeholder="Mon historique maison…"
+                  placeholder={t('create.mon.historique.maison')}
                   maxLength={40}
                 />
               </div>
@@ -576,12 +588,12 @@ export default function CharacterCreatePage() {
           <div className="space-y-4">
             <div className="flex rounded-xl border border-parchment-200 bg-parchment-50 p-1">
               {[
-                { id: false, label: 'Tableau standard' },
-                { id: true, label: 'Saisie libre' },
+                { id: false, label: t('create.tableau.standard') },
+                { id: true, label: t('create.saisie.libre') },
               ].map((mode) => (
                 <button
                   type="button"
-                  key={mode.label}
+                  key={String(mode.id)}
                   aria-pressed={freeMode === mode.id}
                   onClick={() => setFreeMode(mode.id)}
                   className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
@@ -600,7 +612,7 @@ export default function CharacterCreatePage() {
                 {DND_ABILITIES.map((abi) => (
                   <div key={abi.key}>
                     <label className="label" htmlFor={`create-score-${abi.key}`}>
-                      {abi.label}
+                      {abilityLabel(abi.key)}
                     </label>
                     <NumberField
                       id={`create-score-${abi.key}`}
@@ -653,10 +665,10 @@ export default function CharacterCreatePage() {
                         key={abi.key}
                         onClick={() => assignTo(abi.key)}
                         disabled={pickedValue == null}
-                        aria-label={`${abi.label} (${abilityShort(abi.key)}) — ${
+                        aria-label={`${abilityLabel(abi.key)} (${abilityShort(abi.key)}) — ${
                           value != null
                             ? `${value}, ${formatModifier(abilityModifier(value))}`
-                            : 'poser ici'
+                            : t('create.poser.ici')
                         }`}
                         className={`flex w-full items-center gap-3 rounded-xl border px-3.5 py-2.5 text-left transition-colors disabled:opacity-60 ${
                           value != null
@@ -665,7 +677,7 @@ export default function CharacterCreatePage() {
                         }`}
                       >
                         <span className="min-w-0 flex-1 text-sm font-medium text-ink-800">
-                          {abi.label}
+                          {abilityLabel(abi.key)}
                           <span className="ml-1.5 text-xs font-normal text-ink-400">
                             {abilityShort(abi.key)}
                           </span>
@@ -680,7 +692,9 @@ export default function CharacterCreatePage() {
                             </span>
                           </>
                         ) : (
-                          <span className="text-sm text-ink-300">— poser ici —</span>
+                          <span className="text-sm text-ink-300">
+                            {t('create.poser.ici.tirets')}
+                          </span>
                         )}
                       </button>
                     );
@@ -710,20 +724,22 @@ export default function CharacterCreatePage() {
           <div className="space-y-4">
             <div className="card space-y-3 p-4 sm:p-5">
               <h3 className="section-title text-base">
-                Compétences — {skillChoice.count} au choix
+                {t('create.competences.n.au.choix', { count: skillChoice.count })}
                 <span className="ml-2 font-body text-sm font-normal tabular-nums text-ink-400">
                   {skills.length}/{skillChoice.count}
                 </span>
               </h3>
               <p className="text-xs text-ink-400">
                 {skillChoice.anySkill
-                  ? 'Cette classe choisit librement parmi les 18 compétences.'
-                  : 'Parmi la liste de la classe.'}
+                  ? t('create.cette.classe.choisit.librement')
+                  : t('create.parmi.la.liste.de.la.classe')}
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {(skillChoice.anySkill ? DND_SKILLS.map((s) => s.key) : skillChoice.skills).map(
                   (key) => {
-                    const label = DND_SKILLS.find((s) => s.key === key)?.label ?? key;
+                    const label = skillInfoLabel(
+                      DND_SKILLS.find((s) => s.key === key) ?? { key, label: key },
+                    );
                     const on = skills.includes(key);
                     const full = skills.length >= skillChoice.count;
                     return (
@@ -774,7 +790,7 @@ export default function CharacterCreatePage() {
                       }`}
                     >
                       {on && <span className="mr-1 text-xs text-blood-600">●</span>}
-                      {lang}
+                      {languageLabel(lang)}
                     </button>
                   );
                 })}
@@ -807,16 +823,23 @@ export default function CharacterCreatePage() {
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-2">
               <StatTile
-                label="PV max"
+                label={t('create.pv.max')}
                 value={String(maxHp)}
                 note={
                   level > 1
-                    ? `${level} niveaux à PV moyens · d${hitDie} + CON`
-                    : `d${hitDie} + CON ${formatModifier(abilityModifier(scores.constitution))}`
+                    ? t('create.pv.note.multi', { level, hitDie })
+                    : t('create.pv.note.one', {
+                        hitDie,
+                        mod: formatModifier(abilityModifier(scores.constitution)),
+                      })
                 }
               />
-              <StatTile label="CA" value={String(acr.ac)} note={acr.source} />
-              <StatTile label="Vitesse" value="9 m" note="base, sans armure" />
+              <StatTile label={t('create.ca')} value={String(acr.ac)} note={acr.source} />
+              <StatTile
+                label={t('create.vitesse')}
+                value={t('create.vitesse.defaut')}
+                note={t('create.vitesse.note')}
+              />
             </div>
 
             <div className="card space-y-2 p-4 sm:p-5">
@@ -824,18 +847,26 @@ export default function CharacterCreatePage() {
                 <span className="text-sm font-medium text-ink-700">{t('create.classe')}</span>
                 <DotLeader />
                 <span className="text-sm text-ink-800">
-                  {effectiveClass ? `${effectiveClass} ${level}` : 'sans classe'}
+                  {effectiveClass
+                    ? `${classNameLabel(effectiveClass)} ${level}`
+                    : t('create.sans.classe')}
                 </span>
               </div>
               <div className="flex items-center">
                 <span className="text-sm font-medium text-ink-700">{t('create.espece')}</span>
                 <DotLeader />
-                <span className="text-sm text-ink-800">{effectiveRace ?? '—'}</span>
+                <span className="text-sm text-ink-800">
+                  {effectiveRace ? raceInfo(effectiveRace).name : '—'}
+                </span>
               </div>
               <div className="flex items-center">
-                <span className="text-sm font-medium text-ink-700">Historique</span>
+                <span className="text-sm font-medium text-ink-700">
+                  {t('create.step.historique')}
+                </span>
                 <DotLeader />
-                <span className="text-sm text-ink-800">{effectiveBackground ?? '—'}</span>
+                <span className="text-sm text-ink-800">
+                  {effectiveBackground ? backgroundInfo(effectiveBackground).name : '—'}
+                </span>
               </div>
               <div className="flex items-center">
                 <span className="text-sm font-medium text-ink-700">{t('create.sauvegardes')}</span>
@@ -864,7 +895,7 @@ export default function CharacterCreatePage() {
                 <span className="text-sm font-medium text-ink-700">{t('create.armes')}</span>
                 <DotLeader />
                 <span className="text-right text-sm text-ink-800">
-                  {weaponSummary(effectiveClass || null)}
+                  {weaponSummary(t, effectiveClass || null)}
                 </span>
               </div>
               {skills.length > 0 && (
@@ -879,7 +910,9 @@ export default function CharacterCreatePage() {
                         key={key}
                         className="rounded-md border border-parchment-200 bg-parchment-50 px-1.5 py-0.5 text-xs text-ink-700"
                       >
-                        {DND_SKILLS.find((s) => s.key === key)?.label ?? key}
+                        {skillInfoLabel(
+                          DND_SKILLS.find((s) => s.key === key) ?? { key, label: key },
+                        )}
                       </span>
                     ))}
                   </span>
@@ -899,7 +932,7 @@ export default function CharacterCreatePage() {
                         key={lang}
                         className="rounded-md border border-parchment-200 bg-parchment-50 px-1.5 py-0.5 text-xs text-ink-700"
                       >
-                        {lang}
+                        {languageLabel(lang)}
                       </span>
                     ))
                   )}
@@ -933,7 +966,7 @@ export default function CharacterCreatePage() {
             disabled={step === 4 && !abilitiesComplete}
             onClick={() => goTo(step + 1)}
           >
-            Continuer →
+            {t('create.continuer')}
           </button>
         ) : (
           <button

@@ -48,8 +48,8 @@ export function DeathSaveTracker({
         <span className="text-sm font-medium text-ink-700">
           {t('mort.jets.de.sauvegarde.contre.la.mort')}
         </span>
-        {isDead && <span className="text-xs font-bold text-red-600">MORT</span>}
-        {isStable && <span className="text-xs font-bold text-green-600">STABLE</span>}
+        {isDead && <span className="text-xs font-bold text-red-600">{t('mort.mort')}</span>}
+        {isStable && <span className="text-xs font-bold text-green-600">{t('mort.stable')}</span>}
       </div>
       <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
         {/* Successes — tap a circle to toggle that position */}

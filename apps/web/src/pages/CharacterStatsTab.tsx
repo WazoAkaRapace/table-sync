@@ -29,7 +29,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../api';
 import { BottomSheet } from '../components/ui';
-import { abilityLabel, abilityShort } from '../i18n/labels';
+import { abilityLabel, abilityShort, classNameLabel } from '../i18n/labels';
 
 interface Props {
   character: Character;
@@ -93,7 +93,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
       return;
     }
     const clamped = Math.max(1, Math.min(30, Math.round(val)));
-    patchCharacter({ [ability]: clamped }, 'Erreur de mise à jour');
+    patchCharacter({ [ability]: clamped }, t('stats.erreur.de.mise.a.jour'));
   };
 
   const commitSpeed = () => {
@@ -104,7 +104,10 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
       return;
     }
     // Les demi-mètres sont valides (petites races : 7,5 m) — normalise à 1 décimale
-    patchCharacter({ speed: Math.max(0, Math.round(val * 10) / 10) }, 'Erreur de mise à jour');
+    patchCharacter(
+      { speed: Math.max(0, Math.round(val * 10) / 10) },
+      t('stats.erreur.de.mise.a.jour'),
+    );
   };
 
   // Armor-dependent class speed features (Moine / Barbare)
@@ -172,7 +175,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
     if (!Number.isFinite(parsed) || parsed <= 0) return;
     const newMult = Math.round(parsed * 100) / 100;
     if (newMult === capacityMult) return;
-    patchCharacter({ capacityMultiplier: newMult }, 'Erreur de mise à jour');
+    patchCharacter({ capacityMultiplier: newMult }, t('stats.erreur.de.mise.a.jour'));
   };
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: armorClassOverride is a deliberate dep — collapse the inline AC editor when the override changes (e.g. synced from another device).
@@ -183,11 +186,11 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
   const commitAC = () => {
     const val = acDraft.trim();
     if (val === '' || val === 'auto' || val === '0') {
-      patchCharacter({ armorClassOverride: null }, 'Erreur de mise à jour');
+      patchCharacter({ armorClassOverride: null }, t('stats.erreur.de.mise.a.jour'));
     } else {
       const num = Number(val);
       if (Number.isFinite(num) && num > 0) {
-        patchCharacter({ armorClassOverride: Math.round(num) }, 'Erreur de mise à jour');
+        patchCharacter({ armorClassOverride: Math.round(num) }, t('stats.erreur.de.mise.a.jour'));
       }
     }
     setEditingAC(false);
@@ -274,11 +277,11 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
             <div className="text-[11px] text-ink-500 mt-0.5">
               {acOverride !== null ? (
                 <>
-                  <span className="font-medium text-blood-600">Manuel</span>
+                  <span className="font-medium text-blood-600">{t('stats.manuel')}</span>
                   {' · '}
                   <button
                     type="button"
-                    onClick={() => patchCharacter({ armorClassOverride: null }, 'Erreur')}
+                    onClick={() => patchCharacter({ armorClassOverride: null }, t('stats.erreur'))}
                     className="text-blood-600 hover:underline py-1.5"
                   >
                     ↺ Auto
@@ -289,11 +292,15 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
               )}
             </div>
           </div>
-          <DerivedStat label="Initiative" value={formatModifier(dexMod)} />
+          <DerivedStat label={t('stats.initiative')} value={formatModifier(dexMod)} />
           {castingLines.map((l) => (
             <DerivedStat
               key={l.name}
-              label={`DD de sort${castingLines.length > 1 ? ` · ${l.name}` : ''}`}
+              label={
+                castingLines.length > 1
+                  ? t('stats.dd.de.sort.nom', { name: classNameLabel(l.name) })
+                  : t('stats.dd.de.sort')
+              }
               value={String(l.dc)}
               hint={t('stats.attaque.formatmodifier.l.mod.p.abilityshort', {
                 formatModifier: formatModifier(l.mod + profBonus),
@@ -301,9 +308,9 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
               })}
             />
           ))}
-          <DerivedStat label="Perception passive" value={String(passPerc)} />
+          <DerivedStat label={t('stats.perception.passive')} value={String(passPerc)} />
           <DerivedStat
-            label="Vitesse"
+            label={t('stats.vitesse')}
             value={`${speedResult.speed} m`}
             editable
             draftValue={speedDraft}
@@ -343,7 +350,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
               </span>
             </button>
             <div className="text-[11px] text-ink-500 mt-0.5">
-              FOR {character.strength ?? 10} × 7,5 kg
+              {t('stats.portage.details', { strength: character.strength ?? 10 })}
             </div>
           </div>
         </div>
@@ -352,9 +359,11 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
             {t('stats.sauvegardes.maitrisees')} :{' '}
             {classInfo.savingThrows.map((s) => abilityShort(s)).join(', ')}
             {castingLines.length > 0 &&
-              ` · Incantation : ${castingLines
-                .map((l) => `${l.name} (${abilityShort(l.ability)})`)
-                .join(', ')}`}
+              t('stats.incantation.liste', {
+                liste: castingLines
+                  .map((l) => `${classNameLabel(l.name)} (${abilityShort(l.ability)})`)
+                  .join(', '),
+              })}
           </p>
         )}
         {defenseOptions.length > 1 && acOverride === null && (
@@ -367,7 +376,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
                 onClick={() =>
                   patchCharacter(
                     { unarmoredDefense: character.unarmoredDefense === o.key ? null : o.key },
-                    'Erreur de mise à jour',
+                    t('stats.erreur.de.mise.a.jour'),
                   )
                 }
                 aria-pressed={character.unarmoredDefense === o.key}
@@ -382,7 +391,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
                   o_ac: o.ac,
                 })}
               >
-                {o.classKey} <span className="font-mono">{o.ac}</span>
+                {classNameLabel(o.classKey)} <span className="font-mono">{o.ac}</span>
               </button>
             ))}
             <span className="text-[11px] text-ink-400">
@@ -412,7 +421,9 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
               <span className="ml-2 text-base font-semibold text-ink-600">×{capacityMult}</span>
             </div>
             <div className="text-[11px] text-ink-500 mt-1">
-              FOR {character.strength ?? 10} × 7,5 kg × multiplicateur
+              {t('stats.portage.details.multiplicateur', {
+                strength: character.strength ?? 10,
+              })}
             </div>
           </div>
           <label className="block">

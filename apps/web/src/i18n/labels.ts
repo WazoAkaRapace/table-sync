@@ -75,6 +75,16 @@ export function conditionLabel(frValue: string): string {
   return i >= 0 ? (DND_CONDITIONS_EN[i] ?? frValue) : frValue;
 }
 
+/**
+ * Clé i18n de l'indice de règle d'un état (picker de l'onglet Survie) :
+ * le catalogue FR indexe par nom FR, le catalogue EN par nom EN.
+ */
+export function conditionHintKey(frValue: string): string {
+  if (!en()) return `survie.etats.indices.${frValue}`;
+  const i = (DND_CONDITIONS_FR as readonly string[]).indexOf(frValue);
+  return `survie.etats.indices.${i >= 0 ? DND_CONDITIONS_EN[i] : frValue}`;
+}
+
 /** Classes : les noms FR servent de clés logique (findClass) — affichage EN. */
 export function classNameLabel(frName: string): string {
   return en() ? (CLASS_NAMES_EN[frName] ?? frName) : frName;
@@ -110,10 +120,16 @@ export const raceInfo = (frName: string): CatalogEntryEn =>
 export const backgroundInfo = (frName: string): CatalogEntryEn =>
   enEntry(DND_BACKGROUNDS_EN, frName) ?? { name: frName };
 
-import { DND_SKILLS_EN, DND_TOOLS_EN } from '@table-sync/shared';
+import { DND_SKILLS_EN, DND_TOOLS_EN, MUNDANE_WEAPONS } from '@table-sync/shared';
 
 export const skillLabel = (key: string): string => (en() ? DND_SKILLS_EN[key] : undefined) ?? key;
 export const skillInfoLabel = (skill: { key: string; label: string }): string =>
   (en() ? DND_SKILLS_EN[skill.key] : undefined) ?? skill.label;
 export const toolInfoLabel = (tool: { key: string; label: string }): string =>
   (en() ? DND_TOOLS_EN[tool.key] : undefined) ?? tool.label;
+
+/** Armes communes : le moteur stocke les noms EN — affiche le nom FR stocké. */
+export function mundaneWeaponLabel(nameEn: string): string {
+  if (!en()) return MUNDANE_WEAPONS.find((m) => m.nameEn === nameEn)?.nameFr ?? nameEn;
+  return nameEn;
+}

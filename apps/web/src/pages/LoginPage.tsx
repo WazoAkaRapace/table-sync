@@ -21,7 +21,7 @@ export default function LoginPage() {
       await login(username, password);
       nav('/parties');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Connexion échouée');
+      setError(err.response?.data?.error || t('auth.connexion.echouee'));
     } finally {
       setLoading(false);
     }
@@ -40,7 +40,7 @@ export default function LoginPage() {
         <form onSubmit={submit} className="space-y-4">
           <div>
             <label className="label" htmlFor="login-username">
-              Nom d'utilisateur
+              {t('auth.nom.d.utilisateur')}
             </label>
             <input
               id="login-username"
@@ -71,11 +71,11 @@ export default function LoginPage() {
           </div>
           {error && <ErrorMsg message={error} />}
           <button type="submit" className="btn-primary w-full" disabled={loading}>
-            {loading ? 'Connexion…' : 'Se connecter'}
+            {loading ? t('auth.connexion.points') : t('auth.se.connecter')}
           </button>
         </form>
         <p className="text-center text-sm text-ink-400 mt-4">
-          Pas de compte ?{' '}
+          {t('auth.pas.de.compte')}{' '}
           <Link to="/register" className="text-blood-600 font-medium hover:underline">
             {t('login.creer.un.compte')}
           </Link>

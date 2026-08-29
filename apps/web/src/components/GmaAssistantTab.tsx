@@ -18,13 +18,12 @@ import { GMA_PC_FIELD_LABELS_FR } from '@table-sync/shared';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../api';
-import { plural } from '../utils';
 import { Chip, ConfirmButton, Modal } from './ui';
 
 const GMA_APP_URL = 'https://gmassistant.app';
 
-function errMessage(err: any): string {
-  return err?.response?.data?.message || err?.response?.data?.error || 'Erreur';
+function errMessage(err: any, t: (key: string) => string): string {
+  return err?.response?.data?.message || err?.response?.data?.error || t('gma.erreur');
 }
 
 function ScopeChip({ scope }: { scope: 'read' | 'full_access' | null }) {
@@ -38,7 +37,7 @@ function ScopeChip({ scope }: { scope: 'read' | 'full_access' | null }) {
   if (scope === 'read')
     return (
       <Chip tone="red" soft>
-        Lecture seule
+        {t('gma.lecture.seule')}
       </Chip>
     );
   return (
@@ -68,6 +67,7 @@ function CandidateRow({
   checked: boolean;
   onToggle: () => void;
 }) {
+  const { t } = useTranslation();
   const inputId = `gma-char-${name}-${playedBy}`;
   return (
     <li className="flex items-start gap-2.5 border-b border-parchment-200 py-2 last:border-b-0">
@@ -81,7 +81,7 @@ function CandidateRow({
       <label htmlFor={inputId} className="min-w-0 flex-1 text-sm">
         <span className="font-medium text-ink-800">{name}</span>
         <span className="mt-0.5 block text-xs text-ink-400">
-          joué par {playedBy} · {inlineClip(description, 96)}
+          {t('gma.joue.par', { playedBy: playedBy })} · {inlineClip(description, 96)}
         </span>
       </label>
     </li>
@@ -134,11 +134,11 @@ export function GmaAssistantTab({
       setLink(linkRes.data);
       setError('');
     } catch (err: any) {
-      setError(errMessage(err));
+      setError(errMessage(err, t));
     } finally {
       setLoading(false);
     }
-  }, [partyId]);
+  }, [partyId, t]);
 
   useEffect(() => {
     load();
@@ -148,7 +148,7 @@ export function GmaAssistantTab({
 
   async function saveKey() {
     if (!keyValue.trim()) {
-      setKeyError('Colle la clé GM Assistant (elle commence par « gma_ »).');
+      setKeyError(t('gma.colle.la.cle'));
       return;
     }
     setBusy(true);
@@ -159,7 +159,7 @@ export function GmaAssistantTab({
       setShowKeyForm(false);
       await load();
     } catch (err: any) {
-      setKeyError(errMessage(err));
+      setKeyError(errMessage(err, t));
     } finally {
       setBusy(false);
     }
@@ -171,7 +171,7 @@ export function GmaAssistantTab({
       await api.delete('/api/gma/key');
       await load();
     } catch (err: any) {
-      setError(errMessage(err));
+      setError(errMessage(err, t));
     } finally {
       setBusy(false);
     }
@@ -184,7 +184,7 @@ export function GmaAssistantTab({
     api
       .get(`/api/parties/${partyId}/gma/campaigns`)
       .then((res: any) => setCampaigns(res.data.campaigns))
-      .catch((err: any) => setPickerError(errMessage(err)));
+      .catch((err: any) => setPickerError(errMessage(err, t)));
   }
 
   async function linkCampaign(id: string) {
@@ -195,7 +195,7 @@ export function GmaAssistantTab({
       setPickerOpen(false);
       await load();
     } catch (err: any) {
-      setPickerError(errMessage(err));
+      setPickerError(errMessage(err, t));
     } finally {
       setBusy(false);
     }
@@ -212,7 +212,7 @@ export function GmaAssistantTab({
       setDiff(d);
       setCreateIds(new Set(d.toCreate.map((c) => c.characterId)));
     } catch (err: any) {
-      setDiffError(errMessage(err));
+      setDiffError(errMessage(err, t));
     } finally {
       setDiffLoading(false);
     }
@@ -231,7 +231,7 @@ export function GmaAssistantTab({
       setDiff(d.data);
       setCreateIds(new Set((d.data as GmaCharacterDiff).toCreate.map((c) => c.characterId)));
     } catch (err: any) {
-      setDiffError(errMessage(err));
+      setDiffError(errMessage(err, t));
     } finally {
       setBusy(false);
     }
@@ -244,7 +244,7 @@ export function GmaAssistantTab({
       const d = await api.post(`/api/parties/${partyId}/gma/characters/sync`, { dryRun: true });
       setDiff(d.data);
     } catch (err: any) {
-      setDiffError(errMessage(err));
+      setDiffError(errMessage(err, t));
     }
   }
 
@@ -253,13 +253,9 @@ export function GmaAssistantTab({
     setRefreshNote('');
     try {
       const res = await api.get(`/api/parties/${partyId}/gma/sessions`, { params: { refresh: 1 } });
-      setRefreshNote(
-        `${plural(res.data.sessions.length, 'séance')} synchronisée${
-          res.data.sessions.length > 1 ? 's' : ''
-        }`,
-      );
+      setRefreshNote(t('gma.seances.synchronisees', { count: res.data.sessions.length }));
     } catch (err: any) {
-      setRefreshNote(errMessage(err));
+      setRefreshNote(errMessage(err, t));
     } finally {
       setBusy(false);
     }
@@ -271,7 +267,7 @@ export function GmaAssistantTab({
       await api.delete(`/api/parties/${partyId}/gma/link`);
       await load();
     } catch (err: any) {
-      setError(errMessage(err));
+      setError(errMessage(err, t));
     } finally {
       setBusy(false);
     }
@@ -289,11 +285,11 @@ export function GmaAssistantTab({
     <div className="space-y-4">
       <h3 className="section-title">GM Assistant</h3>
       <p className="text-xs text-ink-400">
-        Relie ce groupe à une campagne{' '}
+        {t('gma.intro.pre')}{' '}
         <a href={GMA_APP_URL} target="_blank" rel="noreferrer" className="underline">
           gmassistant.app
         </a>{' '}
-        pour lire ses résumés de séance dans la Chronique — et y créer les personnages de la table.
+        {t('gma.intro.post')}
       </p>
 
       {/* ---- Compte : la clé ---- */}
@@ -317,7 +313,7 @@ export function GmaAssistantTab({
               onClick={removeKey}
               disabled={busy}
             >
-              Oublier
+              {t('gma.oublier')}
             </button>
           </div>
         ) : (
@@ -340,7 +336,7 @@ export function GmaAssistantTab({
             />
             {keyError && <p className="text-xs text-red-600">{keyError}</p>}
             <button type="button" className="btn-primary" onClick={saveKey} disabled={busy}>
-              {busy ? 'Vérification…' : 'Connecter'}
+              {busy ? t('gma.verification') : t('gma.connecter')}
             </button>
           </div>
         )}
@@ -350,7 +346,7 @@ export function GmaAssistantTab({
       {keyed && !linked && (
         <div className="card p-4 space-y-3">
           <h4 className="font-display text-base font-semibold text-ink-800">
-            Liaison du groupe « {partyName} »
+            {t('gma.liaison.du.groupe', { partyName: partyName })}
           </h4>
           <p className="text-sm text-ink-500">{t('gma.deux.chemins.creer.une.campagne.toute')}</p>
           <div className="flex flex-wrap gap-2">
@@ -403,7 +399,7 @@ export function GmaAssistantTab({
               onClick={openSync}
               disabled={busy || keyExpired}
             >
-              ⇄ Resynchroniser les personnages
+              ⇄ {t('gma.resynchroniser.les.personnages')}
               {pendingDiffCount > 0 && (
                 <span className="ml-1.5 rounded-full bg-blood-600 px-1.5 py-0.5 text-[10px] font-semibold text-white">
                   {pendingDiffCount}
@@ -413,7 +409,7 @@ export function GmaAssistantTab({
             <span className="flex-1" />
             <ConfirmButton
               onConfirm={unlink}
-              confirmChildren="Délier ?"
+              confirmChildren={t('gma.delier.confirmer')}
               className="btn-ghost text-xs px-2.5 py-1 text-red-600"
             >
               {t('gma.delier.le.groupe')}
@@ -478,19 +474,23 @@ export function GmaAssistantTab({
           onClose={() => !busy && setSyncOpen(false)}
           title={t('gma.resynchroniser.les.personnages')}
         >
-          {diffLoading && <p className="text-sm text-ink-400 animate-pulse">Comparaison…</p>}
+          {diffLoading && (
+            <p className="text-sm text-ink-400 animate-pulse">{t('gma.comparaison')}</p>
+          )}
           {diffError && <p className="mb-2 text-sm text-red-600">{diffError}</p>}
           {applyResult && (
             <div className="mb-3 rounded-md bg-parchment-100 px-3 py-2 text-xs text-ink-700">
-              {applyResult.created.length > 0 && `${applyResult.created.length} créé(s) — `}
-              {applyResult.updated.length > 0 && `${applyResult.updated.length} mis à jour — `}
+              {applyResult.created.length > 0 &&
+                `${t('gma.resultat.crees', { n: applyResult.created.length })} — `}
+              {applyResult.updated.length > 0 &&
+                `${t('gma.resultat.mis.a.jour', { n: applyResult.updated.length })} — `}
               {applyResult.failed.length > 0 ? (
                 <span className="text-red-600">
-                  {applyResult.failed.length} échec(s) :{' '}
+                  {t('gma.resultat.echecs', { n: applyResult.failed.length })}{' '}
                   {applyResult.failed.map((f) => `${f.name} (${f.reason})`).join(' · ')}
                 </span>
               ) : (
-                'terminé ✓'
+                t('gma.resultat.termine')
               )}
             </div>
           )}
@@ -523,7 +523,7 @@ export function GmaAssistantTab({
                   diff.toUpdate.length === 0)
               }
             >
-              {busy ? 'Application…' : 'Appliquer'}
+              {busy ? t('gma.application') : t('gma.appliquer')}
             </button>
           </div>
           <p className="mt-2 text-[11px] text-ink-400">{t('gma.le.lot.ne.supprime.jamais.rien')}</p>
@@ -565,7 +565,7 @@ function InitModal({
       });
       setResult(res.data);
     } catch (err: any) {
-      setError(errMessage(err));
+      setError(errMessage(err, t));
     } finally {
       setBusy(false);
     }
@@ -575,12 +575,14 @@ function InitModal({
     return (
       <Modal open onClose={onDone} title={t('gma.campagne.creee')}>
         <p className="text-sm text-ink-700">
-          « {result.campaign.title} » existe sur GM Assistant avec{' '}
-          {plural(result.created.length, 'personnage')}.
+          {t('gma.campagne.existe', {
+            title: result.campaign.title,
+            personnages: t('party.compteurs.personnage', { count: result.created.length }),
+          })}
         </p>
         {result.failed.length > 0 && (
           <p className="mt-2 rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">
-            Échecs (à compléter à la main sur gmassistant.app) :{' '}
+            {t('gma.echecs.a.completer')}{' '}
             {result.failed.map((f) => `${f.name} — ${f.reason}`).join(' · ')}
           </p>
         )}
@@ -598,16 +600,18 @@ function InitModal({
     <Modal
       open
       onClose={() => !busy && onClose()}
-      title={confirming ? 'Confirmer la création' : 'Créer la campagne depuis ce groupe'}
+      title={
+        confirming ? t('gma.confirmer.la.creation') : t('gma.creer.la.campagne.depuis.ce.groupe')
+      }
     >
       {confirming ? (
         <div className="space-y-3">
           <p className="text-sm text-ink-700">{t('gma.chez.gm.assistant.il.sera.cree')}</p>
           <ul className="space-y-1 rounded-md bg-parchment-100 px-3 py-2 text-sm text-ink-800">
-            <li className="font-medium">📜 Campagne « {partyName} » (D&D 5e)</li>
+            <li className="font-medium">{t('gma.campagne.ligne', { partyName: partyName })}</li>
             {selected.map((c) => (
               <li key={c.id}>
-                ⚔ {c.name} — joué par {c.ownerName ?? '—'}
+                {t('gma.perso.ligne', { name: c.name, owner: c.ownerName ?? '—' })}
               </li>
             ))}
           </ul>
@@ -622,19 +626,18 @@ function InitModal({
               {t('gma.retour')}
             </button>
             <button type="button" className="btn-primary flex-1" onClick={create} disabled={busy}>
-              {busy ? 'Création…' : 'Créer'}
+              {busy ? t('gma.creation') : t('gma.creer')}
             </button>
           </div>
         </div>
       ) : (
         <div className="space-y-3">
           <p className="text-sm text-ink-500">
-            Une campagne « {partyName} » sera créée sur ton compte GM Assistant, avec les
-            personnages cochés (nom + joué par + classe).
+            {t('gma.une.campagne.sera.creee', { partyName: partyName })}
           </p>
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-ink-500">
-              {plural(selected.length, 'personnage')} sélectionné{selected.length > 1 ? 's' : ''}
+              {t('gma.personnages.selectionnes', { count: selected.length })}
             </span>
             <button
               type="button"
@@ -647,7 +650,9 @@ function InitModal({
                 )
               }
             >
-              {selected.length === characters.length ? 'Tout décocher' : 'Tout sélectionner'}
+              {selected.length === characters.length
+                ? t('gma.tout.decocher')
+                : t('gma.tout.selectionner')}
             </button>
           </div>
           <ul className="max-h-72 overflow-y-auto">
@@ -675,7 +680,7 @@ function InitModal({
             onClick={() => setConfirming(true)}
             disabled={busy}
           >
-            Continuer
+            {t('gma.continuer')}
           </button>
         </div>
       )}
@@ -704,7 +709,9 @@ function SyncDiffBody({
     <div className="space-y-4 text-sm">
       {quiet && (
         <p className="rounded-md bg-parchment-100 px-3 py-2 text-ink-600">
-          {plural(diff.upToDate, 'personnage')} à jour — rien à faire.
+          {t('gma.personnages.a.jour', {
+            personnages: t('party.compteurs.personnage', { count: diff.upToDate }),
+          })}
         </p>
       )}
       {diff.toCreate.length > 0 && (
@@ -778,7 +785,7 @@ function SyncDiffBody({
                 </span>
                 <ConfirmButton
                   onConfirm={() => onDeleteOrphan(o.gmaPcId)}
-                  confirmChildren="Supprimer chez GM Assistant ?"
+                  confirmChildren={t('gma.supprimer.chez.gm.assistant')}
                   className="btn-ghost shrink-0 text-xs px-2.5 py-1 text-red-600"
                 >
                   {t('gma.supprimer')}
@@ -794,13 +801,15 @@ function SyncDiffBody({
             {t('gma.geres.sur.gm.assistant')}
           </h4>
           <p className="mt-1 text-xs text-ink-400">
-            {diff.gmaOnly.map((g) => g.name ?? 'sans nom').join(' · ')} — ils ne deviennent pas des
-            fiches ici.
+            {diff.gmaOnly.map((g) => g.name ?? t('gma.sans.nom')).join(' · ')} —{' '}
+            {t('gma.ne.deviennent.pas.des.fiches')}
           </p>
         </section>
       )}
       {!quiet && diff.upToDate > 0 && (
-        <p className="text-xs text-ink-400">+ {plural(diff.upToDate, 'personnage')} à jour</p>
+        <p className="text-xs text-ink-400">
+          + {t('party.compteurs.personnage', { count: diff.upToDate })} {t('gma.a.jour')}
+        </p>
       )}
     </div>
   );

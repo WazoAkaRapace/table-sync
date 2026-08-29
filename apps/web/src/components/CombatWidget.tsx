@@ -223,10 +223,10 @@ export default function CombatWidget() {
         } ${glowColor}`}
         title={
           isMyTurn
-            ? 'À toi de jouer !'
+            ? t('widget.a.toi.de.jouer.title')
             : needsInitiative
-              ? 'Saisis ton initiative'
-              : 'Combat en cours'
+              ? t('widget.saisis.ton.initiative')
+              : t('widget.combat.en.cours')
         }
       >
         ⚔
@@ -256,7 +256,9 @@ export default function CombatWidget() {
             <div>
               <div className="text-xs font-semibold text-ink-700">{combat.partyName}</div>
               <div className="text-xs text-ink-400">
-                {isSetup ? 'Préparation' : `Tour ${combat.encounter.round}`}
+                {isSetup
+                  ? t('widget.preparation')
+                  : t('widget.tour.round', { round: combat.encounter.round })}
               </div>
             </div>
           </div>
@@ -311,7 +313,7 @@ export default function CombatWidget() {
           {needsInitiative && combat.myCombatant && (
             <div className="p-2 rounded-lg bg-yellow-50 border border-yellow-200">
               <p className="text-xs text-ink-600 mb-1">
-                {combat.myCombatant.name} — saisis ton initiative :
+                {t('widget.nom.saisis.ton.initiative', { name: combat.myCombatant.name })}
               </p>
               <div className="flex items-center gap-1">
                 <input
@@ -357,7 +359,7 @@ export default function CombatWidget() {
                     )
                   }
                   className="btn-secondary text-xs px-2 py-1"
-                  title="Lancer d20 + DEX"
+                  title={t('widget.lancer.d20.dex')}
                 >
                   🎲
                 </button>

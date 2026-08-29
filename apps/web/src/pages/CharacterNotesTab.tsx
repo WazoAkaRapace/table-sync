@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import api from '../api';
 import { SortableCard, SortableGrid } from '../components/SortableGrid';
 import { ConfirmButton, EmptyState, Modal } from '../components/ui';
+import { appLocale } from '../i18n';
 import { useSyncEvent } from '../sync';
 
 interface Props {
@@ -164,7 +165,7 @@ export default function CharacterNotesTab({
 
   const save = async () => {
     if (!title.trim()) {
-      onError('Le titre est requis');
+      onError(t('notes.le.titre.est.requis'));
       return;
     }
     setSaving(true);
@@ -184,7 +185,7 @@ export default function CharacterNotesTab({
       await load();
       await onSaved();
     } catch {
-      onError('Erreur lors de la sauvegarde');
+      onError(t('notes.erreur.lors.de.la.sauvegarde'));
     } finally {
       setSaving(false);
     }
@@ -196,7 +197,7 @@ export default function CharacterNotesTab({
       await load();
       await onSaved();
     } catch {
-      onError('Erreur lors de la suppression');
+      onError(t('notes.erreur.lors.de.la.suppression'));
     }
   };
 
@@ -266,7 +267,7 @@ export default function CharacterNotesTab({
                         armedClassName="bg-red-600 hover:bg-red-700 text-white! px-2.5 py-1 font-semibold"
                         title={t('notes.supprimer.note.title', { note_title: note.title })}
                         ariaLabel={t('notes.supprimer.note.title', { note_title: note.title })}
-                        confirmChildren="Supprimer ?"
+                        confirmChildren={t('notes.supprimer')}
                       >
                         ×
                       </ConfirmButton>
@@ -281,7 +282,9 @@ export default function CharacterNotesTab({
                     />
                   )}
                   <span className="text-[10px] text-ink-400 mt-auto">
-                    Modifié le {new Date(`${note.updatedAt}Z`).toLocaleDateString('fr-FR')}
+                    {t('notes.modifie.le', {
+                      date: new Date(`${note.updatedAt}Z`).toLocaleDateString(appLocale()),
+                    })}
                   </span>
                 </div>
               )}
@@ -294,11 +297,11 @@ export default function CharacterNotesTab({
       <Modal
         open={showModal}
         onClose={() => setShowModal(false)}
-        title={editing ? 'Modifier la note' : 'Nouvelle note'}
+        title={editing ? t('notes.modifier.la.note') : t('notes.nouvelle.note')}
       >
         <div className="space-y-3">
           <label className="block">
-            <span className="label">Titre *</span>
+            <span className="label">{t('notes.titre')}</span>
             <input
               className="input"
               value={title}
@@ -310,7 +313,7 @@ export default function CharacterNotesTab({
 
           <div>
             <div className="flex items-center justify-between mb-1">
-              <span className="label">Contenu</span>
+              <span className="label">{t('notes.contenu')}</span>
               <div className="flex items-center gap-1">
                 <button
                   type="button"
@@ -342,16 +345,14 @@ export default function CharacterNotesTab({
                 className="input min-h-[180px] resize-y font-mono text-sm"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder={
-                  '# Titre\n\n**Gras** et *italique*\n\n- Liste\n- Autre élément\n\n> Citation\n\n`code`'
-                }
+                placeholder={t('notes.modele.de.contenu')}
               />
             )}
           </div>
 
           <div className="bg-parchment-50 rounded-lg p-2 border border-parchment-200">
             <p className="text-[11px] text-ink-500">
-              <strong>Formatage :</strong>
+              <strong>{t('notes.formatage')}</strong>
               {t('notes.gras.italique.code.titre.liste.gt')}
             </p>
           </div>
@@ -363,7 +364,7 @@ export default function CharacterNotesTab({
               disabled={saving || !title.trim()}
               className="btn-primary flex-1 disabled:opacity-50"
             >
-              {saving ? '…' : editing ? 'Enregistrer' : 'Créer'}
+              {saving ? '…' : editing ? t('common.save') : t('notes.creer')}
             </button>
             <button
               type="button"

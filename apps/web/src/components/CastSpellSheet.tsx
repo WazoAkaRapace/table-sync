@@ -129,9 +129,11 @@ export default function CastSpellSheet({
           <div>
             <h3 className="section-title">🪄 {spell.name}</h3>
             <p className="text-xs text-ink-400">
-              {isCantrip ? 'Tour de magie' : `Sort de niveau ${spell.level}`}
-              {spell.concentration && ' · 🌀 Concentration'}
-              {spell.ritual && ' · ⚗ Rituel'}
+              {isCantrip
+                ? t('cast.tour.de.magie')
+                : t('cast.sort.de.niveau.level', { level: spell.level })}
+              {spell.concentration && t('cast.concentration.suffixe')}
+              {spell.ritual && t('cast.rituel.suffixe')}
             </p>
           </div>
           <button
@@ -183,7 +185,7 @@ export default function CastSpellSheet({
                   aria-pressed={selected}
                 >
                   <span className="font-medium flex items-center gap-1.5 min-w-0">
-                    Niveau {opt.level}
+                    {t('cast.niveau.level', { level: opt.level })}
                     {isUpcast && (
                       <span
                         className={`text-[10px] font-semibold uppercase ${selected ? 'text-gold-300' : 'text-blood-500'}`}
@@ -196,7 +198,7 @@ export default function CastSpellSheet({
                         className={`text-[10px] font-semibold uppercase ${selected ? 'text-gold-300' : 'text-gold-600'}`}
                         title={t('cast.emplacement.de.magie.de.pacte.recharge')}
                       >
-                        ☾ pacte
+                        {t('cast.pacte')}
                       </span>
                     )}
                   </span>
@@ -205,12 +207,10 @@ export default function CastSpellSheet({
                   >
                     {isPact ? (
                       <span title={t('cast.emplacement.de.pacte.recharge.au.repos')}>
-                        ☾ {pactRemaining()} restant{pactRemaining() > 1 ? 's' : ''} · repos court
+                        {t('cast.pacte.restant', { count: pactRemaining() })}
                       </span>
                     ) : (
-                      <>
-                        {remainingAt(opt.level)} restant{remainingAt(opt.level) > 1 ? 's' : ''}
-                      </>
+                      t('cast.restant', { count: remainingAt(opt.level) })
                     )}
                   </span>
                 </button>
@@ -230,14 +230,15 @@ export default function CastSpellSheet({
             <div className="flex flex-wrap items-center gap-1.5 mt-3">
               {!isCantrip && chosenOption && (
                 <span className="text-xs text-ink-400">
-                  Au niveau {chosenOption.level}
-                  {chosenOption.pool === 'pact' ? ' (pacte)' : ''} :
+                  {chosenOption.pool === 'pact'
+                    ? t('cast.au.niveau.level.pacte.deux.points', { level: chosenOption.level })
+                    : t('cast.au.niveau.level.deux.points', { level: chosenOption.level })}
                 </span>
               )}
               {dmg.dice && (
                 <Chip tone="orange">
                   ⚔ {dmg.dice}
-                  {dmg.typeFr ? ` dégâts ${dmg.typeFr}` : ''}
+                  {dmg.typeFr ? ` ${t('cast.degats')} ${dmg.typeFr}` : ''}
                 </Chip>
               )}
               {healing.dice && (
@@ -245,15 +246,15 @@ export default function CastSpellSheet({
                   tone="green"
                   title={
                     healing.addsModifier
-                      ? 'Points de vie restaurés : dés + modificateur de caractéristique'
-                      : 'Points de vie restaurés'
+                      ? t('sorts.points.de.vie.restaures.des.modificateur')
+                      : t('sorts.points.de.vie.restaures')
                   }
                 >
                   ✚ {healing.dice}
                   {healing.addsModifier && castingMod !== undefined
                     ? formatModifier(castingMod)
                     : ''}{' '}
-                  PV
+                  {t('sorts.pv')}
                 </Chip>
               )}
               {spell.dcJson && castingMod !== undefined && profBonus !== undefined && (
@@ -278,10 +279,12 @@ export default function CastSpellSheet({
           {casting
             ? '…'
             : concConflict
-              ? '🪄 Lancer et rompre la concentration'
+              ? t('cast.lancer.et.rompre.la.concentration')
               : isCantrip
-                ? '🪄 Lancer le tour de magie'
-                : `🪄 Lancer au niveau ${chosenOption ? chosenOption.level : '—'}`}
+                ? t('cast.lancer.le.tour.de.magie')
+                : t('cast.lancer.au.niveau.level', {
+                    level: chosenOption ? chosenOption.level : '—',
+                  })}
         </button>
 
         {/* Ritual cast: no slot consumed, +10 minutes */}
@@ -292,8 +295,8 @@ export default function CastSpellSheet({
             disabled={casting}
             className="w-full mt-2 py-2.5 rounded-lg bg-purple-100 text-purple-800 border border-purple-300 hover:bg-purple-200 font-medium text-sm disabled:opacity-40 transition-colors"
           >
-            ⚗ Rituel (10 minutes){' '}
-            <span className="font-normal text-purple-500">— sans emplacement</span>
+            {t('cast.rituel.10.minutes')}{' '}
+            <span className="font-normal text-purple-500">{t('cast.sans.emplacement')}</span>
           </button>
         )}
       </div>

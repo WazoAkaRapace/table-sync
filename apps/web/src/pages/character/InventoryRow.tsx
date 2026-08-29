@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ItemVignette } from '../../components/ItemImageViewer';
 import { Chip, RarityBadge, WeightBadge } from '../../components/ui';
-import { weaponPropertyLabel } from '../../i18n/labels';
+import { abilityShort, weaponPropertyLabel } from '../../i18n/labels';
 import { LOCATION_TYPE_ICON } from './types';
 
 // ---------- Inventory row ----------
@@ -106,7 +106,9 @@ export function InventoryRow({
         {/* Confirm-delete state */}
         {confirmingDelete ? (
           <div className="flex items-center justify-between gap-3 py-1">
-            <span className="text-sm font-medium text-red-700">Retirer {itemName} ?</span>
+            <span className="text-sm font-medium text-red-700">
+              {t('rangee.retirer.itemname.confirm', { itemName: itemName })}
+            </span>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -142,14 +144,14 @@ export function InventoryRow({
                     itemName: itemName,
                   })}
                   aria-pressed={entry.equipped}
-                  title={entry.equipped ? 'Équipé' : 'Non équipé'}
+                  title={entry.equipped ? t('rangee.equipe') : t('rangee.non.equipe')}
                 >
                   {entry.equipped ? '★' : '☆'}
                 </button>
               ) : (
                 <span
                   className={`shrink-0 mt-0.5 text-lg leading-none ${entry.equipped ? 'text-gold-600' : 'text-ink-400/40'}`}
-                  title={entry.equipped ? 'Équipé' : 'Non équipé'}
+                  title={entry.equipped ? t('rangee.equipe') : t('rangee.non.equipe')}
                 >
                   {entry.equipped ? '★' : '☆'}
                 </span>
@@ -321,7 +323,7 @@ export function InventoryRow({
                     )}
                     {item.aliases && item.aliases.length > 0 && (
                       <p className="text-xs text-ink-400">
-                        Aussi connu sous : {item.aliases.join(', ')}
+                        {t('rangee.aussi.connu.sous', { aliases: item.aliases.join(', ') })}
                       </p>
                     )}
                     {/* Illustration en châssis — montée à l'ouverture seulement
@@ -342,23 +344,25 @@ export function InventoryRow({
                       (() => {
                         const stats = computeWeaponStats(item, character);
                         if (!stats) return null;
-                        const abilityLabel = stats.ability === 'dexterity' ? 'DEX' : 'FOR';
+                        const abilityLabel = abilityShort(stats.ability);
                         const archery =
                           character.fightingStyle === 'archery' && stats.ranged ? 2 : 0;
                         const profBonus = proficiencyBonus(character.level ?? 1);
                         const breakdown =
                           `d20 ${formatModifier(stats.attackBonus - (stats.proficient ? profBonus : 0) - stats.magicBonus - archery)} (${abilityLabel})` +
-                          (stats.proficient ? ` + ${profBonus} (maîtrise)` : '') +
-                          (archery > 0 ? ` + ${archery} (archerie)` : '') +
-                          (stats.magicBonus > 0 ? ` + ${stats.magicBonus} (magique)` : '');
+                          (stats.proficient ? ` + ${profBonus} (${t('rangee.maitrise')})` : '') +
+                          (archery > 0 ? ` + ${archery} (${t('rangee.archerie')})` : '') +
+                          (stats.magicBonus > 0
+                            ? ` + ${stats.magicBonus} (${t('rangee.magique')})`
+                            : '');
                         return (
                           <div className="flex flex-wrap items-center gap-1.5">
                             <Chip
                               tone={stats.proficient ? 'red' : 'amber'}
                               title={
                                 stats.proficient
-                                  ? `Attaque : ${breakdown}`
-                                  : `Attaque : ${breakdown} — non qualifié avec cette arme (pas de bonus de maîtrise)`
+                                  ? t('survie.attaque.breakdown', { breakdown: breakdown })
+                                  : t('rangee.attaque.non.qualifie', { breakdown: breakdown })
                               }
                             >
                               🎯 {formatModifier(stats.attackBonus)}
@@ -367,7 +371,14 @@ export function InventoryRow({
                             {stats.damageStr && (
                               <Chip
                                 tone="orange"
-                                title={`Dégâts : ${stats.damageStr} (${abilityLabel})${stats.magicBonus > 0 ? ` + ${stats.magicBonus} magique` : ''}`}
+                                title={`${t('rangee.degats', {
+                                  damageStr: stats.damageStr,
+                                  abilityLabel: abilityLabel,
+                                })}${
+                                  stats.magicBonus > 0
+                                    ? t('rangee.degats.magique', { magicBonus: stats.magicBonus })
+                                    : ''
+                                }`}
                               >
                                 ⚔ {stats.damageStr}
                                 {stats.damageTypeFr ? ` ${stats.damageTypeFr}` : ''}
@@ -375,7 +386,7 @@ export function InventoryRow({
                             )}
                             {stats.versatileDamageStr && (
                               <Chip tone="orange" soft title={t('rangee.degats.a.deux.mains')}>
-                                {stats.versatileDamageStr} · deux mains
+                                {stats.versatileDamageStr} {t('rangee.deux.mains')}
                               </Chip>
                             )}
                             {stats.magicBonus > 0 && (
@@ -399,7 +410,7 @@ export function InventoryRow({
                             {t('rangee.armure.non.maitrisee')}
                           </span>
                         )}
-                      {item.acBase !== null && <span>🛡 CA : {item.acBase}</span>}
+                      {item.acBase !== null && <span>{t('rangee.ca', { ac: item.acBase })}</span>}
                       {item.acBase === null &&
                         item.category === 'armor' &&
                         (() => {
@@ -408,29 +419,36 @@ export function InventoryRow({
                           if (!magic.base) return null;
                           return (
                             <span>
-                              🛡 CA : {magic.base.acBase}
-                              {magic.magicBonus > 0 && ` +${magic.magicBonus}`} · base{' '}
-                              {magic.base.nameFr}
+                              {t('rangee.ca.base', {
+                                ac: magic.base.acBase,
+                                bonus: magic.magicBonus > 0 ? ` +${magic.magicBonus}` : '',
+                                name: magic.base.nameFr,
+                              })}
                             </span>
                           );
                         })()}
-                      {item.strMin !== null && <span>💪 FOR min. : {item.strMin}</span>}
+                      {item.strMin !== null && (
+                        <span>{t('rangee.for.min', { min: item.strMin })}</span>
+                      )}
                       {item.stealthDisadvantage && (
                         <span>{t('rangee.desavantage.discretion')}</span>
                       )}
                       {item.properties &&
                         item.properties.filter((p) => p !== 'monk').length > 0 && (
                           <span>
-                            Propriétés :{' '}
-                            {item.properties
-                              .filter((p) => p !== 'monk')
-                              .map((p) => weaponPropertyLabel(p) ?? p)
-                              .join(', ')}
+                            {t('rangee.proprietes', {
+                              properties: item.properties
+                                .filter((p) => p !== 'monk')
+                                .map((p) => weaponPropertyLabel(p) ?? p)
+                                .join(', '),
+                            })}
                           </span>
                         )}
                     </div>
                     {entry.notes && (
-                      <p className="text-xs text-ink-500 italic">Note : {entry.notes}</p>
+                      <p className="text-xs text-ink-500 italic">
+                        {t('rangee.note', { note: entry.notes })}
+                      </p>
                     )}
                     {/* Move to another storage location */}
                     {canMove && canEdit && (
@@ -451,7 +469,7 @@ export function InventoryRow({
                           })}
                         >
                           <option value="" disabled>
-                            — Choisir —
+                            {t('rangee.choisir')}
                           </option>
                           {otherLocations.map((l) => (
                             <option key={l.id} value={l.id}>

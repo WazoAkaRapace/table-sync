@@ -21,18 +21,21 @@ import { Link } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../auth';
 import { ErrorMsg, LoadingSpinner, Modal } from '../components/ui';
-import { copyText, formatSince, plural, toRoman } from '../utils';
+import { copyText, formatSince, toRoman } from '../utils';
 
 // ---------- Small helpers ----------
 
+type Translate = (key: string, opts?: Record<string, unknown>) => string;
+
 function RoleBadge({ role, large = false }: { role: PartyRole; large?: boolean }) {
+  const { t } = useTranslation();
   return (
     <span
       className={`shrink-0 rounded-full font-medium ${
         large ? 'px-2.5 py-1 text-xs' : 'px-2 py-0.5 text-[11px]'
       } ${role === 'gm' ? 'bg-blood-600 text-white' : 'bg-parchment-200 text-ink-700'}`}
     >
-      {role === 'gm' ? 'MD' : 'Joueur'}
+      {role === 'gm' ? t('role.md') : t('role.joueur')}
     </span>
   );
 }
@@ -40,29 +43,27 @@ function RoleBadge({ role, large = false }: { role: PartyRole; large?: boolean }
 // ---------- Forms (shared by the virgin page and the foot modals) ----------
 
 /** Server errors are English machine strings — surface French, state-specific copy. */
-function joinError(err: any): string {
+function joinError(err: any, t: Translate): string {
   const status = err.response?.status;
-  if (status === 404) return 'Code invalide — redemande les six lettres à ton MD.';
-  if (status === 403) return 'Tu as été banni de ce groupe — demande au MD de te débannir.';
-  if (status === 409) return 'Tu fais déjà partie de ce groupe.';
-  if (status === 400) return 'Entre les six lettres du code.';
-  if (status === 429)
-    return err.response?.data?.error || 'Trop d’essais — réessaie dans un instant.';
-  return 'Impossible de rejoindre — vérifie la connexion.';
+  if (status === 404) return t('parties.erreur.code.invalide');
+  if (status === 403) return t('parties.erreur.banni');
+  if (status === 409) return t('parties.erreur.deja.membre');
+  if (status === 400) return t('parties.erreur.six.lettres');
+  if (status === 429) return err.response?.data?.error || t('parties.erreur.trop.essais');
+  return t('parties.erreur.impossible');
 }
 
-function createError(err: any): string {
+function createError(err: any, t: Translate): string {
   const status = err.response?.status;
-  if (status === 400) return 'Donne un nom au groupe.';
-  if (status === 429)
-    return err.response?.data?.error || 'Trop d’essais — réessaie dans un instant.';
-  return 'Création impossible — vérifie la connexion.';
+  if (status === 400) return t('parties.erreur.nom.requis');
+  if (status === 429) return err.response?.data?.error || t('parties.erreur.trop.essais');
+  return t('parties.erreur.creation.impossible');
 }
 
 const MODE_HELPERS: Record<EncumbranceMode, string> = {
-  variant: 'Le personnage est ralenti à FOR×2.5 kg, FOR×5 kg, et immobilisé à FOR×7.5 kg.',
-  standard: 'Le personnage est immobilisé au-delà de FOR×7.5 kg. Aucun palier intermédiaire.',
-  slots: 'Chaque objet compte comme un emplacement, indépendamment de son poids.',
+  variant: 'parties.aide.variante',
+  standard: 'parties.aide.standard',
+  slots: 'parties.aide.slots',
 };
 
 function CreatePartyForm({ onCreated }: { onCreated: () => void }) {
@@ -81,7 +82,7 @@ function CreatePartyForm({ onCreated }: { onCreated: () => void }) {
       setName('');
       onCreated();
     } catch (err: any) {
-      setError(createError(err));
+      setError(createError(err, t));
     } finally {
       setBusy(false);
     }
@@ -116,7 +117,7 @@ function CreatePartyForm({ onCreated }: { onCreated: () => void }) {
           <option value="standard">{t('parties.standard.un.seul.seuil.max')}</option>
           <option value="slots">{t('parties.emplacements.ignorant.le.poids')}</option>
         </select>
-        <p className="mt-1.5 text-xs text-ink-400">{MODE_HELPERS[mode]}</p>
+        <p className="mt-1.5 text-xs text-ink-400">{t(MODE_HELPERS[mode])}</p>
       </div>
       {error && <div className="text-sm text-red-600">{error}</div>}
       <button type="submit" className="btn-primary" disabled={busy}>
@@ -141,7 +142,7 @@ function JoinPartyForm({ onJoined }: { onJoined: () => void }) {
       setInviteCode('');
       onJoined();
     } catch (err: any) {
-      setError(joinError(err));
+      setError(joinError(err, t));
     } finally {
       setBusy(false);
     }
@@ -166,7 +167,7 @@ function JoinPartyForm({ onJoined }: { onJoined: () => void }) {
       </div>
       {error && <div className="text-sm text-red-600">{error}</div>}
       <button type="submit" className="btn-primary" disabled={busy}>
-        Rejoindre
+        {t('parties.rejoindre')}
       </button>
     </form>
   );
@@ -192,11 +193,11 @@ export default function PartiesPage() {
       const res = await api.get('/api/parties');
       setParties(res.data.parties);
     } catch (err: any) {
-      setLoadError(err.response?.data?.error || 'Erreur réseau');
+      setLoadError(err.response?.data?.error || t('parties.erreur.reseau'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     load();
@@ -210,11 +211,11 @@ export default function PartiesPage() {
     });
   }
 
-  if (loading) return <LoadingSpinner label="Ouverture du registre…" />;
+  if (loading) return <LoadingSpinner label={t('parties.ouverture.du.registre')} />;
   if (loadError) {
     return (
       <div className="mx-auto w-full max-w-xl space-y-3">
-        <ErrorMsg message="Le registre n'a pas pu être ouvert — vérifie la connexion." />
+        <ErrorMsg message={t('parties.registre.pas.ouvert')} />
         <div className="text-center">
           <button type="button" className="btn-secondary" onClick={load}>
             {t('parties.reessayer')}
@@ -233,8 +234,7 @@ export default function PartiesPage() {
             {t('parties.mes.groupes')}
           </h1>
           <p className="mt-1.5 text-ink-500">
-            Bienvenue{user ? `, ${user.displayName}` : ''}. Ton registre est encore vierge —
-            ouvre-le d'une de ces deux façons.
+            {t('parties.bienvenue', { name: user ? `, ${user.displayName}` : '' })}
           </p>
         </header>
 
@@ -308,8 +308,10 @@ export default function PartiesPage() {
                   <RoleBadge role={current.role} large />
                 </div>
                 <p className="mt-1.5 text-sm text-ink-400">
-                  MD : {current.gmName || '—'} · {plural(current.memberCount, 'joueur')} ·{' '}
-                  {plural(current.characterCount, 'personnage')} · {formatSince(current.createdAt)}
+                  {t('parties.md.nom', { gm: current.gmName || '—' })} ·{' '}
+                  {t('party.compteurs.joueur', { count: current.memberCount })} ·{' '}
+                  {t('party.compteurs.personnage', { count: current.characterCount })} ·{' '}
+                  {formatSince(current.createdAt)}
                 </p>
                 {current.characterNames.length > 0 && (
                   <p className="mt-4 border-t border-parchment-200 pt-4 leading-relaxed text-ink-700">
@@ -369,7 +371,8 @@ export default function PartiesPage() {
                   <RoleBadge role={p.role} />
                 </div>
                 <p className="mt-0.5 truncate text-sm text-ink-400">
-                  MD : {p.gmName || '—'} · {plural(p.characterCount, 'personnage')}
+                  {t('parties.md.nom', { gm: p.gmName || '—' })} ·{' '}
+                  {t('party.compteurs.personnage', { count: p.characterCount })}
                   {p.role === 'gm' && (
                     <>
                       {' · '}

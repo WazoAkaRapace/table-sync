@@ -258,13 +258,13 @@ export default function PartyPage() {
           // Kicked live (party:change 'remove'/'ban' reloads into this) or stale link.
           setNotMember(true);
         } else {
-          setError(err.response?.data?.error || 'Groupe introuvable');
+          setError(err.response?.data?.error || t('party.groupe.introuvable'));
         }
       } finally {
         setLoading(false);
       }
     },
-    [partyId],
+    [partyId, t],
   );
 
   useEffect(() => {
@@ -303,7 +303,7 @@ export default function PartyPage() {
     });
   }
 
-  if (loading) return <LoadingSpinner label="Ouverture du groupe…" />;
+  if (loading) return <LoadingSpinner label={t('party.ouverture')} />;
   if (disbanded) {
     return (
       <div className="mx-auto w-full max-w-xl space-y-4 pt-10 text-center">
@@ -333,7 +333,7 @@ export default function PartyPage() {
   if (error) {
     return (
       <div className="mx-auto w-full max-w-xl space-y-3">
-        <ErrorMsg message="Le groupe n'a pas pu être ouvert — vérifie la connexion." />
+        <ErrorMsg message={t('party.pas.pu.etre.ouvert')} />
         <div className="text-center">
           <button type="button" className="btn-secondary" onClick={() => load()}>
             {t('party.reessayer')}
@@ -342,7 +342,7 @@ export default function PartyPage() {
       </div>
     );
   }
-  if (!party) return <ErrorMsg message="Groupe introuvable" />;
+  if (!party) return <ErrorMsg message={t('party.groupe.introuvable')} />;
 
   const isGM = party.members.some((m) => m.userId === user?.id && m.role === 'gm');
   const myCharacters = party.characters.filter((c) => c.ownerId === user?.id);
@@ -363,7 +363,11 @@ export default function PartyPage() {
         <p className="mt-1.5 text-sm text-ink-400">
           {t('party.compteurs.joueur', { count: party.members.length })} ·{' '}
           {t('party.compteurs.personnage', { count: party.characters.length })} ·{' '}
-          {encumbranceLabel(party.party.encumbranceMode)}
+          {{
+            variant: t('party.mode.variante'),
+            standard: t('party.mode.standard'),
+            slots: t('party.mode.slots'),
+          }[party.party.encumbranceMode] ?? party.party.encumbranceMode}
         </p>
       </header>
       <div aria-hidden="true">
@@ -464,9 +468,15 @@ export default function PartyPage() {
         <TocHeader numeral="III" title={t('party.outils.annexes')} id="toc-tools" />
         <ul className="list-none">
           {isGM && <TocLink to={`/party/${partyId}/gm`} label={t('nav.table.du.md')} glyph="🛡" />}
-          <TocLink to={`/party/${partyId}/combat`} label="Combat" glyph="⚔" />
-          {gmaLinked && <TocLink to={`/party/${partyId}/chronique`} label="Chronique" glyph="📜" />}
-          <TocLink to={`/party/${partyId}/npcs`} label="PNJ" glyph="🎭" />
+          <TocLink to={`/party/${partyId}/combat`} label={t('party.toc.combat')} glyph="⚔" />
+          {gmaLinked && (
+            <TocLink
+              to={`/party/${partyId}/chronique`}
+              label={t('party.toc.chronique')}
+              glyph="📜"
+            />
+          )}
+          <TocLink to={`/party/${partyId}/npcs`} label={t('party.toc.pnj')} glyph="🎭" />
           {isGM && (
             <li className="flex items-center border-b border-parchment-200 py-3.5 pl-3 pr-3">
               <span className="text-sm font-medium text-ink-800">
@@ -500,17 +510,4 @@ export default function PartyPage() {
       </section>
     </div>
   );
-}
-
-function encumbranceLabel(mode: string): string {
-  switch (mode) {
-    case 'variant':
-      return 'Variante (kg)';
-    case 'standard':
-      return 'Standard (kg)';
-    case 'slots':
-      return 'Emplacements';
-    default:
-      return mode;
-  }
 }

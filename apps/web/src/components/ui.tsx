@@ -2,6 +2,8 @@ import type { CostUnit, EncumbranceState, ItemCategory, Rarity } from '@table-sy
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
+import i18next from '../i18n';
 import { categoryLabel, coinLabel, encumbranceLabel, rarityLabel } from '../i18n/labels';
 
 export function RarityBadge({ rarity }: { rarity: Rarity }) {
@@ -22,7 +24,8 @@ export function CategoryBadge({ category }: { category: ItemCategory }) {
 }
 
 export function WeightBadge({ weightKg }: { weightKg: number | null }) {
-  if (weightKg === null) return <span className="text-xs text-ink-400">poids ?</span>;
+  const { t } = useTranslation();
+  if (weightKg === null) return <span className="text-xs text-ink-400">{t('ui.poids')}</span>;
   return <span className="text-xs text-ink-500">{weightKg} kg</span>;
 }
 
@@ -49,6 +52,7 @@ export function HpBar({
   trackClassName?: string;
   className?: string;
 }) {
+  const { t } = useTranslation();
   const pct = Math.max(0, Math.min(100, max > 0 ? (current / max) * 100 : 0));
   // Temp segment extends past the fill; when the bar is full (or nearly), it
   // caps the END of the fill instead — full HP + a temp buffer stays visible.
@@ -70,7 +74,9 @@ export function HpBar({
       aria-valuenow={current}
       aria-valuemin={0}
       aria-valuemax={max}
-      aria-valuetext={`${current}/${max} PV${temp > 0 ? ` (+${temp} temporaires)` : ''}`}
+      aria-valuetext={`${t('ui.hpbar.aria', { current, max })}${
+        temp > 0 ? t('ui.hpbar.temp', { temp }) : ''
+      }`}
     >
       <div className={`h-full ${tier} transition-all`} style={{ width: `${pct}%` }} />
       {tempPct > 0 && (
@@ -257,6 +263,7 @@ export function EncumbranceBar({
 }) {
   const { totalWeightKg, coinWeightKg, encumberedKg, heavilyEncumberedKg, maxCarryKg, tier, pct } =
     encumbrance;
+  const { t } = useTranslation();
   const barColor = `bar-${tier}`;
   const encPos = Math.min(100, (encumberedKg / maxCarryKg) * 100);
   const heavyPos = Math.min(100, (heavilyEncumberedKg / maxCarryKg) * 100);
@@ -270,7 +277,11 @@ export function EncumbranceBar({
         aria-valuenow={Math.round(totalWeightKg * 100) / 100}
         aria-valuemin={0}
         aria-valuemax={maxCarryKg}
-        aria-valuetext={`${totalWeightKg.toFixed(1)} kg sur ${maxCarryKg} kg, ${encumbranceLabel(tier)}`}
+        aria-valuetext={t('ui.encumbrance.aria', {
+          weight: totalWeightKg.toFixed(1),
+          max: maxCarryKg,
+          tier: encumbranceLabel(tier),
+        })}
       >
         <div className="flex items-center gap-2">
           <div className="relative h-1.5 flex-1 bg-parchment-200 rounded-full overflow-hidden">
@@ -341,13 +352,16 @@ export function EncumbranceBar({
         )}
       </div>
       <div className="flex justify-between text-xs text-ink-400">
-        <span>Encombré: {encumberedKg} kg</span>
-        <span>Lourd: {heavilyEncumberedKg} kg</span>
-        <span>Max: {maxCarryKg} kg</span>
+        <span>{t('ui.encombre', { kg: encumberedKg })}</span>
+        <span>{t('ui.lourd', { kg: heavilyEncumberedKg })}</span>
+        <span>{t('ui.max', { kg: maxCarryKg })}</span>
       </div>
       {coinWeightKg > 0.001 && (
         <div className="text-xs text-ink-400">
-          Objets : {itemWeightKg.toFixed(1)} kg · Monnaie : {coinWeightKg.toFixed(1)} kg
+          {t('ui.objets.monnaie', {
+            items: itemWeightKg.toFixed(1),
+            coins: coinWeightKg.toFixed(1),
+          })}
         </div>
       )}
       {tier !== 'unencumbered' && (
@@ -388,20 +402,21 @@ function tierBadge(tier: EncumbranceState['tier']): string {
 function tierConsequence(tier: EncumbranceState['tier']): string {
   switch (tier) {
     case 'encumbered':
-      return '⚠ Vitesse réduite de 3 m';
+      return i18next.t('ui.vitesse.reduite.de.3.m');
     case 'heavilyEncumbered':
-      return '⚠ Vitesse réduite de 6 m · Désavantage aux jets de Force et Constitution';
+      return i18next.t('ui.vitesse.reduite.de.6.m');
     case 'overburdened':
-      return '⛔ Immobilisé — impossible de se déplacer';
+      return i18next.t('ui.immobilise');
     default:
       return '';
   }
 }
 
-export function LoadingSpinner({ label = 'Chargement…' }: { label?: string }) {
+export function LoadingSpinner({ label }: { label?: string }) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center justify-center py-12">
-      <div className="text-ink-400 animate-pulse">{label}</div>
+      <div className="text-ink-400 animate-pulse">{label ?? t('common.loading')}</div>
     </div>
   );
 }
@@ -450,6 +465,7 @@ export function ConfirmButton({
   title?: string;
   ariaLabel?: string;
 }) {
+  const { t } = useTranslation();
   const [armed, setArmed] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -490,7 +506,7 @@ export function ConfirmButton({
       }}
       className={`${className} ${armed ? `pulse-warn ${armedClassName}` : ''}`}
       title={title}
-      aria-label={armed && ariaLabel ? `${ariaLabel} — confirmer ?` : ariaLabel}
+      aria-label={armed && ariaLabel ? `${ariaLabel}${t('ui.confirmer')}` : ariaLabel}
     >
       {armed ? confirmChildren : children}
     </button>
@@ -546,6 +562,7 @@ export function Modal({
   title: string;
   children: React.ReactNode;
 }) {
+  const { t } = useTranslation();
   const modalRef = useRef<HTMLDivElement>(null);
   const previousFocus = useRef<HTMLElement | null>(null);
   const onCloseRef = useRef(onClose);
@@ -621,7 +638,7 @@ export function Modal({
             type="button"
             onClick={onClose}
             className="btn-ghost text-ink-500 p-1"
-            aria-label="Fermer"
+            aria-label={t('common.close')}
           >
             ✕
           </button>
@@ -655,6 +672,7 @@ export function BottomSheet({
   mobileOnly?: boolean;
   bodyClassName?: string;
 }) {
+  const { t } = useTranslation();
   const sheetRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -691,7 +709,7 @@ export function BottomSheet({
             type="button"
             onClick={onClose}
             className="btn-ghost text-ink-500 p-1"
-            aria-label="Fermer"
+            aria-label={t('common.close')}
           >
             ✕
           </button>

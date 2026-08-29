@@ -23,7 +23,7 @@ export default function RegisterPage() {
       await register(username, password, displayName, email.trim());
       nav('/parties');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Inscription échouée');
+      setError(err.response?.data?.error || t('auth.inscription.echouee'));
     } finally {
       setLoading(false);
     }
@@ -56,7 +56,7 @@ export default function RegisterPage() {
           </div>
           <div>
             <label className="label" htmlFor="register-username">
-              Nom d'utilisateur
+              {t('auth.nom.d.utilisateur')}
             </label>
             <input
               id="register-username"
@@ -73,7 +73,7 @@ export default function RegisterPage() {
           </div>
           <div>
             <label className="label" htmlFor="register-email">
-              Adresse e-mail
+              {t('auth.adresse.e.mail')}
             </label>
             <input
               id="register-email"
@@ -93,7 +93,7 @@ export default function RegisterPage() {
           </div>
           <div>
             <label className="label" htmlFor="register-password">
-              Mot de passe (≥ 6 caractères)
+              {t('auth.mot.de.passe.min')}
             </label>
             <input
               id="register-password"
@@ -109,13 +109,13 @@ export default function RegisterPage() {
           </div>
           {error && <ErrorMsg message={error} />}
           <button type="submit" className="btn-primary w-full" disabled={loading}>
-            {loading ? 'Création…' : "S'inscrire"}
+            {loading ? t('auth.creation.points') : t('auth.s.inscrire')}
           </button>
         </form>
         <p className="text-center text-sm text-ink-400 mt-4">
-          Déjà un compte ?{' '}
+          {t('auth.deja.un.compte')}{' '}
           <Link to="/login" className="text-blood-600 font-medium hover:underline">
-            Se connecter
+            {t('auth.se.connecter')}
           </Link>
         </p>
       </div>
