@@ -11,9 +11,13 @@
     <link rel="icon" href="assets/logo.png" type="image/png" />
     <meta name="theme-color" content="#fdfaf3" />
     <link rel="canonical" href="https://wazoakarapace.github.io/table-sync/" />
+    <link rel="alternate" hreflang="fr" href="https://wazoakarapace.github.io/table-sync/" />
+    <link rel="alternate" hreflang="en" href="https://wazoakarapace.github.io/table-sync/?lang=en" />
+    <link rel="alternate" hreflang="x-default" href="https://wazoakarapace.github.io/table-sync/" />
 
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="fr_FR" />
+    <meta property="og:locale:alternate" content="en_US" />
     <meta property="og:title" content="Table Sync — le compagnon de campagne partagé, pour le MD et les joueurs" />
     <meta
       property="og:description"
@@ -21,6 +25,35 @@
     />
     <meta property="og:image" content="https://wazoakarapace.github.io/table-sync/assets/screenshots/01-parties.png" />
     <meta property="og:url" content="https://wazoakarapace.github.io/table-sync/" />
+
+    <!-- Langue du site — posée avant le premier rendu pour éviter tout flash.
+         Le français est la langue par défaut ; l'anglais arrive par préférence
+         persistée (localStorage « site-lang », clé distincte de l'app) ou par
+         URL partageable ?lang=en. Le CSS masque la langue inactive, la
+         bascule FR|EN et les attributs EN sont portés par main.js. -->
+    <script>
+      (() => {
+        let fromUrl = null;
+        let stored = null;
+        try {
+          fromUrl = /[?&]lang=(en|fr)/.exec(window.location.search)?.[1] ?? null;
+          stored = window.localStorage.getItem('site-lang');
+        } catch {
+          /* stockage indisponible — le français par défaut reste */
+        }
+        const lang = fromUrl ?? stored;
+        if (lang === 'en' || lang === 'fr') {
+          document.documentElement.lang = lang;
+          if (fromUrl && fromUrl !== stored) {
+            try {
+              window.localStorage.setItem('site-lang', fromUrl);
+            } catch {
+              /* la préférence ne survivra pas au rechargement */
+            }
+          }
+        }
+      })();
+    </script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -51,6 +84,25 @@
       the finish review, the verdict, and DESIGN.md.
     -->
 
+    <!-- Bascule de langue FR|EN — cachée sans JS (grammaire .js), le
+         français reste la langue par défaut du document. -->
+    <nav class="lang-nav" aria-label="Langue · Language">
+      <div class="lang-toggle">
+        <button
+          type="button"
+          class="lang-btn is-active"
+          data-lang="fr"
+          aria-pressed="true"
+          aria-label="Français"
+        >
+          FR
+        </button>
+        <button type="button" class="lang-btn" data-lang="en" aria-pressed="false" aria-label="English">
+          EN
+        </button>
+      </div>
+    </nav>
+
     <header class="hero wrap">
       <div class="panel hero-card">
         <div class="hero-identity">
@@ -58,36 +110,44 @@
             <img class="seal" src="assets/logo.png" alt="" width="88" height="88" />
             <h1 class="hero-name">Table Sync</h1>
             <p class="hero-tagline">
-              Le compagnon de campagne partagé, pour le MD et les joueurs.
+              <span lang="fr">Le compagnon de campagne partagé, pour le MD et les joueurs.</span><span
+                lang="en"
+                >The shared campaign companion, for the GM and the players.</span
+              >
             </p>
             <p class="hero-offer">
-              Toute la table sur la même fiche. Fiches de personnage, inventaire en
-              kilogrammes et combat D&amp;D&nbsp;5e, 100&nbsp;% français, synchronisés
-              en temps réel entre l'écran du MD et le téléphone de chaque joueur.
+              <span lang="fr">Toute la table sur la même fiche. Fiches de personnage, inventaire en
+                kilogrammes et combat D&amp;D&nbsp;5e, 100&nbsp;% français, synchronisés
+                en temps réel entre l'écran du MD et le téléphone de chaque joueur.</span><span
+                lang="en"
+                >The whole table on the same sheet. Character sheets, inventory in kilograms and
+                D&amp;D&nbsp;5e combat — in French and English — synced in real time between the
+                GM's screen and each player's phone.</span
+              >
             </p>
             <dl class="sheet-fields">
               <div>
-                <dt>CLASSE</dt>
-                <dd>Outil de table</dd>
+                <dt><span lang="fr">CLASSE</span><span lang="en">CLASS</span></dt>
+                <dd><span lang="fr">Outil de table</span><span lang="en">Table tool</span></dd>
               </div>
               <div>
-                <dt>HISTORIQUE</dt>
-                <dd>Auto-hébergé (Docker)</dd>
+                <dt><span lang="fr">HISTORIQUE</span><span lang="en">BACKGROUND</span></dt>
+                <dd><span lang="fr">Auto-hébergé (Docker)</span><span lang="en">Self-hosted (Docker)</span></dd>
               </div>
               <div>
-                <dt>TAILLE</dt>
-                <dd>P (téléphone) à G (écran du MD)</dd>
+                <dt><span lang="fr">TAILLE</span><span lang="en">SIZE</span></dt>
+                <dd><span lang="fr">P (téléphone) à G (écran du MD)</span><span lang="en">S (phone) to L (GM screen)</span></dd>
               </div>
               <div>
-                <dt>LANGUE</dt>
-                <dd>Français</dd>
+                <dt><span lang="fr">LANGUE</span><span lang="en">LANGUAGES</span></dt>
+                <dd><span lang="fr">Français</span><span lang="en">English &amp; French</span></dd>
               </div>
             </dl>
             <div class="cta-row">
               <a class="btn btn-primary" href="https://github.com/WazoAkaRapace/table-sync">
-                Code source sur GitHub
+                <span lang="fr">Code source sur GitHub</span><span lang="en">Source code on GitHub</span>
               </a>
-              <a class="btn btn-secondary" href="#repos-long">Auto-héberger en 3 commandes</a>
+              <a class="btn btn-secondary" href="#repos-long"><span lang="fr">Auto-héberger en 3 commandes</span><span lang="en">Self-host in 3 commands</span></a>
             </div>
           </div>
           <figure class="portrait-pair">
@@ -95,6 +155,7 @@
               <img
                 src="assets/screenshots/12-traqueur.png"
                 alt="Le traqueur de combat du MD : échelle d'initiative et scène du tour"
+                data-en-alt="The GM's combat tracker: initiative ladder and turn scene"
                 width="390"
                 height="844"
                 decoding="async"
@@ -104,56 +165,57 @@
               <img
                 src="assets/screenshots/01-parties.png"
                 alt="Le registre des groupes dans l'application Table Sync"
+                data-en-alt="The party registry in the Table Sync app"
                 width="390"
                 height="844"
                 decoding="async"
               />
             </div>
-            <figcaption>Le registre côté joueur, le traqueur côté MD.</figcaption>
+            <figcaption><span lang="fr">Le registre côté joueur, le traqueur côté MD.</span><span lang="en">The party registry for players, the combat tracker for the GM.</span></figcaption>
           </figure>
         </div>
 
         <dl class="abilities">
           <div class="ability">
-            <dt>FOR</dt>
+            <dt><span lang="fr">FOR</span><span lang="en">STR</span></dt>
             <dd>
               <span class="score">18</span>
-              <span class="fact">646 objets du SRD, pesés en kilogrammes</span>
+              <span class="fact"><span lang="fr">646 objets du SRD, pesés en kilogrammes</span><span lang="en">646 SRD items, weighed in kilograms</span></span>
             </dd>
           </div>
           <div class="ability is-lead">
-            <dt>DEX</dt>
+            <dt><span lang="fr">DEX</span><span lang="en">DEX</span></dt>
             <dd>
               <span class="score">20</span>
-              <span class="fact">temps réel entre traqueur du MD et fiches</span>
+              <span class="fact"><span lang="fr">temps réel entre traqueur du MD et fiches</span><span lang="en">real time between the GM's tracker and the sheets</span></span>
             </dd>
           </div>
           <div class="ability">
-            <dt>CON</dt>
+            <dt><span lang="fr">CON</span><span lang="en">CON</span></dt>
             <dd>
               <span class="score">16</span>
-              <span class="fact">PWA installable, fiable en séance</span>
+              <span class="fact"><span lang="fr">PWA installable, fiable en séance</span><span lang="en">installable PWA, reliable at the table</span></span>
             </dd>
           </div>
           <div class="ability">
-            <dt>INT</dt>
+            <dt><span lang="fr">INT</span><span lang="en">INT</span></dt>
             <dd>
               <span class="score">18</span>
-              <span class="fact">règles SRD 5.1 : CA, sorts, multiclasse</span>
+              <span class="fact"><span lang="fr">règles SRD 5.1 : CA, sorts, multiclasse</span><span lang="en">SRD 5.1 rules: AC, spells, multiclassing</span></span>
             </dd>
           </div>
           <div class="ability">
-            <dt>SAG</dt>
+            <dt><span lang="fr">SAG</span><span lang="en">WIS</span></dt>
             <dd>
               <span class="score">14</span>
-              <span class="fact">16 états, concentration, épuisement surveillés</span>
+              <span class="fact"><span lang="fr">16 états, concentration, épuisement surveillés</span><span lang="en">16 conditions, concentration and exhaustion watched</span></span>
             </dd>
           </div>
           <div class="ability">
-            <dt>CHA</dt>
+            <dt><span lang="fr">CHA</span><span lang="en">CHA</span></dt>
             <dd>
               <span class="score">16</span>
-              <span class="fact">parle français : objets, sorts, monstres</span>
+              <span class="fact"><span lang="fr">parle français : objets, sorts, monstres</span><span lang="en">speaks French and English: items, spells, monsters</span></span>
             </dd>
           </div>
         </dl>
@@ -164,35 +226,50 @@
       <section class="entry wrap is-lead" id="table">
         <div class="entry-head">
           <span class="entry-ordinal" aria-hidden="true">I</span>
-          <h2 class="entry-title">La table en temps réel</h2>
+          <h2 class="entry-title"><span lang="fr">La table en temps réel</span><span lang="en">The table in real time</span></h2>
         </div>
         <div class="entry-body with-demo">
           <div class="entry-copy">
             <p>
-              Le MD frappe depuis son traqueur&nbsp;: la fiche du joueur suit
+              <span lang="fr">Le MD frappe depuis son traqueur&nbsp;: la fiche du joueur suit
               aussitôt&nbsp;; s'il concentre un sort, le jet de Constitution
               s'affiche avec sa difficulté calculée. Le joueur se soigne depuis
               sa fiche&nbsp;: le traqueur remonte. Un objet change de sac, de
-              personnage ou de monture&nbsp;: toute la table le voit.
+              personnage ou de monture&nbsp;: toute la table le voit.</span><span
+                lang="en"
+                >The GM strikes from the tracker and the player's sheet follows at
+                once; if they're concentrating on a spell, the Constitution save appears
+                with its calculated DC. The player heals from their sheet and the tracker
+                catches up. An item changes bags, characters or mounts — the whole table
+                sees it.</span
+              >
             </p>
             <p>
-              Un seul état partagé, poussé par WebSocket. Pas de rechargement,
+              <span lang="fr">Un seul état partagé, poussé par WebSocket. Pas de rechargement,
               pas de «&nbsp;attends, je rafraîchis&nbsp;»&nbsp;: quand vient ton
-              tour, le téléphone vibre.
+              tour, le téléphone vibre.</span><span
+                lang="en"
+                >One shared state, pushed over WebSocket. No reloading, no “wait,
+                let me refresh”: when your turn comes, your phone vibrates.</span
+              >
             </p>
-            <ul class="proof" aria-label="Preuves">
-              <li>synchronisation WebSocket</li>
-              <li>PV synchronisés dans les deux sens</li>
-              <li>jet de concentration automatique</li>
-              <li>initiative poussée, vibration «&nbsp;à toi&nbsp;»</li>
+            <ul class="proof" aria-label="Preuves" data-en-aria-label="Evidence">
+              <li><span lang="fr">synchronisation WebSocket</span><span lang="en">WebSocket sync</span></li>
+              <li><span lang="fr">PV synchronisés dans les deux sens</span><span lang="en">HP synced both ways</span></li>
+              <li><span lang="fr">jet de concentration automatique</span><span lang="en">automatic concentration save</span></li>
+              <li><span lang="fr">initiative poussée, vibration «&nbsp;à toi&nbsp;»</span><span lang="en">initiative pushed, “your turn” vibration</span></li>
             </ul>
           </div>
           <div>
-            <section class="panel demo" aria-label="Démonstration de la synchronisation temps réel">
+            <section
+              class="panel demo"
+              aria-label="Démonstration de la synchronisation temps réel"
+              data-en-aria-label="Real-time sync demonstration"
+            >
               <div class="demo-panel demo-tracker">
                 <h4>
-                  TRAQUEUR
-                  <span class="who">Embuscade gobeline · écran du MD</span>
+                  <span lang="fr">TRAQUEUR</span><span lang="en">TRACKER</span>
+                  <span class="who"><span lang="fr">Embuscade gobeline · écran du MD</span><span lang="en">Goblin ambush · GM screen</span></span>
                 </h4>
                 <div class="hp-row">
                   <span class="hp-read" data-hp-read>Lyra · 24/31 PV</span>
@@ -200,14 +277,14 @@
                 <div class="hp-track" role="progressbar" aria-valuemin="0" aria-valuemax="31" aria-valuenow="24" aria-valuetext="24 sur 31 points de vie" data-hp-bar>
                   <div class="hp-fill" data-hp-fill style="width: 77%"></div>
                 </div>
-                <button type="button" class="demo-strike" data-strike>⚔&nbsp;Infliger 9 dégâts</button>
-                <span class="damage-chip" data-chip>⚔ 9 dégâts → fiche de Lyra</span>
+                <button type="button" class="demo-strike" data-strike><span lang="fr">⚔&nbsp;Infliger 9 dégâts</span><span lang="en">⚔&nbsp;Deal 9 damage</span></button>
+                <span class="damage-chip" data-chip><span lang="fr">⚔ 9 dégâts → fiche de Lyra</span><span lang="en">⚔ 9 damage → Lyra's sheet</span></span>
               </div>
               <div class="wire" aria-hidden="true"></div>
               <div class="demo-panel demo-sheet">
                 <h4>
-                  FICHE
-                  <span class="who">Lyra · téléphone du joueur</span>
+                  <span lang="fr">FICHE</span><span lang="en">SHEET</span>
+                  <span class="who"><span lang="fr">Lyra · téléphone du joueur</span><span lang="en">Lyra · player's phone</span></span>
                 </h4>
                 <div class="hp-row">
                   <span class="hp-read" data-hp-read>24/31 PV</span>
@@ -216,12 +293,19 @@
                   <div class="hp-fill" data-hp-fill style="width: 77%"></div>
                 </div>
                 <p class="conc-chip" data-conc>
-                  🌀 Concentration · jet de CON <span class="mono">DD 10</span>
+                  <span lang="fr">🌀 Concentration · jet de CON <span class="mono">DD 10</span></span><span
+                    lang="en"
+                    >🌀 Concentration · CON save <span class="mono">DC 10</span></span
+                  >
                 </p>
               </div>
               <p class="demo-note">
-                Démonstration interactive&nbsp;: tape le bouton du MD, la fiche
-                répond. En séance, tout se joue sans rechargement.
+                <span lang="fr">Démonstration interactive&nbsp;: tape le bouton du MD, la fiche
+                répond. En séance, tout se joue sans rechargement.</span><span
+                  lang="en"
+                  >Interactive demo: tap the GM's button and the sheet responds. In a
+                  session, everything plays out without a single reload.</span
+                >
               </p>
             </section>
             <figure class="shot" style="margin-top: 1.4rem">
@@ -229,13 +313,14 @@
                 <img
                   src="assets/screenshots/05-widget-combat.png"
                   alt="Widget de combat sur la fiche du joueur : tour en cours, initiative, points de vie"
+                  data-en-alt="Combat widget on the player's character sheet: current turn, initiative, hit points"
                   width="390"
                   height="844"
                   loading="lazy"
                   decoding="async"
                 />
               </div>
-              <figcaption>Le widget de combat, sur la fiche du joueur</figcaption>
+              <figcaption><span lang="fr">Le widget de combat, sur la fiche du joueur</span><span lang="en">The combat widget, right on the player's sheet</span></figcaption>
             </figure>
           </div>
         </div>
@@ -244,65 +329,92 @@
       <section class="entry wrap" id="fiche">
         <div class="entry-head">
           <span class="entry-ordinal" aria-hidden="true">II</span>
-          <h2 class="entry-title">La fiche du joueur</h2>
+          <h2 class="entry-title"><span lang="fr">La fiche du joueur</span><span lang="en">The player's character sheet</span></h2>
         </div>
         <div class="entry-body">
           <div class="entry-copy">
             <ul class="subentries">
               <li>
-                <h3>Inventaire &amp; bourse</h3>
+                <h3><span lang="fr">Inventaire &amp; bourse</span><span lang="en">Inventory &amp; coin purse</span></h3>
                 <p>
-                  646 objets du SRD en recherche instantanée, pesés en
+                  <span lang="fr">646 objets du SRD en recherche instantanée, pesés en
                   kilogrammes. L'encombrance se déclenche par paliers et affiche ses
                   effets sur la vitesse au moment où ils s'appliquent. Emplacements de
                   stockage (porté, montures, conteneurs) et bourse
                   PC/PA/PE/PO/PP&nbsp;: l'argent pèse. Sur chaque arme, des
                   puces calculées&nbsp;: bonus d'attaque détaillé au clic, dés de
-                  dégâts, bonus magique ✨, alerte ⚠ non qualifié.
+                  dégâts, bonus magique ✨, alerte ⚠ non qualifié.</span><span
+                    lang="en"
+                    >All 646 SRD items in instant search, weighed in kilograms.
+                    Encumbrance triggers by tier and shows its speed effects the moment
+                    they apply. Storage locations (carried, mounts, containers) and a
+                    CP/SP/EP/GP/PP purse — coins have weight. Every weapon carries
+                    computed chips: attack bonus breakdown on tap, damage dice, magic
+                    bonus ✨, non-proficient ⚠ warning.</span
+                  >
                 </p>
               </li>
               <li>
-                <h3>Sorts</h3>
+                <h3><span lang="fr">Sorts</span><span lang="en">Spells</span></h3>
                 <p>
-                  490 sorts du SRD et des extensions, tout en français.
+                  <span lang="fr">490 sorts du SRD et des extensions, tout en français.
                   Emplacements par classe et niveau, incantation supérieure avec
                   dégâts mis à l'échelle en direct, rituels, sorts toujours
-                  préparés ◆ hors quota, aperçu des soins ✚.
+                  préparés ◆ hors quota, aperçu des soins ✚.</span><span
+                    lang="en"
+                    >490 spells from the SRD and the expansions, in French and
+                    English. Slots by class and level, upcasting with damage scaled
+                    live, rituals, always-prepared spells ◆ outside your quota,
+                    healing previews ✚.</span
+                  >
                 </p>
               </li>
               <li>
-                <h3>Survie &amp; forme sauvage</h3>
+                <h3><span lang="fr">Survie &amp; forme sauvage</span><span lang="en">Survival &amp; wild shape</span></h3>
                 <p>
-                  Dés de vie, sauvegardes contre la mort, épuisement 1–6, 16
+                  <span lang="fr">Dés de vie, sauvegardes contre la mort, épuisement 1–6, 16
                   états avec durées. Le Druide change de forme dans les
                   limites de son niveau&nbsp;: vol et nage quand ils sont
                   permis, bêtes déjà vues 👁, PV lancés aux dés et retour
-                  automatique avec les dégâts excédentaires.
+                  automatique avec les dégâts excédentaires.</span><span
+                    lang="en"
+                    >Hit dice, death saves, exhaustion 1–6, and 16 conditions with
+                    durations. The Druid changes shape within their level's limits:
+                    flying and swimming only when allowed, beasts already seen 👁,
+                    HP rolled on the dice and automatic reversion with excess damage
+                    carried over.</span
+                  >
                 </p>
               </li>
               <li>
-                <h3>Multiclasse</h3>
+                <h3><span lang="fr">Multiclasse</span><span lang="en">Multiclassing</span></h3>
                 <p>
-                  SRD 5.1&nbsp;: deux pools d'emplacements (incantation + magie
+                  <span lang="fr">SRD 5.1&nbsp;: deux pools d'emplacements (incantation + magie
                   de pacte en or), prérequis affichés sans jamais bloquer, dés
                   de vie par type de dé, règles évaluées au niveau de chaque
-                  classe.
+                  classe.</span><span
+                    lang="en"
+                    >SRD 5.1: two slot pools (spellcasting + pact magic in
+                    gold), prerequisites shown but never blocking, hit dice per die
+                    type, rules evaluated at each class's own level.</span
+                  >
                 </p>
               </li>
             </ul>
-            <ul class="proof" aria-label="Preuves">
-              <li>646 objets</li>
-              <li>490 sorts</li>
-              <li>16 états</li>
-              <li>poids en kg</li>
+            <ul class="proof" aria-label="Preuves" data-en-aria-label="Evidence">
+              <li><span lang="fr">646 objets</span><span lang="en">646 items</span></li>
+              <li><span lang="fr">490 sorts</span><span lang="en">490 spells</span></li>
+              <li><span lang="fr">16 états</span><span lang="en">16 conditions</span></li>
+              <li><span lang="fr">poids en kg</span><span lang="en">weights in kg</span></li>
             </ul>
           </div>
-          <figure class="phonepost" aria-label="Vues de la fiche de personnage">
+          <figure class="phonepost" aria-label="Vues de la fiche de personnage" data-en-aria-label="Character sheet views">
             <div class="shot-frame phonepost-screen">
               <img
                 class="phonepost-view is-active"
                 src="assets/screenshots/02-inventaire.png"
                 alt="Inventaire d'un personnage : objets, poids en kilogrammes, bourse"
+                data-en-alt="Character inventory: items, weights in kilograms, coin purse"
                 width="390"
                 height="844"
                 decoding="async"
@@ -311,6 +423,7 @@
                 class="phonepost-view"
                 src="assets/screenshots/07-lancer-sort.png"
                 alt="Lancement d'un sort avec incantation supérieure et dégâts mis à l'échelle"
+                data-en-alt="Casting a spell with upcasting and damage scaled live"
                 width="390"
                 height="844"
                 decoding="async"
@@ -319,6 +432,7 @@
                 class="phonepost-view"
                 src="assets/screenshots/09-forme-sauvage.png"
                 alt="Forme sauvage du Druide avec points de vie de la forme"
+                data-en-alt="Druid wild shape with the shape's hit points"
                 width="390"
                 height="844"
                 decoding="async"
@@ -327,6 +441,7 @@
                 class="phonepost-view"
                 src="assets/screenshots/14-multiclasse.png"
                 alt="Multiclasse avec deux pools d'emplacements de sorts"
+                data-en-alt="Multiclass character with two spell slot pools"
                 width="390"
                 height="844"
                 decoding="async"
@@ -339,32 +454,36 @@
                 aria-pressed="true"
                 data-view="0"
                 data-caption="646 objets pesés en kilogrammes, bourse et paliers d'encombrance"
+                data-en-caption="646 items weighed in kilograms, coin purse and encumbrance tiers"
               >
-                Inventaire
+                <span lang="fr">Inventaire</span><span lang="en">Inventory</span>
               </button>
               <button
                 type="button"
                 aria-pressed="false"
                 data-view="1"
                 data-caption="Incantation supérieure : dégâts mis à l'échelle en direct"
+                data-en-caption="Upcasting: damage scaled live"
               >
-                Sorts
+                <span lang="fr">Sorts</span><span lang="en">Spells</span>
               </button>
               <button
                 type="button"
                 aria-pressed="false"
                 data-view="2"
                 data-caption="Forme sauvage : bêtes déjà vues, PV lancés aux dés"
+                data-en-caption="Wild shape: beasts you've seen, HP rolled on dice"
               >
-                Forme sauvage
+                <span lang="fr">Forme sauvage</span><span lang="en">Wild shape</span>
               </button>
               <button
                 type="button"
                 aria-pressed="false"
                 data-view="3"
                 data-caption="Multiclasse : deux pools d'emplacements"
+                data-en-caption="Multiclassing: two slot pools"
               >
-                Multiclasse
+                <span lang="fr">Multiclasse</span><span lang="en">Multiclass</span>
               </button>
             </div>
             <figcaption class="phonepost-caption" aria-live="polite">
@@ -377,49 +496,65 @@
       <section class="entry wrap" id="md">
         <div class="entry-head">
           <span class="entry-ordinal" aria-hidden="true">III</span>
-          <h2 class="entry-title">L'écran du MD</h2>
+          <h2 class="entry-title"><span lang="fr">L'écran du MD</span><span lang="en">The GM screen</span></h2>
         </div>
         <div class="entry-body">
           <div class="entry-copy">
             <ul class="subentries">
               <li>
-                <h3>Traqueur de combat</h3>
+                <h3><span lang="fr">Traqueur de combat</span><span lang="en">Combat tracker</span></h3>
                 <p>
-                  Rencontres préparées, initiative partagée par groupe de
+                  <span lang="fr">Rencontres préparées, initiative partagée par groupe de
                   monstres, tours et rounds. Les PV des monstres sont lancés aux
                   dés de vie. Dégâts, soins, demi-dégâts, PV et CA
-                  éditables&nbsp;; les états expirent tout seuls en fin de tour.
+                  éditables&nbsp;; les états expirent tout seuls en fin de tour.</span><span
+                    lang="en"
+                    >Prepared encounters, initiative shared by monster group, turns
+                    and rounds. Monster HP is rolled from hit dice. Damage, healing,
+                    half damage, HP and AC editable; conditions expire on their own at
+                    the end of a turn.</span
+                  >
                 </p>
               </li>
               <li>
-                <h3>Bestiaire</h3>
+                <h3><span lang="fr">Bestiaire</span><span lang="en">Bestiary</span></h3>
                 <p>
-                  964 monstres avec blocs de stats complets&nbsp;: capacités,
+                  <span lang="fr">964 monstres avec blocs de stats complets&nbsp;: capacités,
                   actions, dés cliquables (le critique double les dés) et
-                  sorts des monstres.
+                  sorts des monstres.</span><span
+                    lang="en"
+                    >964 monsters with complete stat blocks: abilities, actions,
+                    clickable dice (crits double the dice) and monster spells.</span
+                  >
                 </p>
               </li>
               <li>
-                <h3>La table du MD</h3>
+                <h3><span lang="fr">La table du MD</span><span lang="en">The GM's table</span></h3>
                 <p>
-                  Tableau de bord du groupe, PNJ partagés dont les secrets ne
-                  quittent pas l'écran du MD, notes par personnage. Chaque joueur saisit son initiative depuis son écran.
+                  <span lang="fr">Tableau de bord du groupe, PNJ partagés dont les secrets ne
+                  quittent pas l'écran du MD, notes par personnage. Chaque joueur saisit son initiative depuis son écran.</span><span
+                    lang="en"
+                    >A party dashboard, shared NPCs whose secrets never leave the
+                    GM's screen, notes per character. Each player enters their initiative
+                    from their own screen.</span
+                  >
                 </p>
               </li>
             </ul>
-            <ul class="proof" aria-label="Preuves">
-              <li>964 monstres</li>
-              <li>PV lancés aux dés</li>
-              <li>16 états auto-expirants</li>
-              <li>PV synchronisés fiche ↔ traqueur</li>
+            <ul class="proof" aria-label="Preuves" data-en-aria-label="Evidence">
+              <li><span lang="fr">964 monstres</span><span lang="en">964 monsters</span></li>
+              <li><span lang="fr">PV lancés aux dés</span><span lang="en">HP rolled from hit dice</span></li>
+              <li><span lang="fr">16 états auto-expirants</span><span lang="en">16 auto-expiring conditions</span></li>
+              <li><span lang="fr">PV synchronisés fiche ↔ traqueur</span><span lang="en">HP synced sheet ↔ tracker</span></li>
             </ul>
           </div>
-          <figure class="phonepost" aria-label="Vues de l'écran du MD">
+          <figure class="phonepost" aria-label="Vues de l'écran du MD" data-en-aria-label="GM screen views">
             <div class="shot-frame phonepost-screen">
               <img
                 class="phonepost-view is-active"
                 src="assets/screenshots/12-traqueur.png"
                 alt="Traqueur de combat du MD : échelle d'initiative et scène du tour"
+                data-en-alt="GM combat tracker: initiative ladder and turn scene"
                 width="390"
                 height="844"
                 decoding="async"
@@ -428,6 +563,7 @@
                 class="phonepost-view"
                 src="assets/screenshots/13-bloc-stats.png"
                 alt="Bloc de stats d'un monstre avec dés cliquables"
+                data-en-alt="Monster stat block with clickable dice"
                 width="390"
                 height="844"
                 decoding="async"
@@ -436,6 +572,7 @@
                 class="phonepost-view"
                 src="assets/screenshots/11-table-md.png"
                 alt="Table du MD : tableau de bord du groupe"
+                data-en-alt="GM table: party dashboard"
                 width="390"
                 height="844"
                 decoding="async"
@@ -448,24 +585,27 @@
                 aria-pressed="true"
                 data-view="0"
                 data-caption="Initiative par groupe, scène du tour, PV lancés aux dés"
+                data-en-caption="Initiative by group, turn scene, HP rolled from hit dice"
               >
-                Traqueur
+                <span lang="fr">Traqueur</span><span lang="en">Tracker</span>
               </button>
               <button
                 type="button"
                 aria-pressed="false"
                 data-view="1"
                 data-caption="Dés cliquables — le critique double les dés"
+                data-en-caption="Clickable dice — crits double the dice"
               >
-                Bloc de stats
+                <span lang="fr">Bloc de stats</span><span lang="en">Stat block</span>
               </button>
               <button
                 type="button"
                 aria-pressed="false"
                 data-view="2"
                 data-caption="Tableau de bord du groupe, PNJ et secrets réservés au MD"
+                data-en-caption="Party dashboard, NPCs and GM-only secrets"
               >
-                Table du MD
+                <span lang="fr">Table du MD</span><span lang="en">GM table</span>
               </button>
             </div>
             <figcaption class="phonepost-caption" aria-live="polite">
@@ -478,50 +618,68 @@
       <section class="entry wrap" id="chronique">
         <div class="entry-head">
           <span class="entry-ordinal" aria-hidden="true">IV</span>
-          <h2 class="entry-title">La chronique</h2>
+          <h2 class="entry-title"><span lang="fr">La chronique</span><span lang="en">The chronicle</span></h2>
         </div>
         <div class="entry-body">
           <div class="entry-copy">
             <ul class="subentries">
               <li>
-                <h3>GM Assistant</h3>
+                <h3><span lang="fr">GM Assistant</span><span lang="en">GM Assistant</span></h3>
                 <p>
-                  Le groupe se lie à une campagne
+                  <span lang="fr">Le groupe se lie à une campagne
                   <a href="https://gmassistant.app" rel="noopener">gmassistant.app</a>&nbsp;:
                   le MD connecte sa clé, choisit ses personnages&nbsp;— la fiche
                   d'identité de chacun (classes, alignement, apparence,
-                  personnalité, histoire) s'écrit toute seule.
+                  personnalité, histoire) s'écrit toute seule.</span><span
+                    lang="en"
+                    >The party links to a
+                    <a href="https://gmassistant.app" rel="noopener">gmassistant.app</a>
+                    campaign: the GM connects their key, picks their characters — and
+                    everyone's identity sheet (classes, alignment, appearance,
+                    personality, backstory) writes itself.</span
+                  >
                 </p>
               </li>
               <li>
-                <h3>Le registre des séances</h3>
+                <h3><span lang="fr">Le registre des séances</span><span lang="en">The session log</span></h3>
                 <p>
-                  La chronique sert la table entière&nbsp;: les séances en
+                  <span lang="fr">La chronique sert la table entière&nbsp;: les séances en
                   ordinaux romains, la dernière en entrée courante, des résumés
-                  dans tous les styles (Résumé, En bref, Héraut, Conte, Sonnet).
+                  dans tous les styles (Résumé, En bref, Héraut, Conte, Sonnet).</span><span
+                    lang="en"
+                    >The chronicle serves the whole table: sessions in Roman
+                    numerals, the latest as the current entry, summaries in every style
+                    (Summary, In brief, Herald, Tale, Sonnet).</span
+                  >
                 </p>
               </li>
               <li>
-                <h3>Les moments mémorables</h3>
+                <h3><span lang="fr">Les moments mémorables</span><span lang="en">Memorable moments</span></h3>
                 <p>
-                  Chaque moment retenu s'enlumine selon sa nature&nbsp;:
+                  <span lang="fr">Chaque moment retenu s'enlumine selon sa nature&nbsp;:
                   ⚔&nbsp;épique gravé en or, 🕯&nbsp;tragique en italique
-                  éteint, 🗝&nbsp;intrigant à la clé.
+                  éteint, 🗝&nbsp;intrigant à la clé.</span><span
+                    lang="en"
+                    >Each captured moment is illuminated to match its nature:
+                    ⚔&nbsp;epic, engraved in gold; 🕯&nbsp;tragic, in a dimmed
+                    italic; 🗝&nbsp;intriguing, with a key.</span
+                  >
                 </p>
               </li>
             </ul>
-            <ul class="proof" aria-label="Preuves">
-              <li>liaison groupe ↔ campagne</li>
-              <li>fiches d'identité auto-écrites</li>
-              <li>cache serveur 5 min</li>
+            <ul class="proof" aria-label="Preuves" data-en-aria-label="Evidence">
+              <li><span lang="fr">liaison groupe ↔ campagne</span><span lang="en">party ↔ campaign link</span></li>
+              <li><span lang="fr">fiches d'identité auto-écrites</span><span lang="en">self-writing identity sheets</span></li>
+              <li><span lang="fr">cache serveur 5 min</span><span lang="en">5-minute server cache</span></li>
             </ul>
           </div>
-          <figure class="phonepost" aria-label="Vues de la chronique">
+          <figure class="phonepost" aria-label="Vues de la chronique" data-en-aria-label="Chronicle views">
             <div class="shot-frame phonepost-screen">
               <img
                 class="phonepost-view is-active"
                 src="assets/screenshots/16-chronique.png"
                 alt="Registre des séances de la chronique de campagne"
+                data-en-alt="Session log of the campaign chronicle"
                 width="390"
                 height="844"
                 decoding="async"
@@ -530,6 +688,7 @@
                 class="phonepost-view"
                 src="assets/screenshots/17-moments.png"
                 alt="Moments mémorables enluminés de la chronique"
+                data-en-alt="Illuminated memorable moments of the chronicle"
                 width="390"
                 height="844"
                 decoding="async"
@@ -542,16 +701,18 @@
                 aria-pressed="true"
                 data-view="0"
                 data-caption="Les séances en ordinaux romains, la dernière en entrée courante"
+                data-en-caption="Sessions in Roman numerals, the latest as the current entry"
               >
-                Séances
+                <span lang="fr">Séances</span><span lang="en">Sessions</span>
               </button>
               <button
                 type="button"
                 aria-pressed="false"
                 data-view="1"
                 data-caption="Chaque moment s'enlumine selon sa nature : épique, tragique, intrigant"
+                data-en-caption="Each moment illuminated to match its nature: epic, tragic, intriguing"
               >
-                Moments
+                <span lang="fr">Moments</span><span lang="en">Moments</span>
               </button>
             </div>
             <figcaption class="phonepost-caption" aria-live="polite">
@@ -561,38 +722,54 @@
         </div>
       </section>
 
-      <section class="entry wrap" id="personnalite" aria-label="Personnalité">
+      <section class="entry wrap" id="personnalite" aria-label="Personnalité" data-en-aria-label="Personality">
         <div class="entry-head">
           <span class="entry-ordinal" aria-hidden="true">V</span>
-          <h2 class="entry-title">Personnalité</h2>
+          <h2 class="entry-title"><span lang="fr">Personnalité</span><span lang="en">Personality</span></h2>
         </div>
         <div class="personality">
           <article>
-            <h3>TRAITS</h3>
+            <h3><span lang="fr">TRAITS</span><span lang="en">TRAITS</span></h3>
             <p>
-              Mobile-first&nbsp;: une main, le coude sur la table, le téléphone
-              dans la poche entre deux tours.
+              <span lang="fr">Mobile-first&nbsp;: une main, le coude sur la table, le téléphone
+              dans la poche entre deux tours.</span><span
+                lang="en"
+                >Mobile-first: one hand, elbow on the table, phone in your pocket
+                between turns.</span
+              >
             </p>
           </article>
           <article>
-            <h3>IDÉAUX</h3>
+            <h3><span lang="fr">IDÉAUX</span><span lang="en">IDEALS</span></h3>
             <p>
-              Les règles s'enseignent par l'UI&nbsp;: chaque palier d'encombrance,
-              chaque jet de concentration s'affiche au moment où il s'applique.
+              <span lang="fr">Les règles s'enseignent par l'UI&nbsp;: chaque palier d'encombrance,
+              chaque jet de concentration s'affiche au moment où il s'applique.</span><span
+                lang="en"
+                >The UI teaches the rules: every encumbrance tier, every
+                concentration save appears the moment it applies.</span
+              >
             </p>
           </article>
           <article>
-            <h3>LIENS</h3>
+            <h3><span lang="fr">LIENS</span><span lang="en">BONDS</span></h3>
             <p>
-              Le SRD 5.1 en français, et les données de la table qui restent
-              chez vous.
+              <span lang="fr">Le SRD 5.1 en français, et les données de la table qui restent
+              chez vous.</span><span
+                lang="en"
+                >The SRD 5.1 in French and English — and your table's data stays
+                at home.</span
+              >
             </p>
           </article>
           <article>
-            <h3>DÉFAUTS</h3>
+            <h3><span lang="fr">DÉFAUTS</span><span lang="en">FLAWS</span></h3>
             <p>
-              Ne remplace ni les dés, ni les voix, ni le plateau : la table
-              reste physique.
+              <span lang="fr">Ne remplace ni les dés, ni les voix, ni le plateau : la table
+              reste physique.</span><span
+                lang="en"
+                >Replaces neither the dice, the voices, nor the battlemap: the table
+                stays physical.</span
+              >
             </p>
           </article>
         </div>
@@ -603,28 +780,38 @@
           <div class="entry-copy">
             <div class="entry-head entry-head-compact">
               <span class="entry-ordinal" aria-hidden="true">VI</span>
-              <h2 class="entry-title">Repos long : auto-hébergement</h2>
+              <h2 class="entry-title"><span lang="fr">Repos long : auto-hébergement</span><span lang="en">Long rest: self-hosting</span></h2>
             </div>
             <p>
-              L'app vit chez vous&nbsp;: deux conteneurs Docker, votre base
+              <span lang="fr">L'app vit chez vous&nbsp;: deux conteneurs Docker, votre base
               SQLite, vos données. Migration et semis automatiques au
               premier démarrage&nbsp;: 646 objets, 490 sorts et 964 monstres prêts
-              à servir.
+              à servir.</span><span
+                lang="en"
+                >The app lives at your place: two Docker containers, your SQLite
+                database, your data. Migration and seeding run automatically on first
+                boot: 646 items, 490 spells and 964 monsters ready to serve.</span
+              >
             </p>
             <ul class="deploy-notes">
-              <li>Sans Docker&nbsp;: Node 22, puis <code class="mono">npm install &amp;&amp; npm run dev</code></li>
-              <li>Installable comme application (PWA) sur téléphones et tablettes</li>
-              <li>Licence SRD 5.1 : usage personnel, pas de revente</li>
+              <li>
+                <span lang="fr">Sans Docker&nbsp;: Node 22, puis <code class="mono">npm install &amp;&amp; npm run dev</code></span><span
+                  lang="en"
+                  >Without Docker: Node 22, then <code class="mono">npm install &amp;&amp; npm run dev</code></span
+                >
+              </li>
+              <li><span lang="fr">Installable comme application (PWA) sur téléphones et tablettes</span><span lang="en">Installable as an app (PWA) on phones and tablets</span></li>
+              <li><span lang="fr">Licence SRD 5.1 : usage personnel, pas de revente</span><span lang="en">SRD 5.1 license: personal use, no resale</span></li>
             </ul>
             <div class="deploy-cta">
               <a class="btn btn-primary" href="https://github.com/WazoAkaRapace/table-sync">
-                Cloner depuis GitHub
+                <span lang="fr">Cloner depuis GitHub</span><span lang="en">Clone from GitHub</span>
               </a>
               <a
                 class="btn btn-secondary"
                 href="https://github.com/WazoAkaRapace/table-sync#readme"
               >
-                Le guide complet (README)
+                <span lang="fr">Le guide complet (README)</span><span lang="en">The complete guide (README)</span>
               </a>
             </div>
           </div>
@@ -647,41 +834,64 @@
       <div class="rule-head"></div>
       <div class="footer-cols">
         <div>
-          <h3>L'OUTIL</h3>
+          <h3><span lang="fr">L'OUTIL</span><span lang="en">THE TOOL</span></h3>
           <p>
-            Fiches, inventaire, combat et chronique D&amp;D 5e&nbsp;: mobile-first,
-            en français, auto-hébergé.
+            <span lang="fr">Fiches, inventaire, combat et chronique D&amp;D&nbsp;5e&nbsp;: mobile-first,
+            en français, auto-hébergé.</span><span
+              lang="en"
+              >D&amp;D&nbsp;5e sheets, inventory, combat and chronicle: mobile-first, in
+              French and English, self-hosted.</span
+            >
           </p>
         </div>
         <div>
-          <h3>DONNÉES &amp; RÈGLES</h3>
+          <h3><span lang="fr">DONNÉES &amp; RÈGLES</span><span lang="en">DATA &amp; RULES</span></h3>
           <p>
-            Contenu SRD 5.1 (usage personnel). Traductions françaises de
+            <span lang="fr">Contenu SRD 5.1 (usage personnel). Traductions françaises de
             <a href="https://5e-drs.fr" rel="noopener">5e-drs.fr</a> et
-            <a href="https://www.aidedd.org" rel="noopener">AideDD.org</a>.
+            <a href="https://www.aidedd.org" rel="noopener">AideDD.org</a>.</span><span
+              lang="en"
+              >SRD 5.1 content (personal use). French translations by
+              <a href="https://5e-drs.fr" rel="noopener">5e-drs.fr</a> and
+              <a href="https://www.aidedd.org" rel="noopener">AideDD.org</a>.</span
+            >
           </p>
         </div>
         <div>
-          <h3>LE DÉPÔT</h3>
+          <h3><span lang="fr">LE DÉPÔT</span><span lang="en">THE REPO</span></h3>
           <ul>
             <li>
               <a href="https://github.com/WazoAkaRapace/table-sync">github.com/WazoAkaRapace/table-sync</a>
             </li>
-            <li>Site servi par GitHub Pages</li>
+            <li><span lang="fr">Site servi par GitHub Pages</span><span lang="en">Site hosted on GitHub Pages</span></li>
           </ul>
         </div>
       </div>
       <div class="footer-seal-row">
         <img src="assets/logo.png" alt="" width="36" height="36" />
-        <span>Table Sync — fait pour la table.</span>
+        <span><span lang="fr">Table Sync — fait pour la table.</span><span lang="en">Table Sync — made for the table.</span></span>
       </div>
     </footer>
 
     <!-- Visionneuse plein écran — le vocabulaire de l'app : fondu du rideau,
          l'image se pose depuis 0.96, le zoom ne s'anime jamais.
          L'image est créée par main.js à la première ouverture. -->
-    <div class="viewer" role="dialog" aria-modal="true" aria-label="Capture en plein écran" hidden>
-      <button type="button" class="viewer-close" aria-label="Fermer la capture">✕</button>
+    <div
+      class="viewer"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Capture en plein écran"
+      data-en-aria-label="Full-screen screenshot"
+      hidden
+    >
+      <button
+        type="button"
+        class="viewer-close"
+        aria-label="Fermer la capture"
+        data-en-aria-label="Close the screenshot"
+      >
+        ✕
+      </button>
       <figure class="viewer-figure">
         <div class="viewer-frame"></div>
         <figcaption class="viewer-caption"></figcaption>

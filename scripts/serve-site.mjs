@@ -2,7 +2,7 @@
 // Assemble d'abord site/assets/ depuis docs/ (logo + captures) — la seule
 // source de vérité des images reste docs/, le déploiement GitHub Pages fait
 // la même copie. Usage : npm run site [-- --port 4188] · --assemble-only
-import { cpSync, mkdirSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { extname, join, normalize, resolve } from 'node:path';
@@ -20,6 +20,11 @@ function assemble() {
   cpSync(join(root, 'docs', 'screenshots'), join(siteDir, 'assets', 'screenshots'), {
     recursive: true,
   });
+  // Captures EN (optionnelles tant que --lang en n'a pas été régénéré)
+  const shotsEn = join(root, 'docs', 'screenshots-en');
+  if (existsSync(shotsEn)) {
+    cpSync(shotsEn, join(siteDir, 'assets', 'screenshots-en'), { recursive: true });
+  }
   console.log('📦 assets assemblés → site/assets/ (logo + captures depuis docs/)');
 }
 

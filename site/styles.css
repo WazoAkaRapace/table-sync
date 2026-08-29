@@ -148,6 +148,68 @@ code {
   letter-spacing: 0.02em;
 }
 
+/* ---------- Langue du site (FR par défaut · EN au choix) ----------
+   Paires [lang] dans le HTML : la langue inactive est masquée par CSS — la
+   page reste intégralement lisible en français sans JS. La langue est posée
+   sur <html> avant le premier rendu (script inline de <head>). La bascule
+   n'apparaît que si JS vit, même grammaire que .js .reveal. */
+
+html[lang="fr"] [lang="en"] {
+  display: none;
+}
+
+html[lang="en"] [lang="fr"] {
+  display: none;
+}
+
+/* La bascule FR|EN : pilule du dock de l'app — bordée parchemin sur blanc
+   65 %, segment actif encre pleine (le sang reste réservé aux CTA) */
+.lang-nav {
+  position: fixed;
+  top: 0.9rem;
+  right: 0.9rem;
+  z-index: 40;
+  display: none;
+}
+
+.js .lang-nav {
+  display: block;
+}
+
+.lang-toggle {
+  display: flex;
+  border: 1px solid var(--parchment-300);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.65);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.lang-btn {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 0.85rem;
+  border: none;
+  background: transparent;
+  color: var(--ink-600);
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  transition:
+    background-color 0.2s var(--ease),
+    color 0.2s var(--ease);
+}
+
+.lang-btn:hover {
+  color: var(--ink-900);
+}
+
+.lang-btn.is-active {
+  background: var(--ink-800);
+  color: var(--parchment-50);
+}
+
 /* ---------- Carte (surface de travail, recette .card de l'app) ---------- */
 
 .panel {
@@ -913,6 +975,11 @@ code {
   font-size: 0.72rem;
   font-style: italic;
   color: var(--ink-500);
+}
+
+/* L'étiquette du fil (content CSS) suit la langue du document */
+html[lang="en"] .wire::after {
+  content: "real time";
 }
 
 /* ---------- Personnalité (quadrants de fiche) ---------- */

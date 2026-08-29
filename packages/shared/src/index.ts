@@ -375,9 +375,19 @@ export const GMA_RECAP_STYLE_LABELS_FR: Record<string, string> = {
   sonnet_summary: 'Sonnet',
 };
 
+const GMA_RECAP_STYLE_LABELS_EN: Record<string, string> = {
+  default: 'Summary',
+  short_summary: 'In brief',
+  classic_summary: 'Herald',
+  fable_summary: 'Tale',
+  snarky_summary: 'Snarky',
+  sonnet_summary: 'Sonnet',
+};
+
 /** Style label for the recap chips — unknown styles surface verbatim. */
-export function gmaRecapStyleLabel(style: string): string {
-  return GMA_RECAP_STYLE_LABELS_FR[style] ?? style;
+export function gmaRecapStyleLabel(style: string, lang: 'fr' | 'en' = 'fr'): string {
+  const table = lang === 'en' ? GMA_RECAP_STYLE_LABELS_EN : GMA_RECAP_STYLE_LABELS_FR;
+  return table[style] ?? style;
 }
 
 /** A memorable moment of a session (quote or highlight, from the analysis). */
@@ -400,10 +410,20 @@ export const GMA_MOMENT_TYPE_LABELS_FR: Record<string, string> = {
   other: 'Autre',
 };
 
+const GMA_MOMENT_TYPE_LABELS_EN: Record<string, string> = {
+  epic: 'Epic',
+  funny: 'Funny',
+  dramatic: 'Dramatic',
+  tragic: 'Tragic',
+  intriguing: 'Intriguing',
+  other: 'Other',
+};
+
 /** Moment type label — unknown values surface verbatim (open enum upstream). */
-export function gmaMomentTypeLabel(type: string | null): string {
-  if (!type) return 'Moment';
-  return GMA_MOMENT_TYPE_LABELS_FR[type] ?? type;
+export function gmaMomentTypeLabel(type: string | null, lang: 'fr' | 'en' = 'fr'): string {
+  if (!type) return lang === 'en' ? 'Moment' : 'Moment';
+  const table = lang === 'en' ? GMA_MOMENT_TYPE_LABELS_EN : GMA_MOMENT_TYPE_LABELS_FR;
+  return table[type] ?? type;
 }
 
 // ---------- NPCs ----------

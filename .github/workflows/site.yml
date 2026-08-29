@@ -11,6 +11,7 @@ on:
     paths:
       - 'site/**'
       - 'docs/screenshots/**'
+      - 'docs/screenshots-en/**'
       - 'docs/logo.png'
       - '.github/workflows/site.yml'
   workflow_dispatch:
@@ -40,6 +41,11 @@ jobs:
           cp -a site/. publish/
           cp docs/logo.png publish/assets/
           cp -a docs/screenshots publish/assets/screenshots
+          # Captures EN du site bilingue — tolérant tant que le répertoire
+          # n'existe pas encore (générées dans docs/screenshots-en/).
+          if [ -d docs/screenshots-en ]; then
+            cp -a docs/screenshots-en publish/assets/screenshots-en
+          fi
 
       - uses: actions/upload-pages-artifact@v5
         with:
