@@ -32,7 +32,13 @@ import api from '../../api';
 import { CONDITION_ICONS } from '../../components/ConditionsEditor';
 import MonsterStatBlock from '../../components/MonsterStatBlock';
 import { BottomSheet, Chip, HpBar } from '../../components/ui';
-import { abilityShort, conditionHintKey, conditionLabel, damageType } from '../../i18n/labels';
+import {
+  abilityShort,
+  conditionHintKey,
+  conditionLabel,
+  damageType,
+  monsterSizeLabel,
+} from '../../i18n/labels';
 import { DeathSaveTracker } from './DeathSaveTracker';
 import { DeprivationBox } from './DeprivationBox';
 import { HpTracker } from './HpTracker';
@@ -1460,7 +1466,7 @@ export function SurvivalPanel({
                                 ? '1/2'
                                 : f.challengeRating,
                       })}
-                      {f.size ? ` · ${f.size}` : ''}
+                      {f.size ? ` · ${monsterSizeLabel(f.size)}` : ''}
                       {f.fly ? t('survie.forme.vol') : ''}
                       {f.swim ? t('survie.forme.nage') : ''}
                       {!f.seen && t('survie.forme.non.vue')}

@@ -953,25 +953,15 @@
     "languages": "—"
   },
   "ankylosaure": {
-    "name": "Young Horizonback Tortoise",
-    "source": "CRCotN",
+    "name": "Ankylosaurus",
+    "source": "MM",
     "speed": "walk 30 ft.",
-    "languages": [
-      "understands Goblin but can't speak"
-    ],
-    "traits": [
-      {
-        "name": "Amphibious",
-        "desc": "The young horizonback tortoise can breathe air and water."
-      }
-    ],
     "actions": [
       {
-        "name": "Bite",
-        "desc": "mw 7 to hit, reach 10 ft., one target. {@h}18 (4d6 + 4) piercing damage. If the target is a creature, it must succeed on a DC 14 Strength saving throw or be knocked prone."
+        "name": "Tail",
+        "desc": "Melee Weapon Attack: +7 to hit, reach 10 ft., one target. Hit: 18 (4d6 + 4) bludgeoning damage. If the target is a creature, it must succeed on a DC 14 Strength saving throw or be knocked prone."
       }
-    ],
-    "senses": "passive Perception 11"
+    ]
   },
   "anubien": {
     "name": "Anubian",
@@ -1404,7 +1394,7 @@
   },
   "arbeyach": {
     "name": "Arbeyach",
-    "speed": "4 ft.0 ft., burrow 2 ft.0 ft., climb 4 ft.0 ft., fly 8 ft.0 ft. (hover)",
+    "speed": "40 ft., burrow 20 ft., climb 40 ft., fly 80 ft. (hover)",
     "senses": "truesight 120 ft.",
     "languages": "Celestial, Common, Draconic, Infernal",
     "traits": [
@@ -1522,7 +1512,7 @@
   },
   "arbre-pare-fees": {
     "name": "Feywarden Tree",
-    "speed": "2 ft.0 ft.",
+    "speed": "20 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "—",
     "traits": [
@@ -1616,7 +1606,7 @@
   },
   "archer-veteran-elfique": {
     "name": "Elven Veteran Archer",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "languages": "Common, Elvish",
     "traits": [
       {
@@ -1809,7 +1799,7 @@
   },
   "asanbosam": {
     "name": "Asanbosam",
-    "speed": "4 ft.0 ft., climb 1 ft.5 ft.",
+    "speed": "40 ft., climb 15 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Giant",
     "traits": [
@@ -1992,7 +1982,7 @@
   },
   "automate-bibliothecaire": {
     "name": "Librarian Automaton",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "blindsight 60 ft., truesight 10 ft.",
     "languages": "Common, the language of machines",
     "traits": [
@@ -2014,7 +2004,7 @@
   },
   "autruche-de-guerre": {
     "name": "War Ostrich",
-    "speed": "6 ft.0 ft.",
+    "speed": "60 ft.",
     "languages": "—",
     "traits": [
       {
@@ -2039,7 +2029,7 @@
   },
   "avatar-de-boree": {
     "name": "Avatar of Boreas",
-    "speed": "5 ft.0 ft., fly 12 ft.0 ft.",
+    "speed": "50 ft., fly 120 ft.",
     "senses": "darkvision 60 ft., truesight 120 ft.",
     "languages": "Common, Giant, Infernal, Dwarvish",
     "traits": [
@@ -2206,7 +2196,7 @@
   },
   "bagiennik": {
     "name": "Bagiennik",
-    "speed": "3 ft.0 ft., swim 4 ft.0 ft.",
+    "speed": "30 ft., swim 40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common",
     "traits": [
@@ -2421,7 +2411,7 @@
   },
   "beaute-abominable": {
     "name": "Abominable Beauty",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "languages": "Common, Draconic, Elvish, Sylvan",
     "traits": [
       {
@@ -2495,7 +2485,7 @@
   },
   "behtu": {
     "name": "Behtu",
-    "speed": "2 ft.0 ft., climb 2 ft.0 ft.",
+    "speed": "20 ft., climb 20 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Behtu, Common, Infernal",
     "actions": [
@@ -2558,7 +2548,7 @@
   },
   "beli": {
     "name": "Beli",
-    "speed": "3 ft.0 ft., fly 3 ft.0 ft.",
+    "speed": "30 ft., fly 30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Giant, Dwarvish",
     "traits": [
@@ -2592,7 +2582,7 @@
   },
   "belle-noyee": {
     "name": "Drowned Beauty",
-    "speed": "3 ft.0 ft., swim 4 ft.0 ft.",
+    "speed": "30 ft., swim 40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common",
     "traits": [
@@ -2630,7 +2620,7 @@
   },
   "bereginyas": {
     "name": "Bereginyas",
-    "speed": "2 ft.0 ft., fly 6 ft.0 ft.",
+    "speed": "20 ft., fly 60 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Elvish, Sylvan",
     "actions": [
@@ -2710,7 +2700,7 @@
   },
   "bete-d-ombre": {
     "name": "Shadow Beast",
-    "speed": "0 ft., fly 4 ft.0 ft. (hover)",
+    "speed": "0 ft., fly 40 ft. (hover)",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Elvish, Umbral, Void Speech",
     "traits": [
@@ -2865,7 +2855,7 @@
   },
   "blemmye": {
     "name": "Blemmye",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Giant",
     "traits": [
@@ -2931,7 +2921,7 @@
   },
   "boloti": {
     "name": "Boloti",
-    "speed": "2 ft.0 ft., swim 6 ft.0 ft.",
+    "speed": "20 ft., swim 60 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Primordial, Sylvan",
     "traits": [
@@ -2961,7 +2951,7 @@
   },
   "bondisseur-aquatique": {
     "name": "Water Leaper",
-    "speed": "5 ft., fly 5 ft.0 ft., swim 4 ft.0 ft.",
+    "speed": "5 ft., fly 50 ft., swim 40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "—",
     "traits": [
@@ -2999,7 +2989,7 @@
   },
   "boucca": {
     "name": "Boucca",
-    "speed": "2 ft.0 ft., fly 3 ft.0 ft.",
+    "speed": "20 ft., fly 30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Darakhul, Dwarvish",
     "traits": [
@@ -3025,7 +3015,7 @@
   },
   "bouda": {
     "name": "Bouda",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 120 ft.",
     "languages": "Common, Celestial, Infernal, Nurian",
     "traits": [
@@ -3063,7 +3053,7 @@
   },
   "bouffon-macabre": {
     "name": "Macabre Jester",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Abyssal, Celestial, Common, Gnomish",
     "traits": [
@@ -3101,7 +3091,7 @@
   },
   "bouraq": {
     "name": "Buraq",
-    "speed": "6 ft.0 ft., fly 9 ft.0 ft.",
+    "speed": "60 ft., fly 90 ft.",
     "senses": "truesight 120 ft.",
     "languages": "Celestial, Common, Primordial",
     "traits": [
@@ -3247,7 +3237,7 @@
   },
   "camazotz": {
     "name": "Camazotz",
-    "speed": "3 ft.0 ft., climb 3 ft.0 ft., fly 8 ft.0 ft.",
+    "speed": "30 ft., climb 30 ft., fly 80 ft.",
     "senses": "blindsight 120 ft., darkvision 40 ft.",
     "languages": "Common, Darakhul, Derro, Draconic, Infernal, Void Speech, Dwarvish, Nurian, Primordial",
     "traits": [
@@ -3356,7 +3346,7 @@
   },
   "cambium": {
     "name": "Cambium",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Draconic, Infernal",
     "traits": [
@@ -3386,7 +3376,7 @@
   },
   "canitaupe": {
     "name": "Mole Hound",
-    "speed": "3 ft.0 ft., burrow 1 ft.0 ft., swim 1 ft.0 ft.",
+    "speed": "30 ft., burrow 10 ft., swim 10 ft.",
     "senses": "blindsight 30 ft.",
     "languages": "—",
     "traits": [
@@ -3416,7 +3406,7 @@
   },
   "canitaupe-juggernaut": {
     "name": "Mole Hound Juggernaut",
-    "speed": "3 ft.0 ft., burrow 1 ft.0 ft., swim 1 ft.0 ft.",
+    "speed": "30 ft., burrow 10 ft., swim 10 ft.",
     "senses": "blindsight 30 ft.",
     "languages": "—",
     "traits": [
@@ -3482,7 +3472,7 @@
   },
   "capitaine-du-guet": {
     "name": "Watch Captain",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "languages": "any one language (usually Common)",
     "traits": [
       {
@@ -3519,7 +3509,7 @@
   },
   "cavalier-de-baba-yaga-jour-eclatant": {
     "name": "Rider of Baba Yaga (Bright Day)",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Celestial, Common, Infernal",
     "traits": [
@@ -3561,7 +3551,7 @@
   },
   "cavalier-de-baba-yaga-nuit-noire": {
     "name": "Rider of Baba Yaga (Dark Night)",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "languages": "Celestial, Common, Infernal",
     "traits": [
       {
@@ -3602,7 +3592,7 @@
   },
   "cavalier-de-baba-yaga-soleil-rouge": {
     "name": "Rider of Baba Yaga (Red Sun)",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "languages": "Celestial, Common, Infernal",
     "traits": [
       {
@@ -3809,7 +3799,7 @@
   },
   "chapeau-rouge": {
     "name": "Redcap",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Sylvan, Undercommon",
     "traits": [
@@ -3961,7 +3951,7 @@
   },
   "chat-du-temple-de-bastet": {
     "name": "Temple Cat of Bastet",
-    "speed": "4 ft.0 ft., climb 3 ft.0 ft.",
+    "speed": "40 ft., climb 30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Nurian and Sylvan",
     "traits": [
@@ -4024,7 +4014,7 @@
   },
   "chauve-souris-de-peau": {
     "name": "Skin Bat",
-    "speed": "1 ft.0 ft., fly 4 ft.0 ft.",
+    "speed": "10 ft., fly 40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "—",
     "traits": [
@@ -4067,7 +4057,7 @@
   },
   "chef-du-culte-de-l-ordre-d-emeraude": {
     "name": "Emerald Order Cult Leader",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "any three languages",
     "traits": [
@@ -4140,7 +4130,7 @@
   },
   "chelicere": {
     "name": "Chelicera",
-    "speed": "4 ft.0 ft., climb 3 ft.0 ft.",
+    "speed": "40 ft., climb 30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "—",
     "traits": [
@@ -4178,7 +4168,7 @@
   },
   "chernomoi": {
     "name": "Chernomoi",
-    "speed": "2 ft.0 ft., fly 2 ft.0 ft.",
+    "speed": "20 ft., fly 20 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Draconic, Sylvan",
     "traits": [
@@ -4365,7 +4355,7 @@
   },
   "chevalier-fantome": {
     "name": "Ghost Knight",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common",
     "traits": [
@@ -4467,7 +4457,7 @@
   },
   "chien-anguille": {
     "name": "Eel Hound",
-    "speed": "3 ft.0 ft., swim 4 ft.0 ft.",
+    "speed": "30 ft., swim 40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Sylvan",
     "traits": [
@@ -4528,7 +4518,7 @@
   },
   "chien-du-temple": {
     "name": "Temple Dog",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "understands Celestial and Common but can't speak",
     "traits": [
@@ -4641,7 +4631,7 @@
   },
   "chiot-mastodonte": {
     "name": "Mastodon Pup",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "languages": "—",
     "traits": [
       {
@@ -4674,7 +4664,7 @@
   },
   "chort": {
     "name": "Chort",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 120 ft.",
     "languages": "Celestial, Common, Draconic, Infernal",
     "traits": [
@@ -4765,7 +4755,7 @@
   },
   "chronomentaire": {
     "name": "Chronomentary",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Celestial, Infernal",
     "traits": [
@@ -4835,7 +4825,7 @@
   },
   "cikavak": {
     "name": "Cikavak",
-    "speed": "1 ft.0 ft., fly 4 ft.0 ft.",
+    "speed": "10 ft., fly 40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "understands Common",
     "traits": [
@@ -4853,7 +4843,7 @@
   },
   "claquepiege": {
     "name": "Snaptrap",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "blindsight 30 ft.",
     "languages": "—",
     "actions": [
@@ -4869,7 +4859,7 @@
   },
   "clurichaun": {
     "name": "Clurichaun",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Elvish, Sylvan",
     "traits": [
@@ -4914,7 +4904,7 @@
   },
   "colonne-possedee": {
     "name": "Possessed Pillar",
-    "speed": "2 ft.0 ft.",
+    "speed": "20 ft.",
     "senses": "darkvision 120 ft.",
     "languages": "understands the languages of its creator but can't speak",
     "traits": [
@@ -4952,7 +4942,7 @@
   },
   "commandant-des-chevaliers-noirs": {
     "name": "Black Knight Commander",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "languages": "any two languages",
     "traits": [
       {
@@ -4989,7 +4979,7 @@
   },
   "conglomerat-osseux": {
     "name": "Bone Collective",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 120 ft.",
     "languages": "Common, Darakhul",
     "traits": [
@@ -5031,7 +5021,7 @@
   },
   "coquicape": {
     "name": "Shellcap",
-    "speed": "3 ft.0 ft., swim 2 ft.0 ft.",
+    "speed": "30 ft., swim 20 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Giant, Sylvan",
     "traits": [
@@ -5123,7 +5113,7 @@
   },
   "couveteux": {
     "name": "Covetous One",
-    "speed": "2 ft.0 ft., climb 2 ft.0 ft.",
+    "speed": "20 ft., climb 20 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "—",
     "traits": [
@@ -5174,7 +5164,7 @@
   },
   "crabe-garrotteur": {
     "name": "Garrote Crab",
-    "speed": "3 ft.0 ft., swim 2 ft.0 ft.",
+    "speed": "30 ft., swim 20 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "—",
     "traits": [
@@ -5213,7 +5203,7 @@
   },
   "crabe-osseux": {
     "name": "Bone Crab",
-    "speed": "2 ft.0 ft., swim 1 ft.0 ft.",
+    "speed": "20 ft., swim 10 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "—",
     "traits": [
@@ -5372,7 +5362,7 @@
   },
   "croco-de-verre": {
     "name": "Glass Crocodile",
-    "speed": "3 ft.0 ft., swim 5 ft.0 ft.",
+    "speed": "30 ft., swim 50 ft.",
     "senses": "blindsight 30 ft.",
     "languages": "—",
     "traits": [
@@ -5533,7 +5523,7 @@
   },
   "cynome": {
     "name": "Cynome",
-    "speed": "3 ft.0 ft., burrow 1 ft.0 ft.",
+    "speed": "30 ft., burrow 10 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common",
     "traits": [
@@ -5781,7 +5771,7 @@
   },
   "demoiselle-glacee": {
     "name": "Frost Maiden",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Giant, Sylvan",
     "traits": [
@@ -5839,7 +5829,7 @@
   },
   "demon-de-seve": {
     "name": "Sap Demon",
-    "speed": "2 ft.0 ft., climb 2 ft.0 ft.",
+    "speed": "20 ft., climb 20 ft.",
     "languages": "none in its natural form; knows the same languages as the creature it dominates",
     "traits": [
       {
@@ -5900,7 +5890,7 @@
   },
   "derro-antipaladin-des-ombres": {
     "name": "Derro Shadow Antipaladin",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 120 ft.",
     "languages": "Derro, Undercommon",
     "traits": [
@@ -6084,7 +6074,7 @@
   },
   "devoreur-d-ames": {
     "name": "Soul Devourer",
-    "speed": "3 ft.0 ft., fly 10 ft.0 ft.",
+    "speed": "30 ft., fly 100 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Infernal",
     "traits": [
@@ -6192,7 +6182,7 @@
   },
   "diable-automate": {
     "name": "Automaton Devil",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "darkvision 120 ft.",
     "languages": "Common",
     "traits": [
@@ -6362,7 +6352,7 @@
   },
   "diable-cristallin": {
     "name": "Crystalline Devil",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 120 ft.",
     "languages": "Celestial, Common, Infernal",
     "traits": [
@@ -6408,7 +6398,7 @@
   },
   "diable-d-encre": {
     "name": "Ink Devil",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 120 ft.",
     "languages": "Celestial, Common, Draconic",
     "traits": [
@@ -6450,7 +6440,7 @@
   },
   "diable-de-sel": {
     "name": "Salt Devil",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 120 ft.",
     "languages": "Celestial, Common, Gnoll, Infernal",
     "traits": [
@@ -6526,7 +6516,7 @@
   },
   "diable-dore": {
     "name": "Gilded Devil",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Celestial, Common, Draconic, Infernal",
     "traits": [
@@ -6673,7 +6663,7 @@
   },
   "diable-lunaire": {
     "name": "Moon Devil",
-    "speed": "4 ft.0 ft., fly 6 ft.0 ft. (hover), walks on light 8 ft.0 ft.",
+    "speed": "40 ft., fly 60 ft. (hover), walks on light 80 ft.",
     "senses": "darkvision 120 ft.",
     "languages": "Celestial, Draconic, Elvish, Infernal, Sylvan",
     "traits": [
@@ -6900,7 +6890,7 @@
   },
   "dipsa": {
     "name": "Dipsa",
-    "speed": "2 ft.0 ft., climb 2 ft.0 ft., swim 2 ft.0 ft.",
+    "speed": "20 ft., climb 20 ft., swim 20 ft.",
     "languages": "—",
     "traits": [
       {
@@ -6925,7 +6915,7 @@
   },
   "dissimortuum": {
     "name": "Dissimortuum",
-    "speed": "3 ft.0 ft., climb 3 ft.0 ft.",
+    "speed": "30 ft., climb 30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common",
     "traits": [
@@ -6982,7 +6972,7 @@
   },
   "domovoi": {
     "name": "Domovoi",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Elvish, Dwarvish",
     "traits": [
@@ -7043,7 +7033,7 @@
   },
   "doppelrat": {
     "name": "Doppelrat",
-    "speed": "1 ft.5 ft., climb 1 ft.5 ft., swim 1 ft.5 ft.",
+    "speed": "15 ft., climb 15 ft., swim 15 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "—",
     "traits": [
@@ -7108,7 +7098,7 @@
   },
   "dorreq": {
     "name": "Dorreq",
-    "speed": "2 ft.0 ft., climb 1 ft.5 ft.",
+    "speed": "20 ft., climb 15 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Void Speech",
     "traits": [
@@ -8978,7 +8968,7 @@
   },
   "dragon-de-flammes-adulte": {
     "name": "Adult Flame Dragon",
-    "speed": "4 ft.0 ft., climb 4 ft.0 ft., fly 8 ft.0 ft.",
+    "speed": "40 ft., climb 40 ft., fly 80 ft.",
     "senses": "blindsight 60 ft., darkvision 120 ft.",
     "languages": "Common, Draconic, Giant, Ignan, Infernal, Orc",
     "traits": [
@@ -9038,7 +9028,7 @@
   },
   "dragon-de-flammes-dragonnet": {
     "name": "Flame Dragon Wyrmling",
-    "speed": "3 ft.0 ft., climb 3 ft.0 ft., fly 6 ft.0 ft.",
+    "speed": "30 ft., climb 30 ft., fly 60 ft.",
     "senses": "blindsight 30 ft., darkvision 120 ft.",
     "languages": "Common, Draconic, Ignan",
     "actions": [
@@ -9054,7 +9044,7 @@
   },
   "dragon-de-flammes-jeune": {
     "name": "Young Flame Dragon",
-    "speed": "4 ft.0 ft., climb 4 ft.0 ft., fly 8 ft.0 ft.",
+    "speed": "40 ft., climb 40 ft., fly 80 ft.",
     "senses": "blindsight 30 ft., darkvision 120 ft.",
     "languages": "Common, Draconic, Giant, Ignan, Infernal, Orc",
     "traits": [
@@ -9084,7 +9074,7 @@
   },
   "dragon-de-flammes-venerable": {
     "name": "Ancient Flame Dragon",
-    "speed": "4 ft.0 ft., climb 4 ft.0 ft., fly 8 ft.0 ft.",
+    "speed": "40 ft., climb 40 ft., fly 80 ft.",
     "senses": "blindsight 60 ft., darkvision 120 ft.",
     "languages": "Common, Draconic, Giant, Ignan, Infernal, Orc",
     "traits": [
@@ -9144,7 +9134,7 @@
   },
   "dragon-de-mithral-adulte": {
     "name": "Adult Mithral Dragon",
-    "speed": "4 ft.0 ft., fly 8 ft.0 ft.",
+    "speed": "40 ft., fly 80 ft.",
     "senses": "blindsight 60 ft., darkvision 120 ft.",
     "languages": "Celestial, Common, Draconic, Primordial",
     "traits": [
@@ -9204,7 +9194,7 @@
   },
   "dragon-de-mithral-jeune": {
     "name": "Young Mithral Dragon",
-    "speed": "5 ft.0 ft., fly 6 ft.0 ft.",
+    "speed": "50 ft., fly 60 ft.",
     "senses": "blindsight 60 ft., darkvision 120 ft.",
     "languages": "Celestial, Common, Draconic, Primordial",
     "traits": [
@@ -9234,7 +9224,7 @@
   },
   "dragon-de-mithral-venerable": {
     "name": "Ancient Mithral Dragon",
-    "speed": "4 ft.0 ft., fly 8 ft.0 ft.",
+    "speed": "40 ft., fly 80 ft.",
     "senses": "blindsight 60 ft., darkvision 120 ft.",
     "languages": "Celestial, Common, Draconic, Primordial",
     "traits": [
@@ -9298,7 +9288,7 @@
   },
   "dragon-des-cavernes-adulte": {
     "name": "Adult Cave Dragon",
-    "speed": "4 ft.0 ft., climb 4 ft.0 ft., earth glide",
+    "speed": "40 ft., climb 40 ft., earth glide",
     "senses": "blindsight 120 ft.",
     "languages": "Common, Darakhul, Draconic, Goblin, Dwarvish",
     "traits": [
@@ -9370,7 +9360,7 @@
   },
   "dragon-des-cavernes-dragonnet": {
     "name": "Cave Dragon Wyrmling",
-    "speed": "3 ft.0 ft., burrow 2 ft.0 ft., fly 2 ft.0 ft.",
+    "speed": "30 ft., burrow 20 ft., fly 20 ft.",
     "senses": "blindsight 120 ft.",
     "languages": "Draconic",
     "traits": [
@@ -9396,7 +9386,7 @@
   },
   "dragon-des-cavernes-jeune": {
     "name": "Young Cave Dragon",
-    "speed": "4 ft.0 ft., burrow 2 ft.0 ft., fly 2 ft.0 ft.",
+    "speed": "40 ft., burrow 20 ft., fly 20 ft.",
     "senses": "blindsight 120 ft.",
     "languages": "Common, Darakhul, Draconic",
     "traits": [
@@ -9434,7 +9424,7 @@
   },
   "dragon-du-vent-adulte": {
     "name": "Adult Wind Dragon",
-    "speed": "4 ft.0 ft., fly 9 ft.0 ft.",
+    "speed": "40 ft., fly 90 ft.",
     "senses": "blindsight 10 ft., darkvision 60 ft.",
     "languages": "Common, Draconic, Primordial",
     "traits": [
@@ -9506,7 +9496,7 @@
   },
   "dragon-du-vent-dragonnet": {
     "name": "Wind Dragon Wyrmling",
-    "speed": "4 ft.0 ft., fly 8 ft.0 ft.",
+    "speed": "40 ft., fly 80 ft.",
     "senses": "blindsight 10 ft., darkvision 60 ft.",
     "languages": "Draconic, Primordial",
     "actions": [
@@ -9522,7 +9512,7 @@
   },
   "dragon-du-vent-jeune": {
     "name": "Young Wind Dragon",
-    "speed": "4 ft.0 ft., fly 9 ft.0 ft.",
+    "speed": "40 ft., fly 90 ft.",
     "senses": "blindsight 10 ft., darkvision 60 ft.",
     "languages": "Common, Draconic, Primordial",
     "traits": [
@@ -9560,7 +9550,7 @@
   },
   "dragon-du-vent-venerable": {
     "name": "Ancient Wind Dragon",
-    "speed": "4 ft.0 ft., fly 12 ft.0 ft.",
+    "speed": "40 ft., fly 120 ft.",
     "senses": "blindsight 10 ft., darkvision 60 ft.",
     "languages": "Common, Draconic, Elvish, Dwarvish, Primordial",
     "traits": [
@@ -9632,7 +9622,7 @@
   },
   "dragon-du-vide-adulte": {
     "name": "Adult Void Dragon",
-    "speed": "4 ft.0 ft., fly 8 ft.0 ft. (hover)",
+    "speed": "40 ft., fly 80 ft. (hover)",
     "senses": "blindsight 60 ft., darkvision 120 ft.",
     "languages": "Common, Draconic, Void Speech",
     "traits": [
@@ -9704,7 +9694,7 @@
   },
   "dragon-du-vide-dragonnet": {
     "name": "Void Dragon Wyrmling",
-    "speed": "3 ft.0 ft., fly 6 ft.0 ft. (hover)",
+    "speed": "30 ft., fly 60 ft. (hover)",
     "senses": "blindsight 30 ft., darkvision 120 ft.",
     "languages": "Common, Draconic, Void Speech",
     "traits": [
@@ -9734,7 +9724,7 @@
   },
   "dragon-du-vide-jeune": {
     "name": "Young Void Dragon",
-    "speed": "4 ft.0 ft., fly 8 ft.0 ft. (hover)",
+    "speed": "40 ft., fly 80 ft. (hover)",
     "senses": "blindsight 30 ft., darkvision 120 ft.",
     "languages": "Common, Draconic, Void Speech",
     "traits": [
@@ -9772,7 +9762,7 @@
   },
   "dragon-du-vide-venerable": {
     "name": "Ancient Void Dragon",
-    "speed": "4 ft.0 ft., fly 8 ft.0 ft. (hover)",
+    "speed": "40 ft., fly 80 ft. (hover)",
     "senses": "blindsight 60 ft., darkvision 120 ft.",
     "languages": "Celestial, Common, Draconic, Infernal, Void Speech, Primordial",
     "traits": [
@@ -9888,7 +9878,7 @@
   },
   "dragon-marin-adulte": {
     "name": "Adult Sea Dragon",
-    "speed": "4 ft.0 ft., fly 8 ft.0 ft., swim 6 ft.0 ft.",
+    "speed": "40 ft., fly 80 ft., swim 60 ft.",
     "senses": "blindsight 60 ft., darkvision 120 ft.",
     "languages": "Common, Draconic",
     "traits": [
@@ -9948,7 +9938,7 @@
   },
   "dragon-marin-dragonnet": {
     "name": "Sea Dragon Wyrmling",
-    "speed": "3 ft.0 ft., fly 6 ft.0 ft., swim 4 ft.0 ft.",
+    "speed": "30 ft., fly 60 ft., swim 40 ft.",
     "senses": "blindsight 10 ft., darkvision 60 ft.",
     "languages": "Common, Draconic",
     "actions": [
@@ -9964,7 +9954,7 @@
   },
   "dragon-marin-jeune": {
     "name": "Young Sea Dragon",
-    "speed": "4 ft.0 ft., fly 8 ft.0 ft., swim 5 ft.0 ft.",
+    "speed": "40 ft., fly 80 ft., swim 50 ft.",
     "senses": "blindsight 30 ft., darkvision 120 ft.",
     "languages": "Common, Draconic",
     "traits": [
@@ -9998,7 +9988,7 @@
   },
   "dragon-marin-venerable": {
     "name": "Ancient Sea Dragon",
-    "speed": "4 ft.0 ft., fly 8 ft.0 ft., swim 8 ft.0 ft.",
+    "speed": "40 ft., fly 80 ft., swim 80 ft.",
     "senses": "blindsight 60 ft., darkvision 120 ft.",
     "languages": "Common, Draconic, Infernal, Primordial",
     "traits": [
@@ -10058,7 +10048,7 @@
   },
   "dragon-murene": {
     "name": "Moray Dragon",
-    "speed": "2 ft.0 ft., swim 6 ft.0 ft.",
+    "speed": "20 ft., swim 60 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Draconic, Primordial",
     "traits": [
@@ -10874,7 +10864,7 @@
   },
   "dragonette-lanterne": {
     "name": "Lantern Dragonet",
-    "speed": "1 ft.5 ft., fly 4 ft.0 ft. (hover)",
+    "speed": "15 ft., fly 40 ft. (hover)",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Draconic, Elvish, Primordial",
     "traits": [
@@ -10900,7 +10890,7 @@
   },
   "drake-de-cendres": {
     "name": "Ash Drake",
-    "speed": "3 ft.0 ft., fly 6 ft.0 ft.",
+    "speed": "30 ft., fly 60 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Draconic",
     "actions": [
@@ -10928,7 +10918,7 @@
   },
   "drake-de-corail": {
     "name": "Coral Drake",
-    "speed": "3 ft.0 ft., swim 6 ft.0 ft.",
+    "speed": "30 ft., swim 60 ft.",
     "senses": "darkvision 120 ft.",
     "languages": "Draconic",
     "traits": [
@@ -10966,7 +10956,7 @@
   },
   "drake-de-papier": {
     "name": "Paper Drake",
-    "speed": "4 ft.0 ft., fly 10 ft.0 ft.",
+    "speed": "40 ft., fly 100 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Draconic, Elvish, Dwarvish",
     "traits": [
@@ -11000,7 +10990,7 @@
   },
   "drake-de-rouille": {
     "name": "Rust Drake",
-    "speed": "2 ft.0 ft., burrow 5 ft., fly 10 ft.0 ft.",
+    "speed": "20 ft., burrow 5 ft., fly 100 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Draconic",
     "actions": [
@@ -11028,7 +11018,7 @@
   },
   "drake-des-ombres-ancien": {
     "name": "Ancient Shadow Drake",
-    "speed": "2 ft.0 ft., fly 6 ft.0 ft.",
+    "speed": "20 ft., fly 60 ft.",
     "senses": "darkvision 120 ft.",
     "languages": "Common, Draconic, Umbral",
     "traits": [
@@ -11066,7 +11056,7 @@
   },
   "drake-des-profondeurs": {
     "name": "Deep Drake",
-    "speed": "5 ft.0 ft., climb 3 ft.0 ft., fly 10 ft.0 ft.",
+    "speed": "50 ft., climb 30 ft., fly 100 ft.",
     "senses": "blindsight 60 ft., darkvision 120 ft.",
     "languages": "Common, Undercommon, Darakhul, Draconic",
     "traits": [
@@ -11100,7 +11090,7 @@
   },
   "drake-des-tavernes": {
     "name": "Tavern Drake",
-    "speed": "4 ft.0 ft., fly 8 ft.0 ft.",
+    "speed": "40 ft., fly 80 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Draconic",
     "traits": [
@@ -11134,7 +11124,7 @@
   },
   "drake-pourpre": {
     "name": "Purple Drake",
-    "speed": "1 ft.5 ft., fly 8 ft.0 ft.",
+    "speed": "15 ft., fly 80 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Draconic",
     "traits": [
@@ -11164,7 +11154,7 @@
   },
   "drake-stellaire": {
     "name": "Star Drake",
-    "speed": "4 ft.0 ft., fly 10 ft.0 ft.",
+    "speed": "40 ft., fly 100 ft.",
     "senses": "truesight 120 ft.",
     "languages": "Celestial, Common, Draconic, Elvish, Infernal, Dwarvish, Primordial",
     "traits": [
@@ -11228,7 +11218,7 @@
   },
   "drakon": {
     "name": "Drakon",
-    "speed": "3 ft.0 ft., fly 6 ft.0 ft., swim 4 ft.0 ft.",
+    "speed": "30 ft., fly 60 ft., swim 40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "—",
     "traits": [
@@ -11599,7 +11589,7 @@
   },
   "dryade-epine-du-crepuscule": {
     "name": "Twilight Thorn Dryad",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Elvish, Sylvan, Umbral",
     "traits": [
@@ -11765,7 +11755,7 @@
   },
   "eala": {
     "name": "Eala",
-    "speed": "1 ft.0 ft., fly 6 ft.0 ft.",
+    "speed": "10 ft., fly 60 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "—",
     "traits": [
@@ -11870,7 +11860,7 @@
   },
   "edimmu": {
     "name": "Edimmu",
-    "speed": "0 ft., fly 6 ft.0 ft. (hover)",
+    "speed": "0 ft., fly 60 ft. (hover)",
     "senses": "blindsight 60 ft.",
     "languages": "understands Common but can't speak",
     "traits": [
@@ -11925,7 +11915,7 @@
   },
   "einherjar": {
     "name": "Einherjar",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft., truesight 60 ft.",
     "languages": "Celestial, Common",
     "traits": [
@@ -12014,7 +12004,7 @@
   },
   "eleinomae": {
     "name": "Eleinomae",
-    "speed": "3 ft.0 ft., swim 3 ft.0 ft.",
+    "speed": "30 ft., swim 30 ft.",
     "languages": "Aquan, Common, Elvish, Sylvan",
     "traits": [
       {
@@ -12202,7 +12192,7 @@
   },
   "empoigneur-arboricole": {
     "name": "Tree Gripper",
-    "speed": "1 ft.0 ft., climb 4 ft.0 ft.",
+    "speed": "10 ft., climb 40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "—",
     "traits": [
@@ -12281,7 +12271,7 @@
   },
   "enfant-des-bruyeres": {
     "name": "Heath Child",
-    "speed": "2 ft.0 ft., climb 1 ft.0 ft.",
+    "speed": "20 ft., climb 10 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Heathspeak, Common, Sylvan",
     "traits": [
@@ -12469,7 +12459,7 @@
   },
   "erina-defenseur": {
     "name": "Erina Defender",
-    "speed": "2 ft.0 ft., burrow 2 ft.0 ft.",
+    "speed": "20 ft., burrow 20 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Erina",
     "traits": [
@@ -12507,7 +12497,7 @@
   },
   "erina-ecornifleur": {
     "name": "Erina Scrounger",
-    "speed": "2 ft.0 ft., burrow 2 ft.0 ft.",
+    "speed": "20 ft., burrow 20 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Erina",
     "traits": [
@@ -12612,7 +12602,7 @@
   },
   "esclave-putresprit": {
     "name": "Rotmind Slave",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "tremorsense 30 ft.",
     "languages": "understands Common but can't speak",
     "traits": [
@@ -12674,7 +12664,7 @@
   },
   "esprit-du-feu": {
     "name": "Fire Spirit",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Primordial",
     "traits": [
@@ -12740,7 +12730,7 @@
   },
   "esprit-verdoyant": {
     "name": "Verdant Spirit",
-    "speed": "3 ft.0 ft., climb 3 ft.0 ft.",
+    "speed": "30 ft., climb 30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "understands the language you speak",
     "traits": [
@@ -12762,7 +12752,7 @@
   },
   "etincelle": {
     "name": "Spark",
-    "speed": "1 ft.0 ft., fly 6 ft.0 ft. (hover)",
+    "speed": "10 ft., fly 60 ft. (hover)",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Primordial",
     "traits": [
@@ -12916,7 +12906,7 @@
   },
   "fanatique-du-scorpion": {
     "name": "Scorpion Fanatic",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "languages": "Common",
     "traits": [
       {
@@ -12941,7 +12931,7 @@
   },
   "fangeux": {
     "name": "Muckdweller",
-    "speed": "3 ft.0 ft., swim 3 ft.0 ft.",
+    "speed": "30 ft., swim 30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Sylvan, Umbral",
     "traits": [
@@ -13026,7 +13016,7 @@
   },
   "far-darrig": {
     "name": "Far Darrig",
-    "speed": "2 ft.0 ft.",
+    "speed": "20 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Elvish, Sylvan",
     "traits": [
@@ -13092,7 +13082,7 @@
   },
   "fee-des-ombres": {
     "name": "Shadow Fey",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Elvish, Umbral",
     "traits": [
@@ -13126,7 +13116,7 @@
   },
   "fee-des-ombres-chasseur-forestier": {
     "name": "Shadow Fey Forest Hunter",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Elvish, Umbral",
     "traits": [
@@ -13168,7 +13158,7 @@
   },
   "fee-des-ombres-duelliste": {
     "name": "Shadow Fey Duelist",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Elvish, Umbral",
     "traits": [
@@ -13210,7 +13200,7 @@
   },
   "fee-des-ombres-enchanteresse": {
     "name": "Shadow Fey Enchantress",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Elvish, Umbral",
     "traits": [
@@ -13260,7 +13250,7 @@
   },
   "fee-des-ombres-gardien": {
     "name": "Shadow Fey Guardian",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Elvish, Umbral",
     "traits": [
@@ -13306,7 +13296,7 @@
   },
   "felforge": {
     "name": "Fellforged",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "those it spoke in life",
     "traits": [
@@ -13340,7 +13330,7 @@
   },
   "ferocien": {
     "name": "Ferocian",
-    "speed": "4 ft.0 ft., climb 2 ft.0 ft.",
+    "speed": "40 ft., climb 20 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "—",
     "traits": [
@@ -13409,7 +13399,7 @@
   },
   "fext": {
     "name": "Fext",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "the languages spoken by its patron",
     "traits": [
@@ -13447,7 +13437,7 @@
   },
   "fils-de-fenris": {
     "name": "Son of Fenris",
-    "speed": "6 ft.0 ft., burrow 1 ft.5 ft. (3 ft.0 ft. in ice or snow)",
+    "speed": "60 ft., burrow 15 ft. (30 ft. in ice or snow)",
     "senses": "tremorsense 100 ft., truesight 60 ft.",
     "languages": "Common, Celestial, Draconic, Elvish, Dwarvish, Giant, Infernal",
     "traits": [
@@ -13588,7 +13578,7 @@
   },
   "forgepeur": {
     "name": "Fearforge",
-    "speed": "4 ft.0 ft., climb 1 ft.5 ft.",
+    "speed": "40 ft., climb 15 ft.",
     "senses": "blindsight 30 ft.",
     "languages": "Common, Elvish, Sylvan",
     "traits": [
@@ -13626,7 +13616,7 @@
   },
   "fourmi-geante": {
     "name": "Giant Ant",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "blindsight 60 ft.",
     "languages": "—",
     "traits": [
@@ -13651,23 +13641,38 @@
     ]
   },
   "fourmi-geante-reine": {
-    "name": "Giant Coral Snake",
-    "source": "GoS",
-    "speed": "walk 30 ft., swim 30 ft.",
-    "senses": [
-      "blindsight 10 ft."
+    "name": "Giant Ant Queen",
+    "speed": "walk 40 ft.",
+    "senses": "blindsight 60 ft.",
+    "languages": "—",
+    "traits": [
+      {
+        "name": "Keen Smell",
+        "desc": "A giant ant queen has advantage on Wisdom (Perception) checks based on smell."
+      },
+      {
+        "name": "Royal Scent",
+        "desc": "Giant ants defending a queen have advantage on all their attack rolls."
+      }
     ],
     "actions": [
       {
+        "name": "Multiattack",
+        "desc": "A giant ant queen makes two bite attacks and one sting attack."
+      },
+      {
         "name": "Bite",
-        "desc": "mw 5 to hit, reach 5 ft., one target. {@h}8 (2d4 + 3) piercing damage, and the target must succeed on a DC 12 Constitution saving throw or be stunned until the end of its next turn. On a failed save, the target begins to hallucinate and is afflicted with a short-term madness effect (determined randomly or by the DM; see \"Madness\" in chapter 8 of the Dungeon Master's Guide). The effect lasts 10 minutes."
+        "desc": "Melee Weapon Attack: +5 to hit, reach 5 ft., one target. Hit: 7 (1d8 + 3) bludgeoning damage, and the target is grappled (escape DC 13). While grappled, the target is restrained, and the giant ant queen can't bite a different target."
+      },
+      {
+        "name": "Sting",
+        "desc": "Melee Weapon Attack: +5 to hit, reach 5 ft., one target. Hit: 7 (1d8 + 3) piercing damage plus 22 (4d10) poison damage, or half as much poison damage on a successful DC 14 Constitution saving throw."
       }
-    ],
-    "languages": "—"
+    ]
   },
   "fraughashar": {
     "name": "Fraughashar",
-    "speed": "2 ft.5 ft.",
+    "speed": "25 ft.",
     "languages": "Sylvan",
     "traits": [
       {
@@ -13863,7 +13868,7 @@
   },
   "gardien-spectral": {
     "name": "Spectral Guardian",
-    "speed": "0 ft., fly 6 ft.0 ft. (hover)",
+    "speed": "0 ft., fly 60 ft. (hover)",
     "senses": "blindsight 10 ft., darkvision 60 ft.",
     "languages": "understands the languages it knew in life but can't speak",
     "traits": [
@@ -13995,26 +14000,29 @@
     "senses": "passive Perception 12"
   },
   "gbahali-postosuchus": {
-    "name": "Mammoth",
-    "source": "MM",
-    "speed": "walk 40 ft.",
+    "name": "Gbahali (Postosuchus)",
+    "speed": "walk 50 ft.",
+    "languages": "—",
     "traits": [
       {
-        "name": "Trampling Charge",
-        "desc": "If the mammoth moves at least 20 feet straight toward a creature and then hits it with a gore attack on the same turn, that target must succeed on a DC 18 Strength saving throw or be knocked prone. If the target is prone, the mammoth can make one stomp attack against it as a bonus action."
+        "name": "Chameleon Skin",
+        "desc": "The gbahali has advantage on Dexterity (Stealth) checks. If it moves at half its speed or less, attacks made against it before the start of its next turn have disadvantage."
       }
     ],
     "actions": [
       {
-        "name": "Gore",
-        "desc": "mw 10 to hit, reach 10 ft., one target. {@h}25 (4d8 + 7) piercing damage."
+        "name": "Multiattack",
+        "desc": "The gbahali makes one bite attack and two claw attacks."
       },
       {
-        "name": "Stomp",
-        "desc": "mw 10 to hit, reach 5 ft., one prone creature. {@h}29 (4d10 + 7) bludgeoning damage."
+        "name": "Bite",
+        "desc": "Melee Weapon Attack: +8 to hit, reach 10 ft., one target. Hit: 24 (3d12 + 5) piercing damage. If the target is a Medium or smaller creature, it is grappled (escape DC 15). While grappled, the target is restrained, and the gbahali can't bite another target."
+      },
+      {
+        "name": "Claws",
+        "desc": "Melee Weapon Attack: +8 to hit, reach 5 ft., one target. Hit: 14 (2d8 + 5) slashing damage."
       }
-    ],
-    "languages": "—"
+    ]
   },
   "geant-des-collines": {
     "name": "Hill Giant",
@@ -14139,7 +14147,7 @@
   },
   "geant-du-desert": {
     "name": "Desert Giant",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "languages": "Common, Giant",
     "traits": [
       {
@@ -14212,7 +14220,7 @@
   },
   "geant-jotun": {
     "name": "Jotun Giant",
-    "speed": "6 ft.0 ft.",
+    "speed": "60 ft.",
     "senses": "darkvision 120 ft.",
     "languages": "Common, Giant",
     "traits": [
@@ -14276,7 +14284,7 @@
   },
   "geant-obese": {
     "name": "Obese Giant",
-    "speed": "2 ft.0 ft.",
+    "speed": "20 ft.",
     "languages": "Dwarvish, Giant",
     "traits": [
       {
@@ -14301,7 +14309,7 @@
   },
   "geant-thursir": {
     "name": "Thursir Giant",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Dwarvish, Giant",
     "traits": [
@@ -14362,7 +14370,7 @@
   },
   "genie-al-aeshma": {
     "name": "Al-Aeshma Genie",
-    "speed": "3 ft.0 ft., fly 9 ft.0 ft. (hover)",
+    "speed": "30 ft., fly 90 ft. (hover)",
     "senses": "darkvision 120 ft.",
     "languages": "Auran, Common, Ignan",
     "traits": [
@@ -14408,7 +14416,7 @@
   },
   "gerride": {
     "name": "Water Strider",
-    "speed": "1 ft.0 ft., climb 1 ft.0 ft., swim 8 ft.0 ft.",
+    "speed": "10 ft., climb 10 ft., swim 80 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "—",
     "traits": [
@@ -14768,7 +14776,7 @@
   },
   "gnoll-vif-ravageur": {
     "name": "Gnoll Swift Ravager",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Gnoll",
     "traits": [
@@ -15069,7 +15077,7 @@
   },
   "gobelin-poussiereux": {
     "name": "Dust Goblin",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Goblin",
     "traits": [
@@ -15203,7 +15211,7 @@
   },
   "golem-a-vapeur": {
     "name": "Steam Golem",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "darkvision 120 ft.",
     "languages": "understands the languages of its creator but can't speak",
     "traits": [
@@ -15433,7 +15441,7 @@
   },
   "golem-de-sel": {
     "name": "Salt Golem",
-    "speed": "2 ft.0 ft.",
+    "speed": "20 ft.",
     "senses": "darkvision 120 ft.",
     "languages": "understands the languages of its creator but can't speak",
     "traits": [
@@ -15510,7 +15518,7 @@
   },
   "golem-smaragdin": {
     "name": "Emerald Golem",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 120 ft.",
     "languages": "understands the languages of its creator but can't speak",
     "traits": [
@@ -15548,7 +15556,7 @@
   },
   "golem-tresor": {
     "name": "Treasure Golem",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "darkvision 120 ft.",
     "languages": "understands the languages of its creator but can't speak",
     "traits": [
@@ -15683,7 +15691,7 @@
   },
   "goule-darakhule": {
     "name": "Darakhul Ghoul",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Darakhul",
     "traits": [
@@ -15725,7 +15733,7 @@
   },
   "goule-de-fer": {
     "name": "Iron Ghoul",
-    "speed": "3 ft.0 ft., burrow 2 ft.0 ft.",
+    "speed": "30 ft., burrow 20 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Darakhul, Undercommon",
     "traits": [
@@ -15759,7 +15767,7 @@
   },
   "goule-empereur": {
     "name": "Ghoul Emperor",
-    "speed": "3 ft.0 ft., burrow 1 ft.5 ft.",
+    "speed": "30 ft., burrow 15 ft.",
     "senses": "darkvision 120 ft.",
     "languages": "Common, Darakhul, Draconic, Gnoll, Undercommon",
     "traits": [
@@ -15819,7 +15827,7 @@
   },
   "goule-imperiale": {
     "name": "Imperial Ghoul",
-    "speed": "3 ft.0 ft., burrow 1 ft.5 ft.",
+    "speed": "30 ft., burrow 15 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Darakhul, Undercommon",
     "traits": [
@@ -15849,7 +15857,7 @@
   },
   "goule-mendiante": {
     "name": "Beggar Ghoul",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Undercommon",
     "traits": [
@@ -15875,7 +15883,7 @@
   },
   "goule-poudre-d-os": {
     "name": "Bonepowder Ghoul",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Darakhul, Draconic, Dwarvish",
     "traits": [
@@ -15933,7 +15941,7 @@
   },
   "grand-veneur": {
     "name": "Master of the Hunt",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "blindsight 10 ft., darkvision 60 ft.",
     "languages": "Common, Draconic, Elvish, Sylvan",
     "traits": [
@@ -16014,7 +16022,7 @@
   },
   "gremlin-azza": {
     "name": "Azza Gremlin",
-    "speed": "1 ft.0 ft., fly 4 ft.0 ft. (hover)",
+    "speed": "10 ft., fly 40 ft. (hover)",
     "senses": "darkvision 120 ft.",
     "languages": "Common, Primordial",
     "traits": [
@@ -16036,7 +16044,7 @@
   },
   "gremlin-rhume": {
     "name": "Cold Gremlin",
-    "speed": "2 ft.0 ft., climb 1 ft.0 ft., swim 1 ft.0 ft.",
+    "speed": "20 ft., climb 10 ft., swim 10 ft.",
     "senses": "darkvision 120 ft.",
     "languages": "Common",
     "traits": [
@@ -16379,7 +16387,7 @@
   },
   "guenaude-des-sables": {
     "name": "Sand Hag",
-    "speed": "3 ft.0 ft., burrow 3 ft.0 ft.",
+    "speed": "30 ft., burrow 30 ft.",
     "senses": "darkvision 120 ft.",
     "languages": "Common, Dwarvish, Giant, Gnomish",
     "traits": [
@@ -16458,7 +16466,7 @@
   },
   "guenaude-miroir": {
     "name": "Mirror Hag",
-    "speed": "3 ft.0 ft., fly 1 ft.0 ft.",
+    "speed": "30 ft., fly 10 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common",
     "traits": [
@@ -16538,7 +16546,7 @@
   },
   "guenaude-rouge": {
     "name": "Red Hag",
-    "speed": "3 ft.0 ft., swim 3 ft.0 ft.",
+    "speed": "30 ft., swim 30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Druidic, Giant",
     "traits": [
@@ -16572,7 +16580,7 @@
   },
   "guenaude-sanglante": {
     "name": "Blood Hag",
-    "speed": "3 ft.0 ft., climb 3 ft.0 ft.",
+    "speed": "30 ft., climb 30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Giant, Infernal, Sylvan, Trollish",
     "traits": [
@@ -16697,7 +16705,7 @@
   },
   "gug": {
     "name": "Gug",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "darkvision 240 ft.",
     "languages": "Deep Speech, Giant, Undercommon",
     "traits": [
@@ -16791,7 +16799,7 @@
   },
   "habitant-de-leng": {
     "name": "Denizen of Leng",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "languages": "Common, Void Speech",
     "traits": [
       {
@@ -16866,7 +16874,7 @@
   },
   "harpie-chouette": {
     "name": "Owl Harpy",
-    "speed": "2 ft.0 ft., fly 8 ft.0 ft. (hover)",
+    "speed": "20 ft., fly 80 ft. (hover)",
     "senses": "blindsight 60 ft.",
     "languages": "Common, Abyssal, Giant",
     "traits": [
@@ -16977,7 +16985,7 @@
   },
   "heraut-des-tenebres": {
     "name": "Herald of Darkness",
-    "speed": "3 ft.0 ft., swim 3 ft.0 ft., fly 5 ft.0 ft.",
+    "speed": "30 ft., swim 30 ft., fly 50 ft.",
     "senses": "darkvision 200 ft.",
     "languages": "Common, Elvish, Goblin, Infernal, Sylvan",
     "traits": [
@@ -17015,7 +17023,7 @@
   },
   "heraut-du-sang": {
     "name": "Herald of Blood",
-    "speed": "3 ft.0 ft., swim 3 ft.0 ft., fly 5 ft.0 ft.",
+    "speed": "30 ft., swim 30 ft., fly 50 ft.",
     "senses": "darkvision 240 ft.",
     "languages": "Common, Draconic, Infernal, Void Speech",
     "traits": [
@@ -17397,7 +17405,7 @@
   },
   "homme-cafard-escarmoucheur": {
     "name": "Roachling Skirmisher",
-    "speed": "2 ft.5 ft.",
+    "speed": "25 ft.",
     "senses": "darkvision 60 ft., tremorsense 10 ft.",
     "languages": "Common",
     "traits": [
@@ -17423,7 +17431,7 @@
   },
   "homme-cafard-seigneur": {
     "name": "Roachling Lord",
-    "speed": "2 ft.5 ft.",
+    "speed": "25 ft.",
     "senses": "darkvision 60 ft., tremorsense 10 ft.",
     "languages": "Common",
     "traits": [
@@ -17453,7 +17461,7 @@
   },
   "homme-chevre": {
     "name": "Goatman",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Giant, Trollish, but can't speak",
     "traits": [
@@ -17479,7 +17487,7 @@
   },
   "homme-corbeau-combattant": {
     "name": "Ravenfolk Fighter",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 120 ft.",
     "languages": "Common, Huginn, the language of feathers",
     "traits": [
@@ -17525,7 +17533,7 @@
   },
   "homme-corbeau-croasseur-funeste": {
     "name": "Ravenfolk Doom Croaker",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 120 ft.",
     "languages": "Common, Huginn, the language of feathers",
     "traits": [
@@ -17555,7 +17563,7 @@
   },
   "homme-corbeau-eclaireur": {
     "name": "Ravenfolk Scout",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 120 ft.",
     "languages": "Common, Huginn, the language of feathers",
     "traits": [
@@ -17589,7 +17597,7 @@
   },
   "homme-lemurien": {
     "name": "Lemurfolk",
-    "speed": "2 ft.0 ft., climb 1 ft.0 ft., fly 4 ft.0 ft.",
+    "speed": "20 ft., climb 10 ft., fly 40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Lemurian",
     "traits": [
@@ -17615,7 +17623,7 @@
   },
   "homme-lemurien-fourrure-grise": {
     "name": "Gray-Furred Lemurfolk",
-    "speed": "2 ft.0 ft., climb 1 ft.0 ft., fly 4 ft.0 ft.",
+    "speed": "20 ft., climb 10 ft., fly 40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Lemurian",
     "traits": [
@@ -17746,7 +17754,7 @@
   },
   "homme-ours": {
     "name": "Bearfolk",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Giant",
     "traits": [
@@ -17802,7 +17810,7 @@
   },
   "homme-rat": {
     "name": "Ratfolk",
-    "speed": "2 ft.5 ft., swim 1 ft.0 ft.",
+    "speed": "25 ft., swim 10 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common",
     "traits": [
@@ -17828,7 +17836,7 @@
   },
   "homme-rat-roublard": {
     "name": "Ratfolk Rogue",
-    "speed": "2 ft.5 ft., swim 1 ft.0 ft.",
+    "speed": "25 ft., swim 10 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common",
     "traits": [
@@ -17990,7 +17998,7 @@
   },
   "hraesvelgr": {
     "name": "Hraesvelgr",
-    "speed": "5 ft.0 ft. (2 ft.0 ft., fly 12 ft.0 ft. in roc form)",
+    "speed": "50 ft. (20 ft., fly 120 ft. in roc form)",
     "languages": "Auran, Common, Giant (can't speak in roc form)",
     "traits": [
       {
@@ -18166,7 +18174,7 @@
   },
   "ia-affrat": {
     "name": "Ia'Affrat",
-    "speed": "5 ft., fly 4 ft.0 ft. (hover)",
+    "speed": "5 ft., fly 40 ft. (hover)",
     "senses": "blindsight 10 ft., darkvision 120 ft.",
     "languages": "Common, Draconic, Infernal, Primordial",
     "traits": [
@@ -18204,7 +18212,7 @@
   },
   "idole-divine": {
     "name": "Divine Idol",
-    "speed": "0 ft., fly 3 ft.0 ft.",
+    "speed": "0 ft., fly 30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "—",
     "traits": [
@@ -18238,7 +18246,7 @@
   },
   "isonade": {
     "name": "Isonade",
-    "speed": "swim 10 ft.0 ft.",
+    "speed": "swim 100 ft.",
     "senses": "darkvision 90 ft.",
     "languages": "understands Aquan and Celestial but can't speak",
     "traits": [
@@ -18312,7 +18320,7 @@
   },
   "jaculus": {
     "name": "Jaculus",
-    "speed": "2 ft.0 ft., climb 2 ft.0 ft., fly 1 ft.0 ft.",
+    "speed": "20 ft., climb 20 ft., fly 10 ft.",
     "senses": "blindsight 10 ft., darkvision 60 ft.",
     "languages": "Common, Draconic",
     "traits": [
@@ -18370,7 +18378,7 @@
   },
   "kalke": {
     "name": "Kalke",
-    "speed": "3 ft.0 ft., climb 3 ft.0 ft.",
+    "speed": "30 ft., climb 30 ft.",
     "senses": "darkvision 120 ft.",
     "languages": "Abyssal, Common, Infernal",
     "traits": [
@@ -18463,7 +18471,7 @@
   },
   "kikimore": {
     "name": "Kikimora",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Sylvan",
     "traits": [
@@ -18493,7 +18501,7 @@
   },
   "kishi": {
     "name": "Kishi",
-    "speed": "5 ft.0 ft.",
+    "speed": "50 ft.",
     "senses": "darkvision 120 ft.",
     "languages": "Celestial, Common, Draconic, Infernal, telepathy 120 ft.",
     "traits": [
@@ -18599,7 +18607,7 @@
   },
   "kobold-alchimiste": {
     "name": "Kobold Alchemist",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Draconic",
     "traits": [
@@ -18641,7 +18649,7 @@
   },
   "kobold-chef": {
     "name": "Kobold Chieftain",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Draconic",
     "traits": [
@@ -18715,7 +18723,7 @@
   },
   "kobold-forgepiege": {
     "name": "Kobold Trapsmith",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Draconic",
     "traits": [
@@ -18826,7 +18834,7 @@
   },
   "kongamato": {
     "name": "Kongamato",
-    "speed": "1 ft.0 ft., fly 6 ft.0 ft.",
+    "speed": "10 ft., fly 60 ft.",
     "languages": "—",
     "traits": [
       {
@@ -18859,7 +18867,7 @@
   },
   "koralk": {
     "name": "Koralk",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "darkvision 120 ft.",
     "languages": "Infernal, telepathy 120 ft.",
     "traits": [
@@ -18897,7 +18905,7 @@
   },
   "koschei": {
     "name": "Koschei",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Abyssal, Celestial, Common, Infernal, Dwarvish",
     "traits": [
@@ -18949,7 +18957,7 @@
   },
   "kot-bayun": {
     "name": "Kot Bayun",
-    "speed": "4 ft.0 ft., climb 2 ft.0 ft.",
+    "speed": "40 ft., climb 20 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Sylvan",
     "traits": [
@@ -19271,7 +19279,7 @@
   },
   "larve-stellaire-de-cthulhu": {
     "name": "Star Larva of Cthulhu",
-    "speed": "3 ft.0 ft., climb 3 ft.0 ft., fly 5 ft.0 ft.",
+    "speed": "30 ft., climb 30 ft., fly 50 ft.",
     "senses": "darkvision 300 ft.",
     "languages": "Common, Infernal, Void Speech",
     "traits": [
@@ -19309,7 +19317,7 @@
   },
   "lechy": {
     "name": "Leshy",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Elvish, Sylvan",
     "traits": [
@@ -19370,7 +19378,7 @@
   },
   "lente-tempete": {
     "name": "Slow Storm",
-    "speed": "0 ft., fly 6 ft.0 ft. (hover)",
+    "speed": "0 ft., fly 60 ft. (hover)",
     "senses": "blindsight 30 ft., darkvision 120 ft.",
     "languages": "Common, Primordial",
     "traits": [
@@ -19532,7 +19540,7 @@
   },
   "liche-canine": {
     "name": "Canine Lich",
-    "speed": "3 ft.0 ft., fly 5 ft.0 ft.",
+    "speed": "30 ft., fly 50 ft.",
     "senses": "blindsight 100 ft.",
     "languages": "understands Darakhul but can't speak",
     "traits": [
@@ -19681,7 +19689,7 @@
   },
   "likho": {
     "name": "Likho",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Goblin, Void Speech",
     "traits": [
@@ -19715,7 +19723,7 @@
   },
   "limon-des-sarcophages": {
     "name": "Sarcophagus Slime",
-    "speed": "2 ft.0 ft.",
+    "speed": "20 ft.",
     "languages": "understands the languages of its creator but can't speak",
     "traits": [
       {
@@ -19744,7 +19752,7 @@
   },
   "linceul": {
     "name": "Shroud",
-    "speed": "0 ft., fly 3 ft.0 ft. (hover)",
+    "speed": "0 ft., fly 30 ft. (hover)",
     "senses": "darkvision 60 ft.",
     "languages": "Common",
     "traits": [
@@ -19774,7 +19782,7 @@
   },
   "lindwurm": {
     "name": "Lindwurm",
-    "speed": "4 ft.0 ft., swim 2 ft.0 ft.",
+    "speed": "40 ft., swim 20 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "—",
     "traits": [
@@ -19846,7 +19854,7 @@
   },
   "liosalfar": {
     "name": "Liosalfar",
-    "speed": "fly 6 ft.0 ft. (hover)",
+    "speed": "fly 60 ft. (hover)",
     "senses": "darkvision 120 ft., truesight 60 ft.",
     "languages": "Common, Celestial, Primordial, Elvish, Giant",
     "traits": [
@@ -19926,7 +19934,7 @@
   },
   "lorelei": {
     "name": "Lorelei",
-    "speed": "3 ft.0 ft., swim 3 ft.0 ft.",
+    "speed": "30 ft., swim 30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Sylvan",
     "traits": [
@@ -19963,22 +19971,25 @@
     ]
   },
   "loup": {
-    "name": "Wolf of the Overworld",
-    "source": "MCV3MC",
+    "name": "Wolf",
+    "source": "MM",
     "speed": "walk 40 ft.",
     "traits": [
       {
+        "name": "Keen Hearing and Smell",
+        "desc": "The wolf has advantage on Wisdom (Perception) checks that rely on hearing or smell."
+      },
+      {
         "name": "Pack Tactics",
-        "desc": "The wolf has advantage on attack rolls against a creature if at least one of the wolf's allies is within 5 feet of the creature and the ally doesn't have the incapacitated condition."
+        "desc": "The wolf has advantage on an attack roll against a creature if at least one of the wolf's allies is within 5 feet of the creature and the ally isn't incapacitated."
       }
     ],
     "actions": [
       {
         "name": "Bite",
-        "desc": "mw 4 to hit; reach 5 ft., one target. {@h}7 (2d4 + 2) piercing damage. If the target is a creature, it must succeed on a DC 11 Strength saving throw or have the prone condition."
+        "desc": "Melee Weapon Attack: +4 to hit, reach 5 ft., one target. Hit: 7 (2d4 + 2) piercing damage. If the target is a creature, it must succeed on a DC 11 Strength saving throw or be knocked prone."
       }
-    ],
-    "languages": ""
+    ]
   },
   "loup-arctique": {
     "name": "Winter Wolf",
@@ -20095,7 +20106,7 @@
   },
   "loxoda": {
     "name": "Loxoda",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "languages": "Loxodan",
     "traits": [
       {
@@ -20124,7 +20135,7 @@
   },
   "lynx-vaporeux": {
     "name": "Mist Lynx",
-    "speed": "5 ft.0 ft., climb 3 ft.0 ft.",
+    "speed": "50 ft., climb 30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Sylvan",
     "traits": [
@@ -20199,7 +20210,7 @@
   },
   "mahoru": {
     "name": "Mahoru",
-    "speed": "1 ft.0 ft., swim 6 ft.0 ft.",
+    "speed": "10 ft., swim 60 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "—",
     "traits": [
@@ -20237,7 +20248,7 @@
   },
   "malakbel": {
     "name": "Malakbel",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "truesight 30 ft.",
     "languages": "Abyssal, telepathy 120 ft.",
     "traits": [
@@ -20303,7 +20314,7 @@
   },
   "mallqui": {
     "name": "Mallqui",
-    "speed": "2 ft.0 ft.",
+    "speed": "20 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "the languages it knew in life",
     "traits": [
@@ -20341,7 +20352,7 @@
   },
   "malphas-corbeau-de-tempete": {
     "name": "Malphas (Storm Crow)",
-    "speed": "4 ft.0 ft., fly 3 ft.0 ft.",
+    "speed": "40 ft., fly 30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Giant, Ravenfolk, Sylvan",
     "traits": [
@@ -20477,7 +20488,7 @@
   },
   "mamura": {
     "name": "Mamura",
-    "speed": "2 ft.0 ft., fly 3 ft.0 ft.",
+    "speed": "20 ft., fly 30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Elvish, Goblin, Sylvan, Void Speech",
     "traits": [
@@ -20536,7 +20547,7 @@
   },
   "mangedestin": {
     "name": "Fate Eater",
-    "speed": "4 ft.0 ft., climb 4 ft.0 ft.",
+    "speed": "40 ft., climb 40 ft.",
     "senses": "truesight 60 ft.",
     "languages": "telepathy 100 ft.",
     "traits": [
@@ -20562,7 +20573,7 @@
   },
   "mangepoussiere-yakat-shi": {
     "name": "Dust Eater (Yakat-shi)",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "blindsight 60 ft.",
     "languages": "understands Abyssal, Common, Infernal, and Void Speech but can't speak, telepathy 100 ft.",
     "traits": [
@@ -20592,7 +20603,7 @@
   },
   "mangereve": {
     "name": "Dream Eater",
-    "speed": "3 ft.0 ft., fly 2 ft.0 ft.",
+    "speed": "30 ft., fly 20 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Celestial, Common, Draconic, telepathy 100 ft.",
     "traits": [
@@ -20663,7 +20674,7 @@
   },
   "manteau-vide": {
     "name": "Void Cloak",
-    "speed": "0 ft., fly 4 ft.0 ft.",
+    "speed": "0 ft., fly 40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "understands Elvish and Umbral but can't speak",
     "traits": [
@@ -20780,7 +20791,7 @@
   },
   "maraudeur-des-forets": {
     "name": "Forest Marauder",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "darkvision 120 ft.",
     "languages": "Giant, Orc, Sylvan",
     "traits": [
@@ -20806,7 +20817,7 @@
   },
   "marchand-de-sable": {
     "name": "Sandman",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "truesight 60 ft.",
     "languages": "Common, Celestial, Giant, Infernal, Umbral",
     "traits": [
@@ -20840,7 +20851,7 @@
   },
   "marchefleche": {
     "name": "Spire Walker",
-    "speed": "2 ft.0 ft.",
+    "speed": "20 ft.",
     "languages": "Common, Sylvan",
     "traits": [
       {
@@ -20951,7 +20962,7 @@
   },
   "marionnette-des-lianes": {
     "name": "Vine Puppet",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "languages": "—",
     "traits": [
       {
@@ -21038,7 +21049,7 @@
   },
   "mavka": {
     "name": "Mavka",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 90 ft.",
     "languages": "Common, Infernal, Sylvan",
     "traits": [
@@ -21068,7 +21079,7 @@
   },
   "mbielu": {
     "name": "Mbielu",
-    "speed": "3 ft.0 ft., swim 2 ft.0 ft.",
+    "speed": "30 ft., swim 20 ft.",
     "languages": "—",
     "traits": [
       {
@@ -21089,7 +21100,7 @@
   },
   "mecanique-abomination": {
     "name": "Clockwork Abomination",
-    "speed": "3 ft.0 ft., climb 3 ft.0 ft.",
+    "speed": "30 ft., climb 30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Infernal",
     "traits": [
@@ -21131,7 +21142,7 @@
   },
   "mecanique-araignee-tisseuse": {
     "name": "Clockwork Weaver Spider",
-    "speed": "4 ft.0 ft., climb 4 ft.0 ft.",
+    "speed": "40 ft., climb 40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "understands Common",
     "traits": [
@@ -21165,7 +21176,7 @@
   },
   "mecanique-chasseur": {
     "name": "Clockwork Hunter",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "understands Common",
     "traits": [
@@ -21199,7 +21210,7 @@
   },
   "mecanique-chien": {
     "name": "Clockwork Hound",
-    "speed": "5 ft.0 ft.",
+    "speed": "50 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "understands Common",
     "traits": [
@@ -21233,7 +21244,7 @@
   },
   "mecanique-gendarme": {
     "name": "Clockwork Gendarme",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common",
     "traits": [
@@ -21263,7 +21274,7 @@
   },
   "mecanique-myrmidon": {
     "name": "Clockwork Myrmidon",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "understands Common",
     "traits": [
@@ -21305,7 +21316,7 @@
   },
   "mecanique-scarabee": {
     "name": "Clockwork Beetle",
-    "speed": "3 ft.0 ft., fly 5 ft.0 ft.",
+    "speed": "30 ft., fly 50 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "understands Common, telepathy 100 ft. (with its creator only)",
     "traits": [
@@ -21327,7 +21338,7 @@
   },
   "meche-vivante": {
     "name": "Living Wick",
-    "speed": "2 ft.0 ft.",
+    "speed": "20 ft.",
     "languages": "shares a telepathic bond with the one who lit its wick",
     "traits": [
       {
@@ -21356,7 +21367,7 @@
   },
   "mechuiti": {
     "name": "Mechuiti",
-    "speed": "6 ft.0 ft., climb 6 ft.0 ft.",
+    "speed": "60 ft., climb 60 ft.",
     "senses": "truesight 120 ft.",
     "languages": "Celestial, Common, Draconic, Infernal, Primordial, telepathy 300 ft.",
     "traits": [
@@ -21432,7 +21443,7 @@
   },
   "medazur-a-defenses": {
     "name": "Tusked Medazur",
-    "speed": "5 ft., fly 2 ft.0 ft. (hover)",
+    "speed": "5 ft., fly 20 ft. (hover)",
     "senses": "darkvision 60 ft.",
     "languages": "—",
     "traits": [
@@ -21497,7 +21508,7 @@
   },
   "melasse": {
     "name": "Molasses",
-    "speed": "1 ft.5 ft., climb 1 ft.0 ft.",
+    "speed": "15 ft., climb 10 ft.",
     "senses": "blindsight 60 ft.",
     "languages": "—",
     "traits": [
@@ -21956,7 +21967,7 @@
   },
   "mi-go": {
     "name": "Mi-Go",
-    "speed": "3 ft.0 ft., fly 6 ft.0 ft.",
+    "speed": "30 ft., fly 60 ft.",
     "senses": "blindsight 30 ft., darkvision 240 ft.",
     "languages": "Common, Mi-Go, Void Speech",
     "traits": [
@@ -22077,7 +22088,7 @@
   },
   "mimique-carte": {
     "name": "Card Mimic",
-    "speed": "3 ft.0 ft., fly 1 ft.5 ft.",
+    "speed": "30 ft., fly 15 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "—",
     "traits": [
@@ -22107,7 +22118,7 @@
   },
   "mimique-des-dunes": {
     "name": "Dune Mimic",
-    "speed": "1 ft.0 ft.",
+    "speed": "10 ft.",
     "senses": "darkvision 60 ft., tremorsense 30 ft.",
     "languages": "—",
     "traits": [
@@ -22180,7 +22191,7 @@
   },
   "mirageur": {
     "name": "Mirager",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Sylvan",
     "traits": [
@@ -22218,7 +22229,7 @@
   },
   "mngwa": {
     "name": "Mngwa",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Sylvan, can speak with felines",
     "traits": [
@@ -22334,7 +22345,7 @@
   },
   "molosse-nocturne": {
     "name": "Night Hound",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "understands Elvish and Umbral but can't speak",
     "traits": [
@@ -22442,7 +22453,7 @@
   },
   "momie-venimeuse": {
     "name": "Venomous Mummy",
-    "speed": "2 ft.0 ft.",
+    "speed": "20 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "the languages it knew in life",
     "traits": [
@@ -22495,7 +22506,7 @@
   },
   "monolithique-champion": {
     "name": "Monolithic Champion",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Elvish, Umbral",
     "traits": [
@@ -22584,7 +22595,7 @@
   },
   "montagne-de-cadavres": {
     "name": "Corpse Mound",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "understands Common but can't speak",
     "traits": [
@@ -22622,7 +22633,7 @@
   },
   "morphoi": {
     "name": "Morphoi",
-    "speed": "3 ft.0 ft., swim 3 ft.0 ft.",
+    "speed": "30 ft., swim 30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common",
     "traits": [
@@ -22656,7 +22667,7 @@
   },
   "mort-follet": {
     "name": "Death Wisp",
-    "speed": "0 ft., fly 6 ft.0 ft. (hover)",
+    "speed": "0 ft., fly 60 ft. (hover)",
     "senses": "darkvision 60 ft.",
     "languages": "the languages it knew in life",
     "traits": [
@@ -22864,7 +22875,7 @@
   },
   "myling": {
     "name": "Myling",
-    "speed": "3 ft.0 ft., burrow 1 ft.0 ft.",
+    "speed": "30 ft., burrow 10 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common",
     "actions": [
@@ -22957,7 +22968,7 @@
   },
   "nain-loup-ravageur": {
     "name": "Wolverine Dwarf",
-    "speed": "3 ft.5 ft.",
+    "speed": "35 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Dwarvish",
     "traits": [
@@ -22999,7 +23010,7 @@
   },
   "nain-mage-des-anneaux": {
     "name": "Dwarf Ringmage",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Dwarvish",
     "traits": [
@@ -23033,7 +23044,7 @@
   },
   "naina": {
     "name": "Naina",
-    "speed": "4 ft.0 ft., fly 12 ft.0 ft.",
+    "speed": "40 ft., fly 120 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Darakhul, Draconic, Elvish, Sylvan",
     "traits": [
@@ -23158,7 +23169,7 @@
   },
   "necrophage-masque": {
     "name": "Masked Necrophage",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "darkvision 120 ft., truesight 30 ft.",
     "languages": "Common, Giant, Infernal",
     "traits": [
@@ -23191,35 +23202,32 @@
     ]
   },
   "necrophore": {
-    "name": "Steel Leaf Kavu",
-    "source": "PSD",
-    "speed": "walk 40 ft.",
-    "senses": [
-      "darkvision 60 ft."
-    ],
-    "languages": [
-      "understands Elvish"
-    ],
-    "traits": [
-      {
-        "name": "Raking Charge",
-        "desc": "If the kavu moves at least 20 feet straight toward a creature and then hits it with a bite attack on the same turn, that target must succeed on a DC 15 Strength saving throw or be knocked prone. If the target is prone, the kavu can make one rend attack against it as a bonus action."
-      }
-    ],
+    "name": "Necrophore",
+    "speed": "walk 30 ft., burrow 20 ft., climb 10 ft.",
+    "senses": "darkvision 60 ft.",
+    "languages": "—",
     "actions": [
       {
-        "name": "Bite",
-        "desc": "mw 7 to hit, reach 5 ft., one target. {@h}14 (2d8 + 5) piercing damage."
+        "name": "Multiattack",
+        "desc": "The necrophore makes one bite attack and two claw attacks."
       },
       {
-        "name": "Rend",
-        "desc": "mw 7 to hit, reach 5 ft., one prone creature. {@h}23 (4d8 + 5) slashing damage."
+        "name": "Bite",
+        "desc": "Melee Weapon Attack: +6 to hit, reach 10 ft., one target. Hit: 10 (1d12 + 4) piercing damage."
+      },
+      {
+        "name": "Claws",
+        "desc": "Melee Weapon Attack: +6 to hit, reach 5 ft., one target. Hit: 7 (1d6 + 4) slashing damage."
+      },
+      {
+        "name": "Acid Spit (Recharge 5-6)",
+        "desc": "The necrophore spits acid in a 30-foot-long, 5-foot-wide line. Creatures in the line take 32 (5d12) acid damage, or half as much on a successful DC 13 Dexterity saving throw."
       }
     ]
   },
   "ngobou": {
     "name": "Ngobou",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "languages": "—",
     "traits": [
       {
@@ -23248,7 +23256,7 @@
   },
   "nichny": {
     "name": "Nichny",
-    "speed": "3 ft.0 ft., climb 3 ft.0 ft.",
+    "speed": "30 ft., climb 30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Elvish, Primordial, Sylvan, Void Speech",
     "traits": [
@@ -23313,7 +23321,7 @@
   },
   "nihileth": {
     "name": "Nihileth",
-    "speed": "1 ft.0 ft., swim 4 ft.0 ft., fly 4 ft.0 ft. (hover, ethereal form only)",
+    "speed": "10 ft., swim 40 ft., fly 40 ft. (hover, ethereal form only)",
     "senses": "darkvision 120 ft.",
     "languages": "Void Speech, telepathy 120 ft.",
     "traits": [
@@ -23381,7 +23389,7 @@
   },
   "nkosi": {
     "name": "Nkosi",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common",
     "traits": [
@@ -23415,7 +23423,7 @@
   },
   "nkosi-chef-de-meute": {
     "name": "Nkosi Pack Leader",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common",
     "traits": [
@@ -23481,7 +23489,7 @@
   },
   "noctegarm": {
     "name": "Noctegarm",
-    "speed": "2 ft.0 ft., 4 ft.0 ft. (quadruped)",
+    "speed": "20 ft., 40 ft. (quadruped)",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Giant, Goblin, telepathy 200 ft. (facsimiles only)",
     "traits": [
@@ -23511,7 +23519,7 @@
   },
   "noctin": {
     "name": "Noctin",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "languages": "Common and the languages spoken by the noctin's fext master",
     "traits": [
       {
@@ -23575,7 +23583,7 @@
   },
   "nuee-d-esprits-lupins": {
     "name": "Swarm of Wolf Spirits",
-    "speed": "5 ft.0 ft., fly 5 ft.0 ft. (hover)",
+    "speed": "50 ft., fly 50 ft. (hover)",
     "senses": "darkvision 120 ft.",
     "languages": "understands Common",
     "traits": [
@@ -23626,7 +23634,7 @@
   },
   "nuee-d-yeux": {
     "name": "Swarm of Eyes",
-    "speed": "5 ft., fly 4 ft.0 ft. (hover)",
+    "speed": "5 ft., fly 40 ft. (hover)",
     "senses": "darkvision 60 ft.",
     "languages": "understands Common but can't speak",
     "traits": [
@@ -23723,7 +23731,7 @@
   },
   "nuee-de-danseflammes": {
     "name": "Swarm of Firedancers",
-    "speed": "3 ft.0 ft., fly 3 ft.0 ft. (hover)",
+    "speed": "30 ft., fly 30 ft. (hover)",
     "senses": "darkvision 60 ft.",
     "languages": "Ignan",
     "traits": [
@@ -23773,7 +23781,7 @@
   },
   "nuee-de-papillons-de-mort": {
     "name": "Swarm of Death Butterflies",
-    "speed": "5 ft., fly 4 ft.0 ft. (hover)",
+    "speed": "5 ft., fly 40 ft. (hover)",
     "senses": "darkvision 60 ft.",
     "languages": "—",
     "traits": [
@@ -23803,7 +23811,7 @@
   },
   "nuee-de-papillons-de-mort-grande": {
     "name": "Greater Swarm of Death Butterflies",
-    "speed": "5 ft., fly 4 ft.0 ft. (hover)",
+    "speed": "5 ft., fly 40 ft. (hover)",
     "senses": "darkvision 60 ft.",
     "languages": "—",
     "traits": [
@@ -23887,7 +23895,7 @@
   },
   "nuee-de-rodeurs-des-quais": {
     "name": "Swarm of Dock Prowlers",
-    "speed": "3 ft.0 ft., climb 3 ft.0 ft., swim 2 ft.0 ft.",
+    "speed": "30 ft., climb 30 ft., swim 20 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "—",
     "traits": [
@@ -23913,7 +23921,7 @@
   },
   "nuee-de-scarabees-manavores": {
     "name": "Swarm of Manavore Beetles",
-    "speed": "2 ft.0 ft., burrow 5 ft., climb 2 ft.0 ft.",
+    "speed": "20 ft., burrow 5 ft., climb 20 ft.",
     "senses": "blindsight 10 ft., darkvision 30 ft., tremorsense 30 ft.",
     "languages": "—",
     "traits": [
@@ -23943,7 +23951,7 @@
   },
   "nuee-de-scarabees-mecaniques": {
     "name": "Swarm of Clockwork Beetles",
-    "speed": "3 ft.0 ft., fly 5 ft.0 ft.",
+    "speed": "30 ft., fly 50 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "—",
     "traits": [
@@ -23961,7 +23969,7 @@
   },
   "nuee-de-scarabees-prismatiques": {
     "name": "Swarm of Prismatic Beetles",
-    "speed": "2 ft.0 ft., burrow 5 ft., climb 3 ft.0 ft.",
+    "speed": "20 ft., burrow 5 ft., climb 30 ft.",
     "senses": "blindsight 10 ft., darkvision 30 ft.",
     "languages": "—",
     "traits": [
@@ -24004,7 +24012,7 @@
   },
   "nuee-de-sluaghs": {
     "name": "Swarm of Sluaghs",
-    "speed": "3 ft.0 ft., fly 5 ft.0 ft.",
+    "speed": "30 ft., fly 50 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Sylvan",
     "traits": [
@@ -24030,7 +24038,7 @@
   },
   "nuee-osseuse": {
     "name": "Swarm of Bones",
-    "speed": "2 ft.0 ft., fly 6 ft.0 ft.",
+    "speed": "20 ft., fly 60 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Void Speech",
     "traits": [
@@ -24102,7 +24110,7 @@
   },
   "oeil-d-emeraude": {
     "name": "Emerald Eye",
-    "speed": "0 ft., fly 3 ft.0 ft. (hover)",
+    "speed": "0 ft., fly 30 ft. (hover)",
     "senses": "blindsight 60 ft.",
     "languages": "Common, Draconic, telepathy 250 ft.",
     "traits": [
@@ -24158,7 +24166,7 @@
   },
   "ogre-chef-corrompu": {
     "name": "Corrupted Ogre Chieftain",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Giant",
     "traits": [
@@ -24188,7 +24196,7 @@
   },
   "oiseau-de-feu": {
     "name": "Firebird",
-    "speed": "2 ft.0 ft., fly 10 ft.0 ft.",
+    "speed": "20 ft., fly 100 ft.",
     "senses": "truesight 60 ft.",
     "languages": "Celestial, Common, Elvish, Primordial, Sylvan",
     "traits": [
@@ -24497,7 +24505,7 @@
   },
   "orobas": {
     "name": "Orobas",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "truesight 90 ft.",
     "languages": "Celestial, Undercommon, Darakhul, Draconic, Giant, Infernal, Void Speech, telepathy 100 ft.",
     "traits": [
@@ -24579,7 +24587,7 @@
   },
   "ostinato": {
     "name": "Ostinato",
-    "speed": "fly 5 ft.0 ft. (hover)",
+    "speed": "fly 50 ft. (hover)",
     "senses": "darkvision 60 ft.",
     "languages": "telepathy 200 ft.",
     "traits": [
@@ -24771,12 +24779,9 @@
     "languages": ""
   },
   "ours-polaire": {
-    "name": "Cave Bear",
+    "name": "Polar Bear",
     "source": "MM",
     "speed": "walk 40 ft., swim 30 ft.",
-    "senses": [
-      "darkvision 60 ft."
-    ],
     "traits": [
       {
         "name": "Keen Smell",
@@ -24790,18 +24795,17 @@
       },
       {
         "name": "Bite",
-        "desc": "mw 7 to hit, reach 5 ft., one target. {@h}9 (1d8 + 5) piercing damage."
+        "desc": "Melee Weapon Attack: +7 to hit, reach 5 ft., one target. Hit: 9 (1d8 + 5) piercing damage."
       },
       {
         "name": "Claws",
-        "desc": "mw 7 to hit, reach 5 ft., one target. {@h}12 (2d6 + 5) slashing damage."
+        "desc": "Melee Weapon Attack: +7 to hit, reach 5 ft., one target. Hit: 12 (2d6 + 5) slashing damage."
       }
-    ],
-    "languages": ""
+    ]
   },
   "ovasis": {
     "name": "Ovasis",
-    "speed": "2 ft.0 ft., climb 2 ft.0 ft., swim 2 ft.0 ft.",
+    "speed": "20 ft., climb 20 ft., swim 20 ft.",
     "senses": "tremorsense 120 ft.",
     "languages": "understands all languages but can't speak, telepathy 120 ft.",
     "traits": [
@@ -24945,7 +24949,7 @@
   },
   "pavenuee": {
     "name": "Paving Swarm",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "languages": "—",
     "traits": [
       {
@@ -25088,7 +25092,7 @@
   },
   "piege-caustique": {
     "name": "Caustic Trap",
-    "speed": "1 ft.0 ft., burrow 2 ft.0 ft.",
+    "speed": "10 ft., burrow 20 ft.",
     "senses": "darkvision 60 ft., tremorsense 60 ft.",
     "languages": "Common, Primordial",
     "traits": [
@@ -25281,7 +25285,7 @@
   },
   "pombero": {
     "name": "Pombero",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Sylvan",
     "traits": [
@@ -25370,7 +25374,7 @@
   },
   "pourceau-des-failles": {
     "name": "Rift Boar",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "—",
     "traits": [
@@ -25421,7 +25425,7 @@
   },
   "primate-blanc": {
     "name": "White Ape",
-    "speed": "4 ft.0 ft., climb 4 ft.0 ft.",
+    "speed": "40 ft., climb 40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common",
     "traits": [
@@ -25451,7 +25455,7 @@
   },
   "profanateur-maudit": {
     "name": "Cursed Defiler",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "understands an ancient language but can't speak",
     "traits": [
@@ -25481,7 +25485,7 @@
   },
   "profond": {
     "name": "Deep One",
-    "speed": "3 ft.0 ft., swim 3 ft.0 ft.",
+    "speed": "30 ft., swim 30 ft.",
     "senses": "darkvision 120 ft.",
     "languages": "Common, Void Speech",
     "traits": [
@@ -25511,7 +25515,7 @@
   },
   "profond-archimandrite": {
     "name": "Deep One Archimandrite",
-    "speed": "4 ft.0 ft., swim 4 ft.0 ft.",
+    "speed": "40 ft., swim 40 ft.",
     "senses": "darkvision 240 ft.",
     "languages": "Common, Void Speech",
     "traits": [
@@ -25557,7 +25561,7 @@
   },
   "profond-pretre-hybride": {
     "name": "Deep One Hybrid Priest",
-    "speed": "3 ft.0 ft., swim 3 ft.0 ft.",
+    "speed": "30 ft., swim 30 ft.",
     "senses": "darkvision 120 ft.",
     "languages": "Common, Void Speech",
     "traits": [
@@ -25631,7 +25635,7 @@
   },
   "psoglav": {
     "name": "Psoglav",
-    "speed": "4 ft.0 ft., fly 6 ft.0 ft.",
+    "speed": "40 ft., fly 60 ft.",
     "senses": "blindsight 30 ft., darkvision 60 ft.",
     "languages": "Common, telepathy 60 ft.",
     "traits": [
@@ -25719,7 +25723,7 @@
   },
   "qorgeth": {
     "name": "Qorgeth",
-    "speed": "5 ft.0 ft., burrow 5 ft.0 ft., climb 3 ft.0 ft.",
+    "speed": "50 ft., burrow 50 ft., climb 30 ft.",
     "senses": "blindsight 120 ft., tremorsense 120 ft.",
     "languages": "all, telepathy 120 ft.",
     "traits": [
@@ -25913,7 +25917,7 @@
   },
   "qwyllion": {
     "name": "Qwyllion",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Goblin, Infernal, Sylvan, Void Speech",
     "traits": [
@@ -25975,7 +25979,7 @@
   },
   "ramag": {
     "name": "Ramag",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "languages": "Common",
     "traits": [
       {
@@ -26126,7 +26130,7 @@
   },
   "ratatosk": {
     "name": "Ratatosk",
-    "speed": "2 ft.0 ft., climb 2 ft.0 ft.",
+    "speed": "20 ft., climb 20 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Celestial, Common, telepathy 100 ft.",
     "traits": [
@@ -26156,7 +26160,7 @@
   },
   "ravageur-trollien": {
     "name": "Troll Ravager",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Trollish",
     "traits": [
@@ -26198,7 +26202,7 @@
   },
   "ravenala": {
     "name": "Ravenala",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "languages": "Common, Druidic, Elvish, Sylvan",
     "traits": [
       {
@@ -26235,7 +26239,7 @@
   },
   "reine-de-la-nuit-et-de-la-magie": {
     "name": "Queen of Night and Magic",
-    "speed": "3 ft.0 ft., fly 6 ft.0 ft. (hover)",
+    "speed": "30 ft., fly 60 ft. (hover)",
     "senses": "truesight 120 ft.",
     "languages": "Celestial, Common, Elvish, Sylvan, Umbral, telepathy 120 ft.",
     "traits": [
@@ -26307,7 +26311,7 @@
   },
   "reine-des-neiges": {
     "name": "Snow Queen",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "blindsight 10 ft., darkvision 60 ft.",
     "languages": "Common, Elvish, Giant, Sylvan",
     "traits": [
@@ -26367,7 +26371,7 @@
   },
   "reine-des-sorcieres": {
     "name": "Witch Queen",
-    "speed": "4 ft.0 ft., fly 5 ft.0 ft. (hover)",
+    "speed": "40 ft., fly 50 ft. (hover)",
     "senses": "truesight 60 ft.",
     "languages": "Celestial, Common, Draconic, Elvish, Sylvan, Umbral",
     "traits": [
@@ -26423,7 +26427,7 @@
   },
   "rejeton-d-akyishigal": {
     "name": "Spawn of Akyishigal",
-    "speed": "3 ft.0 ft., climb 1 ft.5 ft.",
+    "speed": "30 ft., climb 15 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Infernal, Spawn of Akyishigal",
     "traits": [
@@ -26453,7 +26457,7 @@
   },
   "rejeton-d-arbeyach": {
     "name": "Spawn of Arbeyach",
-    "speed": "4 ft.0 ft., climb 2 ft.0 ft.",
+    "speed": "40 ft., climb 20 ft.",
     "senses": "darkvision 60 ft., tremorsense 60 ft.",
     "languages": "Infernal",
     "traits": [
@@ -26717,7 +26721,7 @@
   },
   "rodeur-des-quais": {
     "name": "Dock Prowler",
-    "speed": "3 ft.0 ft., climb 3 ft.0 ft., swim 2 ft.0 ft.",
+    "speed": "30 ft., climb 30 ft., swim 20 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "—",
     "actions": [
@@ -26733,7 +26737,7 @@
   },
   "rodeur-moussu": {
     "name": "Mossy Stalker",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "blindsight 60 ft.",
     "languages": "Giant, Sylvan, Trollish",
     "traits": [
@@ -26775,7 +26779,7 @@
   },
   "roi-baigne-de-lune": {
     "name": "Moon-Bathed King",
-    "speed": "5 ft.0 ft.",
+    "speed": "50 ft.",
     "senses": "blindsight 30 ft., darkvision 120 ft.",
     "languages": "Abyssal, Celestial, Common, Draconic, Elvish, Infernal, Umbral, telepathy 100 ft.",
     "traits": [
@@ -26839,7 +26843,7 @@
   },
   "roi-des-ours": {
     "name": "Bear King",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Elvish, Giant, Sylvan",
     "traits": [
@@ -26899,7 +26903,7 @@
   },
   "roi-des-rats": {
     "name": "Rat King",
-    "speed": "3 ft.0 ft., burrow 2 ft.0 ft.",
+    "speed": "30 ft., burrow 20 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Thieves' Cant",
     "traits": [
@@ -26933,7 +26937,7 @@
   },
   "roi-des-rivieres": {
     "name": "River King",
-    "speed": "3 ft.0 ft., swim 4 ft.0 ft.",
+    "speed": "30 ft., swim 40 ft.",
     "senses": "blindsight 10 ft., darkvision 60 ft.",
     "languages": "Common, Primordial, Elvish, Giant",
     "traits": [
@@ -27047,7 +27051,7 @@
   },
   "roussalka": {
     "name": "Rusalka",
-    "speed": "3 ft.0 ft., swim 4 ft.0 ft.",
+    "speed": "30 ft., swim 40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common",
     "traits": [
@@ -27077,7 +27081,7 @@
   },
   "rubezahl": {
     "name": "Rübezahl",
-    "speed": "5 ft.0 ft.",
+    "speed": "50 ft.",
     "senses": "blindsight 10 ft., darkvision 120 ft.",
     "languages": "Abyssal, telepathy 120 ft.",
     "traits": [
@@ -27119,7 +27123,7 @@
   },
   "saccageur-releve": {
     "name": "Risen Ravager",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "darkvision 120 ft.",
     "languages": "the languages it knew in life",
     "traits": [
@@ -27432,7 +27436,7 @@
   },
   "sarcoptere": {
     "name": "Sarcopter",
-    "speed": "1 ft.0 ft., fly 6 ft.0 ft.",
+    "speed": "10 ft., fly 60 ft.",
     "senses": "darkvision 240 ft.",
     "languages": "Common, Darakhul",
     "traits": [
@@ -27570,7 +27574,7 @@
   },
   "scheznyki": {
     "name": "Scheznyki",
-    "speed": "2 ft.0 ft., climb 1 ft.5 ft.",
+    "speed": "20 ft., climb 15 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Darakhul, Elvish",
     "traits": [
@@ -27638,7 +27642,7 @@
   },
   "scorpion-nocturne": {
     "name": "Night Scorpion",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "blindsight 60 ft.",
     "languages": "—",
     "actions": [
@@ -27658,7 +27662,7 @@
   },
   "scorpion-stygien-a-large-queue": {
     "name": "Broad-Tailed Stygian Scorpion",
-    "speed": "3 ft.0 ft., climb 2 ft.0 ft.",
+    "speed": "30 ft., climb 20 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "—",
     "actions": [
@@ -27678,7 +27682,7 @@
   },
   "seigneur-des-bandits": {
     "name": "Bandit Lord",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "languages": "any two",
     "traits": [
       {
@@ -27715,7 +27719,7 @@
   },
   "seigneur-des-lianes": {
     "name": "Vine Lord",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "blindsight 30 ft.",
     "languages": "Common",
     "traits": [
@@ -27818,7 +27822,7 @@
   },
   "selang": {
     "name": "Selang",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Elvish, Sylvan, Void Speech",
     "traits": [
@@ -28071,7 +28075,7 @@
   },
   "shabti": {
     "name": "Shabti",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "understands the languages of its creator but can't speak",
     "traits": [
@@ -28109,7 +28113,7 @@
   },
   "shadhavar": {
     "name": "Shadhavar",
-    "speed": "5 ft.0 ft.",
+    "speed": "50 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "understands Elvish and Umbral but can't speak",
     "traits": [
@@ -28147,7 +28151,7 @@
   },
   "shoggoth": {
     "name": "Shoggoth",
-    "speed": "5 ft.0 ft., climb 3 ft.0 ft., swim 3 ft.0 ft.",
+    "speed": "50 ft., climb 30 ft., swim 30 ft.",
     "senses": "darkvision 120 ft., tremorsense 60 ft.",
     "languages": "Void Speech",
     "traits": [
@@ -28189,7 +28193,7 @@
   },
   "silhouette-de-sable": {
     "name": "Sand Silhouette",
-    "speed": "3 ft.0 ft., burrow 3 ft.0 ft.",
+    "speed": "30 ft., burrow 30 ft.",
     "senses": "darkvision 60 ft., tremorsense 60 ft.",
     "languages": "the languages she knew in life",
     "traits": [
@@ -28573,7 +28577,7 @@
   },
   "sorcelueur": {
     "name": "Witchlight",
-    "speed": "fly 5 ft.0 ft.",
+    "speed": "fly 50 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "understands the languages of its creator but can't speak",
     "traits": [
@@ -28603,7 +28607,7 @@
   },
   "sorciere-de-l-echeveau": {
     "name": "Witch of the Skein",
-    "speed": "3 ft.0 ft., fly 3 ft.0 ft.",
+    "speed": "30 ft., fly 30 ft.",
     "senses": "truesight 60 ft.",
     "languages": "Celestial, telepathy 100 ft.",
     "traits": [
@@ -28801,7 +28805,7 @@
   },
   "sphinx-gypsosphinx": {
     "name": "Gypsosphinx",
-    "speed": "4 ft.0 ft., fly 7 ft.0 ft.",
+    "speed": "40 ft., fly 70 ft.",
     "senses": "truesight 90 ft.",
     "languages": "Abyssal, Common, Darakhul, Sphinx",
     "traits": [
@@ -28857,7 +28861,7 @@
   },
   "spinosaure": {
     "name": "Spinosaurus",
-    "speed": "6 ft.0 ft., swim 4 ft.0 ft.",
+    "speed": "60 ft., swim 40 ft.",
     "languages": "—",
     "traits": [
       {
@@ -28908,7 +28912,7 @@
   },
   "spinosaure-jeune": {
     "name": "Young Spinosaurus",
-    "speed": "5 ft.0 ft., swim 3 ft.0 ft.",
+    "speed": "50 ft., swim 30 ft.",
     "languages": "—",
     "traits": [
       {
@@ -29034,7 +29038,7 @@
   },
   "squelette-de-troll-des-lianes": {
     "name": "Vine Troll Skeleton",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "—",
     "traits": [
@@ -29060,7 +29064,7 @@
   },
   "squelette-en-machoires-de-requin": {
     "name": "Shark-Jawed Skeleton",
-    "speed": "3 ft.0 ft., swim 3 ft.0 ft.",
+    "speed": "30 ft., swim 30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "understands the languages of its creator but can't speak",
     "actions": [
@@ -29156,7 +29160,7 @@
   },
   "stuhac": {
     "name": "Stuhac",
-    "speed": "4 ft.0 ft., climb 4 ft.0 ft.",
+    "speed": "40 ft., climb 40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, telepathy 100 ft.",
     "traits": [
@@ -29313,7 +29317,7 @@
   },
   "suffragan-coeur-de-vers": {
     "name": "Suffragan Wormheart",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "the languages it knew in life",
     "traits": [
@@ -29335,7 +29339,7 @@
   },
   "sutureuse": {
     "name": "Stitcher",
-    "speed": "1 ft.0 ft., fly 4 ft.0 ft. (hover)",
+    "speed": "10 ft., fly 40 ft. (hover)",
     "senses": "darkvision 60 ft.",
     "languages": "—",
     "traits": [
@@ -29396,7 +29400,7 @@
   },
   "sylvanien-pleureur": {
     "name": "Weeping Treant",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Druidic, Elvish, Sylvan",
     "traits": [
@@ -29558,7 +29562,7 @@
   },
   "templier-mecaforge": {
     "name": "Mechaforged Templar",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "languages": "Common",
     "traits": [
       {
@@ -29688,7 +29692,7 @@
   },
   "thuellai": {
     "name": "Thuellai",
-    "speed": "0 ft., fly 10 ft.0 ft. (hover)",
+    "speed": "0 ft., fly 100 ft. (hover)",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Dwarvish, Primordial",
     "traits": [
@@ -29832,7 +29836,7 @@
   },
   "titan-antique": {
     "name": "Elder Titan",
-    "speed": "5 ft.0 ft.",
+    "speed": "50 ft.",
     "senses": "darkvision 120 ft.",
     "languages": "Common, Giant, Primordial, Titan, telepathy 200 ft.",
     "traits": [
@@ -29866,7 +29870,7 @@
   },
   "titan-degenere": {
     "name": "Degenerate Titan",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Titan",
     "traits": [
@@ -29900,7 +29904,7 @@
   },
   "titanoboa": {
     "name": "Titanoboa",
-    "speed": "4 ft.0 ft., climb 4 ft.0 ft., swim 4 ft.0 ft.",
+    "speed": "40 ft., climb 40 ft., swim 40 ft.",
     "senses": "blindsight 10 ft.",
     "languages": "—",
     "traits": [
@@ -29930,7 +29934,7 @@
   },
   "tophet": {
     "name": "Tophet",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 200 ft.",
     "languages": "Common",
     "traits": [
@@ -30015,7 +30019,7 @@
   },
   "tosculi-archer-pillard-d-elite": {
     "name": "Tosculi Elite Marauder Archer",
-    "speed": "3 ft.0 ft., fly 6 ft.0 ft.",
+    "speed": "30 ft., fly 60 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Gnoll, Infernal, Tosculi",
     "traits": [
@@ -30053,7 +30057,7 @@
   },
   "tosculi-combattant": {
     "name": "Tosculi Warrior",
-    "speed": "2 ft.0 ft., fly 6 ft.0 ft.",
+    "speed": "20 ft., fly 60 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Tosculi",
     "traits": [
@@ -30087,7 +30091,7 @@
   },
   "tosculi-faux-bourdon": {
     "name": "Tosculi Drone",
-    "speed": "2 ft.0 ft.",
+    "speed": "20 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Tosculi",
     "traits": [
@@ -30154,7 +30158,7 @@
   },
   "totivillus": {
     "name": "Totivillus",
-    "speed": "4 ft.0 ft., fly 6 ft.0 ft.",
+    "speed": "40 ft., fly 60 ft.",
     "senses": "darkvision 60 ft., truesight 30 ft.",
     "languages": "Common, Celestial, Draconic, Infernal, Void Speech, telepathy 120 ft.",
     "traits": [
@@ -30439,7 +30443,7 @@
   },
   "troll-lacustre": {
     "name": "Lake Troll",
-    "speed": "2 ft.0 ft., swim 4 ft.0 ft.",
+    "speed": "20 ft., swim 40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Giant",
     "traits": [
@@ -30561,7 +30565,7 @@
   },
   "ukavac": {
     "name": "Ukavac",
-    "speed": "4 ft.0 ft., swim 2 ft.0 ft.",
+    "speed": "40 ft., swim 20 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Sylvan",
     "traits": [
@@ -30640,7 +30644,7 @@
   },
   "uraeus": {
     "name": "Uraeus",
-    "speed": "3 ft.0 ft., fly 6 ft.0 ft.",
+    "speed": "30 ft., fly 60 ft.",
     "senses": "blindsight 10 ft.",
     "languages": "understands Celestial and Common but can't speak",
     "traits": [
@@ -30670,7 +30674,7 @@
   },
   "urochar-guetteur-etrangleur": {
     "name": "Urochar (Strangling Watcher)",
-    "speed": "4 ft.0 ft., climb 2 ft.0 ft.",
+    "speed": "40 ft., climb 20 ft.",
     "senses": "truesight 120 ft.",
     "languages": "understands Darakhul and Void Speech",
     "traits": [
@@ -30722,7 +30726,7 @@
   },
   "ushabti": {
     "name": "Ushabti",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "any ancient languages, GM's choice",
     "traits": [
@@ -30764,7 +30768,7 @@
   },
   "ushabti-imy-ut": {
     "name": "Ushabti Imy-ut",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common (ancient Nurien)",
     "traits": [
@@ -30790,7 +30794,7 @@
   },
   "vaettir": {
     "name": "Vaettir",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft., truesight 30 ft.",
     "languages": "the languages it knew in life",
     "traits": [
@@ -30836,7 +30840,7 @@
   },
   "vagabond-eonique": {
     "name": "Aeonic Wanderer",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "languages": "Common, Aeonic, Giant, Sylvan",
     "actions": [
       {
@@ -30859,7 +30863,7 @@
   },
   "valkyrie": {
     "name": "Valkyrie",
-    "speed": "3 ft.0 ft., fly 3 ft.0 ft.",
+    "speed": "30 ft., fly 30 ft.",
     "senses": "truesight 60 ft.",
     "languages": "Common, Giant, Dwarvish, plus any language (see Gift of Tongues)",
     "traits": [
@@ -31053,7 +31057,7 @@
   },
   "vampire-umbral": {
     "name": "Umbral Vampire",
-    "speed": "0 ft., fly 4 ft.0 ft. (hover)",
+    "speed": "0 ft., fly 40 ft. (hover)",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Void Speech, Umbral",
     "traits": [
@@ -31126,7 +31130,7 @@
   },
   "vase-corruptrice": {
     "name": "Corrupting Ooze",
-    "speed": "2 ft.0 ft., swim 3 ft.0 ft.",
+    "speed": "20 ft., swim 30 ft.",
     "senses": "darkvision 60 ft., tremorsense 60 ft.",
     "languages": "—",
     "traits": [
@@ -31288,7 +31292,7 @@
   },
   "vent-putrefacteur": {
     "name": "Putrefying Wind",
-    "speed": "0 ft., fly 6 ft.0 ft. (hover)",
+    "speed": "0 ft., fly 60 ft. (hover)",
     "languages": "—",
     "traits": [
       {
@@ -31348,7 +31352,7 @@
   },
   "ver-givre-larve": {
     "name": "Frost Worm Larva",
-    "speed": "3 ft.0 ft., swim 3 ft.0 ft., burrow 2 ft.0 ft. (snow and ice only)",
+    "speed": "30 ft., swim 30 ft., burrow 20 ft. (snow and ice only)",
     "senses": "darkvision 200 ft.",
     "languages": "—",
     "traits": [
@@ -31378,7 +31382,7 @@
   },
   "ver-pecheur": {
     "name": "Angler Worm",
-    "speed": "2 ft.0 ft., climb 2 ft.0 ft.",
+    "speed": "20 ft., climb 20 ft.",
     "senses": "tremorsense 60 ft.",
     "languages": "—",
     "traits": [
@@ -31446,7 +31450,7 @@
   },
   "ver-sathaq": {
     "name": "Sathaq Worm",
-    "speed": "2 ft.0 ft., burrow 2 ft.0 ft., swim 2 ft.0 ft.",
+    "speed": "20 ft., burrow 20 ft., swim 20 ft.",
     "senses": "tremorsense 60 ft.",
     "languages": "understands Deep Speech and Terran but can't speak",
     "traits": [
@@ -31610,7 +31614,7 @@
   },
   "vidien": {
     "name": "Vidien",
-    "speed": "0 ft., fly 5 ft.0 ft. (hover)",
+    "speed": "0 ft., fly 50 ft. (hover)",
     "senses": "truesight 60 ft.",
     "languages": "telepathy 60 ft.",
     "traits": [
@@ -31648,7 +31652,7 @@
   },
   "vil-barbier-siabhre": {
     "name": "Wicked Barber (Siabhre)",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Goblin, Sylvan, Umbral",
     "traits": [
@@ -31694,7 +31698,7 @@
   },
   "vila": {
     "name": "Vila",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Sylvan, telepathy 60 ft. (beasts only)",
     "traits": [
@@ -31740,7 +31744,7 @@
   },
   "vipere-de-zanskaran": {
     "name": "Zanskaran Viper",
-    "speed": "3 ft.0 ft., climb 1 ft.0 ft., swim 3 ft.0 ft.",
+    "speed": "30 ft., climb 10 ft., swim 30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "—",
     "actions": [
@@ -31752,7 +31756,7 @@
   },
   "vipere-du-marais": {
     "name": "Marsh Viper",
-    "speed": "3 ft.0 ft.",
+    "speed": "30 ft.",
     "senses": "blindsight 10 ft.",
     "languages": "—",
     "traits": [
@@ -31770,7 +31774,7 @@
   },
   "voile-de-givre": {
     "name": "Frost Veil",
-    "speed": "1 ft.0 ft., fly (variable; see Windborne)",
+    "speed": "10 ft., fly (variable; see Windborne)",
     "senses": "blindsight 100 ft.",
     "languages": "—",
     "traits": [
@@ -31892,7 +31896,7 @@
   },
   "wampus-feline": {
     "name": "Wampus Cat",
-    "speed": "4 ft.0 ft., climb 2 ft.0 ft., swim 2 ft.0 ft.",
+    "speed": "40 ft., climb 20 ft., swim 20 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common",
     "traits": [
@@ -31972,7 +31976,7 @@
   },
   "wyrm-des-sables": {
     "name": "Sand Wyrm",
-    "speed": "2 ft.0 ft., burrow 4 ft.0 ft.",
+    "speed": "20 ft., burrow 40 ft.",
     "senses": "darkvision 60 ft., tremorsense 120 ft.",
     "languages": "—",
     "traits": [
@@ -32027,7 +32031,7 @@
   },
   "xanka": {
     "name": "Xanka",
-    "speed": "2 ft.5 ft., climb 1 ft.5 ft.",
+    "speed": "25 ft., climb 15 ft.",
     "senses": "blindsight 120 ft.",
     "languages": "understands the languages of its creator but can't speak",
     "traits": [
@@ -32049,7 +32053,7 @@
   },
   "xhkarsh": {
     "name": "Xhkarsh",
-    "speed": "5 ft.0 ft., climb 3 ft.0 ft.",
+    "speed": "50 ft., climb 30 ft.",
     "senses": "darkvision 60 ft., tremorsense 120 ft.",
     "languages": "Common, Undercommon, Deep Speech",
     "traits": [
@@ -32119,7 +32123,7 @@
   },
   "ychen-bannog": {
     "name": "Ychen Bannog",
-    "speed": "5 ft.0 ft.",
+    "speed": "50 ft.",
     "languages": "—",
     "traits": [
       {
@@ -32474,7 +32478,7 @@
   },
   "zimwi": {
     "name": "Zimwi",
-    "speed": "4 ft.0 ft.",
+    "speed": "40 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Giant",
     "actions": [
@@ -32533,7 +32537,7 @@
   },
   "zmey": {
     "name": "Zmey",
-    "speed": "3 ft.0 ft., fly 5 ft.0 ft., swim 3 ft.0 ft.",
+    "speed": "30 ft., fly 50 ft., swim 30 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Draconic, Elvish, Sylvan",
     "traits": [
@@ -32601,7 +32605,7 @@
   },
   "zmey-bebecephale": {
     "name": "Baby Zmey",
-    "speed": "3 ft.0 ft., swim 2 ft.0 ft.",
+    "speed": "30 ft., swim 20 ft.",
     "senses": "darkvision 60 ft.",
     "languages": "Common, Draconic, Sylvan",
     "traits": [

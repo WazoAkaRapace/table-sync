@@ -14201,5 +14201,141 @@
         "desc": "The baby zmey breathes a 30-foot cone of fire. Creatures caught in the cone take 16 (3d10) fire damage, or half as much on a successful DC 16 Dexterity saving throw."
       }
     ]
+  },
+  "loup": {
+    "name": "Wolf",
+    "source": "MM",
+    "speed": "walk 40 ft.",
+    "traits": [
+      {
+        "name": "Keen Hearing and Smell",
+        "desc": "The wolf has advantage on Wisdom (Perception) checks that rely on hearing or smell."
+      },
+      {
+        "name": "Pack Tactics",
+        "desc": "The wolf has advantage on an attack roll against a creature if at least one of the wolf's allies is within 5 feet of the creature and the ally isn't incapacitated."
+      }
+    ],
+    "actions": [
+      {
+        "name": "Bite",
+        "desc": "Melee Weapon Attack: +4 to hit, reach 5 ft., one target. Hit: 7 (2d4 + 2) piercing damage. If the target is a creature, it must succeed on a DC 11 Strength saving throw or be knocked prone."
+      }
+    ]
+  },
+  "ankylosaure": {
+    "name": "Ankylosaurus",
+    "source": "MM",
+    "speed": "walk 30 ft.",
+    "actions": [
+      {
+        "name": "Tail",
+        "desc": "Melee Weapon Attack: +7 to hit, reach 10 ft., one target. Hit: 18 (4d6 + 4) bludgeoning damage. If the target is a creature, it must succeed on a DC 14 Strength saving throw or be knocked prone."
+      }
+    ]
+  },
+  "ours-polaire": {
+    "name": "Polar Bear",
+    "source": "MM",
+    "speed": "walk 40 ft., swim 30 ft.",
+    "traits": [
+      {
+        "name": "Keen Smell",
+        "desc": "The bear has advantage on Wisdom (Perception) checks that rely on smell."
+      }
+    ],
+    "actions": [
+      {
+        "name": "Multiattack",
+        "desc": "The bear makes two attacks: one with its bite and one with its claws."
+      },
+      {
+        "name": "Bite",
+        "desc": "Melee Weapon Attack: +7 to hit, reach 5 ft., one target. Hit: 9 (1d8 + 5) piercing damage."
+      },
+      {
+        "name": "Claws",
+        "desc": "Melee Weapon Attack: +7 to hit, reach 5 ft., one target. Hit: 12 (2d6 + 5) slashing damage."
+      }
+    ]
+  },
+  "necrophore": {
+    "name": "Necrophore",
+    "speed": "walk 30 ft., burrow 20 ft., climb 10 ft.",
+    "senses": "darkvision 60 ft.",
+    "languages": "—",
+    "actions": [
+      {
+        "name": "Multiattack",
+        "desc": "The necrophore makes one bite attack and two claw attacks."
+      },
+      {
+        "name": "Bite",
+        "desc": "Melee Weapon Attack: +6 to hit, reach 10 ft., one target. Hit: 10 (1d12 + 4) piercing damage."
+      },
+      {
+        "name": "Claws",
+        "desc": "Melee Weapon Attack: +6 to hit, reach 5 ft., one target. Hit: 7 (1d6 + 4) slashing damage."
+      },
+      {
+        "name": "Acid Spit (Recharge 5-6)",
+        "desc": "The necrophore spits acid in a 30-foot-long, 5-foot-wide line. Creatures in the line take 32 (5d12) acid damage, or half as much on a successful DC 13 Dexterity saving throw."
+      }
+    ]
+  },
+  "fourmi-geante-reine": {
+    "name": "Giant Ant Queen",
+    "speed": "walk 40 ft.",
+    "senses": "blindsight 60 ft.",
+    "languages": "—",
+    "traits": [
+      {
+        "name": "Keen Smell",
+        "desc": "A giant ant queen has advantage on Wisdom (Perception) checks based on smell."
+      },
+      {
+        "name": "Royal Scent",
+        "desc": "Giant ants defending a queen have advantage on all their attack rolls."
+      }
+    ],
+    "actions": [
+      {
+        "name": "Multiattack",
+        "desc": "A giant ant queen makes two bite attacks and one sting attack."
+      },
+      {
+        "name": "Bite",
+        "desc": "Melee Weapon Attack: +5 to hit, reach 5 ft., one target. Hit: 7 (1d8 + 3) bludgeoning damage, and the target is grappled (escape DC 13). While grappled, the target is restrained, and the giant ant queen can't bite a different target."
+      },
+      {
+        "name": "Sting",
+        "desc": "Melee Weapon Attack: +5 to hit, reach 5 ft., one target. Hit: 7 (1d8 + 3) piercing damage plus 22 (4d10) poison damage, or half as much poison damage on a successful DC 14 Constitution saving throw."
+      }
+    ]
+  },
+  "gbahali-postosuchus": {
+    "name": "Gbahali (Postosuchus)",
+    "speed": "walk 50 ft.",
+    "languages": "—",
+    "traits": [
+      {
+        "name": "Chameleon Skin",
+        "desc": "The gbahali has advantage on Dexterity (Stealth) checks. If it moves at half its speed or less, attacks made against it before the start of its next turn have disadvantage."
+      }
+    ],
+    "actions": [
+      {
+        "name": "Multiattack",
+        "desc": "The gbahali makes one bite attack and two claw attacks."
+      },
+      {
+        "name": "Bite",
+        "desc": "Melee Weapon Attack: +8 to hit, reach 10 ft., one target. Hit: 24 (3d12 + 5) piercing damage. If the target is a Medium or smaller creature, it is grappled (escape DC 15). While grappled, the target is restrained, and the gbahali can't bite another target."
+      },
+      {
+        "name": "Claws",
+        "desc": "Melee Weapon Attack: +8 to hit, reach 5 ft., one target. Hit: 14 (2d8 + 5) slashing damage."
+      }
+    ]
   }
 }

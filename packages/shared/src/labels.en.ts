@@ -69,6 +69,7 @@ export const DAMAGE_TYPE_LABELS_EN: Record<string, string> = {
 };
 
 export const MONSTER_SIZE_LABELS_EN: Record<string, string> = {
+  TP: 'Tiny',
   T: 'Tiny',
   P: 'Small',
   M: 'Medium',

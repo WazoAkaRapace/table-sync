@@ -32,6 +32,7 @@ import {
 } from '../db/schema.ts';
 import { bus } from '../sync/bus.ts';
 import { isPartyGM, requireUser } from './helpers.ts';
+import { langFromReq, pickLocalized } from './lang.ts';
 import { apiMsg } from './messages.ts';
 
 /** Ligne Druide du personnage : niveau de CLASSE + cercle (multiclassage SRD). */
@@ -58,6 +59,7 @@ function druidLine(char: any): { level: number; circle: string | null } {
 interface BeastRow {
   slug: string;
   name_fr: string | null;
+  overlay_en: string | null;
   challenge_rating: number;
   size: string | null;
   armor_class: number | null;
@@ -80,6 +82,7 @@ function parseSpeed(raw: string | null): { fly: boolean; swim: boolean } {
 const BEAST_COLS = {
   slug: monsters.slug,
   name_fr: monsters.nameFr,
+  overlay_en: monsters.overlayEn,
   challenge_rating: monsters.challengeRating,
   size: monsters.size,
   armor_class: monsters.armorClass,
@@ -87,6 +90,19 @@ const BEAST_COLS = {
   hit_dice: monsters.hitDice,
   speed_json: monsters.speedJson,
 };
+
+/** Nom EN de l'overlay d'une bête (repli null → nom FR servi tel quel). */
+function beastNameEn(row: BeastRow): string | null {
+  if (!row.overlay_en) return null;
+  try {
+    const parsed = typeof row.overlay_en === 'string' ? JSON.parse(row.overlay_en) : row.overlay_en;
+    return parsed && typeof parsed === 'object' && typeof parsed.name === 'string'
+      ? parsed.name
+      : null;
+  } catch {
+    return null;
+  }
+}
 
 /** All of the character's combatants in non-ended encounters (newest first). */
 function findActiveCombatants(characterId: number): any[] {
@@ -200,6 +216,7 @@ export async function wildShapeRoutes(app: FastifyInstance) {
         /* default empty */
       }
 
+      const lang = langFromReq(req);
       const forms = rows
         .map((r) => ({ row: r, speed: parseSpeed(r.speed_json) }))
         // Moon elementals are their own rule (CR 5), not gated by maxCR
@@ -211,7 +228,9 @@ export async function wildShapeRoutes(app: FastifyInstance) {
         .map(({ row, speed }) => ({
           slug: row.slug,
           nameFr: row.name_fr,
-          name: row.name_fr ?? row.slug,
+          // Mono-locale comme le reste de l'API (overlay EN, repli FR) —
+          // le sélecteur de forme n'est plus FR-only.
+          name: pickLocalized(lang, beastNameEn(row), row.name_fr) ?? row.slug,
           challengeRating: row.challenge_rating,
           size: row.size,
           armorClass: row.armor_class,

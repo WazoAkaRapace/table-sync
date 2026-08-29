@@ -5133,6 +5133,7 @@ export interface MonsterSearchQuery {
 
 /** French size label lookup (5e-drs codes). */
 export const MONSTER_SIZE_LABELS_FR: Record<string, string> = {
+  TP: 'Très petit',
   T: 'Très petit',
   P: 'Petit',
   M: 'Moyen',
