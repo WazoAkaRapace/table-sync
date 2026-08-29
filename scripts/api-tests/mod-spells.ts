@@ -34,7 +34,7 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
 
   r = await api(base, 'GET', '/api/spells/light', { token: fx.gm.token });
   ok(r.data.spells.length > 100, 'light catalog');
-  ok(r.data.spells[0].nameFr, 'light rows carry French names');
+  ok(r.data.spells[0].name, 'light rows carry localized names (fr default)');
 
   const fireball = srv.query("SELECT id FROM spells WHERE srd_index = 'fireball'");
   ok(fireball, 'fireball seeded');

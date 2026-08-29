@@ -61,7 +61,7 @@ export function TransferModal({
 
   const others: CharacterSummary[] = party ? party.characters.filter((c) => c.id !== charId) : [];
   const maxQty = entry.quantity;
-  const itemName = entry.item.nameFr || entry.item.name;
+  const itemName = entry.item.name || entry.item.name;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();

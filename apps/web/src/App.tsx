@@ -1,11 +1,14 @@
 import type { ConcentrationCheck } from '@table-sync/shared';
 import { lazy, Suspense, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import api from './api';
 import { useAuth } from './auth';
 import CombatWidget from './components/CombatWidget';
 import ConcentrationAlert from './components/ConcentrationAlert';
 import { HeaderProvider, useHeaderState } from './headerContext';
+import './i18n';
+import { LanguageSwitcher } from './components/LanguageSwitcher';
 import { useSync, useSyncEvent } from './sync';
 
 // Route pages are code-split: each lazy() becomes its own chunk so the login
@@ -26,12 +29,18 @@ const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 
 function SyncIndicator() {
   const { status } = useSync();
+  const { t } = useTranslation();
+  const labels = {
+    connected: t('app.sync.connected'),
+    connecting: t('app.sync.connecting'),
+    disconnected: t('app.sync.disconnected'),
+  };
   const colors = {
     connected: 'bg-green-400',
     connecting: 'bg-yellow-400',
     disconnected: 'bg-red-400',
   };
-  const labels = { connected: 'Synchronisé', connecting: 'Connexion…', disconnected: 'Hors ligne' };
+
   // Dot for the happy path; text appears whenever the table would care
   // (connecting/disconnected) so the state is never color-only.
   return (
@@ -74,6 +83,7 @@ function useRouteTitle(pathname: string): { title: string; backTo?: string } | n
 function Nav() {
   const { user, logout } = useAuth();
   const loc = useLocation();
+  const { t } = useTranslation();
   const { override } = useHeaderState();
 
   const routeTitle = useRouteTitle(loc.pathname);
@@ -117,7 +127,7 @@ function Nav() {
             <Link
               to="/parties"
               className="font-display text-lg font-semibold flex items-center"
-              aria-label="Accueil"
+              aria-label={t('app.home')}
             >
               <img src="/icon.svg" alt="" aria-hidden="true" className="w-8 h-8" />
             </Link>
@@ -149,6 +159,7 @@ function Nav() {
             {user.displayName}
           </Link>
           <SyncIndicator />
+          <LanguageSwitcher />
           {loc.pathname === '/parties' && (
             <Link
               to="/compte"
@@ -175,8 +186,8 @@ function Nav() {
               type="button"
               onClick={logout}
               className="btn-ghost text-parchment-50 hover:bg-ink-700 flex items-center justify-center w-11 h-11"
-              title="Déconnexion"
-              aria-label="Déconnexion"
+              title={t('app.logout')}
+              aria-label={t('app.logout')}
             >
               {/* Not the ⏻ character (U+23FB): Android font bundles lack the
                   glyph and render tofu — draw it instead */}

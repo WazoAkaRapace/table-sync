@@ -1,0 +1,31 @@
+{
+  "app": {
+    "sync": {
+      "connected": "Synchronisé",
+      "connecting": "Connexion…",
+      "disconnected": "Hors ligne"
+    },
+    "home": "Accueil",
+    "logout": "Déconnexion",
+    "language": "Langue"
+  },
+  "common": {
+    "loading": "Chargement…",
+    "close": "Fermer",
+    "add": "Ajouter",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "search": "Rechercher",
+    "retry": "Réessayer",
+    "error": "Une erreur est survenue"
+  },
+  "spell": {
+    "one": "Sort",
+    "seeSpell": "Voir le sort : {{name}}"
+  },
+  "monster": {
+    "one": "Monstre"
+  }
+}

@@ -37,6 +37,7 @@ import {
   requireUser,
 } from './helpers.ts';
 import { INVENTORY_WITH_ITEM } from './inventory.ts';
+import { langFromReq } from './lang.ts';
 
 /** Hard upload ceiling — the client downscales to 1280px JPEG (~150-400 ko);
  * anything bigger than this is a client that skipped the canvas step. */
@@ -347,7 +348,9 @@ export async function itemImageRoutes(app: FastifyInstance) {
         action: 'custom-item',
         actorUserId: userId,
       });
-      return reply.code(200).send({ entry: mapInventoryEntry(getEntryWithItem(updatedEntryId)) });
+      return reply
+        .code(200)
+        .send({ entry: mapInventoryEntry(getEntryWithItem(updatedEntryId), langFromReq(req)) });
     },
   );
 
@@ -439,7 +442,9 @@ export async function itemImageRoutes(app: FastifyInstance) {
         action: 'custom-item',
         actorUserId: userId,
       });
-      return reply.code(200).send({ entry: mapInventoryEntry(getEntryWithItem(updatedEntryId)) });
+      return reply
+        .code(200)
+        .send({ entry: mapInventoryEntry(getEntryWithItem(updatedEntryId), langFromReq(req)) });
     },
   );
 }

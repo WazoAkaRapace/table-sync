@@ -11,6 +11,7 @@ import { getDrizzle } from '../db/drizzle.ts';
 import { cols } from '../db/projections.ts';
 import { characterClasses, characters, spells } from '../db/schema.ts';
 import { isPartyGM, mapSpell, requireUser } from './helpers.ts';
+import { langFromReq } from './lang.ts';
 
 export async function domainSpellRoutes(app: FastifyInstance) {
   app.get(
@@ -83,7 +84,7 @@ export async function domainSpellRoutes(app: FastifyInstance) {
             .from(spells)
             .where(sql`${spells.name} = ${name} COLLATE NOCASE`)
             .get() as any;
-          if (row) domainSpells.push({ ...mapSpell(row), domainLevel: g.level });
+          if (row) domainSpells.push({ ...mapSpell(row, langFromReq(req)), domainLevel: g.level });
         }
       }
       return reply.send({ domain: char.divine_domain ?? null, spells: domainSpells }); // 'domain' kept for client compat

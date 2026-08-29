@@ -15,6 +15,7 @@ import {
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import api from '../api';
+import { appLocale } from '../i18n';
 import SpellDetailSheet from './SpellDetailSheet';
 
 interface Props {
@@ -30,7 +31,7 @@ interface Props {
 /** Light spell row from GET /api/spells/light */
 interface SpellLight {
   id: number;
-  nameFr: string;
+  name: string;
   level: number;
 }
 
@@ -56,7 +57,7 @@ function matchSpellsInText(desc: string, catalog: SpellLight[]): SpellLight[] {
     .replace(/\d+\s*emplacements?/gi, ';');
 
   const byName = new Map<string, SpellLight>();
-  for (const s of catalog) byName.set(normalizeSpellName(s.nameFr), s);
+  for (const s of catalog) byName.set(normalizeSpellName(s.name), s);
 
   const found: SpellLight[] = [];
   const seen = new Set<number>();
@@ -138,7 +139,7 @@ export default function MonsterStatBlock({
   const header = (
     <div className="flex items-center justify-between p-4 border-b border-parchment-200 shrink-0">
       <h2 className="section-title truncate">
-        {monster?.nameFr ?? (loading ? 'Chargement…' : 'Monstre')}
+        {monster?.name ?? (loading ? 'Chargement…' : 'Monstre')}
       </h2>
       <button
         type="button"
@@ -306,7 +307,7 @@ function StatBlockBody({
         <div>
           <span className="font-semibold">Puissance</span>
           <span className="text-ink-600 ml-2">
-            {formatCR(monster.challengeRating)} ({monster.xp.toLocaleString('fr-FR')} PX)
+            {formatCR(monster.challengeRating)} ({monster.xp.toLocaleString(appLocale())} PX)
           </span>
         </div>
       </div>
@@ -585,9 +586,9 @@ function ActionEntry({
               key={s.id}
               onClick={() => onOpenSpell(s.id)}
               className="px-2 py-0.5 rounded-full text-xs bg-indigo-100 text-indigo-700 hover:bg-indigo-200 active:scale-95 transition-all"
-              title={`Voir le sort : ${s.nameFr}`}
+              title={`Voir le sort : ${s.name}`}
             >
-              ✨ {s.nameFr}
+              ✨ {s.name}
             </button>
           ))}
         </div>

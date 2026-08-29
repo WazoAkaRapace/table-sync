@@ -46,14 +46,16 @@ async function call<T = any>(
   return (res.status === 204 ? undefined : res.json()) as T;
 }
 
-/** Résout l'id numérique d'un objet/sort du catalogue par son nom français exact. */
+/** Résout l'id numérique d'un objet/sort du catalogue par son nom français exact.
+ * Payloads mono-locale : sans en-tête Accept-Language l'API sert le français —
+ * le champ `name` EST le nom français dans les suites e2e. */
 async function catalogId(kind: 'items' | 'spells', nameFr: string, token: string): Promise<number> {
-  const res = await call<{ [k: string]: { id: number; nameFr: string }[] }>(
+  const res = await call<{ [k: string]: { id: number; name: string }[] }>(
     'GET',
     `/api/${kind}?search=${encodeURIComponent(nameFr)}&limit=25`,
     { token },
   );
-  const hit = res[kind].find((r) => r.nameFr === nameFr);
+  const hit = res[kind].find((r) => r.name === nameFr);
   if (!hit) throw new Error(`Seed E2E : « ${nameFr} » introuvable dans le catalogue ${kind}.`);
   return hit.id;
 }

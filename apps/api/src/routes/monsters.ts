@@ -10,6 +10,7 @@ import { getDrizzle } from '../db/drizzle.ts';
 import { cols } from '../db/projections.ts';
 import { monsters } from '../db/schema.ts';
 import { requireUser } from './helpers.ts';
+import { type AppLang, langFromReq, pickLocalized } from './lang.ts';
 
 interface MonsterQuery {
   search?: string;
@@ -17,10 +18,33 @@ interface MonsterQuery {
 }
 
 /** Map a raw DB row to a full Monster stat block (parses JSON columns). */
-function mapMonster(row: any): Monster {
-  return {
+type MonsterOverlay = {
+  name?: string;
+  traits?: { name: string; desc: string }[];
+  actions?: { name: string; desc: string }[];
+  bonusActions?: { name: string; desc: string }[];
+  reactions?: { name: string; desc: string }[];
+  legendaryActions?: { name: string; desc: string }[];
+  senses?: string;
+  languages?: string;
+  speed?: string;
+};
+
+function parseOverlay(row: any): MonsterOverlay | null {
+  const raw = row.overlay_en;
+  if (!raw) return null;
+  try {
+    const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    return parsed && typeof parsed === 'object' ? (parsed as MonsterOverlay) : null;
+  } catch {
+    return null;
+  }
+}
+
+function mapMonster(row: any, lang: AppLang = 'fr'): Monster {
+  const base: Monster = {
     slug: row.slug,
-    nameFr: row.name_fr,
+    name: row.name_fr,
     type: row.type ?? '',
     subtype: row.subtype ?? null,
     size: row.size ?? 'M',
@@ -52,13 +76,28 @@ function mapMonster(row: any): Monster {
     actions: parseJson(row.actions_json, []),
     legendaryActions: parseJson(row.legendary_actions_json, []),
   };
+  const overlay = lang === 'en' ? parseOverlay(row) : null;
+  if (!overlay) return base;
+  if (overlay.name) base.name = overlay.name;
+  if (overlay.traits) base.traits = overlay.traits;
+  if (overlay.actions) base.actions = overlay.actions;
+  if (overlay.legendaryActions) base.legendaryActions = overlay.legendaryActions;
+  if (overlay.senses) base.senses = overlay.senses;
+  if (typeof overlay.languages === 'string') {
+    base.languages = overlay.languages
+      .split(',')
+      .map((l) => l.trim())
+      .filter(Boolean);
+  }
+  if (overlay.speed) base.speedText = overlay.speed;
+  return base;
 }
 
 /** Map a raw DB row to a light MonsterSummary (no prose). */
-function mapMonsterSummary(row: any): MonsterSummary {
+function mapMonsterSummary(row: any, lang: AppLang = 'fr'): MonsterSummary {
   return {
     slug: row.slug,
-    nameFr: row.name_fr,
+    name: pickLocalized(lang, parseOverlay(row)?.name, row.name_fr),
     type: row.type ?? '',
     size: row.size ?? 'M',
     challengeRating: row.challenge_rating ?? 0,
@@ -107,6 +146,7 @@ export async function monsterRoutes(app: FastifyInstance) {
           ? or(
               sql`normalize(${monsters.nameFr}) LIKE normalize(${`%${search}%`})`,
               sql`normalize(${monsters.type}) LIKE normalize(${`%${search}%`})`,
+              sql`normalize(${monsters.overlayEn}) LIKE normalize(${`%${search}%`})`,
             )
           : undefined;
 
@@ -114,6 +154,7 @@ export async function monsterRoutes(app: FastifyInstance) {
         .select({
           slug: monsters.slug,
           name_fr: monsters.nameFr,
+          overlay_en: monsters.overlayEn,
           type: monsters.type,
           size: monsters.size,
           challenge_rating: monsters.challengeRating,
@@ -126,7 +167,8 @@ export async function monsterRoutes(app: FastifyInstance) {
         .limit(lim)
         .all();
 
-      return reply.send({ monsters: rows.map(mapMonsterSummary) });
+      const lang = langFromReq(req);
+      return reply.send({ monsters: rows.map((r) => mapMonsterSummary(r, lang)) });
     },
   );
 
@@ -144,7 +186,7 @@ export async function monsterRoutes(app: FastifyInstance) {
         .get() as any;
       if (!row) return reply.code(404).send({ error: 'Monstre introuvable' });
 
-      return reply.send({ monster: mapMonster(row) });
+      return reply.send({ monster: mapMonster(row, langFromReq(req)) });
     },
   );
 }

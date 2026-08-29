@@ -147,7 +147,7 @@ export function CatalogSearch({
               <li key={item.id} className="card p-3 flex items-center gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-medium truncate">{item.nameFr || item.name}</span>
+                    <span className="font-medium truncate">{item.name || item.name}</span>
                     {item.rarity !== 'none' && <RarityBadge rarity={item.rarity} />}
                   </div>
                   <div className="flex items-center gap-3 mt-1 text-xs text-ink-500">
@@ -167,7 +167,7 @@ export function CatalogSearch({
                     onClick={() => onAdd(item)}
                     disabled={addingItemId === item.id}
                     className="btn-primary text-sm px-3 py-2 shrink-0"
-                    aria-label={`Ajouter ${item.nameFr || item.name}`}
+                    aria-label={`Ajouter ${item.name || item.name}`}
                   >
                     {addingItemId === item.id ? '…' : '+ Ajouter'}
                   </button>

@@ -558,5 +558,36 @@ check(
   { speed: 4.5, bonus: -3, sources: ['Armure lourde −3 m (FOR insuffisante)'] },
 );
 
+// --- Découplage moteur/noms : armure par CLÉS seules (texte EN, aucun en-tête FR) ---
+const keyedArmor = {
+  category: 'armor',
+  name: 'Mysterious Plate',
+  nameFr: null,
+  description: 'While wearing this armor, you gain a +1 bonus to AC.', // EN pur
+  acBase: null,
+  strMin: null,
+  baseWeapon: null,
+  baseArmor: 'Plate Armor',
+  armorFamily: 'heavy',
+  magicBonus: 1,
+};
+const ma = resolveMagicArmorBase(keyedArmor as any);
+check('Clés seules → base Plate Armor', ma.base?.nameEn, 'Plate Armor');
+check('Clés seules → famille heavy', ma.base?.armorType, 'heavy');
+check('Clés seules → bonus +1', ma.magicBonus, 1);
+const keyedShield = {
+  category: 'armor',
+  name: 'Guardian Aegis',
+  nameFr: null,
+  description: null,
+  acBase: null,
+  strMin: null,
+  baseWeapon: null,
+  baseArmor: 'Shield',
+  armorFamily: 'shield',
+  magicBonus: null,
+};
+check('Clé bouclier → shield', resolveMagicArmorBase(keyedShield as any).shield, true);
+
 console.log(failures === 0 ? '\n✅ All armor stats checks pass' : `\n❌ ${failures} failure(s)`);
 process.exit(failures === 0 ? 0 : 1);

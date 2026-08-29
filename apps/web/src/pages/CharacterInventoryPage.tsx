@@ -456,7 +456,7 @@ export default function CharacterInventoryPage() {
         await deleteEntryMutation.mutateAsync(entry.id);
         if (expandedId === entry.id) setExpandedId(null);
         await refreshInventory();
-        pushToast(`${entry.item.nameFr || entry.item.name} retiré du sac à dos`);
+        pushToast(`${entry.item.name || entry.item.name} retiré du sac à dos`);
       } catch (err) {
         pushToast(apiError(err, 'Erreur de suppression'), 'error');
       }
@@ -492,7 +492,7 @@ export default function CharacterInventoryPage() {
         storageLocationId: activeLocationId,
       });
       await refreshInventory();
-      pushToast(`+1 ${item.nameFr || item.name} ajouté au sac à dos`);
+      pushToast(`+1 ${item.name || item.name} ajouté au sac à dos`);
     } catch (err) {
       pushToast(apiError(err, "Impossible d'ajouter l'objet"), 'error');
     } finally {
@@ -542,7 +542,7 @@ export default function CharacterInventoryPage() {
       }
       setCreateItemImage(EMPTY_ITEM_IMAGE);
       await queryClient.invalidateQueries({ queryKey: ['catalog'] });
-      pushToast(`« ${created.nameFr || created.name} » créé`);
+      pushToast(`« ${created.name || created.name} » créé`);
       // The search was meant to ADD the item — land it in the bag right away.
       addFromCatalog(created);
     } catch (err) {
@@ -593,7 +593,7 @@ export default function CharacterInventoryPage() {
         await refreshInventory(entry.id);
         const target = data?.locations.find((l) => l.id === locationId);
         pushToast(
-          `${entry.item.nameFr || entry.item.name} déplacé vers ${target?.name ?? "l'emplacement"}`,
+          `${entry.item.name || entry.item.name} déplacé vers ${target?.name ?? "l'emplacement"}`,
         );
       } catch (err) {
         pushToast(apiError(err, 'Erreur lors du déplacement'), 'error');
@@ -1524,8 +1524,8 @@ function groupByCategory(entries: InventoryEntry[]): CategoryGroupData[] {
   for (const [category, items] of map) {
     items.sort((a, b) => {
       if (a.equipped !== b.equipped) return a.equipped ? -1 : 1;
-      const na = (a.item.nameFr || a.item.name).toLowerCase();
-      const nb = (b.item.nameFr || b.item.name).toLowerCase();
+      const na = (a.item.name || a.item.name).toLowerCase();
+      const nb = (b.item.name || b.item.name).toLowerCase();
       return na.localeCompare(nb);
     });
     result.push({ category, entries: items });

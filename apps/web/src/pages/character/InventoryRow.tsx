@@ -70,7 +70,7 @@ export function InventoryRow({
     (item.properties && item.properties.length > 0) ||
     !!entry.notes ||
     item.hasImage; // un objet réduit à son image (carte sans texte) reste dépliable
-  const itemName = item.nameFr || item.name;
+  const itemName = item.name || item.name;
 
   // Locations available to move this item to (everything except the active one)
   const otherLocations = locations.filter((l) => l.id !== activeLocationId);

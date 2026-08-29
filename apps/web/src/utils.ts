@@ -1,5 +1,6 @@
 /* Small helpers shared by the register (group list) and the table of contents (party page). */
 
+import { appLocale } from './i18n';
 export function plural(n: number, word: string): string {
   return `${n} ${word}${n > 1 ? 's' : ''}`;
 }
@@ -28,7 +29,7 @@ export function formatSince(createdAt: string): string {
   const normalized = createdAt.includes(' ') ? createdAt.replace(' ', 'T') : createdAt;
   const d = new Date(normalized);
   if (Number.isNaN(d.getTime())) return '';
-  const fmt = new Intl.DateTimeFormat('fr-FR', { month: 'short', year: 'numeric' });
+  const fmt = new Intl.DateTimeFormat(appLocale(), { month: 'short', year: 'numeric' });
   return `depuis ${fmt.format(d)}`;
 }
 
@@ -37,7 +38,7 @@ export function formatCreated(createdAt: string): string {
   const normalized = createdAt.includes(' ') ? createdAt.replace(' ', 'T') : createdAt;
   const d = new Date(normalized);
   if (Number.isNaN(d.getTime())) return '';
-  const fmt = new Intl.DateTimeFormat('fr-FR', { month: 'short', year: 'numeric' });
+  const fmt = new Intl.DateTimeFormat(appLocale(), { month: 'short', year: 'numeric' });
   return `créée ${fmt.format(d)}`;
 }
 

@@ -36,6 +36,7 @@ import {
   mapInventoryEntry,
   requireUser,
 } from './helpers.ts';
+import { langFromReq, pickLocalized } from './lang.ts';
 
 /**
  * inventory JOIN items with the item columns prefixed `i_` — the shape
@@ -64,6 +65,11 @@ export const INVENTORY_WITH_ITEM = {
   i_cost_qty: items.costQty,
   i_cost_unit: items.costUnit,
   i_description: items.description,
+  i_description_en: items.descriptionEn,
+  i_base_weapon: items.baseWeapon,
+  i_base_armor: items.baseArmor,
+  i_armor_family: items.armorFamily,
+  i_magic_bonus: items.magicBonus,
   i_damage_dice: items.damageDice,
   i_damage_type: items.damageType,
   i_ac_base: items.acBase,
@@ -174,6 +180,7 @@ export async function inventoryRoutes(app: FastifyInstance) {
         sortOrder: r.sort_order,
       }));
 
+      const lang = langFromReq(req);
       const cleanEntries = cleanRows.map((r: any) => ({
         id: r.id,
         characterId: r.character_id,
@@ -183,13 +190,16 @@ export async function inventoryRoutes(app: FastifyInstance) {
           source: r.i_source,
           partyId: r.i_party_id,
           category: r.i_category,
-          name: r.i_name,
-          nameFr: r.i_name_fr,
+          name: pickLocalized(lang, r.i_name, r.i_name_fr),
           rarity: r.i_rarity,
           weightKg: r.i_weight_kg,
           costQty: r.i_cost_qty,
           costUnit: r.i_cost_unit,
-          description: r.i_description,
+          description: pickLocalized(lang, r.i_description_en, r.i_description),
+          baseWeapon: r.i_base_weapon ?? null,
+          baseArmor: r.i_base_armor ?? null,
+          armorFamily: r.i_armor_family ?? null,
+          magicBonus: r.i_magic_bonus ?? null,
           damageDice: r.i_damage_dice,
           damageType: r.i_damage_type,
           acBase: r.i_ac_base,
@@ -398,7 +408,7 @@ export async function inventoryRoutes(app: FastifyInstance) {
         itemName: itemRow.nameFr || itemRow.name,
         actorUserId: userId,
       });
-      return reply.code(201).send({ entry: mapInventoryEntry(invRow) });
+      return reply.code(201).send({ entry: mapInventoryEntry(invRow, langFromReq(req)) });
     },
   );
 
@@ -480,7 +490,7 @@ export async function inventoryRoutes(app: FastifyInstance) {
         action: 'adjust',
         actorUserId: userId,
       });
-      return reply.send({ entry: mapInventoryEntry(row) });
+      return reply.send({ entry: mapInventoryEntry(row, langFromReq(req)) });
     },
   );
 

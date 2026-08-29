@@ -92,10 +92,11 @@ export async function api(
   base: string,
   method: string,
   path: string,
-  opts: { token?: string; body?: unknown } = {},
+  opts: { token?: string; body?: unknown; headers?: Record<string, string> } = {},
 ): Promise<ApiResponse> {
   const headers: Record<string, string> = { 'x-real-ip': nextIp() };
   if (opts.token) headers.authorization = `Bearer ${opts.token}`;
+  Object.assign(headers, opts.headers ?? {});
   if (opts.body !== undefined) headers['content-type'] = 'application/json';
   const res = await fetch(`${base}${path}`, {
     method,

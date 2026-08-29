@@ -5,6 +5,7 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import { AuthProvider, useAuth } from './auth';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import './i18n';
 import { SyncProvider } from './sync';
 import './index.css';
 
