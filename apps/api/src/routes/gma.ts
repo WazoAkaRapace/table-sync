@@ -115,30 +115,24 @@ function requirePartyGM(req: FastifyRequest, reply: FastifyReply, partyId: numbe
   const userId = requireUser(req, reply);
   if (userId === null) return false;
   if (!Number.isInteger(partyId) || partyId <= 0) {
-    reply
-      .code(400)
-      .send({
-        error: apiMsg(req, 'bad_request'),
-        message: apiMsg(req, 'Identifiant de groupe invalide.'),
-      });
+    reply.code(400).send({
+      error: apiMsg(req, 'bad_request'),
+      message: apiMsg(req, 'Identifiant de groupe invalide.'),
+    });
     return false;
   }
   if (!isPartyMember(partyId, userId)) {
-    reply
-      .code(403)
-      .send({
-        error: apiMsg(req, 'not a member'),
-        message: apiMsg(req, 'Tu n’es pas membre de ce groupe.'),
-      });
+    reply.code(403).send({
+      error: apiMsg(req, 'not a member'),
+      message: apiMsg(req, 'Tu n’es pas membre de ce groupe.'),
+    });
     return false;
   }
   if (!isPartyGM(partyId, userId)) {
-    reply
-      .code(403)
-      .send({
-        error: apiMsg(req, 'gm only'),
-        message: apiMsg(req, 'Seul le MD peut gérer GM Assistant.'),
-      });
+    reply.code(403).send({
+      error: apiMsg(req, 'gm only'),
+      message: apiMsg(req, 'Seul le MD peut gérer GM Assistant.'),
+    });
     return false;
   }
   return true;
@@ -498,12 +492,10 @@ export async function gmaRoutes(app: FastifyInstance) {
       if (userId === null) return;
       const partyId = Number(req.params.partyId);
       if (!isPartyMember(partyId, userId)) {
-        return reply
-          .code(403)
-          .send({
-            error: apiMsg(req, 'not a member'),
-            message: apiMsg(req, 'Tu n’es pas membre de ce groupe.'),
-          });
+        return reply.code(403).send({
+          error: apiMsg(req, 'not a member'),
+          message: apiMsg(req, 'Tu n’es pas membre de ce groupe.'),
+        });
       }
       const link = getPartyLink(partyId);
       if (!link) return reply.send({ linked: false, campaign: null, accountOk: false });
@@ -1030,12 +1022,10 @@ export async function gmaRoutes(app: FastifyInstance) {
       if (userId === null) return;
       const partyId = Number(req.params.partyId);
       if (!isPartyMember(partyId, userId)) {
-        return reply
-          .code(403)
-          .send({
-            error: apiMsg(req, 'not a member'),
-            message: apiMsg(req, 'Tu n’es pas membre de ce groupe.'),
-          });
+        return reply.code(403).send({
+          error: apiMsg(req, 'not a member'),
+          message: apiMsg(req, 'Tu n’es pas membre de ce groupe.'),
+        });
       }
       const link = getPartyLink(partyId);
       if (!link) {
@@ -1095,12 +1085,10 @@ export async function gmaRoutes(app: FastifyInstance) {
       const partyId = Number(req.params.partyId);
       const sessionId = String(req.params.sessionId ?? '');
       if (!isPartyMember(partyId, userId)) {
-        return reply
-          .code(403)
-          .send({
-            error: apiMsg(req, 'not a member'),
-            message: apiMsg(req, 'Tu n’es pas membre de ce groupe.'),
-          });
+        return reply.code(403).send({
+          error: apiMsg(req, 'not a member'),
+          message: apiMsg(req, 'Tu n’es pas membre de ce groupe.'),
+        });
       }
       const link = getPartyLink(partyId);
       if (!link) {

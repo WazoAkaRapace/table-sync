@@ -29,6 +29,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../api';
 import { BottomSheet } from '../components/ui';
+import { appLang } from '../i18n';
 import { abilityLabel, abilityShort, classNameLabel } from '../i18n/labels';
 
 interface Props {
@@ -51,6 +52,10 @@ const ABILITY_FIELDS: { key: keyof Character; ability: AbilityKey }[] = [
 
 export default function CharacterStatsTab({ character, charId, entries, onSaved, onError }: Props) {
   const { t } = useTranslation();
+  // Langue des chaînes calculées par le moteur (sources CA/vitesse, libellés
+  // de défense sans armure) — relue à chaque rendu, le changement de langue
+  // déclenche un re-rendu via useTranslation.
+  const lang = appLang();
   // Drafts for ability scores (auto-save on blur)
   const [abilityDrafts, setAbilityDrafts] = useState<Record<string, string>>({});
   const [speedDraft, setSpeedDraft] = useState(String(character.speed ?? 9));
@@ -111,7 +116,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
   };
 
   // Armor-dependent class speed features (Moine / Barbare)
-  const speedResult = computeSpeed(character, entries);
+  const speedResult = computeSpeed(character, entries, lang);
 
   // Derived stats
   const level = character.level ?? 1;
@@ -149,9 +154,10 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
     dexMod,
     fightingStylesOf(character).has('defense'),
     character,
+    lang,
   );
   // Défenses sans armure candidates (multiclassage : on en choisit UNE — SRD)
-  const defenseOptions = unarmoredDefensesOf(character);
+  const defenseOptions = unarmoredDefensesOf(character, lang);
   const acOverride = character.armorClassOverride;
   const effectiveAC = acOverride ?? acResult.ac;
   const [acDraft, setAcDraft] = useState('');

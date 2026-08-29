@@ -28,7 +28,7 @@ import { useTranslation } from 'react-i18next';
 import api from '../api';
 import CastSpellSheet from '../components/CastSpellSheet';
 import { BottomSheet, Chip, ErrorMsg } from '../components/ui';
-import { abilityShort, classNameLabel, schoolLabel } from '../i18n/labels';
+import { abilityShort, classNameLabel, damageType, schoolLabel } from '../i18n/labels';
 
 interface Props {
   character: Character;
@@ -641,7 +641,9 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                           ? 'bg-red-50 text-red-700 border border-red-300'
                           : 'bg-parchment-100 text-ink-600 hover:bg-parchment-200'
                     }`}
-                    title={t('sorts.sorts.prepares.de.l.classkey.les', { l_classKey: l.classKey })}
+                    title={t('sorts.sorts.prepares.de.l.classkey.les', {
+                      l_classKey: classNameLabel(l.classKey),
+                    })}
                   >
                     {limits.length > 1 ? `${classNameLabel(l.classKey)} ` : ''}
                     {t('sorts.prepares.prepared.limit', { prepared: count, limit: l.limit })}
@@ -775,7 +777,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                                   <span className="flex items-center gap-1.5 text-xs text-ink-400 min-w-0">
                                     {isMultiClass && cs.classSource && (
                                       <span className="shrink-0 text-[10px] uppercase tracking-wide text-ink-300">
-                                        {cs.classSource}
+                                        {classNameLabel(cs.classSource)}
                                       </span>
                                     )}
                                     {spell.castingTime && (
@@ -1094,7 +1096,7 @@ function safeParse<T>(json: string | null): T | null {
 function computeDamageDice(spell: Spell, charLevel: number): string | null {
   const { dice, typeFr } = spellDamageAtLevel(spell, spell.level, charLevel);
   if (!dice) return null;
-  return typeFr ? `${dice} ${typeFr}` : dice;
+  return typeFr ? `${dice} ${damageType(typeFr) ?? typeFr}` : dice;
 }
 
 /** Render spell stat badges: save DC, attack bonus, damage — computed from character stats. */
@@ -1298,7 +1300,7 @@ function SpellCatalog({
           <option value="">{t('sorts.toutes.classes')}</option>
           {DND_CLASSES.map((c) => (
             <option key={c.name} value={c.name}>
-              {c.name}
+              {classNameLabel(c.name)}
             </option>
           ))}
         </select>
@@ -1323,9 +1325,9 @@ function SpellCatalog({
             aria-label={t('sorts.filtrer.par.ecole')}
           >
             <option value="">{t('sorts.toutes.ecoles')}</option>
-            {Object.entries(SPELL_SCHOOL_LABELS_FR).map(([key, label]) => (
+            {Object.entries(SPELL_SCHOOL_LABELS_FR).map(([key]) => (
               <option key={key} value={key}>
-                {label}
+                {schoolLabel(key as SpellSchool)}
               </option>
             ))}
           </select>
@@ -1443,7 +1445,7 @@ function SpellCatalog({
                       <SpellMetaLine spell={spell} />
                       {spell.classes.length > 0 && (
                         <p className="text-ink-400">
-                          {t('sorts.classes')} {spell.classes.join(', ')}
+                          {t('sorts.classes')} {spell.classes.map(classNameLabel).join(', ')}
                         </p>
                       )}
                     </div>

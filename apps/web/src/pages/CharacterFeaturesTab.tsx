@@ -32,6 +32,32 @@ import { appLang } from '../i18n';
 import { classNameLabel, featureCategoryLabel } from '../i18n/labels';
 import { useSyncEvent } from '../sync';
 
+// TEMPLATE_VARIABLES (partagé) reste la source des syntaxes ; la description
+// affichée passe par i18next — FR = copies verbatim du catalogue partagé.
+const TEMPLATE_VAR_KEYS: Record<string, string> = {
+  '{{name}}': 'traits.var.name',
+  '{{level}}': 'traits.var.level',
+  '{{class}}': 'traits.var.class',
+  '{{race}}': 'traits.var.race',
+  '{{prof}}': 'traits.var.prof',
+  '{{save_dc}}': 'traits.var.save.dc',
+  '{{spell_attack}}': 'traits.var.spell.attack',
+  '{{str_mod}}': 'traits.var.str.mod',
+  '{{dex_mod}}': 'traits.var.dex.mod',
+  '{{con_mod}}': 'traits.var.con.mod',
+  '{{int_mod}}': 'traits.var.int.mod',
+  '{{wis_mod}}': 'traits.var.wis.mod',
+  '{{cha_mod}}': 'traits.var.cha.mod',
+  '{{save:dex}}': 'traits.var.save.dex',
+  '{{save:con}}': 'traits.var.save.con',
+  '{{skill:perception}}': 'traits.var.skill.perception',
+  '{{skill:athletics}}': 'traits.var.skill.athletics',
+  '{{passive_perception}}': 'traits.var.passive.perception',
+  '{{initiative}}': 'traits.var.initiative',
+  '{{speed}}': 'traits.var.speed',
+  '{{max_hp}}': 'traits.var.max.hp',
+};
+
 // Affichage EN : le catalogue SRD a sa table anglaise (classFeatures.en.ts),
 // les lignes stockées restent FR — on superpose via catalogId.
 function featName(f: { title: string; catalogId?: string | null }): string {
@@ -610,7 +636,9 @@ export default function CharacterFeaturesTab({
                     <code className="bg-parchment-200 px-1.5 py-0.5 rounded text-blood-700 font-mono shrink-0">
                       {v.syntax}
                     </code>
-                    <span className="text-ink-500">{v.description}</span>
+                    <span className="text-ink-500">
+                      {TEMPLATE_VAR_KEYS[v.syntax] ? t(TEMPLATE_VAR_KEYS[v.syntax]) : v.description}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -729,7 +757,7 @@ function CatalogCard({
               .map(
                 (g) =>
                   `${ownLines.length > 1 ? `${classNameLabel(g.classKey)} ` : ''}${t('traits.niveau.abrege', { level: g.nextLevel })} : ${g.features
-                    .map((f) => f.name)
+                    .map((f) => defName(f))
                     .join(', ')}`,
               )
               .join(' — ')}
@@ -753,7 +781,7 @@ function CatalogCard({
               >
                 {DND_CLASSES.map((c) => (
                   <option key={c.name} value={c.name}>
-                    {c.name}
+                    {classNameLabel(c.name)}
                   </option>
                 ))}
               </select>

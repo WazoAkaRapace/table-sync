@@ -15,7 +15,8 @@ const BASELINE = resolve(HERE, 'ui-strings-baseline.json');
 
 const ACC = /[àâçéèêëîïôùûüœÀÂÇÉÈÊËÎÏÔÙÛÜŒ]/g;
 // FR non accentué — mots SÛRS (aucune collision EN/Tailwind)
-const FR_UI = /\b(fermer|ajouter|annuler|enregistrer|supprimer|modifier|rechercher|créer|retirer|nouvelle?|aucun|aucune|rencontres?|monstres?|joueurs?|combattants?|maîtrises?|compétences?|sous-classe|personnages?|groupes?|sauvegarde|épuisement|encombrement|encombré|portage|utilisations?|inspiration|concentration|initiative|dégâts|quantité|poids|niveaux|disposition|invitations?|langues?|armures?)\b/gi;
+const FR_UI =
+  /\b(fermer|ajouter|annuler|enregistrer|supprimer|modifier|rechercher|créer|retirer|nouvelle?|aucun|aucune|rencontres?|monstres?|joueurs?|combattants?|maîtrises?|compétences?|sous-classe|personnages?|groupes?|sauvegarde|épuisement|encombrement|encombré|portage|utilisations?|inspiration|concentration|initiative|dégâts|quantité|poids|niveaux|disposition|invitations?|langues?|armures?)\b/gi;
 
 function walk(dir: string): string[] {
   const out: string[] = [];
@@ -38,7 +39,12 @@ for (const file of walk(ROOT)) {
     .replace(/(?:===|!==|==|\.includes\(|\.indexOf\(|\.filter\()[^\n]*/g, (l) =>
       l.replace(/'[^']*'/g, "''"),
     )
-    .replace(/case '[^']*':/g, "case '':");
+    .replace(/case '[^']*':/g, "case '':")
+    // Clés i18n en slug pointé ('traits.ajouter') et préfixes dynamiques
+    // (`pnj.disposition.${d}`) : le mot-liste FR ne doit pas sanctionner
+    // le wiring t() — seules les chaînes d'affichage comptent.
+    .replace(/'([a-z0-9]+(?:\.[a-z0-9-]+)+)'/g, "''")
+    .replace(/`([a-z0-9]+(?:\.[a-z0-9-]+)+)\.\$\{/g, '`${');
   const n = [...src.matchAll(ACC)].length + [...src.matchAll(FR_UI)].length;
   if (n > 0) perFile[file.replace(`${ROOT}/`, '')] = n;
 }

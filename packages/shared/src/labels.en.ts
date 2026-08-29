@@ -188,6 +188,7 @@ export const MONSTER_TYPE_LABELS_EN: Record<string, string> = {
   Fiélon: 'Fiend',
   Démon: 'Fiend',
   'Mort-vivant': 'Undead',
+  'Mort•vivant': 'Undead', // OCR 5e-drs (puce au lieu du tiret)
   Vase: 'Ooze',
   Plante: 'Plant',
   Géant: 'Giant',
@@ -201,6 +202,7 @@ export const MONSTER_TYPE_LABELS_EN: Record<string, string> = {
   Artificiel: 'Construct',
   'Créature artificielle': 'Construct',
   Nuée: 'Swarm',
+  'Nuée de bêtes': 'Swarm of beasts',
 };
 
 /**
@@ -211,6 +213,8 @@ export const MONSTER_TYPE_LABELS_EN: Record<string, string> = {
 export function normalizeMonsterTypeFr(type: string): string {
   let t = type.split('(')[0];
   t = t.replace(/de (Très )?(Grande|Petite) taille/g, '').replace(/de taille \S+/g, '');
+  // Code de taille resté collé en fin (« Nuée de bêtes TP ») — puce OCR → tiret
+  t = t.replace(/\s*\b(TP|TG|Gig)\b\s*$/, '').replace(/•/g, '-');
   t = t.split(',')[0].replace(/\s+/g, ' ').trim();
   return t || type;
 }

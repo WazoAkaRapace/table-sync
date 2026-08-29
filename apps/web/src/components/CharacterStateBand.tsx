@@ -33,6 +33,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import api from '../api';
+import { appLang } from '../i18n';
 import { classNameLabel, conditionLabel } from '../i18n/labels';
 import { Chip, EncumbranceBar, HpBar } from './ui';
 
@@ -119,13 +120,14 @@ export default function CharacterStateBand({
 
   const level = character.level ?? 1;
 
-  // CA — same computation as the Caractéristiques tab
+  // CA — same computation as the Caractéristiques tab (source localisée)
   const dexMod = abilityModifier(character.dexterity ?? 10);
   const acResult = computeAC(
     entries,
     dexMod,
     fightingStylesOf(character).has('defense'),
     character,
+    appLang(),
   );
   const effectiveAC = character.armorClassOverride ?? acResult.ac;
 

@@ -8,6 +8,7 @@ import {
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
+import { damageType } from '../i18n/labels';
 import { Chip } from './ui';
 
 /**
@@ -238,7 +239,9 @@ export default function CastSpellSheet({
               {dmg.dice && (
                 <Chip tone="orange">
                   ⚔ {dmg.dice}
-                  {dmg.typeFr ? ` ${t('cast.degats')} ${dmg.typeFr}` : ''}
+                  {dmg.typeFr
+                    ? ` ${t('cast.degats.de.type', { type: damageType(dmg.typeFr) ?? dmg.typeFr })}`
+                    : ''}
                 </Chip>
               )}
               {healing.dice && (
@@ -258,7 +261,9 @@ export default function CastSpellSheet({
                 </Chip>
               )}
               {spell.dcJson && castingMod !== undefined && profBonus !== undefined && (
-                <Chip tone="blue">🛡 DD {spellSaveDC(castingMod, profBonus)}</Chip>
+                <Chip tone="blue">
+                  🛡 {t('sorts.dd')} {spellSaveDC(castingMod, profBonus)}
+                </Chip>
               )}
               {spell.attackType && castingMod !== undefined && profBonus !== undefined && (
                 <Chip tone="red">🎯 {formatModifier(castingMod + profBonus)}</Chip>

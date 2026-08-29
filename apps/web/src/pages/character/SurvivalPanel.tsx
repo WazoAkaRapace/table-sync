@@ -32,7 +32,7 @@ import api from '../../api';
 import { CONDITION_ICONS } from '../../components/ConditionsEditor';
 import MonsterStatBlock from '../../components/MonsterStatBlock';
 import { BottomSheet, Chip, HpBar } from '../../components/ui';
-import { abilityShort, conditionHintKey, conditionLabel } from '../../i18n/labels';
+import { abilityShort, conditionHintKey, conditionLabel, damageType } from '../../i18n/labels';
 import { DeathSaveTracker } from './DeathSaveTracker';
 import { DeprivationBox } from './DeprivationBox';
 import { HpTracker } from './HpTracker';
@@ -963,7 +963,7 @@ export function SurvivalPanel({
                           })}
                         >
                           ⚔ {stats.damageStr}
-                          {stats.damageTypeFr ? ` ${stats.damageTypeFr}` : ''}
+                          {stats.damageTypeFr ? ` ${damageType(stats.damageTypeFr)}` : ''}
                         </Chip>
                       )}
                       {stats.versatileDamageStr && (
@@ -1088,7 +1088,7 @@ export function SurvivalPanel({
                     abilityLabel: abilityLabel,
                   })}
                 >
-                  ⚔ {u.damageStr} {u.damageTypeFr}
+                  ⚔ {u.damageStr} {damageType(u.damageTypeFr)}
                 </Chip>
                 {u.bonusActionAttack && (
                   <Chip tone="indigo" title={t('survie.arts.martiaux.une.frappe.sans.arme')}>

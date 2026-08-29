@@ -4,14 +4,80 @@
  * require authentication (enforced by the global guard in server.ts).
  */
 
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { and, eq, or, type SQL, sql } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../db/drizzle.ts';
 import { cols } from '../db/projections.ts';
 import { spells } from '../db/schema.ts';
 import { mapSpell, requireUser } from './helpers.ts';
-import { langFromReq, pickLocalized } from './lang.ts';
+import { type AppLang, langFromReq, pickLocalized } from './lang.ts';
 import { apiMsg } from './messages.ts';
+
+// ---------- English spell meta (data/spells-en-meta.json) ----------
+//
+// Le stockage des sorts est FR ; nom et description ont leur colonne EN en
+// base, mais les champs méta (incantation, portée, matériel, durée, niveaux
+// supérieurs) vivent dans un annexe chargé UNE fois au démarrage — même
+// résolution de chemin que db/seed.ts (cwd puis racine du monorepo).
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+interface SpellEnMeta {
+  castingTime: string | null;
+  rangeText: string | null;
+  material: string | null;
+  duration: string | null;
+  higherLevel: string | null;
+}
+
+function resolveSeedPath(filename: string): string {
+  const candidates = [
+    resolve(process.cwd(), 'data', filename),
+    resolve(__dirname, '..', '..', '..', '..', 'data', filename),
+  ];
+  for (const p of candidates) {
+    try {
+      readFileSync(p, 'utf8');
+      return p;
+    } catch {
+      // candidat suivant
+    }
+  }
+  throw new Error(`${filename} not found in: ${candidates.join(', ')}`);
+}
+
+function loadSpellEnMeta(): Record<string, SpellEnMeta> {
+  try {
+    return JSON.parse(readFileSync(resolveSeedPath('spells-en-meta.json'), 'utf8'));
+  } catch {
+    // Annexe absent : repli champ par champ sur le FR stocké.
+    return {};
+  }
+}
+
+const SPELL_EN_META = loadSpellEnMeta();
+
+/**
+ * Recouvre les champs méta d'un sort déjà mappé par leur version anglaise
+ * (clé : srdIndex). Repli CHAMP PAR CHAMP sur la valeur existante (FR)
+ * lorsqu'une entrée ou un champ manque — jamais de payload mixte cassé.
+ */
+export function withSpellEnMeta<T extends { srdIndex: string | null }>(spell: T, lang: AppLang): T {
+  if (lang !== 'en') return spell;
+  const meta = spell.srdIndex ? SPELL_EN_META[spell.srdIndex] : undefined;
+  if (!meta) return spell;
+  return {
+    ...spell,
+    castingTime: meta.castingTime ?? spell.castingTime,
+    rangeText: meta.rangeText ?? spell.rangeText,
+    material: meta.material ?? spell.material,
+    duration: meta.duration ?? spell.duration,
+    higherLevel: meta.higherLevel ?? spell.higherLevel,
+  } as T;
+}
 
 interface SpellQuery {
   class?: string;
@@ -97,8 +163,9 @@ export async function spellRoutes(app: FastifyInstance) {
         drizzle.select({ n: sql<number>`count(*)` }).from(spells).where(filter).get() as any
       ).n;
 
+      const lang = langFromReq(req);
       return reply.send({
-        spells: rows.map((r: any) => mapSpell(r, langFromReq(req))),
+        spells: rows.map((r: any) => withSpellEnMeta(mapSpell(r, lang), lang)),
         total,
         limit: lim,
         offset: off,
@@ -138,7 +205,9 @@ export async function spellRoutes(app: FastifyInstance) {
         .where(eq(spells.id, Number(req.params.id)))
         .get() as any;
       if (!row) return reply.code(404).send({ error: apiMsg(req, 'spell not found') });
-      return reply.send({ spell: mapSpell(row, langFromReq(req)) });
+      return reply.send({
+        spell: withSpellEnMeta(mapSpell(row, langFromReq(req)), langFromReq(req)),
+      });
     },
   );
 }

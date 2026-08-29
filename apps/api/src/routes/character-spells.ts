@@ -25,8 +25,17 @@ import {
   mapCharacterSpell,
   requireUser,
 } from './helpers.ts';
-import { langFromReq } from './lang.ts';
+import { type AppLang, langFromReq } from './lang.ts';
 import { apiMsg } from './messages.ts';
+import { withSpellEnMeta } from './spells.ts';
+
+/** Applique la méta EN au sort embarqué d'un CharacterSpell mappé. */
+function localizeCharacterSpell<T extends { spell: Parameters<typeof withSpellEnMeta>[0] }>(
+  cs: T,
+  lang: AppLang,
+): T {
+  return { ...cs, spell: withSpellEnMeta(cs.spell, lang) as T['spell'] };
+}
 
 interface AddCharacterSpellPayload {
   spellId: number;
@@ -137,7 +146,10 @@ export async function characterSpellRoutes(app: FastifyInstance) {
         )
         .all();
 
-      return reply.send({ spells: rows.map((r: any) => mapCharacterSpell(r, langFromReq(req))) });
+      const lang = langFromReq(req);
+      return reply.send({
+        spells: rows.map((r: any) => localizeCharacterSpell(mapCharacterSpell(r, lang), lang)),
+      });
     },
   );
 
@@ -237,7 +249,10 @@ export async function characterSpellRoutes(app: FastifyInstance) {
         action: 'stats',
         actorUserId: userId,
       });
-      return reply.code(201).send({ spell: mapCharacterSpell(row, langFromReq(req)) });
+      const lang = langFromReq(req);
+      return reply
+        .code(201)
+        .send({ spell: localizeCharacterSpell(mapCharacterSpell(row, lang), lang) });
     },
   );
 
@@ -288,7 +303,8 @@ export async function characterSpellRoutes(app: FastifyInstance) {
         action: 'stats',
         actorUserId: userId,
       });
-      return reply.send({ spell: mapCharacterSpell(row, langFromReq(req)) });
+      const lang = langFromReq(req);
+      return reply.send({ spell: localizeCharacterSpell(mapCharacterSpell(row, lang), lang) });
     },
   );
 

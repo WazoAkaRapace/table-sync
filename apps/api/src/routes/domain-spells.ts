@@ -13,6 +13,7 @@ import { characterClasses, characters, spells } from '../db/schema.ts';
 import { isPartyGM, mapSpell, requireUser } from './helpers.ts';
 import { langFromReq } from './lang.ts';
 import { apiMsg } from './messages.ts';
+import { withSpellEnMeta } from './spells.ts';
 
 export async function domainSpellRoutes(app: FastifyInstance) {
   app.get(
@@ -85,7 +86,11 @@ export async function domainSpellRoutes(app: FastifyInstance) {
             .from(spells)
             .where(sql`${spells.name} = ${name} COLLATE NOCASE`)
             .get() as any;
-          if (row) domainSpells.push({ ...mapSpell(row, langFromReq(req)), domainLevel: g.level });
+          if (row)
+            domainSpells.push({
+              ...withSpellEnMeta(mapSpell(row, langFromReq(req)), langFromReq(req)),
+              domainLevel: g.level,
+            });
         }
       }
       return reply.send({ domain: char.divine_domain ?? null, spells: domainSpells }); // 'domain' kept for client compat

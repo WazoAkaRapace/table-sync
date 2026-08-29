@@ -8,6 +8,7 @@ import {
   ABILITY_SHORT_EN,
   ABILITY_SHORT_FR,
   type AbilityKey,
+  type AppLang,
   CATEGORY_LABELS_EN,
   CATEGORY_LABELS_FR,
   CLASS_NAMES_EN,
@@ -16,6 +17,7 @@ import {
   type CostUnit,
   DND_CONDITIONS_EN,
   DND_CONDITIONS_FR,
+  damageTypeLabel,
   ENCUMBRANCE_LABELS_EN,
   ENCUMBRANCE_LABELS_FR,
   type EncumbranceState,
@@ -30,6 +32,12 @@ import {
   MONSTER_SIZE_LABELS_EN,
   MONSTER_SIZE_LABELS_FR,
   MONSTER_TYPE_LABELS_EN,
+  monsterAlignmentEn,
+  monsterArmorDescEn,
+  monsterConditionEn,
+  monsterDamageTraitEn,
+  monsterSaveEn,
+  monsterSkillEn,
   normalizeMonsterTypeFr,
   RARITY_LABELS_EN,
   RARITY_LABELS_FR,
@@ -46,6 +54,7 @@ import {
 import { appLang } from './index';
 
 const en = () => appLang() === 'en';
+const lang = (): AppLang => (en() ? 'en' : 'fr');
 const both = <T>(fr: T, enTable: T) => (en() ? enTable : fr);
 
 export const abilityLabel = (k: AbilityKey) => both(ABILITY_LABELS_FR, ABILITY_LABELS_EN)[k];
@@ -59,6 +68,13 @@ export const schoolLabel = (s: SpellSchool) =>
   both(SPELL_SCHOOL_LABELS_FR, SPELL_SCHOOL_LABELS_EN)[s];
 export const weaponPropertyLabel = (p: string) =>
   both(WEAPON_PROPERTY_LABELS_FR, WEAPON_PROPERTY_LABELS_EN)[p] ?? p;
+
+/**
+ * Type de dégâts : la valeur stockée/renvoyée par le moteur est FR — l'EN
+ * mappe le mot (variantes incluses) et laisse passer les valeurs déjà
+ * anglaises (analyse du texte EN du bestiaire).
+ */
+export const damageType = (fr: string | null | undefined) => damageTypeLabel(fr, lang());
 export const fightingStyleLabel = (s: FightingStyle) =>
   both(FIGHTING_STYLE_LABELS_FR, FIGHTING_STYLE_LABELS_EN)[s];
 export const monsterSizeLabel = (s: string) =>
@@ -102,6 +118,15 @@ export function monsterTypeLabel(type: string): string {
   return MONSTER_TYPE_LABELS_EN[base] ?? base;
 }
 
+// ---------- Bestiaire : vocabulaire moteur (valeurs stockées FR) ----------
+
+export const monsterAlignment = (fr: string) => (en() ? monsterAlignmentEn(fr) : fr);
+export const monsterCondition = (fr: string) => (en() ? monsterConditionEn(fr) : fr);
+export const monsterDamageTrait = (fr: string) => (en() ? monsterDamageTraitEn(fr) : fr);
+export const monsterSkill = (name: string) => (en() ? monsterSkillEn(name) : name);
+export const monsterSave = (fr: string) => (en() ? monsterSaveEn(fr) : fr);
+export const monsterArmorDesc = (fr: string) => (en() ? monsterArmorDescEn(fr) : fr);
+
 // Catalogues SRD (classes, espèces, historiques) — clés FR, affichage EN.
 import {
   type CatalogEntryEn,
@@ -133,3 +158,7 @@ export function mundaneWeaponLabel(nameEn: string): string {
   if (!en()) return MUNDANE_WEAPONS.find((m) => m.nameEn === nameEn)?.nameFr ?? nameEn;
   return nameEn;
 }
+
+/** Bases d'armure SRD (résolution d'armure magique) : FR stocké — EN miroir. */
+export const mundaneArmorLabel = (base: { nameFr: string; nameEn: string }): string =>
+  en() ? base.nameEn : base.nameFr;

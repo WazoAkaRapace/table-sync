@@ -31,13 +31,15 @@ const STATUS_TEXT_CLASS: Record<NpcStatus, string> = {
   turned: 'text-purple-700',
 };
 
-const DISPOSITION_OPTIONS: { value: NpcDisposition; label: string }[] = (
+// Les maps partagées restent la source des CLÉS (ordre + exhaustivité) ;
+// le libellé affiché passe par i18next — FR = copies verbatim des maps.
+const DISPOSITION_OPTIONS: { value: NpcDisposition; labelKey: string }[] = (
   Object.keys(NPC_DISPOSITION_LABELS_FR) as NpcDisposition[]
-).map((d) => ({ value: d, label: NPC_DISPOSITION_LABELS_FR[d] }));
+).map((d) => ({ value: d, labelKey: `pnj.disposition.${d}` }));
 
-const STATUS_OPTIONS: { value: NpcStatus; label: string }[] = (
+const STATUS_OPTIONS: { value: NpcStatus; labelKey: string }[] = (
   Object.keys(NPC_STATUS_LABELS_FR) as NpcStatus[]
-).map((s) => ({ value: s, label: NPC_STATUS_LABELS_FR[s] }));
+).map((s) => ({ value: s, labelKey: `pnj.status.${s}` }));
 
 type ViewFilter = 'all' | 'shared' | 'mine';
 
@@ -223,7 +225,7 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
             <option value="">{t('pnj.toutes.dispositions')}</option>
             {DISPOSITION_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
-                {o.label}
+                {t(o.labelKey)}
               </option>
             ))}
           </select>
@@ -236,7 +238,7 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
             <option value="">{t('pnj.tous.statuts')}</option>
             {STATUS_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
-                {o.label}
+                {t(o.labelKey)}
               </option>
             ))}
           </select>
@@ -407,14 +409,14 @@ function NpcCard({
         <span className="flex items-center gap-1">
           <span
             className={`inline-block w-2.5 h-2.5 rounded-full ${STATUS_DOT_CLASS[npc.status]}`}
-            title={NPC_STATUS_LABELS_FR[npc.status]}
+            title={t(`pnj.status.${npc.status}`)}
             aria-hidden="true"
           />
           <span className={`font-medium ${STATUS_TEXT_CLASS[npc.status]}`}>
-            {NPC_STATUS_LABELS_FR[npc.status]}
+            {t(`pnj.status.${npc.status}`)}
           </span>
         </span>
-        <span className="text-ink-500">· {NPC_DISPOSITION_LABELS_FR[npc.disposition]}</span>
+        <span className="text-ink-500">· {t(`pnj.disposition.${npc.disposition}`)}</span>
       </div>
 
       {/* Location */}
@@ -653,7 +655,7 @@ function NpcFormModal({ open, onClose, partyId, npc, onSaved, onError }: NpcForm
             >
               {DISPOSITION_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
-                  {o.label}
+                  {t(o.labelKey)}
                 </option>
               ))}
             </select>
@@ -670,7 +672,7 @@ function NpcFormModal({ open, onClose, partyId, npc, onSaved, onError }: NpcForm
             >
               {STATUS_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
-                  {o.label}
+                  {t(o.labelKey)}
                 </option>
               ))}
             </select>

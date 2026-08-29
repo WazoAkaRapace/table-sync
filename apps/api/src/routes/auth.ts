@@ -52,14 +52,9 @@ export async function authRoutes(app: FastifyInstance) {
   app.post('/register', async (req: FastifyRequest<{ Body: AuthBody }>, reply: FastifyReply) => {
     const { username, password, displayName, email } = req.body || {};
     if (!username || !password || !displayName || !email) {
-      return reply
-        .code(400)
-        .send({
-          error: apiMsg(
-            req,
-            'nom d’utilisateur, mot de passe, nom affiché et adresse e-mail requis',
-          ),
-        });
+      return reply.code(400).send({
+        error: apiMsg(req, 'nom d’utilisateur, mot de passe, nom affiché et adresse e-mail requis'),
+      });
     }
     if (username.length < 3) {
       return reply

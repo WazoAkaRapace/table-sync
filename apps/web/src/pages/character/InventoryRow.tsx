@@ -10,7 +10,12 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ItemVignette } from '../../components/ItemImageViewer';
 import { Chip, RarityBadge, WeightBadge } from '../../components/ui';
-import { abilityShort, weaponPropertyLabel } from '../../i18n/labels';
+import {
+  abilityShort,
+  damageType,
+  mundaneArmorLabel,
+  weaponPropertyLabel,
+} from '../../i18n/labels';
 import { LOCATION_TYPE_ICON } from './types';
 
 // ---------- Inventory row ----------
@@ -381,7 +386,7 @@ export function InventoryRow({
                                 }`}
                               >
                                 ⚔ {stats.damageStr}
-                                {stats.damageTypeFr ? ` ${stats.damageTypeFr}` : ''}
+                                {stats.damageTypeFr ? ` ${damageType(stats.damageTypeFr)}` : ''}
                               </Chip>
                             )}
                             {stats.versatileDamageStr && (
@@ -422,7 +427,7 @@ export function InventoryRow({
                               {t('rangee.ca.base', {
                                 ac: magic.base.acBase,
                                 bonus: magic.magicBonus > 0 ? ` +${magic.magicBonus}` : '',
-                                name: magic.base.nameFr,
+                                name: mundaneArmorLabel(magic.base),
                               })}
                             </span>
                           );

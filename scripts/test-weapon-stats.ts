@@ -607,7 +607,11 @@ const frLocaleLongsword = {
   magicBonus: null,
 };
 const s4 = computeWeaponStats(frLocaleLongsword as any, duelliste);
-check('Mono-locale FR + clé → deux mains 1d10 (Duel exclus, mains nues)', s4?.versatileDamageStr, '1d10+3');
+check(
+  'Mono-locale FR + clé → deux mains 1d10 (Duel exclus, mains nues)',
+  s4?.versatileDamageStr,
+  '1d10+3',
+);
 check('Mono-locale FR + clé → base résolue (martial, qualifié)', s4?.proficient, true);
 
 console.log(failures === 0 ? '\n✅ All weapon stats checks pass' : `\n❌ ${failures} failure(s)`);

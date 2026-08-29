@@ -5,14 +5,25 @@
  * and legendary actions.
  */
 
-import type { Monster, MonsterAction } from '@table-sync/shared';
+import type { AbilityKey, Monster, MonsterAction } from '@table-sync/shared';
 import { abilityModifier, formatCR, formatModifier } from '@table-sync/shared';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api';
 import { appLocale } from '../i18n';
-import { monsterSizeLabel } from '../i18n/labels';
+import {
+  abilityShort,
+  damageType,
+  monsterAlignment,
+  monsterArmorDesc,
+  monsterCondition,
+  monsterDamageTrait,
+  monsterSave,
+  monsterSizeLabel,
+  monsterSkill,
+  monsterTypeLabel,
+} from '../i18n/labels';
 import SpellDetailSheet from './SpellDetailSheet';
 
 interface Props {
@@ -74,14 +85,15 @@ function matchSpellsInText(desc: string, catalog: SpellLight[]): SpellLight[] {
   return found;
 }
 
-// French ability key → short label + capitalized save prefix
-const ABILITY_INFO: { key: keyof Monster['abilities']; short: string; savePrefix: string }[] = [
-  { key: 'for', short: 'FOR', savePrefix: 'For' },
-  { key: 'dex', short: 'DEX', savePrefix: 'Dex' },
-  { key: 'con', short: 'CON', savePrefix: 'Con' },
-  { key: 'int', short: 'INT', savePrefix: 'Int' },
-  { key: 'sag', short: 'SAG', savePrefix: 'Sag' },
-  { key: 'cha', short: 'CHA', savePrefix: 'Cha' },
+// Clé de caractéristique du bestiaire (FR) → clé partagée : le libellé court
+// suit la langue active via abilityShort (FOR/SAG en FR, STR/WIS en EN).
+const ABILITY_INFO: { key: keyof Monster['abilities']; ability: AbilityKey }[] = [
+  { key: 'for', ability: 'strength' },
+  { key: 'dex', ability: 'dexterity' },
+  { key: 'con', ability: 'constitution' },
+  { key: 'int', ability: 'intelligence' },
+  { key: 'sag', ability: 'wisdom' },
+  { key: 'cha', ability: 'charisma' },
 ];
 
 // Modes de vitesse — clés i18n (la marche n'a pas de libellé : "9 m" seul).
@@ -227,20 +239,20 @@ function StatBlockBody({
   // Ligne de type : l'ordre taille/type s'inverse en EN (stat block 5e).
   const typeLine = monster.subtype
     ? t('bestiaire.ligne.type.soustype', {
-        type: monster.type,
+        type: monsterTypeLabel(monster.type),
         subtype: monster.subtype,
         size: sizeLabel,
       })
     : sizeLabel
-      ? t('bestiaire.ligne.type', { type: monster.type, size: sizeLabel })
-      : monster.type;
+      ? t('bestiaire.ligne.type', { type: monsterTypeLabel(monster.type), size: sizeLabel })
+      : monsterTypeLabel(monster.type);
 
   return (
     <div className="space-y-4">
       {/* Type line */}
       <p className="text-sm italic text-ink-500">
         {typeLine}
-        {monster.alignment && `, ${monster.alignment.toLowerCase()}`}
+        {monster.alignment && `, ${monsterAlignment(monster.alignment).toLowerCase()}`}
       </p>
 
       {/* Core stats: AC, HP, Speed */}
@@ -249,7 +261,9 @@ function StatBlockBody({
           <span className="font-semibold text-sm">{t('bestiaire.classe.d.armure')}</span>
           <span className="text-sm">
             {monster.armorClass}
-            {monster.armorDesc && <span className="text-ink-400"> ({monster.armorDesc})</span>}
+            {monster.armorDesc && (
+              <span className="text-ink-400"> ({monsterArmorDesc(monster.armorDesc)})</span>
+            )}
           </span>
         </div>
         <div className="flex items-baseline gap-2">
@@ -267,12 +281,12 @@ function StatBlockBody({
 
       {/* Ability scores grid */}
       <div className="grid grid-cols-6 gap-1 text-center border-y border-parchment-200 py-2">
-        {ABILITY_INFO.map(({ key, short }) => {
+        {ABILITY_INFO.map(({ key, ability }) => {
           const score = monster.abilities[key] ?? 10;
           const mod = abilityModifier(score);
           return (
             <div key={key}>
-              <div className="text-xs font-bold text-ink-600">{short}</div>
+              <div className="text-xs font-bold text-ink-600">{abilityShort(ability)}</div>
               <div className="text-sm font-mono">{score}</div>
               <div className="text-xs text-ink-400">({formatModifier(mod)})</div>
             </div>
@@ -285,7 +299,9 @@ function StatBlockBody({
         {monster.savingThrows.length > 0 && (
           <div>
             <span className="font-semibold">{t('bestiaire.jets.de.sauvegarde')}</span>
-            <span className="text-ink-600 ml-2">{monster.savingThrows.join(', ')}</span>
+            <span className="text-ink-600 ml-2">
+              {monster.savingThrows.map(monsterSave).join(', ')}
+            </span>
           </div>
         )}
         {monster.skills.length > 0 && (
@@ -293,7 +309,7 @@ function StatBlockBody({
             <span className="font-semibold">{t('bestiaire.competences')}</span>
             <span className="text-ink-600 ml-2">
               {monster.skills
-                .map((s) => `${s.name}${s.isExpert ? t('bestiaire.expert') : ''}`)
+                .map((s) => `${monsterSkill(s.name)}${s.isExpert ? t('bestiaire.expert') : ''}`)
                 .join(', ')}
             </span>
           </div>
@@ -332,19 +348,25 @@ function StatBlockBody({
           {monster.damageResistances && monster.damageResistances.length > 0 && (
             <div>
               <span className="font-semibold">{t('bestiaire.resistances.aux.degats')}</span>
-              <span className="text-ink-600 ml-2">{monster.damageResistances.join(', ')}</span>
+              <span className="text-ink-600 ml-2">
+                {monster.damageResistances.map(monsterDamageTrait).join(', ')}
+              </span>
             </div>
           )}
           {monster.damageImmunities && monster.damageImmunities.length > 0 && (
             <div>
               <span className="font-semibold">{t('bestiaire.immunites.aux.degats')}</span>
-              <span className="text-ink-600 ml-2">{monster.damageImmunities.join(', ')}</span>
+              <span className="text-ink-600 ml-2">
+                {monster.damageImmunities.map(monsterDamageTrait).join(', ')}
+              </span>
             </div>
           )}
           {monster.conditionImmunities && monster.conditionImmunities.length > 0 && (
             <div>
               <span className="font-semibold">{t('bestiaire.immunites.aux.etats')}</span>
-              <span className="text-ink-600 ml-2">{monster.conditionImmunities.join(', ')}</span>
+              <span className="text-ink-600 ml-2">
+                {monster.conditionImmunities.map(monsterCondition).join(', ')}
+              </span>
             </div>
           )}
         </div>
@@ -420,6 +442,9 @@ function ActionSection({
 }
 
 function formatSpeed(monster: Monster, t: (key: string) => string): string {
+  // Texte de vitesse localisé par l'API quand l'overlay EN existe (pieds) —
+  // sinon formatage métrique depuis `speed`.
+  if (monster.speedText && monster.speedText.trim() !== '') return monster.speedText;
   const parts: string[] = [];
   for (const [mode, value] of Object.entries(monster.speed)) {
     const num = Number(value);
@@ -533,7 +558,7 @@ function ActionEntry({
             title={t('bestiaire.cliquer.pour.lancer.les.degats')}
           >
             🎲 {action.damageDice}
-            {action.damageType ? ` ${action.damageType}` : ''}
+            {action.damageType ? ` ${damageType(action.damageType)}` : ''}
           </button>
         )}
       </div>
@@ -569,7 +594,7 @@ function ActionEntry({
             >
               {isCrit && '🎯 '}
               {damageResult.total} {t('bestiaire.degats')}
-              {action.damageType ? ` ${action.damageType}` : ''}
+              {action.damageType ? ` ${damageType(action.damageType)}` : ''}
               {isCrit && <span className="text-xs font-normal ml-1">×2!</span>}
               <span className="text-xs font-normal ml-1 opacity-70">
                 ({damageResult.rolls.join('+')})
