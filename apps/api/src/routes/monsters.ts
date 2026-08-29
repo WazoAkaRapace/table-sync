@@ -3,7 +3,12 @@
  * Monsters are global reference data (no party scoping), like spells.
  */
 
-import type { Monster, MonsterSummary } from '@table-sync/shared';
+import type { Monster, MonsterAction, MonsterSummary } from '@table-sync/shared';
+import {
+  cleanMonsterActionTextEn,
+  monsterDamageTypeEn,
+  parseMonsterActionCombatInfo,
+} from '@table-sync/shared';
 import { eq, or, sql } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../db/drizzle.ts';
@@ -16,6 +21,34 @@ import { apiMsg } from './messages.ts';
 interface MonsterQuery {
   search?: string;
   limit?: string;
+}
+
+/**
+ * Fusionne les actions EN (name/desc) par-dessus les actions FR : les champs
+ * calculés à l'import (bonus d'attaque, dés, type) devaient survivre au
+ * changement de langue — ici ils sont recalculés depuis le texte EN nettoyé
+ * (5e.tools), avec repli sur les valeurs FR quand le texte EN ne s'analyse
+ * pas. Alignement indice à indice quand les listes correspondent, sinon
+ * l'EN prime seul.
+ */
+function mergeLocalizedActions(
+  fr: MonsterAction[],
+  en: { name: string; desc: string }[],
+): MonsterAction[] {
+  const cleaned = en.map((e) => ({ ...e, desc: cleanMonsterActionTextEn(e.desc) }));
+  const aligned = cleaned.length === fr.length;
+  return cleaned.map((e, i) => {
+    const parsed = parseMonsterActionCombatInfo(e.desc);
+    const fallback = aligned ? fr[i] : undefined;
+    return {
+      ...(fallback ?? { name: e.name, desc: e.desc }),
+      name: e.name,
+      desc: e.desc,
+      attackBonus: parsed.attackBonus ?? fallback?.attackBonus,
+      damageDice: parsed.damageDice ?? fallback?.damageDice,
+      damageType: parsed.damageType ?? monsterDamageTypeEn(fallback?.damageType),
+    };
+  });
 }
 
 /** Map a raw DB row to a full Monster stat block (parses JSON columns). */
@@ -80,9 +113,11 @@ function mapMonster(row: any, lang: AppLang = 'fr'): Monster {
   const overlay = lang === 'en' ? parseOverlay(row) : null;
   if (!overlay) return base;
   if (overlay.name) base.name = overlay.name;
-  if (overlay.traits) base.traits = overlay.traits;
-  if (overlay.actions) base.actions = overlay.actions;
-  if (overlay.legendaryActions) base.legendaryActions = overlay.legendaryActions;
+  if (overlay.traits) base.traits = mergeLocalizedActions(base.traits, overlay.traits);
+  if (overlay.actions) base.actions = mergeLocalizedActions(base.actions, overlay.actions);
+  if (overlay.legendaryActions) {
+    base.legendaryActions = mergeLocalizedActions(base.legendaryActions, overlay.legendaryActions);
+  }
   if (overlay.senses) base.senses = overlay.senses;
   if (typeof overlay.languages === 'string') {
     base.languages = overlay.languages

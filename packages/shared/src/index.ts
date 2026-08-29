@@ -4632,6 +4632,107 @@ export interface MonsterAction {
   cost?: number; // legendary actions only: 1/2/3
 }
 
+// ---------- Analyse bilingue des textes d'action du bestiaire ----------
+
+/** Préambules d'attaque 5e.tools abrégés → formulation SRD anglaise. */
+const ATTACK_MODE_LABELS_EN: Record<string, string> = {
+  mw: 'Melee Weapon Attack',
+  rw: 'Ranged Weapon Attack',
+  ms: 'Melee Spell Attack',
+  rs: 'Ranged Spell Attack',
+};
+
+/**
+ * Nettoie le texte d'une action du bestiaire EN (source 5e.tools) : restitue
+ * le préambule d'attaque canonique (« mw 4 to hit » → « Melee Weapon Attack:
+ * +4 to hit ») et le marqueur « Hit: » ({@h}).
+ */
+export function cleanMonsterActionTextEn(desc: string): string {
+  let s = desc;
+  s = s.replace(
+    /\b(mw|rw|ms|rs)((?:\s*,\s*(?:mw|rw|ms|rs))*)\s+(\d+)\s+to hit/g,
+    (_all: string, first: string, rest: string, bonus: string) => {
+      const modes = [
+        first,
+        ...rest
+          .split(',')
+          .map((x) => x.trim())
+          .filter(Boolean),
+      ];
+      const label =
+        modes.length > 1
+          ? `${ATTACK_MODE_LABELS_EN[modes[0]] ?? 'Attack'} or ${
+              ATTACK_MODE_LABELS_EN[modes[modes.length - 1]] ?? 'Attack'
+            }`
+          : (ATTACK_MODE_LABELS_EN[modes[0]] ?? 'Attack');
+      return `${label}: +${bonus} to hit`;
+    },
+  );
+  s = s.replace(/\{@h\}\s*/g, 'Hit: ');
+  return s;
+}
+
+/** Préfixes FR des types de dégâts → anglais (repli quand l'analyse EN échoue). */
+const DAMAGE_TYPE_PREFIXES_EN: Array<[string, string]> = [
+  ['contondant', 'bludgeoning'],
+  ['tranchant', 'slashing'],
+  ['perforant', 'piercing'],
+  ['feu', 'fire'],
+  ['froid', 'cold'],
+  ['acide', 'acid'],
+  ['poison', 'poison'],
+  ['foudre', 'lightning'],
+  ['tonnerre', 'thunder'],
+  ['radiant', 'radiant'],
+  ['nécrotiqu', 'necrotic'],
+  ['psychiqu', 'psychic'],
+  ['force', 'force'],
+];
+
+export function monsterDamageTypeEn(fr: string | null | undefined): string | null | undefined {
+  if (!fr) return fr;
+  const low = fr.toLowerCase();
+  for (const [prefix, en] of DAMAGE_TYPE_PREFIXES_EN) {
+    if (low.startsWith(prefix)) return en;
+  }
+  return fr;
+}
+
+/**
+ * Extrait bonus d'attaque, dés de dégâts et type d'un texte d'action, FR
+ * (« +9 pour toucher », « 15 (3d6+5) dégâts contondants ») ou EN (« +9 to
+ * hit », « 15 (3d6 + 5) bludgeoning damage »). Les dés sont normalisés
+ * compacts (« 3d6 + 5 » → « 3d6+5 »). Comme l'import FR, les dés ne sont
+ * retenus que suivis d'un type de dégâts (les « regains N (XdY) PV » ne
+ * deviennent pas des puces de dégâts).
+ */
+export function parseMonsterActionCombatInfo(desc: string): {
+  attackBonus?: number;
+  damageDice?: string;
+  damageType?: string;
+} {
+  const out: { attackBonus?: number; damageDice?: string; damageType?: string } = {};
+  const atk =
+    desc.match(/[+:]\s*(\d+)\s+pour toucher/) ??
+    desc.match(/\+\s*(\d+)\s+to hit/i) ??
+    desc.match(/(?:^|[:.,]\s*)(?:mw|rw|ms|rs)(?:\s*,\s*(?:mw|rw|ms|rs))*\s+(\d+)\s+to hit/i);
+  if (atk) out.attackBonus = parseInt(atk[1], 10);
+  const dice = /(\d+)\s*\((\d+\s*d\s*\d+(?:\s*[+-]\s*\d+)?)\)/.exec(desc);
+  if (dice) {
+    const after = desc.slice(dice.index + dice[0].length);
+    const frType = after.match(/^\s*dégâts\s+(\w+)/i);
+    const enType = after.match(/^\s+([a-z]+)\s+damage/i);
+    if (frType) {
+      out.damageDice = dice[2].replace(/\s+/g, '');
+      out.damageType = frType[1];
+    } else if (enType) {
+      out.damageDice = dice[2].replace(/\s+/g, '');
+      out.damageType = enType[1];
+    }
+  }
+  return out;
+}
+
 export interface MonsterSkill {
   name: string;
   isExpert: boolean;

@@ -119,7 +119,7 @@ export default function MonsterStatBlock({
   const hasSpellcasting =
     !!monster &&
     [...monster.traits, ...monster.actions, ...monster.legendaryActions].some((a) =>
-      /incantation/i.test(a.name),
+      /incantation|spellcasting/i.test(a.name),
     );
 
   // Fetch the light spell catalog once when the monster has spellcasting
@@ -480,7 +480,7 @@ function ActionEntry({
   const [damageResult, setDamageResult] = useState<{ total: number; rolls: number[] } | null>(null);
 
   // Spellcasting entry: match the spell names mentioned in the description
-  const isSpellcasting = /incantation/i.test(action.name);
+  const isSpellcasting = /incantation|spellcasting/i.test(action.name);
   const knownSpells =
     isSpellcasting && spellCatalog.length > 0 && action.desc
       ? matchSpellsInText(action.desc, spellCatalog)

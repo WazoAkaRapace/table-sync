@@ -108,4 +108,21 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   ok(r.data.monster.abilities?.dex, 'abilities parsed');
   r = await api(base, 'GET', '/api/monsters/pas-un-monstre', { token: fx.gm.token });
   eq(r.status, 404, 'monster 404');
+
+  // ---------- overlay EN : dés et bonus détectés malgré le texte anglais ----------
+  r = await api(base, 'GET', `/api/monsters/${goblin.slug}?lang=en`, { token: fx.gm.token });
+  eq(r.status, 200, 'monster detail EN');
+  const scimitar = (r.data.monster.actions as Array<Record<string, unknown>>).find((a) =>
+    /scimitar/i.test(String(a.name)),
+  );
+  ok(scimitar != null, 'EN overlay actions served');
+  eq(scimitar?.attackBonus, 4, 'EN attack bonus parsed (mw N to hit)');
+  eq(scimitar?.damageDice, '1d6+2', 'EN damage dice parsed + compactés');
+  eq(scimitar?.damageType, 'slashing', 'EN damage type');
+  ok(
+    !(r.data.monster.actions as Array<Record<string, unknown>>).some((a) =>
+      String(a.desc ?? '').includes('{@'),
+    ),
+    'descriptions EN nettoyées (plus de balises 5e.tools)',
+  );
 }
