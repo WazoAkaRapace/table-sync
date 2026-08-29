@@ -1,6 +1,6 @@
 import type { Character, InventoryEntry, ItemCategory, StorageLocation } from '@table-sync/shared';
-import { CATEGORY_LABELS_FR } from '@table-sync/shared';
 import { useState } from 'react';
+import { categoryLabel } from '../../i18n/labels';
 import { InventoryRow } from './InventoryRow';
 
 // ---------- Category group (collapsible) ----------
@@ -69,7 +69,7 @@ export function CategoryGroup({
             ▼
           </span>
           <span className="font-display text-sm font-semibold text-ink-700">
-            {CATEGORY_LABELS_FR[category]}
+            {categoryLabel(category)}
           </span>
           <span className="text-xs text-ink-400">({entries.length})</span>
         </span>

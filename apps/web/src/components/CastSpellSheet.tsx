@@ -7,6 +7,8 @@ import {
 } from '@table-sync/shared';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
+import { damageType } from '../i18n/labels';
 import { Chip } from './ui';
 
 /**
@@ -50,6 +52,7 @@ export default function CastSpellSheet({
    * choisit (un emplacement de pacte lance le sort au niveau de SON dé). */
   onCast: (level: number, ritual?: boolean, pool?: 'spellcasting' | 'pact') => Promise<void> | void;
 }) {
+  const { t } = useTranslation();
   const isCantrip = spell.level === 0;
   const canUpcast = !!(spell.higherLevel || spell.higherLevel);
 
@@ -121,22 +124,24 @@ export default function CastSpellSheet({
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-label={`Lancer ${spell.name}`}
+        aria-label={t('cast.lancer.spell.name', { spell_name: spell.name })}
       >
         <div className="flex items-start justify-between gap-2 mb-3">
           <div>
             <h3 className="section-title">🪄 {spell.name}</h3>
             <p className="text-xs text-ink-400">
-              {isCantrip ? 'Tour de magie' : `Sort de niveau ${spell.level}`}
-              {spell.concentration && ' · 🌀 Concentration'}
-              {spell.ritual && ' · ⚗ Rituel'}
+              {isCantrip
+                ? t('cast.tour.de.magie')
+                : t('cast.sort.de.niveau.level', { level: spell.level })}
+              {spell.concentration && t('cast.concentration.suffixe')}
+              {spell.ritual && t('cast.rituel.suffixe')}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="text-ink-400 hover:text-ink-700 text-lg leading-none px-1"
-            aria-label="Fermer"
+            aria-label={t('cast.fermer')}
           >
             ✕
           </button>
@@ -144,25 +149,26 @@ export default function CastSpellSheet({
 
         {concConflict && (
           <div className="rounded-lg bg-amber-50 border border-amber-300 p-3 mb-3 text-sm text-amber-900">
-            <p className="font-semibold">⚠️ Concentration en cours</p>
+            <p className="font-semibold">{t('cast.concentration.en.cours')}</p>
             <p className="mt-0.5">
-              Tu concentres déjà un sort. Lancer <strong>{spell.name}</strong> mettra fin au sort
-              précédent.
+              {t('cast.tu.concentres.deja.un.sort.lancer')}
+              <strong>{spell.name}</strong>
+              {t('cast.mettra.fin.au.sort.precedent')}
             </p>
           </div>
         )}
 
         {isCantrip ? (
           <p className="text-sm text-ink-600 bg-parchment-100 rounded-lg p-3">
-            Les tours de magie se lancent à volonté — aucun emplacement à dépenser.
+            {t('cast.les.tours.de.magie.se.lancent')}
           </p>
         ) : castOptions.length === 0 ? (
           <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3">
-            Aucun emplacement de sort disponible. Il te faut un repos.
+            {t('cast.aucun.emplacement.de.sort.disponible.il')}
           </p>
         ) : (
           <div className="space-y-1.5">
-            <p className="text-xs font-medium text-ink-500">Emplacement à dépenser :</p>
+            <p className="text-xs font-medium text-ink-500">{t('cast.emplacement.a.depenser')}</p>
             {castOptions.map((opt) => {
               const selected = chosenKey === opt.key;
               const isUpcast = opt.level > spell.level && canUpcast;
@@ -180,20 +186,20 @@ export default function CastSpellSheet({
                   aria-pressed={selected}
                 >
                   <span className="font-medium flex items-center gap-1.5 min-w-0">
-                    Niveau {opt.level}
+                    {t('cast.niveau.level', { level: opt.level })}
                     {isUpcast && (
                       <span
                         className={`text-[10px] font-semibold uppercase ${selected ? 'text-gold-300' : 'text-blood-500'}`}
                       >
-                        supérieur
+                        {t('cast.superieur')}
                       </span>
                     )}
                     {isPact && (
                       <span
                         className={`text-[10px] font-semibold uppercase ${selected ? 'text-gold-300' : 'text-gold-600'}`}
-                        title="Emplacement de magie de pacte — recharge au repos court (SRD : les deux pools sont interchangeables)"
+                        title={t('cast.emplacement.de.magie.de.pacte.recharge')}
                       >
-                        ☾ pacte
+                        {t('cast.pacte')}
                       </span>
                     )}
                   </span>
@@ -201,13 +207,11 @@ export default function CastSpellSheet({
                     className={`shrink-0 ${selected ? 'text-parchment-100' : isPact ? 'text-gold-600' : 'text-ink-400'}`}
                   >
                     {isPact ? (
-                      <span title="Emplacement de pacte (recharge au repos court) — SRD magie de pacte">
-                        ☾ {pactRemaining()} restant{pactRemaining() > 1 ? 's' : ''} · repos court
+                      <span title={t('cast.emplacement.de.pacte.recharge.au.repos')}>
+                        {t('cast.pacte.restant', { count: pactRemaining() })}
                       </span>
                     ) : (
-                      <>
-                        {remainingAt(opt.level)} restant{remainingAt(opt.level) > 1 ? 's' : ''}
-                      </>
+                      t('cast.restant', { count: remainingAt(opt.level) })
                     )}
                   </span>
                 </button>
@@ -227,14 +231,17 @@ export default function CastSpellSheet({
             <div className="flex flex-wrap items-center gap-1.5 mt-3">
               {!isCantrip && chosenOption && (
                 <span className="text-xs text-ink-400">
-                  Au niveau {chosenOption.level}
-                  {chosenOption.pool === 'pact' ? ' (pacte)' : ''} :
+                  {chosenOption.pool === 'pact'
+                    ? t('cast.au.niveau.level.pacte.deux.points', { level: chosenOption.level })
+                    : t('cast.au.niveau.level.deux.points', { level: chosenOption.level })}
                 </span>
               )}
               {dmg.dice && (
                 <Chip tone="orange">
                   ⚔ {dmg.dice}
-                  {dmg.typeFr ? ` dégâts ${dmg.typeFr}` : ''}
+                  {dmg.typeFr
+                    ? ` ${t('cast.degats.de.type', { type: damageType(dmg.typeFr) ?? dmg.typeFr })}`
+                    : ''}
                 </Chip>
               )}
               {healing.dice && (
@@ -242,19 +249,21 @@ export default function CastSpellSheet({
                   tone="green"
                   title={
                     healing.addsModifier
-                      ? 'Points de vie restaurés : dés + modificateur de caractéristique'
-                      : 'Points de vie restaurés'
+                      ? t('sorts.points.de.vie.restaures.des.modificateur')
+                      : t('sorts.points.de.vie.restaures')
                   }
                 >
                   ✚ {healing.dice}
                   {healing.addsModifier && castingMod !== undefined
                     ? formatModifier(castingMod)
                     : ''}{' '}
-                  PV
+                  {t('sorts.pv')}
                 </Chip>
               )}
               {spell.dcJson && castingMod !== undefined && profBonus !== undefined && (
-                <Chip tone="blue">🛡 DD {spellSaveDC(castingMod, profBonus)}</Chip>
+                <Chip tone="blue">
+                  🛡 {t('sorts.dd')} {spellSaveDC(castingMod, profBonus)}
+                </Chip>
               )}
               {spell.attackType && castingMod !== undefined && profBonus !== undefined && (
                 <Chip tone="red">🎯 {formatModifier(castingMod + profBonus)}</Chip>
@@ -275,10 +284,12 @@ export default function CastSpellSheet({
           {casting
             ? '…'
             : concConflict
-              ? '🪄 Lancer et rompre la concentration'
+              ? t('cast.lancer.et.rompre.la.concentration')
               : isCantrip
-                ? '🪄 Lancer le tour de magie'
-                : `🪄 Lancer au niveau ${chosenOption ? chosenOption.level : '—'}`}
+                ? t('cast.lancer.le.tour.de.magie')
+                : t('cast.lancer.au.niveau.level', {
+                    level: chosenOption ? chosenOption.level : '—',
+                  })}
         </button>
 
         {/* Ritual cast: no slot consumed, +10 minutes */}
@@ -289,8 +300,8 @@ export default function CastSpellSheet({
             disabled={casting}
             className="w-full mt-2 py-2.5 rounded-lg bg-purple-100 text-purple-800 border border-purple-300 hover:bg-purple-200 font-medium text-sm disabled:opacity-40 transition-colors"
           >
-            ⚗ Rituel (10 minutes){' '}
-            <span className="font-normal text-purple-500">— sans emplacement</span>
+            {t('cast.rituel.10.minutes')}{' '}
+            <span className="font-normal text-purple-500">{t('cast.sans.emplacement')}</span>
           </button>
         )}
       </div>

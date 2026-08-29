@@ -32,6 +32,8 @@ import {
 } from '../db/schema.ts';
 import { bus } from '../sync/bus.ts';
 import { isPartyGM, requireUser } from './helpers.ts';
+import { langFromReq, pickLocalized } from './lang.ts';
+import { apiMsg } from './messages.ts';
 
 /** Ligne Druide du personnage : niveau de CLASSE + cercle (multiclassage SRD). */
 function druidLine(char: any): { level: number; circle: string | null } {
@@ -57,6 +59,7 @@ function druidLine(char: any): { level: number; circle: string | null } {
 interface BeastRow {
   slug: string;
   name_fr: string | null;
+  overlay_en: string | null;
   challenge_rating: number;
   size: string | null;
   armor_class: number | null;
@@ -79,6 +82,7 @@ function parseSpeed(raw: string | null): { fly: boolean; swim: boolean } {
 const BEAST_COLS = {
   slug: monsters.slug,
   name_fr: monsters.nameFr,
+  overlay_en: monsters.overlayEn,
   challenge_rating: monsters.challengeRating,
   size: monsters.size,
   armor_class: monsters.armorClass,
@@ -86,6 +90,19 @@ const BEAST_COLS = {
   hit_dice: monsters.hitDice,
   speed_json: monsters.speedJson,
 };
+
+/** Nom EN de l'overlay d'une bête (repli null → nom FR servi tel quel). */
+function beastNameEn(row: BeastRow): string | null {
+  if (!row.overlay_en) return null;
+  try {
+    const parsed = typeof row.overlay_en === 'string' ? JSON.parse(row.overlay_en) : row.overlay_en;
+    return parsed && typeof parsed === 'object' && typeof parsed.name === 'string'
+      ? parsed.name
+      : null;
+  } catch {
+    return null;
+  }
+}
 
 /** All of the character's combatants in non-ended encounters (newest first). */
 function findActiveCombatants(characterId: number): any[] {
@@ -157,10 +174,10 @@ export async function wildShapeRoutes(app: FastifyInstance) {
       const userId = requireUser(req, reply);
       if (userId === null) return;
       const char = getCharacter(Number(req.params.id));
-      if (!char) return reply.code(404).send({ error: 'Personnage introuvable' });
+      if (!char) return reply.code(404).send({ error: apiMsg(req, 'Personnage introuvable') });
       const gm = isPartyGM(char.party_id, userId);
       if (char.owner_id !== userId && !gm) {
-        return reply.code(403).send({ error: 'Réservé au propriétaire ou au MD' });
+        return reply.code(403).send({ error: apiMsg(req, 'Réservé au propriétaire ou au MD') });
       }
 
       const { level, circle } = druidLine(char);
@@ -199,6 +216,7 @@ export async function wildShapeRoutes(app: FastifyInstance) {
         /* default empty */
       }
 
+      const lang = langFromReq(req);
       const forms = rows
         .map((r) => ({ row: r, speed: parseSpeed(r.speed_json) }))
         // Moon elementals are their own rule (CR 5), not gated by maxCR
@@ -210,7 +228,9 @@ export async function wildShapeRoutes(app: FastifyInstance) {
         .map(({ row, speed }) => ({
           slug: row.slug,
           nameFr: row.name_fr,
-          name: row.name_fr ?? row.slug,
+          // Mono-locale comme le reste de l'API (overlay EN, repli FR) —
+          // le sélecteur de forme n'est plus FR-only.
+          name: pickLocalized(lang, beastNameEn(row), row.name_fr) ?? row.slug,
           challengeRating: row.challenge_rating,
           size: row.size,
           armorClass: row.armor_class,
@@ -246,13 +266,13 @@ export async function wildShapeRoutes(app: FastifyInstance) {
       const userId = requireUser(req, reply);
       if (userId === null) return;
       const char = getCharacter(Number(req.params.id));
-      if (!char) return reply.code(404).send({ error: 'Personnage introuvable' });
+      if (!char) return reply.code(404).send({ error: apiMsg(req, 'Personnage introuvable') });
       const gm = isPartyGM(char.party_id, userId);
       if (char.owner_id !== userId && !gm) {
-        return reply.code(403).send({ error: 'Réservé au propriétaire ou au MD' });
+        return reply.code(403).send({ error: apiMsg(req, 'Réservé au propriétaire ou au MD') });
       }
       if (char.wild_shape_slug) {
-        return reply.code(400).send({ error: 'Déjà sous forme animale' });
+        return reply.code(400).send({ error: apiMsg(req, 'Déjà sous forme animale') });
       }
       // Archidruide (niveau 20) : forme sauvage illimitée
       if ((char.wild_shape_uses ?? 2) <= 0 && druidLine(char).level < 20) {
@@ -266,7 +286,8 @@ export async function wildShapeRoutes(app: FastifyInstance) {
         .where(eq(monsters.slug, req.body?.slug ?? ''))
         .get() as any;
       // monsters are French-only in the catalog
-      if (!beast) return reply.code(404).send({ error: 'Forme introuvable dans le bestiaire' });
+      if (!beast)
+        return reply.code(404).send({ error: apiMsg(req, 'Forme introuvable dans le bestiaire') });
 
       // SRD: the druid must have seen the beast before
       let seenList: string[] = [];
@@ -294,7 +315,7 @@ export async function wildShapeRoutes(app: FastifyInstance) {
           (!speed.fly || wildShapeCanFly(level)) &&
           (!speed.swim || wildShapeCanSwim(level)));
       if (!eligible) {
-        return reply.code(400).send({ error: 'Forme non autorisée à ce niveau' });
+        return reply.code(400).send({ error: apiMsg(req, 'Forme non autorisée à ce niveau') });
       }
 
       // Roll the beast's HP from its hit dice
@@ -365,13 +386,13 @@ export async function wildShapeRoutes(app: FastifyInstance) {
       const userId = requireUser(req, reply);
       if (userId === null) return;
       const char = getCharacter(Number(req.params.id));
-      if (!char) return reply.code(404).send({ error: 'Personnage introuvable' });
+      if (!char) return reply.code(404).send({ error: apiMsg(req, 'Personnage introuvable') });
       const gm = isPartyGM(char.party_id, userId);
       if (char.owner_id !== userId && !gm) {
-        return reply.code(403).send({ error: 'Réservé au propriétaire ou au MD' });
+        return reply.code(403).send({ error: apiMsg(req, 'Réservé au propriétaire ou au MD') });
       }
       if (!char.wild_shape_slug) {
-        return reply.code(400).send({ error: 'Pas sous forme animale' });
+        return reply.code(400).send({ error: apiMsg(req, 'Pas sous forme animale') });
       }
 
       // SRD: return to the pre-shape HP; excess damage when dropped to 0 carries over

@@ -1,5 +1,7 @@
 import type { Item, ItemCategory, Rarity } from '@table-sync/shared';
-import { CATEGORY_LABELS_FR, RARITY_LABELS_FR } from '@table-sync/shared';
+import { CATEGORY_LABELS_FR } from '@table-sync/shared';
+import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   CategoryBadge,
   CostBadge,
@@ -8,23 +10,9 @@ import {
   RarityBadge,
   WeightBadge,
 } from '../../components/ui';
+import { categoryLabel, rarityLabel } from '../../i18n/labels';
 
 // ---------- Filter option sets ----------
-
-const CATEGORY_OPTIONS: { value: '' | ItemCategory; label: string }[] = [
-  { value: '', label: 'Toutes catégories' },
-  ...(Object.keys(CATEGORY_LABELS_FR) as ItemCategory[])
-    .filter((c) => c !== 'custom')
-    .map((c) => ({ value: c as ItemCategory, label: CATEGORY_LABELS_FR[c] })),
-];
-
-const RARITY_OPTIONS: { value: '' | Rarity; label: string }[] = [
-  { value: '', label: 'Toutes raretés' },
-  ...(['common', 'uncommon', 'rare', 'veryRare', 'legendary', 'artifact'] as Rarity[]).map((r) => ({
-    value: r,
-    label: RARITY_LABELS_FR[r],
-  })),
-];
 
 // ---------- Catalog search component ----------
 
@@ -67,6 +55,31 @@ export function CatalogSearch({
   onAdd,
   onLoadMore,
 }: CatalogSearchProps) {
+  const { t } = useTranslation();
+
+  // Options localisées au rendu (et non à l'import) : elles suivent le
+  // changement de langue du sélecteur sans rechargement.
+  const categoryOptions = useMemo(
+    () => [
+      { value: '' as const, label: t('recherche.toutes.categories') },
+      ...(Object.keys(CATEGORY_LABELS_FR) as ItemCategory[])
+        .filter((c) => c !== 'custom')
+        .map((c) => ({ value: c, label: categoryLabel(c) })),
+    ],
+    [t],
+  );
+  const rarityOptions = useMemo(
+    () => [
+      { value: '' as const, label: t('recherche.toutes.raretes') },
+      ...(['common', 'uncommon', 'rare', 'veryRare', 'legendary', 'artifact'] as Rarity[]).map(
+        (r) => ({
+          value: r,
+          label: rarityLabel(r),
+        }),
+      ),
+    ],
+    [t],
+  );
   const wanted = search.trim();
   const createCta = canCreateItem && wanted !== '' && !readOnly && onCreateItem && (
     <button
@@ -74,7 +87,7 @@ export function CatalogSearch({
       onClick={() => onCreateItem(wanted)}
       className="btn-secondary w-full text-sm"
     >
-      + Créer « {wanted} »
+      {t('recherche.creer', { name: wanted })}
     </button>
   );
   return (
@@ -83,19 +96,19 @@ export function CatalogSearch({
         <input
           type="search"
           className="input"
-          placeholder="Rechercher un objet…"
+          placeholder={t('recherche.rechercher.un.objet')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          aria-label="Rechercher dans le catalogue"
+          aria-label={t('recherche.rechercher.dans.le.catalogue')}
         />
         <div className="grid grid-cols-2 gap-2">
           <select
             className="input"
             value={category}
             onChange={(e) => setCategory(e.target.value as '' | ItemCategory)}
-            aria-label="Filtrer par catégorie"
+            aria-label={t('recherche.filtrer.par.categorie')}
           >
-            {CATEGORY_OPTIONS.map((o) => (
+            {categoryOptions.map((o) => (
               <option key={o.value} value={o.value}>
                 {o.label}
               </option>
@@ -105,9 +118,9 @@ export function CatalogSearch({
             className="input"
             value={rarity}
             onChange={(e) => setRarity(e.target.value as '' | Rarity)}
-            aria-label="Filtrer par rareté"
+            aria-label={t('recherche.filtrer.par.rarete')}
           >
-            {RARITY_OPTIONS.map((o) => (
+            {rarityOptions.map((o) => (
               <option key={o.value} value={o.value}>
                 {o.label}
               </option>
@@ -122,11 +135,11 @@ export function CatalogSearch({
             <>
               <EmptyState
                 icon="🔍"
-                title="Aucun objet trouvé"
+                title={t('recherche.aucun.objet.trouve')}
                 hint={
                   wanted && canCreateItem
-                    ? `« ${wanted} » n'existe pas encore — tu peux le créer.`
-                    : 'Modifiez votre recherche ou vos filtres.'
+                    ? t('recherche.n.existe.pas.encore', { name: wanted })
+                    : t('recherche.modifiez.votre.recherche.ou.vos.filtres')
                 }
               />
               {wanted && createCta}
@@ -134,20 +147,22 @@ export function CatalogSearch({
           ) : (
             <EmptyState
               icon="📝"
-              title="Recherchez un objet"
-              hint="Tapez le nom d'un objet pour l'ajouter à votre sac à dos."
+              title={t('recherche.recherchez.un.objet')}
+              hint={t('recherche.tapez.le.nom.d.un.objet')}
             />
           )}
         </div>
       ) : (
         <>
-          <p className="text-xs text-ink-400 px-1">{total} objet(s)</p>
+          <p className="text-xs text-ink-400 px-1">
+            {t('recherche.total.objets', { total: total })}
+          </p>
           <ul className="space-y-2">
             {items.map((item) => (
               <li key={item.id} className="card p-3 flex items-center gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-medium truncate">{item.name || item.name}</span>
+                    <span className="font-medium truncate">{item.name}</span>
                     {item.rarity !== 'none' && <RarityBadge rarity={item.rarity} />}
                   </div>
                   <div className="flex items-center gap-3 mt-1 text-xs text-ink-500">
@@ -157,7 +172,7 @@ export function CatalogSearch({
                   </div>
                   {item.aliases && item.aliases.length > 0 && (
                     <p className="text-[11px] text-ink-400 mt-0.5">
-                      Aussi : {item.aliases.join(', ')}
+                      {t('recherche.aussi', { aliases: item.aliases.join(', ') })}
                     </p>
                   )}
                 </div>
@@ -167,16 +182,18 @@ export function CatalogSearch({
                     onClick={() => onAdd(item)}
                     disabled={addingItemId === item.id}
                     className="btn-primary text-sm px-3 py-2 shrink-0"
-                    aria-label={`Ajouter ${item.name || item.name}`}
+                    aria-label={t('recherche.ajouter.item.name.item.name', {
+                      item_name: item.name,
+                    })}
                   >
-                    {addingItemId === item.id ? '…' : '+ Ajouter'}
+                    {addingItemId === item.id ? '…' : t('inv.ajouter')}
                   </button>
                 )}
               </li>
             ))}
           </ul>
 
-          {loading && <LoadingSpinner label="Recherche…" />}
+          {loading && <LoadingSpinner label={t('recherche.recherche')} />}
 
           {/* The exact item may still be missing among the hits — creation
               stays one tap away even with results on screen. */}
@@ -184,7 +201,7 @@ export function CatalogSearch({
 
           {offset + items.length < total && !loading && (
             <button type="button" onClick={onLoadMore} className="btn-secondary w-full">
-              Charger plus ({total - offset - items.length} restants)
+              {t('recherche.charger.plus', { n: total - offset - items.length })}
             </button>
           )}
         </>

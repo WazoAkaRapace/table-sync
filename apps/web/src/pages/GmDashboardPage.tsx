@@ -13,6 +13,7 @@ import {
   skillProficiencyLevel,
 } from '@table-sync/shared';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import api, { itemImageUrl } from '../api';
 import { useAuth } from '../auth';
@@ -36,7 +37,6 @@ import {
 } from '../components/ui';
 import { appLocale } from '../i18n';
 import { useSyncEvent } from '../sync';
-import { plural } from '../utils';
 
 interface Transaction {
   id: number;
@@ -51,6 +51,7 @@ interface Transaction {
 }
 
 export default function GmDashboardPage() {
+  const { t } = useTranslation();
   const { partyId } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -74,12 +75,12 @@ export default function GmDashboardPage() {
         setParty(partyRes.data);
         setTransactions(txRes.data.transactions);
       } catch (err: any) {
-        setError(err.response?.data?.error || 'Erreur');
+        setError(err.response?.data?.error || t('md.erreur'));
       } finally {
         setLoading(false);
       }
     },
-    [partyId],
+    [partyId, t],
   );
 
   useEffect(() => {
@@ -99,7 +100,7 @@ export default function GmDashboardPage() {
 
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorMsg message={error} />;
-  if (!party) return <ErrorMsg message="Groupe introuvable" />;
+  if (!party) return <ErrorMsg message={t('md.groupe.introuvable')} />;
 
   // Zone de danger — tab Réglages visible au MD seulement (l'API vérifie aussi)
   const isGm = party.members.some((m) => m.userId === user?.id && m.role === 'gm');
@@ -113,23 +114,23 @@ export default function GmDashboardPage() {
       {/* Tabs */}
       <div className="flex gap-1 overflow-x-auto no-scrollbar border-b border-parchment-200">
         <TabButton active={tab === 'characters'} onClick={() => setTab('characters')}>
-          Personnages ({party.characters.length})
+          {t('md.personnages.n', { count: party.characters.length })}
         </TabButton>
         <TabButton active={tab === 'transactions'} onClick={() => setTab('transactions')}>
-          Journal ({transactions.length})
+          {t('md.journal.n', { count: transactions.length })}
         </TabButton>
         <TabButton active={tab === 'custom'} onClick={() => setTab('custom')}>
-          Objets custom
+          {t('md.objets.custom')}
         </TabButton>
         <TabButton active={tab === 'members'} onClick={() => setTab('members')}>
-          Joueurs ({party.members.length})
+          {t('md.joueurs.n', { count: party.members.length })}
         </TabButton>
         <TabButton active={tab === 'assistant'} onClick={() => setTab('assistant')}>
           GM Assistant
         </TabButton>
         {isGm && (
           <TabButton active={tab === 'settings'} onClick={() => setTab('settings')}>
-            Réglages
+            {t('md.reglages')}
           </TabButton>
         )}
       </div>
@@ -187,6 +188,7 @@ function DisbandPartySection({
   name: string;
   onDone: () => void;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [confirmName, setConfirmName] = useState('');
   const [busy, setBusy] = useState(false);
@@ -202,19 +204,15 @@ function DisbandPartySection({
       await api.delete(`/api/parties/${partyId}`);
       onDone();
     } catch {
-      setError('Dissolution impossible — vérifie la connexion.');
+      setError(t('md.dissolution.impossible'));
       setBusy(false);
     }
   }
 
   return (
     <div className="rounded-lg border border-red-200 bg-red-50/60 p-4">
-      <h3 className="section-title text-red-700">Zone de danger</h3>
-      <p className="mt-1 text-xs text-ink-500">
-        Dissoudre « {name} » supprime définitivement la table et tout ce qui s'y rattache :
-        personnages et leurs fiches, combats, PNJ, objets personnalisés, journal. Aucun retour en
-        arrière n'est possible.
-      </p>
+      <h3 className="section-title text-red-700">{t('md.zone.de.danger')}</h3>
+      <p className="mt-1 text-xs text-ink-500">{t('md.dissoudre.name.supprime', { name: name })}</p>
       <button
         type="button"
         className="mt-3 rounded border border-red-300 px-3.5 py-1.5 text-sm font-medium text-red-700 transition-colors hover:bg-red-600 hover:text-white"
@@ -224,21 +222,18 @@ function DisbandPartySection({
           setOpen(true);
         }}
       >
-        Dissoudre le groupe…
+        {t('md.dissoudre.le.groupe')}
       </button>
 
       {open && (
         <Modal
           open={open}
           onClose={() => !busy && setOpen(false)}
-          title={`Dissoudre « ${name} » ?`}
+          title={t('md.dissoudre.name', { name: name })}
         >
-          <p className="mb-3 text-sm text-ink-500">
-            Tout le contenu du groupe sera supprimé, pour le MD comme pour les joueurs. Cette action
-            est définitive.
-          </p>
+          <p className="mb-3 text-sm text-ink-500">{t('md.tout.le.contenu.du.groupe.sera')}</p>
           <label className="block">
-            <span className="label">Tape le nom du groupe ({name}) pour confirmer</span>
+            <span className="label">{t('md.tape.le.nom.du.groupe', { name: name })}</span>
             <input
               className="input"
               value={confirmName}
@@ -256,7 +251,7 @@ function DisbandPartySection({
               disabled={busy}
               className="btn-secondary flex-1"
             >
-              Annuler
+              {t('md.annuler')}
             </button>
             <button
               type="button"
@@ -264,7 +259,7 @@ function DisbandPartySection({
               disabled={busy || !nameMatches}
               className="btn-primary flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-50"
             >
-              {busy ? 'Dissolution…' : 'Dissoudre définitivement'}
+              {busy ? t('md.dissolution') : t('md.dissoudre.definitivement')}
             </button>
           </div>
         </Modal>
@@ -306,6 +301,7 @@ function CharactersTab({
   partyId: string;
   onReload: () => void;
 }) {
+  const { t } = useTranslation();
   const [deleteTarget, setDeleteTarget] = useState<CharacterSummary | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [inventories, setInventories] = useState<Record<number, CharacterInventory>>({});
@@ -345,8 +341,8 @@ function CharactersTab({
     return (
       <EmptyState
         icon="🧙"
-        title="Aucun personnage"
-        hint="Les joueurs doivent créer leurs personnages."
+        title={t('md.aucun.personnage')}
+        hint={t('md.les.joueurs.doivent.creer.leurs')}
       />
     );
   }
@@ -418,9 +414,9 @@ function CharactersTab({
                     {c.hidden && (
                       <span
                         className="shrink-0 rounded-full bg-ink-100 px-2 py-0.5 text-[11px] font-medium text-ink-600"
-                        title="Caché des autres joueurs par son propriétaire — inactif en combat"
+                        title={t('md.cache.des.autres.joueurs.par.son')}
                       >
-                        Caché
+                        {t('md.cache')}
                       </span>
                     )}
                   </h3>
@@ -430,7 +426,7 @@ function CharactersTab({
                       : c.characterClass
                         ? `${c.characterClass} `
                         : ''}
-                    {c.level ? `Niv. ${c.level}` : ''}
+                    {c.level ? t('md.niv', { niveau: c.level }) : ''}
                     {c.race ? ` · ${c.race}` : ''}
                   </p>
                 </div>
@@ -439,8 +435,8 @@ function CharactersTab({
                 type="button"
                 onClick={() => setDeleteTarget(c)}
                 className="text-ink-400 hover:text-red-600 text-sm shrink-0 p-1"
-                aria-label={`Supprimer ${c.name}`}
-                title="Supprimer le personnage"
+                aria-label={t('md.supprimer.c.name', { c_name: c.name })}
+                title={t('md.supprimer.le.personnage')}
               >
                 🗑
               </button>
@@ -449,7 +445,7 @@ function CharactersTab({
             {/* HP bar */}
             <div className="mt-3">
               <div className="flex items-center justify-between text-xs text-ink-500 mb-1">
-                <span>❤️ PV</span>
+                <span>{t('md.pv')}</span>
                 <span className="font-medium">
                   {c.currentHp}
                   {c.tempHp > 0 ? ` (+${c.tempHp})` : ''} / {c.maxHp}
@@ -467,7 +463,7 @@ function CharactersTab({
             {enc && (
               <div className="mt-2">
                 <div className="flex items-center justify-between text-xs text-ink-500 mb-1">
-                  <span>🎒 Sac</span>
+                  <span>{t('md.sac')}</span>
                   <span>
                     {enc.totalWeightKg.toFixed(1)} / {enc.maxCarryKg.toFixed(0)} kg ({weightPct}%)
                   </span>
@@ -490,17 +486,17 @@ function CharactersTab({
             {/* Stats row: CA, PP, food, water */}
             <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
               <span className="font-medium">
-                🛡 CA <span className="text-ink-800 font-bold">{effectiveAC}</span>
+                {t('md.ca')} <span className="text-ink-800 font-bold">{effectiveAC}</span>
               </span>
               <span className="font-medium">
-                👁 PP <span className="text-ink-800 font-bold">{pp}</span>
+                {t('md.pp')} <span className="text-ink-800 font-bold">{pp}</span>
               </span>
               <span className="text-ink-500">🍖 {foodCount}</span>
               <span className="text-ink-500">💧 {fullWaterCount}</span>
               {c.exhaustion > 0 && (
                 <span className="inline-flex items-center gap-1">
                   <span className={`w-2 h-2 rounded-full ${exhColor}`} />
-                  <span className="text-ink-500">Épuis. {c.exhaustion}</span>
+                  <span className="text-ink-500">{t('md.epuis', { niveau: c.exhaustion })}</span>
                 </span>
               )}
               {c.currentHp <= 0 && (
@@ -532,10 +528,10 @@ function CharactersTab({
         <Modal
           open={!!deleteTarget}
           onClose={() => !deleting && setDeleteTarget(null)}
-          title={`Supprimer ${deleteTarget.name} ?`}
+          title={t('md.supprimer.deletetarget.name', { deleteTarget_name: deleteTarget.name })}
         >
           <p className="text-sm text-ink-500 mb-4">
-            Cette action est irréversible. Tout l'inventaire et la monnaie seront perdus.
+            {t('md.cette.action.est.irreversible.tout.l')}
           </p>
           <div className="flex gap-2">
             <button
@@ -544,7 +540,7 @@ function CharactersTab({
               disabled={deleting}
               className="btn-secondary flex-1"
             >
-              Annuler
+              {t('md.annuler')}
             </button>
             <button
               type="button"
@@ -552,7 +548,7 @@ function CharactersTab({
               disabled={deleting}
               className="btn-primary flex-1 bg-red-600 hover:bg-red-700"
             >
-              {deleting ? 'Suppression…' : 'Supprimer'}
+              {deleting ? t('md.suppression') : t('md.supprimer.bouton')}
             </button>
           </div>
         </Modal>
@@ -565,7 +561,7 @@ function CharactersTab({
 function sinceLabel(sqliteDate: string): string {
   const d = new Date(sqliteDate.replace(' ', 'T'));
   if (Number.isNaN(d.getTime())) return '';
-  return d.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' });
+  return d.toLocaleDateString(appLocale(), { month: 'short', year: 'numeric' });
 }
 
 type PendingAction =
@@ -573,7 +569,12 @@ type PendingAction =
   | { kind: 'ban'; member: PartyMember }
   | { kind: 'unban'; user: BannedPartyUser };
 
-function actionCopy(p: PendingAction): {
+type Translate = (key: string, opts?: Record<string, unknown>) => string;
+
+function actionCopy(
+  p: PendingAction,
+  t: Translate,
+): {
   title: string;
   body: string;
   cta: string;
@@ -582,26 +583,26 @@ function actionCopy(p: PendingAction): {
   if (p.kind === 'remove') {
     const name = p.member.displayName;
     return {
-      title: `Retirer ${name} de la table ?`,
-      body: `${name} perd l'accès au groupe et à ses fiches. Ses personnages restent au groupe — visibles depuis la Table du MD et en combat. Il pourra revenir avec le code d'invitation.`,
-      cta: 'Retirer',
+      title: t('md.retirer.name.title', { name: name }),
+      body: t('md.retirer.name.body', { name: name }),
+      cta: t('md.retirer'),
       danger: false,
     };
   }
   if (p.kind === 'ban') {
     const name = p.member.displayName;
     return {
-      title: `Bannir ${name} ?`,
-      body: `${name} quitte la table et le code d'invitation ne fonctionnera plus pour lui. Ses personnages restent au groupe. Tu pourras le débannir plus tard.`,
-      cta: 'Bannir',
+      title: t('md.bannir.name.title', { name: name }),
+      body: t('md.bannir.name.body', { name: name }),
+      cta: t('md.bannir'),
       danger: true,
     };
   }
   const name = p.user.displayName;
   return {
-    title: `Débannir ${name} ?`,
-    body: `Le code d'invitation fonctionnera à nouveau pour lui. Il ne revient pas à la table pour autant — il devra rejoindre avec le code.`,
-    cta: 'Débannir',
+    title: t('md.debannir.name.title', { name: name }),
+    body: t('md.debannir.name.body'),
+    cta: t('md.debannir'),
     danger: false,
   };
 }
@@ -619,6 +620,7 @@ function MembersTab({
   partyId: string;
   onReload: (silent?: boolean) => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState('');
@@ -648,7 +650,7 @@ function MembersTab({
         setPending(null);
         await onReload(true);
       } else {
-        setActionError('Action impossible — vérifie la connexion.');
+        setActionError(t('md.action.impossible.verifie.la.connexion'));
       }
     } finally {
       setBusy(false);
@@ -657,9 +659,7 @@ function MembersTab({
 
   return (
     <div className="space-y-4">
-      <p className="text-xs text-ink-400">
-        Retirer libère le siège — le code d'invitation reste valable. Bannir verrouille le code.
-      </p>
+      <p className="text-xs text-ink-400">{t('md.retirer.libere.le.siege.le.code')}</p>
       <div className="card divide-y divide-parchment-100">
         {members.map((m) => (
           <div key={m.userId} className="flex items-center gap-3 p-3">
@@ -672,12 +672,12 @@ function MembersTab({
                     m.role === 'gm' ? 'bg-blood-600 text-white' : 'bg-parchment-200 text-ink-700'
                   }`}
                 >
-                  {m.role === 'gm' ? 'MD' : 'Joueur'}
+                  {m.role === 'gm' ? t('role.md') : t('role.joueur')}
                 </span>
               </div>
               <p className="mt-0.5 text-xs text-ink-400">
-                {plural(charCountByOwner.get(m.userId) ?? 0, 'personnage')} · à la table depuis{' '}
-                {sinceLabel(m.joinedAt)}
+                {t('party.compteurs.personnage', { count: charCountByOwner.get(m.userId) ?? 0 })} ·{' '}
+                {t('md.a.la.table.depuis', { since: sinceLabel(m.joinedAt) })}
               </p>
             </div>
             {m.role === 'player' && (
@@ -689,9 +689,11 @@ function MembersTab({
                     setActionError('');
                     setPending({ kind: 'remove', member: m });
                   }}
-                  aria-label={`Retirer ${m.displayName} de la table`}
+                  aria-label={t('md.retirer.m.displayname.de.la.table', {
+                    m_displayName: m.displayName,
+                  })}
                 >
-                  Retirer
+                  {t('md.retirer')}
                 </button>
                 <button
                   type="button"
@@ -700,9 +702,11 @@ function MembersTab({
                     setActionError('');
                     setPending({ kind: 'ban', member: m });
                   }}
-                  aria-label={`Bannir ${m.displayName} de ce groupe`}
+                  aria-label={t('md.bannir.m.displayname.de.ce.groupe', {
+                    m_displayName: m.displayName,
+                  })}
                 >
-                  Bannir
+                  {t('md.bannir')}
                 </button>
               </div>
             )}
@@ -713,7 +717,8 @@ function MembersTab({
       {banned.length > 0 && (
         <div>
           <h3 className="section-title">
-            Bannis <span className="text-sm font-normal text-ink-400">({banned.length})</span>
+            {t('md.bannis')}{' '}
+            <span className="text-sm font-normal text-ink-400">({banned.length})</span>
           </h3>
           <div className="card divide-y divide-parchment-100">
             {banned.map((u) => (
@@ -724,7 +729,7 @@ function MembersTab({
                     <span className="text-xs text-ink-400">@{u.username}</span>
                   </div>
                   <p className="mt-0.5 text-xs text-ink-400">
-                    banni depuis {sinceLabel(u.bannedAt)}
+                    {t('md.banni.depuis', { since: sinceLabel(u.bannedAt) })}
                   </p>
                 </div>
                 <button
@@ -734,9 +739,9 @@ function MembersTab({
                     setActionError('');
                     setPending({ kind: 'unban', user: u });
                   }}
-                  aria-label={`Débannir ${u.displayName}`}
+                  aria-label={t('md.debannir.u.displayname', { u_displayName: u.displayName })}
                 >
-                  Débannir
+                  {t('md.debannir')}
                 </button>
               </div>
             ))}
@@ -748,9 +753,9 @@ function MembersTab({
         <Modal
           open={!!pending}
           onClose={() => !busy && setPending(null)}
-          title={actionCopy(pending).title}
+          title={actionCopy(pending, t).title}
         >
-          <p className="mb-4 text-sm text-ink-500">{actionCopy(pending).body}</p>
+          <p className="mb-4 text-sm text-ink-500">{actionCopy(pending, t).body}</p>
           {actionError && <div className="mb-3 text-sm text-red-600">{actionError}</div>}
           <div className="flex gap-2">
             <button
@@ -759,15 +764,15 @@ function MembersTab({
               disabled={busy}
               className="btn-secondary flex-1"
             >
-              Annuler
+              {t('md.annuler')}
             </button>
             <button
               type="button"
               onClick={confirmAction}
               disabled={busy}
-              className={`btn-primary flex-1 ${actionCopy(pending).danger ? 'bg-red-600 hover:bg-red-700' : ''}`}
+              className={`btn-primary flex-1 ${actionCopy(pending, t).danger ? 'bg-red-600 hover:bg-red-700' : ''}`}
             >
-              {busy ? '…' : actionCopy(pending).cta}
+              {busy ? '…' : actionCopy(pending, t).cta}
             </button>
           </div>
         </Modal>
@@ -777,47 +782,48 @@ function MembersTab({
 }
 
 function TransactionsTab({ transactions }: { transactions: Transaction[] }) {
+  const { t } = useTranslation();
   if (transactions.length === 0) {
     return (
       <EmptyState
         icon="📋"
-        title="Aucune transaction"
-        hint="Les modifications d'inventaire apparaîtront ici."
+        title={t('md.aucune.transaction')}
+        hint={t('md.les.modifications.d.inventaire')}
       />
     );
   }
   const reasonLabels: Record<string, string> = {
-    add: 'Ajout',
-    adjust: 'Ajustement',
-    remove: 'Retrait',
-    'transfer-in': 'Transfert reçu',
-    'transfer-out': 'Transfert donné',
-    'consume-food': 'Repas consommé',
-    'consume-water': 'Eau bue',
-    item: 'Objet',
+    add: t('md.journal.ajout'),
+    adjust: t('md.journal.ajustement'),
+    remove: t('md.journal.retrait'),
+    'transfer-in': t('md.journal.transfert.recu'),
+    'transfer-out': t('md.journal.transfert.donne'),
+    'consume-food': t('md.journal.repas.consomme'),
+    'consume-water': t('md.journal.eau.bue'),
+    item: t('md.journal.objet'),
   };
   return (
     <div className="card divide-y divide-parchment-100">
-      {transactions.map((t) => (
-        <div key={t.id} className="p-3 flex items-center justify-between gap-3">
+      {transactions.map((tx) => (
+        <div key={tx.id} className="p-3 flex items-center justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <span className="font-medium">{t.itemName}</span>
-            <span className="text-sm text-ink-400 ml-2">× {Math.abs(t.deltaQty)}</span>
+            <span className="font-medium">{tx.itemName}</span>
+            <span className="text-sm text-ink-400 ml-2">× {Math.abs(tx.deltaQty)}</span>
             <div className="text-xs text-ink-400">
-              {reasonLabels[t.reason] || t.reason}
-              {t.actorName ? ` · par ${t.actorName}` : ''}
+              {reasonLabels[tx.reason] || tx.reason}
+              {tx.actorName ? ` · ${t('md.par', { name: tx.actorName })}` : ''}
               {' · '}
-              {new Date(t.at).toLocaleString(appLocale(), {
+              {new Date(tx.at).toLocaleString(appLocale(), {
                 dateStyle: 'short',
                 timeStyle: 'short',
               })}
             </div>
           </div>
           <span
-            className={`text-sm font-mono font-semibold ${t.deltaQty > 0 ? 'text-green-600' : 'text-red-600'}`}
+            className={`text-sm font-mono font-semibold ${tx.deltaQty > 0 ? 'text-green-600' : 'text-red-600'}`}
           >
-            {t.deltaQty > 0 ? '+' : ''}
-            {t.deltaQty}
+            {tx.deltaQty > 0 ? '+' : ''}
+            {tx.deltaQty}
           </span>
         </div>
       ))}
@@ -826,6 +832,7 @@ function TransactionsTab({ transactions }: { transactions: Transaction[] }) {
 }
 
 function CustomItemsTab({ partyId }: { partyId: string }) {
+  const { t } = useTranslation();
   const [customItems, setCustomItems] = useState<any[]>([]);
   const [loadingItems, setLoadingItems] = useState(true);
   // Party setting: may players create items themselves? + member names to
@@ -902,7 +909,7 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
       await api.patch(`/api/parties/${partyId}`, { playersCreateItems: next });
       setPlayersCreate(next);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Erreur');
+      setError(err.response?.data?.error || t('md.erreur'));
     } finally {
       setTogglingPlayersCreate(false);
     }
@@ -930,7 +937,7 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
 
   const openEdit = (item: any) => {
     setEditing(item);
-    setName(item.name || item.name);
+    setName(item.name);
     setCategory(item.category);
     setWeight(item.weightKg !== null ? String(item.weightKg) : '');
     setDesc(item.description || '');
@@ -941,7 +948,7 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
 
   const save = async () => {
     if (!name.trim()) {
-      setError('Le nom est requis');
+      setError(t('md.le.nom.est.requis'));
       return;
     }
     setSaving(true);
@@ -977,14 +984,14 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
             await api.delete(`/api/items/${itemId}/image`);
           }
         } catch {
-          pushToast('Illustration non envoyée — réessaie depuis Modifier');
+          pushToast(t('md.illustration.non.envoyee'));
         }
       }
       setShowModal(false);
       setImageValue(EMPTY_ITEM_IMAGE);
       await loadCustomItems();
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Erreur');
+      setError(err.response?.data?.error || t('md.erreur'));
     } finally {
       setSaving(false);
     }
@@ -995,7 +1002,7 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
       await api.delete(`/api/items/${id}`);
       await loadCustomItems();
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Erreur');
+      setError(err.response?.data?.error || t('md.erreur'));
     }
   };
 
@@ -1003,11 +1010,11 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="section-title">
-          Objets personnalisés{' '}
+          {t('md.objets.personnalises')}{' '}
           <span className="text-ink-400 text-sm font-normal">({customItems.length})</span>
         </h3>
         <button type="button" onClick={openCreate} className="btn-primary text-sm px-3 py-1.5">
-          + Ajouter
+          {t('md.ajouter')}
         </button>
       </div>
 
@@ -1023,22 +1030,21 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
           disabled={playersCreate === null || togglingPlayersCreate}
         />
         <label htmlFor="gm-players-create-items" className="text-sm font-medium text-ink-700">
-          Les joueurs peuvent créer des objets
+          {t('md.les.joueurs.peuvent.creer.des.objets')}
           <span className="mt-0.5 block text-xs font-normal text-ink-400">
-            Depuis la recherche de leur inventaire, un objet introuvable se crée en une touche — il
-            rejoint cette liste pour relecture et retouche.
+            {t('md.depuis.la.recherche.de.leur.inventaire')}
           </span>
         </label>
       </div>
 
       {loadingItems ? (
-        <p className="text-sm text-ink-400 animate-pulse">Chargement…</p>
+        <p className="text-sm text-ink-400 animate-pulse">{t('md.chargement')}</p>
       ) : customItems.length === 0 ? (
         <div className="card p-8">
           <EmptyState
             icon="✨"
-            title="Aucun objet personnalisé"
-            hint="Crée des objets non-SRD : trésors spéciaux, objets de quête, armes uniques…"
+            title={t('md.aucun.objet.personnalise')}
+            hint={t('md.cree.des.objets.non.srd')}
           />
         </div>
       ) : (
@@ -1053,12 +1059,14 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
                   onClick={() =>
                     setViewingImage({
                       id: item.id,
-                      name: item.name || item.name,
+                      name: item.name,
                       rev: item.imageRev ?? null,
                     })
                   }
                   className="shrink-0 overflow-hidden rounded-md border border-parchment-200"
-                  aria-label={`Agrandir l'illustration de ${item.name || item.name}`}
+                  aria-label={t('md.agrandir.l.illustration.de.item.name', {
+                    item_name: item.name,
+                  })}
                 >
                   <img
                     src={itemImageUrl(item.id, item.imageRev)}
@@ -1070,14 +1078,16 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
               ) : null}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-medium text-ink-800">{item.name || item.name}</span>
+                  <span className="font-medium text-ink-800">{item.name}</span>
                   <CategoryBadge category={item.category} />
                   {item.weightKg !== null && (
                     <span className="text-xs text-ink-400">{item.weightKg} kg</span>
                   )}
                   {item.createdBy !== null && (
                     <span className="text-xs text-ink-400">
-                      par {memberNames.get(item.createdBy) ?? 'un joueur'}
+                      {t('md.par', {
+                        name: memberNames.get(item.createdBy) ?? t('md.un.joueur'),
+                      })}
                     </span>
                   )}
                 </div>
@@ -1090,7 +1100,7 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
                   type="button"
                   onClick={() => openEdit(item)}
                   className="text-ink-400 hover:text-blood-600 text-sm p-1"
-                  aria-label="Modifier"
+                  aria-label={t('md.modifier')}
                 >
                   ✎
                 </button>
@@ -1098,9 +1108,13 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
                   onConfirm={() => remove(item.id)}
                   className="text-ink-400 hover:text-red-500 text-sm p-1 rounded-full transition-colors"
                   armedClassName="bg-red-600 hover:bg-red-700 text-white! px-2.5 py-1 font-semibold"
-                  title={`Supprimer ${item.name || item.name}`}
-                  ariaLabel={`Supprimer ${item.name || item.name}`}
-                  confirmChildren="Supprimer ?"
+                  title={t('md.supprimer.item.name.item.name', {
+                    item_name: item.name,
+                  })}
+                  ariaLabel={t('md.supprimer.item.name.item.name', {
+                    item_name: item.name,
+                  })}
+                  confirmChildren={t('md.supprimer.confirmer')}
                 >
                   ×
                 </ConfirmButton>
@@ -1112,44 +1126,44 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
 
       {/* Floating + button */}
       {customItems.length > 0 && (
-        <Fab onClick={openCreate} label="Ajouter un objet personnalisé" mobileOnly />
+        <Fab onClick={openCreate} label={t('md.ajouter.un.objet.personnalise')} mobileOnly />
       )}
 
       {/* Create/Edit modal */}
       <Modal
         open={showModal}
         onClose={() => setShowModal(false)}
-        title={editing ? "Modifier l'objet" : 'Nouvel objet personnalisé'}
+        title={editing ? t('md.modifier.l.objet') : t('md.nouvel.objet.personnalise')}
       >
         <div className="space-y-3">
           <div className="grid sm:grid-cols-2 gap-3">
             <label className="block">
-              <span className="label">Nom *</span>
+              <span className="label">{t('md.nom')}</span>
               <input
                 className="input"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Épée du Héros"
+                placeholder={t('md.epee.du.heros')}
                 autoFocus
               />
             </label>
             <label className="block">
-              <span className="label">Catégorie</span>
+              <span className="label">{t('md.categorie')}</span>
               <select
                 className="input"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
               >
-                <option value="custom">Personnalisé</option>
-                <option value="weapon">Arme</option>
-                <option value="armor">Armure</option>
-                <option value="gear">Équipement</option>
-                <option value="magic">Objet magique</option>
+                <option value="custom">{t('md.personnalise')}</option>
+                <option value="weapon">{t('md.arme')}</option>
+                <option value="armor">{t('md.armure')}</option>
+                <option value="gear">{t('md.equipement')}</option>
+                <option value="magic">{t('md.objet.magique')}</option>
               </select>
             </label>
           </div>
           <label className="block">
-            <span className="label">Poids (kg)</span>
+            <span className="label">{t('md.poids.kg')}</span>
             <input
               type="number"
               step="0.01"
@@ -1160,13 +1174,13 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
             />
           </label>
           <label className="block">
-            <span className="label">Description</span>
+            <span className="label">{t('md.description')}</span>
             <textarea
               className="input"
               rows={2}
               value={desc}
               onChange={(e) => setDesc(e.target.value)}
-              placeholder="Une lame brillant d'une lumière dorée…"
+              placeholder={t('md.une.lame.brillant.d.une.lumiere')}
             />
           </label>
           {/* L'image est le second contenu de l'objet — après la description,
@@ -1176,7 +1190,7 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
             onChange={setImageValue}
             existingItemId={editing?.id}
             existingRev={editing?.imageRev ?? undefined}
-            existingName={editing ? editing.name || editing.name : undefined}
+            existingName={editing ? editing.name : undefined}
           />
           {error && <div className="text-red-600 text-sm">{error}</div>}
           <div className="flex gap-2 pt-1">
@@ -1186,14 +1200,14 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
               disabled={saving || !name.trim()}
               className="btn-primary flex-1 disabled:opacity-50"
             >
-              {saving ? '…' : editing ? 'Enregistrer' : '+ Ajouter au catalogue'}
+              {saving ? '…' : editing ? t('common.save') : t('md.ajouter.au.catalogue')}
             </button>
             <button
               type="button"
               onClick={() => setShowModal(false)}
               className="btn-ghost text-ink-700"
             >
-              Annuler
+              {t('md.annuler')}
             </button>
           </div>
         </div>

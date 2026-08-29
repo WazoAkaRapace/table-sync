@@ -12,6 +12,7 @@ import { cols } from '../db/projections.ts';
 import { npcs, users } from '../db/schema.ts';
 import { bus } from '../sync/bus.ts';
 import { isPartyGM, isPartyMember, requireUser } from './helpers.ts';
+import { apiMsg } from './messages.ts';
 
 export interface NpcRow {
   id: number;
@@ -70,7 +71,8 @@ export async function npcRoutes(app: FastifyInstance) {
       const userId = requireUser(req, reply);
       if (userId === null) return;
       const partyId = Number(req.params.partyId);
-      if (!isPartyMember(partyId, userId)) return reply.code(403).send({ error: 'not a member' });
+      if (!isPartyMember(partyId, userId))
+        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
 
       const gm = isPartyGM(partyId, userId);
       const drizzle = getDrizzle();
@@ -108,10 +110,12 @@ export async function npcRoutes(app: FastifyInstance) {
       const userId = requireUser(req, reply);
       if (userId === null) return;
       const partyId = Number(req.params.partyId);
-      if (!isPartyMember(partyId, userId)) return reply.code(403).send({ error: 'not a member' });
+      if (!isPartyMember(partyId, userId))
+        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
 
       const body = req.body || ({} as CreateNpcPayload);
-      if (!body.name?.trim()) return reply.code(400).send({ error: 'name is required' });
+      if (!body.name?.trim())
+        return reply.code(400).send({ error: apiMsg(req, 'name is required') });
 
       const drizzle = getDrizzle();
       const maxOrder =
@@ -165,11 +169,11 @@ export async function npcRoutes(app: FastifyInstance) {
         .from(npcs)
         .where(eq(npcs.id, Number(req.params.npcId)))
         .get() as any;
-      if (!npc) return reply.code(404).send({ error: 'NPC not found' });
+      if (!npc) return reply.code(404).send({ error: apiMsg(req, 'NPC not found') });
 
       const gm = isPartyGM(npc.party_id, userId);
       if (npc.created_by !== userId && !gm) {
-        return reply.code(403).send({ error: 'only the creator or GM can edit' });
+        return reply.code(403).send({ error: apiMsg(req, 'only the creator or GM can edit') });
       }
 
       const body = req.body || {};
@@ -194,7 +198,7 @@ export async function npcRoutes(app: FastifyInstance) {
       }
 
       if (Object.keys(values).length === 0) {
-        return reply.code(400).send({ error: 'no fields to update' });
+        return reply.code(400).send({ error: apiMsg(req, 'no fields to update') });
       }
       drizzle.update(npcs).set(values).where(eq(npcs.id, npc.id)).run();
 
@@ -223,11 +227,11 @@ export async function npcRoutes(app: FastifyInstance) {
         .from(npcs)
         .where(eq(npcs.id, Number(req.params.npcId)))
         .get() as any;
-      if (!npc) return reply.code(404).send({ error: 'NPC not found' });
+      if (!npc) return reply.code(404).send({ error: apiMsg(req, 'NPC not found') });
 
       const gm = isPartyGM(npc.party_id, userId);
       if (npc.created_by !== userId && !gm) {
-        return reply.code(403).send({ error: 'only the creator or GM can delete' });
+        return reply.code(403).send({ error: apiMsg(req, 'only the creator or GM can delete') });
       }
 
       drizzle.delete(npcs).where(eq(npcs.id, npc.id)).run();

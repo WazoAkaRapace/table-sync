@@ -1,5 +1,6 @@
 import type { CharacterSummary, InventoryEntry, PartyDetail } from '@table-sync/shared';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import api from '../../api';
 import { EmptyState, LoadingSpinner, Modal, NumberField } from '../../components/ui';
 
@@ -24,6 +25,7 @@ export function TransferModal({
   onTransferred,
   onError,
 }: TransferModalProps) {
+  const { t } = useTranslation();
   const [party, setParty] = useState<PartyDetail | null>(null);
   const [loadingParty, setLoadingParty] = useState(false);
   const [targetId, setTargetId] = useState<number | null>(null);
@@ -40,7 +42,7 @@ export function TransferModal({
         if (!cancelled) setParty(res.data);
       })
       .catch((err: any) => {
-        if (!cancelled) onError(err.response?.data?.error || 'Groupe introuvable');
+        if (!cancelled) onError(err.response?.data?.error || t('transfert.groupe.introuvable'));
       })
       .finally(() => {
         if (!cancelled) setLoadingParty(false);
@@ -48,7 +50,7 @@ export function TransferModal({
     return () => {
       cancelled = true;
     };
-  }, [open, partyId, onError]);
+  }, [open, partyId, onError, t]);
 
   useEffect(() => {
     if (open && entry) {
@@ -76,21 +78,25 @@ export function TransferModal({
       });
       await onTransferred(itemName);
     } catch (err: any) {
-      onError(err.response?.data?.error || 'Échec du transfert');
+      onError(err.response?.data?.error || t('transfert.echec.du.transfert'));
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <Modal open={open} onClose={onClose} title={`Transférer — ${itemName}`}>
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={t('transfert.transferer.itemname', { itemName: itemName })}
+    >
       {loadingParty ? (
-        <LoadingSpinner label="Chargement du groupe…" />
+        <LoadingSpinner label={t('transfert.chargement.du.groupe')} />
       ) : others.length === 0 ? (
         <EmptyState
           icon="👤"
-          title="Aucun autre personnage"
-          hint="Aucun destinataire dans ce groupe."
+          title={t('transfert.aucun.autre.personnage')}
+          hint={t('transfert.aucun.destinataire.dans.ce.groupe')}
         />
       ) : (
         <form onSubmit={submit} className="space-y-4">
@@ -115,7 +121,7 @@ export function TransferModal({
           </div>
           <div>
             <label className="label" htmlFor="give-qty">
-              Quantité (max {maxQty})
+              {t('transfert.quantite.max', { maxQty })}
             </label>
             <NumberField
               id="give-qty"
@@ -127,7 +133,7 @@ export function TransferModal({
             />
           </div>
           <button type="submit" disabled={!targetId || submitting} className="btn-primary w-full">
-            {submitting ? 'Transfert…' : 'Transférer'}
+            {submitting ? t('transfert.transfert') : t('transfert.transferer')}
           </button>
         </form>
       )}

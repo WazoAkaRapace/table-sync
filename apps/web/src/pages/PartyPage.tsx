@@ -18,23 +18,25 @@
 
 import type { CharacterSummary, PartyDetail, PartyRole } from '@table-sync/shared';
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../auth';
 import { ErrorMsg, LoadingSpinner } from '../components/ui';
 import { useSyncEvent } from '../sync';
-import { copyText, plural } from '../utils';
+import { copyText } from '../utils';
 
 // ---------- Small pieces of the contents ----------
 
 function RoleBadge({ role }: { role: PartyRole }) {
+  const { t } = useTranslation();
   return (
     <span
       className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${
         role === 'gm' ? 'bg-blood-600 text-white' : 'bg-parchment-200 text-ink-700'
       }`}
     >
-      {role === 'gm' ? 'MD' : 'Joueur'}
+      {role === 'gm' ? t('role.md') : t('role.joueur')}
     </span>
   );
 }
@@ -153,8 +155,9 @@ function MemberCharacters({
   isGM: boolean;
   partyId: string;
 }) {
+  const { t } = useTranslation();
   if (characters.length === 0) {
-    return <p className="mt-1.5 text-xs italic text-ink-400">sans personnage</p>;
+    return <p className="mt-1.5 text-xs italic text-ink-400">{t('party.sans.personnage')}</p>;
   }
   if (!isGM) {
     return (
@@ -171,7 +174,7 @@ function MemberCharacters({
             <span
               aria-hidden="true"
               className="shrink-0 text-xs text-ink-300"
-              title="Seul son joueur peut ouvrir cette fiche"
+              title={t('party.seul.son.joueur.peut.ouvrir.cette')}
             >
               🔒
             </span>
@@ -187,7 +190,7 @@ function MemberCharacters({
           <Link
             to={`/party/${partyId}/character/${c.id}`}
             className="group -mx-2 flex items-center gap-3 rounded-md px-2 py-1.5 transition-colors hover:bg-parchment-100/70"
-            aria-label={`Ouvrir la fiche de ${c.name}`}
+            aria-label={t('party.ouvrir.la.fiche.de.c.name', { c_name: c.name })}
           >
             <Portrait c={c} size="sm" />
             <span className="min-w-0 flex-1">
@@ -212,6 +215,7 @@ function MemberCharacters({
 // ---------- The volume's table of contents ----------
 
 export default function PartyPage() {
+  const { t } = useTranslation();
   const { partyId } = useParams();
   const { user } = useAuth();
   const [party, setParty] = useState<PartyDetail | null>(null);
@@ -254,13 +258,13 @@ export default function PartyPage() {
           // Kicked live (party:change 'remove'/'ban' reloads into this) or stale link.
           setNotMember(true);
         } else {
-          setError(err.response?.data?.error || 'Groupe introuvable');
+          setError(err.response?.data?.error || t('party.groupe.introuvable'));
         }
       } finally {
         setLoading(false);
       }
     },
-    [partyId],
+    [partyId, t],
   );
 
   useEffect(() => {
@@ -299,17 +303,15 @@ export default function PartyPage() {
     });
   }
 
-  if (loading) return <LoadingSpinner label="Ouverture du groupe…" />;
+  if (loading) return <LoadingSpinner label={t('party.ouverture')} />;
   if (disbanded) {
     return (
       <div className="mx-auto w-full max-w-xl space-y-4 pt-10 text-center">
-        <h1 className="font-display text-2xl font-bold">Le groupe a été dissous</h1>
-        <p className="text-sm text-ink-400">
-          Le MD a fermé la table : personnages, combats, PNJ et objets ont été supprimés avec elle.
-        </p>
+        <h1 className="font-display text-2xl font-bold">{t('party.le.groupe.a.ete.dissous')}</h1>
+        <p className="text-sm text-ink-400">{t('party.le.md.a.ferme.la.table')}</p>
         <div>
           <Link to="/parties" className="btn-secondary inline-block">
-            Mes groupes
+            {t('party.mes.groupes')}
           </Link>
         </div>
       </div>
@@ -318,13 +320,11 @@ export default function PartyPage() {
   if (notMember) {
     return (
       <div className="mx-auto w-full max-w-xl space-y-4 pt-10 text-center">
-        <h1 className="font-display text-2xl font-bold">Tu ne fais plus partie de ce groupe</h1>
-        <p className="text-sm text-ink-400">
-          Le MD t'a retiré de la table. Pour revenir, il te faudra un code d'invitation valide.
-        </p>
+        <h1 className="font-display text-2xl font-bold">{t('party.tu.ne.fais.plus.partie.de')}</h1>
+        <p className="text-sm text-ink-400">{t('party.le.md.t.a.retire.de')}</p>
         <div>
           <Link to="/parties" className="btn-secondary inline-block">
-            Mes groupes
+            {t('party.mes.groupes')}
           </Link>
         </div>
       </div>
@@ -333,16 +333,16 @@ export default function PartyPage() {
   if (error) {
     return (
       <div className="mx-auto w-full max-w-xl space-y-3">
-        <ErrorMsg message="Le groupe n'a pas pu être ouvert — vérifie la connexion." />
+        <ErrorMsg message={t('party.pas.pu.etre.ouvert')} />
         <div className="text-center">
           <button type="button" className="btn-secondary" onClick={() => load()}>
-            Réessayer
+            {t('party.reessayer')}
           </button>
         </div>
       </div>
     );
   }
-  if (!party) return <ErrorMsg message="Groupe introuvable" />;
+  if (!party) return <ErrorMsg message={t('party.groupe.introuvable')} />;
 
   const isGM = party.members.some((m) => m.userId === user?.id && m.role === 'gm');
   const myCharacters = party.characters.filter((c) => c.ownerId === user?.id);
@@ -361,8 +361,13 @@ export default function PartyPage() {
       <header className="register-rise pb-6 pt-2 text-center">
         <h1 className="font-display text-2xl font-bold sm:text-3xl">{party.party.name}</h1>
         <p className="mt-1.5 text-sm text-ink-400">
-          {plural(party.members.length, 'joueur')} · {plural(party.characters.length, 'personnage')}{' '}
-          · {encumbranceLabel(party.party.encumbranceMode)}
+          {t('party.compteurs.joueur', { count: party.members.length })} ·{' '}
+          {t('party.compteurs.personnage', { count: party.characters.length })} ·{' '}
+          {{
+            variant: t('party.mode.variante'),
+            standard: t('party.mode.standard'),
+            slots: t('party.mode.slots'),
+          }[party.party.encumbranceMode] ?? party.party.encumbranceMode}
         </p>
       </header>
       <div aria-hidden="true">
@@ -372,12 +377,12 @@ export default function PartyPage() {
 
       {/* I — Ton personnage : la seule porte en sang de la page */}
       <section className="register-rise pt-6" style={{ animationDelay: '60ms' }}>
-        <TocHeader numeral="I" title="Ton personnage" id="toc-mine" />
+        <TocHeader numeral="I" title={t('party.ton.personnage')} id="toc-mine" />
         {myCharacters.length === 0 ? (
           <div className="border-b border-parchment-200 py-5">
-            <p className="text-sm text-ink-500">Tu n'as pas encore de personnage dans ce groupe.</p>
+            <p className="text-sm text-ink-500">{t('party.tu.n.as.pas.encore.de')}</p>
             <Link to={`/party/${partyId}/create`} className="btn-primary mt-4 inline-block">
-              ＋ Créer mon personnage
+              {t('party.creer.mon.personnage')}
             </Link>
           </div>
         ) : (
@@ -387,7 +392,7 @@ export default function PartyPage() {
                 <Link
                   to={`/party/${partyId}/character/${c.id}`}
                   className="-mx-3 flex items-center gap-4 rounded-lg px-3 py-4 transition-colors hover:bg-parchment-100/70"
-                  aria-label={`Ouvrir la fiche de ${c.name}`}
+                  aria-label={t('party.ouvrir.la.fiche.de.c.name', { c_name: c.name })}
                 >
                   <Portrait c={c} own />
                   <span className="min-w-0 flex-1">
@@ -398,9 +403,9 @@ export default function PartyPage() {
                       {c.hidden && (
                         <span
                           className="shrink-0 rounded-full bg-ink-100 px-2 py-0.5 text-[11px] font-medium text-ink-600"
-                          title="Invisible des autres joueurs (le MD le voit) — actif nulle part : ni liste, ni combat"
+                          title={t('party.invisible.des.autres.joueurs.le.md')}
                         >
-                          Caché
+                          {t('party.cache')}
                         </span>
                       )}
                     </span>
@@ -410,7 +415,9 @@ export default function PartyPage() {
                       </span>
                     )}
                   </span>
-                  <span className="shrink-0 text-sm font-medium text-blood-600">Ouvrir →</span>
+                  <span className="shrink-0 text-sm font-medium text-blood-600">
+                    {t('party.ouvrir')}
+                  </span>
                 </Link>
               </li>
             ))}
@@ -419,7 +426,7 @@ export default function PartyPage() {
         {myCharacters.length > 0 && (
           <div className="pt-3">
             <Link to={`/party/${partyId}/create`} className="btn-ghost inline-block text-ink-500">
-              ＋ Nouveau personnage
+              {t('party.nouveau.personnage')}
             </Link>
           </div>
         )}
@@ -427,10 +434,10 @@ export default function PartyPage() {
 
       {/* II — La table : visible de tous, ouvrable par son joueur seul */}
       <section className="register-rise pt-8" style={{ animationDelay: '120ms' }}>
-        <TocHeader numeral="II" title="La table" id="toc-table" />
+        <TocHeader numeral="II" title={t('party.la.table')} id="toc-table" />
         {others.length === 0 ? (
           <p className="border-b border-parchment-200 py-5 text-sm text-ink-400">
-            Personne d'autre à la table pour l'instant — le code d'invitation t'attend en annexes.
+            {t('party.personne.d.autre.a.la.table')}
           </p>
         ) : (
           <ul className="list-none">
@@ -458,15 +465,23 @@ export default function PartyPage() {
 
       {/* III — Outils & annexes */}
       <section className="register-rise pt-8" style={{ animationDelay: '180ms' }}>
-        <TocHeader numeral="III" title="Outils & annexes" id="toc-tools" />
+        <TocHeader numeral="III" title={t('party.outils.annexes')} id="toc-tools" />
         <ul className="list-none">
-          {isGM && <TocLink to={`/party/${partyId}/gm`} label="Table du MD" glyph="🛡" />}
-          <TocLink to={`/party/${partyId}/combat`} label="Combat" glyph="⚔" />
-          {gmaLinked && <TocLink to={`/party/${partyId}/chronique`} label="Chronique" glyph="📜" />}
-          <TocLink to={`/party/${partyId}/npcs`} label="PNJ" glyph="🎭" />
+          {isGM && <TocLink to={`/party/${partyId}/gm`} label={t('nav.table.du.md')} glyph="🛡" />}
+          <TocLink to={`/party/${partyId}/combat`} label={t('party.toc.combat')} glyph="⚔" />
+          {gmaLinked && (
+            <TocLink
+              to={`/party/${partyId}/chronique`}
+              label={t('party.toc.chronique')}
+              glyph="📜"
+            />
+          )}
+          <TocLink to={`/party/${partyId}/npcs`} label={t('party.toc.pnj')} glyph="🎭" />
           {isGM && (
             <li className="flex items-center border-b border-parchment-200 py-3.5 pl-3 pr-3">
-              <span className="text-sm font-medium text-ink-800">Code d'invitation</span>
+              <span className="text-sm font-medium text-ink-800">
+                {t('party.code.d.invitation')}
+              </span>
               <DotLeader />
               <code className="shrink-0 font-mono text-sm font-semibold tracking-[0.2em] text-ink-800">
                 {party.party.inviteCode}
@@ -479,9 +494,15 @@ export default function PartyPage() {
                     : 'border-parchment-300 text-ink-700 hover:border-blood-600 hover:text-blood-600'
                 }`}
                 onClick={copyInvite}
-                aria-label={`Copier le code d'invitation ${party.party.inviteCode}`}
+                aria-label={t('party.copier.le.code.d.invitation.party', {
+                  party_party_inviteCode: party.party.inviteCode,
+                })}
               >
-                {inviteCopied ? 'Copié ✓' : inviteCopyFailed ? 'Copie impossible' : 'Copier'}
+                {inviteCopied
+                  ? t('commun.copie.ok')
+                  : inviteCopyFailed
+                    ? t('commun.copie.impossible')
+                    : t('commun.copier')}
               </button>
             </li>
           )}
@@ -489,17 +510,4 @@ export default function PartyPage() {
       </section>
     </div>
   );
-}
-
-function encumbranceLabel(mode: string): string {
-  switch (mode) {
-    case 'variant':
-      return 'Variante (kg)';
-    case 'standard':
-      return 'Standard (kg)';
-    case 'slots':
-      return 'Emplacements';
-    default:
-      return mode;
-  }
 }

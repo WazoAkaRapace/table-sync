@@ -12,6 +12,7 @@ import { cols } from '../db/projections.ts';
 import { characters, inventory, storageLocations } from '../db/schema.ts';
 import { bus } from '../sync/bus.ts';
 import { characterVisibleTo, isOwnerOrGM, isPartyMember, requireUser } from './helpers.ts';
+import { apiMsg } from './messages.ts';
 
 /**
  * Ensure a character has a default "carried" location. Returns its ID.
@@ -67,12 +68,12 @@ export async function locationRoutes(app: FastifyInstance) {
       if (userId === null) return;
       const drizzle = getDrizzle();
       const char = getCharacter(drizzle, Number(req.params.id));
-      if (!char) return reply.code(404).send({ error: 'character not found' });
+      if (!char) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
       if (!isPartyMember(char.party_id, userId))
-        return reply.code(403).send({ error: 'not a member' });
+        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
       // Hidden character: 404 for everyone but its owner and the GM
       if (!characterVisibleTo(char, userId))
-        return reply.code(404).send({ error: 'character not found' });
+        return reply.code(404).send({ error: apiMsg(req, 'character not found') });
 
       // Ensure carried exists
       ensureCarriedLocation(char.id);
@@ -99,12 +100,15 @@ export async function locationRoutes(app: FastifyInstance) {
       if (userId === null) return;
       const drizzle = getDrizzle();
       const char = getCharacter(drizzle, Number(req.params.id));
-      if (!char) return reply.code(404).send({ error: 'character not found' });
+      if (!char) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
       if (!isOwnerOrGM(char, userId))
-        return reply.code(403).send({ error: 'only the owner or GM can edit this inventory' });
+        return reply
+          .code(403)
+          .send({ error: apiMsg(req, 'only the owner or GM can edit this inventory') });
 
       const body = req.body || ({} as CreateStorageLocationPayload);
-      if (!body.name?.trim()) return reply.code(400).send({ error: 'name is required' });
+      if (!body.name?.trim())
+        return reply.code(400).send({ error: apiMsg(req, 'name is required') });
 
       const maxOrder =
         (
@@ -154,15 +158,17 @@ export async function locationRoutes(app: FastifyInstance) {
         .from(storageLocations)
         .where(eq(storageLocations.id, Number(req.params.locId)))
         .get() as any;
-      if (!loc) return reply.code(404).send({ error: 'location not found' });
+      if (!loc) return reply.code(404).send({ error: apiMsg(req, 'location not found') });
 
       // Don't allow deleting the carried location
       if (loc.type === 'carried')
-        return reply.code(400).send({ error: 'cannot delete carried location' });
+        return reply.code(400).send({ error: apiMsg(req, 'cannot delete carried location') });
 
       const char = getCharacter(drizzle, loc.character_id);
       if (!isOwnerOrGM(char, userId))
-        return reply.code(403).send({ error: 'only the owner or GM can edit this inventory' });
+        return reply
+          .code(403)
+          .send({ error: apiMsg(req, 'only the owner or GM can edit this inventory') });
 
       // Move items back to carried (merge with existing entries to avoid UNIQUE constraint).
       // One transaction: merge/move every entry, then drop the location — a

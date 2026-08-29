@@ -40,6 +40,7 @@ import {
   requireUser,
   validateClassEntries,
 } from './helpers.ts';
+import { apiMsg } from './messages.ts';
 
 /** characters.* + the owner's display_name (JOIN users) — the mappers' shape. */
 const CHARACTER_WITH_OWNER = { ...cols(characters), owner_name: users.displayName };
@@ -97,10 +98,12 @@ export async function characterRoutes(app: FastifyInstance) {
       const userId = requireUser(req, reply);
       if (userId === null) return;
       const partyId = Number(req.params.partyId);
-      if (!isPartyMember(partyId, userId)) return reply.code(403).send({ error: 'not a member' });
+      if (!isPartyMember(partyId, userId))
+        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
 
       const body = req.body || ({} as CreateCharacterPayload);
-      if (!body.name?.trim()) return reply.code(400).send({ error: 'name is required' });
+      if (!body.name?.trim())
+        return reply.code(400).send({ error: apiMsg(req, 'name is required') });
       const ability = (value: number | undefined, fallback: number): number => {
         const score = value ?? fallback;
         if (score < 1 || score > 30) return -1;
@@ -118,7 +121,7 @@ export async function characterRoutes(app: FastifyInstance) {
         if (score < 0) return reply.code(400).send({ error: `${label} must be between 1 and 30` });
       }
       const maxHp = body.maxHp ?? 1;
-      if (maxHp < 1) return reply.code(400).send({ error: 'maxHp must be ≥ 1' });
+      if (maxHp < 1) return reply.code(400).send({ error: apiMsg(req, 'maxHp must be ≥ 1') });
       const currentHp = body.currentHp ?? maxHp;
       const capMult = body.capacityMultiplier ?? 1;
       const skillProficiencies = (body.skillProficiencies ?? []).filter(
@@ -183,7 +186,8 @@ export async function characterRoutes(app: FastifyInstance) {
       const userId = requireUser(req, reply);
       if (userId === null) return;
       const partyId = Number(req.params.partyId);
-      if (!isPartyMember(partyId, userId)) return reply.code(403).send({ error: 'not a member' });
+      if (!isPartyMember(partyId, userId))
+        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
 
       const rows = getDrizzle()
         .select(CHARACTER_WITH_OWNER)
@@ -208,12 +212,12 @@ export async function characterRoutes(app: FastifyInstance) {
       const userId = requireUser(req, reply);
       if (userId === null) return;
       const row = getCharacterWithOwner(getDrizzle(), Number(req.params.id));
-      if (!row) return reply.code(404).send({ error: 'character not found' });
+      if (!row) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
       if (!isPartyMember(row.party_id, userId))
-        return reply.code(403).send({ error: 'not a member' });
+        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
       // 404 (not 403): a hidden character must not betray its existence
       if (!characterVisibleTo(row, userId))
-        return reply.code(404).send({ error: 'character not found' });
+        return reply.code(404).send({ error: apiMsg(req, 'character not found') });
       attachCharacterClasses([row]);
       return reply.send({ character: mapCharacter(row) });
     },
@@ -234,16 +238,18 @@ export async function characterRoutes(app: FastifyInstance) {
         .from(characters)
         .where(eq(characters.id, Number(req.params.id)))
         .get() as any;
-      if (!char) return reply.code(404).send({ error: 'character not found' });
+      if (!char) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
       // Owner or GM can edit
       const isGM = isPartyGM(char.party_id, userId);
       if (char.owner_id !== userId && !isGM) {
-        return reply.code(403).send({ error: 'only the owner or GM can edit' });
+        return reply.code(403).send({ error: apiMsg(req, 'only the owner or GM can edit') });
       }
       // Visibility is the owner's call alone — not even the GM flips it
       const body = req.body || {};
       if (body.hidden !== undefined && char.owner_id !== userId) {
-        return reply.code(403).send({ error: 'seul le propriétaire peut changer la visibilité' });
+        return reply
+          .code(403)
+          .send({ error: apiMsg(req, 'seul le propriétaire peut changer la visibilité') });
       }
       const hiding = body.hidden === true && !char.hidden;
       // Speed is metric meters — halves are valid (small races: 7.5 m)
@@ -251,7 +257,9 @@ export async function characterRoutes(app: FastifyInstance) {
         body.speed !== undefined &&
         (typeof body.speed !== 'number' || !Number.isFinite(body.speed) || body.speed < 0)
       ) {
-        return reply.code(400).send({ error: 'vitesse invalide (nombre positif en mètres)' });
+        return reply
+          .code(400)
+          .send({ error: apiMsg(req, 'vitesse invalide (nombre positif en mètres)') });
       }
       const allowed: (keyof PatchCharacterPayload)[] = [
         'name',
@@ -376,7 +384,7 @@ export async function characterRoutes(app: FastifyInstance) {
         replaceCharacterClasses(char.id, validated.entries);
       }
       if (Object.keys(values).length === 0 && body.classes === undefined) {
-        return reply.code(400).send({ error: 'no fields to update' });
+        return reply.code(400).send({ error: apiMsg(req, 'no fields to update') });
       }
 
       // --- Wild Shape: while shaped, HP edits target the beast's bar.
@@ -751,10 +759,10 @@ export async function characterRoutes(app: FastifyInstance) {
         .from(characters)
         .where(eq(characters.id, Number(req.params.id)))
         .get() as any;
-      if (!char) return reply.code(404).send({ error: 'character not found' });
+      if (!char) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
       const isGM = isPartyGM(char.party_id, userId);
       if (char.owner_id !== userId && !isGM) {
-        return reply.code(403).send({ error: 'only the owner or GM can delete' });
+        return reply.code(403).send({ error: apiMsg(req, 'only the owner or GM can delete') });
       }
       drizzle.delete(characters).where(eq(characters.id, char.id)).run();
       bus.emitChange({

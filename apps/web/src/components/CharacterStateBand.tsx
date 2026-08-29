@@ -30,8 +30,11 @@ import {
   type InventoryEntry,
 } from '@table-sync/shared';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import api from '../api';
+import { appLang } from '../i18n';
+import { classNameLabel, conditionLabel } from '../i18n/labels';
 import { Chip, EncumbranceBar, HpBar } from './ui';
 
 /** Combat snapshot relevant to the band (subset of the page's hubCombat). */
@@ -80,6 +83,7 @@ export default function CharacterStateBand({
   onNotice,
   onConcentrationCheck,
 }: Props) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
 
   // Inline name editing (moved from the old header card)
@@ -116,13 +120,14 @@ export default function CharacterStateBand({
 
   const level = character.level ?? 1;
 
-  // CA — same computation as the Caractéristiques tab
+  // CA — same computation as the Caractéristiques tab (source localisée)
   const dexMod = abilityModifier(character.dexterity ?? 10);
   const acResult = computeAC(
     entries,
     dexMod,
     fightingStylesOf(character).has('defense'),
     character,
+    appLang(),
   );
   const effectiveAC = character.armorClassOverride ?? acResult.ac;
 
@@ -178,10 +183,10 @@ export default function CharacterStateBand({
     if (!trimmed || trimmed === character.name) return;
     try {
       await api.patch(`/api/characters/${character.id}`, { name: trimmed });
-      onNotice('Nom mis à jour');
+      onNotice(t('band.nom.mis.a.jour'));
       await onSaved();
     } catch {
-      onError('Erreur de mise à jour');
+      onError(t('band.erreur.de.mise.a.jour'));
     }
   };
 
@@ -204,12 +209,14 @@ export default function CharacterStateBand({
       if (res?.data?.concentrationCheck) onConcentrationCheck(res.data.concentrationCheck);
       if (res?.data?.concentrationBroken) {
         onNotice(
-          `🌀 Concentration rompue : ${res.data.concentrationBroken} — le sort en cours est interrompu`,
+          t('survie.concentration.rompue.condition', {
+            condition: conditionLabel(res.data.concentrationBroken),
+          }),
         );
       }
       await onSaved();
     } catch {
-      onError('Erreur de mise à jour');
+      onError(t('band.erreur.de.mise.a.jour'));
     } finally {
       setHpPending(null);
       setTempPending(null);
@@ -294,7 +301,7 @@ export default function CharacterStateBand({
   return (
     <>
       <section
-        aria-label="État du personnage"
+        aria-label={t('band.etat.du.personnage')}
         className="-mx-4 px-4 sm:mx-0 sm:px-0 border-b border-parchment-200"
       >
         <div className="py-2 sm:py-2.5 space-y-1.5">
@@ -322,7 +329,7 @@ export default function CharacterStateBand({
                         if (e.key === 'Escape') setEditingName(false);
                       }}
                       autoFocus
-                      aria-label="Nom du personnage"
+                      aria-label={t('band.nom.du.personnage')}
                     />
                   ) : canEdit ? (
                     <button
@@ -332,7 +339,7 @@ export default function CharacterStateBand({
                         setEditingName(true);
                       }}
                       className="hover:text-blood-600 transition-colors truncate"
-                      title="Cliquer pour renommer"
+                      title={t('band.cliquer.pour.renommer')}
                     >
                       {character.name}
                     </button>
@@ -344,9 +351,11 @@ export default function CharacterStateBand({
                   <span>
                     {classesOf(character).length > 1
                       ? `${classesOf(character)
-                          .map((c) => `${c.classKey} ${c.level}`)
+                          .map((c) => `${classNameLabel(c.classKey)} ${c.level}`)
                           .join(' / ')}`
-                      : `${character.characterClass ?? '—'} · Niv ${level}`}
+                      : `${classNameLabel(character.characterClass ?? '—')} ${t('band.niv.level', {
+                          level,
+                        })}`}
                     {character.race ? ` · ${character.race}` : ''}
                   </span>
                   {character.concentrating && (
@@ -354,8 +363,8 @@ export default function CharacterStateBand({
                       type="button"
                       onClick={() => onNavigate('survival')}
                       className="shrink-0 hover:scale-110 transition-transform"
-                      aria-label="En concentration — ouvrir la survie"
-                      title="Concentration en cours"
+                      aria-label={t('band.en.concentration.ouvrir.la.survie')}
+                      title={t('band.concentration.en.cours')}
                     >
                       🌀
                     </button>
@@ -363,8 +372,8 @@ export default function CharacterStateBand({
                   {character.inspiration && (
                     <span
                       className="shrink-0"
-                      title="Inspiration"
-                      aria-label="Inspiration acquise"
+                      title={t('band.inspiration')}
+                      aria-label={t('band.inspiration.acquise')}
                       role="img"
                     >
                       ✨
@@ -380,28 +389,36 @@ export default function CharacterStateBand({
                 className="flex-1 min-w-0 lg:w-56 lg:flex-none"
                 title={
                   shaped
-                    ? `PV de la forme animale — PV réels : ${character.currentHp}/${character.maxHp}`
-                    : `Points de vie : ${displayHp}/${hpMax}${displayTemp > 0 ? ` (+${displayTemp} temporaires)` : ''}`
+                    ? t('band.pv.de.la.forme.animale', {
+                        hp: character.currentHp,
+                        maxHp: character.maxHp,
+                      })
+                    : `${t('band.points.de.vie.displayhp.hpmax', { displayHp, hpMax })}${
+                        displayTemp > 0 ? t('band.plus.n.temporaires', { displayTemp }) : ''
+                      }`
                 }
               >
                 <HpBar current={displayHp} max={hpMax} temp={displayTemp} size="sm" showText />
               </span>
               {displayTemp > 0 && (
-                <Chip tone="blue" title="PV temporaires">
+                <Chip tone="blue" title={t('band.pv.temporaires')}>
                   +{displayTemp}
                 </Chip>
               )}
               {shaped && (
                 <Chip
                   tone="green"
-                  title={`PV réels du personnage : ${character.currentHp}/${character.maxHp}`}
+                  title={t('band.pv.reels.du.personnage.character.currenthp', {
+                    character_currentHp: character.currentHp,
+                    character_maxHp: character.maxHp,
+                  })}
                 >
                   🐺 {character.currentHp}
                 </Chip>
               )}
               {character.currentHp <= 0 && (character.tempHp ?? 0) <= 0 && (
-                <Chip tone="red" title="0 PV — jets de sauvegarde contre la mort (onglet Survie)">
-                  💀 À terre
+                <Chip tone="red" title={t('band.0.pv.jets.de.sauvegarde.contre')}>
+                  {t('band.a.terre')}
                 </Chip>
               )}
               {canEdit ? (
@@ -409,15 +426,17 @@ export default function CharacterStateBand({
                   type="button"
                   onClick={() => onNavigate('stats')}
                   className="font-mono text-sm font-semibold text-ink-800 bg-parchment-100 border border-parchment-200 rounded-md px-2 py-1 hover:border-blood-400 transition-colors"
-                  title={character.armorClassOverride ? 'CA manuelle' : acResult.source}
-                  aria-label={`Classe d'armure ${effectiveAC} — ouvrir les caractéristiques`}
+                  title={character.armorClassOverride ? t('band.ca.manuelle') : acResult.source}
+                  aria-label={t('band.classe.d.armure.effectiveac.ouvrir.les', {
+                    effectiveAC,
+                  })}
                 >
                   🛡 {effectiveAC}
                 </button>
               ) : (
                 <span
                   className="font-mono text-sm font-semibold text-ink-800 bg-parchment-100 border border-parchment-200 rounded-md px-2 py-1"
-                  title={character.armorClassOverride ? 'CA manuelle' : acResult.source}
+                  title={character.armorClassOverride ? t('band.ca.manuelle') : acResult.source}
                 >
                   🛡 {effectiveAC}
                 </span>
@@ -427,23 +446,27 @@ export default function CharacterStateBand({
                   type="button"
                   onClick={() => onNavigate('spells')}
                   className="font-mono text-sm font-semibold text-gold-700 bg-gold-100/70 border border-gold-300 rounded-md px-2 py-1 hover:border-gold-500 transition-colors"
-                  title={`${slotsLeft} emplacements de sort disponibles sur ${slotsTotal} — ouvrir les sorts`}
-                  aria-label={`${slotsLeft} emplacements de sort sur ${slotsTotal} — ouvrir les sorts`}
+                  title={t('band.slotsleft.emplacements.de.sort.disponibles.sur', {
+                    slotsLeft: slotsLeft,
+                    slotsTotal: slotsTotal,
+                  })}
+                  aria-label={t('band.slotsleft.emplacements.de.sort.sur.slotstotal', {
+                    slotsLeft: slotsLeft,
+                    slotsTotal: slotsTotal,
+                  })}
                 >
                   ✨ {slotsLeft}/{slotsTotal}
                 </button>
               )}
               {stateCount > 0 && (
-                <Chip tone="amber">
-                  ⚠ {stateCount} état{stateCount > 1 ? 's' : ''}
-                </Chip>
+                <Chip tone="amber">{t('band.etats.count', { count: stateCount })}</Chip>
               )}
               <button
                 type="button"
                 onClick={() => setExpanded((e) => !e)}
                 className="shrink-0 w-8 h-8 rounded-lg text-ink-500 hover:bg-parchment-100 transition-colors flex items-center justify-center"
                 aria-expanded={expanded}
-                aria-label="Détails de l'état du personnage"
+                aria-label={t('band.details.de.l.etat.du.personnage')}
               >
                 {expanded ? '⌃' : '⌄'}
               </button>
@@ -472,42 +495,42 @@ export default function CharacterStateBand({
             <div className="border-t border-parchment-200 pt-2 space-y-2">
               <div className="flex flex-wrap items-center gap-1.5">
                 {conditions.length === 0 && exhaustion === 0 && stateCount === 0 && (
-                  <span className="text-xs text-ink-500">Aucun état actif</span>
+                  <span className="text-xs text-ink-500">{t('band.aucun.etat.actif')}</span>
                 )}
                 {conditions.map((c) => (
                   <Chip key={c} tone="amber">
-                    {c}
+                    {conditionLabel(c)}
                   </Chip>
                 ))}
                 {exhaustion > 0 && (
-                  <Chip tone="red" title="Épuisement — malus cumulés (onglet Survie)">
-                    Épuisement {exhaustion}
+                  <Chip tone="red" title={t('band.epuisement.malus.cumules.onglet.survie')}>
+                    {t('band.epuisement.level', { level: exhaustion })}
                   </Chip>
                 )}
                 {character.foodDays > 0 && (
-                  <Chip tone="amber" title="Jours sans nourriture (onglet Survie)">
-                    🍽 {character.foodDays} j sans nourriture
+                  <Chip tone="amber" title={t('band.jours.sans.nourriture')}>
+                    {t('band.j.sans.nourriture', { days: character.foodDays })}
                   </Chip>
                 )}
                 {character.waterDays > 0 && (
-                  <Chip tone="red" title="Jours sans eau (onglet Survie)">
-                    💧 {character.waterDays} j sans eau
+                  <Chip tone="red" title={t('band.jours.sans.eau')}>
+                    {t('band.j.sans.eau', { days: character.waterDays })}
                   </Chip>
                 )}
-                {character.inspiration && <Chip tone="gold">✨ Inspiration</Chip>}
+                {character.inspiration && <Chip tone="gold">{t('band.inspiration')}</Chip>}
                 {canEdit && stateCount > 0 && (
                   <button
                     type="button"
                     onClick={() => onNavigate('survival')}
                     className="btn-ghost text-xs px-2 py-1"
                   >
-                    Gérer les états →
+                    {t('band.gerer.les.etats')}
                   </button>
                 )}
               </div>
               {slotRows.length > 0 && (
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-xs font-medium text-ink-600">Emplacements :</span>
+                  <span className="text-xs font-medium text-ink-600">{t('band.emplacements')}</span>
                   {allSlotRows.map((r) => (
                     <span
                       key={r.pact ? `p${r.level}` : `s${r.level}`}
@@ -516,9 +539,12 @@ export default function CharacterStateBand({
                           ? 'bg-gold-100 border-gold-300 text-gold-700'
                           : 'bg-parchment-100 border-parchment-200 text-ink-600'
                       }`}
-                      title={`${
-                        r.pact ? 'Magie de pacte' : 'Incantation'
-                      } — niveau ${r.level} : ${r.left}/${r.max} emplacements`}
+                      title={t('band.r.pact.magie.de.pacte.niveau', {
+                        r_pact: r.pact ? t('sorts.magie.de.pacte') : t('sorts.incantation'),
+                        r_level: r.level,
+                        r_left: r.left,
+                        r_max: r.max,
+                      })}
                     >
                       {r.pact ? '☾' : 'N'}
                       {r.level} {r.left}/{r.max}
@@ -529,13 +555,13 @@ export default function CharacterStateBand({
               {canEdit && (
                 <div className="flex items-center gap-1.5">
                   <label htmlFor={hpInputId} className="text-xs font-medium text-ink-600 shrink-0">
-                    {shaped ? 'PV (forme)' : 'PV'}
+                    {shaped ? t('band.pv.forme') : t('band.pv')}
                   </label>
                   <button
                     type="button"
                     onClick={() => damageHp(5)}
                     className="w-11 h-11 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 font-semibold flex items-center justify-center transition-colors"
-                    aria-label="Blesser de 5"
+                    aria-label={t('band.blesser.de.5')}
                   >
                     −5
                   </button>
@@ -543,7 +569,7 @@ export default function CharacterStateBand({
                     type="button"
                     onClick={() => damageHp(1)}
                     className="w-11 h-11 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 font-semibold flex items-center justify-center transition-colors"
-                    aria-label="Blesser de 1"
+                    aria-label={t('band.blesser.de.1')}
                   >
                     −1
                   </button>
@@ -565,7 +591,7 @@ export default function CharacterStateBand({
                     type="button"
                     onClick={() => queueHp(displayHp + 1)}
                     className="w-11 h-11 rounded-lg bg-green-100 hover:bg-green-200 text-green-700 font-semibold flex items-center justify-center transition-colors"
-                    aria-label="Soigner de 1"
+                    aria-label={t('band.soigner.de.1')}
                   >
                     +1
                   </button>
@@ -573,7 +599,7 @@ export default function CharacterStateBand({
                     type="button"
                     onClick={() => queueHp(displayHp + 5)}
                     className="w-11 h-11 rounded-lg bg-green-100 hover:bg-green-200 text-green-700 font-semibold flex items-center justify-center transition-colors"
-                    aria-label="Soigner de 5"
+                    aria-label={t('band.soigner.de.5')}
                   >
                     +5
                   </button>
@@ -592,7 +618,7 @@ export default function CharacterStateBand({
         <div className="band-drop fixed top-14 inset-x-0 z-20">
           <div className="max-w-6xl mx-auto px-4">
             <section
-              aria-label="État du personnage (épinglé)"
+              aria-label={t('band.etat.du.personnage.epingle')}
               className="-mx-4 px-4 sm:mx-0 sm:px-0 bg-parchment-50/95 backdrop-blur border-b border-parchment-200 shadow-md"
             >
               <div className="py-1.5 space-y-1.5">
@@ -610,7 +636,10 @@ export default function CharacterStateBand({
                   <div className="flex items-center gap-1.5 ml-auto shrink-0">
                     <span
                       className="w-24 sm:w-28 shrink-0"
-                      title={`Points de vie : ${displayHp}/${hpMax}`}
+                      title={t('band.points.de.vie.displayhp.hpmax', {
+                        displayHp: displayHp,
+                        hpMax: hpMax,
+                      })}
                     >
                       <HpBar
                         current={displayHp}
@@ -629,9 +658,7 @@ export default function CharacterStateBand({
                       </span>
                     )}
                     {stateCount > 0 && (
-                      <Chip tone="amber">
-                        ⚠ {stateCount} état{stateCount > 1 ? 's' : ''}
-                      </Chip>
+                      <Chip tone="amber">{t('band.etats.count', { count: stateCount })}</Chip>
                     )}
                   </div>
                 </div>
@@ -667,6 +694,7 @@ function CombatLine({
   isCaster: boolean;
   live?: boolean;
 }) {
+  const { t } = useTranslation();
   if (!combat) return null;
   return (
     <div role={live ? 'status' : undefined} aria-live={live ? 'polite' : undefined}>
@@ -677,11 +705,11 @@ function CombatLine({
             onClick={onOpenInitiative}
             className="btn-primary w-full py-2 lg:hidden"
           >
-            🎲 Lance ton initiative !
+            {t('band.lance.ton.initiative')}
           </button>
           {combatHref && (
             <Link to={combatHref} className="btn-primary hidden lg:flex justify-center flex-1 py-2">
-              🎲 Initiative — ouvrir le combat
+              {t('band.initiative.ouvrir.le.combat')}
             </Link>
           )}
         </div>
@@ -692,31 +720,34 @@ function CombatLine({
         <div
           className={`band-rise grid gap-2 lg:flex lg:w-fit ${isCaster ? 'grid-cols-2' : 'grid-cols-1'}`}
         >
-          <span className="sr-only">À toi de jouer</span>
+          <span className="sr-only">{t('band.a.toi.de.jouer')}</span>
           <button
             type="button"
             onClick={() => onNavigate('survival')}
             className="btn-secondary py-2"
-            aria-label="Attaquer — ouvrir les attaques"
+            aria-label={t('band.attaquer.ouvrir.les.attaques')}
           >
-            ⚔ Attaquer
+            {t('band.attaquer')}
           </button>
           {isCaster && (
             <button
               type="button"
               onClick={() => onNavigate('spells')}
               className="btn-secondary py-2"
-              aria-label="Lancer un sort — ouvrir les sorts"
+              aria-label={t('band.lancer.un.sort.ouvrir.les.sorts')}
             >
-              ✨ Lancer un sort
+              {t('band.lancer.un.sort')}
             </button>
           )}
         </div>
       ) : (
         <p className="text-xs text-ink-500 truncate">
           {combat.status === 'active' && combat.currentCombatantName
-            ? `⚔ Tour de ${combat.currentCombatantName} · Manche ${combat.round}`
-            : '⚔ Combat en préparation'}
+            ? t('band.tour.de.nom.manche.round', {
+                name: combat.currentCombatantName,
+                round: combat.round,
+              })
+            : t('band.combat.en.preparation')}
         </p>
       )}
     </div>

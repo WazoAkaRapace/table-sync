@@ -5,7 +5,7 @@
  */
 
 import {
-  ABILITY_SHORT_FR,
+  type ABILITY_SHORT_FR,
   abilityModifier,
   type Character,
   type CharacterSpell,
@@ -24,9 +24,11 @@ import {
   spellSaveDC,
 } from '@table-sync/shared';
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import api from '../api';
 import CastSpellSheet from '../components/CastSpellSheet';
 import { BottomSheet, Chip, ErrorMsg } from '../components/ui';
+import { abilityShort, classNameLabel, damageType, schoolLabel } from '../i18n/labels';
 
 interface Props {
   character: Character;
@@ -64,6 +66,7 @@ const SCHOOL_TEXT: Record<string, string> = {
 };
 
 export default function CharacterSpellsTab({ character, charId, onSaved, onError }: Props) {
+  const { t } = useTranslation();
   const [charSpells, setCharSpells] = useState<CharacterSpell[]>([]);
   const [loadingSpells, setLoadingSpells] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -298,8 +301,8 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
     } catch (err) {
       onError(
         err instanceof Error && err.message.includes('UNIQUE')
-          ? 'Sort déjà connu'
-          : "Erreur lors de l'ajout du sort",
+          ? t('sorts.sort.deja.connu')
+          : t('sorts.erreur.lors.de.l.ajout.du.sort'),
       );
     } finally {
       setAddingSpellId(null);
@@ -314,7 +317,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
       await fetchCharSpells();
       await onSaved();
     } catch {
-      onError('Erreur lors de la suppression');
+      onError(t('sorts.erreur.lors.de.la.suppression'));
     }
   };
 
@@ -323,7 +326,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
       await api.patch(`/api/character-spells/${linkId}`, { prepared: !prepared });
       await fetchCharSpells();
     } catch {
-      onError('Erreur de mise à jour');
+      onError(t('sorts.erreur.de.mise.a.jour'));
     }
   };
 
@@ -337,7 +340,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
       await api.patch(`/api/characters/${charId}`, { spellSlotsUsed: used });
       await onSaved();
     } catch {
-      onError('Erreur de mise à jour');
+      onError(t('sorts.erreur.de.mise.a.jour'));
     }
   };
 
@@ -350,7 +353,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
       await api.patch(`/api/characters/${charId}`, { spellSlotsUsed: used });
       await onSaved();
     } catch {
-      onError('Erreur de mise à jour');
+      onError(t('sorts.erreur.de.mise.a.jour'));
     }
   };
 
@@ -363,7 +366,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
       await api.patch(`/api/characters/${charId}`, { pactSlotsUsed: used });
       await onSaved();
     } catch {
-      onError('Erreur de mise à jour');
+      onError(t('sorts.erreur.de.mise.a.jour'));
     }
   };
 
@@ -376,7 +379,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
       await api.patch(`/api/characters/${charId}`, { pactSlotsUsed: used });
       await onSaved();
     } catch {
-      onError('Erreur de mise à jour');
+      onError(t('sorts.erreur.de.mise.a.jour'));
     }
   };
 
@@ -388,7 +391,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
       });
       await onSaved();
     } catch {
-      onError('Erreur de mise à jour');
+      onError(t('sorts.erreur.de.mise.a.jour'));
     }
   };
 
@@ -437,7 +440,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
         await onSaved();
       } catch {
         ok = false;
-        onError('Erreur lors du lancement');
+        onError(t('sorts.erreur.lors.du.lancement'));
       }
     }
     if (ok) {
@@ -497,11 +500,8 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
     return (
       <div className="card p-8 text-center space-y-3">
         <p className="text-4xl">✨</p>
-        <p className="text-ink-500">Cette classe ne lance pas de sorts.</p>
-        <p className="text-xs text-ink-400">
-          Définissez une classe de lanceur de sorts dans l'onglet Caractéristiques pour accéder aux
-          sorts.
-        </p>
+        <p className="text-ink-500">{t('sorts.cette.classe.ne.lance.pas.de')}</p>
+        <p className="text-xs text-ink-400">{t('sorts.definissez.une.classe.de.lanceur.de')}</p>
       </div>
     );
   }
@@ -538,28 +538,30 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
       {isCaster && (
         <section className="card p-4 sm:p-5 space-y-2.5">
           <div className="flex items-center justify-between gap-2">
-            <h2 className="section-title">Emplacements de sort</h2>
+            <h2 className="section-title">{t('sorts.emplacements.de.sort')}</h2>
             <button
               type="button"
               onClick={restoreAll}
               className="text-xs text-blood-600 hover:underline px-1.5 py-1.5 -mr-1.5"
             >
-              ↻ Restaurer tout
+              {t('sorts.restaurer.tout')}
             </button>
           </div>
           {castingLines.length > 0 &&
             (castingLines.length === 1 ? (
               <p className="text-xs text-ink-500">
-                DD <span className="font-mono font-semibold">{castingLines[0].dc}</span> · Attaque{' '}
+                {t('sorts.dd')}{' '}
+                <span className="font-mono font-semibold">{castingLines[0].dc}</span> ·{' '}
+                {t('sorts.attaque')}{' '}
                 <span className="font-mono font-semibold">{castingLines[0].atk}</span> ·{' '}
-                {ABILITY_SHORT_FR[castingLines[0].ability]}
+                {abilityShort(castingLines[0].ability)}
               </p>
             ) : (
               <p className="text-xs text-ink-500 leading-relaxed">
                 {castingLines
                   .map(
                     (l) =>
-                      `${l.name} : DD ${l.dc} · att. ${l.atk} · ${ABILITY_SHORT_FR[l.ability]}`,
+                      `${classNameLabel(l.name)} : ${t('sorts.dd')} ${l.dc} · ${t('sorts.att')} ${l.atk} · ${abilityShort(l.ability)}`,
                   )
                   .join(' — ')}
               </p>
@@ -570,7 +572,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
               slotsUsed={slotsUsed}
               onSpend={spendSlot}
               onRestore={restoreSlot}
-              label={railsLabeled ? 'Incantation' : null}
+              label={railsLabeled ? t('sorts.incantation') : null}
             />
           )}
           {showPactRail && (
@@ -579,9 +581,9 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
               slotsUsed={pactUsed}
               onSpend={spendPact}
               onRestore={restorePact}
-              label={railsLabeled ? 'Magie de pacte' : null}
+              label={railsLabeled ? t('sorts.magie.de.pacte') : null}
               tone="gold"
-              note="recharge au repos court"
+              note={t('sorts.recharge.au.repos.court')}
             />
           )}
         </section>
@@ -593,7 +595,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
         <section className="card p-4 sm:p-5 space-y-3 min-w-0">
           <div className="flex items-center justify-between">
             <h2 className="section-title flex items-center gap-2">
-              Sorts connus{' '}
+              {t('sorts.sorts.connus')}{' '}
               <span className="text-ink-400 text-sm font-normal">({charSpells.length})</span>
             </h2>
             {/* Mobile: open catalog as bottom sheet */}
@@ -602,7 +604,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
               onClick={() => setCatalogOpen(true)}
               className="btn-primary text-sm px-3 py-1.5 lg:hidden"
             >
-              + Ajouter
+              {t('sorts.ajouter')}
             </button>
           </div>
 
@@ -618,7 +620,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                     : 'bg-parchment-100 text-ink-600 hover:bg-parchment-200'
                 }`}
               >
-                Tous
+                {t('sorts.tous')}
               </button>
               {limits.map((l) => {
                 const count = preparedCountFor(l.classKey);
@@ -639,9 +641,12 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                           ? 'bg-red-50 text-red-700 border border-red-300'
                           : 'bg-parchment-100 text-ink-600 hover:bg-parchment-200'
                     }`}
-                    title={`Sorts préparés de ${l.classKey} — les tours de magie sont toujours disponibles`}
+                    title={t('sorts.sorts.prepares.de.l.classkey.les', {
+                      l_classKey: classNameLabel(l.classKey),
+                    })}
                   >
-                    {limits.length > 1 ? `${l.classKey} ` : ''}Préparés {count} / {l.limit}
+                    {limits.length > 1 ? `${classNameLabel(l.classKey)} ` : ''}
+                    {t('sorts.prepares.prepared.limit', { prepared: count, limit: l.limit })}
                   </button>
                 );
               })}
@@ -650,17 +655,17 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
 
           {loadError ? (
             <div className="space-y-2">
-              <ErrorMsg message="Impossible de charger tes sorts. Vérifie la connexion puis réessaie." />
+              <ErrorMsg message={t('sorts.impossible.de.charger.tes.sorts')} />
               <button
                 type="button"
                 onClick={() => fetchCharSpells()}
                 className="btn-ghost text-blood-600 text-sm px-3 py-1.5"
               >
-                Réessayer
+                {t('sorts.reessayer')}
               </button>
             </div>
           ) : loadingSpells ? (
-            <div role="status" aria-label="Chargement des sorts" className="space-y-1.5">
+            <div role="status" aria-label={t('sorts.chargement.des.sorts')} className="space-y-1.5">
               {[0, 1, 2].map((i) => (
                 <SpellRowSkeleton key={i} />
               ))}
@@ -668,13 +673,13 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
           ) : spellsByLevel.length === 0 ? (
             <p className="text-sm text-ink-400 italic">
               {listFilter === 'prepared' ? (
-                'Aucun sort préparé. Touchez une étoile pour préparer un sort.'
+                t('sorts.aucun.sort.prepare.touchez.une.etoile')
               ) : (
                 <>
-                  Aucun sort.{' '}
+                  {t('sorts.aucun.sort')}{' '}
                   {typeof window !== 'undefined' && window.innerWidth >= 1024
-                    ? 'Parcourez le grimoire →'
-                    : 'Cliquez sur « Ajouter » pour parcourir le grimoire.'}
+                    ? t('sorts.parcourez.le.grimoire')
+                    : t('sorts.cliquez.sur.ajouter.pour.parcourir.le.grimoire')}
                 </>
               )}
             </p>
@@ -687,16 +692,20 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                   <div key={group.level}>
                     <div className="flex items-baseline justify-between gap-2 mb-1.5">
                       <span className="text-xs font-semibold text-ink-400 uppercase tracking-wide">
-                        {group.level === 0 ? 'Tours de magie' : `Niveau ${group.level}`}
+                        {group.level === 0
+                          ? t('sorts.tours.de.magie')
+                          : t('sorts.niveau.level', { level: group.level })}
                       </span>
                       {group.level === 0
-                        ? isCaster && <span className="text-[11px] text-ink-500">à volonté</span>
+                        ? isCaster && (
+                            <span className="text-[11px] text-ink-500">{t('sorts.a.volonte')}</span>
+                          )
                         : maxSlots > 0 && (
                             <span className="text-[11px] text-ink-500">
                               <span className="font-mono">
                                 {remaining} / {maxSlots}
                               </span>{' '}
-                              emplacements
+                              {t('sorts.emplacements')}
                             </span>
                           )}
                     </div>
@@ -716,25 +725,22 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                             <SwipeToReveal
                               reveal={canRemove}
                               onAction={() => removeSpell(cs.id)}
-                              actionLabel={`Oublier ${name}`}
+                              actionLabel={t('sorts.oublier.name', { name: name })}
                             >
                               <div className="bg-parchment-50 border border-parchment-200 rounded-lg flex items-center gap-1 pl-2 pr-1.5 py-1 min-h-[52px]">
                                 <span
                                   className={`h-2.5 w-2.5 rounded-full shrink-0 ${
                                     SCHOOL_DOT[spell.school] ?? 'bg-parchment-400'
                                   }`}
-                                  title={
-                                    SPELL_SCHOOL_LABELS_FR[spell.school as SpellSchool] ??
-                                    spell.school
-                                  }
+                                  title={schoolLabel(spell.school as SpellSchool) ?? spell.school}
                                   aria-hidden="true"
                                 />
                                 {isDomain ? (
                                   <span
                                     className="w-11 h-11 flex items-center justify-center text-lg text-gold-600 shrink-0"
-                                    title="Sort de domaine — toujours préparé, ne compte pas dans la limite"
+                                    title={t('sorts.sort.de.domaine.toujours.prepare.ne')}
                                     role="img"
-                                    aria-label="Sort de domaine toujours préparé"
+                                    aria-label={t('sorts.sort.de.domaine.toujours.prepare')}
                                   >
                                     ◆
                                   </span>
@@ -747,8 +753,14 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                                         ? 'text-gold-600 hover:text-gold-700'
                                         : 'text-ink-300 hover:text-ink-500'
                                     }`}
-                                    aria-label={cs.prepared ? 'Sort préparé' : 'Sort non préparé'}
-                                    title={cs.prepared ? 'Préparé' : 'Non préparé'}
+                                    aria-label={
+                                      cs.prepared
+                                        ? t('sorts.sort.prepare')
+                                        : t('sorts.sort.non.prepare')
+                                    }
+                                    title={
+                                      cs.prepared ? t('sorts.prepare') : t('sorts.non.prepare')
+                                    }
                                   >
                                     {cs.prepared ? '★' : '☆'}
                                   </button>
@@ -765,7 +777,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                                   <span className="flex items-center gap-1.5 text-xs text-ink-400 min-w-0">
                                     {isMultiClass && cs.classSource && (
                                       <span className="shrink-0 text-[10px] uppercase tracking-wide text-ink-300">
-                                        {cs.classSource}
+                                        {classNameLabel(cs.classSource)}
                                       </span>
                                     )}
                                     {spell.castingTime && (
@@ -780,7 +792,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                                     {spell.concentration && (
                                       <span
                                         className="shrink-0 text-indigo-500 text-[11px]"
-                                        title="Nécessite de la concentration"
+                                        title={t('sorts.necessite.de.la.concentration')}
                                       >
                                         🌀
                                       </span>
@@ -788,7 +800,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                                     {spell.ritual && (
                                       <span
                                         className="shrink-0 text-purple-600 text-[11px]"
-                                        title="Lançable en rituel"
+                                        title={t('sorts.lancable.en.rituel')}
                                       >
                                         ⚗
                                       </span>
@@ -799,8 +811,8 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                                   type="button"
                                   onClick={() => startCast(spell, cs.id)}
                                   className="w-11 h-11 shrink-0 rounded-xl bg-parchment-100 hover:bg-gold-100 border border-parchment-200 text-ink-500 hover:text-gold-600 flex items-center justify-center text-base transition-colors"
-                                  aria-label={`Lancer ${name}`}
-                                  title="Lancer le sort"
+                                  aria-label={t('sorts.lancer.name', { name: name })}
+                                  title={t('sorts.lancer.le.sort')}
                                 >
                                   🪄
                                 </button>
@@ -810,7 +822,8 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                                   <p>{spell.description}</p>
                                   {spell.higherLevel && (
                                     <p className="text-ink-400 italic">
-                                      <strong>Aux niveaux supérieurs :</strong> {spell.higherLevel}
+                                      <strong>{t('sorts.aux.niveaux.superieurs')}</strong>{' '}
+                                      {spell.higherLevel}
                                     </p>
                                   )}
                                   <SpellStatBadges
@@ -830,14 +843,14 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                                             onClick={cancelForget}
                                             className="text-[11px] text-ink-400 hover:text-ink-600 px-1.5 py-1.5"
                                           >
-                                            Annuler
+                                            {t('sorts.annuler')}
                                           </button>
                                           <button
                                             type="button"
                                             onClick={() => removeSpell(cs.id)}
                                             className="px-2.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold pulse-warn"
                                           >
-                                            Oublier définitivement
+                                            {t('sorts.oublier.definitivement')}
                                           </button>
                                         </span>
                                       ) : (
@@ -846,7 +859,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                                           onClick={() => armForget(cs.id)}
                                           className="text-[11px] text-blood-600 hover:underline px-1.5 py-1.5"
                                         >
-                                          Oublier ce sort
+                                          {t('sorts.oublier.ce.sort')}
                                         </button>
                                       )}
                                     </div>
@@ -867,7 +880,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
 
         {/* Desktop: catalog panel always visible on the right */}
         <section className="hidden lg:block space-y-3">
-          <h2 className="section-title">Grimoire</h2>
+          <h2 className="section-title">{t('sorts.grimoire')}</h2>
           <div className="card p-4 space-y-3 max-h-[70vh] overflow-y-auto">
             <SpellCatalog {...catalogProps} />
           </div>
@@ -875,7 +888,11 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
       </div>
 
       {/* Mobile: catalog as bottom sheet */}
-      <BottomSheet open={catalogOpen} onClose={() => setCatalogOpen(false)} title="Grimoire">
+      <BottomSheet
+        open={catalogOpen}
+        onClose={() => setCatalogOpen(false)}
+        title={t('sorts.grimoire')}
+      >
         <SpellCatalog {...catalogProps} />
       </BottomSheet>
 
@@ -952,6 +969,7 @@ function SlotRail({
   /** Pact pool rides the gold accent (or = magie). */
   tone?: 'default' | 'gold';
 }) {
+  const { t } = useTranslation();
   const [openLevel, setOpenLevel] = useState<number | null>(null);
   const levels = slots
     .map((max, i) => ({ level: i + 1, max, used: slotsUsed[i] ?? 0 }))
@@ -980,7 +998,12 @@ function SlotRail({
               type="button"
               onClick={() => setOpenLevel(openLevel === lvl ? null : lvl)}
               aria-pressed={openLevel === lvl}
-              aria-label={`Niveau ${lvl} : ${remaining} emplacement${remaining > 1 ? 's' : ''} disponible${remaining > 1 ? 's' : ''} sur ${max} — corriger`}
+              aria-label={t('sorts.niveau.lvl.remaining.emplacement.remaining.1', {
+                lvl: lvl,
+                remaining: remaining,
+                s: remaining > 1 ? 's' : '',
+                max: max,
+              })}
               className={`shrink-0 min-w-[56px] min-h-[48px] px-2.5 py-1.5 rounded-xl flex flex-col items-center justify-center gap-1.5 transition-colors ${
                 tone === 'gold' ? 'ring-1 ring-gold-300' : ''
               } ${
@@ -1002,7 +1025,7 @@ function SlotRail({
       {open && (
         <div className="flex items-center justify-between gap-2 bg-parchment-100 rounded-xl px-3 py-1.5">
           <span className="text-xs font-medium text-ink-600">
-            Niveau {open.level} —{' '}
+            {t('sorts.niveau.level', { level: open.level })} —{' '}
             <span className="font-mono">
               {open.max - open.used} / {open.max}
             </span>
@@ -1013,7 +1036,9 @@ function SlotRail({
               onClick={() => onRestore(open.level)}
               disabled={open.used <= 0}
               className="w-9 h-9 rounded-lg bg-parchment-200 hover:bg-parchment-300 disabled:opacity-30 text-base font-medium flex items-center justify-center transition-colors"
-              aria-label={`Restaurer un emplacement de niveau ${open.level}`}
+              aria-label={t('sorts.restaurer.un.emplacement.de.niveau.open', {
+                open_level: open.level,
+              })}
             >
               −
             </button>
@@ -1022,7 +1047,9 @@ function SlotRail({
               onClick={() => onSpend(open.level)}
               disabled={open.max - open.used <= 0}
               className="w-9 h-9 rounded-lg bg-parchment-200 hover:bg-parchment-300 disabled:opacity-30 text-base font-medium flex items-center justify-center transition-colors"
-              aria-label={`Dépenser un emplacement de niveau ${open.level}`}
+              aria-label={t('sorts.depenser.un.emplacement.de.niveau.open', {
+                open_level: open.level,
+              })}
             >
               +
             </button>
@@ -1048,11 +1075,11 @@ function SpellRowSkeleton() {
   );
 }
 
-// DC success type labels
-const DC_SUCCESS_FR: Record<string, string> = {
-  none: 'Aucun effet en cas de réussite',
-  half: 'Moitié des dégâts en cas de réussite',
-  other: 'Effet réduit en cas de réussite',
+// DC success type label KEYS — resolved through t() at render time
+const DC_SUCCESS_KEYS: Record<string, string> = {
+  none: 'sorts.aucun.effet.en.cas.de.reussite',
+  half: 'sorts.moitie.des.degats.en.cas.de.reussite',
+  other: 'sorts.effet.reduit.en.cas.de.reussite',
 };
 
 /** Parse JSON safely, returning null on failure. */
@@ -1069,7 +1096,7 @@ function safeParse<T>(json: string | null): T | null {
 function computeDamageDice(spell: Spell, charLevel: number): string | null {
   const { dice, typeFr } = spellDamageAtLevel(spell, spell.level, charLevel);
   if (!dice) return null;
-  return typeFr ? `${dice} ${typeFr}` : dice;
+  return typeFr ? `${dice} ${damageType(typeFr) ?? typeFr}` : dice;
 }
 
 /** Render spell stat badges: save DC, attack bonus, damage — computed from character stats. */
@@ -1086,6 +1113,7 @@ function SpellStatBadges({
   isCaster: boolean;
   charLevel: number;
 }) {
+  const { t } = useTranslation();
   if (!isCaster) return null;
 
   const dc = safeParse<{
@@ -1105,16 +1133,18 @@ function SpellStatBadges({
     <div className="flex flex-wrap gap-1.5 pt-0.5">
       {dc && (
         <Chip tone="blue">
-          🛡 DD {dcValue}
+          🛡 {t('sorts.dd')} {dcValue}
           {dc.dc_type?.index && (
             <span className="text-blue-500">
               ·{' '}
-              {ABILITY_SHORT_FR[dc.dc_type.index as keyof typeof ABILITY_SHORT_FR] ??
+              {abilityShort(dc.dc_type.index as keyof typeof ABILITY_SHORT_FR) ??
                 dc.dc_type.index.toUpperCase()}
             </span>
           )}
           {dc.dc_success && dc.dc_success !== 'none' && (
-            <span className="text-blue-400">· {DC_SUCCESS_FR[dc.dc_success] ?? ''}</span>
+            <span className="text-blue-400">
+              · {DC_SUCCESS_KEYS[dc.dc_success] ? t(DC_SUCCESS_KEYS[dc.dc_success]) : ''}
+            </span>
           )}
         </Chip>
       )}
@@ -1122,7 +1152,7 @@ function SpellStatBadges({
         <Chip tone="red">
           🎯 {formatModifier(attackBonus)}
           <span className="text-red-500">
-            · {spell.attackType === 'ranged' ? 'Distance' : 'Corps à corps'}
+            · {spell.attackType === 'ranged' ? t('sorts.distance') : t('sorts.corps.a.corps')}
           </span>
         </Chip>
       )}
@@ -1132,12 +1162,12 @@ function SpellStatBadges({
           tone="green"
           title={
             healing.addsModifier
-              ? 'Points de vie restaurés : dés + modificateur de caractéristique'
-              : 'Points de vie restaurés'
+              ? t('sorts.points.de.vie.restaures.des.modificateur')
+              : t('sorts.points.de.vie.restaures')
           }
         >
           ✚ {healing.dice}
-          {healing.addsModifier ? formatModifier(castingMod) : ''} PV
+          {healing.addsModifier ? formatModifier(castingMod) : ''} {t('sorts.pv')}
         </Chip>
       )}
     </div>
@@ -1147,29 +1177,30 @@ function SpellStatBadges({
 // ---------- Expanded-detail meta line ----------
 
 /** Duration reading: 🌀 replaces the data's "concentration, " prefix. */
-function spellDurationLabel(spell: Spell): string | null {
+function spellDurationLabel(spell: Spell, concLabel: string): string | null {
   if (!spell.duration && !spell.concentration) return null;
   let d = spell.duration ?? '';
   if (spell.concentration && /^concentration,?\s*/i.test(d)) {
     d = d.replace(/^concentration,?\s*/i, '');
-    return `🌀 ${d ? d.charAt(0).toUpperCase() + d.slice(1) : 'Concentration'}`;
+    return `🌀 ${d ? d.charAt(0).toUpperCase() + d.slice(1) : concLabel}`;
   }
-  if (spell.concentration) return `🌀 ${d || 'Concentration'}`;
+  if (spell.concentration) return `🌀 ${d || concLabel}`;
   return d.charAt(0).toUpperCase() + d.slice(1);
 }
 
 /** One sober typographic line: school · range · duration · components (+ ritual tint). */
 function SpellMetaLine({ spell }: { spell: Spell }) {
+  const { t } = useTranslation();
   const parts: Array<[string, React.ReactNode]> = [];
-  const schoolLabel = SPELL_SCHOOL_LABELS_FR[spell.school as SpellSchool] ?? spell.school;
+  const schoolText = schoolLabel(spell.school as SpellSchool) ?? spell.school;
   parts.push([
     'school',
     <span key="school" className={`font-medium ${SCHOOL_TEXT[spell.school] ?? 'text-ink-600'}`}>
-      {schoolLabel}
+      {schoolText}
     </span>,
   ]);
   if (spell.rangeText) parts.push(['range', <span key="range">{spell.rangeText}</span>]);
-  const duration = spellDurationLabel(spell);
+  const duration = spellDurationLabel(spell, t('sorts.concentration'));
   if (duration) parts.push(['duration', <span key="duration">{duration}</span>]);
   if (spell.components.length > 0)
     parts.push(['components', <span key="components">{spell.components.join(', ')}</span>]);
@@ -1177,7 +1208,7 @@ function SpellMetaLine({ spell }: { spell: Spell }) {
     parts.push([
       'ritual',
       <span key="ritual" className="text-purple-700 font-medium">
-        Rituel ⚗
+        {t('sorts.rituel')}
       </span>,
     ]);
   return (
@@ -1189,7 +1220,9 @@ function SpellMetaLine({ spell }: { spell: Spell }) {
         </Fragment>
       ))}
       {spell.material && (
-        <span className="block text-ink-400 truncate">Matériel : {spell.material}</span>
+        <span className="block text-ink-400 truncate">
+          {t('sorts.materiel')} {spell.material}
+        </span>
       )}
     </p>
   );
@@ -1244,6 +1277,7 @@ function SpellCatalog({
   onRetry: () => void;
   onLoadMore: () => void;
 }) {
+  const { t } = useTranslation();
   const [expandedSpellId, setExpandedSpellId] = useState<number | null>(null);
 
   return (
@@ -1253,7 +1287,7 @@ function SpellCatalog({
         <input
           type="text"
           className="input"
-          placeholder="Rechercher un sort…"
+          placeholder={t('sorts.rechercher.un.sort')}
           value={search}
           onChange={(e) => onSearch(e.target.value)}
         />
@@ -1261,12 +1295,12 @@ function SpellCatalog({
           className="input py-1.5 text-sm w-full"
           value={selectedClass}
           onChange={(e) => onClass(e.target.value)}
-          aria-label="Filtrer par classe"
+          aria-label={t('sorts.filtrer.par.classe')}
         >
-          <option value="">Toutes classes</option>
+          <option value="">{t('sorts.toutes.classes')}</option>
           {DND_CLASSES.map((c) => (
             <option key={c.name} value={c.name}>
-              {c.name}
+              {classNameLabel(c.name)}
             </option>
           ))}
         </select>
@@ -1275,12 +1309,12 @@ function SpellCatalog({
             className="input py-1.5 text-sm flex-1"
             value={level}
             onChange={(e) => onLevel(e.target.value)}
-            aria-label="Filtrer par niveau"
+            aria-label={t('sorts.filtrer.par.niveau')}
           >
-            <option value="">Tous niveaux</option>
+            <option value="">{t('sorts.tous.niveaux')}</option>
             {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((l) => (
               <option key={l} value={String(l)}>
-                {l === 0 ? 'Tours de magie' : `Niveau ${l}`}
+                {l === 0 ? t('sorts.tours.de.magie') : t('sorts.niveau.level', { level: l })}
               </option>
             ))}
           </select>
@@ -1288,12 +1322,12 @@ function SpellCatalog({
             className="input py-1.5 text-sm flex-1"
             value={school}
             onChange={(e) => onSchool(e.target.value)}
-            aria-label="Filtrer par école"
+            aria-label={t('sorts.filtrer.par.ecole')}
           >
-            <option value="">Toutes écoles</option>
-            {Object.entries(SPELL_SCHOOL_LABELS_FR).map(([key, label]) => (
+            <option value="">{t('sorts.toutes.ecoles')}</option>
+            {Object.entries(SPELL_SCHOOL_LABELS_FR).map(([key]) => (
               <option key={key} value={key}>
-                {label}
+                {schoolLabel(key as SpellSchool)}
               </option>
             ))}
           </select>
@@ -1303,36 +1337,36 @@ function SpellCatalog({
       {/* Results */}
       {error ? (
         <div className="space-y-2 py-2">
-          <ErrorMsg message="Impossible de charger le grimoire. Vérifie la connexion puis réessaie." />
+          <ErrorMsg message={t('sorts.impossible.de.charger.le.grimoire')} />
           <button
             type="button"
             onClick={onRetry}
             className="btn-ghost text-blood-600 text-sm px-3 py-1.5"
           >
-            Réessayer
+            {t('sorts.reessayer')}
           </button>
         </div>
       ) : loading ? (
-        <div role="status" aria-label="Chargement du grimoire" className="space-y-1.5">
+        <div role="status" aria-label={t('sorts.chargement.du.grimoire')} className="space-y-1.5">
           {[0, 1, 2].map((i) => (
             <SpellRowSkeleton key={i} />
           ))}
         </div>
       ) : spells.length === 0 ? (
         search.trim() || level !== '' || school ? (
-          <p className="text-sm text-ink-400 italic text-center py-4">Aucun sort trouvé.</p>
+          <p className="text-sm text-ink-400 italic text-center py-4">
+            {t('sorts.aucun.sort.trouve')}
+          </p>
         ) : (
           <div className="text-center py-8 space-y-1">
             <p className="text-3xl">📝</p>
-            <p className="text-sm text-ink-400">Recherchez un sort</p>
-            <p className="text-xs text-ink-400">
-              Tapez le nom d'un sort ou filtrez par niveau/école.
-            </p>
+            <p className="text-sm text-ink-400">{t('sorts.recherchez.un.sort')}</p>
+            <p className="text-xs text-ink-400">{t('sorts.tapez.le.nom.d.un.sort')}</p>
           </div>
         )
       ) : (
         <>
-          <p className="text-xs text-ink-400">{total} sort(s)</p>
+          <p className="text-xs text-ink-400">{t('sorts.total.sort.s', { total: total })}</p>
           <ul className="space-y-1.5">
             {spells.map((spell) => {
               const isExpanded = expandedSpellId === spell.id;
@@ -1348,7 +1382,7 @@ function SpellCatalog({
                       className={`h-2.5 w-2.5 rounded-full shrink-0 ${
                         SCHOOL_DOT[spell.school] ?? 'bg-parchment-400'
                       }`}
-                      title={SPELL_SCHOOL_LABELS_FR[spell.school as SpellSchool] ?? spell.school}
+                      title={schoolLabel(spell.school as SpellSchool) ?? spell.school}
                       aria-hidden="true"
                     />
                     <button
@@ -1362,12 +1396,14 @@ function SpellCatalog({
                       </span>
                       <span className="flex items-center gap-1.5 text-xs text-ink-400 min-w-0">
                         <span className="shrink-0">
-                          {spell.level === 0 ? 'Tour' : `Niv. ${spell.level}`}
+                          {spell.level === 0
+                            ? t('sorts.tour')
+                            : t('sorts.niv.level', { level: spell.level })}
                         </span>
                         {spell.concentration && (
                           <span
                             className="shrink-0 text-indigo-500 text-[11px]"
-                            title="Nécessite de la concentration"
+                            title={t('sorts.necessite.de.la.concentration')}
                           >
                             🌀
                           </span>
@@ -1375,7 +1411,7 @@ function SpellCatalog({
                         {spell.ritual && (
                           <span
                             className="shrink-0 text-purple-600 text-[11px]"
-                            title="Lançable en rituel"
+                            title={t('sorts.lancable.en.rituel')}
                           >
                             ⚗
                           </span>
@@ -1388,7 +1424,7 @@ function SpellCatalog({
                       disabled={isKnown || addingSpellId === spell.id}
                       className="text-xs px-2.5 py-2 rounded-lg bg-blood-600 text-white hover:bg-blood-700 disabled:opacity-40 disabled:cursor-not-allowed shrink-0 transition-colors"
                     >
-                      {isKnown ? '✓' : addingSpellId === spell.id ? '…' : '+ Ajouter'}
+                      {isKnown ? '✓' : addingSpellId === spell.id ? '…' : t('sorts.ajouter')}
                     </button>
                   </div>
                   {isExpanded && (
@@ -1396,7 +1432,7 @@ function SpellCatalog({
                       <p>{spell.description}</p>
                       {spell.higherLevel && (
                         <p className="text-ink-400 italic">
-                          <strong>Aux niveaux supérieurs :</strong> {spell.higherLevel}
+                          <strong>{t('sorts.aux.niveaux.superieurs')}</strong> {spell.higherLevel}
                         </p>
                       )}
                       <SpellStatBadges
@@ -1408,7 +1444,9 @@ function SpellCatalog({
                       />
                       <SpellMetaLine spell={spell} />
                       {spell.classes.length > 0 && (
-                        <p className="text-ink-400">Classes : {spell.classes.join(', ')}</p>
+                        <p className="text-ink-400">
+                          {t('sorts.classes')} {spell.classes.map(classNameLabel).join(', ')}
+                        </p>
                       )}
                     </div>
                   )}
@@ -1422,7 +1460,7 @@ function SpellCatalog({
               onClick={onLoadMore}
               className="btn-ghost text-ink-700 w-full text-sm py-2"
             >
-              Charger plus ({total - offset - PAGE_SIZE} restants)
+              {t('sorts.charger.plus', { remaining: total - offset - PAGE_SIZE })}
             </button>
           )}
         </>
@@ -1450,6 +1488,7 @@ function SwipeToReveal({
   actionLabel: string;
   children: React.ReactNode;
 }) {
+  const { t } = useTranslation();
   const WIDTH = 76; // revealed action width in px
   const [dx, setDx] = useState(0);
   const [open, setOpen] = useState(false);
@@ -1523,7 +1562,7 @@ function SwipeToReveal({
           tabIndex={open ? 0 : -1}
         >
           <span className="text-base leading-none">🗑</span>
-          Oublier
+          {t('sorts.oublier')}
         </button>
       </div>
       {/* Row content — draggable anywhere */}
@@ -1534,7 +1573,7 @@ function SwipeToReveal({
         onPointerCancel={onPointerUp}
         className={`relative touch-pan-y select-none ${dragging ? '' : 'transition-transform duration-200'}`}
         style={{ transform: `translateX(${dx}px)` }}
-        title="Glisser vers la gauche pour oublier le sort"
+        title={t('sorts.glisser.vers.la.gauche.pour.oublier')}
       >
         {children}
       </div>

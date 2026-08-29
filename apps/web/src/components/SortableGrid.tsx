@@ -27,6 +27,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { type ReactNode, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 /** Handle wiring derived from the hook that produces it (no deep imports). */
 type SortableApi = ReturnType<typeof useSortable>;
@@ -73,6 +74,7 @@ export function SortableGrid({
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
+  const { t } = useTranslation();
 
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
     if (!over || active.id === over.id) return;
@@ -85,12 +87,12 @@ export function SortableGrid({
   // Typed const (tsc 7 doesn't contextually type this through JSX props)
   const announcements: Announcements = {
     onDragStart: ({ active }) =>
-      `${labelOf(active.id)} pris — flèches pour déplacer, Espace pour déposer.`,
+      t('tri.pris.fleches.pour.deplacer.espace', { label: labelOf(active.id) }),
     onDragOver: ({ active, over }) =>
       over && active.id !== over.id
         ? `${labelOf(active.id)} avant ${labelOf(over.id)}.`
         : undefined,
-    onDragEnd: ({ active }) => `${labelOf(active.id)} déposé.`,
+    onDragEnd: ({ active }) => t('tri.depose', { label: labelOf(active.id) }),
     onDragCancel: ({ active }) => `${labelOf(active.id)} remis en place.`,
   };
 
@@ -170,17 +172,18 @@ function DragHandle({
   listeners: SortableApi['listeners'];
   activatorRef: SortableApi['setActivatorNodeRef'];
 }) {
+  const { t } = useTranslation();
   return (
     <button
       type="button"
       ref={activatorRef}
       // -m-2 p-3: ~40 px hit area for a glyph the size of ✎/×
       className="-m-2 p-3 rounded-md text-ink-400 hover:text-ink-700 cursor-grab active:cursor-grabbing touch-none"
-      title="Glisser pour réordonner"
+      title={t('tri.glisser.pour.reordonner')}
       {...attributes}
       {...listeners}
       aria-label={label}
-      aria-roledescription="poignée de déplacement"
+      aria-roledescription={t('tri.poignee.de.deplacement')}
     >
       <svg viewBox="0 0 10 16" className="w-2.5 h-4" fill="currentColor" aria-hidden="true">
         <circle cx="2.6" cy="3" r="1.6" />

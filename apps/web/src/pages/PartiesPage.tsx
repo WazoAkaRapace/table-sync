@@ -16,22 +16,26 @@
 
 import type { EncumbranceMode, PartyListRow, PartyRole } from '@table-sync/shared';
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../auth';
 import { ErrorMsg, LoadingSpinner, Modal } from '../components/ui';
-import { copyText, formatSince, plural, toRoman } from '../utils';
+import { copyText, formatSince, toRoman } from '../utils';
 
 // ---------- Small helpers ----------
 
+type Translate = (key: string, opts?: Record<string, unknown>) => string;
+
 function RoleBadge({ role, large = false }: { role: PartyRole; large?: boolean }) {
+  const { t } = useTranslation();
   return (
     <span
       className={`shrink-0 rounded-full font-medium ${
         large ? 'px-2.5 py-1 text-xs' : 'px-2 py-0.5 text-[11px]'
       } ${role === 'gm' ? 'bg-blood-600 text-white' : 'bg-parchment-200 text-ink-700'}`}
     >
-      {role === 'gm' ? 'MD' : 'Joueur'}
+      {role === 'gm' ? t('role.md') : t('role.joueur')}
     </span>
   );
 }
@@ -39,32 +43,31 @@ function RoleBadge({ role, large = false }: { role: PartyRole; large?: boolean }
 // ---------- Forms (shared by the virgin page and the foot modals) ----------
 
 /** Server errors are English machine strings — surface French, state-specific copy. */
-function joinError(err: any): string {
+function joinError(err: any, t: Translate): string {
   const status = err.response?.status;
-  if (status === 404) return 'Code invalide — redemande les six lettres à ton MD.';
-  if (status === 403) return 'Tu as été banni de ce groupe — demande au MD de te débannir.';
-  if (status === 409) return 'Tu fais déjà partie de ce groupe.';
-  if (status === 400) return 'Entre les six lettres du code.';
-  if (status === 429)
-    return err.response?.data?.error || 'Trop d’essais — réessaie dans un instant.';
-  return 'Impossible de rejoindre — vérifie la connexion.';
+  if (status === 404) return t('parties.erreur.code.invalide');
+  if (status === 403) return t('parties.erreur.banni');
+  if (status === 409) return t('parties.erreur.deja.membre');
+  if (status === 400) return t('parties.erreur.six.lettres');
+  if (status === 429) return err.response?.data?.error || t('parties.erreur.trop.essais');
+  return t('parties.erreur.impossible');
 }
 
-function createError(err: any): string {
+function createError(err: any, t: Translate): string {
   const status = err.response?.status;
-  if (status === 400) return 'Donne un nom au groupe.';
-  if (status === 429)
-    return err.response?.data?.error || 'Trop d’essais — réessaie dans un instant.';
-  return 'Création impossible — vérifie la connexion.';
+  if (status === 400) return t('parties.erreur.nom.requis');
+  if (status === 429) return err.response?.data?.error || t('parties.erreur.trop.essais');
+  return t('parties.erreur.creation.impossible');
 }
 
 const MODE_HELPERS: Record<EncumbranceMode, string> = {
-  variant: 'Le personnage est ralenti à FOR×2.5 kg, FOR×5 kg, et immobilisé à FOR×7.5 kg.',
-  standard: 'Le personnage est immobilisé au-delà de FOR×7.5 kg. Aucun palier intermédiaire.',
-  slots: 'Chaque objet compte comme un emplacement, indépendamment de son poids.',
+  variant: 'parties.aide.variante',
+  standard: 'parties.aide.standard',
+  slots: 'parties.aide.slots',
 };
 
 function CreatePartyForm({ onCreated }: { onCreated: () => void }) {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [mode, setMode] = useState<EncumbranceMode>('variant');
   const [error, setError] = useState('');
@@ -79,7 +82,7 @@ function CreatePartyForm({ onCreated }: { onCreated: () => void }) {
       setName('');
       onCreated();
     } catch (err: any) {
-      setError(createError(err));
+      setError(createError(err, t));
     } finally {
       setBusy(false);
     }
@@ -89,20 +92,20 @@ function CreatePartyForm({ onCreated }: { onCreated: () => void }) {
     <form onSubmit={submit} className="mt-4 flex flex-1 flex-col gap-4">
       <div>
         <label className="label" htmlFor="create-party-name">
-          Nom du groupe
+          {t('parties.nom.du.groupe')}
         </label>
         <input
           id="create-party-name"
           className="input"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Les Héros de Chult"
+          placeholder={t('parties.les.heros.de.chult')}
           required
         />
       </div>
       <div>
         <label className="label" htmlFor="create-party-mode">
-          Mode d'encombrement
+          {t('parties.mode.d.encombrement')}
         </label>
         <select
           id="create-party-mode"
@@ -110,21 +113,22 @@ function CreatePartyForm({ onCreated }: { onCreated: () => void }) {
           value={mode}
           onChange={(e) => setMode(e.target.value as EncumbranceMode)}
         >
-          <option value="variant">Variante — 3 paliers de poids (recommandé)</option>
-          <option value="standard">Standard — un seul seuil max</option>
-          <option value="slots">Emplacements — ignorant le poids</option>
+          <option value="variant">{t('parties.variante.3.paliers.de.poids.recommande')}</option>
+          <option value="standard">{t('parties.standard.un.seul.seuil.max')}</option>
+          <option value="slots">{t('parties.emplacements.ignorant.le.poids')}</option>
         </select>
-        <p className="mt-1.5 text-xs text-ink-400">{MODE_HELPERS[mode]}</p>
+        <p className="mt-1.5 text-xs text-ink-400">{t(MODE_HELPERS[mode])}</p>
       </div>
       {error && <div className="text-sm text-red-600">{error}</div>}
       <button type="submit" className="btn-primary" disabled={busy}>
-        Créer le groupe
+        {t('parties.creer.le.groupe')}
       </button>
     </form>
   );
 }
 
 function JoinPartyForm({ onJoined }: { onJoined: () => void }) {
+  const { t } = useTranslation();
   const [inviteCode, setInviteCode] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -138,7 +142,7 @@ function JoinPartyForm({ onJoined }: { onJoined: () => void }) {
       setInviteCode('');
       onJoined();
     } catch (err: any) {
-      setError(joinError(err));
+      setError(joinError(err, t));
     } finally {
       setBusy(false);
     }
@@ -148,7 +152,7 @@ function JoinPartyForm({ onJoined }: { onJoined: () => void }) {
     <form onSubmit={submit} className="mt-4 flex flex-1 flex-col gap-4">
       <div>
         <label className="label" htmlFor="join-party-code">
-          Code d'invitation
+          {t('parties.code.d.invitation')}
         </label>
         <input
           id="join-party-code"
@@ -163,7 +167,7 @@ function JoinPartyForm({ onJoined }: { onJoined: () => void }) {
       </div>
       {error && <div className="text-sm text-red-600">{error}</div>}
       <button type="submit" className="btn-primary" disabled={busy}>
-        Rejoindre
+        {t('parties.rejoindre')}
       </button>
     </form>
   );
@@ -172,6 +176,7 @@ function JoinPartyForm({ onJoined }: { onJoined: () => void }) {
 // ---------- The register ----------
 
 export default function PartiesPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [parties, setParties] = useState<PartyListRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -188,11 +193,11 @@ export default function PartiesPage() {
       const res = await api.get('/api/parties');
       setParties(res.data.parties);
     } catch (err: any) {
-      setLoadError(err.response?.data?.error || 'Erreur réseau');
+      setLoadError(err.response?.data?.error || t('parties.erreur.reseau'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     load();
@@ -206,14 +211,14 @@ export default function PartiesPage() {
     });
   }
 
-  if (loading) return <LoadingSpinner label="Ouverture du registre…" />;
+  if (loading) return <LoadingSpinner label={t('parties.ouverture.du.registre')} />;
   if (loadError) {
     return (
       <div className="mx-auto w-full max-w-xl space-y-3">
-        <ErrorMsg message="Le registre n'a pas pu être ouvert — vérifie la connexion." />
+        <ErrorMsg message={t('parties.registre.pas.ouvert')} />
         <div className="text-center">
           <button type="button" className="btn-secondary" onClick={load}>
-            Réessayer
+            {t('parties.reessayer')}
           </button>
         </div>
       </div>
@@ -225,10 +230,11 @@ export default function PartiesPage() {
     return (
       <div className="register-rise mx-auto w-full max-w-3xl">
         <header className="pb-6 pt-2 text-center">
-          <h1 className="font-display text-2xl font-bold sm:text-3xl">Mes groupes</h1>
+          <h1 className="font-display text-2xl font-bold sm:text-3xl">
+            {t('parties.mes.groupes')}
+          </h1>
           <p className="mt-1.5 text-ink-500">
-            Bienvenue{user ? `, ${user.displayName}` : ''}. Ton registre est encore vierge —
-            ouvre-le d'une de ces deux façons.
+            {t('parties.bienvenue', { name: user ? `, ${user.displayName}` : '' })}
           </p>
         </header>
 
@@ -241,16 +247,14 @@ export default function PartiesPage() {
         {/* Two ruled entry paths — flat on the parchment, split by a rule, no cards */}
         <div className="grid divide-y divide-parchment-300 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
           <section className="flex flex-col py-6 sm:py-8 sm:pr-10">
-            <h2 className="section-title">Créer un groupe</h2>
-            <p className="mt-1 text-sm text-ink-400">
-              Tu animeras la table en tant que MD, avec un code d'invitation à donner à tes joueurs.
-            </p>
+            <h2 className="section-title">{t('parties.creer.un.groupe')}</h2>
+            <p className="mt-1 text-sm text-ink-400">{t('parties.tu.animeras.la.table.en.tant')}</p>
             <CreatePartyForm onCreated={load} />
           </section>
           <section className="flex flex-col py-6 sm:py-8 sm:pl-10">
-            <h2 className="section-title">Rejoindre avec un code</h2>
+            <h2 className="section-title">{t('parties.rejoindre.avec.un.code')}</h2>
             <p className="mt-1 text-sm text-ink-400">
-              Ta table te donne six lettres — entre-les pour t'asseoir.
+              {t('parties.ta.table.te.donne.six.lettres')}
             </p>
             <JoinPartyForm onJoined={load} />
           </section>
@@ -268,9 +272,9 @@ export default function PartiesPage() {
   return (
     <div className="mx-auto w-full max-w-3xl">
       <header className="register-rise pb-6 pt-2 text-center">
-        <h1 className="font-display text-2xl font-bold sm:text-3xl">Mes groupes</h1>
+        <h1 className="font-display text-2xl font-bold sm:text-3xl">{t('parties.mes.groupes')}</h1>
         <p className="mt-1.5 text-sm text-ink-400">
-          {plural(parties.length, 'groupe')} au registre
+          {t('parties.au.registre', { count: parties.length })}
         </p>
       </header>
 
@@ -289,7 +293,7 @@ export default function PartiesPage() {
           <Link
             to={`/party/${current.id}`}
             className="-mx-3 block rounded-lg px-3 py-6 transition-colors hover:bg-parchment-100/70"
-            aria-label={`Ouvrir le groupe ${current.name}`}
+            aria-label={t('parties.ouvrir.le.groupe.current.name', { current_name: current.name })}
           >
             <div className="flex items-start gap-4">
               <span
@@ -304,8 +308,10 @@ export default function PartiesPage() {
                   <RoleBadge role={current.role} large />
                 </div>
                 <p className="mt-1.5 text-sm text-ink-400">
-                  MD : {current.gmName || '—'} · {plural(current.memberCount, 'joueur')} ·{' '}
-                  {plural(current.characterCount, 'personnage')} · {formatSince(current.createdAt)}
+                  {t('parties.md.nom', { gm: current.gmName || '—' })} ·{' '}
+                  {t('party.compteurs.joueur', { count: current.memberCount })} ·{' '}
+                  {t('party.compteurs.personnage', { count: current.characterCount })} ·{' '}
+                  {formatSince(current.createdAt)}
                 </p>
                 {current.characterNames.length > 0 && (
                   <p className="mt-4 border-t border-parchment-200 pt-4 leading-relaxed text-ink-700">
@@ -317,7 +323,7 @@ export default function PartiesPage() {
           </Link>
           {current.role === 'gm' && (
             <div className="flex flex-wrap items-center gap-2 pb-6 pl-14 text-sm">
-              <span className="text-ink-400">Code d'invitation</span>
+              <span className="text-ink-400">{t('parties.code.d.invitation')}</span>
               <code className="rounded-lg border border-parchment-200 bg-parchment-100 px-2.5 py-1 font-mono font-semibold tracking-[0.2em]">
                 {current.inviteCode}
               </code>
@@ -325,13 +331,15 @@ export default function PartiesPage() {
                 type="button"
                 className="text-blood-600 hover:underline"
                 onClick={() => copyCode(current.id, current.inviteCode)}
-                aria-label={`Copier le code d'invitation ${current.inviteCode}`}
+                aria-label={t('parties.copier.le.code.d.invitation.current', {
+                  current_inviteCode: current.inviteCode,
+                })}
               >
                 {copiedId === current.id
-                  ? 'Copié ✓'
+                  ? t('commun.copie.ok')
                   : copyFailedId === current.id
-                    ? 'Copie impossible'
-                    : 'Copier'}
+                    ? t('commun.copie.impossible')
+                    : t('commun.copier')}
               </button>
             </div>
           )}
@@ -347,7 +355,7 @@ export default function PartiesPage() {
             <Link
               to={`/party/${p.id}`}
               className="-mx-3 flex items-start gap-4 rounded-lg px-3 py-4 transition-colors hover:bg-parchment-100/70"
-              aria-label={`Ouvrir le groupe ${p.name}`}
+              aria-label={t('parties.ouvrir.le.groupe.p.name', { p_name: p.name })}
             >
               <span
                 aria-hidden="true"
@@ -363,7 +371,8 @@ export default function PartiesPage() {
                   <RoleBadge role={p.role} />
                 </div>
                 <p className="mt-0.5 truncate text-sm text-ink-400">
-                  MD : {p.gmName || '—'} · {plural(p.characterCount, 'personnage')}
+                  {t('parties.md.nom', { gm: p.gmName || '—' })} ·{' '}
+                  {t('party.compteurs.personnage', { count: p.characterCount })}
                   {p.role === 'gm' && (
                     <>
                       {' · '}
@@ -386,17 +395,21 @@ export default function PartiesPage() {
           className="btn-ghost text-ink-500"
           onClick={() => setShowCreate(true)}
         >
-          ＋ Nouveau groupe
+          {t('parties.nouveau.groupe')}
         </button>
         <span aria-hidden="true" className="text-parchment-400">
           ·
         </span>
         <button type="button" className="btn-ghost text-ink-500" onClick={() => setShowJoin(true)}>
-          Rejoindre par code
+          {t('parties.rejoindre.par.code')}
         </button>
       </div>
 
-      <Modal open={showCreate} onClose={() => setShowCreate(false)} title="Nouveau groupe">
+      <Modal
+        open={showCreate}
+        onClose={() => setShowCreate(false)}
+        title={t('parties.nouveau.groupe')}
+      >
         <CreatePartyForm
           onCreated={() => {
             setShowCreate(false);
@@ -404,7 +417,11 @@ export default function PartiesPage() {
           }}
         />
       </Modal>
-      <Modal open={showJoin} onClose={() => setShowJoin(false)} title="Rejoindre un groupe">
+      <Modal
+        open={showJoin}
+        onClose={() => setShowJoin(false)}
+        title={t('parties.rejoindre.un.groupe')}
+      >
         <JoinPartyForm
           onJoined={() => {
             setShowJoin(false);

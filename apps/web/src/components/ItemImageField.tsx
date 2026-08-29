@@ -10,7 +10,9 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { itemImageUrl } from '../api';
+import { appLocale } from '../i18n';
 import { downscaleImage } from '../utils';
 import { ConfirmButton } from './ui';
 
@@ -30,11 +32,17 @@ export interface ItemImageValue {
 
 export const EMPTY_ITEM_IMAGE: ItemImageValue = { staged: null, removed: false };
 
-/** Format mono d'une valeur mesurée : 214 ko, 1,2 Mo. */
-function formatSize(bytes: number): string {
+type TranslateFn = ReturnType<typeof useTranslation>['t'];
+
+/** Format mono d'une valeur mesurée : 214 ko, 1,2 Mo (EN : 214 kB, 1.2 MB). */
+function formatSize(bytes: number, t: TranslateFn): string {
   return bytes >= 1024 * 1024
-    ? `${(bytes / (1024 * 1024)).toFixed(1).replace('.', ',')} Mo`
-    : `${Math.max(1, Math.round(bytes / 1024))} ko`;
+    ? t('champ.taille.mo', {
+        n: new Intl.NumberFormat(appLocale(), { maximumFractionDigits: 1 }).format(
+          bytes / (1024 * 1024),
+        ),
+      })
+    : t('champ.taille.ko', { n: String(Math.max(1, Math.round(bytes / 1024))) });
 }
 
 export function ItemImageField({
@@ -53,6 +61,7 @@ export function ItemImageField({
   existingRev?: string | null;
   existingName?: string;
 }) {
+  const { t } = useTranslation();
   const [processing, setProcessing] = useState(false);
   const [fileError, setFileError] = useState('');
   const [dragOver, setDragOver] = useState(false);
@@ -75,7 +84,7 @@ export function ItemImageField({
     const result = await downscaleImage(file);
     setProcessing(false);
     if (!result) {
-      setFileError('Fichier illisible — essaie une photo ou une image.');
+      setFileError(t('champ.fichier.illisible'));
       return;
     }
     onChange({
@@ -112,7 +121,7 @@ export function ItemImageField({
 
   return (
     <div>
-      <span className="label">Illustration</span>
+      <span className="label">{t('champ.illustration')}</span>
       <input
         ref={inputRef}
         type="file"
@@ -130,18 +139,22 @@ export function ItemImageField({
             <>
               <img
                 src={value.staged.previewUrl}
-                alt={`Aperçu de l'illustration de ${existingName ?? 'l’objet'}`}
+                alt={t('champ.apercu.de.l.illustration.de.existingname', {
+                  existingName: existingName ?? 'l’objet',
+                })}
                 className="mx-auto max-h-56 w-full object-contain"
               />
               <p className="mt-1.5 text-center font-mono text-xs text-ink-400">
                 JPEG · {value.staged.width} × {value.staged.height} ·{' '}
-                {formatSize(value.staged.size)}
+                {formatSize(value.staged.size, t)}
               </p>
             </>
           ) : (
             <img
               src={itemImageUrl(existingItemId as number, existingRev ?? undefined)}
-              alt={`Illustration actuelle de ${existingName ?? 'l’objet'}`}
+              alt={t('champ.illustration.actuelle.de.existingname.l.objet', {
+                existingName: existingName ?? 'l’objet',
+              })}
               className="mx-auto max-h-56 w-full object-contain"
             />
           )}
@@ -160,7 +173,7 @@ export function ItemImageField({
             setDragOver(false);
             handleFile(e.dataTransfer.files?.[0]);
           }}
-          aria-label="Ajouter une illustration"
+          aria-label={t('champ.ajouter.une.illustration')}
           className={`flex w-full flex-col items-center gap-1 rounded-lg border border-dashed py-5 transition-colors ${
             dragOver
               ? 'border-blood-400 bg-blood-50/40'
@@ -171,15 +184,17 @@ export function ItemImageField({
             🗺
           </span>
           <span className="text-sm font-medium text-ink-700">
-            {dragOver ? 'Glisse une image ici' : 'Ajouter une illustration'}
+            {dragOver ? t('champ.glisse.une.image.ici') : t('champ.ajouter.une.illustration')}
           </span>
           <span className="text-xs text-ink-400">
-            Une carte, une lettre, un document — photo ou fichier
+            {t('champ.une.carte.une.lettre.un.document')}
           </span>
         </button>
       )}
 
-      {processing && <p className="mt-1 animate-pulse text-xs text-ink-400">Traitement…</p>}
+      {processing && (
+        <p className="mt-1 animate-pulse text-xs text-ink-400">{t('champ.traitement')}</p>
+      )}
       {fileError && <p className="mt-1 text-xs text-red-600">{fileError}</p>}
 
       {(hasStaged || showsExisting) && (
@@ -190,7 +205,7 @@ export function ItemImageField({
             disabled={processing}
             className="btn-ghost text-xs disabled:opacity-50"
           >
-            📷 Remplacer
+            {t('champ.remplacer')}
           </button>
           <ConfirmButton
             onConfirm={() => {
@@ -199,10 +214,10 @@ export function ItemImageField({
             }}
             className="btn-ghost text-xs text-red-600 hover:bg-red-50"
             armedClassName="bg-red-600 hover:bg-red-700 text-white!"
-            ariaLabel="Supprimer l'illustration"
-            confirmChildren="Supprimer l'illustration ?"
+            ariaLabel={t('champ.supprimer.l.illustration')}
+            confirmChildren={t('champ.supprimer.l.illustration.confirm')}
           >
-            Supprimer
+            {t('champ.supprimer')}
           </ConfirmButton>
         </div>
       )}

@@ -24,11 +24,39 @@ import {
   TEMPLATE_VARIABLES,
 } from '@table-sync/shared';
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import api from '../api';
 import { SortableCard, SortableGrid } from '../components/SortableGrid';
 import { ConfirmButton, EmptyState, Modal } from '../components/ui';
 import { appLang } from '../i18n';
+import { classNameLabel, featureCategoryLabel } from '../i18n/labels';
 import { useSyncEvent } from '../sync';
+
+// TEMPLATE_VARIABLES (partagé) reste la source des syntaxes ; la description
+// affichée passe par i18next — FR = copies verbatim du catalogue partagé.
+const TEMPLATE_VAR_KEYS: Record<string, string> = {
+  '{{name}}': 'traits.var.name',
+  '{{level}}': 'traits.var.level',
+  '{{class}}': 'traits.var.class',
+  '{{race}}': 'traits.var.race',
+  '{{prof}}': 'traits.var.prof',
+  '{{save_dc}}': 'traits.var.save.dc',
+  '{{spell_attack}}': 'traits.var.spell.attack',
+  '{{str_mod}}': 'traits.var.str.mod',
+  '{{dex_mod}}': 'traits.var.dex.mod',
+  '{{con_mod}}': 'traits.var.con.mod',
+  '{{int_mod}}': 'traits.var.int.mod',
+  '{{wis_mod}}': 'traits.var.wis.mod',
+  '{{cha_mod}}': 'traits.var.cha.mod',
+  '{{save:dex}}': 'traits.var.save.dex',
+  '{{save:con}}': 'traits.var.save.con',
+  '{{skill:perception}}': 'traits.var.skill.perception',
+  '{{skill:athletics}}': 'traits.var.skill.athletics',
+  '{{passive_perception}}': 'traits.var.passive.perception',
+  '{{initiative}}': 'traits.var.initiative',
+  '{{speed}}': 'traits.var.speed',
+  '{{max_hp}}': 'traits.var.max.hp',
+};
 
 // Affichage EN : le catalogue SRD a sa table anglaise (classFeatures.en.ts),
 // les lignes stockées restent FR — on superpose via catalogId.
@@ -73,6 +101,7 @@ export default function CharacterFeaturesTab({
   onSaved,
   onError,
 }: Props) {
+  const { t } = useTranslation();
   const [features, setFeatures] = useState<CharacterFeature[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -157,7 +186,7 @@ export default function CharacterFeaturesTab({
 
   const save = async () => {
     if (!title.trim()) {
-      onError('Le titre est requis');
+      onError(t('traits.le.titre.est.requis'));
       return;
     }
     const cm = counterMax.trim() ? Math.max(0, Number(counterMax)) : null;
@@ -206,7 +235,7 @@ export default function CharacterFeaturesTab({
       await load();
       await onSaved();
     } catch {
-      onError('Erreur lors de la sauvegarde');
+      onError(t('traits.erreur.lors.de.la.sauvegarde'));
     } finally {
       setSaving(false);
     }
@@ -221,7 +250,7 @@ export default function CharacterFeaturesTab({
       await api.patch(`/api/character-features/${feature.id}`, { counterCurrent: next });
       await load();
     } catch {
-      onError('Erreur de mise à jour');
+      onError(t('traits.erreur.de.mise.a.jour'));
     }
   };
 
@@ -231,7 +260,7 @@ export default function CharacterFeaturesTab({
       await load();
       await onSaved();
     } catch {
-      onError('Erreur lors de la suppression');
+      onError(t('traits.erreur.lors.de.la.suppression'));
     }
   };
 
@@ -249,7 +278,7 @@ export default function CharacterFeaturesTab({
       await api.patch(`/api/characters/${charId}/features/order`, { order: nextIds });
     } catch {
       setFeatures(prev);
-      onError('Réorganisation non enregistrée');
+      onError(t('traits.reorganisation.non.enregistree'));
     }
   };
 
@@ -265,7 +294,7 @@ export default function CharacterFeaturesTab({
       await load();
       await onSaved();
     } catch {
-      onError("Erreur d'ajout depuis le catalogue");
+      onError(t('traits.erreur.d.ajout.depuis.le.catalogue'));
     }
   };
 
@@ -281,17 +310,18 @@ export default function CharacterFeaturesTab({
   const addedCatalogIds = new Set(features.map((f) => f.catalogId).filter(Boolean) as string[]);
 
   if (loading) {
-    return <p className="text-sm text-ink-400 animate-pulse">Chargement…</p>;
+    return <p className="text-sm text-ink-400 animate-pulse">{t('traits.chargement')}</p>;
   }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="section-title">
-          Traits <span className="text-ink-400 text-sm font-normal">({features.length})</span>
+          {t('traits.traits')}{' '}
+          <span className="text-ink-400 text-sm font-normal">({features.length})</span>
         </h2>
         <button type="button" onClick={openCreate} className="btn-primary text-sm px-3 py-1.5">
-          + Ajouter
+          {t('traits.ajouter')}
         </button>
       </div>
 
@@ -302,8 +332,8 @@ export default function CharacterFeaturesTab({
         <div className="card p-8">
           <EmptyState
             icon="📋"
-            title="Aucun trait"
-            hint="Ajoute tes capacités de classe, traits raciaux, dons, ou toute autre caractéristique de ton personnage."
+            title={t('traits.aucun.trait')}
+            hint={t('traits.ajoute.tes.capacites.de.classe.traits.raciaux.dons.ou.toute')}
           />
         </div>
       ) : (
@@ -311,7 +341,7 @@ export default function CharacterFeaturesTab({
           {grouped.map((group) => (
             <div key={group.category}>
               <div className="text-xs font-semibold text-ink-400 uppercase tracking-wide mb-2">
-                {FEATURE_CATEGORY_LABELS_FR[group.category]} ({group.items.length})
+                {featureCategoryLabel(group.category)} ({group.items.length})
               </div>
               <SortableGrid
                 ids={group.items.map((f) => f.id)}
@@ -327,7 +357,9 @@ export default function CharacterFeaturesTab({
                     <SortableCard
                       key={feature.id}
                       id={feature.id}
-                      label={`Déplacer ${featName(feature)}`}
+                      label={t('traits.deplacer.featname.feature', {
+                        featName: featName(feature),
+                      })}
                     >
                       {(handle, isDragging) => (
                         <div
@@ -342,7 +374,9 @@ export default function CharacterFeaturesTab({
                                 type="button"
                                 onClick={() => openEdit(feature)}
                                 className="text-ink-400 hover:text-blood-600 text-sm p-1"
-                                aria-label={`Modifier ${featName(feature)}`}
+                                aria-label={t('traits.modifier.featname.feature', {
+                                  featName: featName(feature),
+                                })}
                               >
                                 ✎
                               </button>
@@ -350,9 +384,13 @@ export default function CharacterFeaturesTab({
                                 onConfirm={() => remove(feature.id)}
                                 className="text-ink-400 hover:text-red-500 text-sm p-1 rounded-full transition-colors"
                                 armedClassName="bg-red-600 hover:bg-red-700 text-white! px-2.5 py-1 font-semibold"
-                                title={`Supprimer ${featName(feature)}`}
-                                ariaLabel={`Supprimer ${featName(feature)}`}
-                                confirmChildren="Supprimer ?"
+                                title={t('traits.supprimer.featname.feature', {
+                                  featName: featName(feature),
+                                })}
+                                ariaLabel={t('traits.supprimer.featname.feature', {
+                                  featName: featName(feature),
+                                })}
+                                confirmChildren={t('traits.supprimer')}
                               >
                                 ×
                               </ConfirmButton>
@@ -374,7 +412,7 @@ export default function CharacterFeaturesTab({
                                 current === 0
                                   ? 'bg-red-500'
                                   : pct <= 50
-                                    ? 'bg-amber-500'
+                                    ? 'bg-yellow-500'
                                     : 'bg-green-500';
                               return (
                                 <div className="flex items-center gap-2 bg-parchment-50 rounded-lg p-2">
@@ -383,7 +421,7 @@ export default function CharacterFeaturesTab({
                                     onClick={() => adjustCounter(feature, -1)}
                                     disabled={current <= 0}
                                     className="w-7 h-7 rounded-md bg-parchment-200 hover:bg-parchment-300 disabled:opacity-30 text-sm font-medium flex items-center justify-center shrink-0"
-                                    aria-label="Diminuer"
+                                    aria-label={t('traits.diminuer')}
                                   >
                                     −
                                   </button>
@@ -396,11 +434,18 @@ export default function CharacterFeaturesTab({
                                     onClick={() => adjustCounter(feature, 1)}
                                     disabled={current >= max}
                                     className="w-7 h-7 rounded-md bg-parchment-200 hover:bg-parchment-300 disabled:opacity-30 text-sm font-medium flex items-center justify-center shrink-0"
-                                    aria-label="Augmenter"
+                                    aria-label={t('traits.augmenter')}
                                   >
                                     +
                                   </button>
-                                  <div className="flex-1 h-2 bg-parchment-200 rounded-full overflow-hidden">
+                                  <div
+                                    className="flex-1 h-2 bg-parchment-200 rounded-full overflow-hidden"
+                                    role="progressbar"
+                                    aria-valuenow={current}
+                                    aria-valuemin={0}
+                                    aria-valuemax={max}
+                                    aria-valuetext={`${current} / ${max}`}
+                                  >
                                     <div
                                       className={`h-full ${barColor} transition-all rounded-full`}
                                       style={{ width: `${pct}%` }}
@@ -423,11 +468,14 @@ export default function CharacterFeaturesTab({
                                   className="self-start text-[10px] px-2 py-0.5 rounded-full border bg-indigo-50 text-indigo-700 border-indigo-200"
                                   title={
                                     eff === 'short'
-                                      ? 'Se recharge après un repos court ou long'
-                                      : 'Se recharge après un repos long'
+                                      ? t('traits.se.recharge.apres.un.repos.court.ou.long')
+                                      : t('traits.se.recharge.apres.un.repos.long')
                                   }
                                 >
-                                  ↻ {eff === 'short' ? 'repos court' : 'repos long'}
+                                  ↻{' '}
+                                  {eff === 'short'
+                                    ? t('traits.repos.court')
+                                    : t('traits.repos.long')}
                                 </span>
                               );
                             })()}
@@ -435,7 +483,7 @@ export default function CharacterFeaturesTab({
                           <span
                             className={`inline-block self-start text-[10px] px-2 py-0.5 rounded-full border ${CATEGORY_COLORS[feature.category]}`}
                           >
-                            {FEATURE_CATEGORY_LABELS_FR[feature.category]}
+                            {featureCategoryLabel(feature.category)}
                           </span>
                         </div>
                       )}
@@ -452,22 +500,22 @@ export default function CharacterFeaturesTab({
       <Modal
         open={showModal}
         onClose={() => setShowModal(false)}
-        title={editing ? 'Modifier le trait' : 'Nouveau trait'}
+        title={editing ? t('traits.modifier.le.trait') : t('traits.nouveau.trait')}
       >
         <div className="space-y-3">
           <label className="block">
-            <span className="label">Titre *</span>
+            <span className="label">{t('traits.titre')}</span>
             <input
               className="input"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Récupération arcanique"
+              placeholder={t('traits.recuperation.arcanique')}
               autoFocus
             />
           </label>
 
           <label className="block">
-            <span className="label">Catégorie</span>
+            <span className="label">{t('traits.categorie')}</span>
             <select
               className="input"
               value={category}
@@ -475,36 +523,38 @@ export default function CharacterFeaturesTab({
             >
               {categories.map((cat) => (
                 <option key={cat} value={cat}>
-                  {FEATURE_CATEGORY_LABELS_FR[cat]}
+                  {featureCategoryLabel(cat)}
                 </option>
               ))}
             </select>
           </label>
 
           <label className="block">
-            <span className="label">Description</span>
+            <span className="label">{t('traits.description')}</span>
             <textarea
               className="input min-h-[120px] resize-y"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Une fois par jour lors d'un repos court, récupérez {{level}} emplacements de sort. DD de sort : {{save_dc}}."
+              placeholder={t('traits.une.fois.par.jour.lors.d')}
             />
           </label>
 
           {/* Charge counter (optional) */}
           <label className="block">
-            <span className="label">Compteur de charges (optionnel)</span>
+            <span className="label">{t('traits.compteur.de.charges.optionnel')}</span>
             <input
               type="number"
               min={0}
               className="input"
               value={counterMax}
               onChange={(e) => setCounterMax(e.target.value)}
-              placeholder="Laisser vide pour aucun compteur"
+              placeholder={t('traits.laisser.vide.pour.aucun.compteur')}
             />
             <p className="text-xs text-ink-400 mt-1">
-              Pour les points de Ki, utilisations de rage, pool de soins, etc.
-              {counterMax && Number(counterMax) > 0 ? ' Le compteur démarre au maximum.' : ''}
+              {t('traits.pour.les.points.de.ki.utilisations')}
+              {counterMax && Number(counterMax) > 0
+                ? ` ${t('traits.le.compteur.demarre.au.maximum')}`
+                : ''}
             </p>
           </label>
 
@@ -514,7 +564,7 @@ export default function CharacterFeaturesTab({
           {counterMax.trim() !== '' && Number(counterMax) > 0 && (
             <div className="bg-parchment-50 rounded-lg p-3 border border-parchment-200 space-y-1.5">
               <span className="text-xs font-medium text-ink-500 block">
-                Le compteur se restaure aux repos (boutons de l’onglet Survie) :
+                {t('traits.le.compteur.se.restaure.aux.repos')}
               </span>
               <label className="flex items-center gap-2 text-sm text-ink-700">
                 <input
@@ -526,7 +576,7 @@ export default function CharacterFeaturesTab({
                   }}
                   className="w-4 h-4 accent-blood-600"
                 />
-                ↻ Repos court (et donc long)
+                {t('traits.repos.court.et.donc.long')}
               </label>
               <label className="flex items-center gap-2 text-sm text-ink-700">
                 <input
@@ -538,17 +588,16 @@ export default function CharacterFeaturesTab({
                   }}
                   className="w-4 h-4 accent-blood-600"
                 />
-                ↻ Repos long uniquement
+                {t('traits.repos.long.uniquement')}
               </label>
               {editing?.catalogId && (
                 <p className="text-[11px] text-ink-400 italic">
-                  Pré-coché sur la règle du catalogue — un choix identique continue de la suivre
-                  (elle évolue avec le niveau) ; seul un écart est mémorisé.
+                  {t('traits.pre.coche.sur.la.regle.du')}
                 </p>
               )}
               {!resetShort && !resetLong && (
                 <p className="text-xs text-ink-400">
-                  Aucune case cochée : rechargement manuel uniquement.
+                  {t('traits.aucune.case.cochee.rechargement.manuel.uniquement')}
                 </p>
               )}
             </div>
@@ -557,7 +606,9 @@ export default function CharacterFeaturesTab({
           {/* Live preview */}
           {description.trim() && (
             <div className="bg-parchment-100 rounded-lg p-3">
-              <span className="text-xs font-medium text-ink-400 block mb-1">Aperçu</span>
+              <span className="text-xs font-medium text-ink-400 block mb-1">
+                {t('traits.apercu')}
+              </span>
               <p className="text-sm text-ink-700 whitespace-pre-line">
                 {renderFeatureTemplate(description, character)}
               </p>
@@ -570,13 +621,14 @@ export default function CharacterFeaturesTab({
             onClick={() => setShowTemplateHelp((s) => !s)}
             className="text-xs text-blood-600 hover:underline"
           >
-            {showTemplateHelp ? '▼' : '▶'} Variables de modèle
+            {showTemplateHelp ? '▼' : '▶'} {t('traits.variables.de.modele')}
           </button>
           {showTemplateHelp && (
             <div className="bg-parchment-50 rounded-lg p-3 border border-parchment-200">
               <p className="text-xs text-ink-500 mb-2">
-                Utilisez <code className="bg-parchment-200 px-1 rounded">{'{{variable}}'}</code>{' '}
-                pour insérer une valeur calculée depuis votre fiche :
+                {t('traits.utilisez')}{' '}
+                <code className="bg-parchment-200 px-1 rounded">{'{{variable}}'}</code>{' '}
+                {t('traits.pour.inserer.une.valeur.calculee.depuis.votre')}
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
                 {TEMPLATE_VARIABLES.map((v) => (
@@ -584,7 +636,9 @@ export default function CharacterFeaturesTab({
                     <code className="bg-parchment-200 px-1.5 py-0.5 rounded text-blood-700 font-mono shrink-0">
                       {v.syntax}
                     </code>
-                    <span className="text-ink-500">{v.description}</span>
+                    <span className="text-ink-500">
+                      {TEMPLATE_VAR_KEYS[v.syntax] ? t(TEMPLATE_VAR_KEYS[v.syntax]) : v.description}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -598,14 +652,14 @@ export default function CharacterFeaturesTab({
               disabled={saving || !title.trim()}
               className="btn-primary flex-1 disabled:opacity-50"
             >
-              {saving ? '…' : editing ? 'Enregistrer' : 'Créer'}
+              {saving ? '…' : editing ? t('common.save') : t('traits.creer')}
             </button>
             <button
               type="button"
               onClick={() => setShowModal(false)}
               className="btn-ghost text-ink-700"
             >
-              Annuler
+              {t('traits.annuler')}
             </button>
           </div>
         </div>
@@ -616,7 +670,11 @@ export default function CharacterFeaturesTab({
 
 // ---------- Catalogue SRD (capacités par classe/niveau) ----------
 
-function resetLabel(def: ClassFeatureDef, character: Character): string | null {
+function resetLabel(
+  def: ClassFeatureDef,
+  character: Character,
+  t: (key: string) => string,
+): string | null {
   if (!def.resource) return null;
   const owner = findClassFeatureClass(def.id);
   const ownerLevel = owner
@@ -627,8 +685,9 @@ function resetLabel(def: ClassFeatureDef, character: Character): string | null {
   const short =
     def.resource.reset === 'short' ||
     (def.resource.shortFromLevel !== undefined && ownerLevel >= def.resource.shortFromLevel);
-  const unit = def.resource.unit === 'PV' ? ' PV' : '';
-  return short ? `${unit || 'util.'} / repos court*` : `${unit || 'util.'} / repos long`;
+  const unit = def.resource.unit === 'PV' ? ` ${t('sorts.pv')}` : '';
+  const rest = short ? t('traits.recharge.court') : t('traits.recharge.long');
+  return `${unit || t('traits.util')}${rest}`;
 }
 
 function CatalogCard({
@@ -640,6 +699,7 @@ function CatalogCard({
   addedCatalogIds: Set<string>;
   onAdd: (def: ClassFeatureDef) => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const ownLines = classesOf(character);
   const charClassName =
@@ -687,7 +747,8 @@ function CatalogCard({
           className="flex items-center gap-2 text-sm font-semibold text-ink-700 hover:text-blood-700 transition-colors"
           aria-expanded={open}
         >
-          <span aria-hidden="true">📚</span> Catalogue de classe
+          <span aria-hidden="true">📚</span>
+          {t('traits.catalogue.de.classe')}
           <span className="text-xs font-normal text-ink-400">{open ? '▼' : '▶'}</span>
         </button>
         {nextGains.length > 0 && (
@@ -695,8 +756,8 @@ function CatalogCard({
             {nextGains
               .map(
                 (g) =>
-                  `${ownLines.length > 1 ? `${g.classKey} ` : ''}niv. ${g.nextLevel} : ${g.features
-                    .map((f) => f.name)
+                  `${ownLines.length > 1 ? `${classNameLabel(g.classKey)} ` : ''}${t('traits.niveau.abrege', { level: g.nextLevel })} : ${g.features
+                    .map((f) => defName(f))
                     .join(', ')}`,
               )
               .join(' — ')}
@@ -708,7 +769,7 @@ function CatalogCard({
         <div className="mt-3 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
             <label className="flex items-center gap-1.5 text-xs text-ink-500">
-              Classe
+              {t('traits.classe')}
               <select
                 className="input py-1 text-xs w-auto"
                 value={cls}
@@ -716,25 +777,25 @@ function CatalogCard({
                   setCls(e.target.value);
                   setSubFilter('base');
                 }}
-                aria-label="Classe du catalogue"
+                aria-label={t('traits.classe.du.catalogue')}
               >
                 {DND_CLASSES.map((c) => (
                   <option key={c.name} value={c.name}>
-                    {c.name}
+                    {classNameLabel(c.name)}
                   </option>
                 ))}
               </select>
             </label>
             {subclasses.length > 0 && (
               <label className="flex items-center gap-1.5 text-xs text-ink-500">
-                Voie
+                {t('traits.voie')}
                 <select
                   className="input py-1 text-xs w-auto"
                   value={subFilter}
                   onChange={(e) => setSubFilter(e.target.value)}
-                  aria-label="Sous-classe du catalogue"
+                  aria-label={t('traits.sous.classe.du.catalogue')}
                 >
-                  <option value="base">Classe de base</option>
+                  <option value="base">{t('traits.classe.de.base')}</option>
                   {subclasses.map((s) => (
                     <option key={s.key} value={s.key}>
                       {s.label}
@@ -747,13 +808,15 @@ function CatalogCard({
 
           <div className="divide-y divide-parchment-100 rounded-lg border border-parchment-200 overflow-hidden">
             {sorted.length === 0 && (
-              <p className="text-xs text-ink-400 p-3">Aucune capacité cataloguée ici.</p>
+              <p className="text-xs text-ink-400 p-3">
+                {t('traits.aucune.capacite.cataloguee.ici')}
+              </p>
             )}
             {sorted.map((def) => {
               const added = addedCatalogIds.has(def.id);
               const locked = isOwnClass && def.level > level;
               const expanded = expandedId === def.id;
-              const reset = resetLabel(def, character);
+              const reset = resetLabel(def, character, t);
               return (
                 <div key={def.id} className="bg-parchment-50/60">
                   <div className="flex items-center gap-2 px-3 py-2">
@@ -770,14 +833,14 @@ function CatalogCard({
                             : 'bg-parchment-200 text-ink-500'
                         }`}
                       >
-                        Niv {def.level}
+                        {t('traits.niv.level', { level: def.level })}
                       </span>
                       <span className="text-sm font-medium text-ink-800 truncate">
                         {defName(def)}
                       </span>
                       {def.native && (
                         <span className="text-[10px] text-ink-400 italic shrink-0">
-                          géré par la fiche
+                          {t('traits.gere.par.la.fiche')}
                         </span>
                       )}
                       {reset && (
@@ -785,8 +848,8 @@ function CatalogCard({
                           className="text-[10px] text-blood-600 shrink-0"
                           title={
                             def.resource?.reset === 'short'
-                              ? 'Récupéré après un repos court ou long'
-                              : 'Récupéré après un repos long'
+                              ? t('traits.recupere.apres.un.repos.court.ou.long')
+                              : t('traits.recupere.apres.un.repos.long')
                           }
                         >
                           ↻ {reset}
@@ -795,7 +858,7 @@ function CatalogCard({
                     </button>
                     {added ? (
                       <span className="text-xs text-green-700 font-semibold shrink-0">
-                        ✓ ajouté
+                        {t('traits.ajoute')}
                       </span>
                     ) : (
                       <button
@@ -807,9 +870,17 @@ function CatalogCard({
                             ? 'bg-parchment-200 text-ink-400 cursor-not-allowed'
                             : 'bg-blood-600 text-white hover:bg-blood-700 disabled:opacity-50'
                         }`}
-                        title={locked ? `Nécessite le niveau ${def.level}` : 'Ajouter aux traits'}
+                        title={
+                          locked
+                            ? t('traits.necessite.le.niveau', { level: def.level })
+                            : t('traits.ajouter.aux.traits')
+                        }
                       >
-                        {locked ? `Niv ${def.level}` : addingId === def.id ? '…' : '+ Ajouter'}
+                        {locked
+                          ? t('traits.niv.level', { level: def.level })
+                          : addingId === def.id
+                            ? '…'
+                            : t('traits.ajouter')}
                       </button>
                     )}
                   </div>
@@ -822,10 +893,7 @@ function CatalogCard({
               );
             })}
           </div>
-          <p className="text-[10px] text-ink-400">
-            * le compteur se recharge via les boutons Repos de l'onglet Survie. Le maximum est
-            recalculé à ton niveau actuel lors de l'ajout.
-          </p>
+          <p className="text-[10px] text-ink-400">{t('traits.le.compteur.se.recharge.via.les')}</p>
         </div>
       )}
     </div>

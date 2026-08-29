@@ -7,8 +7,6 @@
  */
 
 import {
-  ABILITY_LABELS_FR,
-  ABILITY_SHORT_FR,
   type AbilityKey,
   abilityModifier,
   type Character,
@@ -28,8 +26,11 @@ import {
   unarmoredDefensesOf,
 } from '@table-sync/shared';
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import api from '../api';
 import { BottomSheet } from '../components/ui';
+import { appLang } from '../i18n';
+import { abilityLabel, abilityShort, classNameLabel } from '../i18n/labels';
 
 interface Props {
   character: Character;
@@ -50,6 +51,11 @@ const ABILITY_FIELDS: { key: keyof Character; ability: AbilityKey }[] = [
 ];
 
 export default function CharacterStatsTab({ character, charId, entries, onSaved, onError }: Props) {
+  const { t } = useTranslation();
+  // Langue des chaînes calculées par le moteur (sources CA/vitesse, libellés
+  // de défense sans armure) — relue à chaque rendu, le changement de langue
+  // déclenche un re-rendu via useTranslation.
+  const lang = appLang();
   // Drafts for ability scores (auto-save on blur)
   const [abilityDrafts, setAbilityDrafts] = useState<Record<string, string>>({});
   const [speedDraft, setSpeedDraft] = useState(String(character.speed ?? 9));
@@ -92,7 +98,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
       return;
     }
     const clamped = Math.max(1, Math.min(30, Math.round(val)));
-    patchCharacter({ [ability]: clamped }, 'Erreur de mise à jour');
+    patchCharacter({ [ability]: clamped }, t('stats.erreur.de.mise.a.jour'));
   };
 
   const commitSpeed = () => {
@@ -103,11 +109,14 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
       return;
     }
     // Les demi-mètres sont valides (petites races : 7,5 m) — normalise à 1 décimale
-    patchCharacter({ speed: Math.max(0, Math.round(val * 10) / 10) }, 'Erreur de mise à jour');
+    patchCharacter(
+      { speed: Math.max(0, Math.round(val * 10) / 10) },
+      t('stats.erreur.de.mise.a.jour'),
+    );
   };
 
   // Armor-dependent class speed features (Moine / Barbare)
-  const speedResult = computeSpeed(character, entries);
+  const speedResult = computeSpeed(character, entries, lang);
 
   // Derived stats
   const level = character.level ?? 1;
@@ -145,9 +154,10 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
     dexMod,
     fightingStylesOf(character).has('defense'),
     character,
+    lang,
   );
   // Défenses sans armure candidates (multiclassage : on en choisit UNE — SRD)
-  const defenseOptions = unarmoredDefensesOf(character);
+  const defenseOptions = unarmoredDefensesOf(character, lang);
   const acOverride = character.armorClassOverride;
   const effectiveAC = acOverride ?? acResult.ac;
   const [acDraft, setAcDraft] = useState('');
@@ -171,7 +181,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
     if (!Number.isFinite(parsed) || parsed <= 0) return;
     const newMult = Math.round(parsed * 100) / 100;
     if (newMult === capacityMult) return;
-    patchCharacter({ capacityMultiplier: newMult }, 'Erreur de mise à jour');
+    patchCharacter({ capacityMultiplier: newMult }, t('stats.erreur.de.mise.a.jour'));
   };
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: armorClassOverride is a deliberate dep — collapse the inline AC editor when the override changes (e.g. synced from another device).
@@ -182,11 +192,11 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
   const commitAC = () => {
     const val = acDraft.trim();
     if (val === '' || val === 'auto' || val === '0') {
-      patchCharacter({ armorClassOverride: null }, 'Erreur de mise à jour');
+      patchCharacter({ armorClassOverride: null }, t('stats.erreur.de.mise.a.jour'));
     } else {
       const num = Number(val);
       if (Number.isFinite(num) && num > 0) {
-        patchCharacter({ armorClassOverride: Math.round(num) }, 'Erreur de mise à jour');
+        patchCharacter({ armorClassOverride: Math.round(num) }, t('stats.erreur.de.mise.a.jour'));
       }
     }
     setEditingAC(false);
@@ -196,7 +206,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
     <div className="space-y-4">
       {/* Ability scores */}
       <section className="card p-4 sm:p-5 space-y-3">
-        <h2 className="section-title">Caractéristiques</h2>
+        <h2 className="section-title">{t('stats.caracteristiques')}</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {ABILITY_FIELDS.map(({ key, ability }) => {
             const score = (character[key as keyof Character] as number) ?? 10;
@@ -204,9 +214,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
             const draftVal = abilityDrafts[ability] ?? String(score);
             return (
               <div key={ability} className="bg-parchment-100 rounded-xl p-3 text-center">
-                <div className="text-xs font-medium text-ink-500 mb-1">
-                  {ABILITY_LABELS_FR[ability]}
-                </div>
+                <div className="text-xs font-medium text-ink-500 mb-1">{abilityLabel(ability)}</div>
                 <div className="text-2xl font-bold tabular-nums text-ink-800 mb-1">
                   {formatModifier(mod)}
                 </div>
@@ -221,7 +229,9 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
                   }}
-                  aria-label={`Score de ${ABILITY_LABELS_FR[ability]}`}
+                  aria-label={t('stats.score.de.abilitylabel.ability', {
+                    abilityLabel: abilityLabel(ability),
+                  })}
                 />
               </div>
             );
@@ -231,11 +241,13 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
 
       {/* Derived stats */}
       <section className="card p-4 sm:p-5 space-y-3">
-        <h2 className="section-title">Statistiques dérivées</h2>
+        <h2 className="section-title">{t('stats.statistiques.derivees')}</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {/* Armor Class — computed or overridden */}
           <div className="bg-parchment-100 rounded-xl p-3 text-center">
-            <div className="text-xs font-medium text-ink-500 mb-1">Classe d'armure</div>
+            <div className="text-xs font-medium text-ink-500 mb-1">
+              {t('stats.classe.d.armure')}
+            </div>
             {editingAC ? (
               <input
                 type="number"
@@ -249,7 +261,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
                   if (e.key === 'Escape') setEditingAC(false);
                 }}
                 placeholder={String(acResult.ac)}
-                aria-label="Classe d'armure"
+                aria-label={t('stats.classe.d.armure')}
                 autoFocus
               />
             ) : (
@@ -260,7 +272,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
                   setEditingAC(true);
                 }}
                 className="w-full min-h-11 flex items-center justify-center gap-1.5 text-2xl font-bold tabular-nums text-ink-800 hover:text-blood-600 transition-colors"
-                aria-label="Modifier la classe d'armure"
+                aria-label={t('stats.modifier.la.classe.d.armure')}
               >
                 {effectiveAC}
                 <span className="text-sm font-normal text-ink-500" aria-hidden="true">
@@ -271,11 +283,11 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
             <div className="text-[11px] text-ink-500 mt-0.5">
               {acOverride !== null ? (
                 <>
-                  <span className="font-medium text-blood-600">Manuel</span>
+                  <span className="font-medium text-blood-600">{t('stats.manuel')}</span>
                   {' · '}
                   <button
                     type="button"
-                    onClick={() => patchCharacter({ armorClassOverride: null }, 'Erreur')}
+                    onClick={() => patchCharacter({ armorClassOverride: null }, t('stats.erreur'))}
                     className="text-blood-600 hover:underline py-1.5"
                   >
                     ↺ Auto
@@ -286,18 +298,25 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
               )}
             </div>
           </div>
-          <DerivedStat label="Initiative" value={formatModifier(dexMod)} />
+          <DerivedStat label={t('stats.initiative')} value={formatModifier(dexMod)} />
           {castingLines.map((l) => (
             <DerivedStat
               key={l.name}
-              label={`DD de sort${castingLines.length > 1 ? ` · ${l.name}` : ''}`}
+              label={
+                castingLines.length > 1
+                  ? t('stats.dd.de.sort.nom', { name: classNameLabel(l.name) })
+                  : t('stats.dd.de.sort')
+              }
               value={String(l.dc)}
-              hint={`Attaque ${formatModifier(l.mod + profBonus)} · ${ABILITY_SHORT_FR[l.ability]}`}
+              hint={t('stats.attaque.formatmodifier.l.mod.p.abilityshort', {
+                formatModifier: formatModifier(l.mod + profBonus),
+                abilityShort: abilityShort(l.ability),
+              })}
             />
           ))}
-          <DerivedStat label="Perception passive" value={String(passPerc)} />
+          <DerivedStat label={t('stats.perception.passive')} value={String(passPerc)} />
           <DerivedStat
-            label="Vitesse"
+            label={t('stats.vitesse')}
             value={`${speedResult.speed} m`}
             editable
             draftValue={speedDraft}
@@ -311,7 +330,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
           />
           {hitDice.length > 0 && hitDice[0].classKey !== '' && (
             <DerivedStat
-              label="Dés de vie"
+              label={t('stats.des.de.vie')}
               value={
                 hitDice.length === 1
                   ? `d${hitDice[0].die} · ${Math.max(0, hitDice[0].max - hitDice[0].used)}/${hitDice[0].max}`
@@ -321,15 +340,15 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
               }
             />
           )}
-          <DerivedStat label="Bonus de maîtrise" value={formatModifier(profBonus)} />
+          <DerivedStat label={t('stats.bonus.de.maitrise')} value={formatModifier(profBonus)} />
           {/* Portage max — FOR × 7,5 kg × multiplicateur (feuille dédiée) */}
           <div className="bg-parchment-100 rounded-xl p-3 text-center">
-            <div className="text-xs font-medium text-ink-500 mb-1">Portage max</div>
+            <div className="text-xs font-medium text-ink-500 mb-1">{t('stats.portage.max')}</div>
             <button
               type="button"
               onClick={openPortage}
               className="w-full min-h-11 flex items-center justify-center gap-1.5 text-2xl font-bold tabular-nums text-ink-800 hover:text-blood-600 transition-colors"
-              aria-label="Modifier le multiplicateur de portage"
+              aria-label={t('stats.modifier.le.multiplicateur.de.portage')}
             >
               {portageMaxKg} kg
               <span className="px-1.5 py-0.5 rounded-full bg-blood-50 border border-blood-200 text-blood-700 text-[11px] font-semibold">
@@ -337,23 +356,25 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
               </span>
             </button>
             <div className="text-[11px] text-ink-500 mt-0.5">
-              FOR {character.strength ?? 10} × 7,5 kg
+              {t('stats.portage.details', { strength: character.strength ?? 10 })}
             </div>
           </div>
         </div>
         {classInfo && (
           <p className="text-xs text-ink-500">
-            Sauvegardes maîtrisées :{' '}
-            {classInfo.savingThrows.map((s) => ABILITY_SHORT_FR[s]).join(', ')}
+            {t('stats.sauvegardes.maitrisees')}{' '}
+            {classInfo.savingThrows.map((s) => abilityShort(s)).join(', ')}
             {castingLines.length > 0 &&
-              ` · Incantation : ${castingLines
-                .map((l) => `${l.name} (${ABILITY_SHORT_FR[l.ability]})`)
-                .join(', ')}`}
+              t('stats.incantation.liste', {
+                liste: castingLines
+                  .map((l) => `${classNameLabel(l.name)} (${abilityShort(l.ability)})`)
+                  .join(', '),
+              })}
           </p>
         )}
         {defenseOptions.length > 1 && acOverride === null && (
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs text-ink-500">Défense sans armure :</span>
+            <span className="text-xs text-ink-500">{t('stats.defense.sans.armure')}</span>
             {defenseOptions.map((o) => (
               <button
                 key={o.key}
@@ -361,7 +382,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
                 onClick={() =>
                   patchCharacter(
                     { unarmoredDefense: character.unarmoredDefense === o.key ? null : o.key },
-                    'Erreur de mise à jour',
+                    t('stats.erreur.de.mise.a.jour'),
                   )
                 }
                 aria-pressed={character.unarmoredDefense === o.key}
@@ -370,13 +391,17 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
                     ? 'bg-blood-600 text-white'
                     : 'bg-parchment-100 text-ink-600 hover:bg-parchment-200'
                 }`}
-                title={`${o.label}${o.shieldForbidden ? ' — sans bouclier' : ''} · CA ${o.ac}`}
+                title={t('stats.o.label.o.shieldforbidden.ca.o', {
+                  o_label: o.label,
+                  o_shieldForbidden: o.shieldForbidden ? ` — ${t('stats.sans.bouclier')}` : '',
+                  o_ac: o.ac,
+                })}
               >
-                {o.classKey} <span className="font-mono">{o.ac}</span>
+                {classNameLabel(o.classKey)} <span className="font-mono">{o.ac}</span>
               </button>
             ))}
             <span className="text-[11px] text-ink-400">
-              une seule se cumule (SRD) — la meilleure s'applique par défaut
+              {t('stats.une.seule.se.cumule.srd.la')}
             </span>
           </div>
         )}
@@ -386,12 +411,12 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
       <BottomSheet
         open={portageOpen}
         onClose={() => setPortageOpen(false)}
-        title="Portage maximum"
+        title={t('stats.portage.maximum')}
         mobileOnly={false}
         size="md"
         footer={
           <button type="button" onClick={saveMult} className="btn-primary flex-1">
-            Enregistrer
+            {t('stats.enregistrer')}
           </button>
         }
       >
@@ -402,11 +427,13 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
               <span className="ml-2 text-base font-semibold text-ink-600">×{capacityMult}</span>
             </div>
             <div className="text-[11px] text-ink-500 mt-1">
-              FOR {character.strength ?? 10} × 7,5 kg × multiplicateur
+              {t('stats.portage.details.multiplicateur', {
+                strength: character.strength ?? 10,
+              })}
             </div>
           </div>
           <label className="block">
-            <span className="label">Multiplicateur de portage</span>
+            <span className="label">{t('stats.multiplicateur.de.portage')}</span>
             <input
               type="number"
               min={1}
@@ -421,24 +448,22 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
           </label>
           <div className="text-xs text-ink-600 bg-parchment-50 border border-parchment-200 rounded-lg p-3 space-y-1.5">
             <p>
-              <strong>×1 (défaut)</strong> : créature de taille M sans capacité spéciale.
+              <strong>{t('stats.1.defaut')}</strong>
+              {t('stats.creature.de.taille.m.sans.capacite')}
             </p>
             <p>
-              <strong>×2</strong> : Construction massive (Goliath, Firbolg, Demi-Orc, Bugbear, Orc,
-              Loxodon) ou créature de taille G. Le personnage compte comme une catégorie de taille
-              supérieure pour le calcul du poids transportable.
+              <strong>×2</strong>
+              {t('stats.construction.massive.goliath.firbolg.demi.orc')}
             </p>
             <p>
-              <strong>×3</strong> : Créature de taille TG.
+              <strong>×3</strong>
+              {t('stats.creature.de.taille.tg')}
             </p>
             <p>
-              <strong>×4</strong> : Créature de taille Gig.
+              <strong>×4</strong>
+              {t('stats.creature.de.taille.gig')}
             </p>
-            <p className="text-ink-500">
-              Ce multiplicateur s'applique aux trois paliers (encombré, lourdement encombré, max).
-              Modifie-le si ton personnage a un trait qui augmente sa capacité de portage. La barre
-              d'encombrement du bandeau suit automatiquement.
-            </p>
+            <p className="text-ink-500">{t('stats.ce.multiplicateur.s.applique.aux.trois')}</p>
           </div>
         </div>
       </BottomSheet>

@@ -5,9 +5,11 @@
 
 import type { Character, CharacterNote } from '@table-sync/shared';
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import api from '../api';
 import { SortableCard, SortableGrid } from '../components/SortableGrid';
 import { ConfirmButton, EmptyState, Modal } from '../components/ui';
+import { appLocale } from '../i18n';
 import { useSyncEvent } from '../sync';
 
 interface Props {
@@ -112,6 +114,7 @@ export default function CharacterNotesTab({
   onSaved,
   onError,
 }: Props) {
+  const { t } = useTranslation();
   const [notes, setNotes] = useState<CharacterNote[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -162,7 +165,7 @@ export default function CharacterNotesTab({
 
   const save = async () => {
     if (!title.trim()) {
-      onError('Le titre est requis');
+      onError(t('notes.le.titre.est.requis'));
       return;
     }
     setSaving(true);
@@ -182,7 +185,7 @@ export default function CharacterNotesTab({
       await load();
       await onSaved();
     } catch {
-      onError('Erreur lors de la sauvegarde');
+      onError(t('notes.erreur.lors.de.la.sauvegarde'));
     } finally {
       setSaving(false);
     }
@@ -194,7 +197,7 @@ export default function CharacterNotesTab({
       await load();
       await onSaved();
     } catch {
-      onError('Erreur lors de la suppression');
+      onError(t('notes.erreur.lors.de.la.suppression'));
     }
   };
 
@@ -208,30 +211,27 @@ export default function CharacterNotesTab({
       await api.patch(`/api/characters/${charId}/notes/order`, { order: nextIds });
     } catch {
       setNotes(prev);
-      onError('Réorganisation non enregistrée');
+      onError(t('notes.reorganisation.non.enregistree'));
     }
   };
 
-  if (loading) return <p className="text-sm text-ink-400 animate-pulse">Chargement…</p>;
+  if (loading) return <p className="text-sm text-ink-400 animate-pulse">{t('notes.chargement')}</p>;
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="section-title">
-          Notes <span className="text-ink-400 text-sm font-normal">({notes.length})</span>
+          {t('notes.notes')}
+          <span className="text-ink-400 text-sm font-normal">({notes.length})</span>
         </h2>
         <button type="button" onClick={openCreate} className="btn-primary text-sm px-3 py-1.5">
-          + Ajouter
+          {t('notes.ajouter')}
         </button>
       </div>
 
       {notes.length === 0 ? (
         <div className="card p-8">
-          <EmptyState
-            icon="📝"
-            title="Aucune note"
-            hint="Crée des notes pour tes quêtes, rappels, lore, ou tout ce dont tu as besoin."
-          />
+          <EmptyState icon="📝" title={t('notes.aucune.note')} hint={t('notes.cree.des.notes')} />
         </div>
       ) : (
         <SortableGrid
@@ -241,7 +241,11 @@ export default function CharacterNotesTab({
           className="grid gap-3 sm:grid-cols-2"
         >
           {notes.map((note) => (
-            <SortableCard key={note.id} id={note.id} label={`Déplacer ${note.title}`}>
+            <SortableCard
+              key={note.id}
+              id={note.id}
+              label={t('notes.deplacer.note.title', { note_title: note.title })}
+            >
               {(handle, isDragging) => (
                 <div
                   className={`card p-4 flex flex-col gap-2 ${isDragging ? 'card-dragging' : ''}`}
@@ -253,7 +257,7 @@ export default function CharacterNotesTab({
                         type="button"
                         onClick={() => openEdit(note)}
                         className="text-ink-400 hover:text-blood-600 text-sm p-1"
-                        aria-label={`Modifier ${note.title}`}
+                        aria-label={t('notes.modifier.note.title', { note_title: note.title })}
                       >
                         ✎
                       </button>
@@ -261,9 +265,9 @@ export default function CharacterNotesTab({
                         onConfirm={() => remove(note.id)}
                         className="text-ink-400 hover:text-red-500 text-sm p-1 rounded-full transition-colors"
                         armedClassName="bg-red-600 hover:bg-red-700 text-white! px-2.5 py-1 font-semibold"
-                        title={`Supprimer ${note.title}`}
-                        ariaLabel={`Supprimer ${note.title}`}
-                        confirmChildren="Supprimer ?"
+                        title={t('notes.supprimer.note.title', { note_title: note.title })}
+                        ariaLabel={t('notes.supprimer.note.title', { note_title: note.title })}
+                        confirmChildren={t('notes.supprimer')}
                       >
                         ×
                       </ConfirmButton>
@@ -278,7 +282,9 @@ export default function CharacterNotesTab({
                     />
                   )}
                   <span className="text-[10px] text-ink-400 mt-auto">
-                    Modifié le {new Date(`${note.updatedAt}Z`).toLocaleDateString('fr-FR')}
+                    {t('notes.modifie.le', {
+                      date: new Date(`${note.updatedAt}Z`).toLocaleDateString(appLocale()),
+                    })}
                   </span>
                 </div>
               )}
@@ -291,37 +297,37 @@ export default function CharacterNotesTab({
       <Modal
         open={showModal}
         onClose={() => setShowModal(false)}
-        title={editing ? 'Modifier la note' : 'Nouvelle note'}
+        title={editing ? t('notes.modifier.la.note') : t('notes.nouvelle.note')}
       >
         <div className="space-y-3">
           <label className="block">
-            <span className="label">Titre *</span>
+            <span className="label">{t('notes.titre')}</span>
             <input
               className="input"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Mes quêtes en cours"
+              placeholder={t('notes.mes.quetes.en.cours')}
               autoFocus
             />
           </label>
 
           <div>
             <div className="flex items-center justify-between mb-1">
-              <span className="label">Contenu</span>
+              <span className="label">{t('notes.contenu')}</span>
               <div className="flex items-center gap-1">
                 <button
                   type="button"
                   onClick={() => setPreviewMode(false)}
                   className={`text-xs px-2 py-0.5 rounded ${!previewMode ? 'bg-blood-600 text-white' : 'bg-parchment-200 text-ink-500'}`}
                 >
-                  ✏️ Éditer
+                  {t('notes.editer')}
                 </button>
                 <button
                   type="button"
                   onClick={() => setPreviewMode(true)}
                   className={`text-xs px-2 py-0.5 rounded ${previewMode ? 'bg-blood-600 text-white' : 'bg-parchment-200 text-ink-500'}`}
                 >
-                  👁 Aperçu
+                  {t('notes.apercu')}
                 </button>
               </div>
             </div>
@@ -331,7 +337,7 @@ export default function CharacterNotesTab({
                   // biome-ignore lint/security/noDangerouslySetInnerHtml: renderMarkdown escapes <, > and & in inline() before injecting its own trusted tags — no user HTML reaches the DOM.
                   <div dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }} />
                 ) : (
-                  <span className="text-ink-400 italic">Rien à prévisualiser</span>
+                  <span className="text-ink-400 italic">{t('notes.rien.a.previsualiser')}</span>
                 )}
               </div>
             ) : (
@@ -339,17 +345,15 @@ export default function CharacterNotesTab({
                 className="input min-h-[180px] resize-y font-mono text-sm"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder={
-                  '# Titre\n\n**Gras** et *italique*\n\n- Liste\n- Autre élément\n\n> Citation\n\n`code`'
-                }
+                placeholder={t('notes.modele.de.contenu')}
               />
             )}
           </div>
 
           <div className="bg-parchment-50 rounded-lg p-2 border border-parchment-200">
             <p className="text-[11px] text-ink-500">
-              <strong>Formatage :</strong> `**gras**` · `*italique*` · `` `code` `` · `# Titre` · `-
-              liste` · `&gt; citation` · `---` séparateur
+              <strong>{t('notes.formatage')}</strong>
+              {t('notes.gras.italique.code.titre.liste.gt')}
             </p>
           </div>
 
@@ -360,14 +364,14 @@ export default function CharacterNotesTab({
               disabled={saving || !title.trim()}
               className="btn-primary flex-1 disabled:opacity-50"
             >
-              {saving ? '…' : editing ? 'Enregistrer' : 'Créer'}
+              {saving ? '…' : editing ? t('common.save') : t('notes.creer')}
             </button>
             <button
               type="button"
               onClick={() => setShowModal(false)}
               className="btn-ghost text-ink-700"
             >
-              Annuler
+              {t('notes.annuler')}
             </button>
           </div>
         </div>

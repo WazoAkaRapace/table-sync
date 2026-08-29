@@ -37,6 +37,7 @@ import {
   requireUser,
 } from './helpers.ts';
 import { langFromReq, pickLocalized } from './lang.ts';
+import { apiMsg } from './messages.ts';
 
 /**
  * inventory JOIN items with the item columns prefixed `i_` — the shape
@@ -139,13 +140,13 @@ export async function inventoryRoutes(app: FastifyInstance) {
         .innerJoin(users, eq(users.id, characters.ownerId))
         .where(eq(characters.id, Number(req.params.id)))
         .get() as any;
-      if (!char) return reply.code(404).send({ error: 'character not found' });
+      if (!char) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
       if (!isPartyMember(char.party_id, userId)) {
-        return reply.code(403).send({ error: 'not a member' });
+        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
       }
       // Hidden character: 404 for everyone but its owner and the GM
       if (!characterVisibleTo(char, userId)) {
-        return reply.code(404).send({ error: 'character not found' });
+        return reply.code(404).send({ error: apiMsg(req, 'character not found') });
       }
 
       const cleanRows = drizzle
@@ -334,12 +335,14 @@ export async function inventoryRoutes(app: FastifyInstance) {
       if (userId === null) return;
       const drizzle = getDrizzle();
       const char = getCharacter(drizzle, Number(req.params.id));
-      if (!char) return reply.code(404).send({ error: 'character not found' });
+      if (!char) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
       if (!isOwnerOrGM(char, userId))
-        return reply.code(403).send({ error: 'only the owner or GM can edit this inventory' });
+        return reply
+          .code(403)
+          .send({ error: apiMsg(req, 'only the owner or GM can edit this inventory') });
 
       const body = req.body || ({} as AddInventoryPayload);
-      if (!body.itemId) return reply.code(400).send({ error: 'itemId is required' });
+      if (!body.itemId) return reply.code(400).send({ error: apiMsg(req, 'itemId is required') });
       const qty = Math.max(1, body.quantity ?? 1);
       const equipped = body.equipped ? 1 : 0;
       const notes = body.notes || null;
@@ -351,9 +354,9 @@ export async function inventoryRoutes(app: FastifyInstance) {
         .from(items)
         .where(eq(items.id, body.itemId))
         .get() as any;
-      if (!addedItem) return reply.code(404).send({ error: 'item not found' });
+      if (!addedItem) return reply.code(404).send({ error: apiMsg(req, 'item not found') });
       if (addedItem.party_id != null && addedItem.party_id !== char.party_id) {
-        return reply.code(403).send({ error: 'this item belongs to another party' });
+        return reply.code(403).send({ error: apiMsg(req, 'this item belongs to another party') });
       }
 
       // Resolve storage location (default to carried)
@@ -427,10 +430,12 @@ export async function inventoryRoutes(app: FastifyInstance) {
         .from(inventory)
         .where(eq(inventory.id, Number(req.params.invId)))
         .get() as any;
-      if (!inv) return reply.code(404).send({ error: 'inventory entry not found' });
+      if (!inv) return reply.code(404).send({ error: apiMsg(req, 'inventory entry not found') });
       const char = getCharacter(drizzle, inv.character_id);
       if (!isOwnerOrGM(char, userId))
-        return reply.code(403).send({ error: 'only the owner or GM can edit this inventory' });
+        return reply
+          .code(403)
+          .send({ error: apiMsg(req, 'only the owner or GM can edit this inventory') });
 
       const body = req.body || {};
       const values: Record<string, unknown> = {};
@@ -448,7 +453,7 @@ export async function inventoryRoutes(app: FastifyInstance) {
         values.storageLocationId = body.storageLocationId;
       }
       if (Object.keys(values).length === 0) {
-        return reply.code(400).send({ error: 'no fields to update' });
+        return reply.code(400).send({ error: apiMsg(req, 'no fields to update') });
       }
       drizzle.update(inventory).set(values).where(eq(inventory.id, inv.id)).run();
 
@@ -506,10 +511,12 @@ export async function inventoryRoutes(app: FastifyInstance) {
         .from(inventory)
         .where(eq(inventory.id, Number(req.params.invId)))
         .get() as any;
-      if (!inv) return reply.code(404).send({ error: 'inventory entry not found' });
+      if (!inv) return reply.code(404).send({ error: apiMsg(req, 'inventory entry not found') });
       const char = getCharacter(drizzle, inv.character_id);
       if (!isOwnerOrGM(char, userId))
-        return reply.code(403).send({ error: 'only the owner or GM can edit this inventory' });
+        return reply
+          .code(403)
+          .send({ error: apiMsg(req, 'only the owner or GM can edit this inventory') });
 
       const itemRow = itemDisplayName(inv.item_id);
       logTransaction(drizzle, {
@@ -551,14 +558,15 @@ export async function inventoryRoutes(app: FastifyInstance) {
       const drizzle = getDrizzle();
       const fromChar = getCharacter(drizzle, fromCharId);
       const toChar = getCharacter(drizzle, toCharacterId);
-      if (!fromChar || !toChar) return reply.code(404).send({ error: 'character not found' });
+      if (!fromChar || !toChar)
+        return reply.code(404).send({ error: apiMsg(req, 'character not found') });
       if (fromChar.party_id !== toChar.party_id) {
-        return reply.code(400).send({ error: 'characters must be in the same party' });
+        return reply.code(400).send({ error: apiMsg(req, 'characters must be in the same party') });
       }
       if (!isOwnerOrGM(fromChar, userId)) {
         return reply
           .code(403)
-          .send({ error: 'only the owner or GM can transfer from this character' });
+          .send({ error: apiMsg(req, 'only the owner or GM can transfer from this character') });
       }
 
       const inv = drizzle
@@ -567,10 +575,12 @@ export async function inventoryRoutes(app: FastifyInstance) {
         .where(eq(inventory.id, inventoryId))
         .get() as any;
       if (!inv || inv.character_id !== fromCharId) {
-        return reply.code(404).send({ error: 'inventory entry not found for this character' });
+        return reply
+          .code(404)
+          .send({ error: apiMsg(req, 'inventory entry not found for this character') });
       }
       if (qty > inv.quantity)
-        return reply.code(400).send({ error: 'not enough quantity to transfer' });
+        return reply.code(400).send({ error: apiMsg(req, 'not enough quantity to transfer') });
 
       const itemName = itemDisplayName(inv.item_id).name;
 
@@ -653,13 +663,15 @@ export async function inventoryRoutes(app: FastifyInstance) {
       if (userId === null) return;
       const drizzle = getDrizzle();
       const char = getCharacter(drizzle, Number(req.params.id));
-      if (!char) return reply.code(404).send({ error: 'character not found' });
+      if (!char) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
       if (!isOwnerOrGM(char, userId))
-        return reply.code(403).send({ error: 'only the owner or GM can edit this inventory' });
+        return reply
+          .code(403)
+          .send({ error: apiMsg(req, 'only the owner or GM can edit this inventory') });
 
       const type = req.body?.type;
       if (type !== 'food' && type !== 'water')
-        return reply.code(400).send({ error: 'type must be food or water' });
+        return reply.code(400).send({ error: apiMsg(req, 'type must be food or water') });
 
       // Find a tagged inventory item
       // For water: skip items with notes containing 'empty' (already drunk)
@@ -804,9 +816,11 @@ export async function inventoryRoutes(app: FastifyInstance) {
       if (userId === null) return;
       const drizzle = getDrizzle();
       const char = getCharacter(drizzle, Number(req.params.id));
-      if (!char) return reply.code(404).send({ error: 'character not found' });
+      if (!char) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
       if (!isOwnerOrGM(char, userId))
-        return reply.code(403).send({ error: 'only the owner or GM can edit this inventory' });
+        return reply
+          .code(403)
+          .send({ error: apiMsg(req, 'only the owner or GM can edit this inventory') });
 
       // Find all empty waterskins
       const empties = drizzle
@@ -830,7 +844,7 @@ export async function inventoryRoutes(app: FastifyInstance) {
         .all() as any[];
 
       if (!empties.length) {
-        return reply.code(400).send({ error: 'Aucune gourde vide à remplir' });
+        return reply.code(400).send({ error: apiMsg(req, 'Aucune gourde vide à remplir') });
       }
 
       const { ensureCarriedLocation } = await import('./locations.ts');
@@ -896,7 +910,8 @@ export async function inventoryRoutes(app: FastifyInstance) {
       const userId = requireUser(req, reply);
       if (userId === null) return;
       const partyId = Number(req.params.partyId);
-      if (!isPartyGM(partyId, userId)) return reply.code(403).send({ error: 'GM only' });
+      if (!isPartyGM(partyId, userId))
+        return reply.code(403).send({ error: apiMsg(req, 'GM only') });
 
       const rows = getDrizzle()
         .select({ ...cols(transactions), actor_name: users.displayName })

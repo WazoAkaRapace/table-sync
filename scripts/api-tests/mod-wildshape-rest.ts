@@ -51,6 +51,24 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
     'seen flag computed',
   );
 
+  // Mono-locale : sous Accept-Language: en, le nom vient de l'overlay EN
+  // (repli FR) — le sélecteur de forme suit la langue du reste de l'API.
+  r = await api(base, 'GET', `/api/characters/${druid.id}/wild-shape/forms`, {
+    token: GM,
+    headers: { 'Accept-Language': 'en' },
+  });
+  eq(r.status, 200, 'forms list EN');
+  const wolfFr = r.data.forms.find((f: any) => f.slug === 'loup');
+  ok(wolfFr && wolfFr.name === 'Wolf', 'EN overlay name served (loup → Wolf)');
+  ok(
+    r.data.forms.every((f: any) => typeof f.name === 'string' && f.name.length > 0),
+    'every form has a name in EN',
+  );
+  // FR (défaut) : nom FR servi tel quel
+  r = await api(base, 'GET', `/api/characters/${druid.id}/wild-shape/forms`, { token: GM });
+  const wolfEn = r.data.forms.find((f: any) => f.slug === 'loup');
+  ok(wolfEn && wolfEn.name === 'Loup', 'FR name served by default (loup → Loup)');
+
   // ---------- shape ----------
   r = await api(base, 'POST', `/api/characters/${druid.id}/wild-shape`, {
     token: fx.player.token,

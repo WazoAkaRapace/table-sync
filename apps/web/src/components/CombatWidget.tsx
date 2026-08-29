@@ -11,6 +11,7 @@
 
 import type { Combatant, EncounterDetail } from '@table-sync/shared';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../auth';
@@ -30,6 +31,7 @@ function rollD20(bonus: number): number {
 }
 
 export default function CombatWidget() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const location = useLocation();
   const [combats, setCombats] = useState<ActiveCombat[]>([]);
@@ -221,10 +223,10 @@ export default function CombatWidget() {
         } ${glowColor}`}
         title={
           isMyTurn
-            ? 'À toi de jouer !'
+            ? t('widget.a.toi.de.jouer.title')
             : needsInitiative
-              ? 'Saisis ton initiative'
-              : 'Combat en cours'
+              ? t('widget.saisis.ton.initiative')
+              : t('widget.combat.en.cours')
         }
       >
         ⚔
@@ -254,7 +256,9 @@ export default function CombatWidget() {
             <div>
               <div className="text-xs font-semibold text-ink-700">{combat.partyName}</div>
               <div className="text-xs text-ink-400">
-                {isSetup ? 'Préparation' : `Tour ${combat.encounter.round}`}
+                {isSetup
+                  ? t('widget.preparation')
+                  : t('widget.tour.round', { round: combat.encounter.round })}
               </div>
             </div>
           </div>
@@ -262,7 +266,7 @@ export default function CombatWidget() {
             type="button"
             onClick={() => setCollapsed(true)}
             className="text-ink-400 hover:text-ink-700 text-sm"
-            title="Réduire"
+            title={t('widget.reduire')}
           >
             ◀
           </button>
@@ -272,7 +276,7 @@ export default function CombatWidget() {
           {/* Initiative request banner */}
           {needsInitiative && (
             <div className="text-center py-2 px-3 rounded-lg bg-yellow-400 text-ink-900 font-bold">
-              🎲 Lance ton initiative !
+              {t('widget.lance.ton.initiative')}
             </div>
           )}
 
@@ -280,16 +284,16 @@ export default function CombatWidget() {
           {isMyTurn && (
             <>
               <div className="text-center py-2 px-3 rounded-lg bg-blood-600 text-parchment-50 font-bold">
-                ⚔ À toi de jouer !
+                {t('widget.a.toi.de.jouer')}
               </div>
               <button
                 type="button"
                 onClick={() => endMyTurn(combat.encounter.id)}
                 disabled={endingTurn}
                 className="btn-primary w-full min-h-[44px] text-sm"
-                aria-label="Terminer mon tour — passer au combattant suivant"
+                aria-label={t('widget.terminer.mon.tour.passer.au.combattant')}
               >
-                ✓ J'ai fini mon tour
+                {t('widget.j.ai.fini.mon.tour')}
               </button>
             </>
           )}
@@ -297,7 +301,8 @@ export default function CombatWidget() {
           {/* Current actor (only during active combat) */}
           {combat.currentCombatant && !isMyTurn && !needsInitiative && (
             <div className="text-sm text-ink-600">
-              Au tour de : <strong>{combat.currentCombatant.name}</strong>
+              {t('widget.au.tour.de')}
+              <strong>{combat.currentCombatant.name}</strong>
               <span className="text-ink-400 ml-1">
                 (init {combat.currentCombatant.initiative ?? '—'})
               </span>
@@ -308,7 +313,7 @@ export default function CombatWidget() {
           {needsInitiative && combat.myCombatant && (
             <div className="p-2 rounded-lg bg-yellow-50 border border-yellow-200">
               <p className="text-xs text-ink-600 mb-1">
-                {combat.myCombatant.name} — saisis ton initiative :
+                {t('widget.nom.saisis.ton.initiative', { name: combat.myCombatant.name })}
               </p>
               <div className="flex items-center gap-1">
                 <input
@@ -320,7 +325,15 @@ export default function CombatWidget() {
                     setInitInput(e.target.value);
                     if (initError) setInitError(false);
                   }}
+                  onKeyDown={async (e) => {
+                    if (e.key !== 'Enter') return;
+                    const v = parseInt(initInput, 10);
+                    if (Number.isNaN(v)) return;
+                    const ok = await setInitiative(combat.encounter.id, combat.myCombatant!.id, v);
+                    if (ok) setInitInput('');
+                  }}
                   placeholder="—"
+                  aria-label={t('widget.mon.initiative')}
                   className="input input-compact text-sm py-1"
                   autoFocus
                 />
@@ -346,14 +359,14 @@ export default function CombatWidget() {
                     )
                   }
                   className="btn-secondary text-xs px-2 py-1"
-                  title="Lancer d20 + DEX"
+                  title={t('widget.lancer.d20.dex')}
                 >
                   🎲
                 </button>
               </div>
               {initError && (
                 <p className="text-xs text-red-600 mt-1" role="alert">
-                  Échec de l'enregistrement — réessaie
+                  {t('widget.echec.de.l.enregistrement.reessaie')}
                 </p>
               )}
             </div>
@@ -377,7 +390,7 @@ export default function CombatWidget() {
             to={`/party/${combat.partyId}/combat?enc=${combat.encounter.id}`}
             className="block text-center text-xs text-blood-600 hover:text-blood-700 pt-1"
           >
-            Voir le combat →
+            {t('widget.voir.le.combat')}
           </Link>
         </div>
       </div>

@@ -14,6 +14,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../db/drizzle.ts';
 import { cols } from '../db/projections.ts';
 import { users } from '../db/schema.ts';
+import { apiMsg } from './messages.ts';
 
 const BCRYPT_ROUNDS = 10;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -51,17 +52,19 @@ export async function authRoutes(app: FastifyInstance) {
   app.post('/register', async (req: FastifyRequest<{ Body: AuthBody }>, reply: FastifyReply) => {
     const { username, password, displayName, email } = req.body || {};
     if (!username || !password || !displayName || !email) {
-      return reply
-        .code(400)
-        .send({ error: 'nom d’utilisateur, mot de passe, nom affiché et adresse e-mail requis' });
+      return reply.code(400).send({
+        error: apiMsg(req, 'nom d’utilisateur, mot de passe, nom affiché et adresse e-mail requis'),
+      });
     }
     if (username.length < 3) {
       return reply
         .code(400)
-        .send({ error: 'le nom d’utilisateur doit faire au moins 3 caractères' });
+        .send({ error: apiMsg(req, 'le nom d’utilisateur doit faire au moins 3 caractères') });
     }
     if (password.length < 6) {
-      return reply.code(400).send({ error: 'le mot de passe doit faire au moins 6 caractères' });
+      return reply
+        .code(400)
+        .send({ error: apiMsg(req, 'le mot de passe doit faire au moins 6 caractères') });
     }
     const badEmail = emailError(email);
     if (badEmail) return reply.code(400).send({ error: badEmail });
@@ -72,7 +75,8 @@ export async function authRoutes(app: FastifyInstance) {
       .from(users)
       .where(eq(users.username, username))
       .get();
-    if (existing) return reply.code(409).send({ error: 'ce nom d’utilisateur est déjà pris' });
+    if (existing)
+      return reply.code(409).send({ error: apiMsg(req, 'ce nom d’utilisateur est déjà pris') });
 
     const emailClash = drizzle
       .select({ id: users.id })
@@ -80,7 +84,7 @@ export async function authRoutes(app: FastifyInstance) {
       .where(eq(users.email, normalizeEmail(email)))
       .get();
     if (emailClash) {
-      return reply.code(409).send({ error: 'cette adresse e-mail est déjà utilisée' });
+      return reply.code(409).send({ error: apiMsg(req, 'cette adresse e-mail est déjà utilisée') });
     }
 
     const hash = bcrypt.hashSync(password, BCRYPT_ROUNDS);
@@ -100,7 +104,9 @@ export async function authRoutes(app: FastifyInstance) {
   app.post('/login', async (req: FastifyRequest<{ Body: AuthBody }>, reply: FastifyReply) => {
     const { username, password } = req.body || {};
     if (!username || !password) {
-      return reply.code(400).send({ error: 'nom d’utilisateur et mot de passe requis' });
+      return reply
+        .code(400)
+        .send({ error: apiMsg(req, 'nom d’utilisateur et mot de passe requis') });
     }
 
     const drizzle = getDrizzle();
@@ -109,10 +115,10 @@ export async function authRoutes(app: FastifyInstance) {
       .from(users)
       .where(eq(users.username, username))
       .get() as any;
-    if (!row) return reply.code(401).send({ error: 'identifiants invalides' });
+    if (!row) return reply.code(401).send({ error: apiMsg(req, 'identifiants invalides') });
 
     const ok = bcrypt.compareSync(password, row.password_hash);
-    if (!ok) return reply.code(401).send({ error: 'identifiants invalides' });
+    if (!ok) return reply.code(401).send({ error: apiMsg(req, 'identifiants invalides') });
 
     const user = sanitizeUser(row);
     const token = app.jwt.sign({ sub: user.id, username: user.username });
@@ -125,13 +131,13 @@ export async function authRoutes(app: FastifyInstance) {
     { onRequest: [(app as any).authenticate] },
     async (req: FastifyRequest, reply: FastifyReply) => {
       const userId = (req as any).user?.sub;
-      if (!userId) return reply.code(401).send({ error: 'non autorisé' });
+      if (!userId) return reply.code(401).send({ error: apiMsg(req, 'non autorisé') });
       const row = getDrizzle()
         .select(cols(users))
         .from(users)
         .where(eq(users.id, userId))
         .get() as any;
-      if (!row) return reply.code(404).send({ error: 'utilisateur introuvable' });
+      if (!row) return reply.code(404).send({ error: apiMsg(req, 'utilisateur introuvable') });
       return reply.send({ user: sanitizeUser(row) });
     },
   );
@@ -142,12 +148,12 @@ export async function authRoutes(app: FastifyInstance) {
     { onRequest: [(app as any).authenticate] },
     async (req: FastifyRequest<{ Body: UpdateProfilePayload }>, reply: FastifyReply) => {
       const userId = (req as any).user?.sub;
-      if (!userId) return reply.code(401).send({ error: 'non autorisé' });
+      if (!userId) return reply.code(401).send({ error: apiMsg(req, 'non autorisé') });
       const body = req.body || {};
 
       const drizzle = getDrizzle();
       const row = drizzle.select(cols(users)).from(users).where(eq(users.id, userId)).get() as any;
-      if (!row) return reply.code(404).send({ error: 'utilisateur introuvable' });
+      if (!row) return reply.code(404).send({ error: apiMsg(req, 'utilisateur introuvable') });
 
       const values: { displayName?: string; email?: string | null } = {};
       if (body.displayName !== undefined) {
@@ -155,7 +161,7 @@ export async function authRoutes(app: FastifyInstance) {
         if (!displayName || displayName.length > 40) {
           return reply
             .code(400)
-            .send({ error: 'le nom affiché doit contenir entre 1 et 40 caractères' });
+            .send({ error: apiMsg(req, 'le nom affiché doit contenir entre 1 et 40 caractères') });
         }
         values.displayName = displayName;
       }
@@ -175,7 +181,9 @@ export async function authRoutes(app: FastifyInstance) {
               .where(eq(users.email, email))
               .get();
             if (clash) {
-              return reply.code(409).send({ error: 'cette adresse e-mail est déjà utilisée' });
+              return reply
+                .code(409)
+                .send({ error: apiMsg(req, 'cette adresse e-mail est déjà utilisée') });
             }
           }
           values.email = email;
@@ -183,7 +191,7 @@ export async function authRoutes(app: FastifyInstance) {
       }
 
       if (Object.keys(values).length === 0) {
-        return reply.code(400).send({ error: 'aucun champ à mettre à jour' });
+        return reply.code(400).send({ error: apiMsg(req, 'aucun champ à mettre à jour') });
       }
 
       const updated = drizzle
@@ -202,25 +210,25 @@ export async function authRoutes(app: FastifyInstance) {
     { onRequest: [(app as any).authenticate] },
     async (req: FastifyRequest<{ Body: ChangePasswordPayload }>, reply: FastifyReply) => {
       const userId = (req as any).user?.sub;
-      if (!userId) return reply.code(401).send({ error: 'non autorisé' });
+      if (!userId) return reply.code(401).send({ error: apiMsg(req, 'non autorisé') });
       const { currentPassword, newPassword } = req.body || {};
       if (!currentPassword || !newPassword) {
         return reply
           .code(400)
-          .send({ error: 'mot de passe actuel et nouveau mot de passe requis' });
+          .send({ error: apiMsg(req, 'mot de passe actuel et nouveau mot de passe requis') });
       }
       if (String(newPassword).length < 6) {
         return reply
           .code(400)
-          .send({ error: 'le nouveau mot de passe doit faire au moins 6 caractères' });
+          .send({ error: apiMsg(req, 'le nouveau mot de passe doit faire au moins 6 caractères') });
       }
 
       const drizzle = getDrizzle();
       const row = drizzle.select(cols(users)).from(users).where(eq(users.id, userId)).get() as any;
-      if (!row) return reply.code(404).send({ error: 'utilisateur introuvable' });
+      if (!row) return reply.code(404).send({ error: apiMsg(req, 'utilisateur introuvable') });
 
       if (!bcrypt.compareSync(currentPassword, row.password_hash)) {
-        return reply.code(400).send({ error: 'mot de passe actuel incorrect' });
+        return reply.code(400).send({ error: apiMsg(req, 'mot de passe actuel incorrect') });
       }
 
       const hash = bcrypt.hashSync(newPassword, BCRYPT_ROUNDS);

@@ -34,6 +34,7 @@ import {
   mapFeature,
   requireUser,
 } from './helpers.ts';
+import { apiMsg } from './messages.ts';
 
 /**
  * Fetch the (feature, character) pair for a character_features row.
@@ -79,13 +80,13 @@ export async function characterFeatureRoutes(app: FastifyInstance) {
       if (userId === null) return;
       const drizzle = getDrizzle();
       const char = getCharacter(drizzle, Number(req.params.id));
-      if (!char) return reply.code(404).send({ error: 'character not found' });
+      if (!char) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
       if (!isPartyMember(char.party_id, userId)) {
-        return reply.code(403).send({ error: 'not a member' });
+        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
       }
       // Hidden character: 404 for everyone but its owner and the GM
       if (!characterVisibleTo(char, userId)) {
-        return reply.code(404).send({ error: 'character not found' });
+        return reply.code(404).send({ error: apiMsg(req, 'character not found') });
       }
 
       const rows = drizzle
@@ -110,17 +111,19 @@ export async function characterFeatureRoutes(app: FastifyInstance) {
       if (userId === null) return;
       const drizzle = getDrizzle();
       const char = getCharacter(drizzle, Number(req.params.id));
-      if (!char) return reply.code(404).send({ error: 'character not found' });
+      if (!char) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
       if (!isPartyMember(char.party_id, userId)) {
-        return reply.code(403).send({ error: 'not a member' });
+        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
       }
       if (!isOwnerOrGM(char, userId)) {
-        return reply.code(403).send({ error: 'only the owner or GM can modify features' });
+        return reply
+          .code(403)
+          .send({ error: apiMsg(req, 'only the owner or GM can modify features') });
       }
 
       const body = req.body || ({} as CreateCharacterFeaturePayload);
       if (!body.title?.trim()) {
-        return reply.code(400).send({ error: 'title is required' });
+        return reply.code(400).send({ error: apiMsg(req, 'title is required') });
       }
 
       const category = body.category ?? 'custom';
@@ -197,13 +200,15 @@ export async function characterFeatureRoutes(app: FastifyInstance) {
       if (userId === null) return;
       const drizzle = getDrizzle();
       const resolved = getFeatureWithCharacter(Number(req.params.featureId));
-      if (!resolved) return reply.code(404).send({ error: 'feature not found' });
+      if (!resolved) return reply.code(404).send({ error: apiMsg(req, 'feature not found') });
       const { feature, char } = resolved;
       if (!isPartyMember(char.party_id, userId)) {
-        return reply.code(403).send({ error: 'not a member' });
+        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
       }
       if (!isOwnerOrGM(char, userId)) {
-        return reply.code(403).send({ error: 'only the owner or GM can modify features' });
+        return reply
+          .code(403)
+          .send({ error: apiMsg(req, 'only the owner or GM can modify features') });
       }
 
       const body = req.body || {};
@@ -229,7 +234,7 @@ export async function characterFeatureRoutes(app: FastifyInstance) {
       }
       if (body.counterCurrent !== undefined) values.counterCurrent = body.counterCurrent;
       if (Object.keys(values).length === 0) {
-        return reply.code(400).send({ error: 'no fields to update' });
+        return reply.code(400).send({ error: apiMsg(req, 'no fields to update') });
       }
       drizzle
         .update(characterFeatures)
@@ -269,12 +274,14 @@ export async function characterFeatureRoutes(app: FastifyInstance) {
       if (userId === null) return;
       const drizzle = getDrizzle();
       const char = getCharacter(drizzle, Number(req.params.id));
-      if (!char) return reply.code(404).send({ error: 'character not found' });
+      if (!char) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
       if (!isPartyMember(char.party_id, userId)) {
-        return reply.code(403).send({ error: 'not a member' });
+        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
       }
       if (!isOwnerOrGM(char, userId)) {
-        return reply.code(403).send({ error: 'only the owner or GM can modify features' });
+        return reply
+          .code(403)
+          .send({ error: apiMsg(req, 'only the owner or GM can modify features') });
       }
 
       const body = req.body || ({} as ReorderPayload);
@@ -283,7 +290,8 @@ export async function characterFeatureRoutes(app: FastifyInstance) {
           (Array.isArray(body.order) ? body.order : []).map(Number).filter(Number.isInteger),
         ),
       ];
-      if (order.length === 0) return reply.code(400).send({ error: 'order is required' });
+      if (order.length === 0)
+        return reply.code(400).send({ error: apiMsg(req, 'order is required') });
 
       // Every id must belong to this character
       const owned = new Set(
@@ -296,7 +304,9 @@ export async function characterFeatureRoutes(app: FastifyInstance) {
         ).map((r) => r.id),
       );
       if (order.some((id) => !owned.has(id))) {
-        return reply.code(400).send({ error: 'feature does not belong to this character' });
+        return reply
+          .code(400)
+          .send({ error: apiMsg(req, 'feature does not belong to this character') });
       }
 
       getDb().transaction(() => {
@@ -328,13 +338,15 @@ export async function characterFeatureRoutes(app: FastifyInstance) {
       if (userId === null) return;
       const drizzle = getDrizzle();
       const resolved = getFeatureWithCharacter(Number(req.params.featureId));
-      if (!resolved) return reply.code(404).send({ error: 'feature not found' });
+      if (!resolved) return reply.code(404).send({ error: apiMsg(req, 'feature not found') });
       const { feature, char } = resolved;
       if (!isPartyMember(char.party_id, userId)) {
-        return reply.code(403).send({ error: 'not a member' });
+        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
       }
       if (!isOwnerOrGM(char, userId)) {
-        return reply.code(403).send({ error: 'only the owner or GM can modify features' });
+        return reply
+          .code(403)
+          .send({ error: apiMsg(req, 'only the owner or GM can modify features') });
       }
 
       drizzle.delete(characterFeatures).where(eq(characterFeatures.id, feature.id)).run();

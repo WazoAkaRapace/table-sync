@@ -6,6 +6,7 @@
 
 import type { CharacterSummary } from '@table-sync/shared';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Modal } from './ui';
 
 interface Props {
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export default function AddPlayerModal({ open, onClose, characters, onAdd }: Props) {
+  const { t } = useTranslation();
   const [selected, setSelected] = useState<Set<number>>(new Set());
 
   // Fresh selection each time the modal opens
@@ -45,12 +47,15 @@ export default function AddPlayerModal({ open, onClose, characters, onAdd }: Pro
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="Ajouter des personnages">
+    <Modal open={open} onClose={onClose} title={t('ajoutjoueur.ajouter.des.personnages')}>
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm text-ink-500">
           {selected.size === 0
-            ? 'Sélectionne un ou plusieurs personnages'
-            : `${selected.size} sélectionné${selected.size > 1 ? 's' : ''}`}
+            ? t('ajoutjoueur.selectionne.un.personnage')
+            : t('ajoutjoueur.n.selectionne.s', {
+                n: selected.size,
+                s: selected.size > 1 ? 's' : '',
+              })}
         </span>
         <button
           type="button"
@@ -58,7 +63,7 @@ export default function AddPlayerModal({ open, onClose, characters, onAdd }: Pro
           disabled={characters.length === 0}
           className="text-sm font-medium text-blood-600 hover:text-blood-700 disabled:opacity-40"
         >
-          {allSelected ? 'Tout désélectionner' : 'Tout sélectionner'}
+          {allSelected ? t('ajoutjoueur.tout.deselectionner') : t('ajoutjoueur.tout.selectionner')}
         </button>
       </div>
       <div className="space-y-1 max-h-[60vh] overflow-y-auto">
@@ -90,7 +95,7 @@ export default function AddPlayerModal({ open, onClose, characters, onAdd }: Pro
       </div>
       <div className="flex gap-2 mt-4">
         <button type="button" onClick={onClose} className="btn-secondary flex-1">
-          Annuler
+          {t('ajoutjoueur.annuler')}
         </button>
         <button
           type="button"
@@ -98,7 +103,8 @@ export default function AddPlayerModal({ open, onClose, characters, onAdd }: Pro
           disabled={selected.size === 0}
           className="btn-primary flex-1 disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          + Ajouter{selected.size > 0 ? ` (${selected.size})` : ''}
+          {t('ajoutjoueur.ajouter')}
+          {selected.size > 0 ? ` (${selected.size})` : ''}
         </button>
       </div>
     </Modal>

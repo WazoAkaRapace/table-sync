@@ -12,6 +12,8 @@ import { cols } from '../db/projections.ts';
 import { characterClasses, characters, spells } from '../db/schema.ts';
 import { isPartyGM, mapSpell, requireUser } from './helpers.ts';
 import { langFromReq } from './lang.ts';
+import { apiMsg } from './messages.ts';
+import { withSpellEnMeta } from './spells.ts';
 
 export async function domainSpellRoutes(app: FastifyInstance) {
   app.get(
@@ -25,10 +27,10 @@ export async function domainSpellRoutes(app: FastifyInstance) {
         .from(characters)
         .where(eq(characters.id, Number(req.params.id)))
         .get() as any;
-      if (!char) return reply.code(404).send({ error: 'Personnage introuvable' });
+      if (!char) return reply.code(404).send({ error: apiMsg(req, 'Personnage introuvable') });
       const gm = isPartyGM(char.party_id, userId);
       if (char.owner_id !== userId && !gm) {
-        return reply.code(403).send({ error: 'Réservé au propriétaire ou au MD' });
+        return reply.code(403).send({ error: apiMsg(req, 'Réservé au propriétaire ou au MD') });
       }
 
       // Cleric domains, druid Circle of the Land terrains, paladin oaths —
@@ -84,7 +86,11 @@ export async function domainSpellRoutes(app: FastifyInstance) {
             .from(spells)
             .where(sql`${spells.name} = ${name} COLLATE NOCASE`)
             .get() as any;
-          if (row) domainSpells.push({ ...mapSpell(row, langFromReq(req)), domainLevel: g.level });
+          if (row)
+            domainSpells.push({
+              ...withSpellEnMeta(mapSpell(row, langFromReq(req)), langFromReq(req)),
+              domainLevel: g.level,
+            });
         }
       }
       return reply.send({ domain: char.divine_domain ?? null, spells: domainSpells }); // 'domain' kept for client compat

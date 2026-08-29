@@ -15,6 +15,7 @@ import { items, parties, partyMembers } from '../db/schema.ts';
 import { bus } from '../sync/bus.ts';
 import { isPartyGM, isPartyMember, mapItem, requireUser } from './helpers.ts';
 import { langFromReq } from './lang.ts';
+import { apiMsg } from './messages.ts';
 
 interface ItemQuery {
   search?: string;
@@ -60,7 +61,7 @@ export async function itemRoutes(app: FastifyInstance) {
       // party's own items alone (GM dashboard custom-items tab).
       if (partyIdFilter) {
         if (!isPartyMember(Number(partyIdFilter), userId)) {
-          return reply.code(403).send({ error: 'not a member' });
+          return reply.code(403).send({ error: apiMsg(req, 'not a member') });
         }
         where.push(or(isNull(items.partyId), eq(items.partyId, Number(partyIdFilter))));
       } else {
@@ -139,10 +140,10 @@ export async function itemRoutes(app: FastifyInstance) {
         .from(items)
         .where(eq(items.id, Number(req.params.id)))
         .get() as any;
-      if (!row) return reply.code(404).send({ error: 'item not found' });
+      if (!row) return reply.code(404).send({ error: apiMsg(req, 'item not found') });
       // Custom items are only visible to members of the owning party (SRD items have party_id NULL).
       if (row.party_id != null && !isPartyMember(row.party_id, userId)) {
-        return reply.code(403).send({ error: 'not a member' });
+        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
       }
       return reply.send({ item: mapItem(row, langFromReq(req)) });
     },
@@ -169,13 +170,15 @@ export async function itemRoutes(app: FastifyInstance) {
             drizzle.select(cols(parties)).from(parties).where(eq(parties.id, partyId)).get() as any
           )?.players_create_items;
         if (!allowed) {
-          return reply.code(403).send({ error: 'only the GM can create custom items' });
+          return reply
+            .code(403)
+            .send({ error: apiMsg(req, 'only the GM can create custom items') });
         }
       }
       const body = req.body || ({} as CreateCustomItem);
 
       if (!body.name?.trim()) {
-        return reply.code(400).send({ error: 'name is required' });
+        return reply.code(400).send({ error: apiMsg(req, 'name is required') });
       }
 
       // Clés de base résolues à la création (découplage moteur/noms)
@@ -221,13 +224,13 @@ export async function itemRoutes(app: FastifyInstance) {
       const drizzle = getDrizzle();
       const itemId = Number(req.params.id);
       const item = drizzle.select(cols(items)).from(items).where(eq(items.id, itemId)).get() as any;
-      if (!item) return reply.code(404).send({ error: 'item not found' });
+      if (!item) return reply.code(404).send({ error: apiMsg(req, 'item not found') });
       if (item.source !== 'custom')
-        return reply.code(403).send({ error: 'can only modify custom items' });
+        return reply.code(403).send({ error: apiMsg(req, 'can only modify custom items') });
 
       // Check GM access
       if (!isPartyGM(item.party_id, userId)) {
-        return reply.code(403).send({ error: 'only the GM can modify items' });
+        return reply.code(403).send({ error: apiMsg(req, 'only the GM can modify items') });
       }
 
       const body = req.body || {};
@@ -240,7 +243,7 @@ export async function itemRoutes(app: FastifyInstance) {
       if (body.costUnit !== undefined) values.costUnit = body.costUnit;
       if (body.description !== undefined) values.description = body.description;
       if (Object.keys(values).length === 0) {
-        return reply.code(400).send({ error: 'no fields to update' });
+        return reply.code(400).send({ error: apiMsg(req, 'no fields to update') });
       }
 
       drizzle.update(items).set(values).where(eq(items.id, itemId)).run();
@@ -265,13 +268,13 @@ export async function itemRoutes(app: FastifyInstance) {
       const drizzle = getDrizzle();
       const itemId = Number(req.params.id);
       const item = drizzle.select(cols(items)).from(items).where(eq(items.id, itemId)).get() as any;
-      if (!item) return reply.code(404).send({ error: 'item not found' });
+      if (!item) return reply.code(404).send({ error: apiMsg(req, 'item not found') });
       if (item.source !== 'custom')
-        return reply.code(403).send({ error: 'can only delete custom items' });
+        return reply.code(403).send({ error: apiMsg(req, 'can only delete custom items') });
 
       // Check GM access
       if (!isPartyGM(item.party_id, userId)) {
-        return reply.code(403).send({ error: 'only the GM can delete items' });
+        return reply.code(403).send({ error: apiMsg(req, 'only the GM can delete items') });
       }
 
       drizzle.delete(items).where(eq(items.id, itemId)).run();

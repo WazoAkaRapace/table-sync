@@ -593,5 +593,26 @@ const keyedMundane = {
 const s3 = computeWeaponStats(keyedMundane as any, duelliste);
 check('Arme avec dés + clé → Duel appliqué (1d8)', s3?.damageStr, '1d8+5');
 
+// Régression mono-locale FR : payload sans nameFr, `name` localisé — la clé
+// seule doit restaurer deux mains (Épée longue 1d8/1d10) et la catégorie.
+const frLocaleLongsword = {
+  category: 'weapon',
+  name: 'Épée longue',
+  nameFr: null,
+  description: null,
+  properties: ['versatile'],
+  damageDice: '1d8',
+  damageType: 'tranchant',
+  baseWeapon: 'Longsword',
+  magicBonus: null,
+};
+const s4 = computeWeaponStats(frLocaleLongsword as any, duelliste);
+check(
+  'Mono-locale FR + clé → deux mains 1d10 (Duel exclus, mains nues)',
+  s4?.versatileDamageStr,
+  '1d10+3',
+);
+check('Mono-locale FR + clé → base résolue (martial, qualifié)', s4?.proficient, true);
+
 console.log(failures === 0 ? '\n✅ All weapon stats checks pass' : `\n❌ ${failures} failure(s)`);
 process.exit(failures === 0 ? 0 : 1);

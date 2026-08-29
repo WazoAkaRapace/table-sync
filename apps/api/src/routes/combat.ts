@@ -52,6 +52,7 @@ import {
   mirrorConditionsToCharacter,
   requireUser,
 } from './helpers.ts';
+import { apiMsg } from './messages.ts';
 
 // ---------- Row mappers ----------
 
@@ -224,11 +225,11 @@ async function getEncounterForUser(
   if (userId === null) return null;
   const enc = getEncounter(getDrizzle(), Number(req.params.id));
   if (!enc) {
-    reply.code(404).send({ error: 'Rencontre introuvable' });
+    reply.code(404).send({ error: apiMsg(req, 'Rencontre introuvable') });
     return null;
   }
   if (!isPartyMember(enc.party_id, userId)) {
-    reply.code(403).send({ error: 'Pas membre du groupe' });
+    reply.code(403).send({ error: apiMsg(req, 'Pas membre du groupe') });
     return null;
   }
   return enc;
@@ -245,7 +246,7 @@ export async function combatRoutes(app: FastifyInstance) {
       if (userId === null) return;
       const partyId = Number(req.params.partyId);
       if (!isPartyMember(partyId, userId))
-        return reply.code(403).send({ error: 'Pas membre du groupe' });
+        return reply.code(403).send({ error: apiMsg(req, 'Pas membre du groupe') });
 
       const gm = isPartyGM(partyId, userId);
       const drizzle = getDrizzle();
@@ -306,11 +307,12 @@ export async function combatRoutes(app: FastifyInstance) {
       const userId = requireUser(req, reply);
       if (userId === null) return;
       const partyId = Number(req.params.partyId);
-      if (!isPartyGM(partyId, userId)) return reply.code(403).send({ error: 'Réservé au MD' });
+      if (!isPartyGM(partyId, userId))
+        return reply.code(403).send({ error: apiMsg(req, 'Réservé au MD') });
 
       const body = req.body || ({} as CreateEncounterPayload);
       const name = (body.name || '').trim();
-      if (!name) return reply.code(400).send({ error: 'Le nom est requis' });
+      if (!name) return reply.code(400).send({ error: apiMsg(req, 'Le nom est requis') });
 
       const drizzle = getDrizzle();
       const { id } = drizzle
@@ -415,8 +417,9 @@ export async function combatRoutes(app: FastifyInstance) {
       if (userId === null) return;
       const drizzle = getDrizzle();
       const enc = getEncounter(drizzle, Number(req.params.id));
-      if (!enc) return reply.code(404).send({ error: 'Rencontre introuvable' });
-      if (!isPartyGM(enc.party_id, userId)) return reply.code(403).send({ error: 'Réservé au MD' });
+      if (!enc) return reply.code(404).send({ error: apiMsg(req, 'Rencontre introuvable') });
+      if (!isPartyGM(enc.party_id, userId))
+        return reply.code(403).send({ error: apiMsg(req, 'Réservé au MD') });
 
       const body = req.body || {};
       const values: Record<string, unknown> = {};
@@ -426,7 +429,7 @@ export async function combatRoutes(app: FastifyInstance) {
       if (body.turnIndex !== undefined) values.turnIndex = body.turnIndex;
 
       if (Object.keys(values).length === 0) {
-        return reply.code(400).send({ error: 'no fields to update' });
+        return reply.code(400).send({ error: apiMsg(req, 'no fields to update') });
       }
       drizzle.update(encountersTable).set(values).where(eq(encountersTable.id, enc.id)).run();
 
@@ -449,8 +452,9 @@ export async function combatRoutes(app: FastifyInstance) {
       if (userId === null) return;
       const drizzle = getDrizzle();
       const enc = getEncounter(drizzle, Number(req.params.id));
-      if (!enc) return reply.code(404).send({ error: 'Rencontre introuvable' });
-      if (!isPartyGM(enc.party_id, userId)) return reply.code(403).send({ error: 'Réservé au MD' });
+      if (!enc) return reply.code(404).send({ error: apiMsg(req, 'Rencontre introuvable') });
+      if (!isPartyGM(enc.party_id, userId))
+        return reply.code(403).send({ error: apiMsg(req, 'Réservé au MD') });
 
       drizzle.delete(encountersTable).where(eq(encountersTable.id, enc.id)).run();
       bus.emitChange({
@@ -474,18 +478,23 @@ export async function combatRoutes(app: FastifyInstance) {
       if (userId === null) return;
       const drizzle = getDrizzle();
       const enc = getEncounter(drizzle, Number(req.params.id));
-      if (!enc) return reply.code(404).send({ error: 'Rencontre introuvable' });
-      if (!isPartyGM(enc.party_id, userId)) return reply.code(403).send({ error: 'Réservé au MD' });
+      if (!enc) return reply.code(404).send({ error: apiMsg(req, 'Rencontre introuvable') });
+      if (!isPartyGM(enc.party_id, userId))
+        return reply.code(403).send({ error: apiMsg(req, 'Réservé au MD') });
 
       const body = req.body || ({} as AddMonsterPayload);
-      if (!body.monsterSlug) return reply.code(400).send({ error: 'monsterSlug requis' });
+      if (!body.monsterSlug)
+        return reply.code(400).send({ error: apiMsg(req, 'monsterSlug requis') });
 
       const monster = drizzle
         .select(cols(monsters))
         .from(monsters)
         .where(eq(monsters.slug, body.monsterSlug))
         .get() as any;
-      if (!monster) return reply.code(404).send({ error: 'Monstre introuvable dans le catalogue' });
+      if (!monster)
+        return reply
+          .code(404)
+          .send({ error: apiMsg(req, 'Monstre introuvable dans le catalogue') });
 
       const abilities = monster.abilities_json ? JSON.parse(monster.abilities_json) : { dex: 10 };
       const dexMod = abilityModifier(abilities.dex ?? 10);
@@ -578,8 +587,9 @@ export async function combatRoutes(app: FastifyInstance) {
       if (userId === null) return;
       const drizzle = getDrizzle();
       const enc = getEncounter(drizzle, Number(req.params.id));
-      if (!enc) return reply.code(404).send({ error: 'Rencontre introuvable' });
-      if (!isPartyGM(enc.party_id, userId)) return reply.code(403).send({ error: 'Réservé au MD' });
+      if (!enc) return reply.code(404).send({ error: apiMsg(req, 'Rencontre introuvable') });
+      if (!isPartyGM(enc.party_id, userId))
+        return reply.code(403).send({ error: apiMsg(req, 'Réservé au MD') });
 
       const body = req.body || ({} as AddPlayerPayload);
       // Accept a batch (characterIds) or a single legacy characterId
@@ -588,7 +598,8 @@ export async function combatRoutes(app: FastifyInstance) {
         : body.characterId
           ? [body.characterId]
           : [];
-      if (characterIds.length === 0) return reply.code(400).send({ error: 'characterId requis' });
+      if (characterIds.length === 0)
+        return reply.code(400).send({ error: apiMsg(req, 'characterId requis') });
 
       const chars = drizzle
         .select(cols(charactersTable))
@@ -596,16 +607,16 @@ export async function combatRoutes(app: FastifyInstance) {
         .where(inArray(charactersTable.id, characterIds))
         .all() as any[];
       if (chars.length !== characterIds.length) {
-        return reply.code(404).send({ error: 'Personnage introuvable' });
+        return reply.code(404).send({ error: apiMsg(req, 'Personnage introuvable') });
       }
       if (chars.some((char) => char.party_id !== enc.party_id)) {
-        return reply.code(400).send({ error: 'Personnage pas dans ce groupe' });
+        return reply.code(400).send({ error: apiMsg(req, 'Personnage pas dans ce groupe') });
       }
       // Hidden characters are inactive — they don't join fights
       if (chars.some((char) => char.hidden)) {
         return reply
           .code(400)
-          .send({ error: 'Personnage caché — il ne peut pas rejoindre un combat' });
+          .send({ error: apiMsg(req, 'Personnage caché — il ne peut pas rejoindre un combat') });
       }
 
       const createdIds: number[] = [];
@@ -682,13 +693,13 @@ export async function combatRoutes(app: FastifyInstance) {
       if (userId === null) return;
       const drizzle = getDrizzle();
       const enc = getEncounter(drizzle, Number(req.params.id));
-      if (!enc) return reply.code(404).send({ error: 'Rencontre introuvable' });
+      if (!enc) return reply.code(404).send({ error: apiMsg(req, 'Rencontre introuvable') });
       if (!isPartyMember(enc.party_id, userId))
-        return reply.code(403).send({ error: 'Pas membre du groupe' });
+        return reply.code(403).send({ error: apiMsg(req, 'Pas membre du groupe') });
 
       const combatant = getCombatant(drizzle, Number(req.params.cid));
       if (!combatant || combatant.encounter_id !== enc.id) {
-        return reply.code(404).send({ error: 'Combattant introuvable' });
+        return reply.code(404).send({ error: apiMsg(req, 'Combattant introuvable') });
       }
 
       // Authorization: GM can set any; player can only set their own combatant
@@ -704,7 +715,7 @@ export async function combatRoutes(app: FastifyInstance) {
         if (!char || char.owner_id !== userId) {
           return reply
             .code(403)
-            .send({ error: 'Vous ne pouvez modifier que votre propre initiative' });
+            .send({ error: apiMsg(req, 'Vous ne pouvez modifier que votre propre initiative') });
         }
       }
 
@@ -753,14 +764,15 @@ export async function combatRoutes(app: FastifyInstance) {
       if (userId === null) return;
       const drizzle = getDrizzle();
       const combatant = getCombatant(drizzle, Number(req.params.cid));
-      if (!combatant) return reply.code(404).send({ error: 'Combattant introuvable' });
+      if (!combatant) return reply.code(404).send({ error: apiMsg(req, 'Combattant introuvable') });
 
       const enc = drizzle
         .select({ party_id: encountersTable.partyId })
         .from(encountersTable)
         .where(eq(encountersTable.id, combatant.encounter_id))
         .get() as any;
-      if (!isPartyGM(enc.party_id, userId)) return reply.code(403).send({ error: 'Réservé au MD' });
+      if (!isPartyGM(enc.party_id, userId))
+        return reply.code(403).send({ error: apiMsg(req, 'Réservé au MD') });
 
       const body = req.body || {};
       const values: Record<string, unknown> = {};
@@ -775,7 +787,7 @@ export async function combatRoutes(app: FastifyInstance) {
       if (body.cardColor !== undefined) values.cardColor = body.cardColor;
 
       if (Object.keys(values).length === 0) {
-        return reply.code(400).send({ error: 'no fields to update' });
+        return reply.code(400).send({ error: apiMsg(req, 'no fields to update') });
       }
 
       // Auto-set defeated when HP hits 0; auto-clear when HP goes above 0
@@ -1011,14 +1023,15 @@ export async function combatRoutes(app: FastifyInstance) {
       if (userId === null) return;
       const drizzle = getDrizzle();
       const combatant = getCombatant(drizzle, Number(req.params.cid));
-      if (!combatant) return reply.code(404).send({ error: 'Combattant introuvable' });
+      if (!combatant) return reply.code(404).send({ error: apiMsg(req, 'Combattant introuvable') });
 
       const enc = drizzle
         .select({ party_id: encountersTable.partyId })
         .from(encountersTable)
         .where(eq(encountersTable.id, combatant.encounter_id))
         .get() as any;
-      if (!isPartyGM(enc.party_id, userId)) return reply.code(403).send({ error: 'Réservé au MD' });
+      if (!isPartyGM(enc.party_id, userId))
+        return reply.code(403).send({ error: apiMsg(req, 'Réservé au MD') });
 
       // If grouped, delete ALL members of the group (they were added together)
       if (combatant.group_id) {
@@ -1056,8 +1069,9 @@ export async function combatRoutes(app: FastifyInstance) {
         .from(encountersTable)
         .where(eq(encountersTable.id, Number(req.params.id)))
         .get();
-      if (!enc) return reply.code(404).send({ error: 'Rencontre introuvable' });
-      if (!isPartyGM(enc.partyId, userId)) return reply.code(403).send({ error: 'Réservé au MD' });
+      if (!enc) return reply.code(404).send({ error: apiMsg(req, 'Rencontre introuvable') });
+      if (!isPartyGM(enc.partyId, userId))
+        return reply.code(403).send({ error: apiMsg(req, 'Réservé au MD') });
 
       const sorted = sortCombatants(
         drizzle
@@ -1070,7 +1084,7 @@ export async function combatRoutes(app: FastifyInstance) {
       const active = sorted.filter((c) => !c.defeated);
 
       if (active.length === 0) {
-        return reply.code(400).send({ error: 'Aucun combattant actif' });
+        return reply.code(400).send({ error: apiMsg(req, 'Aucun combattant actif') });
       }
 
       // --- Starting the combat: setup → active, round 1, first combatant acts.
@@ -1132,8 +1146,9 @@ export async function combatRoutes(app: FastifyInstance) {
         .from(encountersTable)
         .where(eq(encountersTable.id, Number(req.params.id)))
         .get();
-      if (!enc) return reply.code(404).send({ error: 'Rencontre introuvable' });
-      if (enc.status !== 'active') return reply.code(400).send({ error: 'Combat non actif' });
+      if (!enc) return reply.code(404).send({ error: apiMsg(req, 'Rencontre introuvable') });
+      if (enc.status !== 'active')
+        return reply.code(400).send({ error: apiMsg(req, 'Combat non actif') });
 
       const sorted = sortCombatants(
         drizzle
@@ -1146,12 +1161,12 @@ export async function combatRoutes(app: FastifyInstance) {
       const active = sorted.filter((c) => !c.defeated);
 
       if (active.length === 0) {
-        return reply.code(400).send({ error: 'Aucun combattant actif' });
+        return reply.code(400).send({ error: apiMsg(req, 'Aucun combattant actif') });
       }
 
       const currentIdx = Math.min(enc.turnIndex, sorted.length - 1);
       const current = sorted[currentIdx];
-      if (!current) return reply.code(400).send({ error: 'Aucun combattant actif' });
+      if (!current) return reply.code(400).send({ error: apiMsg(req, 'Aucun combattant actif') });
 
       // The current turn belongs to a group (or a lone combatant): the caller
       // must own one of its characters to close it. Ownership is checked on the

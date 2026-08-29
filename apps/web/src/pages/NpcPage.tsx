@@ -8,6 +8,7 @@ import type {
 } from '@table-sync/shared';
 import { NPC_DISPOSITION_LABELS_FR, NPC_STATUS_LABELS_FR } from '@table-sync/shared';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../auth';
@@ -30,19 +31,26 @@ const STATUS_TEXT_CLASS: Record<NpcStatus, string> = {
   turned: 'text-purple-700',
 };
 
-const DISPOSITION_OPTIONS: { value: NpcDisposition; label: string }[] = (
+// Les maps partagées restent la source des CLÉS (ordre + exhaustivité) ;
+// le libellé affiché passe par i18next — FR = copies verbatim des maps.
+const DISPOSITION_OPTIONS: { value: NpcDisposition; labelKey: string }[] = (
   Object.keys(NPC_DISPOSITION_LABELS_FR) as NpcDisposition[]
-).map((d) => ({ value: d, label: NPC_DISPOSITION_LABELS_FR[d] }));
+).map((d) => ({ value: d, labelKey: `pnj.disposition.${d}` }));
 
-const STATUS_OPTIONS: { value: NpcStatus; label: string }[] = (
+const STATUS_OPTIONS: { value: NpcStatus; labelKey: string }[] = (
   Object.keys(NPC_STATUS_LABELS_FR) as NpcStatus[]
-).map((s) => ({ value: s, label: NPC_STATUS_LABELS_FR[s] }));
+).map((s) => ({ value: s, labelKey: `pnj.status.${s}` }));
 
 type ViewFilter = 'all' | 'shared' | 'mine';
+
+// Sentinel for the un-factioned group: a stable map key independent of the
+// display language ("Sans faction" / "No faction").
+const NO_FACTION = '__no_faction__';
 
 // ---------- Main component ----------
 
 export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
+  const { t } = useTranslation();
   const { partyId } = useParams<{ partyId: string }>();
   const { user } = useAuth();
 
@@ -82,12 +90,12 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
         setNpcs(npcRes.data.npcs);
         setParty(partyRes.data);
       } catch (err: any) {
-        setError(err.response?.data?.error || 'Impossible de charger les PNJ');
+        setError(err.response?.data?.error || t('pnj.impossible.de.charger.les.pnj'));
       } finally {
         setLoading(false);
       }
     },
-    [partyId],
+    [partyId, t],
   );
 
   useEffect(() => {
@@ -130,18 +138,18 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
       .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
   }, [npcs, search, dispositionFilter, statusFilter, view, user?.id]);
 
-  // Group by faction (or "Sans faction")
+  // Group by faction (or the "Sans faction" bucket)
   const grouped = useMemo(() => {
     const map = new Map<string, Npc[]>();
     for (const n of filtered) {
-      const key = n.faction?.trim() || 'Sans faction';
+      const key = n.faction?.trim() || NO_FACTION;
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(n);
     }
     // Sort factions alphabetically, "Sans faction" last
     return Array.from(map.entries()).sort(([a], [b]) => {
-      if (a === 'Sans faction') return 1;
-      if (b === 'Sans faction') return -1;
+      if (a === NO_FACTION) return 1;
+      if (b === NO_FACTION) return -1;
       return a.localeCompare(b);
     });
   }, [filtered]);
@@ -171,9 +179,9 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
       await api.delete(`/api/npcs/${deleting.id}`);
       setDeleting(null);
       await load();
-      flash('success', `${deleting.name} supprimé`);
+      flash('success', t('pnj.name.supprime', { name: deleting.name }));
     } catch (err: any) {
-      flash('error', err.response?.data?.error || 'Erreur de suppression');
+      flash('error', err.response?.data?.error || t('pnj.erreur.de.suppression'));
     } finally {
       setDeleteBusy(false);
     }
@@ -181,19 +189,19 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
 
   // ---------- Render guards ----------
 
-  if (loading) return <LoadingSpinner label="Chargement des PNJ…" />;
+  if (loading) return <LoadingSpinner label={t('pnj.chargement.des.pnj')} />;
   if (error && npcs.length === 0) return <ErrorMsg message={error} />;
-  if (!party) return <ErrorMsg message="Groupe introuvable" />;
+  if (!party) return <ErrorMsg message={t('pnj.groupe.introuvable')} />;
 
   return (
     <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-3">
-          {!embedded && <span className="text-sm text-ink-400">PNJ</span>}
+          {!embedded && <span className="text-sm text-ink-400">{t('pnj.titre')}</span>}
         </div>
         <button type="button" onClick={openCreate} className="btn-primary text-sm">
-          + Ajouter un PNJ
+          {t('pnj.ajouter.un.pnj')}
         </button>
       </div>
 
@@ -202,22 +210,22 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
         <input
           type="search"
           className="input"
-          placeholder="Rechercher un PNJ…"
+          placeholder={t('pnj.rechercher.un.pnj')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          aria-label="Rechercher un PNJ"
+          aria-label={t('pnj.rechercher.un.pnj')}
         />
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           <select
             className="input"
             value={dispositionFilter}
             onChange={(e) => setDispositionFilter(e.target.value as '' | NpcDisposition)}
-            aria-label="Filtrer par disposition"
+            aria-label={t('pnj.filtrer.par.disposition')}
           >
-            <option value="">Toutes dispositions</option>
+            <option value="">{t('pnj.toutes.dispositions')}</option>
             {DISPOSITION_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
-                {o.label}
+                {t(o.labelKey)}
               </option>
             ))}
           </select>
@@ -225,12 +233,12 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
             className="input"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as '' | NpcStatus)}
-            aria-label="Filtrer par statut"
+            aria-label={t('pnj.filtrer.par.statut')}
           >
-            <option value="">Tous statuts</option>
+            <option value="">{t('pnj.tous.statuts')}</option>
             {STATUS_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
-                {o.label}
+                {t(o.labelKey)}
               </option>
             ))}
           </select>
@@ -238,11 +246,11 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
             className="input col-span-2 sm:col-span-1"
             value={view}
             onChange={(e) => setView(e.target.value as ViewFilter)}
-            aria-label="Filtrer par visibilité"
+            aria-label={t('pnj.filtrer.par.visibilite')}
           >
-            <option value="all">Tous</option>
-            <option value="shared">Partagés</option>
-            <option value="mine">Les miens</option>
+            <option value="all">{t('pnj.tous')}</option>
+            <option value="shared">{t('pnj.partages')}</option>
+            <option value="mine">{t('pnj.les.miens')}</option>
           </select>
         </div>
       </div>
@@ -266,11 +274,9 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
         <div className="card p-4">
           <EmptyState
             icon="🎭"
-            title={npcs.length === 0 ? 'Aucun PNJ' : 'Aucun résultat'}
+            title={npcs.length === 0 ? t('pnj.aucun') : t('pnj.aucun.resultat')}
             hint={
-              npcs.length === 0
-                ? 'Ajoutez vos rencontres et alliés pour cette campagne.'
-                : 'Modifiez vos filtres ou votre recherche.'
+              npcs.length === 0 ? t('pnj.ajoutez.vos.rencontres') : t('pnj.modifiez.vos.filtres')
             }
           />
         </div>
@@ -280,7 +286,7 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
             <section key={faction}>
               <h2 className="section-title mb-3 flex items-center gap-2">
                 <span className="text-blood-600">⚜</span>
-                {faction}
+                {faction === NO_FACTION ? t('pnj.sans.faction') : faction}
                 <span className="text-ink-400 text-sm font-normal">({group.length})</span>
               </h2>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -317,10 +323,10 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
         <Modal
           open={true}
           onClose={() => !deleteBusy && setDeleting(null)}
-          title={`Supprimer ${deleting.name} ?`}
+          title={t('pnj.supprimer.deleting.name', { deleting_name: deleting.name })}
         >
           <p className="text-sm text-ink-500 mb-4">
-            Cette action est irréversible. Le PNJ sera retiré du groupe.
+            {t('pnj.cette.action.est.irreversible.le.pnj')}
           </p>
           <div className="flex gap-2">
             <button
@@ -329,7 +335,7 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
               disabled={deleteBusy}
               className="btn-secondary flex-1"
             >
-              Annuler
+              {t('pnj.annuler')}
             </button>
             <button
               type="button"
@@ -337,7 +343,7 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
               disabled={deleteBusy}
               className="btn-primary flex-1 bg-red-600 hover:bg-red-700"
             >
-              {deleteBusy ? 'Suppression…' : 'Supprimer'}
+              {deleteBusy ? t('pnj.suppression') : t('common.delete')}
             </button>
           </div>
         </Modal>
@@ -359,27 +365,35 @@ function NpcCard({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const { t } = useTranslation();
   const [showSecret, setShowSecret] = useState(false);
   const hasSecret = npc.secret !== null && npc.secret.trim() !== '';
 
   return (
     <article className="card p-4 flex flex-col gap-2 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between gap-2">
-        <button
-          type="button"
-          onClick={canEdit ? onEdit : undefined}
-          className="min-w-0 flex-1 text-left"
-          aria-label={canEdit ? `Modifier ${npc.name}` : npc.name}
-        >
-          <h3 className="section-title leading-tight truncate">{npc.name}</h3>
-        </button>
+        {canEdit ? (
+          <button
+            type="button"
+            onClick={onEdit}
+            className="min-w-0 flex-1 text-left"
+            aria-label={t('pnj.modifier.npc.name', { npc_name: npc.name })}
+          >
+            <h3 className="section-title leading-tight truncate">{npc.name}</h3>
+          </button>
+        ) : (
+          // Non-editors get a plain heading — no dead focusable control
+          <h3 className="section-title leading-tight truncate min-w-0 flex-1">{npc.name}</h3>
+        )}
         <span
           className="shrink-0 text-base"
           title={
-            npc.isShared ? 'Partagé avec le groupe' : 'Privé (visible par le créateur et le MD)'
+            npc.isShared
+              ? t('pnj.partage.avec.le.groupe')
+              : t('pnj.prive.visible.par.le.createur.et.le.md')
           }
           role="img"
-          aria-label={npc.isShared ? 'Partagé' : 'Privé'}
+          aria-label={npc.isShared ? t('pnj.partage') : t('pnj.prive')}
         >
           {npc.isShared ? '🔗' : '🔒'}
         </span>
@@ -395,14 +409,14 @@ function NpcCard({
         <span className="flex items-center gap-1">
           <span
             className={`inline-block w-2.5 h-2.5 rounded-full ${STATUS_DOT_CLASS[npc.status]}`}
-            title={NPC_STATUS_LABELS_FR[npc.status]}
+            title={t(`pnj.status.${npc.status}`)}
             aria-hidden="true"
           />
           <span className={`font-medium ${STATUS_TEXT_CLASS[npc.status]}`}>
-            {NPC_STATUS_LABELS_FR[npc.status]}
+            {t(`pnj.status.${npc.status}`)}
           </span>
         </span>
-        <span className="text-ink-500">· {NPC_DISPOSITION_LABELS_FR[npc.disposition]}</span>
+        <span className="text-ink-500">· {t(`pnj.disposition.${npc.disposition}`)}</span>
       </div>
 
       {/* Location */}
@@ -428,7 +442,7 @@ function NpcCard({
             aria-expanded={showSecret}
           >
             <span aria-hidden="true">🤫</span>
-            Secret
+            {t('pnj.secret')}
             <span className={`text-ink-400 chevron ${showSecret ? 'is-open' : 'is-closed'}`}>
               ▼
             </span>
@@ -445,22 +459,24 @@ function NpcCard({
 
       {/* Footer: creator + actions */}
       <div className="mt-auto pt-2 flex items-center justify-between gap-2 border-t border-parchment-100">
-        <span className="text-xs text-ink-400 truncate">par {npc.createdByName}</span>
+        <span className="text-xs text-ink-400 truncate">
+          {t('pnj.par.name', { name: npc.createdByName })}
+        </span>
         {canEdit && (
           <div className="flex items-center gap-1 shrink-0">
             <button
               type="button"
               onClick={onEdit}
               className="text-xs px-2 py-1 rounded-lg text-ink-600 hover:bg-parchment-100"
-              aria-label={`Modifier ${npc.name}`}
+              aria-label={t('pnj.modifier.npc.name', { npc_name: npc.name })}
             >
-              ✎ Modifier
+              {t('pnj.modifier')}
             </button>
             <button
               type="button"
               onClick={onDelete}
               className="text-xs px-2 py-1 rounded-lg text-red-600 hover:bg-red-50"
-              aria-label={`Supprimer ${npc.name}`}
+              aria-label={t('pnj.supprimer.npc.name', { npc_name: npc.name })}
             >
               🗑
             </button>
@@ -483,6 +499,7 @@ interface NpcFormModalProps {
 }
 
 function NpcFormModal({ open, onClose, partyId, npc, onSaved, onError }: NpcFormModalProps) {
+  const { t } = useTranslation();
   const isEdit = npc !== null;
 
   const [name, setName] = useState('');
@@ -558,18 +575,22 @@ function NpcFormModal({ open, onClose, partyId, npc, onSaved, onError }: NpcForm
       }
       await onSaved();
     } catch (err: any) {
-      onError(err.response?.data?.error || "Erreur lors de l'enregistrement");
+      onError(err.response?.data?.error || t('pnj.erreur.lors.de.l.enregistrement'));
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <Modal open={open} onClose={onClose} title={isEdit ? 'Modifier le PNJ' : 'Nouveau PNJ'}>
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={isEdit ? t('pnj.modifier.le.pnj') : t('pnj.nouveau.pnj')}
+    >
       <form onSubmit={submit} className="space-y-3">
         <div>
           <label className="label" htmlFor="npc-name">
-            Nom *
+            {t('pnj.nom')}
           </label>
           <input
             id="npc-name"
@@ -584,47 +605,47 @@ function NpcFormModal({ open, onClose, partyId, npc, onSaved, onError }: NpcForm
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="label" htmlFor="npc-role">
-              Rôle
+              {t('pnj.role')}
             </label>
             <input
               id="npc-role"
               className="input"
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              placeholder="Ex. Aubergiste, Marchand…"
+              placeholder={t('pnj.ex.aubergiste.marchand')}
             />
           </div>
           <div>
             <label className="label" htmlFor="npc-faction">
-              Faction
+              {t('pnj.faction')}
             </label>
             <input
               id="npc-faction"
               className="input"
               value={faction}
               onChange={(e) => setFaction(e.target.value)}
-              placeholder="Ex. Ordre du Gantelet"
+              placeholder={t('pnj.ex.ordre.du.gantelet')}
             />
           </div>
         </div>
 
         <div>
           <label className="label" htmlFor="npc-location">
-            Lieu
+            {t('pnj.lieu')}
           </label>
           <input
             id="npc-location"
             className="input"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            placeholder="Ex. Port de Nyanzaru"
+            placeholder={t('pnj.ex.port.de.nyanzaru')}
           />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="label" htmlFor="npc-disposition">
-              Disposition
+              {t('pnj.disposition')}
             </label>
             <select
               id="npc-disposition"
@@ -634,14 +655,14 @@ function NpcFormModal({ open, onClose, partyId, npc, onSaved, onError }: NpcForm
             >
               {DISPOSITION_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
-                  {o.label}
+                  {t(o.labelKey)}
                 </option>
               ))}
             </select>
           </div>
           <div>
             <label className="label" htmlFor="npc-status">
-              Statut
+              {t('pnj.statut')}
             </label>
             <select
               id="npc-status"
@@ -651,7 +672,7 @@ function NpcFormModal({ open, onClose, partyId, npc, onSaved, onError }: NpcForm
             >
               {STATUS_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
-                  {o.label}
+                  {t(o.labelKey)}
                 </option>
               ))}
             </select>
@@ -660,7 +681,7 @@ function NpcFormModal({ open, onClose, partyId, npc, onSaved, onError }: NpcForm
 
         <div>
           <label className="label" htmlFor="npc-description">
-            Description
+            {t('pnj.description')}
           </label>
           <textarea
             id="npc-description"
@@ -668,13 +689,13 @@ function NpcFormModal({ open, onClose, partyId, npc, onSaved, onError }: NpcForm
             rows={3}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Apparence, comportement, rumeurs publiques…"
+            placeholder={t('pnj.apparence.placeholder')}
           />
         </div>
 
         <div>
           <label className="label" htmlFor="npc-secret">
-            Secret
+            {t('pnj.secret')}
           </label>
           <textarea
             id="npc-secret"
@@ -682,10 +703,10 @@ function NpcFormModal({ open, onClose, partyId, npc, onSaved, onError }: NpcForm
             rows={2}
             value={secret}
             onChange={(e) => setSecret(e.target.value)}
-            placeholder="Informes cachées — visibles par le créateur et le MD uniquement"
+            placeholder={t('pnj.informes.cachees.visibles.par.le.createur')}
           />
           <span className="text-xs text-ink-400 mt-1 block">
-            Le secret n'est jamais partagé avec les autres joueurs.
+            {t('pnj.le.secret.n.est.jamais.partage')}
           </span>
         </div>
 
@@ -696,12 +717,14 @@ function NpcFormModal({ open, onClose, partyId, npc, onSaved, onError }: NpcForm
             onChange={(e) => setIsShared(e.target.checked)}
             className="w-4 h-4 accent-blood-600"
           />
-          <span className="text-sm font-medium text-ink-700">Partagé avec le groupe</span>
-          <span className="text-xs text-ink-400">(sinon, visible par le créateur et le MD)</span>
+          <span className="text-sm font-medium text-ink-700">
+            {t('pnj.partage.avec.le.groupe')}
+          </span>
+          <span className="text-xs text-ink-400">{t('pnj.sinon.visible.par.le.createur.et')}</span>
         </label>
 
         <button type="submit" disabled={submitting} className="btn-primary w-full">
-          {submitting ? 'Enregistrement…' : isEdit ? 'Enregistrer' : 'Créer le PNJ'}
+          {submitting ? t('pnj.enregistrement') : isEdit ? t('common.save') : t('pnj.creer.le.pnj')}
         </button>
       </form>
     </Modal>

@@ -17,6 +17,7 @@ import {
   MULTICLASS_PROFICIENCIES_GAINED,
 } from '@table-sync/shared';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { BottomSheet } from './ui';
 
 interface Props {
@@ -38,6 +39,7 @@ const ABILITY_LABELS: Record<string, string> = {
 };
 
 export default function AddClassSheet({ open, onClose, character, currentClasses, onAdd }: Props) {
+  const { t } = useTranslation();
   const totalLevel = currentClasses.reduce((sum, c) => sum + c.level, 0);
   const remaining = 20 - totalLevel;
   const takenKeys = new Set(currentClasses.map((c) => findClass(c.classKey)?.name ?? c.classKey));
@@ -79,12 +81,13 @@ export default function AddClassSheet({ open, onClose, character, currentClasses
     <BottomSheet
       open={open}
       onClose={close}
-      title="Ajouter une classe"
+      title={t('classe.ajouter.une.classe')}
       mobileOnly={false}
       footer={
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs text-ink-500">
-            Niveau total&nbsp;<span className="font-mono">{totalLevel}</span> →{' '}
+            {t('classe.niveau.total.nbsp')}
+            <span className="font-mono">{totalLevel}</span> →{' '}
             <span className="font-mono">{Math.min(20, totalLevel + (info ? level : 0))}</span> / 20
           </p>
           <button
@@ -93,7 +96,7 @@ export default function AddClassSheet({ open, onClose, character, currentClasses
             disabled={!info || remaining < 1}
             onClick={confirm}
           >
-            Ajouter
+            {t('classe.ajouter')}
           </button>
         </div>
       }
@@ -102,7 +105,7 @@ export default function AddClassSheet({ open, onClose, character, currentClasses
         {/* 1 — choix de la classe */}
         <section className="space-y-2">
           <p className="text-xs font-semibold text-ink-400 uppercase tracking-wide">
-            Nouvelle classe
+            {t('classe.nouvelle.classe')}
           </p>
           <div className="grid grid-cols-2 gap-2">
             {DND_CLASSES.map((c) => {
@@ -150,10 +153,12 @@ export default function AddClassSheet({ open, onClose, character, currentClasses
             {/* 2 — prérequis (⚠ jamais bloquant) */}
             <section className="rounded-xl border border-parchment-300 bg-parchment-50 p-3 space-y-1.5">
               <p className="text-xs font-semibold text-ink-400 uppercase tracking-wide">
-                Prérequis (SRD)
+                {t('classe.prerequis.srd')}
               </p>
               {prereqGroups.length === 0 ? (
-                <p className="text-sm text-ink-600">Aucun prérequis de caractéristique.</p>
+                <p className="text-sm text-ink-600">
+                  {t('classe.aucun.prerequis.de.caracteristique')}
+                </p>
               ) : (
                 <ul className="space-y-1">
                   {prereqGroups.map((group) => (
@@ -163,16 +168,18 @@ export default function AddClassSheet({ open, onClose, character, currentClasses
                         const ok = score >= 13;
                         return (
                           <span key={a} className="flex items-center gap-1">
-                            {i > 0 && <span className="text-ink-400">et</span>}
+                            {i > 0 && <span className="text-ink-400">{t('classe.et')}</span>}
                             <span className={ok ? 'text-ink-700' : 'text-orange-600'}>
                               {ABILITY_LABELS[a]} <span className="font-mono">{score}</span>
-                              {!ok && <span className="text-orange-600">(13 requis)</span>}
+                              {!ok && (
+                                <span className="text-orange-600">{t('classe.13.requis')}</span>
+                              )}
                             </span>
                           </span>
                         );
                       })}
                       {group === prereqGroups[0] && prereqGroups.length > 1 && (
-                        <span className="text-ink-400">ou…</span>
+                        <span className="text-ink-400">{t('classe.ou')}</span>
                       )}
                     </li>
                   ))}
@@ -180,7 +187,7 @@ export default function AddClassSheet({ open, onClose, character, currentClasses
               )}
               {!prereqSatisfied && (
                 <p className="text-xs text-orange-600">
-                  ⚠ Prérequis non satisfait — la fiche t'avertit, à toi et au MD de décider.
+                  {t('classe.prerequis.non.satisfait.la.fiche.t')}
                 </p>
               )}
             </section>
@@ -188,28 +195,25 @@ export default function AddClassSheet({ open, onClose, character, currentClasses
             {/* 3 — maîtrises acquises (table SRD) */}
             <section className="rounded-xl border border-parchment-300 bg-parchment-50 p-3 space-y-1">
               <p className="text-xs font-semibold text-ink-400 uppercase tracking-wide">
-                Maîtrises acquises
+                {t('classe.maitrises.acquises')}
               </p>
               <ul className="text-sm text-ink-700 space-y-0.5">
                 {gained?.linesFr.map((line) => (
                   <li key={line}>{line}</li>
                 ))}
               </ul>
-              <p className="text-xs text-ink-500">
-                Votre classe de départ garde ses maîtrises complètes — la nouvelle classe n'accorde
-                que cette liste (SRD).
-              </p>
+              <p className="text-xs text-ink-500">{t('classe.votre.classe.de.depart.garde.ses')}</p>
             </section>
 
             {/* 4 — niveau de départ + sous-classe */}
             <section className="space-y-3">
               <div className="flex items-center justify-between gap-3">
-                <span className="label mb-0">Niveaux de départ</span>
+                <span className="label mb-0">{t('classe.niveaux.de.depart')}</span>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     className="btn-secondary w-11 h-11 text-lg"
-                    aria-label="Retirer un niveau"
+                    aria-label={t('classe.retirer.un.niveau')}
                     onClick={() => setLevel((l) => Math.max(1, l - 1))}
                   >
                     −
@@ -220,7 +224,7 @@ export default function AddClassSheet({ open, onClose, character, currentClasses
                   <button
                     type="button"
                     className="btn-secondary w-11 h-11 text-lg"
-                    aria-label="Ajouter un niveau"
+                    aria-label={t('classe.ajouter.un.niveau')}
                     onClick={() => setLevel((l) => Math.min(maxLevel, l + 1))}
                   >
                     +
@@ -228,16 +232,17 @@ export default function AddClassSheet({ open, onClose, character, currentClasses
                 </div>
               </div>
               <p className="text-sm text-ink-500">
-                Sous-classe&nbsp;:{' '}
+                {t('classe.sous.classe')}
                 {subclassOptions.length === 0 ? (
-                  'aucune pour cette classe.'
+                  t('classe.aucune.pour.cette.classe')
                 ) : Math.min(...subclassOptions.map((s) => s.level)) > level ? (
                   <span className="text-ink-400">
-                    à choisir au niveau {Math.min(...subclassOptions.map((s) => s.level))} de cette
-                    classe.
+                    {t('classe.a.choisir.au.niveau.n.de.cette.classe', {
+                      n: Math.min(...subclassOptions.map((s) => s.level)),
+                    })}
                   </span>
                 ) : (
-                  <span className="text-ink-400">à choisir après l'ajout (voie de classe).</span>
+                  <span className="text-ink-400">{t('classe.a.choisir.apres.l.ajout.voie')}</span>
                 )}
               </p>
             </section>

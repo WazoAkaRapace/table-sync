@@ -7,8 +7,7 @@ import { useAuth } from './auth';
 import CombatWidget from './components/CombatWidget';
 import ConcentrationAlert from './components/ConcentrationAlert';
 import { HeaderProvider, useHeaderState } from './headerContext';
-import './i18n';
-import { LanguageSwitcher } from './components/LanguageSwitcher';
+import i18next from './i18n';
 import { useSync, useSyncEvent } from './sync';
 
 // Route pages are code-split: each lazy() becomes its own chunk so the login
@@ -45,7 +44,7 @@ function SyncIndicator() {
   // (connecting/disconnected) so the state is never color-only.
   return (
     <span
-      className="inline-flex items-center gap-1.5 text-xs text-ink-400"
+      className="inline-flex items-center gap-1.5 text-xs text-ink-300"
       role="status"
       aria-live="polite"
     >
@@ -56,7 +55,7 @@ function SyncIndicator() {
         aria-label={labels[status]}
       />
       {status !== 'connected' && (
-        <span className={status === 'disconnected' ? 'text-red-600 font-medium' : ''}>
+        <span className={status === 'disconnected' ? 'text-red-400 font-medium' : ''}>
           {labels[status]}
         </span>
       )}
@@ -70,12 +69,14 @@ function useRouteTitle(pathname: string): { title: string; backTo?: string } | n
   if (partyMatch) {
     const sub = partyMatch[2];
     const partyBase = `/party/${partyMatch[1]}`;
-    if (sub === 'gm') return { title: '🛡 Table du MD', backTo: partyBase };
-    if (sub === 'npcs') return { title: '🎭 PNJ', backTo: partyBase };
-    if (sub === 'combat') return { title: '⚔ Combat', backTo: partyBase };
-    if (sub === 'create') return { title: 'Nouveau personnage', backTo: partyBase };
-    if (sub.startsWith('character/')) return { title: 'Personnage', backTo: partyBase };
-    return { title: 'Groupe', backTo: '/parties' };
+    if (sub === 'gm') return { title: i18next.t('nav.table.du.md'), backTo: partyBase };
+    if (sub === 'npcs') return { title: i18next.t('nav.pnj'), backTo: partyBase };
+    if (sub === 'combat') return { title: i18next.t('nav.combat'), backTo: partyBase };
+    if (sub === 'create')
+      return { title: i18next.t('create.nouveau.personnage'), backTo: partyBase };
+    if (sub.startsWith('character/'))
+      return { title: i18next.t('nav.personnage'), backTo: partyBase };
+    return { title: i18next.t('nav.groupe'), backTo: '/parties' };
   }
   return null;
 }
@@ -110,6 +111,7 @@ function Nav() {
                   type="button"
                   onClick={headerBack.onClick}
                   className="btn-ghost text-parchment-50 hover:bg-ink-700 text-sm shrink-0"
+                  aria-label={i18next.t('nav.retour')}
                 >
                   {headerBack.label}
                 </button>
@@ -117,6 +119,7 @@ function Nav() {
                 <Link
                   to={headerBack.to!}
                   className="btn-ghost text-parchment-50 hover:bg-ink-700 text-sm shrink-0"
+                  aria-label={i18next.t('nav.retour')}
                 >
                   {headerBack.label}
                 </Link>
@@ -145,7 +148,7 @@ function Nav() {
           )}
           {loc.pathname.startsWith('/party/') && !routeTitle?.backTo && (
             <Link to="/parties" className="btn-ghost text-parchment-50 hover:bg-ink-700 text-sm">
-              <span className="hidden sm:inline">Mes groupes</span>
+              <span className="hidden sm:inline">{t('app.mes.groupes')}</span>
               <span className="sm:hidden">🏠</span>
             </Link>
           )}
@@ -154,18 +157,17 @@ function Nav() {
           <Link
             to="/compte"
             className="text-sm text-parchment-200 hidden sm:inline hover:text-parchment-50 hover:underline underline-offset-4"
-            title="Mon compte"
+            title={t('app.mon.compte')}
           >
             {user.displayName}
           </Link>
           <SyncIndicator />
-          <LanguageSwitcher />
           {loc.pathname === '/parties' && (
             <Link
               to="/compte"
               className="btn-ghost text-parchment-50 hover:bg-ink-700 flex items-center justify-center w-11 h-11"
-              title="Mon compte"
-              aria-label="Mon compte"
+              title={t('app.mon.compte')}
+              aria-label={t('app.mon.compte')}
             >
               <svg
                 viewBox="0 0 24 24"
@@ -212,11 +214,12 @@ function Nav() {
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation();
   const { user, loading } = useAuth();
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-ink-400 animate-pulse">Chargement…</div>
+        <div className="text-ink-400 animate-pulse">{t('app.chargement')}</div>
       </div>
     );
   }
@@ -266,9 +269,10 @@ function PartyOpenTracker() {
 
 /** Suspense fallback shown while a lazy route chunk downloads. */
 function RouteFallback() {
+  const { t } = useTranslation();
   return (
     <div className="card max-w-xs mx-auto mt-16 p-6 text-center" role="status" aria-live="polite">
-      <span className="text-ink-400 animate-pulse">Chargement…</span>
+      <span className="text-ink-400 animate-pulse">{t('app.chargement')}</span>
     </div>
   );
 }

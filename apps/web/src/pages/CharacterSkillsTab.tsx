@@ -10,7 +10,6 @@
  */
 
 import {
-  ABILITY_SHORT_FR,
   type AbilityKey,
   abilityModifier,
   auraOfProtectionBonus,
@@ -32,7 +31,6 @@ import {
   findClass,
   formatModifier,
   hasAutomaticToolExpertise,
-  MUNDANE_WEAPONS,
   type PatchCharacterPayload,
   proficiencyBonus,
   type SkillKey,
@@ -42,8 +40,21 @@ import {
   type ToolCategory,
   toolProficiencyLevel,
 } from '@table-sync/shared';
+import type { TFunction } from 'i18next';
 import { type FormEvent, Fragment, useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import api from '../api';
+import {
+  abilityLabel,
+  abilityShort,
+  classNameLabel,
+  fightingStyleLabel,
+  languageLabel,
+  mundaneWeaponLabel,
+  skillInfoLabel,
+  toolCategoryLabel,
+  toolInfoLabel,
+} from '../i18n/labels';
 
 interface Props {
   character: Character;
@@ -70,6 +81,7 @@ interface BreakdownSegment {
 
 /** Decompose a skill modifier into its colored rule terms (teaches the math). */
 function skillBreakdownSegments(
+  t: TFunction,
   character: Character,
   ability: AbilityKey,
   prof: number,
@@ -77,17 +89,20 @@ function skillBreakdownSegments(
 ): BreakdownSegment[] {
   const mod = abilityModifier(abilityScore(character, ability));
   const segments: BreakdownSegment[] = [
-    { text: `${ABILITY_SHORT_FR[ability]} ${formatModifier(mod)}`, className: 'text-ink-600' },
+    { text: `${abilityShort(ability)} ${formatModifier(mod)}`, className: 'text-ink-600' },
   ];
   if (prof === 2) {
     segments.push({
-      text: `maîtrise ×2 ${formatModifier(profBonus * 2)}`,
+      text: t('skills.maitrise.x2', { mod: formatModifier(profBonus * 2) }),
       className: 'text-gold-700',
     });
   } else if (prof === 1) {
-    segments.push({ text: `maîtrise ${formatModifier(profBonus)}`, className: 'text-blood-600' });
+    segments.push({
+      text: t('skills.maitrise', { mod: formatModifier(profBonus) }),
+      className: 'text-blood-600',
+    });
   } else {
-    segments.push({ text: 'sans maîtrise', className: 'text-ink-400' });
+    segments.push({ text: t('skills.sans.maitrise'), className: 'text-ink-400' });
   }
   return segments;
 }
@@ -95,6 +110,7 @@ function skillBreakdownSegments(
 const TOOL_CATEGORIES = Object.keys(TOOL_CATEGORY_LABELS_FR) as ToolCategory[];
 
 export default function CharacterSkillsTab({ character, charId, onSaved, onError }: Props) {
+  const { t } = useTranslation();
   const level = character.level ?? 1;
   const profBonus = proficiencyBonus(level);
   const className = findClass(character.characterClass)?.name ?? null;
@@ -115,10 +131,10 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
         await api.patch(`/api/characters/${charId}`, payload);
         await onSaved();
       } catch {
-        onError('Erreur de mise à jour');
+        onError(t('skills.erreur.de.mise.a.jour'));
       }
     },
-    [charId, onSaved, onError],
+    [charId, onSaved, onError, t],
   );
 
   const toggleSkill = (skillKey: SkillKey) => {
@@ -195,17 +211,20 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
   // In read mode the ◉ dots carry the state on their own.
   let expertiseBanner: string;
   if (maxExpertise > 0 && usedExpertise >= maxExpertise) {
-    expertiseBanner = `Expertise : ${usedExpertise}/${maxExpertise} — touche ◉ pour libérer un emplacement`;
+    expertiseBanner = t('skills.expertise.pleine', { used: usedExpertise, max: maxExpertise });
   } else if (maxExpertise > 0) {
-    expertiseBanner = `Expertise : ${usedExpertise}/${maxExpertise} — touche une maîtrise ● pour la passer en ◉${
-      className === 'Roublard' ? ' (outils de voleur compris)' : ''
-    }`;
+    expertiseBanner = `${t('skills.expertise.disponible', {
+      used: usedExpertise,
+      max: maxExpertise,
+    })}${className === 'Roublard' ? t('skills.outils.de.voleur.compris') : ''}`;
   } else if (className === 'Barde') {
-    expertiseBanner = 'Expertise disponible dès le niveau 3 (Barde)';
+    expertiseBanner = t('skills.expertise.barde');
   } else if (className === 'Clerc') {
-    expertiseBanner = 'Expertise réservée au Domaine du Savoir (Clerc)';
+    expertiseBanner = t('skills.expertise.clerc');
   } else {
-    expertiseBanner = `Expertise : non disponible pour ${className ?? 'cette classe'} — Roublard niv 1 · Barde niv 3 · Clerc du Savoir niv 1`;
+    expertiseBanner = t('skills.expertise.non.disponible', {
+      className: className ? classNameLabel(className) : t('skills.cette.classe'),
+    });
   }
 
   // Group skills by ability
@@ -235,7 +254,7 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
           >
             <p className="text-xs text-gold-700 flex items-center gap-2">
               <span className="text-sm leading-none">✎</span>
-              <span>Mode édition — touche une ligne pour cycler ○ maîtrise → ◉ expertise</span>
+              <span>{t('skills.mode.edition.touche.une.ligne.pour')}</span>
             </p>
             <p className="text-xs text-ink-600 flex items-center gap-2">
               <span className="text-sm leading-none">⭐</span>
@@ -244,7 +263,7 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
           </div>
         ) : (
           <p className="flex-1 min-w-0 text-xs text-ink-500">
-            Lecture — touche une compétence pour voir le détail de son bonus.
+            {t('skills.lecture.touche.une.competence.pour.voir')}
           </p>
         )}
         <button
@@ -256,7 +275,7 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
           }}
           className={`shrink-0 text-sm px-3 py-2 ${editMode ? 'btn-primary' : 'btn-secondary'}`}
         >
-          {editMode ? '✓ Terminer' : '✎ Modifier'}
+          {editMode ? t('skills.terminer') : t('skills.modifier')}
         </button>
       </div>
 
@@ -265,15 +284,17 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
           {/* Saving throws — the tab's hero: the most-rolled numbers */}
           <section className="card p-4 sm:p-5 space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="section-title">Jets de sauvegarde</h2>
+              <h2 className="section-title">{t('skills.jets.de.sauvegarde')}</h2>
               <span className="text-xs text-ink-400">
-                Bonus de maîtrise {formatModifier(profBonus)}
+                {t('skills.bonus.de.maitrise')} {formatModifier(profBonus)}
               </span>
             </div>
             {auraOfProtection > 0 && (
               <p className="text-xs text-gold-700 bg-gold-400/10 border border-gold-400/40 rounded-lg px-2.5 py-1.5">
-                🛡️ Aura de protection : +{auraOfProtection} à toutes tes sauvegardes — et à celles
-                des alliés à {auraRadiusMeters(level)} m (inclus dans les totaux ci-dessous)
+                {t('skills.aura.de.protection', {
+                  bonus: auraOfProtection,
+                  radius: auraRadiusMeters(level),
+                })}
               </p>
             )}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -291,7 +312,7 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
                   <>
                     <span className="flex items-center justify-center gap-1.5 text-xs font-medium text-ink-500">
                       {proficient && <span className="text-blood-600">●</span>}
-                      <span>{abi.label}</span>
+                      <span>{abilityLabel(abi.key)}</span>
                       {auraOfProtection > 0 && <span aria-hidden="true">🛡️</span>}
                     </span>
                     <span className="block mt-0.5 text-xl font-bold tabular-nums text-ink-800">
@@ -320,11 +341,12 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
 
           {/* Skills grouped by ability — full-width rows, breakdown on tap */}
           <section className="card p-4 sm:p-5 space-y-3">
-            <h2 className="section-title">Compétences</h2>
+            <h2 className="section-title">{t('skills.competences')}</h2>
             {skillsByAbility.map((group) => (
               <div key={group.ability}>
                 <div className="text-xs font-semibold text-ink-500 uppercase tracking-wide mb-1.5">
-                  {ABILITY_SHORT_FR[group.ability as AbilityKey]} — {group.label}
+                  {abilityShort(group.ability as AbilityKey)} —{' '}
+                  {abilityLabel(group.ability as AbilityKey)}
                 </div>
                 <div className="space-y-1.5">
                   {group.skills.map((skill) => {
@@ -348,7 +370,9 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
                             <span className={`text-xs w-4 shrink-0 ${profDotClass(prof)}`}>
                               {profDotGlyph(prof)}
                             </span>
-                            <span className="text-sm text-ink-700 truncate">{skill.label}</span>
+                            <span className="text-sm text-ink-700 truncate">
+                              {skillInfoLabel(skill)}
+                            </span>
                           </span>
                           <span className="font-bold text-ink-800 shrink-0">
                             {formatModifier(total)}
@@ -373,7 +397,9 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
                             <span className={`text-xs w-4 shrink-0 ${profDotClass(prof)}`}>
                               {profDotGlyph(prof)}
                             </span>
-                            <span className="text-sm text-ink-700 truncate">{skill.label}</span>
+                            <span className="text-sm text-ink-700 truncate">
+                              {skillInfoLabel(skill)}
+                            </span>
                           </span>
                           <span className="flex items-center gap-1.5 shrink-0">
                             <span className="font-bold text-ink-800">{formatModifier(total)}</span>
@@ -393,6 +419,7 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
                           <div className="expand-inner">
                             <p className="mt-1 mx-2 rounded-md bg-parchment-100 px-2.5 py-1.5 text-xs flex flex-wrap items-center gap-x-1">
                               {skillBreakdownSegments(
+                                t,
                                 character,
                                 skill.ability,
                                 prof,
@@ -424,20 +451,18 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
 
           {/* Tools — read mode shows only what is mastered */}
           <section className="card p-4 sm:p-5 space-y-3">
-            <h2 className="section-title">Outils</h2>
+            <h2 className="section-title">{t('skills.outils')}</h2>
             {hasAutomaticToolExpertise(character) && (
               <p className="text-xs text-ink-500 flex items-center gap-2">
                 <span className="text-sm leading-none">⭐</span>
-                <span>
-                  Maîtrise des outils (niv 6) : bonus de maîtrise doublé sur tous les outils.
-                </span>
+                <span>{t('skills.maitrise.des.outils.niv.6.bonus')}</span>
               </p>
             )}
             {editMode ? (
               TOOL_CATEGORIES.map((cat) => (
                 <div key={cat}>
                   <div className="text-xs font-semibold text-ink-500 uppercase tracking-wide mb-1.5">
-                    {TOOL_CATEGORY_LABELS_FR[cat]}
+                    {toolCategoryLabel(cat)}
                   </div>
                   <div className="grid grid-cols-2 gap-1.5">
                     {DND_TOOLS.filter((t) => t.category === cat).map((tool) => {
@@ -457,7 +482,9 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
                           <span className={`text-xs w-4 shrink-0 ${profDotClass(prof)}`}>
                             {profDotGlyph(prof)}
                           </span>
-                          <span className="text-sm text-ink-700 truncate">{tool.label}</span>
+                          <span className="text-sm text-ink-700 truncate">
+                            {toolInfoLabel(tool)}
+                          </span>
                         </button>
                       );
                     })}
@@ -484,21 +511,21 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
                       >
                         {prof === 2 ? '◉' : '●'}
                       </span>
-                      {tool.label}
+                      {toolInfoLabel(tool)}
                     </span>
                   );
                 })}
               </div>
             ) : (
               <p className="text-sm text-ink-500">
-                Aucune maîtrise d'outil — ✎ Modifier pour en choisir.
+                {t('skills.aucune.maitrise.d.outil.modifier.pour')}
               </p>
             )}
           </section>
 
           {/* Languages — read mode shows known tongues only */}
           <section className="card p-4 sm:p-5 space-y-3">
-            <h2 className="section-title">Langues</h2>
+            <h2 className="section-title">{t('skills.langues')}</h2>
             {editMode ? (
               <>
                 <div className="flex flex-wrap gap-1.5">
@@ -517,20 +544,20 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
                         aria-pressed={known}
                       >
                         {known && <span className="text-blood-600 text-xs mr-1">●</span>}
-                        {lang}
+                        {languageLabel(lang)}
                       </button>
                     );
                   })}
                 </div>
                 <form onSubmit={addLanguage} className="flex gap-2">
                   <label htmlFor="new-language" className="sr-only">
-                    Nouvelle langue
+                    {t('skills.nouvelle.langue')}
                   </label>
                   <input
                     id="new-language"
                     value={newLang}
                     onChange={(e) => setNewLang(e.target.value)}
-                    placeholder="Autre langue…"
+                    placeholder={t('skills.autre.langue')}
                     maxLength={40}
                     className="flex-1 px-3 py-2 rounded-lg border bg-parchment-50 border-parchment-200 placeholder:text-ink-400 text-sm text-ink-700"
                   />
@@ -538,7 +565,7 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
                     type="submit"
                     className="px-3 py-2 rounded-lg border bg-parchment-100 border-parchment-200 hover:border-parchment-300 text-sm font-medium text-ink-600"
                   >
-                    Ajouter
+                    {t('skills.ajouter')}
                   </button>
                 </form>
               </>
@@ -550,12 +577,14 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
                     className="px-3 py-1.5 rounded-full border text-sm text-ink-700 bg-blood-50 border-blood-300"
                   >
                     <span className="text-blood-600 text-xs mr-1">●</span>
-                    {lang}
+                    {languageLabel(lang)}
                   </span>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-ink-500">Aucune langue — ✎ Modifier pour en ajouter.</p>
+              <p className="text-sm text-ink-500">
+                {t('skills.aucune.langue.modifier.pour.en.ajouter')}
+              </p>
             )}
           </section>
         </div>
@@ -575,15 +604,14 @@ function WeaponMasteryCard({
   editMode: boolean;
   patch: (payload: PatchCharacterPayload) => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const effective = effectiveWeaponProficiencies(character);
   const isCustom = character.weaponProficiencies != null;
   const classDefault = classWeaponProficiencies(character.characterClass);
   const hasFightingStyle = (FIGHTING_STYLE_CLASSES as readonly string[]).includes(
     character.characterClass ?? '',
   );
-  const styleLabel = character.fightingStyle
-    ? FIGHTING_STYLE_LABELS_FR[character.fightingStyle]
-    : null;
+  const styleLabel = character.fightingStyle ? fightingStyleLabel(character.fightingStyle) : null;
 
   const toggle = (token: 'simple' | 'martial') => {
     // Materialize the effective list (class defaults when untouched), then flip
@@ -594,13 +622,11 @@ function WeaponMasteryCard({
     patch({ weaponProficiencies: tokens });
   };
 
-  const specificFr = effective.specific.map(
-    (nameEn) => MUNDANE_WEAPONS.find((m) => m.nameEn === nameEn)?.nameFr ?? nameEn,
-  );
+  const specificFr = effective.specific.map((nameEn) => mundaneWeaponLabel(nameEn));
 
-  const masteredFr = [
-    effective.simple && 'Armes simples',
-    effective.martial && 'Armes de guerre',
+  const mastered = [
+    effective.simple && t('skills.armes.simples'),
+    effective.martial && t('skills.armes.de.guerre'),
     ...specificFr,
   ].filter(Boolean) as string[];
 
@@ -614,15 +640,15 @@ function WeaponMasteryCard({
   return (
     <section className="card p-4 sm:p-5 space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="section-title">Maîtrise d'armes</h2>
+        <h2 className="section-title">{t('skills.maitrise.d.armes')}</h2>
         {editMode && isCustom && (
           <button
             type="button"
             onClick={() => patch({ weaponProficiencies: null })}
             className="text-xs text-blood-600 hover:underline"
-            title="Revenir aux maîtrises par défaut de la classe"
+            title={t('skills.revenir.aux.maitrises.par.defaut.de')}
           >
-            ↺ Selon la classe
+            {t('skills.selon.la.classe')}
           </button>
         )}
       </div>
@@ -635,7 +661,8 @@ function WeaponMasteryCard({
               className={chip(effective.simple)}
               aria-pressed={effective.simple}
             >
-              <span aria-hidden="true">🗡</span> Armes simples
+              <span aria-hidden="true">🗡</span>
+              {t('skills.armes.simples')}
             </button>
             <button
               type="button"
@@ -643,12 +670,13 @@ function WeaponMasteryCard({
               className={chip(effective.martial)}
               aria-pressed={effective.martial}
             >
-              <span aria-hidden="true">⚔️</span> Armes de guerre
+              <span aria-hidden="true">⚔️</span>
+              {t('skills.armes.de.guerre')}
             </button>
           </div>
           {specificFr.length > 0 && (
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-xs text-ink-400">Spécifiques :</span>
+              <span className="text-xs text-ink-400">{t('skills.specifiques')}</span>
               {specificFr.map((fr) => (
                 <span
                   key={fr}
@@ -661,7 +689,9 @@ function WeaponMasteryCard({
           )}
           {hasFightingStyle && (
             <label className="flex items-center justify-between gap-3">
-              <span className="text-sm font-medium text-ink-700">Style de combat</span>
+              <span className="text-sm font-medium text-ink-700">
+                {t('skills.style.de.combat')}
+              </span>
               <select
                 className="input py-1.5 text-sm w-auto max-w-[60%]"
                 value={character.fightingStyle ?? ''}
@@ -670,12 +700,12 @@ function WeaponMasteryCard({
                     fightingStyle: e.target.value === '' ? null : (e.target.value as FightingStyle),
                   })
                 }
-                aria-label="Style de combat"
+                aria-label={t('skills.style.de.combat')}
               >
                 <option value="">—</option>
-                {Object.entries(FIGHTING_STYLE_LABELS_FR).map(([value, label]) => (
+                {Object.entries(FIGHTING_STYLE_LABELS_FR).map(([value]) => (
                   <option key={value} value={value}>
-                    {label}
+                    {fightingStyleLabel(value as FightingStyle)}
                   </option>
                 ))}
               </select>
@@ -684,9 +714,9 @@ function WeaponMasteryCard({
         </>
       ) : (
         <>
-          {masteredFr.length > 0 ? (
+          {mastered.length > 0 ? (
             <div className="flex flex-wrap gap-1.5">
-              {masteredFr.map((fr) => (
+              {mastered.map((fr) => (
                 <span
                   key={fr}
                   className="px-3 py-1.5 rounded-full border text-sm text-ink-700 bg-blood-50 border-blood-300"
@@ -698,29 +728,32 @@ function WeaponMasteryCard({
             </div>
           ) : (
             <p className="text-sm text-ink-500">
-              Aucune maîtrise d'arme — ✎ Modifier pour en choisir.
+              {t('skills.aucune.maitrise.d.arme.modifier.pour')}
             </p>
           )}
           {styleLabel && (
             <p className="text-sm text-ink-700">
-              Style de combat : <strong>{styleLabel}</strong>
+              {t('skills.style.de.combat')}
+              <strong>{styleLabel}</strong>
             </p>
           )}
         </>
       )}
       <p className="text-xs text-ink-400">
         {isCustom
-          ? 'Maîtrises personnalisées.'
-          : `Selon la classe ${character.characterClass ?? '—'} : ${
-              [
-                classDefault.simple && 'armes simples',
-                classDefault.martial && 'armes de guerre',
-                classDefault.specific.length > 0 &&
-                  `${classDefault.specific.length} arme(s) spécifique(s)`,
-              ]
-                .filter(Boolean)
-                .join(' + ') || 'aucune maîtrise'
-            }.`}
+          ? t('skills.maitrises.personnalisees')
+          : t('skills.selon.la.classe.liste', {
+              classLabel: classNameLabel(character.characterClass ?? '—'),
+              liste:
+                [
+                  classDefault.simple && t('skills.footer.armes.simples'),
+                  classDefault.martial && t('skills.footer.armes.de.guerre'),
+                  classDefault.specific.length > 0 &&
+                    t('skills.footer.n.armes.specific.n', { count: classDefault.specific.length }),
+                ]
+                  .filter(Boolean)
+                  .join(' + ') || t('skills.footer.aucune.maitrise'),
+            })}
       </p>
     </section>
   );
@@ -728,12 +761,16 @@ function WeaponMasteryCard({
 
 /** Armor mastery: read mode lists trained armor families + shields (chips);
  *  edit mode toggles light/medium/heavy/shields. null = class default (SRD). */
-const ARMOR_TOKEN_LABELS_FR: Record<'light' | 'medium' | 'heavy' | 'shields', string> = {
-  light: 'Armures légères',
-  medium: 'Armures intermédiaires',
-  heavy: 'Armures lourdes',
-  shields: 'Boucliers',
+const ARMOR_TOKEN_KEYS: Record<'light' | 'medium' | 'heavy' | 'shields', string> = {
+  light: 'skills.armures.legeres',
+  medium: 'skills.armures.intermediaires',
+  heavy: 'skills.armures.lourdes',
+  shields: 'skills.boucliers',
 };
+
+function armorTokenLabel(t: TFunction, token: 'light' | 'medium' | 'heavy' | 'shields'): string {
+  return t(ARMOR_TOKEN_KEYS[token]);
+}
 
 function ArmorMasteryCard({
   character,
@@ -744,6 +781,7 @@ function ArmorMasteryCard({
   editMode: boolean;
   patch: (payload: PatchCharacterPayload) => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const effective = effectiveArmorProficiencies(character);
   const isCustom = character.armorProficiencies != null;
   const classDefault = classArmorProficiencies(character.characterClass);
@@ -756,7 +794,7 @@ function ArmorMasteryCard({
     });
   };
 
-  const trainedFr = tokens.filter((t) => effective[t]).map((t) => ARMOR_TOKEN_LABELS_FR[t]);
+  const trained = tokens.filter((tk) => effective[tk]).map((tk) => armorTokenLabel(t, tk));
 
   const chip = (active: boolean) =>
     `flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-colors ${
@@ -768,15 +806,15 @@ function ArmorMasteryCard({
   return (
     <section className="card p-4 sm:p-5 space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="section-title">Maîtrise d'armures</h2>
+        <h2 className="section-title">{t('skills.maitrise.d.armures')}</h2>
         {editMode && isCustom && (
           <button
             type="button"
             onClick={() => patch({ armorProficiencies: null })}
             className="text-xs text-blood-600 hover:underline"
-            title="Revenir aux maîtrises par défaut de la classe"
+            title={t('skills.revenir.aux.maitrises.par.defaut.de')}
           >
-            ↺ Selon la classe
+            {t('skills.selon.la.classe')}
           </button>
         )}
       </div>
@@ -799,13 +837,13 @@ function ArmorMasteryCard({
                       ? '⚓'
                       : '🛡️'}
               </span>{' '}
-              {ARMOR_TOKEN_LABELS_FR[token]}
+              {armorTokenLabel(t, token)}
             </button>
           ))}
         </div>
-      ) : trainedFr.length > 0 ? (
+      ) : trained.length > 0 ? (
         <div className="flex flex-wrap gap-1.5">
-          {trainedFr.map((fr) => (
+          {trained.map((fr) => (
             <span
               key={fr}
               className="px-3 py-1.5 rounded-full border text-sm text-ink-700 bg-blood-50 border-blood-300"
@@ -816,23 +854,23 @@ function ArmorMasteryCard({
           ))}
         </div>
       ) : (
-        <p className="text-sm text-ink-500">
-          Aucune maîtrise d'armure — ✎ Modifier pour en choisir.
-        </p>
+        <p className="text-sm text-ink-500">{t('skills.aucune.maitrise.d.armure.modifier.pour')}</p>
       )}
       <p className="text-xs text-ink-400">
         {isCustom
-          ? 'Maîtrises personnalisées.'
-          : `Selon la classe ${character.characterClass ?? '—'} : ${
-              [
-                classDefault.light && 'armures légères',
-                classDefault.medium && 'armures intermédiaires',
-                classDefault.heavy && 'armures lourdes',
-                classDefault.shields && 'boucliers',
-              ]
-                .filter(Boolean)
-                .join(' + ') || 'aucune maîtrise'
-            }.`}
+          ? t('skills.maitrises.personnalisees')
+          : t('skills.selon.la.classe.liste', {
+              classLabel: classNameLabel(character.characterClass ?? '—'),
+              liste:
+                [
+                  classDefault.light && t('skills.footer.armures.legeres'),
+                  classDefault.medium && t('skills.footer.armures.intermediaires'),
+                  classDefault.heavy && t('skills.footer.armures.lourdes'),
+                  classDefault.shields && t('skills.footer.boucliers'),
+                ]
+                  .filter(Boolean)
+                  .join(' + ') || t('skills.footer.aucune.maitrise'),
+            })}
       </p>
     </section>
   );

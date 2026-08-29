@@ -22,10 +22,12 @@ import {
   type PatchCharacterPayload,
 } from '@table-sync/shared';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import api from '../api';
 import { useAuth } from '../auth';
 import AddClassSheet from '../components/AddClassSheet';
 import { BottomSheet, ConfirmButton } from '../components/ui';
+import { classNameLabel, fightingStyleLabel } from '../i18n/labels';
 
 interface Props {
   character: Character;
@@ -35,26 +37,32 @@ interface Props {
 }
 
 // Fields that are simple text inputs
-const PHYSICAL_FIELDS: Array<{ key: keyof Character; label: string; placeholder?: string }> = [
-  { key: 'alignment', label: 'Alignement', placeholder: 'Loyal Bon' },
-  { key: 'sex', label: 'Sexe', placeholder: 'M / F' },
-  { key: 'age', label: 'Âge', placeholder: '125 ans' },
-  { key: 'height', label: 'Taille', placeholder: '1,80 m' },
-  { key: 'weight', label: 'Poids', placeholder: '80 kg' },
-  { key: 'skin', label: 'Peau', placeholder: 'Pâle' },
-  { key: 'eyes', label: 'Yeux', placeholder: 'Bleus' },
-  { key: 'hair', label: 'Cheveux', placeholder: 'Noirs, courts' },
-];
+const PHYSICAL_FIELDS: Array<{ key: keyof Character; labelKey: string; placeholderKey?: string }> =
+  [
+    { key: 'alignment', labelKey: 'desc.alignement', placeholderKey: 'desc.alignement.ph' },
+    { key: 'sex', labelKey: 'desc.sexe' },
+    { key: 'age', labelKey: 'desc.age', placeholderKey: 'desc.age.ph' },
+    { key: 'height', labelKey: 'desc.taille.physique', placeholderKey: 'desc.taille.ph' },
+    { key: 'weight', labelKey: 'desc.poids', placeholderKey: 'desc.poids.ph' },
+    { key: 'skin', labelKey: 'desc.peau', placeholderKey: 'desc.peau.ph' },
+    { key: 'eyes', labelKey: 'desc.yeux', placeholderKey: 'desc.yeux.ph' },
+    { key: 'hair', labelKey: 'desc.cheveux', placeholderKey: 'desc.cheveux.ph' },
+  ];
 
-const PERSONALITY_FIELDS: Array<{ key: keyof Character; label: string; placeholder: string }> = [
+// Clés i18n — résolues au rendu (la langue peut changer à chaud)
+const PERSONALITY_FIELDS: Array<{
+  key: keyof Character;
+  labelKey: string;
+  placeholderKey: string;
+}> = [
   {
     key: 'personalityTraits',
-    label: 'Traits de personnalité',
-    placeholder: "Je suis animé d'une curiosité insatiable…",
+    labelKey: 'desc.perso.traits',
+    placeholderKey: 'desc.perso.traits.ph',
   },
-  { key: 'ideals', label: 'Idéaux', placeholder: 'Le savoir est la plus grande richesse.' },
-  { key: 'bonds', label: 'Liens', placeholder: 'Je cherche mon maître disparu.' },
-  { key: 'flaws', label: 'Défauts', placeholder: 'Je suis incapable de résister à un mystère.' },
+  { key: 'ideals', labelKey: 'desc.perso.ideaux', placeholderKey: 'desc.perso.ideaux.ph' },
+  { key: 'bonds', labelKey: 'desc.perso.liens', placeholderKey: 'desc.perso.liens.ph' },
+  { key: 'flaws', labelKey: 'desc.perso.defauts', placeholderKey: 'desc.perso.defauts.ph' },
 ];
 
 /** Niveau d'acquisition du style de combat par classe (SRD). */
@@ -73,6 +81,7 @@ function subclassLabel(entry: CharacterClassEntry): string | null {
 }
 
 export default function CharacterDescriptionTab({ character, charId, onSaved, onError }: Props) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const isOwner = user?.id === character.ownerId;
   const [drafts, setDrafts] = useState<Record<string, string>>({});
@@ -114,9 +123,9 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
   /** Remplace l'ensemble des lignes de classe (PATCH atomique côté API). */
   const patchClasses = useCallback(
     (entries: CharacterClassEntry[]) => {
-      patchCharacter({ classes: entries }, 'Impossible de mettre à jour les classes');
+      patchCharacter({ classes: entries }, t('desc.impossible.de.mettre.a.jour.les.classes'));
     },
-    [patchCharacter],
+    [patchCharacter, t],
   );
 
   const bumpLevel = (classKey: string, delta: number) => {
@@ -157,7 +166,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
     const draftVal = drafts[key];
     const currentVal = (character[key as keyof Character] as string) ?? '';
     if (draftVal === undefined || draftVal === currentVal) return;
-    patchCharacter({ [key]: draftVal.trim() || null }, 'Erreur de mise à jour');
+    patchCharacter({ [key]: draftVal.trim() || null }, t('desc.erreur.de.mise.a.jour'));
   };
 
   const handlePortraitUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -185,7 +194,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
         if (!ctx) return;
         ctx.drawImage(img, 0, 0, width, height);
         const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-        patchCharacter({ portraitUrl: dataUrl }, 'Erreur lors du téléversement');
+        patchCharacter({ portraitUrl: dataUrl }, t('desc.erreur.lors.du.televersement'));
       };
       img.src = ev.target?.result as string;
     };
@@ -193,17 +202,17 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
   };
 
   const removePortrait = () => {
-    patchCharacter({ portraitUrl: null }, 'Erreur de mise à jour');
+    patchCharacter({ portraitUrl: null }, t('desc.erreur.de.mise.a.jour'));
   };
 
   const commitRace = () => {
     if (raceDraft === (character.race ?? '')) return;
-    patchCharacter({ race: raceDraft.trim() || null }, 'Erreur de mise à jour');
+    patchCharacter({ race: raceDraft.trim() || null }, t('desc.erreur.de.mise.a.jour'));
   };
 
   const commitBackground = () => {
     if (bgDraft === (character.background ?? '')) return;
-    patchCharacter({ background: bgDraft.trim() || null }, 'Erreur de mise à jour');
+    patchCharacter({ background: bgDraft.trim() || null }, t('desc.erreur.de.mise.a.jour'));
   };
 
   const closeIdentity = () => {
@@ -215,8 +224,8 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
   // Ligne résumé : « Guerrier 5 / Magicien 3 » + sous-classes
   const summaryClass =
     classLines.length > 0
-      ? classLines.map((c) => `${c.classKey} ${c.level}`).join(' / ')
-      : `Niveau ${character.level ?? 1} · classe non définie`;
+      ? classLines.map((c) => `${classNameLabel(c.classKey)} ${c.level}`).join(' / ')
+      : t('desc.niveau.level.classe.non.definie', { level: character.level ?? 1 });
   const subclassLine = classLines
     .map((c) => {
       const label = subclassLabel(c);
@@ -234,13 +243,13 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
       {/* Identity & class — summary card, full editor in bottom sheet */}
       <section className="card p-4 sm:p-5 space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="section-title">Identité & classe</h2>
+          <h2 className="section-title">{t('desc.identite.classe')}</h2>
           <button
             type="button"
             onClick={() => setIdentityOpen(true)}
             className="btn-secondary text-sm px-3 py-2"
           >
-            ✎ Modifier
+            {t('desc.modifier')}
           </button>
         </div>
         <div className="space-y-1">
@@ -248,7 +257,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
             {classLines.length > 1
               ? classLines.map((c) => (
                   <span key={c.classKey}>
-                    {c.classKey} <span className="font-mono">{c.level}</span>
+                    {classNameLabel(c.classKey)} <span className="font-mono">{c.level}</span>
                     {c !== classLines[classLines.length - 1] ? ' / ' : ''}
                   </span>
                 ))
@@ -257,7 +266,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
           {subclassLine && <p className="text-sm text-ink-700">{subclassLine}</p>}
           <p className="text-sm text-ink-500">
             {[character.race, character.background].filter(Boolean).join(' · ') ||
-              'Race et historique non définies'}
+              t('desc.race.et.historique.non.definies')}
           </p>
         </div>
       </section>
@@ -266,7 +275,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
       <BottomSheet
         open={identityOpen}
         onClose={closeIdentity}
-        title="Identité & classe"
+        title={t('desc.identite.classe')}
         mobileOnly={false}
       >
         <div className="space-y-4">
@@ -274,14 +283,15 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
           <section className="space-y-3">
             <div className="flex items-center justify-between gap-3">
               <p className="text-xs font-semibold text-ink-400 uppercase tracking-wide">
-                Lignes de classe
+                {t('desc.lignes.de.classe')}
               </p>
               <p className="text-xs text-ink-500">
-                Niveau total&nbsp;<span className="font-mono">{totalLevel}</span>/20
+                {t('desc.niveau.total.nbsp')}
+                <span className="font-mono">{totalLevel}</span>/20
               </p>
             </div>
             {totalLevel >= 20 && (
-              <p className="text-sm text-orange-600">Niveau total maximal atteint (20).</p>
+              <p className="text-sm text-orange-600">{t('desc.niveau.total.maximal.atteint.20')}</p>
             )}
             <div className="space-y-3">
               {classLines.map((entry, index) => {
@@ -302,7 +312,9 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
                         <p className="text-sm font-semibold text-ink-800 truncate">
                           {name}
                           {index === 0 && (
-                            <span className="text-xs font-normal text-ink-400"> · départ</span>
+                            <span className="text-xs font-normal text-ink-400">
+                              {t('desc.depart')}
+                            </span>
                           )}
                           <span className="text-xs font-normal text-ink-400">
                             {' '}
@@ -314,7 +326,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
                         <button
                           type="button"
                           className="btn-secondary w-11 h-11 text-lg"
-                          aria-label={`Retirer un niveau de ${name}`}
+                          aria-label={t('desc.retirer.un.niveau.de.name', { name: name })}
                           onClick={() => bumpLevel(name, -1)}
                         >
                           −
@@ -323,7 +335,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
                         <button
                           type="button"
                           className="btn-secondary w-11 h-11 text-lg"
-                          aria-label={`Ajouter un niveau de ${name}`}
+                          aria-label={t('desc.ajouter.un.niveau.de.name', { name: name })}
                           onClick={() => bumpLevel(name, 1)}
                         >
                           +
@@ -332,35 +344,37 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
                           <button
                             type="button"
                             className="text-xs text-red-500 hover:text-red-700 px-2 h-11"
-                            aria-label={`Retirer la classe ${name}`}
+                            aria-label={t('desc.retirer.la.classe.name', { name: name })}
                             onClick={() => removeClass(name)}
                           >
-                            Retirer
+                            {t('desc.retirer')}
                           </button>
                         )}
                       </div>
                     </div>
                     {issue && !issue.satisfied && (
                       <p className="text-xs text-orange-600">
-                        ⚠ Prérequis ({issue.details.join(' / ')}) — à valider avec le MD.
+                        {t('desc.prerequis', { details: issue.details.join(' / ') })}
                       </p>
                     )}
                     {subclassOptions.length > 0 && (
                       <label className="flex items-center justify-between gap-3">
-                        <span className="label mb-0 text-xs">Voie de classe</span>
+                        <span className="label mb-0 text-xs">{t('desc.voie.de.classe')}</span>
                         <select
                           className="input py-1.5 text-sm w-auto max-w-[60%]"
                           value={entry.subclassKey ?? ''}
                           onChange={(e) =>
                             setSubclass(name, e.target.value === '' ? null : e.target.value)
                           }
-                          aria-label={`Voie de classe de ${name}`}
+                          aria-label={t('desc.voie.de.classe.de.name', { name: name })}
                         >
                           <option value="">—</option>
                           {subclassOptions.map((s) => (
                             <option key={s.key} value={s.key} disabled={s.level > entry.level}>
                               {s.label}
-                              {s.level > entry.level ? ` (niv. ${s.level})` : ''}
+                              {s.level > entry.level
+                                ? ` ${t('desc.niv.level', { level: s.level })}`
+                                : ''}
                             </option>
                           ))}
                         </select>
@@ -368,17 +382,17 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
                     )}
                     {name === 'Druide' && entry.subclassKey === 'terre' && (
                       <label className="flex items-center justify-between gap-3">
-                        <span className="label mb-0 text-xs">Terrain du cercle</span>
+                        <span className="label mb-0 text-xs">{t('desc.terrain.du.cercle')}</span>
                         <select
                           className="input py-1.5 text-sm w-auto max-w-[60%]"
                           value={character.landCircle ?? ''}
                           onChange={(e) =>
                             patchCharacter(
                               { landCircle: e.target.value === '' ? null : e.target.value },
-                              'Erreur de mise à jour',
+                              t('desc.erreur.de.mise.a.jour'),
                             )
                           }
-                          aria-label="Terrain du cercle"
+                          aria-label={t('desc.terrain.du.cercle')}
                         >
                           <option value="">—</option>
                           {LAND_CIRCLES.map((t) => (
@@ -391,7 +405,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
                     )}
                     {styleEligible && (
                       <label className="flex items-center justify-between gap-3">
-                        <span className="label mb-0 text-xs">Style de combat</span>
+                        <span className="label mb-0 text-xs">{t('desc.style.de.combat')}</span>
                         <select
                           className="input py-1.5 text-sm w-auto max-w-[60%]"
                           value={entry.fightingStyle ?? ''}
@@ -401,12 +415,12 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
                               e.target.value === '' ? null : (e.target.value as FightingStyle),
                             )
                           }
-                          aria-label={`Style de combat de ${name}`}
+                          aria-label={t('desc.style.de.combat.de.name', { name: name })}
                         >
                           <option value="">—</option>
                           {(Object.keys(FIGHTING_STYLE_LABELS_FR) as FightingStyle[]).map((s) => (
                             <option key={s} value={s}>
-                              {FIGHTING_STYLE_LABELS_FR[s]}
+                              {fightingStyleLabel(s as FightingStyle)}
                             </option>
                           ))}
                         </select>
@@ -421,31 +435,31 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
               className="btn-ghost text-sm px-3 py-2"
               onClick={() => setAddClassOpen(true)}
             >
-              ＋ Ajouter une classe
+              {t('desc.ajouter.une.classe')}
             </button>
           </section>
 
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
-              <span className="label">Race</span>
+              <span className="label">{t('desc.race')}</span>
               <input
                 type="text"
                 className="input"
                 value={raceDraft}
                 onChange={(e) => setRaceDraft(e.target.value)}
                 onBlur={commitRace}
-                placeholder="Haut-elfe"
+                placeholder={t('desc.haut.elfe')}
               />
             </label>
             <label className="block">
-              <span className="label">Historique</span>
+              <span className="label">{t('desc.historique')}</span>
               <input
                 type="text"
                 className="input"
                 value={bgDraft}
                 onChange={(e) => setBgDraft(e.target.value)}
                 onBlur={commitBackground}
-                placeholder="Sage"
+                placeholder={t('desc.sage')}
               />
             </label>
           </div>
@@ -463,7 +477,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
 
       {/* Portrait + physical attributes */}
       <section className="card p-4 sm:p-5 space-y-3">
-        <h2 className="section-title">Apparence</h2>
+        <h2 className="section-title">{t('desc.apparence')}</h2>
 
         {/* Portrait */}
         <div className="flex items-center gap-4">
@@ -493,18 +507,18 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
               onClick={() => fileInputRef.current?.click()}
               className="btn-primary text-sm px-3 py-1.5"
             >
-              📷 {character.portraitUrl ? 'Changer' : 'Téléverser'}
+              📷 {character.portraitUrl ? t('desc.changer') : t('desc.televerser')}
             </button>
             {character.portraitUrl && (
               <ConfirmButton
                 onConfirm={removePortrait}
                 className="text-xs text-red-500 hover:text-red-700"
                 armedClassName="font-semibold text-red-700!"
-                confirmChildren="Confirmer ?"
-                title="Supprimer le portrait"
-                ariaLabel="Supprimer le portrait"
+                confirmChildren={t('desc.confirmer')}
+                title={t('desc.supprimer.le.portrait')}
+                ariaLabel={t('desc.supprimer.le.portrait')}
               >
-                Supprimer
+                {t('desc.supprimer')}
               </ConfirmButton>
             )}
           </div>
@@ -514,12 +528,12 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {PHYSICAL_FIELDS.map((f) => (
             <label key={f.key} className="block">
-              <span className="label">{f.label}</span>
+              <span className="label">{t(f.labelKey)}</span>
               <input
                 type="text"
                 className="input"
                 value={drafts[f.key] ?? ''}
-                placeholder={f.placeholder}
+                placeholder={f.placeholderKey ? t(f.placeholderKey) : undefined}
                 onChange={(e) => setDrafts((d) => ({ ...d, [f.key]: e.target.value }))}
                 onBlur={() => commitField(f.key)}
               />
@@ -529,11 +543,11 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
 
         {/* Appearance textarea */}
         <label className="block">
-          <span className="label">Description physique</span>
+          <span className="label">{t('desc.description.physique')}</span>
           <textarea
             className="input min-h-[80px] resize-y"
             value={drafts.appearance ?? ''}
-            placeholder="Un elfe élancé portant une robe d'érudit usée…"
+            placeholder={t('desc.un.elfe.elance.portant.une.robe')}
             onChange={(e) => setDrafts((d) => ({ ...d, appearance: e.target.value }))}
             onBlur={() => commitField('appearance')}
           />
@@ -542,15 +556,15 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
 
       {/* Personality */}
       <section className="card p-4 sm:p-5 space-y-3">
-        <h2 className="section-title">Personnalité</h2>
+        <h2 className="section-title">{t('desc.personnalite')}</h2>
         <div className="space-y-3">
           {PERSONALITY_FIELDS.map((f) => (
             <label key={f.key} className="block">
-              <span className="label">{f.label}</span>
+              <span className="label">{t(f.labelKey)}</span>
               <textarea
                 className="input min-h-[60px] resize-y"
                 value={drafts[f.key] ?? ''}
-                placeholder={f.placeholder}
+                placeholder={f.placeholderKey ? t(f.placeholderKey) : undefined}
                 onChange={(e) => setDrafts((d) => ({ ...d, [f.key]: e.target.value }))}
                 onBlur={() => commitField(f.key)}
               />
@@ -561,13 +575,13 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
 
       {/* Backstory (distinct de l'« Historique » de l'identité — le stat 5e « Sage ») */}
       <section className="card p-4 sm:p-5 space-y-3">
-        <h2 className="section-title">Historique</h2>
+        <h2 className="section-title">{t('desc.historique')}</h2>
         <label className="block">
-          <span className="label">Histoire du personnage</span>
+          <span className="label">{t('desc.histoire.du.personnage')}</span>
           <textarea
             className="input min-h-[120px] resize-y"
             value={drafts.backstory ?? ''}
-            placeholder="Née dans un village de pêcheurs, elle quitta tout lorsque la flotte mourut…"
+            placeholder={t('desc.nee.dans.un.village.de.pecheurs')}
             onChange={(e) => setDrafts((d) => ({ ...d, backstory: e.target.value }))}
             onBlur={() => commitField('backstory')}
           />
@@ -576,13 +590,13 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
 
       {/* Allies & organizations */}
       <section className="card p-4 sm:p-5 space-y-3">
-        <h2 className="section-title">Alliés et organisations</h2>
+        <h2 className="section-title">{t('desc.allies.et.organisations')}</h2>
         <label className="block">
-          <span className="label">Alliés, mentors, guildes et factions</span>
+          <span className="label">{t('desc.allies.mentors.guildes.et.factions')}</span>
           <textarea
             className="input min-h-[80px] resize-y"
             value={drafts.alliesOrganizations ?? ''}
-            placeholder="La Confrérie du Givre, Harshnag le géant…"
+            placeholder={t('desc.la.confrerie.du.givre.harshnag.le')}
             onChange={(e) => setDrafts((d) => ({ ...d, alliesOrganizations: e.target.value }))}
             onBlur={() => commitField('alliesOrganizations')}
           />
@@ -592,18 +606,18 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
       {/* Visibility — the owner's call alone (secret prep) */}
       {isOwner && (
         <section className="card p-4 sm:p-5 space-y-3">
-          <h2 className="section-title">Visibilité</h2>
+          <h2 className="section-title">{t('desc.visibilite')}</h2>
           <p className="text-sm text-ink-500">
             {character.hidden ? (
               <>
-                🙈 Ce personnage est <strong>caché</strong> : les autres joueurs ne le voient nulle
-                part et il ne peut pas rejoindre les combats. Toi et le MD y avez toujours accès.
+                {t('desc.ce.personnage.est')}
+                <strong>{t('desc.cache')}</strong>
+                {t('desc.les.autres.joueurs.ne.le.voient')}
               </>
             ) : (
               <>
-                Ce personnage est visible de toute la table. Cache-le pour préparer une surprise —
-                il disparaît des listes des autres joueurs, quitte les combats en cours, et «{' '}
-                <em>Ma fiche</em> » pointe sur ton personnage actif.
+                {t('desc.ce.personnage.est.visible.de.toute')} <em>{t('desc.ma.fiche')}</em>
+                {t('desc.pointe.sur.ton.personnage.actif')}
               </>
             )}
           </p>
@@ -612,10 +626,15 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
               type="button"
               className={character.hidden ? 'btn-primary' : 'btn-secondary'}
               onClick={() =>
-                patchCharacter({ hidden: !character.hidden }, 'Impossible de changer la visibilité')
+                patchCharacter(
+                  { hidden: !character.hidden },
+                  t('desc.impossible.de.changer.la.visibilite'),
+                )
               }
             >
-              {character.hidden ? '👁 Révéler à la table' : '🙈 Cacher des autres joueurs'}
+              {character.hidden
+                ? t('desc.reveler.a.la.table')
+                : t('desc.cacher.des.autres.joueurs')}
             </button>
           </div>
         </section>

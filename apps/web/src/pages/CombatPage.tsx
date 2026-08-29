@@ -28,6 +28,7 @@ import type {
   PartyDetail,
 } from '@table-sync/shared';
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../auth';
@@ -48,7 +49,7 @@ import {
 } from '../components/ui';
 import { useHeaderOverride } from '../headerContext';
 import { useSyncEvent } from '../sync';
-import { formatCreated, plural, toRoman } from '../utils';
+import { formatCreated, toRoman } from '../utils';
 
 // ---------- Small combat helpers ----------
 
@@ -98,9 +99,9 @@ function rosterLine(roster: EncounterRosterEntry[]): string {
     .join(' · ');
 }
 
-function conditionsTitle(conditions: Combatant['conditions']): string {
+function conditionsTitle(conditions: Combatant['conditions'], t: (key: string) => string): string {
   return conditions
-    .map((c) => (c.duration == null ? c.name : `${c.name} (${c.duration} tour(s))`))
+    .map((c) => (c.duration == null ? c.name : `${c.name} (${c.duration} ${t('combat.tour.s')})`))
     .join(', ');
 }
 
@@ -113,16 +114,21 @@ function hpVisible(c: Combatant): boolean {
 // The tier comes from the server (stable jitter on its boundaries); the wording
 // varies per monster so the field reads like a table call, not a gauge.
 
+// Phrases indexées par palier d'état apparent — clés i18n, traduites au rendu.
 const FEELING_PHRASES: string[][] = [
-  ['À l’agonie', 'Au bord de l’effondrement', 'Il tient à peine debout'],
-  ['Gravement blessé', 'Il chancelle', 'Couvert de sang'],
-  ['Blessé', 'Touché', 'En difficulté'],
-  ['En pleine forme', 'Frais et dispos', 'À peine égratigné'],
+  [
+    'combat.etat.a.l.agonie',
+    'combat.etat.au.bord.de.l.effondrement',
+    'combat.etat.il.tient.a.peine.debout',
+  ],
+  ['combat.etat.gravement.blesse', 'combat.etat.il.chancelle', 'combat.etat.couvert.de.sang'],
+  ['combat.etat.blesse', 'combat.etat.touche', 'combat.etat.en.difficulte'],
+  ['combat.etat.en.pleine.forme', 'combat.etat.frais.et.dispos', 'combat.etat.a.peine.egratigne'],
 ];
 const FEELING_DOTS = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-green-500'];
 
 /** Stable word choice per monster + tier — no flicker between polls. */
-function feelingPhrase(c: Combatant): string | null {
+function feelingPhraseKey(c: Combatant): string | null {
   if (c.feeling == null) return null;
   const tier = Math.max(0, Math.min(3, Math.round(c.feeling)));
   const variants = FEELING_PHRASES[tier];
@@ -135,6 +141,7 @@ function feelingDot(c: Combatant): string | null {
 }
 
 export default function CombatPage() {
+  const { t } = useTranslation();
   const { partyId } = useParams();
   const { user } = useAuth();
   const [party, setParty] = useState<PartyDetail | null>(null);
@@ -198,16 +205,20 @@ export default function CombatPage() {
   // "Ma fiche" targets the ACTIVE sheet: hidden (secret prep) characters are
   // skipped — the shortcut always returns to a character the table can see.
   const myCharacter = party?.characters.find((c) => c.ownerId === user?.id && !c.hidden) ?? null;
-  // biome-ignore lint/correctness/useExhaustiveDependencies: dep narrowed to myCharacter?.id so the memoized action object keeps a stable identity across party refreshes.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: dep narrowed to myCharacter?.id so the memoized action object keeps a stable identity across party refreshes; t rides along for language switches.
   const sheetAction = useMemo(
     () =>
       myCharacter && partyId
-        ? { label: 'Ma fiche', short: '🧙', to: `/party/${partyId}/character/${myCharacter.id}` }
+        ? {
+            label: t('desc.ma.fiche'),
+            short: '🧙',
+            to: `/party/${partyId}/character/${myCharacter.id}`,
+          }
         : null,
-    [myCharacter?.id, partyId],
+    [myCharacter?.id, partyId, t],
   );
   useHeaderOverride(
-    activeEncounter ? activeEncounter.name : '⚔ Combat',
+    activeEncounter ? activeEncounter.name : t('combat.combat'),
     activeEncounter ? backToList : null,
     sheetAction,
   );
@@ -225,12 +236,12 @@ export default function CombatPage() {
         setEncounters(encRes.data.encounters || []);
         setError('');
       } catch (err: any) {
-        setError(err.response?.data?.error || 'Erreur');
+        setError(err.response?.data?.error || t('combat.erreur'));
       } finally {
         setLoading(false);
       }
     },
-    [partyId],
+    [partyId, t],
   );
 
   useEffect(() => {
@@ -250,15 +261,18 @@ export default function CombatPage() {
     [currentPartyId, activeEncounter?.id],
   );
 
-  const loadEncounter = useCallback(async (id: number, silent = false) => {
-    try {
-      const res = await api.get(`/api/encounters/${id}`);
-      setActiveEncounter(res.data.encounter);
-    } catch {
-      // Silent refreshes keep the stale view; a failed explicit open must say so.
-      if (!silent) setError('Impossible de charger la rencontre');
-    }
-  }, []);
+  const loadEncounter = useCallback(
+    async (id: number, silent = false) => {
+      try {
+        const res = await api.get(`/api/encounters/${id}`);
+        setActiveEncounter(res.data.encounter);
+      } catch {
+        // Silent refreshes keep the stale view; a failed explicit open must say so.
+        if (!silent) setError(t('combat.impossible.de.charger.la.rencontre'));
+      }
+    },
+    [t],
+  );
 
   const selectEncounter = async (id: number) => {
     setFocusId(null);
@@ -297,7 +311,7 @@ export default function CombatPage() {
       await load(true);
       await selectEncounter(res.data.encounter.id);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Erreur');
+      setError(err.response?.data?.error || t('combat.erreur'));
     }
   };
 
@@ -308,7 +322,7 @@ export default function CombatPage() {
       // Response omits combatants — reload the full detail.
       await loadEncounter(activeEncounter.id, true);
     } catch (err: any) {
-      pushToast(err.response?.data?.error || 'Erreur', 'error');
+      pushToast(err.response?.data?.error || t('combat.erreur'), 'error');
     }
   };
 
@@ -321,7 +335,7 @@ export default function CombatPage() {
       await api.post(`/api/encounters/${activeEncounter.id}/next-turn`);
       await loadEncounter(activeEncounter.id, true);
     } catch (err: any) {
-      pushToast(err.response?.data?.error || 'Erreur', 'error');
+      pushToast(err.response?.data?.error || t('combat.erreur'), 'error');
     }
   };
 
@@ -338,7 +352,7 @@ export default function CombatPage() {
     } catch {
       // Most likely the MD advanced the same turn a beat earlier — resync
       // quietly so the stage shows whose turn it actually is.
-      pushToast('Le tour a déjà changé', 'error');
+      pushToast(t('combat.le.tour.a.deja.change'), 'error');
       await loadEncounter(activeEncounter.id, true);
     } finally {
       setEndingTurn(false);
@@ -363,7 +377,7 @@ export default function CombatPage() {
       }
       await loadEncounter(activeEncounter.id, true);
     } catch (err: any) {
-      pushToast(err.response?.data?.error || 'Erreur', 'error');
+      pushToast(err.response?.data?.error || t('combat.erreur'), 'error');
     } finally {
       setRollingInit(false);
     }
@@ -379,7 +393,7 @@ export default function CombatPage() {
       });
       await loadEncounter(activeEncounter.id);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Erreur');
+      setError(err.response?.data?.error || t('combat.erreur'));
     }
   };
 
@@ -390,7 +404,7 @@ export default function CombatPage() {
       await loadEncounter(activeEncounter.id);
       setShowAddPlayer(false);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Erreur');
+      setError(err.response?.data?.error || t('combat.erreur'));
     }
   };
 
@@ -415,7 +429,7 @@ export default function CombatPage() {
       }
     } catch (err: any) {
       setActiveEncounter(snapshot);
-      pushToast(err.response?.data?.error || 'Échec de la mise à jour', 'error');
+      pushToast(err.response?.data?.error || t('combat.echec.de.la.mise.a.jour'), 'error');
     }
   };
 
@@ -427,7 +441,7 @@ export default function CombatPage() {
       });
       await loadEncounter(activeEncounter.id);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Erreur');
+      setError(err.response?.data?.error || t('combat.erreur'));
     }
   };
 
@@ -439,7 +453,7 @@ export default function CombatPage() {
         await loadEncounter(activeEncounter.id);
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Erreur');
+      setError(err.response?.data?.error || t('combat.erreur'));
     }
   };
 
@@ -449,7 +463,7 @@ export default function CombatPage() {
       if (activeEncounter?.id === id) setActiveEncounter(null);
       await load(true);
     } catch (err: any) {
-      pushToast(err.response?.data?.error || 'Erreur', 'error');
+      pushToast(err.response?.data?.error || t('combat.erreur'), 'error');
     }
   };
 
@@ -501,9 +515,9 @@ export default function CombatPage() {
     [isDesktop],
   );
 
-  if (loading) return <LoadingSpinner label="Ouverture du registre…" />;
+  if (loading) return <LoadingSpinner label={t('combat.ouverture.du.registre')} />;
   if (error && !party) return <ErrorMsg message={error} />;
-  if (!party) return <ErrorMsg message="Groupe introuvable" />;
+  if (!party) return <ErrorMsg message={t('combat.groupe.introuvable')} />;
 
   const availableChars = party.characters.filter(
     (c) => !c.hidden && !activeEncounter?.combatants.some((com) => com.characterId === c.id),
@@ -555,10 +569,8 @@ export default function CombatPage() {
               />
             ) : (
               <div className="card p-6 text-center text-sm text-ink-400">
-                📜 Bloc de stats
-                <p className="mt-1 text-xs">
-                  Touchez 📜 sur un monstre pour l’amarrer ici pendant la rencontre.
-                </p>
+                {t('combat.bloc.de.stats')}
+                <p className="mt-1 text-xs">{t('combat.touchez.sur.un.monstre.pour.l')}</p>
               </div>
             )
           }
@@ -584,7 +596,7 @@ export default function CombatPage() {
       <Modal
         open={showNewEncounter}
         onClose={() => setShowNewEncounter(false)}
-        title="Nouvelle rencontre"
+        title={t('combat.nouvelle.rencontre')}
       >
         <NewEncounterForm onCreate={createEncounter} />
       </Modal>
@@ -623,6 +635,7 @@ function NewEncounterForm({
   onCreate: (name: string) => void;
   autoFocus?: boolean;
 }) {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   return (
     <form
@@ -635,7 +648,7 @@ function NewEncounterForm({
     >
       <div>
         <label className="label" htmlFor="new-encounter-name">
-          Nom de la rencontre
+          {t('combat.nom.de.la.rencontre')}
         </label>
         <input
           id="new-encounter-name"
@@ -643,12 +656,12 @@ function NewEncounterForm({
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Ex : Embuscade gobeline"
+          placeholder={t('combat.ex.embuscade.gobeline')}
           className="input w-full"
         />
       </div>
       <button type="submit" className="btn-primary w-full" disabled={!name.trim()}>
-        Créer la rencontre
+        {t('combat.creer.la.rencontre')}
       </button>
     </form>
   );
@@ -669,6 +682,7 @@ function EncounterRegister({
   onCreate: (name: string) => void;
   onOpenModal: () => void;
 }) {
+  const { t } = useTranslation();
   // Lifecycle hierarchy: the live fight(s) first as expanded entries, then
   // prepared encounters, finished ones compacted at the foot of the page.
   const live = encounters.filter((e) => e.status === 'active');
@@ -681,8 +695,8 @@ function EncounterRegister({
     return (
       <div className="register-rise">
         <header className="pb-6 pt-2 text-center">
-          <h1 className="font-display text-2xl font-bold sm:text-3xl">Rencontres</h1>
-          <p className="mt-1.5 text-ink-500">Le registre des combats du groupe est vierge.</p>
+          <h1 className="font-display text-2xl font-bold sm:text-3xl">{t('combat.rencontres')}</h1>
+          <p className="mt-1.5 text-ink-500">{t('combat.le.registre.des.combats.du.groupe')}</p>
         </header>
 
         <div aria-hidden="true">
@@ -692,18 +706,15 @@ function EncounterRegister({
 
         {isGM ? (
           <section className="mx-auto max-w-md py-8">
-            <h2 className="section-title">Ouvrir la première rencontre</h2>
-            <p className="mt-1 text-sm text-ink-400">
-              Chaque combat a sa page — nomme-la comme l'épisode de la soirée, puis ajoute monstres
-              et personnages sur le banc de préparation.
-            </p>
+            <h2 className="section-title">{t('combat.ouvrir.la.premiere.rencontre')}</h2>
+            <p className="mt-1 text-sm text-ink-400">{t('combat.chaque.combat.a.sa.page.nomme')}</p>
             <NewEncounterForm onCreate={onCreate} autoFocus />
           </section>
         ) : (
           <EmptyState
             icon="⚔"
-            title="Aucune rencontre"
-            hint="Le MD n'a pas encore ouvert le registre des combats."
+            title={t('combat.aucune.rencontre')}
+            hint={t('combat.le.md.n.a.pas.encore.ouvert')}
           />
         )}
 
@@ -716,10 +727,10 @@ function EncounterRegister({
   return (
     <div>
       <header className="register-rise pb-6 pt-2 text-center">
-        <h1 className="font-display text-2xl font-bold sm:text-3xl">Rencontres</h1>
+        <h1 className="font-display text-2xl font-bold sm:text-3xl">{t('combat.rencontres')}</h1>
         <p className="mt-1.5 text-sm text-ink-400">
-          {plural(encounters.length, 'rencontre')} au registre
-          {live.length > 0 && ` — ${plural(live.length, 'combat')} en cours`}
+          {t('combat.au.registre', { count: encounters.length })}
+          {live.length > 0 && ` — ${t('combat.registre.en.cours', { count: live.length })}`}
         </p>
       </header>
 
@@ -746,7 +757,9 @@ function EncounterRegister({
                   isLive ? 'py-6' : isDone ? 'py-3' : 'py-4'
                 }`}
                 aria-label={
-                  isLive ? `Reprendre la rencontre ${enc.name}` : `Ouvrir la rencontre ${enc.name}`
+                  isLive
+                    ? t('combat.reprendre.la.rencontre.enc.name', { enc_name: enc.name })
+                    : t('combat.ouvrir.la.rencontre.enc.name', { enc_name: enc.name })
                 }
               >
                 <span className="flex items-start gap-4">
@@ -777,23 +790,26 @@ function EncounterRegister({
                       </span>
                       {isLive && (
                         <span className="shrink-0 rounded-full bg-blood-600 px-2.5 py-1 font-mono text-xs font-semibold text-parchment-50">
-                          Tour {enc.round}
+                          {t('combat.tour', { round: enc.round })}
                         </span>
                       )}
                     </span>
                     {isLive && (
                       <span className="mt-1.5 block text-sm text-ink-500">
-                        🔴 En cours · {plural(enc.combatantCount, 'combattant')}
+                        {t('combat.registre.en.cours.ligne', { count: enc.combatantCount })}
                       </span>
                     )}
                     {!isLive && !isDone && (
                       <span className="mt-0.5 block text-sm text-ink-400">
-                        ⚪ Préparation · {plural(enc.combatantCount, 'combattant')}
+                        {t('combat.registre.preparation.ligne', { count: enc.combatantCount })}
                       </span>
                     )}
                     {isDone && (
                       <span className="mt-0.5 block text-sm text-ink-400">
-                        ⚫ Terminée · tour {enc.round} · {formatCreated(enc.createdAt)}
+                        {t('combat.terminee.tour.created', {
+                          round: enc.round,
+                          created: formatCreated(enc.createdAt, t('combat.creee')),
+                        })}
                       </span>
                     )}
                     {enc.roster.length > 0 && !isDone && (
@@ -816,11 +832,11 @@ function EncounterRegister({
                     onConfirm={() => onDelete(enc.id)}
                     className="text-xs text-ink-400 hover:text-red-600"
                     armedClassName="font-semibold text-red-700"
-                    title="Supprimer la rencontre"
-                    ariaLabel={`Supprimer la rencontre ${enc.name}`}
-                    confirmChildren="Confirmer ?"
+                    title={t('combat.supprimer.la.rencontre')}
+                    ariaLabel={t('combat.supprimer.la.rencontre.enc.name', { enc_name: enc.name })}
+                    confirmChildren={t('combat.confirmer')}
                   >
-                    Supprimer
+                    {t('combat.supprimer')}
                   </ConfirmButton>
                 </div>
               )}
@@ -832,7 +848,7 @@ function EncounterRegister({
       {isGM && (
         <div className="flex items-center justify-center pt-6">
           <button type="button" className="btn-ghost text-ink-500" onClick={onOpenModal}>
-            ＋ Nouvelle rencontre
+            {t('combat.nouvelle.rencontre')}
           </button>
         </div>
       )}
@@ -899,6 +915,7 @@ function CombatTheatre({
   onOpenStatBlock?: (slug: string) => void;
   statDock: ReactNode;
 }) {
+  const { t } = useTranslation();
   const combatants = encounter.combatants;
   const status = encounter.status;
   const current = combatants[encounter.turnIndex];
@@ -938,7 +955,7 @@ function CombatTheatre({
   const startDisabled = combatants.length === 0 || needsInitiative;
   const nextHint = next ? (
     <span className="ml-auto text-sm text-ink-400">
-      Puis : {next.name}
+      {t('combat.puis', { name: next.name })}
       {next.groupId !== null &&
         combatants.filter((c) => c.groupId === next.groupId).length > 1 &&
         ` (×${combatants.filter((c) => c.groupId === next.groupId).length})`}
@@ -948,13 +965,13 @@ function CombatTheatre({
     isGM && status === 'active' ? (
       <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-parchment-200 pt-4">
         <button type="button" onClick={onNextTurn} className="btn-primary min-h-[44px] text-sm">
-          ▶ Tour suivant
+          {t('combat.tour.suivant')}
         </button>
         <button type="button" onClick={onEnd} className="btn-secondary min-h-[44px] text-sm">
-          ⏹ Fin
+          {t('combat.fin')}
         </button>
         <button type="button" onClick={onAddMonster} className="btn-secondary min-h-[44px] text-sm">
-          + Monstre
+          {t('combat.monstre')}
         </button>
         {canAddPlayer && (
           <button
@@ -962,7 +979,7 @@ function CombatTheatre({
             onClick={onAddPlayer}
             className="btn-secondary min-h-[44px] text-sm"
           >
-            + PJ
+            {t('combat.pj')}
           </button>
         )}
         {nextHint}
@@ -976,9 +993,9 @@ function CombatTheatre({
           onClick={onEndMyTurn}
           disabled={endMyTurnBusy}
           className="btn-primary min-h-[44px] text-sm"
-          aria-label="Terminer mon tour — passer au combattant suivant"
+          aria-label={t('combat.terminer.mon.tour.passer.au.combattant')}
         >
-          ✓ J'ai fini mon tour
+          {t('combat.j.ai.fini.mon.tour')}
         </button>
         {nextHint}
       </div>
@@ -1025,7 +1042,9 @@ function CombatTheatre({
                   needsInitiative ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'
                 }`}
               >
-                {needsInitiative ? '⚪ En attente d’initiative' : '✅ Prêt à démarrer'}
+                {needsInitiative
+                  ? t('combat.en.attente.d.initiative')
+                  : t('combat.pret.a.demarrer')}
               </span>
               <div className="ml-auto flex flex-wrap items-center gap-2">
                 {needsInitiative && (
@@ -1034,9 +1053,9 @@ function CombatTheatre({
                     onClick={onRollAll}
                     disabled={rollingInit}
                     className="btn-secondary min-h-[44px] text-sm disabled:opacity-40"
-                    title="Lancer d20 + DEX pour toutes les initiatives manquantes"
+                    title={t('combat.lancer.d20.dex.pour.toutes.les')}
                   >
-                    {rollingInit ? '🎲 Lancés…' : '🎲 Tout lancer'}
+                    {rollingInit ? t('combat.lances') : t('combat.tout.lancer')}
                   </button>
                 )}
                 <button
@@ -1044,7 +1063,7 @@ function CombatTheatre({
                   onClick={onAddMonster}
                   className="btn-secondary min-h-[44px] text-sm"
                 >
-                  + Monstre
+                  {t('combat.monstre')}
                 </button>
                 {canAddPlayer && (
                   <button
@@ -1052,7 +1071,7 @@ function CombatTheatre({
                     onClick={onAddPlayer}
                     className="btn-secondary min-h-[44px] text-sm"
                   >
-                    + PJ
+                    {t('combat.pj')}
                   </button>
                 )}
                 <button
@@ -1062,11 +1081,11 @@ function CombatTheatre({
                   className="btn-primary min-h-[44px] text-sm disabled:cursor-not-allowed disabled:opacity-40"
                   title={
                     needsInitiative
-                      ? 'Tous les combattants doivent lancer leur initiative'
-                      : 'Démarrer le combat — tour 1, premier combattant'
+                      ? t('combat.tous.les.combattants.doivent.lancer')
+                      : t('combat.demarrer.le.combat.tour.1')
                   }
                 >
-                  ▶ Démarrer le combat
+                  {t('combat.demarrer.le.combat')}
                 </button>
               </div>
             </div>
@@ -1080,22 +1099,22 @@ function CombatTheatre({
               <h2 className="font-display text-2xl font-bold leading-tight">{encounter.name}</h2>
               {status === 'setup' && (
                 <span className="rounded-full bg-yellow-100 px-2.5 py-1 text-xs font-medium text-yellow-700">
-                  ⚪ Préparation
+                  {t('combat.preparation')}
                 </span>
               )}
               {status === 'active' && (
                 <span className="rounded-full bg-blood-600 px-2.5 py-1 font-mono text-xs font-semibold text-parchment-50">
-                  Tour {encounter.round}
+                  {t('combat.tour', { round: encounter.round })}
                 </span>
               )}
             </div>
             <EmptyState
               icon="🎭"
-              title="Aucun combattant"
+              title={t('combat.aucun.combattant')}
               hint={
                 isGM
-                  ? 'Ajoute des monstres et des personnages pour commencer.'
-                  : 'Le MD prépare la rencontre.'
+                  ? t('combat.ajoute.des.monstres.et.des.personnages')
+                  : t('combat.le.md.prepare.la.rencontre')
               }
             />
           </div>
@@ -1152,6 +1171,7 @@ function InitiativeRail({
   targetMode: boolean;
   onApplyDamage: (id: number) => void;
 }) {
+  const { t } = useTranslation();
   // Number group members ("Gobelin 1", "Gobelin 2"…) in sorted order.
   const labels = useMemo(() => {
     const counters = new Map<number, number>();
@@ -1169,25 +1189,28 @@ function InitiativeRail({
     (currentRef.groupId !== null ? c.groupId === currentRef.groupId : c.id === currentRef.id);
 
   return (
-    <nav aria-label="Ordre d'initiative">
-      <h2 className="section-title mb-2 hidden text-base lg:block">Initiative</h2>
+    <nav aria-label={t('combat.ordre.d.initiative')}>
+      <h2 className="section-title mb-2 hidden text-base lg:block">{t('combat.initiative')}</h2>
       <ol className="list-none flex gap-1.5 overflow-x-auto pb-1 lg:flex-col lg:gap-1 lg:overflow-visible lg:pb-0">
         {combatants.map((c, idx) => {
           const label = labels[idx];
           const isCurrent = isCurrentDetent(c);
           const isFocused = focusId === c.id;
           const hp = hpVisible(c);
-          const phrase = feelingPhrase(c);
+          const phraseKey = feelingPhraseKey(c);
+          const phrase = phraseKey !== null ? t(phraseKey) : null;
           const ariaParts = [
             label,
-            c.initiative === null ? 'initiative non lancée' : `initiative ${c.initiative}`,
+            c.initiative === null
+              ? t('combat.initiative.non.lancee')
+              : t('combat.initiative.n', { n: c.initiative }),
           ];
-          if (hp) ariaParts.push(`${c.hitPoints}/${c.maxHitPoints} PV`);
+          if (hp) ariaParts.push(`${c.hitPoints}/${c.maxHitPoints} ${t('combat.pv')}`);
           if (phrase) ariaParts.push(phrase.toLowerCase());
           if (c.conditions.length > 0)
-            ariaParts.push(`${plural(c.conditions.length, 'condition')}`);
-          if (c.defeated) ariaParts.push('vaincu');
-          if (isCurrent) ariaParts.push('tour en cours');
+            ariaParts.push(t('combat.compteurs.condition', { count: c.conditions.length }));
+          if (c.defeated) ariaParts.push(t('combat.vaincu'));
+          if (isCurrent) ariaParts.push(t('combat.tour.en.cours'));
           return (
             <li key={c.id} className="shrink-0 lg:w-full">
               <button
@@ -1230,7 +1253,7 @@ function InitiativeRail({
                       className={`shrink-0 rounded-full px-1.5 text-[10px] font-semibold ${
                         isCurrent ? 'bg-parchment-50/25' : 'bg-orange-100 text-orange-700'
                       }`}
-                      title={conditionsTitle(c.conditions)}
+                      title={conditionsTitle(c.conditions, t)}
                     >
                       {c.conditions.length}
                     </span>
@@ -1239,7 +1262,7 @@ function InitiativeRail({
                     <span
                       aria-hidden="true"
                       className={`h-1.5 w-1.5 shrink-0 rounded-full ${feelingDot(c)}`}
-                      title={`État apparent : ${phrase}`}
+                      title={t('combat.etat.apparent.phrase', { phrase: phrase })}
                     />
                   )}
                   {c.defeated && (
@@ -1281,6 +1304,7 @@ function DamageChipDock({
   onToggleHalf: () => void;
   onCancel: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className={`card p-2.5 ${applyMode ? 'ring-2 ring-blood-400' : ''}`} role="status">
       <div className="flex flex-wrap items-center gap-2">
@@ -1292,9 +1316,9 @@ function DamageChipDock({
               ? 'bg-blood-600 text-parchment-50 shadow-md'
               : 'bg-orange-100 text-orange-800 hover:bg-orange-200'
           }`}
-          title={applyMode ? 'Annuler (Échap)' : 'Appliquer à une cible'}
+          title={applyMode ? t('combat.annuler.echap') : t('combat.appliquer.a.une.cible')}
         >
-          ⚔ {Math.floor(chip.value * (chip.half ? 0.5 : 1))} dégâts
+          {t('combat.chip.degats', { n: Math.floor(chip.value * (chip.half ? 0.5 : 1)) })}
           <span className="ml-1.5 font-sans text-xs font-normal opacity-75">{chip.source}</span>
         </button>
         <button
@@ -1306,7 +1330,7 @@ function DamageChipDock({
               : 'bg-parchment-100 text-ink-600 hover:bg-parchment-200'
           }`}
           aria-pressed={chip.half}
-          title="Demi-dégâts (résistance, sauvegarde réussie)"
+          title={t('combat.demi.degats.resistance.sauvegarde.reussie')}
         >
           ½
         </button>
@@ -1314,12 +1338,12 @@ function DamageChipDock({
           type="button"
           onClick={onCancel}
           className="btn-ghost min-h-[44px] min-w-[44px] p-2 text-sm text-ink-400 hover:text-ink-700"
-          aria-label="Annuler la puce de dégâts"
+          aria-label={t('combat.annuler.la.puce.de.degats')}
         >
           ✕
         </button>
         <span className="ml-auto text-xs text-ink-500">
-          {applyMode ? 'Touchez une cible…' : 'Touchez la puce, puis une cible'}
+          {applyMode ? t('combat.touchez.une.cible') : t('combat.touchez.la.puce.puis.une.cible')}
         </span>
       </div>
     </div>
@@ -1340,16 +1364,16 @@ const CARD_COLORS = [
   '#e0e7ff', // indigo
 ];
 
-/** French names for the color marks — announced when picking a swatch. */
+/** Color marks — i18n keys announced when picking a swatch. */
 const CARD_COLOR_NAMES: Record<string, string> = {
-  '#fef3c7': 'ambre',
-  '#dcfce7': 'vert',
-  '#dbeafe': 'bleu',
-  '#fce7f3': 'rose',
-  '#f3e8ff': 'violet',
-  '#fed7aa': 'orange',
-  '#fee2e2': 'rouge',
-  '#e0e7ff': 'indigo',
+  '#fef3c7': 'combat.couleur.ambre',
+  '#dcfce7': 'combat.couleur.vert',
+  '#dbeafe': 'combat.couleur.bleu',
+  '#fce7f3': 'combat.couleur.rose',
+  '#f3e8ff': 'combat.couleur.violet',
+  '#fed7aa': 'combat.couleur.orange',
+  '#fee2e2': 'combat.couleur.rouge',
+  '#e0e7ff': 'combat.couleur.indigo',
 };
 
 function StagePanel({
@@ -1383,6 +1407,7 @@ function StagePanel({
   onOpenStatBlock?: (slug: string) => void;
   footer?: ReactNode;
 }) {
+  const { t } = useTranslation();
   const [showDamage, setShowDamage] = useState(false);
   const [showConditions, setShowConditions] = useState(false);
   const [showColor, setShowColor] = useState(false);
@@ -1418,26 +1443,26 @@ function StagePanel({
           <div className="flex flex-wrap items-center gap-2">
             {status === 'active' && (
               <span className="rounded-full bg-blood-600 px-2.5 py-1 font-mono text-xs font-semibold text-parchment-50">
-                Tour {encounter.round}
+                {t('combat.tour', { round: encounter.round })}
               </span>
             )}
             {status === 'setup' && (
               <span className="rounded-full bg-yellow-100 px-2.5 py-1 text-xs font-medium text-yellow-700">
-                ⚪ Préparation
+                {t('combat.preparation')}
               </span>
             )}
             {status === 'ended' && (
               <span className="rounded-full bg-parchment-200 px-2.5 py-1 text-xs font-medium text-ink-500">
-                ⚫ Terminée · tour {encounter.round}
+                {t('combat.terminee.tour', { round: encounter.round })}
               </span>
             )}
             {!isCurrentTurn && status === 'active' && (
               <span className="rounded-full bg-parchment-200 px-2 py-0.5 text-[11px] font-medium text-ink-500">
-                Hors tour
+                {t('combat.hors.tour')}
               </span>
             )}
             {combatant.defeated && (
-              <span className="text-sm font-medium text-ink-400">💀 Vaincu</span>
+              <span className="text-sm font-medium text-ink-400">{t('combat.mort.vaincu')}</span>
             )}
           </div>
           <h2 className="mt-1 font-display text-2xl font-bold leading-tight sm:text-3xl">
@@ -1445,7 +1470,7 @@ function StagePanel({
               <Link
                 to={sheetPath}
                 className="hover:text-blood-600 hover:underline"
-                title="Ouvrir la fiche du personnage"
+                title={t('combat.ouvrir.la.fiche.du.personnage')}
               >
                 {label}
               </Link>
@@ -1457,14 +1482,14 @@ function StagePanel({
         <div className="flex shrink-0 items-center gap-2">
           <span
             className="rounded-lg border border-parchment-200 bg-parchment-100 px-2 py-1 font-mono text-sm font-semibold text-ink-700"
-            title="Initiative"
+            title={t('combat.initiative')}
           >
-            Init {combatant.initiative ?? '—'}
+            {t('combat.init.badge', { value: combatant.initiative ?? '—' })}
           </span>
           {combatant.armorClass !== null && (
             <span
               className="flex items-center gap-1 rounded-lg border border-parchment-200 bg-parchment-100 px-2 py-1 font-mono text-sm font-semibold text-ink-700"
-              title="Classe d'armure"
+              title={t('combat.classe.d.armure')}
             >
               <span aria-hidden="true">🛡</span>
               {combatant.armorClass}
@@ -1482,7 +1507,9 @@ function StagePanel({
               type="button"
               onClick={() => (targetMode ? onApplyDamage(m.id) : onFocus(m.id))}
               aria-label={
-                targetMode ? `Appliquer les dégâts à ${memberLabel(m)}` : `Voir ${memberLabel(m)}`
+                targetMode
+                  ? t('combat.appliquer.les.degats.a.label', { label: memberLabel(m) })
+                  : t('combat.voir.label', { label: memberLabel(m) })
               }
               className={`relative flex min-h-[44px] items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs transition-colors ${
                 m.id === combatant.id
@@ -1516,14 +1543,14 @@ function StagePanel({
               className="flex-1"
             />
           </div>
-        ) : feelingPhrase(combatant) ? (
+        ) : feelingPhraseKey(combatant) !== null ? (
           // Redacted monster HP reads as a vague table call, never a gauge
           <p className="flex items-center gap-2 text-sm italic text-ink-500">
             <span
               aria-hidden="true"
               className={`h-2 w-2 shrink-0 rounded-full ${feelingDot(combatant)}`}
             />
-            {feelingPhrase(combatant)}
+            {t(feelingPhraseKey(combatant) as string)}
           </p>
         ) : null}
       </div>
@@ -1537,8 +1564,8 @@ function StagePanel({
               className="rounded bg-orange-100 px-2 py-0.5 text-xs text-orange-700"
               title={
                 cond.duration == null
-                  ? "Jusqu'à dissipation"
-                  : `${cond.duration} tour(s) restant(s)`
+                  ? t('combat.jusqu.a.dissipation')
+                  : t('combat.tours.restants', { duration: cond.duration })
               }
             >
               {cond.name}
@@ -1557,7 +1584,7 @@ function StagePanel({
             className="text-sm font-medium text-ink-600"
             htmlFor={`stage-init-${combatant.id}`}
           >
-            Initiative
+            {t('combat.initiative')}
           </label>
           <input
             id={`stage-init-${combatant.id}`}
@@ -1568,22 +1595,22 @@ function StagePanel({
             onKeyDown={(e) => e.key === 'Enter' && submitInitiative()}
             placeholder="—"
             className="input input-compact w-20 text-center"
-            title="Saisir l'initiative"
+            title={t('combat.saisir.l.initiative')}
           />
           {isGM && (
             <button
               type="button"
               onClick={() => onSetInitiative(combatant.id, rollD20(combatant.initiativeBonus))}
               className="btn-secondary text-sm"
-              title="Lancer l'initiative (d20 + DEX)"
+              title={t('combat.lancer.l.initiative.d20.dex')}
             >
-              🎲 Lancer
+              {t('combat.lancer')}
             </button>
           )}
           <span className="text-xs text-ink-400">
             {groupMembers.length > 1
-              ? 'Partagée par tout le groupe'
-              : `Bonus DEX ${signedBonus(combatant.initiativeBonus)}`}
+              ? t('combat.partagee.par.tout.le.groupe')
+              : t('combat.bonus.dex', { bonus: signedBonus(combatant.initiativeBonus) })}
           </span>
         </div>
       )}
@@ -1597,18 +1624,18 @@ function StagePanel({
             type="button"
             onClick={() => setShowDamage(true)}
             className="btn-secondary flex items-center justify-center gap-1 py-3 text-sm"
-            title="Dégâts / soins / PV"
+            title={t('combat.degats.soins.pv')}
           >
-            ⚔ <span>Dégâts</span>
+            {t('combat.degats')}
           </button>
           {!combatant.defeated && (
             <button
               type="button"
               onClick={() => setShowConditions(true)}
               className="btn-secondary flex items-center justify-center gap-1 py-3 text-sm"
-              title="Conditions"
+              title={t('combat.conditions')}
             >
-              ✎ <span>Cond.</span>
+              ✎ <span>{t('combat.cond')}</span>
             </button>
           )}
           {combatant.monsterSlug && (
@@ -1616,18 +1643,18 @@ function StagePanel({
               type="button"
               onClick={() => onOpenStatBlock?.(combatant.monsterSlug!)}
               className="btn-secondary flex items-center justify-center gap-1 py-3 text-sm"
-              title="Bloc de stats"
+              title={t('combat.bloc.de.stats')}
             >
-              📜 <span>Stats</span>
+              📜 <span>{t('combat.stats')}</span>
             </button>
           )}
           <button
             type="button"
             onClick={() => setShowColor(true)}
             className="btn-secondary flex items-center justify-center gap-1 py-3 text-sm"
-            title="Marque de couleur (relier l'écran aux figurines)"
+            title={t('combat.marque.de.couleur.relier.l.ecran')}
           >
-            🎨 <span>Marque</span>
+            🎨 <span>{t('combat.marque')}</span>
           </button>
         </div>
       )}
@@ -1639,11 +1666,20 @@ function StagePanel({
             onConfirm={() => onDelete(combatant.id)}
             className="text-xs text-ink-400 hover:text-red-600"
             armedClassName="font-semibold text-red-700"
-            title={groupMembers.length > 1 ? 'Supprimer le groupe' : 'Retirer du combat'}
-            ariaLabel={`Retirer ${label}${groupMembers.length > 1 ? ' et son groupe' : ''} du combat`}
-            confirmChildren="Sûr ?"
+            title={
+              groupMembers.length > 1
+                ? t('combat.supprimer.le.groupe')
+                : t('combat.retirer.du.combat')
+            }
+            ariaLabel={t('combat.retirer.label.groupmembers.length.1.du', {
+              label: label,
+              grp: groupMembers.length > 1 ? ` ${t('combat.et.son.groupe')}` : '',
+            })}
+            confirmChildren={t('combat.sur')}
           >
-            {groupMembers.length > 1 ? 'Retirer le groupe' : 'Retirer du combat'}
+            {groupMembers.length > 1
+              ? t('combat.retirer.le.groupe')
+              : t('combat.retirer.du.combat')}
           </ConfirmButton>
         </div>
       )}
@@ -1672,7 +1708,7 @@ function StagePanel({
       <BottomSheet
         open={showColor}
         onClose={() => setShowColor(false)}
-        title="Marque de couleur"
+        title={t('combat.marque.de.couleur')}
         size="md"
         mobileOnly={false}
       >
@@ -1693,21 +1729,24 @@ function StagePanel({
                     : 'border-parchment-200 hover:border-parchment-300'
                 } ${color === null ? 'bg-white' : ''}`}
                 style={color ? { backgroundColor: color } : undefined}
-                title={color === null ? 'Par défaut' : color}
+                title={color === null ? t('combat.par.defaut') : color}
                 aria-label={
                   color === null
-                    ? 'Marque par défaut'
-                    : `Marque ${CARD_COLOR_NAMES[color] ?? 'de couleur'}`
+                    ? t('combat.marque.par.defaut')
+                    : t('combat.marque.couleur', {
+                        couleur: t(CARD_COLOR_NAMES[color] ?? 'combat.de.couleur'),
+                      })
                 }
               >
-                {color === null && <span className="text-xs text-ink-400">Défaut</span>}
+                {color === null && (
+                  <span className="text-xs text-ink-400">{t('combat.defaut')}</span>
+                )}
               </button>
             );
           })}
         </div>
         <p className="mt-3 text-xs text-ink-400">
-          La marque apparaît sur le combattant dans l'échelle d'initiative — même couleur que la
-          figurine sur la table.
+          {t('combat.la.marque.apparait.sur.le.combattant')}
         </p>
       </BottomSheet>
     </article>
@@ -1729,6 +1768,7 @@ function DamageSheet({
   label: string;
   onPatch: (id: number, patch: Partial<Combatant>) => void;
 }) {
+  const { t } = useTranslation();
   const [damageInput, setDamageInput] = useState('');
   const [editHp, setEditHp] = useState('');
   const [editMaxHp, setEditMaxHp] = useState('');
@@ -1785,15 +1825,15 @@ function DamageSheet({
     <BottomSheet open={open} onClose={onClose} title={label} mobileOnly={false} size="md">
       {combatant.hitPoints !== null && (
         <p className="mb-3 text-center font-mono text-lg font-semibold text-ink-700">
-          {combatant.hitPoints}/{combatant.maxHitPoints} PV
+          {combatant.hitPoints}/{combatant.maxHitPoints} {t('combat.pv')}
         </p>
       )}
       <input
         type="number"
         value={damageInput}
         onChange={(e) => setDamageInput(e.target.value)}
-        placeholder="Montant"
-        aria-label="Montant (dégâts ou soins)"
+        placeholder={t('combat.montant')}
+        aria-label={t('combat.montant.degats.ou.soins')}
         className="input mb-3 w-full text-center text-lg"
         autoFocus
       />
@@ -1803,22 +1843,22 @@ function DamageSheet({
           onClick={() => applyDamage(1)}
           className="btn-secondary bg-red-100 py-3 text-sm text-red-700 hover:bg-red-200"
         >
-          ⚔ Dégâts
+          {t('combat.degats')}
         </button>
         <button
           type="button"
           onClick={() => applyDamage(0.5)}
           className="btn-secondary bg-orange-100 py-3 text-sm text-orange-700 hover:bg-orange-200"
-          title="Résistance : demi-dégâts"
+          title={t('combat.resistance.demi.degats')}
         >
-          🛡 Résist
+          {t('combat.resist')}
         </button>
         <button
           type="button"
           onClick={applyHeal}
           className="btn-secondary bg-green-100 py-3 text-sm text-green-700 hover:bg-green-200"
         >
-          ❤ Soins
+          {t('combat.soins')}
         </button>
         <button
           type="button"
@@ -1828,17 +1868,17 @@ function DamageSheet({
           }}
           className="btn-secondary py-3 text-sm"
         >
-          {combatant.defeated ? '✨ Réanimer' : '💀 Vaincu'}
+          {combatant.defeated ? t('combat.reanimer') : t('combat.mort.vaincu')}
         </button>
       </div>
 
       {/* Direct HP / Max HP edit */}
       <div className="mt-3 border-t border-parchment-200 pt-3">
-        <p className="mb-2 text-xs text-ink-400">Modification directe</p>
+        <p className="mb-2 text-xs text-ink-400">{t('combat.modification.directe')}</p>
         <div className="flex items-end gap-2">
           <div className="flex-1">
             <label className="mb-1 block text-xs text-ink-500" htmlFor={`hp-edit-${combatant.id}`}>
-              PV actuels
+              {t('combat.pv.actuels')}
             </label>
             <input
               id={`hp-edit-${combatant.id}`}
@@ -1851,7 +1891,7 @@ function DamageSheet({
           </div>
           <div className="flex-1">
             <label className="mb-1 block text-xs text-ink-500" htmlFor={`hp-max-${combatant.id}`}>
-              PV max
+              {t('combat.pv.max')}
             </label>
             <input
               id={`hp-max-${combatant.id}`}

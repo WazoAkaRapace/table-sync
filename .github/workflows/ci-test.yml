@@ -39,6 +39,10 @@ jobs:
       - name: Lint (Biome)
         run: npm run lint
 
+      # ---- Ratchet i18n : le FR hors catalogue ne peut que descendre ----
+      - name: i18n ratchet
+        run: npm run i18n:ratchet
+
       # ---- Rules suites (fast tsx scripts, non-zero exit on failure) ----
       - name: Rules suite - weapons
         run: npm run test-weapon-stats

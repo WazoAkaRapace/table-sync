@@ -3,6 +3,7 @@
  * Weights are ALWAYS in kilograms (SI). The SRD source data (lb) is converted at import.
  */
 
+import { DND_SKILLS_EN } from './catalogs.en.ts';
 import {
   bardicInspirationDie,
   classFeatureResourceMax,
@@ -14,9 +15,25 @@ import {
   songOfRestDie,
 } from './classFeatures.ts';
 
+export * from './catalogs.en.ts';
 export * from './classFeatures.en.ts';
 export * from './classFeatures.ts';
 export * from './labels.en.ts';
+
+// ---------- Langue des chaînes calculées ----------
+
+/**
+ * Langue d'affichage des chaînes construites par le moteur (sources de CA,
+ * vitesses, libellés de défense sans armure, types de dégâts…). 'fr' est la
+ * valeur par défaut SACRÉE : langue de stockage et des suites de règles —
+ * les résultats français doivent rester identiques octet par octet.
+ */
+export type AppLang = 'fr' | 'en';
+
+/** Variante bilingue d'une chaîne calculée — le français reste le défaut. */
+function pickLang(lang: AppLang, fr: string, en: string): string {
+  return lang === 'en' ? en : fr;
+}
 
 // ---------- Items ----------
 
@@ -1479,7 +1496,7 @@ export function averageMaxHpMulti(
 export interface UnarmoredDefenseOption {
   key: 'barbare' | 'moine' | 'draconique';
   classKey: string;
-  /** French formula label, e.g. "Barbare · 10 + DEX + CON". */
+  /** Formula label, e.g. "Barbare · 10 + DEX + CON" / "Barbarian · 10 + Dex + Con". */
   label: string;
   /** AC from the formula alone (DEX included, shield excluded). */
   ac: number;
@@ -1493,6 +1510,7 @@ export function unarmoredDefensesOf(
     constitution?: number;
     wisdom?: number;
   },
+  lang: AppLang = 'fr',
 ): UnarmoredDefenseOption[] {
   const dexMod = abilityModifier(character.dexterity ?? 10);
   const out: UnarmoredDefenseOption[] = [];
@@ -1501,7 +1519,7 @@ export function unarmoredDefensesOf(
     out.push({
       key: 'barbare',
       classKey: 'Barbare',
-      label: 'Barbare · 10 + DEX + CON',
+      label: pickLang(lang, 'Barbare · 10 + DEX + CON', 'Barbarian · 10 + Dex + Con'),
       ac: 10 + dexMod + conMod,
       shieldForbidden: false,
     });
@@ -1511,7 +1529,7 @@ export function unarmoredDefensesOf(
     out.push({
       key: 'moine',
       classKey: 'Moine',
-      label: 'Moine · 10 + DEX + SAG',
+      label: pickLang(lang, 'Moine · 10 + DEX + SAG', 'Monk · 10 + Dex + Wis'),
       ac: 10 + dexMod + wisMod,
       shieldForbidden: true,
     });
@@ -1521,7 +1539,7 @@ export function unarmoredDefensesOf(
       out.push({
         key: 'draconique',
         classKey: 'Ensorceleur',
-        label: 'Résilience draconique · 13 + DEX',
+        label: pickLang(lang, 'Résilience draconique · 13 + DEX', 'Draconic Resilience · 13 + Dex'),
         ac: 13 + dexMod,
         shieldForbidden: false,
       });
@@ -1942,7 +1960,8 @@ export function passivePerception(
 
 export interface ArmorClassResult {
   ac: number;
-  /** Human-readable source, e.g. "Cuirasse · DEX +2" or "Sans armure · 10 + DEX" */
+  /** Human-readable source, e.g. "Cuirasse · DEX +2" or "Sans armure · 10 + DEX"
+   * (EN: "Breastplate · 14 +2" or "Unarmored · 10 +3") */
   source: string;
   /** Whether a shield is equipped */
   hasShield: boolean;
@@ -1956,6 +1975,7 @@ export interface ArmorClassResult {
  *   - Light (acBase <= 12): acBase + DEX
  * Magic armor (acBase null) resolves to its mundane base + magic bonus,
  * like magic weapons. defenseStyle: +1 CA from the Défense fighting style.
+ * lang: langue du libellé `source` ('fr' par défaut — identique octet par octet).
  */
 export function computeAC(
   entries: Array<{
@@ -1977,10 +1997,16 @@ export function computeAC(
     dexterity?: number;
     unarmoredDefense?: 'barbare' | 'moine' | 'draconique' | null;
   },
+  lang: AppLang = 'fr',
 ): ArmorClassResult {
   // Find equipped armor (non-shield) and shield
-  let armor: { acBase: number; armorType: 'light' | 'medium' | 'heavy'; name: string } | null =
-    null;
+  let armor: {
+    acBase: number;
+    armorType: 'light' | 'medium' | 'heavy';
+    name: string;
+    /** Nom anglais canonique quand la base SRD est résolue (affichage EN). */
+    nameEn: string | null;
+  } | null = null;
   let hasShield = false;
   let magicAcBonus = 0;
 
@@ -2005,8 +2031,12 @@ export function computeAC(
       magicBonus = magic.magicBonus;
     } else {
       // Mundane armor: look up its true type (acBase 12 is studded-leather
-      // light AND hide medium — the value alone can't tell them apart)
-      base = findMundaneArmorByName(entry.item.name, entry.item.nameFr);
+      // light AND hide medium — the value alone can't tell them apart).
+      // Clé stable d'abord : en mono-locale, `name` est localisé.
+      const keyedArmor = entry.item.baseArmor
+        ? MUNDANE_ARMORS.find((a) => a.nameEn === entry.item.baseArmor)
+        : undefined;
+      base = keyedArmor ?? findMundaneArmorByName(entry.item.name, entry.item.nameFr);
     }
 
     // Shield gives +2 and is tracked separately
@@ -2028,6 +2058,7 @@ export function computeAC(
               ? 'medium'
               : 'light',
         name: entry.item.nameFr ?? entry.item.name,
+        nameEn: base?.nameEn ?? null,
       };
       magicAcBonus = magicBonus;
     }
@@ -2048,7 +2079,11 @@ export function computeAC(
     if (character && classLevelOf(character, 'Barbare') > 0) {
       byKey.barbare = {
         ac: 10 + dexMod + conMod,
-        source: `Sans armure · 10 ${formatModifier(dexMod)} ${formatModifier(conMod)} (Barbare)`,
+        source: pickLang(
+          lang,
+          `Sans armure · 10 ${formatModifier(dexMod)} ${formatModifier(conMod)} (Barbare)`,
+          `Unarmored · 10 ${formatModifier(dexMod)} ${formatModifier(conMod)} (Barbarian)`,
+        ),
       };
     }
     if (
@@ -2059,13 +2094,21 @@ export function computeAC(
     ) {
       byKey.draconique = {
         ac: 13 + dexMod,
-        source: `Sans armure · 13 ${formatModifier(dexMod)} (Résilience draconique)`,
+        source: pickLang(
+          lang,
+          `Sans armure · 13 ${formatModifier(dexMod)} (Résilience draconique)`,
+          `Unarmored · 13 ${formatModifier(dexMod)} (Draconic Resilience)`,
+        ),
       };
     }
     if (character && classLevelOf(character, 'Moine') > 0 && !hasShield) {
       byKey.moine = {
         ac: 10 + dexMod + wisMod,
-        source: `Sans armure · 10 ${formatModifier(dexMod)} ${formatModifier(wisMod)} (Moine)`,
+        source: pickLang(
+          lang,
+          `Sans armure · 10 ${formatModifier(dexMod)} ${formatModifier(wisMod)} (Moine)`,
+          `Unarmored · 10 ${formatModifier(dexMod)} ${formatModifier(wisMod)} (Monk)`,
+        ),
       };
     }
     const choice = character?.unarmoredDefense ?? null;
@@ -2081,22 +2124,29 @@ export function computeAC(
       source = pick.source;
     } else {
       ac = 10 + dexMod;
-      source = `Sans armure · 10 ${formatModifier(dexMod)}`;
+      source = pickLang(
+        lang,
+        `Sans armure · 10 ${formatModifier(dexMod)}`,
+        `Unarmored · 10 ${formatModifier(dexMod)}`,
+      );
     }
   } else {
     const isHeavy = armor.armorType === 'heavy';
     const isMedium = armor.armorType === 'medium';
+    // EN: nom canonique de la base SRD quand elle est résolue, sinon le nom
+    // localisé de l'objet (payload mono-locale — `name` suit la langue).
+    const armorName = lang === 'en' ? (armor.nameEn ?? armor.name) : armor.name;
     // Light: acBase + full DEX; Medium: acBase + min(DEX, 2); Heavy: acBase only
     if (isHeavy) {
       ac = armor.acBase;
-      source = `${armor.name} · ${armor.acBase}`;
+      source = `${armorName} · ${armor.acBase}`;
     } else if (isMedium) {
       const dexBonus = Math.min(dexMod, 2);
       ac = armor.acBase + dexBonus;
-      source = `${armor.name} · ${armor.acBase} ${formatModifier(dexBonus)}`;
+      source = `${armorName} · ${armor.acBase} ${formatModifier(dexBonus)}`;
     } else {
       ac = armor.acBase + dexMod;
-      source = `${armor.name} · ${armor.acBase} ${formatModifier(dexMod)}`;
+      source = `${armorName} · ${armor.acBase} ${formatModifier(dexMod)}`;
     }
     if (magicAcBonus > 0) {
       ac += magicAcBonus;
@@ -2106,13 +2156,13 @@ export function computeAC(
 
   if (hasShield) {
     ac += 2;
-    source += ' · Bouclier +2';
+    source += pickLang(lang, ' · Bouclier +2', ' · Shield +2');
   }
 
   // Défense fighting style: +1 while wearing armor
   if (defenseStyle && armor) {
     ac += 1;
-    source += ' · Défense +1';
+    source += pickLang(lang, ' · Défense +1', ' · Defense +1');
   }
 
   return { ac, source, hasShield };
@@ -3007,6 +3057,14 @@ export function computeWeaponStats(
   let presumedBase = false;
   let nameEn = item.name;
 
+  // Clé stable d'abord (docs/i18n-engine-refactor-plan.md) : en payload
+  // mono-locale, `name` est localisé (FR par défaut) — le moteur raisonne
+  // sur le nom anglais de la base, pour les armes mundane comme magiques.
+  if (item.baseWeapon) {
+    const keyed = MUNDANE_WEAPONS.find((m) => m.nameEn === item.baseWeapon);
+    if (keyed) nameEn = keyed.nameEn;
+  }
+
   if (!dice) {
     const magic = resolveMagicWeaponBase(item);
     if (!magic.base) return null;
@@ -3133,6 +3191,7 @@ export interface SpeedResult {
  * Effective speed with SRD armor-dependent class features:
  *  - Moine, Déplacement sans armure: +bonus while wearing no armor and no shield
  *  - Barbare, Déplacement rapide (level 5+): +3 m unless wearing heavy armor
+ * lang: langue des libellés `sources` ('fr' par défaut — identique octet par octet).
  */
 export function computeSpeed(
   character: CharacterClassSource & { speed?: number; strength?: number },
@@ -3147,6 +3206,7 @@ export function computeSpeed(
     } & ItemBaseKeys;
     equipped: boolean;
   }>,
+  lang: AppLang = 'fr',
 ): SpeedResult {
   const base = character.speed ?? 9;
 
@@ -3184,13 +3244,15 @@ export function computeSpeed(
     const bonus = unarmoredMovementBonus(monkLvl);
     if (bonus > 0) {
       speed += bonus;
-      sources.push(`Déplacement sans armure +${bonus} m`);
+      sources.push(
+        pickLang(lang, `Déplacement sans armure +${bonus} m`, `Unarmored Movement +${bonus} m`),
+      );
     }
   }
   const barbLvl = classLevelOf(character, 'Barbare');
   if (barbLvl >= 5 && !wearingHeavy) {
     speed += 3;
-    sources.push('Déplacement rapide +3 m');
+    sources.push(pickLang(lang, 'Déplacement rapide +3 m', 'Fast Movement +3 m'));
   }
 
   // SRD: heavy armor worn below its STR minimum costs 3 m of speed
@@ -3213,7 +3275,9 @@ export function computeSpeed(
   });
   if (underStrMin) {
     speed -= 3;
-    sources.push('Armure lourde −3 m (FOR insuffisante)');
+    sources.push(
+      pickLang(lang, 'Armure lourde −3 m (FOR insuffisante)', 'Heavy armor −3 m (low STR)'),
+    );
   }
 
   return { speed, bonus: speed - base, sources };
@@ -4619,6 +4683,399 @@ export interface MonsterAction {
   cost?: number; // legendary actions only: 1/2/3
 }
 
+// ---------- Analyse bilingue des textes d'action du bestiaire ----------
+
+/** Préambules d'attaque 5e.tools abrégés → formulation SRD anglaise. */
+const ATTACK_MODE_LABELS_EN: Record<string, string> = {
+  mw: 'Melee Weapon Attack',
+  rw: 'Ranged Weapon Attack',
+  ms: 'Melee Spell Attack',
+  rs: 'Ranged Spell Attack',
+};
+
+/**
+ * Nettoie le texte d'une action du bestiaire EN (source 5e.tools) : restitue
+ * le préambule d'attaque canonique (« mw 4 to hit » → « Melee Weapon Attack:
+ * +4 to hit ») et le marqueur « Hit: » ({@h}).
+ */
+export function cleanMonsterActionTextEn(desc: string): string {
+  let s = desc;
+  s = s.replace(
+    /\b(mw|rw|ms|rs)((?:\s*,\s*(?:mw|rw|ms|rs))*)\s+(\d+)\s+to hit/g,
+    (_all: string, first: string, rest: string, bonus: string) => {
+      const modes = [
+        first,
+        ...rest
+          .split(',')
+          .map((x) => x.trim())
+          .filter(Boolean),
+      ];
+      const label =
+        modes.length > 1
+          ? `${ATTACK_MODE_LABELS_EN[modes[0]] ?? 'Attack'} or ${
+              ATTACK_MODE_LABELS_EN[modes[modes.length - 1]] ?? 'Attack'
+            }`
+          : (ATTACK_MODE_LABELS_EN[modes[0]] ?? 'Attack');
+      return `${label}: +${bonus} to hit`;
+    },
+  );
+  s = s.replace(/\{@h\}\s*/g, 'Hit: ');
+  return s;
+}
+
+/** Préfixes FR des types de dégâts → anglais (repli quand l'analyse EN échoue). */
+const DAMAGE_TYPE_PREFIXES_EN: Array<[string, string]> = [
+  ['contondant', 'bludgeoning'],
+  ['tranchant', 'slashing'],
+  ['perforant', 'piercing'],
+  ['feu', 'fire'],
+  ['froid', 'cold'],
+  ['acide', 'acid'],
+  ['poison', 'poison'],
+  ['foudre', 'lightning'],
+  ['tonnerre', 'thunder'],
+  ['radiant', 'radiant'],
+  ['nécrotiqu', 'necrotic'],
+  ['psychiqu', 'psychic'],
+  ['force', 'force'],
+];
+
+export function monsterDamageTypeEn(fr: string | null | undefined): string | null | undefined {
+  if (!fr) return fr;
+  const low = fr.toLowerCase();
+  for (const [prefix, en] of DAMAGE_TYPE_PREFIXES_EN) {
+    if (low.startsWith(prefix)) return en;
+  }
+  return fr;
+}
+
+/**
+ * Mots FR de type de dégât — singulier/pluriel/féminin, formes préfixées —
+ * vers l'anglais canonique. Les clés déjà anglaises passent telles quelles.
+ */
+const DAMAGE_TYPE_WORDS_EN: Record<string, string> = {
+  contondant: 'bludgeoning',
+  contondante: 'bludgeoning',
+  contondants: 'bludgeoning',
+  contondantes: 'bludgeoning',
+  tranchant: 'slashing',
+  tranchante: 'slashing',
+  tranchants: 'slashing',
+  tranchantes: 'slashing',
+  perforant: 'piercing',
+  perforante: 'piercing',
+  perforants: 'piercing',
+  perforantes: 'piercing',
+  'de feu': 'fire',
+  feu: 'fire',
+  'de froid': 'cold',
+  froid: 'cold',
+  'de foudre': 'lightning',
+  foudre: 'lightning',
+  'de tonnerre': 'thunder',
+  tonnerre: 'thunder',
+  "d'acide": 'acid',
+  acide: 'acid',
+  'de poison': 'poison',
+  poison: 'poison',
+  nécrotique: 'necrotic',
+  nécrotiques: 'necrotic',
+  radiant: 'radiant',
+  radiante: 'radiant',
+  radiants: 'radiant',
+  radiantes: 'radiant',
+  'de force': 'force',
+  force: 'force',
+  psychique: 'psychic',
+  psychiques: 'psychic',
+  // Valeurs déjà anglaises (index SRD / analyse du texte EN) — passage direct.
+  // ('radiant' est couvert par l'entrée FR — même orthographe.)
+  bludgeoning: 'bludgeoning',
+  piercing: 'piercing',
+  slashing: 'slashing',
+  fire: 'fire',
+  cold: 'cold',
+  lightning: 'lightning',
+  thunder: 'thunder',
+  acid: 'acid',
+  necrotic: 'necrotic',
+  psychic: 'psychic',
+};
+
+/**
+ * Libellé d'affichage d'un type de dégât. 'fr' (défaut) renvoie la valeur
+ * telle quelle — la valeur stockée EST le français. 'en' mappe le mot FR
+ * (variantes incluses) vers l'anglais ; les valeurs non reconnues passent
+ * par `monsterDamageTypeEn` (préfixes) puis restent inchangées.
+ */
+export function damageTypeLabel(
+  fr: string | null | undefined,
+  lang: AppLang = 'fr',
+): string | null | undefined {
+  if (fr == null || lang !== 'en') return fr;
+  return DAMAGE_TYPE_WORDS_EN[fr.toLowerCase()] ?? monsterDamageTypeEn(fr);
+}
+
+/** Mots d'alignement du bestiaire → anglais (vocable fermé SRD 5.1). */
+const ALIGNMENT_WORDS_EN: Record<string, string> = {
+  loyal: 'Lawful',
+  loyale: 'Lawful',
+  neutre: 'Neutral',
+  mauvais: 'Evil',
+  mauvaise: 'Evil',
+  bon: 'Good',
+  bonne: 'Good',
+  chaotique: 'Chaotic',
+  ou: 'or',
+};
+
+/**
+ * Alignement du bestiaire (FR, casse variable, OCR) → anglais : les neuf
+ * combinaisons, « non aligné », et les formes « tout/n'importe quel
+ * alignement … ». Les parenthèses (pourcentages) passent telles quelles ;
+ * une valeur exotique reste inchangée.
+ */
+export function monsterAlignmentEn(fr: string): string {
+  const norm = fr.trim().replace(/\s+/g, ' ');
+  const low = norm.toLowerCase();
+  if (/^non[- ]alignée?$/.test(low) || low === 'sans alignement') return 'Unaligned';
+  const any = low.match(/^(?:n'importe quel alignement|tout alignement)\s*(.*)$/);
+  if (any) {
+    const rest = any[1].trim();
+    if (rest === '') return 'Any alignment';
+    if (rest === 'chaotique') return 'Any chaotic alignment';
+    if (rest === 'mauvais') return 'Any evil alignment';
+    if (rest === 'bon') return 'Any good alignment';
+    if (rest === 'non bon') return 'Any non-good alignment';
+    if (rest === 'non loyal') return 'Any non-lawful alignment';
+    if (rest === 'autre que bon') return 'Any alignment other than good';
+    if (rest === 'autre que loyal') return 'Any alignment other than lawful';
+  }
+  return norm
+    .split(' ')
+    .map((w) => ALIGNMENT_WORDS_EN[w.toLowerCase()] ?? w)
+    .join(' ')
+    .replace(/^alignement\s+/i, '')
+    .replace(/\s{2,}/g, ' ');
+}
+
+/** États du bestiaire (minuscules OCR, variantes) → anglais SRD 5.1. */
+const MONSTER_CONDITION_LABELS_EN: Record<string, string> = {
+  'à terre': 'Prone',
+  agrippé: 'Grappled',
+  assourdi: 'Deafened',
+  aveuglé: 'Blinded',
+  charmé: 'Charmed',
+  effrayé: 'Frightened',
+  empoigné: 'Grappled',
+  empoisonné: 'Poisoned',
+  entravé: 'Restrained',
+  épuisé: 'Exhaustion',
+  épuisement: 'Exhaustion',
+  étourdi: 'Stunned',
+  inconscient: 'Unconscious',
+  paralysé: 'Paralyzed',
+  pétrifié: 'Petrified',
+  terrorisé: 'Frightened',
+  terrifié: 'Frightened',
+};
+
+/** État d'immunité FR → EN (casse insensible ; valeur inconnue inchangée). */
+export function monsterConditionEn(fr: string): string {
+  return MONSTER_CONDITION_LABELS_EN[fr.trim().toLowerCase()] ?? fr;
+}
+
+/** Phrases composées de résistance/immunité → formulation SRD anglaise. */
+const MONSTER_DAMAGE_TRAITS_EN: Record<string, string> = {
+  "contondant, perforant et tranchant d'attaques magiques":
+    'bludgeoning, piercing, and slashing from magical attacks',
+  "contondant, perforant et tranchant d'attaques non magiques":
+    'bludgeoning, piercing, and slashing from nonmagical attacks',
+  "contondant, perforant, ou tranchant d'attaques non magiques":
+    'bludgeoning, piercing, or slashing from nonmagical attacks',
+  "contondant, tranchant, et perforant d'attaques non magiques":
+    'bludgeoning, piercing, and slashing from nonmagical attacks',
+  "contondant, perforant et tranchant d'attaques non magiques qui ne sont pas en adamantium":
+    "bludgeoning, piercing, and slashing from nonmagical attacks that aren't adamantine",
+  "contondant, perforant et tranchant d'attaques non magiques qui ne sont pas en argent":
+    "bludgeoning, piercing, and slashing from nonmagical attacks that aren't silvered",
+  'tranchants des attaques non magiques': 'slashing from nonmagical attacks',
+  "tranchants des attaques non magiques sauf celles venant d'une arme en adamantium":
+    "slashing from nonmagical attacks that aren't adamantine",
+  "tranchants des armes non magiques autres qu'en adamantium":
+    'slashing from nonmagical weapons other than adamantine',
+  'perforants et tranchants des attaques non magiques':
+    'piercing and slashing from nonmagical attacks',
+  'perforants et tranchants infligés par des attaques non magiques':
+    'piercing and slashing from nonmagical attacks',
+  "de froid (tant qu'il porte l'anneau de l'hiver)": 'cold (while wearing the Ring of Winter)',
+};
+
+/**
+ * Résistance/immunité aux dégâts du bestiaire (FR, phrases OCR) → anglais :
+ * phrase composée exacte d'abord (les formulations « d'attaques non
+ * magiques… » sont fermées), sinon chaque terme séparé par « ; » passe par
+ * `damageTypeLabel`. Une valeur exotique reste inchangée.
+ */
+export function monsterDamageTraitEn(fr: string): string {
+  const norm = fr.trim().replace(/\s+/g, ' ');
+  const exact = MONSTER_DAMAGE_TRAITS_EN[norm.toLowerCase()];
+  if (exact) return exact;
+  if (norm.includes(';')) {
+    return norm
+      .split(';')
+      .map((part) => damageTypeLabel(part.trim(), 'en') ?? '')
+      .join('; ');
+  }
+  return damageTypeLabel(norm, 'en') ?? norm;
+}
+
+/** Compétences du bestiaire : nom FR (OCR, casse/accents variables) → EN SRD. */
+const MONSTER_SKILLS_EN: Record<string, string> = (() => {
+  const out: Record<string, string> = {};
+  for (const skill of DND_SKILLS) {
+    const key = skill.label
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+    out[key] = DND_SKILLS_EN[skill.key] ?? skill.label;
+  }
+  // Synonymes du bestiaire (5e-drs) absents du canon DND_SKILLS.
+  out.intuition = DND_SKILLS_EN.insight; // « Perspicacité »
+  out.tromperie = DND_SKILLS_EN.deception; // « Supercherie »
+  return out;
+})();
+
+/** Nom de compétence du bestiaire FR → EN (repli : la valeur inchangée). */
+export function monsterSkillEn(name: string): string {
+  const stripped = name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+  const exact = MONSTER_SKILLS_EN[stripped.trim()];
+  if (exact) return exact;
+  // Déchets OCR (« Perspicacité +S », « Représentation+? ») : coupe au plus
+  // long préfixe reconnu (frontière mot ou non-lettre), le reste suit tel quel.
+  for (let cut = stripped.length; cut >= 3; cut--) {
+    const prefix = stripped.slice(0, cut);
+    const mapped = MONSTER_SKILLS_EN[prefix];
+    if (mapped && (cut === stripped.length || /[^a-z]/.test(stripped[cut] ?? ''))) {
+      const rest = name.slice(cut).trim();
+      return rest === '' ? mapped : `${mapped} ${rest}`;
+    }
+  }
+  return name;
+}
+
+/** Codes de caractéristique FR des jets de sauvegarde → abréviation EN. */
+const SAVE_ABILITY_CODES_EN: Record<string, string> = {
+  for: 'Str',
+  dex: 'Dex',
+  con: 'Con',
+  int: 'Int',
+  sag: 'Wis',
+  cha: 'Cha',
+};
+
+/** Jet de sauvegarde du bestiaire (« For +4 » → « Str +4 » ; sinon inchangé). */
+export function monsterSaveEn(fr: string): string {
+  const m = fr.match(/^([A-Za-z]{3})\b/);
+  if (!m) return fr;
+  const en = SAVE_ABILITY_CODES_EN[m[1].toLowerCase()];
+  return en ? en + fr.slice(m[1].length) : fr;
+}
+
+/** Description d'armure du bestiaire : jetons FR (vocable fermé) → EN SRD. */
+const MONSTER_ARMOR_TOKENS_EN: Record<string, string> = {
+  'armure naturelle': 'natural armor',
+  'armure naturelle et mystique': 'natural and mystical armor',
+  'armure de cuir clouté': 'studded leather armor',
+  'armure de cuir': 'leather armor',
+  'armure de peaux': 'hide armor',
+  'armure de peau': 'hide armor',
+  "armure d'écailles": 'scale mail',
+  'armure de pièces': 'patchwork armor',
+  'armure de coquillages': 'shell armor',
+  'armure composite': 'composite armor',
+  'chemise de mailles': 'chain shirt',
+  'cotte de mailles': 'chain mail',
+  'demi-plate': 'half plate armor',
+  cuirasse: 'breastplate',
+  harnois: 'plate armor',
+  clibanion: 'splint armor',
+  broigne: 'ring mail',
+  'cuir clouté': 'studded leather',
+  plate: 'plate armor',
+  bouclier: 'shield',
+  'armure du mage': 'mage armor',
+  'armure de mage': 'mage armor',
+  "peau d'écorce": 'barkskin',
+  'bracelets de défense': 'bracers of defense',
+  'restes de caparaçonnage': 'caparison remnants',
+  "débris d'armure": 'armor scraps',
+  'débris de barde': 'barding scraps',
+  'manteau renforcé rudimentaire': 'crude reinforced cloak',
+  'parfois plus avec une armure': 'sometimes more with armor',
+  "voir l'aptitude armure naturelle": 'see the natural armor feature',
+  cage: 'cage',
+};
+
+/**
+ * `armorDesc` du bestiaire FR → EN : jetons séparés par «, » mappés un à un
+ * (vocable fermé de 45 valeurs sur les graines), préfixe « N avec … »
+ * préservé (« 15 avec armure du mage » → « 15 with mage armor »). Une valeur
+ * inconnue reste inchangée.
+ */
+export function monsterArmorDescEn(fr: string): string {
+  const withPrefix = fr
+    .trim()
+    .replace(/\s+/g, ' ')
+    .match(/^(\d+)\s+avec\s+(.+)$/);
+  const body = withPrefix ? withPrefix[2] : fr.trim().replace(/\s+/g, ' ');
+  const mapped = body
+    .split(',')
+    .map((token) => MONSTER_ARMOR_TOKENS_EN[token.trim().toLowerCase()] ?? token.trim())
+    .filter(Boolean)
+    .join(', ');
+  return withPrefix ? `${withPrefix[1]} with ${mapped}` : mapped;
+}
+
+/**
+ * Extrait bonus d'attaque, dés de dégâts et type d'un texte d'action, FR
+ * (« +9 pour toucher », « 15 (3d6+5) dégâts contondants ») ou EN (« +9 to
+ * hit », « 15 (3d6 + 5) bludgeoning damage »). Les dés sont normalisés
+ * compacts (« 3d6 + 5 » → « 3d6+5 »). Comme l'import FR, les dés ne sont
+ * retenus que suivis d'un type de dégâts (les « regains N (XdY) PV » ne
+ * deviennent pas des puces de dégâts).
+ */
+export function parseMonsterActionCombatInfo(desc: string): {
+  attackBonus?: number;
+  damageDice?: string;
+  damageType?: string;
+} {
+  const out: { attackBonus?: number; damageDice?: string; damageType?: string } = {};
+  const atk =
+    desc.match(/[+:]\s*(\d+)\s+pour toucher/) ??
+    desc.match(/\+\s*(\d+)\s+to hit/i) ??
+    desc.match(/(?:^|[:.,]\s*)(?:mw|rw|ms|rs)(?:\s*,\s*(?:mw|rw|ms|rs))*\s+(\d+)\s+to hit/i);
+  if (atk) out.attackBonus = parseInt(atk[1], 10);
+  const dice = /(\d+)\s*\((\d+\s*d\s*\d+(?:\s*[+-]\s*\d+)?)\)/.exec(desc);
+  if (dice) {
+    const after = desc.slice(dice.index + dice[0].length);
+    const frType = after.match(/^\s*dégâts\s+(\w+)/i);
+    const enType = after.match(/^\s+([a-z]+)\s+damage/i);
+    if (frType) {
+      out.damageDice = dice[2].replace(/\s+/g, '');
+      out.damageType = frType[1];
+    } else if (enType) {
+      out.damageDice = dice[2].replace(/\s+/g, '');
+      out.damageType = enType[1];
+    }
+  }
+  return out;
+}
+
 export interface MonsterSkill {
   name: string;
   isExpert: boolean;
@@ -4676,6 +5133,7 @@ export interface MonsterSearchQuery {
 
 /** French size label lookup (5e-drs codes). */
 export const MONSTER_SIZE_LABELS_FR: Record<string, string> = {
+  TP: 'Très petit',
   T: 'Très petit',
   P: 'Petit',
   M: 'Moyen',

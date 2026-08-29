@@ -6,6 +6,8 @@
 import type { CombatantCondition } from '@table-sync/shared';
 import { DND_CONDITIONS_FR } from '@table-sync/shared';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { conditionLabel } from '../i18n/labels';
 import { BottomSheet } from './ui';
 
 interface Props {
@@ -42,6 +44,7 @@ export default function ConditionsEditor({
   onSave,
   combatantName,
 }: Props) {
+  const { t } = useTranslation();
   const [draft, setDraft] = useState<CombatantCondition[]>(conditions);
 
   // Reset draft when modal opens
@@ -73,14 +76,14 @@ export default function ConditionsEditor({
     <BottomSheet
       open={open}
       onClose={onClose}
-      title={`Conditions — ${combatantName}`}
+      title={t('conds.conditions.combatantname', { combatantName: combatantName })}
       size="md"
       mobileOnly={false}
       bodyClassName="space-y-2"
       footer={
         <>
           <button type="button" onClick={onClose} className="btn-secondary flex-1">
-            Annuler
+            {t('conds.annuler')}
           </button>
           <button
             type="button"
@@ -111,11 +114,11 @@ export default function ConditionsEditor({
               className={`w-9 h-9 rounded-lg flex items-center justify-center text-lg shrink-0 transition-colors ${
                 active ? 'bg-blood-100' : 'bg-parchment-100 hover:bg-parchment-200'
               }`}
-              aria-label={cond}
+              aria-label={conditionLabel(cond)}
             >
               {CONDITION_ICONS[cond] ?? '❓'}
             </button>
-            <span className="flex-1 text-sm font-medium">{cond}</span>
+            <span className="flex-1 text-sm font-medium">{conditionLabel(cond)}</span>
             {active && (
               <div className="flex items-center gap-1">
                 <input
@@ -129,7 +132,7 @@ export default function ConditionsEditor({
                     setDuration(cond, v === '' ? null : Math.max(1, parseInt(v, 10)));
                   }}
                   className="input w-14 text-center text-sm"
-                  title="Durée en tours (vide = jusqu'à dissipation)"
+                  title={t('conds.duree.en.tours.vide.jusqu.a')}
                 />
                 <span className="text-xs text-ink-400 w-12">
                   {entry?.duration == null ? 'tours ∞' : 'tours'}

@@ -18,6 +18,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../auth';
@@ -83,21 +84,28 @@ const CHARACTER_TABS: {
   primary: boolean;
   short?: string;
 }[] = [
-  { key: 'survival', label: 'Survie', icon: '🩸', primary: true, short: 'Survie' },
-  { key: 'stats', label: 'Caractéristiques', icon: '⚔️', primary: true, short: 'Caract.' },
-  { key: 'spells', label: 'Sorts', icon: '✨', primary: true, short: 'Sorts' },
-  { key: 'skills', label: 'Compétences', icon: '🎯', primary: true, short: 'Comp.' },
-  { key: 'inventory', label: 'Inventaire', icon: '🎒', primary: false },
-  { key: 'features', label: 'Traits', icon: '📋', primary: false, short: 'Traits' },
-  { key: 'description', label: 'Description', icon: '👤', primary: false },
-  { key: 'npcs', label: 'PNJ', icon: '🎭', primary: false },
-  { key: 'notes', label: 'Notes', icon: '📝', primary: false },
+  { key: 'survival', label: 'onglet.survie', icon: '🩸', primary: true, short: 'onglet.survie' },
+  {
+    key: 'stats',
+    label: 'onglet.caracteristiques',
+    icon: '⚔️',
+    primary: true,
+    short: 'onglet.caract',
+  },
+  { key: 'spells', label: 'onglet.sorts', icon: '✨', primary: true, short: 'onglet.sorts' },
+  { key: 'skills', label: 'onglet.competences', icon: '🎯', primary: true, short: 'onglet.comp' },
+  { key: 'inventory', label: 'onglet.inventaire', icon: '🎒', primary: false },
+  { key: 'features', label: 'onglet.traits', icon: '📋', primary: false, short: 'onglet.traits' },
+  { key: 'description', label: 'onglet.description', icon: '👤', primary: false },
+  { key: 'npcs', label: 'onglet.pnj', icon: '🎭', primary: false },
+  { key: 'notes', label: 'onglet.notes', icon: '📝', primary: false },
 ];
 const CATALOG_PAGE_SIZE = 30;
 
 // ---------- Main component ----------
 
 export default function CharacterInventoryPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { partyId, charId } = useParams<{ partyId: string; charId: string }>();
   const queryClient = useQueryClient();
@@ -118,7 +126,7 @@ export default function CharacterInventoryPage() {
   const data = inventoryQuery.data ?? null;
   const loading = inventoryQuery.isPending;
   const error = inventoryQuery.error
-    ? apiError(inventoryQuery.error, "Impossible de charger l'inventaire")
+    ? apiError(inventoryQuery.error, t('inv.impossible.de.charger.l.inventaire'))
     : '';
   // The in-tab banner is dismissible; remembering WHICH message was dismissed
   // re-arms it automatically when a different error lands.
@@ -286,7 +294,7 @@ export default function CharacterInventoryPage() {
             event.toCharacterId === currentCharId &&
             event.itemName
           ) {
-            pushToast(`Objet reçu : ${event.itemName}`);
+            pushToast(t('inv.objet.recu', { name: event.itemName }));
           }
         }
       } else if (event.type === 'character:change') {
@@ -425,7 +433,7 @@ export default function CharacterInventoryPage() {
         await patchEntryMutation.mutateAsync({ id: entry.id, patch: { quantity: next } });
         await refreshInventory(entry.id);
       } catch (err) {
-        pushToast(apiError(err, 'Erreur de mise à jour'), 'error');
+        pushToast(apiError(err, t('inv.erreur.de.mise.a.jour')), 'error');
       }
     });
   };
@@ -443,7 +451,7 @@ export default function CharacterInventoryPage() {
         await patchEntryMutation.mutateAsync({ id: entry.id, patch: { quantity: qty } });
         await refreshInventory(entry.id);
       } catch (err) {
-        pushToast(apiError(err, 'Erreur'), 'error');
+        pushToast(apiError(err, t('inv.erreur')), 'error');
       }
     });
   };
@@ -456,9 +464,9 @@ export default function CharacterInventoryPage() {
         await deleteEntryMutation.mutateAsync(entry.id);
         if (expandedId === entry.id) setExpandedId(null);
         await refreshInventory();
-        pushToast(`${entry.item.name || entry.item.name} retiré du sac à dos`);
+        pushToast(t('inv.retire.du.sac.a.dos', { name: entry.item.name || entry.item.name }));
       } catch (err) {
-        pushToast(apiError(err, 'Erreur de suppression'), 'error');
+        pushToast(apiError(err, t('inv.erreur.de.suppression')), 'error');
       }
     });
   };
@@ -477,7 +485,7 @@ export default function CharacterInventoryPage() {
         });
         await refreshInventory(entry.id);
       } catch (err) {
-        pushToast(apiError(err, 'Erreur'), 'error');
+        pushToast(apiError(err, t('inv.erreur')), 'error');
       }
     });
   };
@@ -492,9 +500,9 @@ export default function CharacterInventoryPage() {
         storageLocationId: activeLocationId,
       });
       await refreshInventory();
-      pushToast(`+1 ${item.name || item.name} ajouté au sac à dos`);
+      pushToast(t('inv.ajoute.au.sac.a.dos', { name: item.name }));
     } catch (err) {
-      pushToast(apiError(err, "Impossible d'ajouter l'objet"), 'error');
+      pushToast(apiError(err, t('inv.impossible.d.ajouter.l.objet')), 'error');
     } finally {
       setAddingItemId(null);
     }
@@ -537,16 +545,16 @@ export default function CharacterInventoryPage() {
             headers: { 'Content-Type': 'multipart/form-data' },
           });
         } catch {
-          pushToast('Illustration non envoyée — réessaie depuis Modifier', 'error');
+          pushToast(t('inv.illustration.non.envoyee'), 'error');
         }
       }
       setCreateItemImage(EMPTY_ITEM_IMAGE);
       await queryClient.invalidateQueries({ queryKey: ['catalog'] });
-      pushToast(`« ${created.name || created.name} » créé`);
+      pushToast(t('inv.cree', { name: created.name }));
       // The search was meant to ADD the item — land it in the bag right away.
       addFromCatalog(created);
     } catch (err) {
-      pushToast(apiError(err, "Impossible de créer l'objet"), 'error');
+      pushToast(apiError(err, t('inv.impossible.de.creer.l.objet')), 'error');
     } finally {
       setCreatingItem(false);
     }
@@ -561,10 +569,10 @@ export default function CharacterInventoryPage() {
       await refreshInventory();
       // Auto-select the newly created tab
       setActiveLocationId(res.data.location.id);
-      pushToast(`Transport ajouté : ${payload.name}`);
+      pushToast(t('inv.transport.ajoute', { name: payload.name }));
       setShowNewLocationModal(false);
     } catch (err) {
-      pushToast(apiError(err, "Impossible d'ajouter le transport"), 'error');
+      pushToast(apiError(err, t('inv.impossible.d.ajouter.le.transport')), 'error');
     }
   };
 
@@ -577,9 +585,9 @@ export default function CharacterInventoryPage() {
       const carried = findCarriedLocation(data?.locations ?? []);
       if (carried) setActiveLocationId(carried.id);
       await refreshInventory();
-      pushToast(`${location.name} supprimé — objets replacés sur le personnage`);
+      pushToast(t('inv.transport.supprime', { name: location.name }));
     } catch (err) {
-      pushToast(apiError(err, 'Erreur de suppression'), 'error');
+      pushToast(apiError(err, t('inv.erreur.de.suppression')), 'error');
     }
   };
 
@@ -593,10 +601,13 @@ export default function CharacterInventoryPage() {
         await refreshInventory(entry.id);
         const target = data?.locations.find((l) => l.id === locationId);
         pushToast(
-          `${entry.item.name || entry.item.name} déplacé vers ${target?.name ?? "l'emplacement"}`,
+          t('inv.deplace.vers', {
+            name: entry.item.name || entry.item.name,
+            target: target?.name ?? t('inv.l.emplacement'),
+          }),
         );
       } catch (err) {
-        pushToast(apiError(err, 'Erreur lors du déplacement'), 'error');
+        pushToast(apiError(err, t('inv.erreur.lors.du.deplacement')), 'error');
       }
     });
   };
@@ -609,11 +620,11 @@ export default function CharacterInventoryPage() {
       await saveCoinsMutation.mutateAsync(coins);
       setCoinsDirty(false);
       await refreshInventory();
-      pushToast('Bourse mise à jour');
+      pushToast(t('inv.bourse.mise.a.jour'));
     } catch (err) {
-      pushToast(apiError(err, 'Erreur de sauvegarde'), 'error');
+      pushToast(apiError(err, t('inv.erreur.de.sauvegarde')), 'error');
     }
-  }, [coins, coinsDirty, pushToast, refreshInventory, markLocalMutation, saveCoinsMutation]);
+  }, [coins, coinsDirty, pushToast, refreshInventory, markLocalMutation, saveCoinsMutation, t]);
 
   const dismissError = () => setDismissedError(error);
 
@@ -714,7 +725,7 @@ export default function CharacterInventoryPage() {
       setCombatRefresh((n) => n + 1);
     } catch {
       // Most likely the MD advanced the same turn a beat earlier
-      pushToast('Le tour a déjà changé', 'error');
+      pushToast(t('inv.le.tour.a.deja.change'), 'error');
       setCombatRefresh((n) => n + 1);
     } finally {
       setEndingTurn(false);
@@ -722,9 +733,9 @@ export default function CharacterInventoryPage() {
   };
 
   // ---------- Render guards ----------
-  if (loading) return <LoadingSpinner label="Chargement du sac à dos…" />;
+  if (loading) return <LoadingSpinner label={t('inv.chargement.du.sac.a.dos')} />;
   if (error && !data) return <ErrorMsg message={error} />;
-  if (!data) return <ErrorMsg message="Personnage introuvable" />;
+  if (!data) return <ErrorMsg message={t('inv.personnage.introuvable')} />;
 
   const { character, encumbrance, locations, locationWeights } = data;
 
@@ -838,7 +849,7 @@ export default function CharacterInventoryPage() {
               aria-pressed={activeTab === tab.key}
             >
               <span aria-hidden="true">{tab.icon}</span>
-              <span>{tab.label}</span>
+              <span>{t(tab.label)}</span>
             </button>
           ))}
         </div>
@@ -860,7 +871,7 @@ export default function CharacterInventoryPage() {
               className="block w-full px-3 py-1.5 text-xs font-semibold text-ink-900"
               aria-expanded={hubInitOpen}
             >
-              🎲 Lance ton initiative !
+              {t('inv.lance.ton.initiative')}
             </button>
             {hubInitOpen && (
               <>
@@ -877,7 +888,7 @@ export default function CharacterInventoryPage() {
                     placeholder="—"
                     className="input input-compact text-sm py-1"
                     autoFocus
-                    aria-label="Ton initiative"
+                    aria-label={t('inv.ton.initiative')}
                   />
                   <button
                     type="button"
@@ -913,14 +924,16 @@ export default function CharacterInventoryPage() {
                       if (hubInitError) setHubInitError(false);
                     }}
                     className="btn-secondary text-xs px-2 py-1"
-                    title={`d20 + ${hubCombat.initiativeBonus} (DEX)`}
+                    title={t('inv.d20.hubcombat.initiativebonu.dex', {
+                      initiativeBonus: hubCombat.initiativeBonus,
+                    })}
                   >
                     🎲
                   </button>
                 </div>
                 {hubInitError && (
                   <p className="px-3 pb-2 text-xs text-red-600" role="alert">
-                    Échec de l'enregistrement — réessaie
+                    {t('inv.echec.de.l.enregistrement.reessaie')}
                   </p>
                 )}
               </>
@@ -934,7 +947,7 @@ export default function CharacterInventoryPage() {
           // Agir line speaks at the instant the turn becomes yours.
           <div className="band-rise relative mb-[-6px] mx-auto w-fit max-w-full rounded-t-xl rounded-b-md shadow-md border border-b-0 bg-blood-600 border-blood-700 combat-turn-glow overflow-hidden">
             <div className="relative px-3 py-1.5 text-xs font-bold text-parchment-50 text-center">
-              ⚔ À toi de jouer !
+              {t('inv.a.toi.de.jouer')}
               <TurnSlash active={turnSlash} />
             </div>
             <div className="flex items-center gap-2 px-2 py-1.5 bg-parchment-50 border-t border-blood-300">
@@ -943,15 +956,15 @@ export default function CharacterInventoryPage() {
                 onClick={endMyTurn}
                 disabled={endingTurn}
                 className="btn-primary min-h-[44px] flex-1 px-4 text-sm whitespace-nowrap"
-                aria-label="Terminer mon tour — passer au combattant suivant"
+                aria-label={t('inv.terminer.mon.tour.passer.au.combattant')}
               >
-                ✓ J'ai fini mon tour
+                {t('inv.j.ai.fini.mon.tour')}
               </button>
               <Link
                 to={`/party/${hubCombat.partyId}/combat?enc=${hubCombat.encounterId}`}
                 className="btn-secondary min-h-[44px] px-3 text-xs whitespace-nowrap"
               >
-                Voir le combat
+                {t('inv.voir.le.combat')}
               </Link>
             </div>
           </div>
@@ -960,11 +973,11 @@ export default function CharacterInventoryPage() {
             <Link
               to={`/party/${hubCombat.partyId}/combat?enc=${hubCombat.encounterId}`}
               className="relative block mb-[-6px] mx-auto w-fit max-w-full px-3 py-1.5 rounded-t-xl rounded-b-md text-xs font-semibold shadow-md border border-b-0 transition-colors bg-ink-900 text-parchment-200 border-ink-700"
-              aria-label="Combat en cours — ouvrir le traqueur"
+              aria-label={t('inv.combat.en.cours.ouvrir.le.traqueur')}
             >
               {hubCombat.currentCombatantName
                 ? `⚔ ${hubCombat.currentCombatantName}`
-                : '⚔ Combat en préparation'}
+                : t('inv.combat.en.preparation')}
               <TurnSlash active={turnSlash} />
             </Link>
           )
@@ -994,13 +1007,13 @@ export default function CharacterInventoryPage() {
                   active ? 'text-white' : 'text-ink-400 hover:text-ink-700'
                 }`}
                 aria-pressed={active}
-                aria-label={tab.label}
+                aria-label={t(tab.label)}
               >
                 <span className="text-lg leading-none" aria-hidden="true">
                   {tab.icon}
                 </span>
                 <span className="text-[9px] font-medium leading-none">
-                  {tab.short ?? tab.label}
+                  {tab.short ? t(tab.short) : t(tab.label)}
                 </span>
               </button>
             );
@@ -1036,10 +1049,10 @@ export default function CharacterInventoryPage() {
                 aria-expanded={moreOpen}
                 aria-label={
                   hubCombat
-                    ? 'Combat en cours'
+                    ? t('inv.hub.combat.en.cours')
                     : moreOpen
-                      ? 'Fermer les autres onglets'
-                      : 'Autres onglets'
+                      ? t('inv.hub.fermer.les.autres.onglets')
+                      : t('inv.hub.autres.onglets')
                 }
               >
                 <span
@@ -1113,7 +1126,7 @@ export default function CharacterInventoryPage() {
                         <span className="text-lg leading-none" aria-hidden="true">
                           {tab.icon}
                         </span>
-                        {tab.label}
+                        {t(tab.label)}
                       </button>
                     );
                   })}
@@ -1246,10 +1259,12 @@ export default function CharacterInventoryPage() {
                           }`}
                           aria-label={
                             isConfirming
-                              ? `Confirmer la suppression de ${loc.name}`
-                              : `Supprimer ${loc.name}`
+                              ? t('inv.confirmer.la.suppression.de.name', { name: loc.name })
+                              : t('inv.supprimer.name', { name: loc.name })
                           }
-                          title={isConfirming ? 'Confirmer ?' : 'Supprimer ce transport'}
+                          title={
+                            isConfirming ? t('inv.confirmer') : t('inv.supprimer.ce.transport')
+                          }
                         >
                           {isConfirming ? '✓' : '🗑'}
                         </button>
@@ -1263,10 +1278,10 @@ export default function CharacterInventoryPage() {
                     type="button"
                     onClick={() => setShowNewLocationModal(true)}
                     className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium border border-dashed border-parchment-300 text-ink-500 hover:border-blood-400 hover:text-blood-600 transition-colors"
-                    aria-label="Ajouter un transport"
-                    title="Ajouter un transport"
+                    aria-label={t('inv.ajouter.un.transport')}
+                    title={t('inv.ajouter.un.transport')}
                   >
-                    <span aria-hidden="true">+</span> Transport
+                    <span aria-hidden="true">+</span> {t('inv.transport')}
                   </button>
                 )}
               </div>
@@ -1287,7 +1302,7 @@ export default function CharacterInventoryPage() {
                   type="button"
                   onClick={dismissError}
                   className="btn-ghost text-ink-500 text-sm shrink-0"
-                  aria-label="Fermer l'erreur"
+                  aria-label={t('inv.fermer.l.erreur')}
                 >
                   ✕
                 </button>
@@ -1302,18 +1317,18 @@ export default function CharacterInventoryPage() {
                     🎲
                   </span>
                   <div className="flex-1">
-                    <p className="font-medium text-ink-900">Bienvenue !</p>
+                    <p className="font-medium text-ink-900">{t('inv.bienvenue')}</p>
                     <p className="text-sm text-ink-700 mt-1">
-                      Appuie sur le bouton <strong>+ Ajouter</strong> en bas de l'écran pour
-                      chercher un objet dans le catalogue, puis suivez la barre de poids pour voir
-                      si votre personnage est encombré.
+                      {t('inv.appuie.sur.le.bouton')}
+                      <strong>{t('inv.ajouter')}</strong>
+                      {t('inv.en.bas.de.l.ecran.pour')}
                     </p>
                     <button
                       type="button"
                       onClick={dismissTour}
                       className="btn-primary text-sm mt-2 px-3 py-1.5"
                     >
-                      Compris
+                      {t('inv.compris')}
                     </button>
                   </div>
                 </div>
@@ -1325,7 +1340,7 @@ export default function CharacterInventoryPage() {
               {/* ---------- LEFT: inventory grouped by category ---------- */}
               <section className="space-y-3">
                 <h2 className="section-title">
-                  {activeLocation ? activeLocation.name : 'Sac à dos'}{' '}
+                  {activeLocation ? activeLocation.name : t('inv.sac.a.dos')}{' '}
                   <span className="text-ink-400 text-sm font-normal">({entries.length})</span>
                 </h2>
 
@@ -1337,8 +1352,8 @@ export default function CharacterInventoryPage() {
                           ? '🎒'
                           : LOCATION_TYPE_ICON[activeLocation?.type ?? 'carried']
                       }
-                      title={isActiveCarried ? 'Sac à dos vide' : 'Aucun objet ici'}
-                      hint="Appuie sur + Ajouter pour chercher un objet."
+                      title={isActiveCarried ? t('inv.sac.a.dos.vide') : t('inv.aucun.objet.ici')}
+                      hint={t('inv.appuie.sur.ajouter')}
                     />
                   </div>
                 ) : (
@@ -1372,7 +1387,7 @@ export default function CharacterInventoryPage() {
 
               {/* ---------- RIGHT: catalog (desktop only — mobile uses FAB + bottom sheet) ---------- */}
               <section className="hidden lg:block space-y-3">
-                <h2 className="section-title">Catalogue</h2>
+                <h2 className="section-title">{t('inv.catalogue')}</h2>
                 {catalogContent}
               </section>
             </div>
@@ -1397,14 +1412,18 @@ export default function CharacterInventoryPage() {
       {activeTab === 'inventory' && canEdit && (
         <Fab
           onClick={() => setCatalogOpen(true)}
-          label="Ajouter un objet au catalogue"
+          label={t('inv.ajouter.un.objet.au.catalogue')}
           mobileOnly
           raised
         />
       )}
 
       {/* ---------- Mobile catalog bottom sheet ---------- */}
-      <BottomSheet open={catalogOpen} onClose={() => setCatalogOpen(false)} title="Catalogue">
+      <BottomSheet
+        open={catalogOpen}
+        onClose={() => setCatalogOpen(false)}
+        title={t('inv.catalogue')}
+      >
         {catalogContent}
       </BottomSheet>
 
@@ -1418,7 +1437,7 @@ export default function CharacterInventoryPage() {
         onTransferred={async (itemName: string) => {
           setTransferEntry(null);
           await refreshInventory();
-          pushToast(`${itemName} transféré`);
+          pushToast(t('inv.transfere', { name: itemName }));
         }}
         onError={(msg) => pushToast(msg, 'error')}
       />
@@ -1431,10 +1450,14 @@ export default function CharacterInventoryPage() {
       />
 
       {/* ---------- Custom item creation modal (players too, party setting) ---------- */}
-      <Modal open={createItemOpen} onClose={() => setCreateItemOpen(false)} title="Créer un objet">
+      <Modal
+        open={createItemOpen}
+        onClose={() => setCreateItemOpen(false)}
+        title={t('inv.creer.un.objet')}
+      >
         <form onSubmit={submitCreateItem} className="space-y-3">
           <label className="block">
-            <span className="label">Nom *</span>
+            <span className="label">{t('inv.nom')}</span>
             <input
               className="input"
               value={createItemName}
@@ -1446,21 +1469,21 @@ export default function CharacterInventoryPage() {
           </label>
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
-              <span className="label">Catégorie</span>
+              <span className="label">{t('inv.categorie')}</span>
               <select
                 className="input"
                 value={createItemCategory}
                 onChange={(e) => setCreateItemCategory(e.target.value)}
               >
-                <option value="custom">Personnalisé</option>
-                <option value="weapon">Arme</option>
-                <option value="armor">Armure</option>
-                <option value="gear">Équipement</option>
-                <option value="magic">Objet magique</option>
+                <option value="custom">{t('inv.personnalise')}</option>
+                <option value="weapon">{t('inv.arme')}</option>
+                <option value="armor">{t('inv.armure')}</option>
+                <option value="gear">{t('inv.equipement')}</option>
+                <option value="magic">{t('inv.objet.magique')}</option>
               </select>
             </label>
             <label className="block">
-              <span className="label">Poids (kg)</span>
+              <span className="label">{t('inv.poids.kg')}</span>
               <input
                 type="number"
                 step="0.01"
@@ -1473,13 +1496,13 @@ export default function CharacterInventoryPage() {
             </label>
           </div>
           <label className="block">
-            <span className="label">Description</span>
+            <span className="label">{t('onglet.description')}</span>
             <textarea
               className="input"
               rows={3}
               value={createItemDesc}
               onChange={(e) => setCreateItemDesc(e.target.value)}
-              placeholder="À quoi ça sert ?"
+              placeholder={t('inv.a.quoi.ca.sert')}
             />
           </label>
           {/* L'illustration est le second contenu de l'objet — après la
@@ -1490,12 +1513,9 @@ export default function CharacterInventoryPage() {
             disabled={creatingItem || !createItemName.trim()}
             className="btn-primary w-full"
           >
-            {creatingItem ? '…' : '✨ Créer et ajouter'}
+            {creatingItem ? '…' : t('inv.creer.et.ajouter')}
           </button>
-          <p className="text-xs text-ink-400">
-            L’objet rejoint le catalogue du groupe — le MD pourra le retoucher dans son tableau de
-            bord.
-          </p>
+          <p className="text-xs text-ink-400">{t('inv.l.objet.rejoint.le.catalogue.du')}</p>
         </form>
       </Modal>
 

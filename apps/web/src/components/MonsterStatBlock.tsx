@@ -5,17 +5,25 @@
  * and legendary actions.
  */
 
-import type { Monster, MonsterAction } from '@table-sync/shared';
-import {
-  abilityModifier,
-  formatCR,
-  formatModifier,
-  MONSTER_SIZE_LABELS_FR,
-} from '@table-sync/shared';
+import type { AbilityKey, Monster, MonsterAction } from '@table-sync/shared';
+import { abilityModifier, formatCR, formatModifier } from '@table-sync/shared';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../api';
 import { appLocale } from '../i18n';
+import {
+  abilityShort,
+  damageType,
+  monsterAlignment,
+  monsterArmorDesc,
+  monsterCondition,
+  monsterDamageTrait,
+  monsterSave,
+  monsterSizeLabel,
+  monsterSkill,
+  monsterTypeLabel,
+} from '../i18n/labels';
 import SpellDetailSheet from './SpellDetailSheet';
 
 interface Props {
@@ -77,22 +85,24 @@ function matchSpellsInText(desc: string, catalog: SpellLight[]): SpellLight[] {
   return found;
 }
 
-// French ability key → short label + capitalized save prefix
-const ABILITY_INFO: { key: keyof Monster['abilities']; short: string; savePrefix: string }[] = [
-  { key: 'for', short: 'FOR', savePrefix: 'For' },
-  { key: 'dex', short: 'DEX', savePrefix: 'Dex' },
-  { key: 'con', short: 'CON', savePrefix: 'Con' },
-  { key: 'int', short: 'INT', savePrefix: 'Int' },
-  { key: 'sag', short: 'SAG', savePrefix: 'Sag' },
-  { key: 'cha', short: 'CHA', savePrefix: 'Cha' },
+// Clé de caractéristique du bestiaire (FR) → clé partagée : le libellé court
+// suit la langue active via abilityShort (FOR/SAG en FR, STR/WIS en EN).
+const ABILITY_INFO: { key: keyof Monster['abilities']; ability: AbilityKey }[] = [
+  { key: 'for', ability: 'strength' },
+  { key: 'dex', ability: 'dexterity' },
+  { key: 'con', ability: 'constitution' },
+  { key: 'int', ability: 'intelligence' },
+  { key: 'sag', ability: 'wisdom' },
+  { key: 'cha', ability: 'charisma' },
 ];
 
+// Modes de vitesse — clés i18n (la marche n'a pas de libellé : "9 m" seul).
 const SPEED_LABELS: Record<string, string> = {
   walk: '',
-  swim: 'nage',
-  fly: 'vol',
-  climb: 'escalade',
-  burrow: 'creusement',
+  swim: 'bestiaire.vitesse.nage',
+  fly: 'bestiaire.vitesse.vol',
+  climb: 'bestiaire.vitesse.escalade',
+  burrow: 'bestiaire.vitesse.creusement',
 };
 
 export default function MonsterStatBlock({
@@ -102,6 +112,7 @@ export default function MonsterStatBlock({
   onDamageRolled,
   variant = 'modal',
 }: Props) {
+  const { t } = useTranslation();
   const [monster, setMonster] = useState<Monster | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -120,7 +131,7 @@ export default function MonsterStatBlock({
   const hasSpellcasting =
     !!monster &&
     [...monster.traits, ...monster.actions, ...monster.legendaryActions].some((a) =>
-      /incantation/i.test(a.name),
+      /incantation|spellcasting/i.test(a.name),
     );
 
   // Fetch the light spell catalog once when the monster has spellcasting
@@ -139,13 +150,13 @@ export default function MonsterStatBlock({
   const header = (
     <div className="flex items-center justify-between p-4 border-b border-parchment-200 shrink-0">
       <h2 className="section-title truncate">
-        {monster?.name ?? (loading ? 'Chargement…' : 'Monstre')}
+        {monster?.name ?? (loading ? t('app.chargement') : t('monster.one'))}
       </h2>
       <button
         type="button"
         onClick={onClose}
         className="btn-ghost text-ink-500 p-1 shrink-0"
-        aria-label="Fermer"
+        aria-label={t('bestiaire.fermer')}
       >
         ✕
       </button>
@@ -155,10 +166,14 @@ export default function MonsterStatBlock({
   const body = (
     <div className="overflow-y-auto p-4 flex-1">
       {loading && (
-        <p className="text-sm text-ink-400 text-center py-8">Chargement du stat block…</p>
+        <p className="text-sm text-ink-400 text-center py-8">
+          {t('bestiaire.chargement.du.stat.block')}
+        </p>
       )}
       {!loading && !monster && (
-        <p className="text-sm text-ink-400 text-center py-8">Monstre introuvable.</p>
+        <p className="text-sm text-ink-400 text-center py-8">
+          {t('bestiaire.monstre.introuvable')}
+        </p>
       )}
       {monster && (
         <StatBlockBody
@@ -219,53 +234,59 @@ function StatBlockBody({
   onOpenSpell: (id: number) => void;
   onDamageRolled?: (total: number, source: string) => void;
 }) {
-  const sizeLabel = MONSTER_SIZE_LABELS_FR[monster.size] ?? monster.size;
-  const typeLine = [
-    monster.type,
-    monster.subtype && `(${monster.subtype})`,
-    sizeLabel && `de taille ${sizeLabel}`,
-  ]
-    .filter(Boolean)
-    .join(' ');
+  const { t } = useTranslation();
+  const sizeLabel = monsterSizeLabel(monster.size);
+  // Ligne de type : l'ordre taille/type s'inverse en EN (stat block 5e).
+  const typeLine = monster.subtype
+    ? t('bestiaire.ligne.type.soustype', {
+        type: monsterTypeLabel(monster.type),
+        subtype: monster.subtype,
+        size: sizeLabel,
+      })
+    : sizeLabel
+      ? t('bestiaire.ligne.type', { type: monsterTypeLabel(monster.type), size: sizeLabel })
+      : monsterTypeLabel(monster.type);
 
   return (
     <div className="space-y-4">
       {/* Type line */}
       <p className="text-sm italic text-ink-500">
         {typeLine}
-        {monster.alignment && `, ${monster.alignment.toLowerCase()}`}
+        {monster.alignment && `, ${monsterAlignment(monster.alignment).toLowerCase()}`}
       </p>
 
       {/* Core stats: AC, HP, Speed */}
       <div className="space-y-1.5">
         <div className="flex items-baseline gap-2">
-          <span className="font-semibold text-sm">🛡 Classe d'armure</span>
+          <span className="font-semibold text-sm">{t('bestiaire.classe.d.armure')}</span>
           <span className="text-sm">
             {monster.armorClass}
-            {monster.armorDesc && <span className="text-ink-400"> ({monster.armorDesc})</span>}
+            {monster.armorDesc && (
+              <span className="text-ink-400"> ({monsterArmorDesc(monster.armorDesc)})</span>
+            )}
           </span>
         </div>
         <div className="flex items-baseline gap-2">
-          <span className="font-semibold text-sm">❤ Points de vie</span>
+          <span className="font-semibold text-sm">{t('bestiaire.points.de.vie')}</span>
           <span className="text-sm">
             {monster.hitPoints}
             {monster.hitDice && <span className="text-ink-400"> ({monster.hitDice})</span>}
           </span>
         </div>
         <div className="flex items-baseline gap-2">
-          <span className="font-semibold text-sm">🏃 Vitesse</span>
-          <span className="text-sm">{formatSpeed(monster)}</span>
+          <span className="font-semibold text-sm">{t('bestiaire.vitesse')}</span>
+          <span className="text-sm">{formatSpeed(monster, t)}</span>
         </div>
       </div>
 
       {/* Ability scores grid */}
       <div className="grid grid-cols-6 gap-1 text-center border-y border-parchment-200 py-2">
-        {ABILITY_INFO.map(({ key, short }) => {
+        {ABILITY_INFO.map(({ key, ability }) => {
           const score = monster.abilities[key] ?? 10;
           const mod = abilityModifier(score);
           return (
             <div key={key}>
-              <div className="text-xs font-bold text-ink-600">{short}</div>
+              <div className="text-xs font-bold text-ink-600">{abilityShort(ability)}</div>
               <div className="text-sm font-mono">{score}</div>
               <div className="text-xs text-ink-400">({formatModifier(mod)})</div>
             </div>
@@ -277,37 +298,44 @@ function StatBlockBody({
       <div className="space-y-1.5 text-sm">
         {monster.savingThrows.length > 0 && (
           <div>
-            <span className="font-semibold">Jets de sauvegarde</span>
-            <span className="text-ink-600 ml-2">{monster.savingThrows.join(', ')}</span>
+            <span className="font-semibold">{t('bestiaire.jets.de.sauvegarde')}</span>{' '}
+            <span className="text-ink-600 ml-2">
+              {monster.savingThrows.map(monsterSave).join(', ')}
+            </span>
           </div>
         )}
         {monster.skills.length > 0 && (
           <div>
-            <span className="font-semibold">Compétences</span>
+            <span className="font-semibold">{t('bestiaire.competences')}</span>{' '}
             <span className="text-ink-600 ml-2">
-              {monster.skills.map((s) => `${s.name}${s.isExpert ? ' (expert)' : ''}`).join(', ')}
+              {monster.skills
+                .map((s) => `${monsterSkill(s.name)}${s.isExpert ? t('bestiaire.expert') : ''}`)
+                .join(', ')}
             </span>
           </div>
         )}
         {monster.senses && (
           <div>
-            <span className="font-semibold">Sens</span>
+            <span className="font-semibold">{t('bestiaire.sens')}</span>{' '}
             <span className="text-ink-600 ml-2">{monster.senses}</span>
             {monster.telepathy && (
-              <span className="text-ink-600">, télépathie {monster.telepathy} m</span>
+              <span className="text-ink-600">
+                {t('bestiaire.telepathie', { metres: monster.telepathy })}
+              </span>
             )}
           </div>
         )}
         <div>
-          <span className="font-semibold">Langues</span>
+          <span className="font-semibold">{t('bestiaire.langues')}</span>{' '}
           <span className="text-ink-600 ml-2">
             {monster.languages.length > 0 ? monster.languages.join(', ') : '—'}
           </span>
         </div>
         <div>
-          <span className="font-semibold">Puissance</span>
+          <span className="font-semibold">{t('bestiaire.puissance')}</span>{' '}
           <span className="text-ink-600 ml-2">
-            {formatCR(monster.challengeRating)} ({monster.xp.toLocaleString(appLocale())} PX)
+            {formatCR(monster.challengeRating)} ({monster.xp.toLocaleString(appLocale())}{' '}
+            {t('bestiaire.px')})
           </span>
         </div>
       </div>
@@ -319,20 +347,26 @@ function StatBlockBody({
         <div className="space-y-1.5 text-sm">
           {monster.damageResistances && monster.damageResistances.length > 0 && (
             <div>
-              <span className="font-semibold">Résistances aux dégâts</span>
-              <span className="text-ink-600 ml-2">{monster.damageResistances.join(', ')}</span>
+              <span className="font-semibold">{t('bestiaire.resistances.aux.degats')}</span>
+              <span className="text-ink-600 ml-2">
+                {monster.damageResistances.map(monsterDamageTrait).join(', ')}
+              </span>
             </div>
           )}
           {monster.damageImmunities && monster.damageImmunities.length > 0 && (
             <div>
-              <span className="font-semibold">Immunités aux dégâts</span>
-              <span className="text-ink-600 ml-2">{monster.damageImmunities.join(', ')}</span>
+              <span className="font-semibold">{t('bestiaire.immunites.aux.degats')}</span>
+              <span className="text-ink-600 ml-2">
+                {monster.damageImmunities.map(monsterDamageTrait).join(', ')}
+              </span>
             </div>
           )}
           {monster.conditionImmunities && monster.conditionImmunities.length > 0 && (
             <div>
-              <span className="font-semibold">Immunités aux états</span>
-              <span className="text-ink-600 ml-2">{monster.conditionImmunities.join(', ')}</span>
+              <span className="font-semibold">{t('bestiaire.immunites.aux.etats')}</span>
+              <span className="text-ink-600 ml-2">
+                {monster.conditionImmunities.map(monsterCondition).join(', ')}
+              </span>
             </div>
           )}
         </div>
@@ -341,7 +375,7 @@ function StatBlockBody({
       {/* Traits */}
       {monster.traits.length > 0 && (
         <ActionSection
-          title="Capacités"
+          title={t('bestiaire.capacites')}
           actions={monster.traits}
           spellCatalog={spellCatalog}
           onOpenSpell={onOpenSpell}
@@ -352,7 +386,7 @@ function StatBlockBody({
       {/* Actions */}
       {monster.actions.length > 0 && (
         <ActionSection
-          title="Actions"
+          title={t('bestiaire.actions')}
           actions={monster.actions}
           spellCatalog={spellCatalog}
           onOpenSpell={onOpenSpell}
@@ -363,7 +397,7 @@ function StatBlockBody({
       {/* Legendary actions */}
       {monster.legendaryActions.length > 0 && (
         <ActionSection
-          title="Actions légendaires"
+          title={t('bestiaire.actions.legendaires')}
           actions={monster.legendaryActions}
           spellCatalog={spellCatalog}
           onOpenSpell={onOpenSpell}
@@ -407,12 +441,16 @@ function ActionSection({
   );
 }
 
-function formatSpeed(monster: Monster): string {
+function formatSpeed(monster: Monster, t: (key: string) => string): string {
+  // Texte de vitesse localisé par l'API quand l'overlay EN existe (pieds) —
+  // sinon formatage métrique depuis `speed`.
+  if (monster.speedText && monster.speedText.trim() !== '') return monster.speedText;
   const parts: string[] = [];
   for (const [mode, value] of Object.entries(monster.speed)) {
     const num = Number(value);
     if (Number.isNaN(num) || num === 0) continue;
-    const label = SPEED_LABELS[mode];
+    const labelKey = SPEED_LABELS[mode];
+    const label = labelKey ? t(labelKey) : '';
     parts.push(label ? `${label} ${num} m` : `${num} m`);
   }
   return parts.length > 0 ? parts.join(', ') : '—';
@@ -458,6 +496,7 @@ function ActionEntry({
   onOpenSpell: (id: number) => void;
   onDamageRolled?: (total: number, source: string) => void;
 }) {
+  const { t } = useTranslation();
   const [attackResult, setAttackResult] = useState<{
     roll: number;
     natural: number;
@@ -466,7 +505,7 @@ function ActionEntry({
   const [damageResult, setDamageResult] = useState<{ total: number; rolls: number[] } | null>(null);
 
   // Spellcasting entry: match the spell names mentioned in the description
-  const isSpellcasting = /incantation/i.test(action.name);
+  const isSpellcasting = /incantation|spellcasting/i.test(action.name);
   const knownSpells =
     isSpellcasting && spellCatalog.length > 0 && action.desc
       ? matchSpellsInText(action.desc, spellCatalog)
@@ -505,7 +544,7 @@ function ActionEntry({
             type="button"
             onClick={handleAttack}
             className="px-1.5 py-0.5 rounded text-xs font-mono bg-red-100 text-red-700 shrink-0 hover:bg-red-200 active:scale-95 transition-all cursor-pointer"
-            title="Cliquer pour lancer le jet d'attaque (d20)"
+            title={t('bestiaire.cliquer.pour.lancer.le.jet.d')}
           >
             🎲 +{action.attackBonus}
           </button>
@@ -516,10 +555,10 @@ function ActionEntry({
             type="button"
             onClick={handleDamage}
             className="px-1.5 py-0.5 rounded text-xs font-mono bg-orange-100 text-orange-700 shrink-0 hover:bg-orange-200 active:scale-95 transition-all cursor-pointer"
-            title="Cliquer pour lancer les dégâts"
+            title={t('bestiaire.cliquer.pour.lancer.les.degats')}
           >
             🎲 {action.damageDice}
-            {action.damageType ? ` ${action.damageType}` : ''}
+            {action.damageType ? ` ${damageType(action.damageType)}` : ''}
           </button>
         )}
       </div>
@@ -538,9 +577,9 @@ function ActionEntry({
                     : 'bg-red-50 text-red-700'
               }`}
             >
-              {isCrit && '🎯 Critique ! '}
-              {isFumble && '💥 Échec ! '}
-              {attackResult.total} à l'attaque
+              {isCrit && t('bestiaire.critique')}
+              {isFumble && t('bestiaire.echec')}
+              {attackResult.total} {t('bestiaire.a.l.attaque')}
               <span className="text-xs font-normal ml-1 opacity-70">
                 (d20: {attackResult.natural})
               </span>
@@ -554,7 +593,8 @@ function ActionEntry({
               }`}
             >
               {isCrit && '🎯 '}
-              {damageResult.total} dégâts{action.damageType ? ` ${action.damageType}` : ''}
+              {damageResult.total} {t('bestiaire.degats')}
+              {action.damageType ? ` ${damageType(action.damageType)}` : ''}
               {isCrit && <span className="text-xs font-normal ml-1">×2!</span>}
               <span className="text-xs font-normal ml-1 opacity-70">
                 ({damageResult.rolls.join('+')})
@@ -586,7 +626,7 @@ function ActionEntry({
               key={s.id}
               onClick={() => onOpenSpell(s.id)}
               className="px-2 py-0.5 rounded-full text-xs bg-indigo-100 text-indigo-700 hover:bg-indigo-200 active:scale-95 transition-all"
-              title={`Voir le sort : ${s.name}`}
+              title={t('bestiaire.voir.le.sort.s.name', { s_name: s.name })}
             >
               ✨ {s.name}
             </button>

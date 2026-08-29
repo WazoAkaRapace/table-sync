@@ -46,6 +46,11 @@ export function appLocale(): string {
   return appLang() === 'en' ? 'en-US' : 'fr-FR';
 }
 
+// La langue du document suit la préférence persistée DÈS le chargement (et pas
+// seulement au moment de setAppLang) : un utilisateur EN qui recharge garde
+// <html lang="en"> pour les lecteurs d'écran et l'orthographe native.
+document.documentElement.lang = appLang();
+
 void i18next.use(initReactI18next).init({
   resources: {
     fr: { translation: fr },

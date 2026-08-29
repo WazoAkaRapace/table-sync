@@ -1,0 +1,3432 @@
+{
+  "friends": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": "A small amount of makeup applied to the face as this spell is cast.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "acid-splash": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "guidance": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "poison-spray": {
+    "castingTime": "1 action",
+    "rangeText": "10 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "chill-touch": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": null,
+    "duration": "1 round",
+    "higherLevel": null
+  },
+  "control-flames": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Instantaneous or 1 hour",
+    "higherLevel": null
+  },
+  "true-strike": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 round",
+    "higherLevel": null
+  },
+  "thunderclap": {
+    "castingTime": "1 action",
+    "rangeText": "5 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "eldritch-blast": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "druidcraft": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "create-bonfire": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "sword-burst": {
+    "castingTime": "1 action",
+    "rangeText": "Self (5-foot radius)",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "shape-water": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": null,
+    "duration": "Instantaneous or 1 hour",
+    "higherLevel": null
+  },
+  "mold-earth": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": null,
+    "duration": "Instantaneous or 1 hour",
+    "higherLevel": null
+  },
+  "lightning-lure": {
+    "castingTime": "1 action",
+    "rangeText": "Self (15-foot radius)",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "sacred-flame": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "produce-flame": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "10 minutes",
+    "higherLevel": null
+  },
+  "thorn-whip": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": "The stem of a plant with thorns.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "frostbite": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "toll-the-dead": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "shillelagh": {
+    "castingTime": "1 bonus action",
+    "rangeText": "Touch",
+    "material": "Mistletoe, a shamrock leaf, and a club or quarterstaff.",
+    "duration": "1 minute",
+    "higherLevel": null
+  },
+  "minor-illusion": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": "A bit of fleece.",
+    "duration": "1 minute",
+    "higherLevel": null
+  },
+  "infestation": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": "A living flea.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "green-flame-blade": {
+    "castingTime": "1 action",
+    "rangeText": "Self (5-foot radius)",
+    "material": "Text cost.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "booming-blade": {
+    "castingTime": "1 action",
+    "rangeText": "Self (5-foot radius)",
+    "material": "Text cost.",
+    "duration": "1 round",
+    "higherLevel": null
+  },
+  "light": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "A firefly or phosphorescent moss.",
+    "duration": "1 hour",
+    "higherLevel": null
+  },
+  "dancing-lights": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": "A bit of phosphorus or wychwood, or a glowworm.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "mage-hand": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": null,
+    "duration": "1 minute",
+    "higherLevel": null
+  },
+  "message": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": "A short piece of copper wire.",
+    "duration": "1 round",
+    "higherLevel": null
+  },
+  "vicious-mockery": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "word-of-radiance": {
+    "castingTime": "1 action",
+    "rangeText": "5 feet",
+    "material": "A holy symbol.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "magic-stone": {
+    "castingTime": "1 bonus action",
+    "rangeText": "Touch",
+    "material": null,
+    "duration": "1 minute",
+    "higherLevel": null
+  },
+  "mind-sliver": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "1 round",
+    "higherLevel": null
+  },
+  "shocking-grasp": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "prestidigitation": {
+    "castingTime": "1 action",
+    "rangeText": "10 feet",
+    "material": null,
+    "duration": "1 hour",
+    "higherLevel": null
+  },
+  "blade-ward": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "1 round",
+    "higherLevel": null
+  },
+  "ray-of-frost": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "mending": {
+    "castingTime": "1 minute",
+    "rangeText": "Touch",
+    "material": "Two lodestones.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "resistance": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "A miniature cloak.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "gust": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "primal-savagery": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "spare-the-dying": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "thaumaturgy": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": null,
+    "duration": "1 minute",
+    "higherLevel": null
+  },
+  "fire-bolt": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "absorb-elements": {
+    "castingTime": "1 reaction, which you take when you take acid, cold, fire, lightning, or thunder damage",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "1 round",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, the extra damage increases by 1d6 for each slot level above 1st."
+  },
+  "alarm": {
+    "castingTime": "1 minute",
+    "rangeText": "30 feet",
+    "material": "A tiny bell and a piece of fine silver wire.",
+    "duration": "8 hours",
+    "higherLevel": null
+  },
+  "animal-friendship": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": "A morsel of food.",
+    "duration": "24 hours",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, you can affect one additional beast for each slot level above 1st."
+  },
+  "find-familiar": {
+    "castingTime": "1 hour",
+    "rangeText": "10 feet",
+    "material": "Charcoal, incense, and herbs worth at least 10 gp that must be consumed by fire in a brass brazier.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "armor-of-agathys": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": "A cup of water.",
+    "duration": "1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, both the temporary hit points and the cold damage increase by 5 for each slot level above 1st."
+  },
+  "mage-armor": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "A piece of cured leather.",
+    "duration": "8 hours",
+    "higherLevel": null
+  },
+  "goodberry": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "A sprig of mistletoe.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "silvery-barbs": {
+    "castingTime": "1 reaction, which you take when a creature you can see within 60 feet of you succeeds on an attack roll, an ability check, or a saving throw",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "bless": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": "A sprinkling of holy water.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, you can target one additional creature for each slot level above 1st."
+  },
+  "inflict-wounds": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, the damage increases by 1d10 for each slot level above 1st."
+  },
+  "shield": {
+    "castingTime": "1 reaction",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "1 round",
+    "higherLevel": null
+  },
+  "shield-of-faith": {
+    "castingTime": "1 bonus action",
+    "rangeText": "60 feet",
+    "material": "A small parchment with a bit of holy text written on it.",
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "catapult": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, the maximum weight of objects that you can target with this spell increases by 5 pounds, and the damage increases by 3d8, for each slot level above 1st."
+  },
+  "ceremony": {
+    "castingTime": "1 hour",
+    "rangeText": "Touch",
+    "material": "Text cost consume.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "charm-person": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": null,
+    "duration": "1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, you can target one additional creature for each slot level above 1st. The creatures must be within 30 feet of each other when you target them."
+  },
+  "searing-smite": {
+    "castingTime": "1 bonus action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, the initial extra damage dealt by the attack increases by 1d6 for each slot level above 1st."
+  },
+  "wrathful-smite": {
+    "castingTime": "1 bonus action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "thunderous-smite": {
+    "castingTime": "1 bonus action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "snare": {
+    "castingTime": "1 minute",
+    "rangeText": "Touch",
+    "material": "Text consume.",
+    "duration": "8 hours",
+    "higherLevel": null
+  },
+  "speak-with-animals": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "10 minutes",
+    "higherLevel": null
+  },
+  "comprehend-languages": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": "A pinch of soot and salt.",
+    "duration": "1 hour",
+    "higherLevel": null
+  },
+  "color-spray": {
+    "castingTime": "1 action",
+    "rangeText": "Self (15-foot cone)",
+    "material": "A pinch of powder or sand that is colored red, yellow, and blue.",
+    "duration": "1 round",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, roll an additional 2d10 for each slot level above 1st."
+  },
+  "ice-knife": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": "A drop of water or piece of ice.",
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, the cold damage increases by 2d6 for each slot level above 1st."
+  },
+  "create-or-destroy-water": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": "A drop of water if creating water, or a few grains of sand if destroying it.",
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, you create or destroy 10 additional gallons of water, or the size of the cube increases by 5 feet, for each slot level above 1st."
+  },
+  "disguise-self": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "1 hour",
+    "higherLevel": null
+  },
+  "detect-magic": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "detect-evil-and-good": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "detect-poison-and-disease": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": "A yew leaf.",
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "floating-disk": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": "A drop of mercury.",
+    "duration": "1 hour",
+    "higherLevel": null
+  },
+  "compelled-duel": {
+    "castingTime": "1 bonus action",
+    "rangeText": "30 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "chaos-bolt": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, each target takes 2d8 + 1d6 extra damage of the type rolled for each slot level above 1st."
+  },
+  "guiding-bolt": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": null,
+    "duration": "1 round",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, the damage increases by 1d6 for each slot level above 1st."
+  },
+  "entangle": {
+    "castingTime": "1 action",
+    "rangeText": "90 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "divine-favor": {
+    "castingTime": "1 bonus action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "feather-fall": {
+    "castingTime": "1 reaction, which you take when you or a creature within 60 feet of you falls",
+    "rangeText": "60 feet",
+    "material": "A small feather or a piece of down.",
+    "duration": "1 minute",
+    "higherLevel": null
+  },
+  "bane": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": "A drop of blood.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, you can target one additional creature for each slot level above 1st."
+  },
+  "hideous-laughter": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": "Tiny tarts and a feather that is waved in the air.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "zephyr-strike": {
+    "castingTime": "1 bonus action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "ensnaring-strike": {
+    "castingTime": "1 bonus action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "If you cast this spell using a spell slot of 2nd level or higher, the damage increases by 1d6 for each slot level above 1st."
+  },
+  "cause-fear": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, you can target one additional creature for each slot level above 1st. The creatures must be within 30 feet of each other when you target them."
+  },
+  "grease": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": "A bit of pork rind or butter.",
+    "duration": "1 minute",
+    "higherLevel": null
+  },
+  "longstrider": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "A pinch of dirt.",
+    "duration": "1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, you can target one additional creature for each spell slot above 1st."
+  },
+  "hail-of-thorns": {
+    "castingTime": "1 bonus action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "If you cast this spell using a spell slot of 2nd level or higher, the damage increases by 1d10 for each slot level above 1st (to a maximum of 6d10)."
+  },
+  "heroism": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, you can target one additional creature for each slot level above 1st."
+  },
+  "identify": {
+    "castingTime": "1 minute",
+    "rangeText": "Touch",
+    "material": "A pearl worth at least 100 gp and an owl feather.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "silent-image": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": "A bit of fleece.",
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "command": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "1 round",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, you can affect one additional creature for each slot level above 1st. The creatures must be within 30 feet of each other when you target them."
+  },
+  "beast-bond": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "A bit of fur wrapped in a cloth.",
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "faerie-fire": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "burning-hands": {
+    "castingTime": "1 action",
+    "rangeText": "Self (15-foot cone)",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, the damage increases by 1d6 for each slot level above 1st."
+  },
+  "hex": {
+    "castingTime": "1 bonus action",
+    "rangeText": "90 feet",
+    "material": "The petrified eye of a newt.",
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 3rd or 4th level, you can maintain your concentration on the spell for up to 8 hours. When you use a spell slot of 5th level or higher, you can maintain your concentration on the spell for up to 24 hours."
+  },
+  "hunters-mark": {
+    "castingTime": "1 bonus action",
+    "rangeText": "90 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 3rd or 4th level, you can maintain your concentration on the spell for up to 8 hours. When you use a spell slot of 5th level or higher, you can maintain your concentration on the spell for up to 24 hours."
+  },
+  "tasha-s-caustic-brew": {
+    "castingTime": "1 action",
+    "rangeText": "Self (30-foot line)",
+    "material": "A bit of rotten food.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, the damage increases by 2d4 for each slot level above 1st."
+  },
+  "healing-word": {
+    "castingTime": "1 bonus action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, the healing increases by 1d4 for each slot level above 1st."
+  },
+  "dissonant-whispers": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, the damage increases by 3d6 for each slot level above 1st."
+  },
+  "fog-cloud": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, the radius of the fog increases by 20 feet for each slot level above 1st."
+  },
+  "chromatic-orb": {
+    "castingTime": "1 action",
+    "rangeText": "90 feet",
+    "material": "Text cost.",
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, the damage increases by 3d8 for each slot level above 1st."
+  },
+  "projectile-elementaire": {
+    "castingTime": "1 action",
+    "rangeText": "90 feet",
+    "material": "A precious gemstone worth at least 50 gp matching the elemental type of the projectile you want to hurl: a diamond for air, a sapphire for water, a ruby for fire, or a piece of jet for earth.",
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, the damage increases by 1d8 for each slot level above 1st."
+  },
+  "magic-missile": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, the spell creates one more dart for each slot level above 1st."
+  },
+  "protection-from-evil-and-good": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "Holy water or powdered silver and iron, which the spell consumes.",
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "purify-food-and-drink": {
+    "castingTime": "1 action",
+    "rangeText": "10 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "ray-of-sickness": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, the damage increases by 2d8 for each slot level above 1st."
+  },
+  "expeditious-retreat": {
+    "castingTime": "1 bonus action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "hellish-rebuke": {
+    "castingTime": "1 reaction, which you take in response to being damaged by a creature within 60 feet of you that you can see",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, the damage increases by 1d10 for each slot level above 1st."
+  },
+  "sanctuary": {
+    "castingTime": "1 bonus action",
+    "rangeText": "30 feet",
+    "material": "A small silver mirror.",
+    "duration": "1 minute",
+    "higherLevel": null
+  },
+  "jump": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "A grasshopper's hind leg.",
+    "duration": "1 minute",
+    "higherLevel": null
+  },
+  "earth-tremor": {
+    "castingTime": "1 action",
+    "rangeText": "10 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, the damage increases by 1d6 for each slot level above 1st."
+  },
+  "unseen-servant": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": "A piece of string and a bit of wood.",
+    "duration": "1 hour",
+    "higherLevel": null
+  },
+  "false-life": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": "A small amount of alcohol or distilled spirits.",
+    "duration": "1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, you gain 5 additional temporary hit points for each slot level above 1st."
+  },
+  "cure-wounds": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, the healing increases by 1d8 for each slot level above 1st."
+  },
+  "sleep": {
+    "castingTime": "1 action",
+    "rangeText": "90 feet",
+    "material": "A pinch of fine sand, rose petals, or a cricket.",
+    "duration": "1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, roll an additional 2d8 for each slot level above 1st."
+  },
+  "arms-of-hadar": {
+    "castingTime": "1 action",
+    "rangeText": "Self (10-foot radius)",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, the damage increases by 2d6 for each slot level above 1st."
+  },
+  "illusory-script": {
+    "castingTime": "1 minute",
+    "rangeText": "Touch",
+    "material": "A lead-based ink worth at least 10 gp, which this spell consumes.",
+    "duration": "10 days",
+    "higherLevel": null
+  },
+  "witch-bolt": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": "A twig from a tree that has been struck by lightning.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, the initial damage increases by 1d12 for each slot level above 1st."
+  },
+  "thunderwave": {
+    "castingTime": "1 action",
+    "rangeText": "Self (15-foot cube)",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, the damage increases by 1d8 for each slot level above 1st."
+  },
+  "vents-contraires": {
+    "castingTime": "1 reaction",
+    "rangeText": "5 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, the creature is pushed an additional 5 feet for each slot level above 1st."
+  },
+  "enlarge-reduce": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": "A pinch iron powder.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "aid": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": "A tiny strip of white cloth.",
+    "duration": "8 hours",
+    "higherLevel": "When you cast this spell using a spell slot of 3rd level or higher, a target's hit points increase by an additional 5 for each slot level above 2nd."
+  },
+  "enhance-ability": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "Fur or a feather from a beast.",
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 3rd level or higher, you can target one additional creature for each slot level above 2nd."
+  },
+  "calm-emotions": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "find-steed": {
+    "castingTime": "10 minutes",
+    "rangeText": "30 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "magic-weapon": {
+    "castingTime": "1 bonus action",
+    "rangeText": "Touch",
+    "material": null,
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 4th level or higher, the bonus increases to +2. When you use a spell slot of 6th level or higher, the bonus increases to +3."
+  },
+  "spiritual-weapon": {
+    "castingTime": "1 bonus action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 3rd level or higher, the damage increases by 1d8 for every two slot levels above the 2nd."
+  },
+  "earthbind": {
+    "castingTime": "1 action",
+    "rangeText": "300 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "augury": {
+    "castingTime": "1 minute",
+    "rangeText": "Self",
+    "material": "Specially marked sticks, bones, or similar tokens worth at least 25 gp.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "arcanists-magic-aura": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "A small square of silk.",
+    "duration": "24 hours",
+    "higherLevel": null
+  },
+  "magic-mouth": {
+    "castingTime": "1 minute",
+    "rangeText": "30 feet",
+    "material": "A honeycomb and jade dust of at least 10 inches, the spell consumes.",
+    "duration": "Until dispelled",
+    "higherLevel": null
+  },
+  "gust-of-wind": {
+    "castingTime": "1 action",
+    "rangeText": "Self (60-foot line)",
+    "material": "A legume seed.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "blindness-deafness": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": null,
+    "duration": "1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 3rd level or higher, you can target one additional creature for each slot level above 2nd."
+  },
+  "branding-smite": {
+    "castingTime": "1 bonus action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 3rd level or higher, the extra damage increases by 1d6 for each slot level above 2nd."
+  },
+  "summon-beast": {
+    "castingTime": "1 action",
+    "rangeText": "90 feet",
+    "material": "Text cost.",
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 3rd level or higher, use the higher level wherever the spell's level appears in the stat block."
+  },
+  "rope-trick": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "Powdered corn extract and a twisted loop of parchment.",
+    "duration": "1 hour",
+    "higherLevel": null
+  },
+  "cordon-of-arrows": {
+    "castingTime": "1 action",
+    "rangeText": "5 feet",
+    "material": "Four or more arrows or bolts.",
+    "duration": "8 hours",
+    "higherLevel": "When you cast this spell using a spell slot of 3rd level or higher, the amount of ammunition that can be affected increases by two for each slot level above 2nd."
+  },
+  "crown-of-madness": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "spike-growth": {
+    "castingTime": "1 action",
+    "rangeText": "150 feet",
+    "material": "Seven sharp thorns or seven small twigs, each sharpened to a point.",
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "knock": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "detect-thoughts": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": "A copper coin.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "enthrall": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "1 minute",
+    "higherLevel": null
+  },
+  "rime-s-binding-ice": {
+    "castingTime": "1 action",
+    "rangeText": "Self (30-foot cone)",
+    "material": "A vial of meltwater.",
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 3rd level or higher, increase the cold damage by 3d8 for each slot level above 2nd."
+  },
+  "mind-spike": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 3rd level or higher, the damage increases by 3d8 for each slot level above 2nd."
+  },
+  "nathair-s-mischief": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": "A piece of crust from an apple pie.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "healing-spirit": {
+    "castingTime": "1 bonus action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 3rd level or higher, the healing increases by 1d6 for each slot level above 2nd."
+  },
+  "aganazzar-s-scorcher": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": "A red dragon's scale.",
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 3rd level or higher, the damage increases by 3d8 for each slot level above 2nd."
+  },
+  "continual-flame": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "Ruby dust worth 50 gp, which the spell consumes.",
+    "duration": "Until dispelled",
+    "higherLevel": null
+  },
+  "acid-arrow": {
+    "castingTime": "1 action",
+    "rangeText": "90 feet",
+    "material": "Powdered rhubarb leaf and an adder's stomach.",
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 3rd level or higher, the damage (both initial and later) increases by 1d4 for each slot level above 2nd."
+  },
+  "blur": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "phantasmal-force": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": "A bit of fleece.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "tasha-s-mind-whip": {
+    "castingTime": "1 action",
+    "rangeText": "90 feet",
+    "material": null,
+    "duration": "1 round",
+    "higherLevel": "When you cast this spell using a spell slot of 3rd level or higher, you can target one additional creature for each slot level above 2nd. The creatures must be within 30 feet of each other when you target them."
+  },
+  "misty-step": {
+    "castingTime": "1 bonus action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "shatter": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": "A burst of mica.",
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a 3 or higher level spell slot, the damage of the spell increases by 1d8 for each level of higher spell slot 2."
+  },
+  "mirror-image": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "1 minute",
+    "higherLevel": null
+  },
+  "hold-person": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": "A small, straight piece of iron.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 3rd level or higher, you can target one additional humanoid for each slot level above 2nd. The humanoids must be within 30 feet of each other when you target them."
+  },
+  "invisibility": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "An eyelash encased in gum arabic.",
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 3rd level or higher, you can target one additional creature for each slot level above 2nd."
+  },
+  "shadow-blade": {
+    "castingTime": "1 bonus action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a 3rd- or 4th-level spell slot, the damage increases to 3d8. When you cast it using a 5th- or 6th-level spell slot, the damage increases to 4d8. When you cast it using a spell slot of 7th level or higher, the damage increases to 5d8."
+  },
+  "flame-blade": {
+    "castingTime": "1 bonus action",
+    "rangeText": "Self",
+    "material": "Leaf of sumac.",
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": "When you cast this spell using a spell slot of 4th level or higher, the damage increases by 1d6 for every two slot levels above 2nd."
+  },
+  "levitate": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": "Either a small leather loop or a piece of golden wire bent into a cup shape with a long shank on one end.",
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "skywrite": {
+    "castingTime": "1 action",
+    "rangeText": "Sight",
+    "material": null,
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": null
+  },
+  "warding-bond": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "A pair of platinum rings worth at least 50 gp each, which you and the target must wear for the duration.",
+    "duration": "1 hour",
+    "higherLevel": null
+  },
+  "locate-animals-or-plants": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": "A bit of fur from a bloodhound.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "locate-object": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": "A forked twig.",
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "animal-messenger": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": "A morsel of food.",
+    "duration": "24 hours",
+    "higherLevel": "If you cast this spell using a spell slot of 3nd level or higher, the duration of the spell increases by 48 hours for each slot level above 2nd."
+  },
+  "heat-metal": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": "A piece of iron and a flame.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 3rd level or higher, the damage increases by 1d8 for each slot level above 2nd."
+  },
+  "alter-self": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": null
+  },
+  "snilloc-s-snowball-swarm": {
+    "castingTime": "1 action",
+    "rangeText": "90 feet",
+    "material": "A piece of ice or a small white rock chip.",
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 3rd level or higher, the damage increases by 3d6 for each slot level above 2nd."
+  },
+  "cloud-of-daggers": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": "A sliver of glass.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 3rd level or higher, the damage increases by 4d4 for each slot level above 2nd."
+  },
+  "pass-without-trace": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": "Ashes from a burned leaf of mistletoe and a sprig of spruce.",
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": null
+  },
+  "spider-climb": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "A drop of bitumen and a spider.",
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": null
+  },
+  "barkskin": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "A handful of oak bark.",
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": null
+  },
+  "maximilian-s-earthen-grasp": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": "A miniature hand sculpted from clay.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "gentle-repose": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "A pinch of salt and one copper piece placed on each of the corpse's eyes, which must remain there for the duration.",
+    "duration": "10 days",
+    "higherLevel": null
+  },
+  "prayer-of-healing": {
+    "castingTime": "10 minutes",
+    "rangeText": "30 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 3rd level or higher, the healing increases by 1d8 for each slot level above 2nd."
+  },
+  "protection-from-poison": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": null,
+    "duration": "1 hour",
+    "higherLevel": null
+  },
+  "pyrotechnics": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "ray-of-enfeeblement": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "scorching-ray": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 3rd level or higher, you create one additional ray for each slot level above 2nd."
+  },
+  "moonbeam": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": "Several seeds of any moonseed plant and a piece of opalescent feldspar.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 3rd level or higher, the damage increases by 1dl0 for each slot level above 2nd."
+  },
+  "lesser-restoration": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "beast-sense": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": null,
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": null
+  },
+  "warp-sense": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": "A razorvine leaf.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "find-traps": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "silence": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": null,
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "dragon-s-breath": {
+    "castingTime": "1 bonus action",
+    "rangeText": "Touch",
+    "material": "A hot pepper.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 3rd level or higher, the damage increases by 3d6 for each slot level above 2nd."
+  },
+  "flaming-sphere": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": "A bit of tallow, a pinch of brimstone, and a dusting of powdered iron.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 3rd level or higher, the damage increases by 1d6 for each slot level above 2nd."
+  },
+  "suggestion": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": "A snake's tongue and either a bit of honeycomb or a drop of sweet oil.",
+    "duration": "Concentration, up to 8 hours",
+    "higherLevel": null
+  },
+  "darkness": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": "Bat fur and a drop of pitch or piece of coal.",
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "web": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": "A bit of spiderweb.",
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": null
+  },
+  "dust-devil": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": "A pinch of dust.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 3rd level or higher, the damage increases by 1d8 for each slot level above 2nd."
+  },
+  "warding-wind": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "arcane-lock": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "Gold dust worth at least 25 gp, which the spell consumes.",
+    "duration": "Until dispelled",
+    "higherLevel": null
+  },
+  "darkvision": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "Either a pinch of dried carrot or an agate.",
+    "duration": "8 hours",
+    "higherLevel": null
+  },
+  "see-invisibility": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": "A dash of talc and a small amount of silver powder.",
+    "duration": "1 hour",
+    "higherLevel": null
+  },
+  "zone-of-truth": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "10 minutes",
+    "higherLevel": null
+  },
+  "animate-dead": {
+    "castingTime": "1 minute",
+    "rangeText": "10 feet",
+    "material": "A drop of blood, a piece of flesh, and a pinch of bone dust.",
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 4th level or higher, you animate or reassert control over two additional undead creatures for each slot level above 3rd. Each of the creatures must come from a different corpse or pile of bones."
+  },
+  "nondetection": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "A pinch of diamond dust worth 25 gp sprinkled over the target, which the spell consumes.",
+    "duration": "8 hours",
+    "higherLevel": null
+  },
+  "call-lightning": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": null,
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": "When you cast this spell using a spell slot of 4th or higher level, the damage increases by 1d10 for each slot level above 3rd."
+  },
+  "elemental-weapon": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": null,
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 5th or 6th level, the bonus to attack rolls increases to +2 and the extra damage increases to 1d4. When you use a spell slot of 7th level or higher, the bonus increases to +3 and the extra damage increases to 1d4."
+  },
+  "aura-of-vitality": {
+    "castingTime": "1 action",
+    "rangeText": "Self (30-foot radius)",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "crusader-s-mantle": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "fireball": {
+    "castingTime": "1 action",
+    "rangeText": "150 feet",
+    "material": "A tiny ball of bat guano and sulfur.",
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 4th level or higher, the damage increases by 1d6 for each slot level above 3rd."
+  },
+  "magic-circle": {
+    "castingTime": "1 minute",
+    "rangeText": "10 feet",
+    "material": "Holy water or powdered silver and iron worth at least 100 gp, which the spell consumes.",
+    "duration": "1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 4th level or higher, the duration increases by 1 hour for each slot level above 3rd."
+  },
+  "blinding-smite": {
+    "castingTime": "1 bonus action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "clairvoyance": {
+    "castingTime": "10 minutes",
+    "rangeText": "1 mile",
+    "material": "A focus worth at least 100 gp, either a jeweled horn for hearing or a glass eye for seeing.",
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "blink": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "1 minute",
+    "higherLevel": null
+  },
+  "sending": {
+    "castingTime": "1 action",
+    "rangeText": "Unlimited",
+    "material": "A short piece of fine copper wire.",
+    "duration": "1 round",
+    "higherLevel": null
+  },
+  "speak-with-dead": {
+    "castingTime": "1 action",
+    "rangeText": "10 feet",
+    "material": "Burning incense.",
+    "duration": "10 minutes",
+    "higherLevel": null
+  },
+  "speak-with-plants": {
+    "castingTime": "1 action",
+    "rangeText": "Self (30-foot radius)",
+    "material": null,
+    "duration": "10 minutes",
+    "higherLevel": null
+  },
+  "counterspell": {
+    "castingTime": "1 reaction, which you take when you see a creature within 60 feet of you casting a spell",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 4th level or higher, the interrupted spell has no effect if its level is less than or equal to the level of the spell slot you used."
+  },
+  "summon-lesser-demons": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": "Text consume.",
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 6th or 7th level, you summon twice as many demons. If you cast it using a spell slot of 8th or 9th level, you summon three times as many demons."
+  },
+  "summon-fey": {
+    "castingTime": "1 action",
+    "rangeText": "90 feet",
+    "material": "Text cost.",
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 4th level or higher, use the higher level wherever the spell's level appears in the stat block."
+  },
+  "summon-undead": {
+    "castingTime": "1 action",
+    "rangeText": "90 feet",
+    "material": "Text cost.",
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 4th level or higher, use the higher level wherever the spell's level appears in the stat block."
+  },
+  "summon-shadowspawn": {
+    "castingTime": "1 action",
+    "rangeText": "90 feet",
+    "material": "Text cost.",
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 4th level or higher, use the higher level wherever the spell's level appears in the stat block."
+  },
+  "create-food-and-water": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "plant-growth": {
+    "castingTime": "1 action",
+    "rangeText": "150 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "remove-curse": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "dispel-magic": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 4th level or higher, you automatically end the effects of a spell on the target if the spell's level is equal to or less than the level of the spell slot you used."
+  },
+  "tongues": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "A small clay model of a ziggurat.",
+    "duration": "1 hour",
+    "higherLevel": null
+  },
+  "lightning-bolt": {
+    "castingTime": "1 action",
+    "rangeText": "Self (100-foot line)",
+    "material": "A bit of fur and a rod of amber, crystal, or glass.",
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 4th level or higher, the damage increases by 1d6 for each slot level above 3rd."
+  },
+  "enemies-abound": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "erupting-earth": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": "A piece of obsidian.",
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 4th level or higher, the damage increases by 3d12 for each slot level above 3rd."
+  },
+  "spirit-guardians": {
+    "castingTime": "1 action",
+    "rangeText": "Self (15-foot radius)",
+    "material": "A holy symbol.",
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": "When you cast this spell using a spell slot of 4th level or higher, the damage increases by 1d8 for each slot level above 3rd."
+  },
+  "lightning-arrow": {
+    "castingTime": "1 bonus action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 4th level or higher, the damage for both effects of the spell increases by 4d8;2d8 for each slot level above 3rd."
+  },
+  "flame-arrows": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": null,
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 4th level or higher, the number of pieces of ammunition you can affect with this spell increases by two for each slot level above 3rd."
+  },
+  "gaseous-form": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "A bit of gauze and a wisp of smoke.",
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": null
+  },
+  "intellect-fortress": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 4th level or higher, you can target one additional creature for each slot level above 3rd. The creatures must be within 30 feet of each other when you target them."
+  },
+  "ashardalon-s-stride": {
+    "castingTime": "1 bonus action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 4th level or higher, increase your speed by 5 feet for each spell slot level above 3rd. The spell deals an additional 1d6 fire damage for each slot level above 3rd."
+  },
+  "thunder-step": {
+    "castingTime": "1 action",
+    "rangeText": "90 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 4th level or higher, the damage increases by 3d10 for each slot level above 3rd."
+  },
+  "meld-into-stone": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": null,
+    "duration": "8 hours",
+    "higherLevel": null
+  },
+  "glyph-of-warding": {
+    "castingTime": "1 hour",
+    "rangeText": "Touch",
+    "material": "Incense and powdered diamond worth at least 200 gp, which the spell consumes.",
+    "duration": "Until dispelled",
+    "higherLevel": "When you cast this spell using a spell slot of 4th level or higher, the damage of an explosive runes glyph increases by 1d8 for each slot level above 3rd. If you create a spell glyph, you can store any spell of up to the same level as the slot you use for the glyph of warding."
+  },
+  "haste": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": "A shaving of licorice root.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "major-image": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": "A bit of fleece.",
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": "When you cast this spell using a spell slot of 6th level or higher, the spell lasts until dispelled, without requiring your concentration."
+  },
+  "conjure-animals": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": "When you cast this spell using certain higher-level spell slots, you choose one of the summoning options above, and more creatures appear: twice as many with a 5th-level slot, three times as many with a 7th-level."
+  },
+  "conjure-barrage": {
+    "castingTime": "1 action",
+    "rangeText": "Self (60-foot cone)",
+    "material": "One piece of ammunition or a thrown weapon.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "slow": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": "A drop of molasses.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "beacon-of-hope": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "daylight": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "1 hour",
+    "higherLevel": null
+  },
+  "bestow-curse": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "If you cast this spell using a spell slot of 4th level or higher, the duration is concentration, up to 10 minutes. If you use a spell slot of 5th level or higher, the duration is 8 hours. If you use a spell slot of 7th level or higher, the duration is 24 hours. If you use a 9th level spell slot, the spell lasts until it is dispelled. Using a spell slot of 5th level or higher grants a duration that doesn't require concentration."
+  },
+  "water-walk": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": "A piece of cork.",
+    "duration": "1 hour",
+    "higherLevel": null
+  },
+  "melf-s-minute-meteors": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": "Niter, sulfur, and pine tar formed into a bead.",
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": "When you cast this spell using a spell slot of 4th level or higher, the number of meteors created increases by two for each slot level above 3rd."
+  },
+  "phantom-steed": {
+    "castingTime": "1 minute",
+    "rangeText": "30 feet",
+    "material": null,
+    "duration": "1 hour",
+    "higherLevel": null
+  },
+  "feign-death": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "A pinch of graveyard dirt.",
+    "duration": "1 hour",
+    "higherLevel": null
+  },
+  "mass-healing-word": {
+    "castingTime": "1 bonus action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 4th level or higher, the healing increases by 1d4 for each slot level above 3rd."
+  },
+  "hypnotic-pattern": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": "A glowing stick of incense or a crystal vial filled with phosphorescent material.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "wall-of-water": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": "A drop of water.",
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "wall-of-sand": {
+    "castingTime": "1 action",
+    "rangeText": "90 feet",
+    "material": "A handful of sand.",
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "wind-wall": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": "A tiny fan and a feather of exotic origin.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "stinking-cloud": {
+    "castingTime": "1 action",
+    "rangeText": "90 feet",
+    "material": "A rotten egg or several skunk cabbage leaves.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "tiny-hut": {
+    "castingTime": "1 minute",
+    "rangeText": "Self (10-foot-radius hemisphere)",
+    "material": "A small crystal bead.",
+    "duration": "8 hours",
+    "higherLevel": null
+  },
+  "fear": {
+    "castingTime": "1 action",
+    "rangeText": "Self (30-foot cone)",
+    "material": "A white feather or the heart of a hen.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "protection-from-energy": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": null,
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": null
+  },
+  "tidal-wave": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": "A drop of water.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "water-breathing": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": "A short piece of reed or straw.",
+    "duration": "24 hours",
+    "higherLevel": null
+  },
+  "revivify": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "Diamonds worth 300 gp, which the spell consumes.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "tiny-servant": {
+    "castingTime": "1 minute",
+    "rangeText": "Touch",
+    "material": null,
+    "duration": "8 hours",
+    "higherLevel": "When you cast this spell using a spell slot of 4th level or higher, you can animate two additional objects for each slot level above 3rd."
+  },
+  "catnap": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": "A pinch of sand.",
+    "duration": "10 minutes",
+    "higherLevel": "When you cast this spell using a spell slot of 4th level or higher, you can target one additional willing creature for each slot level above 3rd."
+  },
+  "sleet-storm": {
+    "castingTime": "1 action",
+    "rangeText": "150 feet",
+    "material": "A pinch of dust and a few drops of water.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "vampiric-touch": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 4th level or higher, the damage increases by 1d6 for each slot level above 3rd."
+  },
+  "life-transference": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 4th level or higher, the damage increases by 4d8 for each slot level above 3rd."
+  },
+  "spirit-shroud": {
+    "castingTime": "1 bonus action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 4th level or higher, the damage increases by 1d8 for every two slot levels above 3rd."
+  },
+  "fly": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "A wing feather from any bird.",
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": "When you cast this spell using a spell slot of 4th level or higher, you can target one additional creature for each slot level above 3rd."
+  },
+  "hunger-of-hadar": {
+    "castingTime": "1 action",
+    "rangeText": "150 feet",
+    "material": "A pickled octopus tentacle.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "find-greater-steed": {
+    "castingTime": "10 minutes",
+    "rangeText": "30 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "phantasmal-killer": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 5th level or higher, the damage increases by 1d10 for each slot level above 4th."
+  },
+  "aura-of-purity": {
+    "castingTime": "1 action",
+    "rangeText": "Self (30-foot radius)",
+    "material": null,
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "aura-of-life": {
+    "castingTime": "1 action",
+    "rangeText": "Self (30-foot radius)",
+    "material": null,
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "banishment": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": "An item distasteful to the target.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 5th level or higher, you can target one additional creature for each slot level above 4th."
+  },
+  "fire-shield": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": "A little phosphorus or a firefly.",
+    "duration": "10 minutes",
+    "higherLevel": null
+  },
+  "charm-monster": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": null,
+    "duration": "1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 5th level or higher, you can target one additional creature for each slot level above 4th. The creatures must be within 30 feet of each other when you target them."
+  },
+  "staggering-smite": {
+    "castingTime": "1 bonus action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "faithful-hound": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": "A tiny silver whistle, a piece of bone, and a thread",
+    "duration": "8 hours",
+    "higherLevel": null
+  },
+  "secret-chest": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "An exquisite chest, 3 feet by 2 feet by 2 feet, constructed from rare materials worth at least 5,000 gp, and a Tiny replica made from the same materials worth at least 50 gp.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "compulsion": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "confusion": {
+    "castingTime": "1 action",
+    "rangeText": "90 feet",
+    "material": "Three walnut shells.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 5th level or higher, the radius of the sphere increases by 5 feet for each slot level above 4th."
+  },
+  "control-water": {
+    "castingTime": "1 action",
+    "rangeText": "300 feet",
+    "material": "A drop of water and a pinch of dust.",
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "summon-aberration": {
+    "castingTime": "1 action",
+    "rangeText": "90 feet",
+    "material": "Text cost.",
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 5th level or higher, use the higher level wherever the spell's level appears in the stat block."
+  },
+  "summon-construct": {
+    "castingTime": "1 action",
+    "rangeText": "90 feet",
+    "material": "Text cost.",
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 4th level or higher, use the higher level wherever the spell's level appears in the stat block."
+  },
+  "summon-elemental": {
+    "castingTime": "1 action",
+    "rangeText": "90 feet",
+    "material": "Text cost.",
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 5th level or higher, use the higher level wherever the spell's level appears in the stat block."
+  },
+  "summon-greater-demon": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": "Text consume.",
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 5th level or higher, the challenge rating increases by 1 for each slot level above 4th."
+  },
+  "divination": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": "Incense and a sacrificial offering appropriate to your religion, together worth at least 25 gp, which the spell consumes.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "dominate-beast": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell with a 9th level spell slot, the duration is concentration, up to 8 hours."
+  },
+  "fabricate": {
+    "castingTime": "10 minutes",
+    "rangeText": "120 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "stone-shape": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "Soft clay, to be crudely worked into the desired shape for the stone object.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "elemental-bane": {
+    "castingTime": "1 action",
+    "rangeText": "90 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 5th level or higher, you can target one additional creature for each slot level above 4th. The creatures must be within 30 feet of each other when you target them."
+  },
+  "blight": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 5th level of higher, the damage increases by 1d8 for each slot level above 4th."
+  },
+  "guardian-of-faith": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": null,
+    "duration": "8 hours",
+    "higherLevel": null
+  },
+  "guardian-of-nature": {
+    "castingTime": "1 bonus action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "giant-insect": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": null,
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "greater-invisibility": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "conjure-minor-elementals": {
+    "castingTime": "1 minute",
+    "rangeText": "90 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": "When you cast this spell using certain higher-level spell slots, you choose one of the summoning options above, and more creatures appear: twice as many with a 6th-level slot and three times as many with an 8th-level slot."
+  },
+  "conjure-woodland-beings": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": "One holly berry per creature summoned.",
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": "When you cast this spell using certain higher-level spell slots, you choose one of the summoning options above, and more creatures appear: twice as many with a 6th-level slot and three times as many with an 8th-level slot."
+  },
+  "invocation-d-ombres": {
+    "castingTime": "1 minute",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": "When you cast this spell using certain spell slot levels, you choose the summoning option above and more creatures appear: twice as many summoned creatures with a 6th-level spell slot, three times as many with an 8th-level spell slot."
+  },
+  "raulothim-s-psychic-lance": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 5th level or higher, the damage increases by 7d6 for each slot level above 4th."
+  },
+  "grasping-vine": {
+    "castingTime": "1 bonus action",
+    "rangeText": "30 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "freedom-of-movement": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "A leather strap, bound around the arm or a similar appendage.",
+    "duration": "1 hour",
+    "higherLevel": null
+  },
+  "locate-creature": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": "A bit of fur from a bloodhound.",
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": null
+  },
+  "polymorph": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": "A caterpillar cocoon.",
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": null
+  },
+  "wall-of-fire": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": "A small piece of phosphorus.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 5th level or higher, the damage increases by 1d8 for each slot level above 4th."
+  },
+  "arcane-eye": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": "A bit of bat fur.",
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": null
+  },
+  "shadow-of-moil": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": "Text cost.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "stoneskin": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "Diamond dust worth 100 gp, which the spell consumes.",
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": null
+  },
+  "dimension-door": {
+    "castingTime": "1 action",
+    "rangeText": "500 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "death-ward": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": null,
+    "duration": "8 hours",
+    "higherLevel": null
+  },
+  "sickening-radiance": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": null,
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "private-sanctum": {
+    "castingTime": "10 minutes",
+    "rangeText": "120 feet",
+    "material": "A thin sheet of lead, a piece of opaque glass, a wad of cotton or cloth, and powdered chrysolite.",
+    "duration": "24 hours",
+    "higherLevel": "When you cast this spell using a spell slot of 5th level or higher, you can increase the size of the cube by 100 feet for each slot level beyond 4th. Thus you could protect a cube that can be up to 200 feet on one side by using a spell slot of 5th level."
+  },
+  "gate-seal": {
+    "castingTime": "1 minute",
+    "rangeText": "60 feet",
+    "material": "Text consume.",
+    "duration": "24 hours",
+    "higherLevel": "When you cast this spell using a spell slot of 6th level or higher, the spell lasts until dispelled."
+  },
+  "watery-sphere": {
+    "castingTime": "1 action",
+    "rangeText": "90 feet",
+    "material": "A droplet of water.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "storm-sphere": {
+    "castingTime": "1 action",
+    "rangeText": "150 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 5th level or higher, the damage for each of its effects increases by 2d6;4d6 for each slot level above 4th."
+  },
+  "vitriolic-sphere": {
+    "castingTime": "1 action",
+    "rangeText": "150 feet",
+    "material": "A drop of giant slug bile.",
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 5th level or higher, the initial damage increases by 10d4 for each slot level above 4th."
+  },
+  "resilient-sphere": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": "A hemispherical piece of clear crystal and a matching hemispherical piece of gum arabic.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "ice-storm": {
+    "castingTime": "1 action",
+    "rangeText": "300 feet",
+    "material": "A pinch of dust and a few drops of water.",
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 5th level or higher, the bludgeoning damage increases by 1d8 for each slot level above 4th."
+  },
+  "black-tentacles": {
+    "castingTime": "1 action",
+    "rangeText": "90 feet",
+    "material": "A piece of tentacle from a giant octopus or a giant squid",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "hallucinatory-terrain": {
+    "castingTime": "10 minutes",
+    "rangeText": "300 feet",
+    "material": "A stone, a twig, and a bit of green plant.",
+    "duration": "24 hours",
+    "higherLevel": null
+  },
+  "skill-empowerment": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": null,
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": null
+  },
+  "animate-objects": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "If you cast this spell using a spell slot of 6th level or higher, you can animate two additional objects for each slot level above 5th."
+  },
+  "seeming": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": null,
+    "duration": "8 hours",
+    "higherLevel": null
+  },
+  "holy-weapon": {
+    "castingTime": "1 bonus action",
+    "rangeText": "Touch",
+    "material": null,
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": null
+  },
+  "infernal-calling": {
+    "castingTime": "1 minute",
+    "rangeText": "90 feet",
+    "material": "Text cost.",
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 6th level or higher, the challenge rating increases by 1 for each slot level above 5th."
+  },
+  "dawn": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": "Text cost.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "cloudkill": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": null,
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": "When you cast this spell using a spell slot of 6th level or higher, the damage increases by 1d8 for each slot level above 5th."
+  },
+  "swift-quiver": {
+    "castingTime": "1 bonus action",
+    "rangeText": "Touch",
+    "material": "A quiver containing at least one piece of ammunition.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "circle-of-power": {
+    "castingTime": "1 action",
+    "rangeText": "Self (30-foot radius)",
+    "material": null,
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "teleportation-circle": {
+    "castingTime": "1 minute",
+    "rangeText": "10 feet",
+    "material": "Rare chalks and inks infused with precious gems worth at least 50 gp, which the spell consumes.",
+    "duration": "1 round",
+    "higherLevel": null
+  },
+  "banishing-smite": {
+    "castingTime": "1 bonus action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "flame-strike": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": "Pinch of sulfur.",
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 6th level or higher, the fire damage or the radiant damage (your choice) increases by 1d6 for each slot level above 5th."
+  },
+  "commune": {
+    "castingTime": "1 minute",
+    "rangeText": "Self",
+    "material": "Incense and a vial of holy or unholy water.",
+    "duration": "1 minute",
+    "higherLevel": null
+  },
+  "commune-with-nature": {
+    "castingTime": "1 minute",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "cone-of-cold": {
+    "castingTime": "1 action",
+    "rangeText": "Self (60-foot cone)",
+    "material": "A small crystal or glass cone.",
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 6th level or higher, the damage increases by 1d8 for each slot level above 5th."
+  },
+  "contact-other-plane": {
+    "castingTime": "1 minute",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "1 minute",
+    "higherLevel": null
+  },
+  "contagion": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": null,
+    "duration": "7 days",
+    "higherLevel": null
+  },
+  "planar-binding": {
+    "castingTime": "1 hour",
+    "rangeText": "60 feet",
+    "material": "A jewel worth at least 1,000 gp, which the spell consumes.",
+    "duration": "24 hours",
+    "higherLevel": "When you cast this spell using a spell slot of a higher level, the duration increases to 10 days with a 6th-level slot, to 30 days with a 7th-level slot, to 180 days with an 8th-level slot, and to a year and a day with a 9th-level spell slot."
+  },
+  "control-winds": {
+    "castingTime": "1 action",
+    "rangeText": "300 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": null
+  },
+  "summon-draconic-spirit": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": "Text cost.",
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 6th level or higher, use the higher level wherever the spell's level appears in the stat block."
+  },
+  "summon-celestial": {
+    "castingTime": "1 action",
+    "rangeText": "90 feet",
+    "material": "Text cost.",
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 6th level or higher, use the higher level wherever the spell's level appears in the stat block."
+  },
+  "antilife-shell": {
+    "castingTime": "1 action",
+    "rangeText": "Self (10-foot radius)",
+    "material": null,
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": null
+  },
+  "creation": {
+    "castingTime": "1 minute",
+    "rangeText": "30 feet",
+    "material": "A tiny piece of matter of the same type of the item you plan to create.",
+    "duration": "Special",
+    "higherLevel": "When you cast this spell using a spell slot of 6th level or higher, the cube increases by 5 feet for each slot level above 5th."
+  },
+  "danse-macabre": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 6th level or higher, you animate up to two additional corpses for each slot level above 5th."
+  },
+  "negative-energy-flood": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": "A broken bone and a square of black silk.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "dispel-evil-and-good": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": "Holy water or powdered silver and iron.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "dominate-person": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a 6th-level spell slot, the duration is concentration, up to 10 minutes. When you use a 7th-level spell slot, the duration is concentration, up to 1 hour. When you use a spell slot of 8th level or higher, the duration is concentration, up to 8 hours."
+  },
+  "mislead": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": null
+  },
+  "enervation": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 6th level or higher, the damage increases by 4d8;2d8 for each slot level above 5th."
+  },
+  "awaken": {
+    "castingTime": "8 hours",
+    "rangeText": "Touch",
+    "material": "An agate worth at least 1,000 gp, which the spell consumes.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "insect-plague": {
+    "castingTime": "1 action",
+    "rangeText": "300 feet",
+    "material": "A few grains of sugar, some kernels of grain, and a smear of fat.",
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": "When you cast this spell using a spell slot of 6th level or higher, the damage increases by 1d10 for each slot level above 5th."
+  },
+  "far-step": {
+    "castingTime": "1 bonus action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "steel-wind-strike": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": "Text cost.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "wrath-of-nature": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "hold-monster": {
+    "castingTime": "1 action",
+    "rangeText": "90 feet",
+    "material": "A small piece of iron.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a level 6 or higher location, you can target an additional creature for each level of location beyond the fifth. The creatures must be within 30 feet o f each other when you target them."
+  },
+  "immolation": {
+    "castingTime": "1 action",
+    "rangeText": "90 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "conjure-elemental": {
+    "castingTime": "1 minute",
+    "rangeText": "90 feet",
+    "material": "Burning incense for air, soft clay for earth, sulfur and phosphorus for fire, or water and sand for water.",
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 6th level or higher, the challenge rating increases by 1 for each slot level above 5th."
+  },
+  "conjure-volley": {
+    "castingTime": "1 action",
+    "rangeText": "150 feet",
+    "material": "One piece of ammunition or one thrown weapon.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "telepathic-bond": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": "Pieces of eggshell from two different kinds of creatures",
+    "duration": "1 hour",
+    "higherLevel": null
+  },
+  "maelstrom": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": "Paper or leaf in the shape of a funnel.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "arcane-hand": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": "An eggshell and a snakeskin glove.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 6th level or higher, the damage from the clenched fist option increases by 2d8 and the damage from the grasping hand increases by 2d6 for each slot level above 5th."
+  },
+  "modify-memory": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "If you cast this spell using a spell slot of 6th level or higher, you can alter the target's memories of an event that took place up to 7 days ago (6th level), 30 days ago (7th level), 1 year ago (8th level), or any time in the creature's past (9th level)."
+  },
+  "wall-of-force": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": "A pinch of powder made by crushing a clear gemstone.",
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "wall-of-light": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": "A hand mirror.",
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": "When you cast this spell using a spell slot of 6th level or higher, the damage increases by 4d8 for each slot level above 5th."
+  },
+  "wall-of-stone": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": "A small block of granite.",
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "legend-lore": {
+    "castingTime": "10 minutes",
+    "rangeText": "Self",
+    "material": "Incense worth at least 250 gp, which the spell consumes, and four ivory strips worth at least 50 gp each.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "tree-stride": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "passwall": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": "A pinch of sesame seeds.",
+    "duration": "1 hour",
+    "higherLevel": null
+  },
+  "synaptic-static": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "geas": {
+    "castingTime": "1 minute",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "30 days",
+    "higherLevel": "When you cast this spell using a spell slot of 7th or 8th level, the duration is 1 year. When you cast this spell using a spell slot of 9th level, the spell lasts until it is ended by one of the spells mentioned above."
+  },
+  "raise-dead": {
+    "castingTime": "1 hour",
+    "rangeText": "Touch",
+    "material": "A diamond worth at least 500 gp, which the spell consumes.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "reincarnate": {
+    "castingTime": "1 hour",
+    "rangeText": "Touch",
+    "material": "Rare oils and unguents worth at least 1,000 gp, which the spell consumes.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "greater-restoration": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "Diamond dust worth at least 100 gp, which the spell consumes.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "hallow": {
+    "castingTime": "24 hours",
+    "rangeText": "Touch",
+    "material": "Herbs, oils, and incense worth at least 1,000 gp, which the spell consumes.",
+    "duration": "Until dispelled",
+    "higherLevel": null
+  },
+  "scrying": {
+    "castingTime": "10 minutes",
+    "rangeText": "Self",
+    "material": "A focus worth at least 1,000 gp, such as a crystal ball, a silver mirror, or a font filled with holy water.",
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "mass-cure-wounds": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 6th level or higher, the healing increases by 1d8 for each slot level above 5th."
+  },
+  "dream": {
+    "castingTime": "1 minute",
+    "rangeText": "Special",
+    "material": "A handful of sand, a dab of ink, and a writing quill plucked from a sleeping bird.",
+    "duration": "8 hours",
+    "higherLevel": null
+  },
+  "telekinesis": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "transmute-rock": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": "Clay and water.",
+    "duration": "Until dispelled",
+    "higherLevel": null
+  },
+  "destructive-wave": {
+    "castingTime": "1 action",
+    "rangeText": "Self (30-foot radius)",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "planar-ally": {
+    "castingTime": "10 minutes",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "blade-barrier": {
+    "castingTime": "1 action",
+    "rangeText": "90 feet",
+    "material": null,
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "druid-grove": {
+    "castingTime": "10 minutes",
+    "rangeText": "Touch",
+    "material": "Text consume.",
+    "duration": "24 hours",
+    "higherLevel": null
+  },
+  "fizban-s-platinum-shield": {
+    "castingTime": "1 bonus action",
+    "rangeText": "60 feet",
+    "material": "Text cost.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "soul-cage": {
+    "castingTime": "1 reaction, which you take when a humanoid you can see within 60 feet of you dies",
+    "rangeText": "60 feet",
+    "material": "Text cost.",
+    "duration": "8 hours",
+    "higherLevel": null
+  },
+  "circle-of-death": {
+    "castingTime": "1 action",
+    "rangeText": "150 feet",
+    "material": "The powder of a crushed black pearl worth at least 500 gp.",
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 7th level or higher, the damage increases by 2d6 for each slot level above 6th."
+  },
+  "chain-lightning": {
+    "castingTime": "1 action",
+    "rangeText": "150 feet",
+    "material": "A bit of fur; a piece of amber, glass, or a crystal rod; and three silver pins.",
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 7th level or higher, one additional bolt leaps from the first target to another target for each slot level above 6th."
+  },
+  "harm": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "summon-fiend": {
+    "castingTime": "1 action",
+    "rangeText": "90 feet",
+    "material": "Text cost.",
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 7th level or higher, use the higher level wherever the spell's level appears in the stat block."
+  },
+  "instant-summons": {
+    "castingTime": "1 minute",
+    "rangeText": "Touch",
+    "material": "A sapphire worth 1,000 gp.",
+    "duration": "Until dispelled",
+    "higherLevel": null
+  },
+  "tasha-s-otherworldly-guise": {
+    "castingTime": "1 bonus action",
+    "rangeText": "Self",
+    "material": "Text cost.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "create-homunculus": {
+    "castingTime": "1 hour",
+    "rangeText": "Touch",
+    "material": "Text cost consume.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "create-undead": {
+    "castingTime": "1 minute",
+    "rangeText": "10 feet",
+    "material": "One clay pot filled with grave dirt, one clay pot filled with brackish water, and one 150 gp black onyx stone for each corpse.",
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a 7th-level spell slot, you can animate or reassert control over four ghouls. When you cast this spell using an 8th-level spell slot, you can animate or reassert control over five ghouls or two ghasts or wights. When you cast this spell using a 9th-level spell slot, you can animate or reassert control over six ghouls, three ghasts or wights, or two mummies."
+  },
+  "irresistible-dance": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "disintegrate": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": "A lodestone and a pinch of dust.",
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 7th level or higher, the damage increases by 3d6 for each slot level above 6th."
+  },
+  "scatter": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "heroes-feast": {
+    "castingTime": "10 minutes",
+    "rangeText": "30 feet",
+    "material": "A gem-encrusted bowl worth at least 1,000 gp, which the spell consumes.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "globe-of-invulnerability": {
+    "castingTime": "1 action",
+    "rangeText": "Self (10-foot radius)",
+    "material": "A glass or crystal bead that shatters when the spell ends.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 7th level or higher, the barrier blocks spells of one level higher for each slot level above 6th."
+  },
+  "heal": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 7th level or higher, the amount of healing increases by 10 for each slot level above 6th."
+  },
+  "programmed-illusion": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": "A bit of fleece and jade dust worth at least 25 gp.",
+    "duration": "Until dispelled",
+    "higherLevel": null
+  },
+  "forbiddance": {
+    "castingTime": "10 minutes",
+    "rangeText": "Touch",
+    "material": "A sprinkling of holy water, rare incense, and powdered ruby worth at least 1,000 gp.",
+    "duration": "24 hours",
+    "higherLevel": null
+  },
+  "conjure-fey": {
+    "castingTime": "1 minute",
+    "rangeText": "90 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 7th level or higher, the challenge rating increases by 1 for each slot level above 6th."
+  },
+  "wind-walk": {
+    "castingTime": "1 minute",
+    "rangeText": "30 feet",
+    "material": "Fire and holy water.",
+    "duration": "8 hours",
+    "higherLevel": null
+  },
+  "eyebite": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "word-of-recall": {
+    "castingTime": "1 action",
+    "rangeText": "5 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "wall-of-thorns": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": "A handful of thorns.",
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": "When you cast this spell using a spell slot of 7th level or higher, both types of damage increase by 1d8 for each slot level above 6th."
+  },
+  "wall-of-ice": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": "A small piece of quartz.",
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": "When you cast this spell using a spell slot of 7th level or higher, the damage the wall deals when it appears increases by 2d6, and the damage from passing through the sheet of frigid air increases by 1d6, for each slot level above 6th."
+  },
+  "bones-of-the-earth": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 7th level or higher, you can create two additional pillars for each slot level above 6th."
+  },
+  "flesh-to-stone": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": "A pinch of lime, water, and earth.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "arcane-gate": {
+    "castingTime": "1 action",
+    "rangeText": "500 feet",
+    "material": null,
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "contingency": {
+    "castingTime": "10 minutes",
+    "rangeText": "Self",
+    "material": "A statuette of yourself carved from ivory and decorated with gems worth at least 1,500 gp.",
+    "duration": "10 days",
+    "higherLevel": null
+  },
+  "mental-prison": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "primordial-ward": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "guards-and-wards": {
+    "castingTime": "10 minutes",
+    "rangeText": "Touch",
+    "material": "Burning incense, a small measure of brimstone and oil, a knotted string, a small amount of umber hulk blood, and a small silver rod worth at least 10 gp.",
+    "duration": "24 hours",
+    "higherLevel": null
+  },
+  "sunbeam": {
+    "castingTime": "1 action",
+    "rangeText": "Self (60-foot line)",
+    "material": "A magnifying glass.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "investiture-of-ice": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "investiture-of-stone": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "investiture-of-flame": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "investiture-of-wind": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "find-the-path": {
+    "castingTime": "1 minute",
+    "rangeText": "Self",
+    "material": "A set of divinatory tools--such as bones, ivory sticks, cards, teeth, or carved runes--worth 100 gp and an object from the location you wish to find.",
+    "duration": "Concentration, up to 24 hours",
+    "higherLevel": null
+  },
+  "freezing-sphere": {
+    "castingTime": "1 action",
+    "rangeText": "300 feet",
+    "material": "A small crystal sphere.",
+    "duration": "Instantaneous",
+    "higherLevel": "When you cast this spell using a spell slot of 7th level or higher, the damage increases by 1d6 for each slot level above 6th."
+  },
+  "mass-suggestion": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": "A snake's tongue and either a bit of honeycomb or a drop of sweet oil.",
+    "duration": "24 hours",
+    "higherLevel": "When you cast this spell using a 7th-level spell slot, the duration is 10 days. When you use an 8th-level spell slot, the duration is 30 days. When you use a 9th-level spell slot, the duration is a year and a day."
+  },
+  "move-earth": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": "An iron blade and a small bag containing a mixture of soils--clay, loam, and sand.",
+    "duration": "Concentration, up to 2 hours",
+    "higherLevel": null
+  },
+  "tenser-s-transformation": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": "A few hairs from a bull.",
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "magic-jar": {
+    "castingTime": "1 minute",
+    "rangeText": "Self",
+    "material": "A gem, crystal, reliquary, or some other ornamental container worth at least 500 gp.",
+    "duration": "Until dispelled",
+    "higherLevel": null
+  },
+  "true-seeing": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "An ointment for the eyes that costs 25 gp; is made from mushroom powder, saffron, and fat; and is consumed by the spell.",
+    "duration": "1 hour",
+    "higherLevel": null
+  },
+  "transport-via-plants": {
+    "castingTime": "1 action",
+    "rangeText": "10 feet",
+    "material": null,
+    "duration": "1 round",
+    "higherLevel": null
+  },
+  "delayed-blast-fireball": {
+    "castingTime": "1 action",
+    "rangeText": "150 feet",
+    "material": "A tiny ball of bat guano and sulfur.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": "When you cast this spell using a spell slot of 8th level or higher, the base damage increases by 1d6 for each slot level above 7th."
+  },
+  "forcecage": {
+    "castingTime": "1 action",
+    "rangeText": "100 feet",
+    "material": "Ruby dust worth 1,500 gp.",
+    "duration": "1 hour",
+    "higherLevel": null
+  },
+  "plane-shift": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "A forked, metal rod worth at least 250 gp, attuned to a particular plane of existence.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "crown-of-stars": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "1 hour",
+    "higherLevel": "When you cast this spell using a spell slot of 8th level or higher, the number of motes created increases by two for each slot level above 7th."
+  },
+  "sequester": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": "A powder composed of diamond, emerald, ruby, and sapphire dust worth at least 5,000 gp, which the spell consumes.",
+    "duration": "Until dispelled",
+    "higherLevel": null
+  },
+  "finger-of-death": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "arcane-sword": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": "A miniature platinum sword with a grip and pommel of copper and zinc, worth 250 gp.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "etherealness": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "8 hours",
+    "higherLevel": "When you cast this spell using a spell slot of 8th level or higher, you can target up to three willing creatures (including you) for each slot level above 7th. The creatures must be within 10 feet of you when you cast the spell."
+  },
+  "reverse-gravity": {
+    "castingTime": "1 action",
+    "rangeText": "100 feet",
+    "material": "A lodestone and iron filings.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "conjure-celestial": {
+    "castingTime": "1 minute",
+    "rangeText": "90 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": "When you cast this spell using a 9th-level spell slot, you summon a celestial of challenge rating 5 or lower."
+  },
+  "magnificent-mansion": {
+    "castingTime": "1 minute",
+    "rangeText": "300 feet",
+    "material": "A miniature portal carved from ivory, a small piece of polished marble, and a tiny silver spoon, each item worth at least 5 gp.",
+    "duration": "24 hours",
+    "higherLevel": null
+  },
+  "mirage-arcane": {
+    "castingTime": "10 minutes",
+    "rangeText": "Sight",
+    "material": null,
+    "duration": "10 days",
+    "higherLevel": null
+  },
+  "power-word-pain": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "divine-word": {
+    "castingTime": "1 bonus action",
+    "rangeText": "30 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "project-image": {
+    "castingTime": "1 action",
+    "rangeText": "500 miles",
+    "material": "A small replica of you made from materials worth at least 5 gp.",
+    "duration": "Concentration, up to 24 hours",
+    "higherLevel": null
+  },
+  "prismatic-spray": {
+    "castingTime": "1 action",
+    "rangeText": "Self (60-foot cone)",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "regenerate": {
+    "castingTime": "1 minute",
+    "rangeText": "Touch",
+    "material": "A prayer wheel and holy water.",
+    "duration": "1 hour",
+    "higherLevel": null
+  },
+  "resurrection": {
+    "castingTime": "1 hour",
+    "rangeText": "Touch",
+    "material": "A diamond worth at least 1,000 gp, which the spell consumes.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "simulacrum": {
+    "castingTime": "12 hours",
+    "rangeText": "Touch",
+    "material": "Snow or ice in quantities sufficient to made a life-size copy of the duplicated creature; some hair, fingernail clippings, or other piece of that creature's body placed inside the snow or ice; and powdered ruby worth 1,500 gp, sprinkled over the duplicate and consumed by the spell.",
+    "duration": "Until dispelled",
+    "higherLevel": null
+  },
+  "dream-of-the-blue-veil": {
+    "castingTime": "10 minutes",
+    "rangeText": "20 feet",
+    "material": "A magic item or a willing creature from the destination world.",
+    "duration": "6 hours",
+    "higherLevel": null
+  },
+  "symbol": {
+    "castingTime": "1 minute",
+    "rangeText": "Touch",
+    "material": "Mercury, phosphorus, and powdered diamond and opal with a total value of at least 1,000 gp, which the spell consumes.",
+    "duration": "Until dispelled",
+    "higherLevel": null
+  },
+  "teleport": {
+    "castingTime": "1 action",
+    "rangeText": "10 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "fire-storm": {
+    "castingTime": "1 action",
+    "rangeText": "150 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "temple-of-the-gods": {
+    "castingTime": "1 hour",
+    "rangeText": "120 feet",
+    "material": "Text cost.",
+    "duration": "24 hours",
+    "higherLevel": null
+  },
+  "whirlwind": {
+    "castingTime": "1 action",
+    "rangeText": "300 feet",
+    "material": "A piece of straw.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "draconic-transformation": {
+    "castingTime": "1 bonus action",
+    "rangeText": "Self (60-foot cone)",
+    "material": "Text cost.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "holy-aura": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": "A tiny reliquary worth at least 1,000 gp containing a sacred relic, such as a scrap of cloth from a saint's robe or a piece of parchment from a religious text.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "antipathy-sympathy": {
+    "castingTime": "1 hour",
+    "rangeText": "60 feet",
+    "material": "Either a lump of alum soaked in vinegar for the antipathy effect or a drop of honey for the sympathy effect.",
+    "duration": "10 days",
+    "higherLevel": null
+  },
+  "glibness": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "1 hour",
+    "higherLevel": null
+  },
+  "antimagic-field": {
+    "castingTime": "1 action",
+    "rangeText": "Self (10-foot radius)",
+    "material": "A pinch of powdered iron or iron filings.",
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": null
+  },
+  "clone": {
+    "castingTime": "1 hour",
+    "rangeText": "Touch",
+    "material": "A diamond worth at least 1,000 gp and at least 1 cubic inch of flesh of the creature that is to be cloned, which the spell consumes, and a vessel worth at least 2,000 gp that has a sealable lid and is large enough to hold a Medium creature, such as a huge urn, coffin, mud-filled cyst in the ground, or crystal container filled with salt water.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "control-weather": {
+    "castingTime": "10 minutes",
+    "rangeText": "Self (7.5 miles radius)",
+    "material": "Burning incense and bits of earth and wood mixed in water.",
+    "duration": "Concentration, up to 8 hours",
+    "higherLevel": null
+  },
+  "maze": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "demiplane": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "1 hour",
+    "higherLevel": null
+  },
+  "dominate-monster": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": "When you cast this spell with a 9th-level spell slot, the duration is concentration, up to 8 hours."
+  },
+  "illusory-dragon": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "sunburst": {
+    "castingTime": "1 action",
+    "rangeText": "150 feet",
+    "material": "Fire and a piece of sunstone.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "feeblemind": {
+    "castingTime": "1 action",
+    "rangeText": "150 feet",
+    "material": "A handful of clay, crystal, glass, or mineral spheres.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "mind-blank": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": null,
+    "duration": "24 hours",
+    "higherLevel": null
+  },
+  "abi-dalzim-s-horrid-wilting": {
+    "castingTime": "1 action",
+    "rangeText": "150 feet",
+    "material": "A bit of sponge.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "animal-shapes": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": null,
+    "duration": "Concentration, up to 24 hours",
+    "higherLevel": null
+  },
+  "mighty-fortress": {
+    "castingTime": "1 minute",
+    "rangeText": "1 mile",
+    "material": "Text cost consume.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "power-word-stun": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "incendiary-cloud": {
+    "castingTime": "1 action",
+    "rangeText": "150 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "telepathy": {
+    "castingTime": "1 action",
+    "rangeText": "Unlimited",
+    "material": "A pair of linked silver rings.",
+    "duration": "24 hours",
+    "higherLevel": null
+  },
+  "maddening-darkness": {
+    "castingTime": "1 action",
+    "rangeText": "150 feet",
+    "material": "A drop of pitch mixed with a drop of mercury.",
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "earthquake": {
+    "castingTime": "1 action",
+    "rangeText": "500 feet",
+    "material": "A pinch of dirt, a piece of rock, and a lump of clay.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "tsunami": {
+    "castingTime": "1 minute",
+    "rangeText": "Sight",
+    "material": null,
+    "duration": "Concentration, up to 6 rounds",
+    "higherLevel": null
+  },
+  "time-stop": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "shapechange": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": "A jade circlet worth at least 1,500 gp, which you must place on your head before you cast the spell.",
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": null
+  },
+  "imprisonment": {
+    "castingTime": "1 minute",
+    "rangeText": "30 feet",
+    "material": "A vellum depiction or a carved statuette in the likeness of the target, and a special component that varies according to the version of the spell you choose, worth at least 500 gp per Hit Die of the target.",
+    "duration": "Until dispelled",
+    "higherLevel": null
+  },
+  "weird": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "mass-heal": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "psychic-scream": {
+    "castingTime": "1 action",
+    "rangeText": "90 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "invulnerability": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": "Text cost consume.",
+    "duration": "Concentration, up to 10 minutes",
+    "higherLevel": null
+  },
+  "blade-of-disaster": {
+    "castingTime": "1 bonus action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "mass-polymorph": {
+    "castingTime": "1 action",
+    "rangeText": "120 feet",
+    "material": "A caterpillar cocoon.",
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": null
+  },
+  "true-polymorph": {
+    "castingTime": "1 action",
+    "rangeText": "30 feet",
+    "material": "A drop of mercury, a dollop of gum arabic, and a wisp of smoke.",
+    "duration": "Concentration, up to 1 hour",
+    "higherLevel": null
+  },
+  "power-word-heal": {
+    "castingTime": "1 action",
+    "rangeText": "Touch",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "power-word-kill": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "prismatic-wall": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": null,
+    "duration": "10 minutes",
+    "higherLevel": null
+  },
+  "meteor-swarm": {
+    "castingTime": "1 action",
+    "rangeText": "1 mile",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "gate": {
+    "castingTime": "1 action",
+    "rangeText": "60 feet",
+    "material": "A diamond worth at least 5,000 gp.",
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  },
+  "foresight": {
+    "castingTime": "1 minute",
+    "rangeText": "Touch",
+    "material": "A hummingbird feather.",
+    "duration": "8 hours",
+    "higherLevel": null
+  },
+  "astral-projection": {
+    "castingTime": "1 hour",
+    "rangeText": "10 feet",
+    "material": "For each creature you affect with this spell, you must provide one jacinth worth at least 1,000 gp and one ornately carved bar of silver worth at least 100 gp, all of which the spell consumes.",
+    "duration": "Special",
+    "higherLevel": null
+  },
+  "true-resurrection": {
+    "castingTime": "1 hour",
+    "rangeText": "Touch",
+    "material": "A sprinkle of holy water and diamonds worth at least 25,000 gp, which the spell consumes.",
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "wish": {
+    "castingTime": "1 action",
+    "rangeText": "Self",
+    "material": null,
+    "duration": "Instantaneous",
+    "higherLevel": null
+  },
+  "storm-of-vengeance": {
+    "castingTime": "1 action",
+    "rangeText": "Sight",
+    "material": null,
+    "duration": "Concentration, up to 1 minute",
+    "higherLevel": null
+  }
+}

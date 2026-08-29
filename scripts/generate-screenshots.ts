@@ -280,14 +280,15 @@ async function register(apiPort: number, username: string, displayName: string):
   return { token, user };
 }
 
-/** Résout l'id numérique d'un objet/sort du catalogue par son nom français exact. */
+/** Résout l'id numérique d'un objet/sort du catalogue par son nom français exact.
+ * Payloads mono-locale : sans Accept-Language, `name` EST le nom français. */
 async function catalogId(api: Api, kind: 'items' | 'spells', nameFr: string): Promise<number> {
   const key = kind === 'items' ? 'items' : 'spells';
-  const res = await api<{ [k: string]: { id: number; nameFr: string }[] }>(
+  const res = await api<{ [k: string]: { id: number; name: string }[] }>(
     'GET',
     `/api/${kind}?search=${encodeURIComponent(nameFr)}&limit=25`,
   );
-  const hit = res[key].find((r) => r.nameFr === nameFr);
+  const hit = res[key].find((r) => r.name === nameFr);
   if (!hit) throw new Error(`${kind} introuvable dans le catalogue : « ${nameFr} »`);
   return hit.id;
 }

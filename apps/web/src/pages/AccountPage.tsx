@@ -1,10 +1,12 @@
 import type { ChangePasswordPayload, UpdateProfilePayload } from '@table-sync/shared';
 import { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../auth';
 import { ErrorMsg, type Toast, ToastStack } from '../components/ui';
 import { useHeaderOverride } from '../headerContext';
+import { LANGUAGES, setAppLang } from '../i18n';
 import { formatSince } from '../utils';
 
 /**
@@ -13,6 +15,7 @@ import { formatSince } from '../utils';
  * lecture seule : il sert à la connexion et ne change pas.
  */
 export default function AccountPage() {
+  const { t, i18n } = useTranslation();
   const { user, refreshUser } = useAuth();
   const nav = useNavigate();
 
@@ -40,7 +43,7 @@ export default function AccountPage() {
   const onBack = useCallback(() => {
     nav('/parties');
   }, [nav]);
-  useHeaderOverride('Mon compte', onBack);
+  useHeaderOverride(t('account.mon.compte'), onBack);
 
   if (!user) return null;
 
@@ -61,9 +64,9 @@ export default function AccountPage() {
       if (mail !== (user!.email ?? '')) body.email = mail; // vide = retirer l’adresse
       await api.patch('/api/auth/me', body);
       await refreshUser();
-      pushToast('Profil enregistré');
+      pushToast(t('account.profil.enregistre'));
     } catch (err: any) {
-      setProfileError(err.response?.data?.error || 'Enregistrement impossible — réessayez.');
+      setProfileError(err.response?.data?.error || t('account.enregistrement.impossible'));
     } finally {
       setSavingProfile(false);
     }
@@ -79,9 +82,9 @@ export default function AccountPage() {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      pushToast('Mot de passe mis à jour');
+      pushToast(t('account.mot.de.passe.mis.a.jour'));
     } catch (err: any) {
-      setPasswordError(err.response?.data?.error || 'Changement impossible — réessayez.');
+      setPasswordError(err.response?.data?.error || t('account.changement.impossible'));
     } finally {
       setSavingPassword(false);
     }
@@ -90,13 +93,13 @@ export default function AccountPage() {
   return (
     <div className="max-w-md mx-auto space-y-6">
       <h1 className="font-display text-2xl sm:text-3xl font-bold text-ink-900 text-center">
-        Mon compte
+        {t('account.mon.compte')}
       </h1>
 
       {/* ---------- Profil ---------- */}
       <section className="card p-5 sm:p-6" aria-labelledby="account-profil-title">
         <h2 id="account-profil-title" className="section-title mb-4">
-          Profil
+          {t('account.profil')}
         </h2>
         <div className="flex items-center gap-4">
           <span
@@ -108,16 +111,19 @@ export default function AccountPage() {
           <div className="min-w-0">
             <p className="text-lg font-medium text-ink-900 truncate">{user.displayName}</p>
             <p className="text-sm text-ink-400 truncate">@{user.username}</p>
-            <p className="text-xs text-ink-400">Membre {formatSince(user.createdAt)}</p>
+            <p className="text-xs text-ink-400">
+              {' '}
+              {t('account.membre', { since: formatSince(user.createdAt) })}
+            </p>
           </div>
         </div>
         <p className="text-xs text-ink-400 mt-2 mb-5">
-          L’identifiant @{user.username} sert à la connexion — il ne peut pas changer.
+          {t('account.identifiant.servit.a.la', { username: user.username })}
         </p>
         <form onSubmit={submitProfile} className="space-y-4">
           <div>
             <label className="label" htmlFor="account-display-name">
-              Nom affiché
+              {t('account.nom.affiche')}
             </label>
             <input
               id="account-display-name"
@@ -129,11 +135,11 @@ export default function AccountPage() {
               autoComplete="nickname"
               required
             />
-            <p className="text-xs text-ink-400 mt-1">C’est le nom que voit la table.</p>
+            <p className="text-xs text-ink-400 mt-1">{t('account.c.est.le.nom.que.voit')}</p>
           </div>
           <div>
             <label className="label" htmlFor="account-email">
-              Adresse e-mail
+              {t('auth.adresse.e.mail')}
             </label>
             <input
               id="account-email"
@@ -142,16 +148,17 @@ export default function AccountPage() {
               className="input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="vous@exemple.fr"
+              placeholder={t('account.vous.exemple.fr')}
               autoComplete="email"
               inputMode="email"
             />
             {user.email ? (
-              <p className="text-xs text-ink-400 mt-1">Laissez vide pour retirer votre adresse.</p>
+              <p className="text-xs text-ink-400 mt-1">
+                {t('account.laissez.vide.pour.retirer.votre.adresse')}
+              </p>
             ) : (
               <p className="text-xs text-ink-400 mt-1">
-                Optionnelle — elle servira à retrouver votre compte si vous oubliez votre mot de
-                passe.
+                {t('account.optionnelle.elle.servira.a.retrouver.votre')}
               </p>
             )}
           </div>
@@ -161,20 +168,50 @@ export default function AccountPage() {
             className="btn-primary w-full"
             disabled={!profileDirty || savingProfile}
           >
-            {savingProfile ? 'Enregistrement…' : 'Enregistrer'}
+            {savingProfile ? t('account.enregistrement') : t('account.enregistrer')}
           </button>
         </form>
+      </section>
+
+      {/* ---------- Langue ---------- */}
+      <section className="card p-5 sm:p-6" aria-labelledby="account-lang-title">
+        <h2 id="account-lang-title" className="section-title mb-4">
+          {t('account.langue')}
+        </h2>
+        {/* biome-ignore lint/a11y/useSemanticElements: fieldset ajoute sa propre bordure/marge qui casse la rangée de pastilles compacte. */}
+        <div
+          className="inline-flex rounded-lg border border-ink-200 bg-parchment-100 p-1"
+          role="group"
+          aria-label={t('account.langue')}
+        >
+          {LANGUAGES.map((l) => (
+            <button
+              key={l.code}
+              type="button"
+              onClick={() => setAppLang(l.code)}
+              aria-pressed={(i18n.resolvedLanguage ?? 'fr') === l.code}
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                (i18n.resolvedLanguage ?? 'fr') === l.code
+                  ? 'bg-ink-800 text-parchment-50 shadow-sm'
+                  : 'text-ink-600 hover:text-ink-900'
+              }`}
+            >
+              {l.label}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-ink-400 mt-3">{t('account.langue.aide')}</p>
       </section>
 
       {/* ---------- Mot de passe ---------- */}
       <section className="card p-5 sm:p-6" aria-labelledby="account-password-title">
         <h2 id="account-password-title" className="section-title mb-4">
-          Mot de passe
+          {t('account.mot.de.passe')}
         </h2>
         <form onSubmit={submitPassword} className="space-y-4">
           <div>
             <label className="label" htmlFor="account-password-current">
-              Mot de passe actuel
+              {t('account.mot.de.passe.actuel')}
             </label>
             <input
               id="account-password-current"
@@ -189,7 +226,7 @@ export default function AccountPage() {
           </div>
           <div>
             <label className="label" htmlFor="account-password-new">
-              Nouveau mot de passe (≥ 6 caractères)
+              {t('auth.nouveau.mot.de.passe.min')}
             </label>
             <input
               id="account-password-new"
@@ -205,7 +242,7 @@ export default function AccountPage() {
           </div>
           <div>
             <label className="label" htmlFor="account-password-confirm">
-              Confirmer le nouveau mot de passe
+              {t('account.confirmer.le.nouveau.mot.de.passe')}
             </label>
             <input
               id="account-password-confirm"
@@ -219,7 +256,7 @@ export default function AccountPage() {
             />
             {!passwordsMatch && (
               <p className="text-xs text-red-600 mt-1">
-                Les deux nouveaux mots de passe ne correspondent pas.
+                {t('account.les.deux.nouveaux.mots.de.passe')}
               </p>
             )}
           </div>
@@ -229,7 +266,7 @@ export default function AccountPage() {
             className="btn-primary w-full"
             disabled={!passwordReady || savingPassword}
           >
-            {savingPassword ? 'Changement…' : 'Changer le mot de passe'}
+            {savingPassword ? t('account.changement') : t('account.changer.le.mot.de.passe')}
           </button>
         </form>
       </section>

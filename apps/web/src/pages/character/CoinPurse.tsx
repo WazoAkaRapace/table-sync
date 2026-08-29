@@ -1,7 +1,8 @@
 import type { Character } from '@table-sync/shared';
-import { COIN_LABELS_FR } from '@table-sync/shared';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { NumberField } from '../../components/ui';
+import { coinLabel } from '../../i18n/labels';
 import type { CoinsState } from './types';
 
 // ---------- Coin purse (auto-save, distinct colored glyphs) ----------
@@ -28,6 +29,7 @@ interface CoinPurseProps {
 }
 
 export function CoinPurse({ coins, readOnly = false, onChange, onBlur }: CoinPurseProps) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const totalCp =
     coins.copper +
@@ -47,9 +49,10 @@ export function CoinPurse({ coins, readOnly = false, onChange, onBlur }: CoinPur
         aria-expanded={expanded}
       >
         <h2 className="section-title">
-          Bourse{' '}
+          {t('bourse.titre')}{' '}
           <span className="text-ink-400 text-sm font-normal">
-            ({totalGp} PO{remCp > 0 ? ` ${remCp} PC` : ''})
+            ({t('bourse.total.po', { gp: totalGp })}
+            {remCp > 0 ? t('bourse.total.pc', { cp: remCp }) : ''})
           </span>
         </h2>
         <span className={`text-ink-400 text-sm chevron ${expanded ? 'is-open' : 'is-closed'}`}>
@@ -69,13 +72,15 @@ export function CoinPurse({ coins, readOnly = false, onChange, onBlur }: CoinPur
                       style={{ backgroundColor: color }}
                       aria-hidden="true"
                     />
-                    {COIN_LABELS_FR[unit]}
+                    {coinLabel(unit)}
                   </span>
                   {readOnly ? (
                     <div
                       className="input bg-parchment-100 text-ink-700 flex items-center justify-between"
                       role="img"
-                      aria-label={`Quantité de ${COIN_LABELS_FR[unit]}`}
+                      aria-label={t('bourse.quantite.de.coinlabel.unit', {
+                        coinLabel_unit: coinLabel(unit),
+                      })}
                     >
                       <span>{coins[key]}</span>
                       <span className="text-xs text-ink-400">{unit}</span>
@@ -89,7 +94,9 @@ export function CoinPurse({ coins, readOnly = false, onChange, onBlur }: CoinPur
                       zeroAsEmpty
                       onChange={(n) => onChange(key, n)}
                       onBlur={onBlur}
-                      aria-label={`Quantité de ${COIN_LABELS_FR[unit]}`}
+                      aria-label={t('bourse.quantite.de.coinlabel.unit', {
+                        coinLabel_unit: coinLabel(unit),
+                      })}
                     />
                   )}
                 </label>
