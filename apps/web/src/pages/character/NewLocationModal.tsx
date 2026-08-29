@@ -133,7 +133,7 @@ export function NewLocationModal({ open, onClose, onCreate }: NewLocationModalPr
                 aria-label={t('empl.multiplicateur.de.capacite')}
               />
               <span className="text-xs text-ink-400 mt-1 block">
-                Bête de somme = 2 (capacité doublée).
+                {t('empl.bete.de.somme.2.capacite.doublee')}
               </span>
             </label>
           </>
@@ -171,7 +171,7 @@ export function NewLocationModal({ open, onClose, onCreate }: NewLocationModalPr
         )}
 
         <button type="submit" disabled={!name.trim() || submitting} className="btn-primary w-full">
-          {submitting ? 'Création…' : 'Créer'}
+          {submitting ? t('empl.creation') : t('empl.creer')}
         </button>
       </form>
     </Modal>

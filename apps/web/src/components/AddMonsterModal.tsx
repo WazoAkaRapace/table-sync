@@ -159,7 +159,7 @@ export default function AddMonsterModal({ open, onClose, onAdd }: Props) {
                 +
               </button>
               <span className="text-sm text-ink-400 ml-2">
-                {count > 1 ? `${count} monstres (groupe)` : '1 monstre'}
+                {t('ajmonstre.groupe.de.monstres', { count })}
               </span>
             </div>
           </div>

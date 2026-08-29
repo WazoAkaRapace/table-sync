@@ -232,13 +232,14 @@ export default function AddClassSheet({ open, onClose, character, currentClasses
                 </div>
               </div>
               <p className="text-sm text-ink-500">
-                Sous-classe&nbsp;:{' '}
+                {t('classe.sous.classe')}
                 {subclassOptions.length === 0 ? (
-                  'aucune pour cette classe.'
+                  t('classe.aucune.pour.cette.classe')
                 ) : Math.min(...subclassOptions.map((s) => s.level)) > level ? (
                   <span className="text-ink-400">
-                    à choisir au niveau {Math.min(...subclassOptions.map((s) => s.level))} de cette
-                    classe.
+                    {t('classe.a.choisir.au.niveau.n.de.cette.classe', {
+                      n: Math.min(...subclassOptions.map((s) => s.level)),
+                    })}
                   </span>
                 ) : (
                   <span className="text-ink-400">{t('classe.a.choisir.apres.l.ajout.voie')}</span>

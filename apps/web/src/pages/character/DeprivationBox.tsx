@@ -45,7 +45,7 @@ export function DeprivationBox({ label, days, icon, onStep }: DeprivationBoxProp
       </div>
       {days >= 3 && (
         <p className="text-xs mt-1.5 italic">
-          {days >= 5 ? '⚠ Risque grave d\u2019épuisement' : '⚠ Privation prolongée'}
+          {days >= 5 ? t('deprivation.risque.grave') : t('deprivation.privation.prolongee')}
         </p>
       )}
     </div>

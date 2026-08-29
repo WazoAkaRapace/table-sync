@@ -1,11 +1,8 @@
 {
-  "total": 123,
+  "total": 85,
   "perFile": {
     "App.tsx": 1,
     "auth.tsx": 3,
-    "components/AddClassSheet.tsx": 3,
-    "components/AddMonsterModal.tsx": 3,
-    "components/AddPlayerModal.tsx": 8,
     "components/CastSpellSheet.tsx": 2,
     "components/CharacterStateBand.tsx": 2,
     "components/CombatWidget.tsx": 7,
@@ -13,18 +10,14 @@
     "components/ConditionsEditor.tsx": 14,
     "components/ErrorBoundary.tsx": 1,
     "components/GmaAssistantTab.tsx": 2,
-    "components/SortableGrid.tsx": 7,
-    "components/SpellDetailSheet.tsx": 2,
+    "components/SpellDetailSheet.tsx": 1,
     "pages/CharacterDescriptionTab.tsx": 1,
     "pages/CharacterFeaturesTab.tsx": 1,
     "pages/CharacterInventoryPage.tsx": 3,
     "pages/CharacterSpellsTab.tsx": 8,
     "pages/CombatPage.tsx": 20,
     "pages/NpcPage.tsx": 9,
-    "pages/character/DeprivationBox.tsx": 3,
-    "pages/character/NewLocationModal.tsx": 6,
     "pages/character/SurvivalPanel.tsx": 5,
-    "pages/character/TransferModal.tsx": 7,
     "sync.tsx": 2
   }
 }

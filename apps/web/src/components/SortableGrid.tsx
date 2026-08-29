@@ -74,6 +74,7 @@ export function SortableGrid({
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
+  const { t } = useTranslation();
 
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
     if (!over || active.id === over.id) return;
@@ -86,12 +87,12 @@ export function SortableGrid({
   // Typed const (tsc 7 doesn't contextually type this through JSX props)
   const announcements: Announcements = {
     onDragStart: ({ active }) =>
-      `${labelOf(active.id)} pris — flèches pour déplacer, Espace pour déposer.`,
+      t('tri.pris.fleches.pour.deplacer.espace', { label: labelOf(active.id) }),
     onDragOver: ({ active, over }) =>
       over && active.id !== over.id
         ? `${labelOf(active.id)} avant ${labelOf(over.id)}.`
         : undefined,
-    onDragEnd: ({ active }) => `${labelOf(active.id)} déposé.`,
+    onDragEnd: ({ active }) => t('tri.depose', { label: labelOf(active.id) }),
     onDragCancel: ({ active }) => `${labelOf(active.id)} remis en place.`,
   };
 
@@ -182,7 +183,7 @@ function DragHandle({
       {...attributes}
       {...listeners}
       aria-label={label}
-      aria-roledescription="poignée de déplacement"
+      aria-roledescription={t('tri.poignee.de.deplacement')}
     >
       <svg viewBox="0 0 10 16" className="w-2.5 h-4" fill="currentColor" aria-hidden="true">
         <circle cx="2.6" cy="3" r="1.6" />
