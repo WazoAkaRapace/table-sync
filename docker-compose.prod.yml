@@ -22,7 +22,13 @@ services:
       - PORT=4000
       - DATABASE_PATH=/app/data/db/inventory.sqlite
       # JWT_SECRET must be set — read from .env or shell environment
-      - JWT_SECRET=${JWT_SECRET}
+      - JWT_SECRET=${JWT_SECRET:?Set JWT_SECRET in .env or environment}
+      # Web Push (VAPID) — all three together or push stays cleanly disabled.
+      # Generate once with `npm run vapid-keys`, NEVER rotate afterwards:
+      # new keys orphan every existing subscription (docs/push-notifications.md).
+      - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY:-}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY:-}
+      - VAPID_SUBJECT=${VAPID_SUBJECT:-}
     restart: unless-stopped
 
   web:
