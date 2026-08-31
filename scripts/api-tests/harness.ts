@@ -21,9 +21,11 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { type MockGmaHandle, startMockGma } from './mock-gma.ts';
+import { type MockPushHandle, startMockPush } from './mock-push.ts';
 
 const require = createRequire(import.meta.url);
 const Database = require('better-sqlite3');
+const webpush = require('web-push');
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = resolve(__dirname, '..', '..');
@@ -139,6 +141,13 @@ function freePort(preferred: number): Promise<number> {
   });
 }
 
+// Each startServer call must land on its OWN port. Retrying the same
+// preferred port lets macOS's looser SO_REUSEADDR semantics "succeed" over
+// the previous server's wildcard bind — the probe closes, the real spawn
+// then dies on EADDRINUSE, and the health poll happily answers from the
+// PREVIOUS server (bit us with the push module's second VAPID-less boot).
+let nextPreferredPort = 4611;
+
 export interface ServerHandle {
   base: string;
   dbPath: string;
@@ -148,15 +157,28 @@ export interface ServerHandle {
   child: ChildProcess;
   /** The mock GM Assistant server the API talks to (GMA_BASE_URL). */
   gma: MockGmaHandle;
+  /** The mock push service the subscriptions point at (their endpoints). */
+  push: MockPushHandle;
   /** Read-only query against the live test DB (WAL allows concurrent readers). */
   query: (sql: string, ...params: unknown[]) => any;
   queryAll: (sql: string, ...params: unknown[]) => any[];
   stop: () => Promise<void>;
 }
 
-export async function startServer(): Promise<ServerHandle> {
-  const port = await freePort(4611);
+export interface StartServerOptions {
+  /** Boot WITHOUT the VAPID env vars — the push-disabled code path. */
+  withoutVapid?: boolean;
+}
+
+export async function startServer(opts: StartServerOptions = {}): Promise<ServerHandle> {
+  const preferred = nextPreferredPort;
+  nextPreferredPort = 0; // every subsequent boot takes an ephemeral port
+  const port = await freePort(preferred);
   const gmaMock = await startMockGma();
+  const pushMock = await startMockPush();
+  // Real VAPID keypair per run: the signing + encryption code paths only
+  // engage with valid key material.
+  const vapid = webpush.generateVAPIDKeys();
   const dir = mkdtempSync(join(tmpdir(), 'dnd-api-test-'));
   const dbPath = join(dir, 'test.sqlite');
   const imagesDir = join(dir, 'images');
@@ -179,6 +201,16 @@ export async function startServer(): Promise<ServerHandle> {
       TRUST_PROXY: 'true',
       // GM Assistant calls go to the in-process mock (see mock-gma.ts).
       GMA_BASE_URL: gmaMock.url,
+      // Web Push: on by default; `withoutVapid` boots the disabled path.
+      // The push mock serves TLS with a self-signed cert — trust it explicitly.
+      NODE_EXTRA_CA_CERTS: pushMock.certPath,
+      ...(opts.withoutVapid
+        ? {}
+        : {
+            VAPID_PUBLIC_KEY: vapid.publicKey,
+            VAPID_PRIVATE_KEY: vapid.privateKey,
+            VAPID_SUBJECT: 'mailto:test-api@example.com',
+          }),
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
@@ -199,7 +231,18 @@ export async function startServer(): Promise<ServerHandle> {
     }
     try {
       const res = await fetch(`${base}/api/health`);
-      if (res.ok) break;
+      if (res.ok) {
+        // The poll can answer from a previous server still holding this
+        // port (see nextPreferredPort note) — make sure OUR child is the
+        // one alive on it before declaring victory.
+        await new Promise((r) => setTimeout(r, 250));
+        if (child.exitCode !== null) {
+          throw new Error(
+            `server exited early (code ${child.exitCode}) — another process answered the health probe — log:\n${Buffer.concat(logChunks).toString()}`,
+          );
+        }
+        break;
+      }
     } catch {
       /* retry */
     }
@@ -234,6 +277,7 @@ export async function startServer(): Promise<ServerHandle> {
       /* already closed */
     }
     await gmaMock.stop();
+    await pushMock.stop();
     rmSync(dir, { recursive: true, force: true });
   };
 
@@ -245,6 +289,7 @@ export async function startServer(): Promise<ServerHandle> {
     serverLog,
     child,
     gma: gmaMock,
+    push: pushMock,
     query,
     queryAll,
     stop,

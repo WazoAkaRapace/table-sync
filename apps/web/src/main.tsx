@@ -6,6 +6,7 @@ import App from './App';
 import { AuthProvider, useAuth } from './auth';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import './i18n';
+import { registerServiceWorker } from './push';
 import { SyncProvider } from './sync';
 import './index.css';
 
@@ -32,6 +33,9 @@ function AppWithSync() {
     </SyncProvider>
   );
 }
+
+// Service worker push-only (aucun cache) : pas critique, échec silencieux.
+void registerServiceWorker();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

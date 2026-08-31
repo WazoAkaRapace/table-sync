@@ -46,6 +46,8 @@ const EN: Record<string, string> = {
   'Les deux nouveaux mots de passe ne correspondent pas.': "The two new passwords don't match.",
   'Email invalide': 'Invalid email',
   'Email déjà utilisé': 'Email already in use',
+  'Notifications désactivées sur ce serveur (VAPID absent)':
+    'Push notifications disabled on this server (no VAPID)',
   'Seul le MD peut animer un combat': 'Only the DM can run a combat',
   'Seul le MD peut créer une rencontre': 'Only the DM can create an encounter',
   'Seul le MD peut modifier une rencontre': 'Only the DM can edit an encounter',
@@ -169,6 +171,8 @@ const EN: Record<string, string> = {
   'classe d’origine inconnue pour ce personnage': 'unknown origin class for this character',
   'classes doit être un tableau non vide': 'classes must be a non-empty array',
   'entry is not annotated': 'entry is not annotated',
+  'endpoint push invalide': 'invalid push endpoint',
+  'clés push manquantes': 'missing push keys',
   'feature does not belong to this character': 'feature does not belong to this character',
   'feature not found': 'feature not found',
   'file is not a JPEG or PNG image': 'file is not a JPEG or PNG image',

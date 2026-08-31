@@ -12,6 +12,7 @@ import { backfillItemBases } from './db/backfill.ts';
 import { runDrizzleMigrations } from './db/drizzle.ts';
 import { migrate } from './db/index.ts';
 import { seedItems, seedMonsters, seedSpells } from './db/seed.ts';
+import { pushEnabled } from './push/config.ts';
 import { errorRateLimit } from './rateLimit.ts';
 import { authRoutes } from './routes/auth.ts';
 import { characterFeatureRoutes } from './routes/character-features.ts';
@@ -28,6 +29,7 @@ import { locationRoutes } from './routes/locations.ts';
 import { monsterRoutes } from './routes/monsters.ts';
 import { npcRoutes } from './routes/npcs.ts';
 import { partyRoutes } from './routes/parties.ts';
+import { pushRoutes } from './routes/push.ts';
 import { restRoutes } from './routes/rest.ts';
 import { spellRoutes } from './routes/spells.ts';
 import { wildShapeRoutes } from './routes/wildshape.ts';
@@ -139,6 +141,7 @@ async function buildServer() {
   await app.register(domainSpellRoutes, { prefix: '/api' });
   await app.register(restRoutes, { prefix: '/api' });
   await app.register(gmaRoutes, { prefix: '/api' });
+  await app.register(pushRoutes, { prefix: '/api' });
 
   // WebSocket (real-time sync)
   await registerWsRoutes(app);
@@ -173,6 +176,11 @@ async function start() {
     await app.listen({ port: PORT, host: '0.0.0.0' });
     console.log(`🚀 API running at http://localhost:${PORT}`);
     console.log(`🔌 WebSocket at ws://localhost:${PORT}/ws`);
+    console.log(
+      pushEnabled
+        ? '🔔 Push notifications: activé'
+        : '🔕 Push notifications: désactivé (VAPID absent)',
+    );
   } catch (err) {
     app.log.error(err);
     process.exit(1);

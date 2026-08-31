@@ -29,6 +29,7 @@
     "test-api": "tsx scripts/test-api.ts",
     "test:e2e": "playwright test",
     "screenshots": "tsx scripts/generate-screenshots.ts",
+    "vapid-keys": "tsx scripts/generate-vapid-keys.ts",
     "site": "node scripts/serve-site.mjs",
     "i18n:ratchet": "tsx scripts/i18n/check-ui-strings.ts"
   },

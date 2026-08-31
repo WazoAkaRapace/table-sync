@@ -1,5 +1,5 @@
 import type { ChangePasswordPayload, UpdateProfilePayload } from '@table-sync/shared';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
@@ -7,6 +7,14 @@ import { useAuth } from '../auth';
 import { ErrorMsg, type Toast, ToastStack } from '../components/ui';
 import { useHeaderOverride } from '../headerContext';
 import { LANGUAGES, setAppLang } from '../i18n';
+import {
+  disablePush,
+  enablePush,
+  getPushSubscription,
+  PushError,
+  pushSecureContext,
+  pushSupported,
+} from '../push';
 import { TUTORIAL_SEEN_KEY, TUTORIAL_TABS_DONE_KEY } from '../tutorial/TutorialHost';
 import { formatSince } from '../utils';
 
@@ -30,6 +38,36 @@ export default function AccountPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [savingPassword, setSavingPassword] = useState(false);
+
+  // Notifications push — état de CE navigateur. Le useEffect reste au-dessus
+  // du garde `if (!user)` : les hooks doivent tourner avant tout retour anticipé.
+  const [pushConfig, setPushConfig] = useState<{
+    enabled: boolean;
+    publicKey: string | null;
+  } | null>(null);
+  const [pushPermission, setPushPermission] = useState<string>('default');
+  const [pushSubscribed, setPushSubscribed] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
+  const [pushTesting, setPushTesting] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const res = await api.get('/api/push/config');
+        if (alive) setPushConfig(res.data);
+      } catch {
+        if (alive) setPushConfig({ enabled: false, publicKey: null });
+      }
+      if (!pushSupported()) return;
+      if (alive) setPushPermission(Notification.permission);
+      const sub = await getPushSubscription();
+      if (alive && sub) setPushSubscribed(true);
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const [toasts, setToasts] = useState<Toast[]>([]);
   const pushToast = useCallback((message: string, kind: Toast['kind'] = 'success') => {
@@ -88,6 +126,51 @@ export default function AccountPage() {
       setPasswordError(err.response?.data?.error || t('account.changement.impossible'));
     } finally {
       setSavingPassword(false);
+    }
+  }
+
+  async function handleEnablePush() {
+    if (!pushConfig?.publicKey) return;
+    setPushBusy(true);
+    try {
+      await enablePush(pushConfig.publicKey);
+      setPushPermission(Notification.permission);
+      setPushSubscribed(true);
+      pushToast(t('account.notifications.activees'));
+    } catch (err: any) {
+      if (err instanceof PushError && err.code === 'permission') {
+        setPushPermission(Notification.permission);
+      } else {
+        pushToast(err.response?.data?.error || t('account.notifications.impossible'), 'error');
+      }
+    } finally {
+      setPushBusy(false);
+    }
+  }
+
+  async function handleDisablePush() {
+    setPushBusy(true);
+    try {
+      await disablePush();
+      setPushSubscribed(false);
+      pushToast(t('account.notifications.desactivees'));
+    } catch (err: any) {
+      pushToast(err.response?.data?.error || t('account.notifications.impossible'), 'error');
+    } finally {
+      setPushBusy(false);
+    }
+  }
+
+  async function handleTestPush() {
+    setPushTesting(true);
+    try {
+      const res = await api.post('/api/push/test');
+      if ((res.data?.sent ?? 0) > 0) pushToast(t('account.notifications.test.envoye'));
+      else pushToast(t('account.notifications.test.echoue'), 'error');
+    } catch (err: any) {
+      pushToast(err.response?.data?.error || t('account.notifications.test.echoue'), 'error');
+    } finally {
+      setPushTesting(false);
     }
   }
 
@@ -202,6 +285,61 @@ export default function AccountPage() {
           ))}
         </div>
         <p className="text-xs text-ink-400 mt-3">{t('account.langue.aide')}</p>
+      </section>
+
+      {/* ---------- Notifications push (par appareil) ---------- */}
+      <section className="card p-5 sm:p-6" aria-labelledby="account-notif-title">
+        <h2 id="account-notif-title" className="section-title mb-4">
+          {t('account.notifications')}
+        </h2>
+
+        {!pushSecureContext() ? (
+          <p className="text-sm text-ink-700">{t('account.notifications.contexte.non.securise')}</p>
+        ) : !pushSupported() ? (
+          <p className="text-sm text-ink-700">{t('account.notifications.non.supporte')}</p>
+        ) : pushConfig && !pushConfig.enabled ? (
+          <p className="text-sm text-ink-700">{t('account.notifications.desactivees.serveur')}</p>
+        ) : pushPermission === 'denied' ? (
+          <p className="text-sm text-ink-700">{t('account.notifications.permission.refusee')}</p>
+        ) : pushSubscribed ? (
+          <div className="space-y-4">
+            <p className="text-sm text-ink-700">{t('account.notifications.aide.actives')}</p>
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={handleTestPush}
+                disabled={pushTesting}
+              >
+                {pushTesting
+                  ? t('account.notifications.test.encours')
+                  : t('account.notifications.test')}
+              </button>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={handleDisablePush}
+                disabled={pushBusy}
+              >
+                {t('account.notifications.desactiver')}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <p className="text-sm text-ink-700">{t('account.notifications.aide')}</p>
+            <button
+              type="button"
+              className="btn-primary w-full"
+              onClick={handleEnablePush}
+              disabled={pushBusy || !pushConfig}
+            >
+              {t('account.notifications.activer')}
+            </button>
+          </div>
+        )}
+
+        <p className="text-xs text-ink-400 mt-4">{t('account.notifications.appareil.note')}</p>
       </section>
 
       {/* ---------- Tutoriel — rejeu de la visite guidée (par navigateur) ---------- */}

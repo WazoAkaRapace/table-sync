@@ -1693,5 +1693,22 @@
   "account.tutoriel": "Tutorial",
   "account.tutoriel.aide": "The guided tour walks you through the sheet: status band, tabs, survival, spells, inventory…",
   "account.tutoriel.bouton": "Reset tutorial",
-  "account.tutoriel.toast": "Guided tour re-enabled — it starts next time you open a sheet."
+  "account.tutoriel.toast": "Guided tour re-enabled — it starts next time you open a sheet.",
+  "account.notifications": "Notifications",
+  "account.notifications.aide": "Get alerted outside the app — screen off or app in the background.",
+  "account.notifications.aide.actives": "This browser will receive notifications, even when closed.",
+  "account.notifications.activer": "Enable notifications",
+  "account.notifications.activees": "Notifications enabled",
+  "account.notifications.desactiver": "Disable on this browser",
+  "account.notifications.desactivees": "Notifications disabled",
+  "account.notifications.impossible": "Couldn't change notifications — try again.",
+  "account.notifications.test": "Send a test notification",
+  "account.notifications.test.encours": "Sending…",
+  "account.notifications.test.envoye": "Notification sent — check your screen.",
+  "account.notifications.test.echoue": "Send failed — try again.",
+  "account.notifications.contexte.non.securise": "Notifications require HTTPS: this page is served over plain HTTP. Open the app via its https:// address.",
+  "account.notifications.non.supporte": "This browser doesn't support web notifications. On iPhone/iPad: add Table Sync to your home screen (iOS 16.4 or later) and reopen it from its icon.",
+  "account.notifications.desactivees.serveur": "Notifications are disabled on this server — the DM must configure the VAPID keys there (docs/push-notifications.md).",
+  "account.notifications.permission.refusee": "Permission denied — re-enable notifications in the browser settings (the 🔒 icon next to the address, or Settings → Table Sync on iOS).",
+  "account.notifications.appareil.note": "Subscriptions are per device: each tablet and browser opts in on its own."
 }

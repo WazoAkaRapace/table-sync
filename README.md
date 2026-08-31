@@ -84,6 +84,7 @@ Conçue pour être utilisée sur téléphone et tablette pendant la partie : PWA
 ### 🔄 Temps réel & multi-appareils
 - **Synchronisation WebSocket** : tout le monde voit les mêmes PV, états, initiative, en direct — le MD blesse, la fiche du joueur suit ; le joueur se soigne, le traqueur suit
 - Notifications poussées : demande d'initiative, jet de concentration, tour du joueur (widget flottant)
+- **Notifications Web Push** hors app (écran éteint, app fermée) : abonnement par appareil depuis Mon compte, chaîne VAPID complète côté serveur ([docs](docs/push-notifications.md)) — requiert un accès HTTPS
 - PNJ partagés avec secrets réservés au MD, notes par personnage, traits avec compteurs (Rage, Divinité…)
 - Installable comme **PWA** sur téléphone/tablette
 

@@ -681,6 +681,32 @@ export const gmaMoments = sqliteTable(
   ],
 );
 
+// ---------- Push notifications (Web Push / VAPID) ----------
+
+/**
+ * One Web Push subscription per browser/appareil. The push service's endpoint
+ * URL is the natural key — re-subscribing from the same browser upserts its
+ * keys (they rotate). `locale` freezes the user's language at subscribe time
+ * so server-initiated payloads can localize title/body without a request.
+ */
+export const pushSubscriptions = sqliteTable(
+  'push_subscriptions',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    endpoint: text('endpoint').notNull().unique('push_subscriptions_endpoint_unique'),
+    p256dh: text('p256dh').notNull(),
+    auth: text('auth').notNull(),
+    locale: text('locale').notNull().default('fr'),
+    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+    // NULL = never sent to; diagnostic marker only.
+    lastUsedAt: text('last_used_at'),
+  },
+  (t) => [index('idx_push_subscriptions_user').on(t.userId)],
+);
+
 /** Mapping local character ↔ GMA player character (written by init + resync). */
 export const gmaPcLinks = sqliteTable(
   'gma_pc_links',

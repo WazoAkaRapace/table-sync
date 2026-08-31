@@ -27,6 +27,7 @@ import { run as itemImages } from './api-tests/mod-item-images.ts';
 import { run as items } from './api-tests/mod-items.ts';
 import { run as multiclass } from './api-tests/mod-multiclass.ts';
 import { run as npcsMonsters } from './api-tests/mod-npcs-monsters.ts';
+import { run as push } from './api-tests/mod-push.ts';
 import { run as spells } from './api-tests/mod-spells.ts';
 import { run as syncWs } from './api-tests/mod-sync-ws.ts';
 import { run as wildshapeRest } from './api-tests/mod-wildshape-rest.ts';
@@ -49,6 +50,7 @@ const MODULES: Array<{
   { name: 'multiclassage', run: multiclass },
   { name: 'wild shape + rests', run: wildshapeRest },
   { name: 'websocket sync', run: syncWs },
+  { name: 'push notifications', run: push },
 ];
 
 async function main(): Promise<void> {

@@ -1692,5 +1692,22 @@
   "account.tutoriel": "Tutoriel",
   "account.tutoriel.aide": "La visite guidée présente la fiche : bandeau d'état, onglets, survie, sorts, inventaire…",
   "account.tutoriel.bouton": "Réinitialiser le tutoriel",
-  "account.tutoriel.toast": "Visite guidée réactivée — elle démarre à la prochaine fiche ouverte."
+  "account.tutoriel.toast": "Visite guidée réactivée — elle démarre à la prochaine fiche ouverte.",
+  "account.notifications": "Notifications",
+  "account.notifications.aide": "Sois prévenu en dehors de l'application — écran éteint ou app en arrière-plan.",
+  "account.notifications.aide.actives": "Ce navigateur recevra les notifications, même fermé.",
+  "account.notifications.activer": "Activer les notifications",
+  "account.notifications.activees": "Notifications activées",
+  "account.notifications.desactiver": "Désactiver sur ce navigateur",
+  "account.notifications.desactivees": "Notifications désactivées",
+  "account.notifications.impossible": "Impossible de modifier les notifications — réessaie.",
+  "account.notifications.test": "Envoyer une notification de test",
+  "account.notifications.test.encours": "Envoi…",
+  "account.notifications.test.envoye": "Notification envoyée — vérifie ton écran.",
+  "account.notifications.test.echoue": "Échec de l'envoi — réessaie.",
+  "account.notifications.contexte.non.securise": "Les notifications exigent HTTPS : cette page est servie en HTTP simple. Ouvre l'application via son adresse https://.",
+  "account.notifications.non.supporte": "Ce navigateur ne gère pas les notifications web. Sur iPhone/iPad : ajoute Table Sync à l'écran d'accueil (iOS 16.4 minimum) puis rouvre-le depuis son icône.",
+  "account.notifications.desactivees.serveur": "Les notifications sont désactivées sur ce serveur — le MD doit y configurer les clés VAPID (docs/push-notifications.md).",
+  "account.notifications.permission.refusee": "Permission refusée — réactive les notifications dans les réglages du navigateur (icône 🔒 près de l'adresse, ou Réglages → Table Sync sur iOS).",
+  "account.notifications.appareil.note": "L'abonnement est par appareil : chaque tablette et navigateur s'abonne de son côté."
 }
