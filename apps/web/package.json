@@ -20,7 +20,7 @@
     "react-dom": "^19.2.8",
     "react-i18next": "^17.0.12",
     "react-joyride": "^3.2.0",
-    "react-router-dom": "^7.18.2"
+    "react-router-dom": "^7.18.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
