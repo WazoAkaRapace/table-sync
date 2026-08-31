@@ -41,6 +41,7 @@ import {
   ToastStack,
 } from '../components/ui';
 import { useSync, useSyncEvent } from '../sync';
+import { TutorialHost } from '../tutorial/TutorialHost';
 import CharacterDescriptionTab from './CharacterDescriptionTab';
 import CharacterFeaturesTab from './CharacterFeaturesTab';
 import CharacterNotesTab from './CharacterNotesTab';
@@ -233,26 +234,11 @@ export default function CharacterInventoryPage() {
   // Confirm-delete location (per location id)
   const [confirmDeleteLocationId, setConfirmDeleteLocationId] = useState<number | null>(null);
 
-  // First-run tour
-  const [showTour, setShowTour] = useState(false);
-
   // Active tab — the fiche opens on state (Survie), not on the bag
   const [activeTab, setActiveTab] = useState<CharacterTab>('survival');
   // Concentration save popup — page-level because the state band's HP quick-edit
   // (pinned above EVERY tab) must surface it wherever the player stands.
   const [concCheck, setConcCheck] = useState<ConcentrationCheck | null>(null);
-  useEffect(() => {
-    const seen = localStorage.getItem('dnd-inv-tour-seen');
-    if (!seen && !loading) {
-      const t = setTimeout(() => setShowTour(true), 800);
-      return () => clearTimeout(t);
-    }
-  }, [loading]);
-  const dismissTour = () => {
-    setShowTour(false);
-    localStorage.setItem('dnd-inv-tour-seen', '1');
-  };
-
   // ---------- Sheet data side-effects ----------
   // Re-sync the coin draft + active location tab whenever fresh sheet data
   // lands. Structural sharing means `data` only changes when the payload
@@ -834,6 +820,7 @@ export default function CharacterInventoryPage() {
       <div
         className="sheet-rise -mx-4 px-4 sm:mx-0 sm:px-0 hidden lg:block"
         style={{ animationDelay: '60ms' }}
+        data-tuto="tabbar"
       >
         <div className="flex items-center gap-1 bg-parchment-100 rounded-xl p-1 overflow-x-auto no-scrollbar">
           {CHARACTER_TABS.map((tab) => (
@@ -1023,6 +1010,7 @@ export default function CharacterInventoryPage() {
               className={`dock-rise relative flex items-center gap-1 bg-white/95 backdrop-blur rounded-full shadow-xl border border-parchment-200 px-2 py-1.5 ${
                 hubCombat?.isMyTurn ? 'combat-turn-glow' : ''
               }`}
+              data-tuto="dock"
             >
               {/* Sliding active indicator — 8px padding + 60px per block */}
               <span
@@ -1035,6 +1023,7 @@ export default function CharacterInventoryPage() {
               <button
                 type="button"
                 onClick={() => setMoreOpen((o) => !o)}
+                data-tuto="dock-hub"
                 className={`hub-button relative z-10 mx-1 -my-3 w-12 h-12 shrink-0 rounded-full shadow-lg flex items-center justify-center text-xl leading-none active:scale-90 border-4 border-parchment-50 ${
                   moreOpen
                     ? 'bg-ink-900 rotate-90 text-white'
@@ -1210,7 +1199,7 @@ export default function CharacterInventoryPage() {
         {activeTab === 'inventory' && (
           <>
             {/* ---------- Storage location tabs ---------- */}
-            <div className="-mx-4 px-4 sm:mx-0 sm:px-0">
+            <div className="-mx-4 px-4 sm:mx-0 sm:px-0" data-tuto="inv-rangs">
               <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
                 {locations.map((loc) => {
                   const isActive = loc.id === activeLocationResolvedId;
@@ -1309,36 +1298,10 @@ export default function CharacterInventoryPage() {
               </div>
             )}
 
-            {/* First-run tour hint */}
-            {showTour && data.entries.length === 0 && (
-              <div className="card p-4 border-blood-200 bg-blood-50/50">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl shrink-0" aria-hidden="true">
-                    🎲
-                  </span>
-                  <div className="flex-1">
-                    <p className="font-medium text-ink-900">{t('inv.bienvenue')}</p>
-                    <p className="text-sm text-ink-700 mt-1">
-                      {t('inv.appuie.sur.le.bouton')}
-                      <strong>{t('inv.ajouter')}</strong>
-                      {t('inv.en.bas.de.l.ecran.pour')}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={dismissTour}
-                      className="btn-primary text-sm mt-2 px-3 py-1.5"
-                    >
-                      {t('inv.compris')}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Two-column layout: backpack (3fr) + catalog (2fr) on desktop */}
             <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
               {/* ---------- LEFT: inventory grouped by category ---------- */}
-              <section className="space-y-3">
+              <section className="space-y-3" data-tuto="inv-sac">
                 <h2 className="section-title">
                   {activeLocation ? activeLocation.name : t('inv.sac.a.dos')}{' '}
                   <span className="text-ink-400 text-sm font-normal">({entries.length})</span>
@@ -1386,7 +1349,7 @@ export default function CharacterInventoryPage() {
               </section>
 
               {/* ---------- RIGHT: catalog (desktop only — mobile uses FAB + bottom sheet) ---------- */}
-              <section className="hidden lg:block space-y-3">
+              <section className="hidden lg:block space-y-3" data-tuto="inv-catalogue">
                 <h2 className="section-title">{t('inv.catalogue')}</h2>
                 {catalogContent}
               </section>
@@ -1415,6 +1378,7 @@ export default function CharacterInventoryPage() {
           label={t('inv.ajouter.un.objet.au.catalogue')}
           mobileOnly
           raised
+          dataTuto="inv-fab"
         />
       )}
 
@@ -1518,6 +1482,16 @@ export default function CharacterInventoryPage() {
           <p className="text-xs text-ink-400">{t('inv.l.objet.rejoint.le.catalogue.du')}</p>
         </form>
       </Modal>
+
+      {/* ---------- Visite guidée (déclenchement + scripts : docs/tutorial-script.md) ---------- */}
+      {data && user && (
+        <TutorialHost
+          character={data.character}
+          canEdit={canEdit}
+          activeTab={activeTab}
+          onNavigateTab={setActiveTab}
+        />
+      )}
 
       {/* ---------- Toast stack ---------- */}
       <ToastStack toasts={toasts} onDismiss={dismissToast} />

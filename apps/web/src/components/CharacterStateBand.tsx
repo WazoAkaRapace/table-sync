@@ -302,6 +302,7 @@ export default function CharacterStateBand({
     <>
       <section
         aria-label={t('band.etat.du.personnage')}
+        data-tuto="band"
         className="-mx-4 px-4 sm:mx-0 sm:px-0 border-b border-parchment-200"
       >
         <div className="py-2 sm:py-2.5 space-y-1.5">

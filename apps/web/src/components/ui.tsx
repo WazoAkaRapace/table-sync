@@ -166,18 +166,22 @@ export function Fab({
   mobileOnly = false,
   raised = false,
   children = '+',
+  dataTuto,
 }: {
   onClick: () => void;
   label: string;
   mobileOnly?: boolean;
   raised?: boolean;
   children?: React.ReactNode;
+  /** Cible de la visite guidée (attribut data-tuto). */
+  dataTuto?: string;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={label}
+      data-tuto={dataTuto}
       className={`fab-enter fixed ${
         raised
           ? 'bottom-[calc(6rem+env(safe-area-inset-bottom))]'

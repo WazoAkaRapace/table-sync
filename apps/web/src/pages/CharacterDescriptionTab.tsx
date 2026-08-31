@@ -241,7 +241,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
   return (
     <div className="space-y-4">
       {/* Identity & class — summary card, full editor in bottom sheet */}
-      <section className="card p-4 sm:p-5 space-y-3">
+      <section className="card p-4 sm:p-5 space-y-3" data-tuto="desc-identite">
         <div className="flex items-center justify-between gap-3">
           <h2 className="section-title">{t('desc.identite.classe')}</h2>
           <button
@@ -476,7 +476,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
       />
 
       {/* Portrait + physical attributes */}
-      <section className="card p-4 sm:p-5 space-y-3">
+      <section className="card p-4 sm:p-5 space-y-3" data-tuto="desc-apparence">
         <h2 className="section-title">{t('desc.apparence')}</h2>
 
         {/* Portrait */}

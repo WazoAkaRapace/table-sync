@@ -66,8 +66,23 @@ async function injectSession(page: Page, session: SeedSession) {
     ({ token, user }) => {
       localStorage.setItem('dnd-inv-token', token);
       localStorage.setItem('dnd-inv-user', JSON.stringify(user));
-      // Pas de visite guidée au premier chargement de la fiche.
+      // Pas de visite guidée au premier chargement de la fiche, ni des
+      // visites propres d'onglet (tutorial.spec.ts les réarme explicitement).
       localStorage.setItem('dnd-inv-tour-seen', '1');
+      localStorage.setItem(
+        'dnd-inv-tour-tabs',
+        JSON.stringify([
+          'survival',
+          'stats',
+          'spells',
+          'skills',
+          'inventory',
+          'features',
+          'description',
+          'npcs',
+          'notes',
+        ]),
+      );
     },
     { token: session.token, user: session.user },
   );

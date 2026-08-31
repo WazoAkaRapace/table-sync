@@ -282,7 +282,7 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
       <div className="grid gap-4 lg:grid-cols-[3fr_2fr] lg:items-start">
         <div className="space-y-4">
           {/* Saving throws — the tab's hero: the most-rolled numbers */}
-          <section className="card p-4 sm:p-5 space-y-3">
+          <section className="card p-4 sm:p-5 space-y-3" data-tuto="skills-sauvegardes">
             <div className="flex items-center justify-between">
               <h2 className="section-title">{t('skills.jets.de.sauvegarde')}</h2>
               <span className="text-xs text-ink-400">
@@ -340,7 +340,7 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
           </section>
 
           {/* Skills grouped by ability — full-width rows, breakdown on tap */}
-          <section className="card p-4 sm:p-5 space-y-3">
+          <section className="card p-4 sm:p-5 space-y-3" data-tuto="skills-competences">
             <h2 className="section-title">{t('skills.competences')}</h2>
             {skillsByAbility.map((group) => (
               <div key={group.ability}>
@@ -450,7 +450,7 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
           <ArmorMasteryCard character={character} editMode={editMode} patch={patchSheet} />
 
           {/* Tools — read mode shows only what is mastered */}
-          <section className="card p-4 sm:p-5 space-y-3">
+          <section className="card p-4 sm:p-5 space-y-3" data-tuto="skills-outils">
             <h2 className="section-title">{t('skills.outils')}</h2>
             {hasAutomaticToolExpertise(character) && (
               <p className="text-xs text-ink-500 flex items-center gap-2">
@@ -638,7 +638,7 @@ function WeaponMasteryCard({
     }`;
 
   return (
-    <section className="card p-4 sm:p-5 space-y-3">
+    <section className="card p-4 sm:p-5 space-y-3" data-tuto="skills-maitrises">
       <div className="flex items-center justify-between">
         <h2 className="section-title">{t('skills.maitrise.d.armes')}</h2>
         {editMode && isCustom && (

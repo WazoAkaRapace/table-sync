@@ -219,7 +219,7 @@ export default function CharacterNotesTab({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between" data-tuto="notes-liste">
         <h2 className="section-title">
           {t('notes.notes')}
           <span className="text-ink-400 text-sm font-normal">({notes.length})</span>

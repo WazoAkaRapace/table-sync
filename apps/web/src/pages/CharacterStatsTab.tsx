@@ -205,7 +205,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
   return (
     <div className="space-y-4">
       {/* Ability scores */}
-      <section className="card p-4 sm:p-5 space-y-3">
+      <section className="card p-4 sm:p-5 space-y-3" data-tuto="stats-caracts">
         <h2 className="section-title">{t('stats.caracteristiques')}</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {ABILITY_FIELDS.map(({ key, ability }) => {
@@ -240,11 +240,11 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
       </section>
 
       {/* Derived stats */}
-      <section className="card p-4 sm:p-5 space-y-3">
+      <section className="card p-4 sm:p-5 space-y-3" data-tuto="stats-derivees">
         <h2 className="section-title">{t('stats.statistiques.derivees')}</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {/* Armor Class — computed or overridden */}
-          <div className="bg-parchment-100 rounded-xl p-3 text-center">
+          <div className="bg-parchment-100 rounded-xl p-3 text-center" data-tuto="stats-ca">
             <div className="text-xs font-medium text-ink-500 mb-1">
               {t('stats.classe.d.armure')}
             </div>
@@ -342,7 +342,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
           )}
           <DerivedStat label={t('stats.bonus.de.maitrise')} value={formatModifier(profBonus)} />
           {/* Portage max — FOR × 7,5 kg × multiplicateur (feuille dédiée) */}
-          <div className="bg-parchment-100 rounded-xl p-3 text-center">
+          <div className="bg-parchment-100 rounded-xl p-3 text-center" data-tuto="stats-portage">
             <div className="text-xs font-medium text-ink-500 mb-1">{t('stats.portage.max')}</div>
             <button
               type="button"

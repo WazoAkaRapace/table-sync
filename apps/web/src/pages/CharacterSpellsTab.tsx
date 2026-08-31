@@ -536,7 +536,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
     <div className="space-y-4">
       {/* Caster resources: save DC line + slot rail */}
       {isCaster && (
-        <section className="card p-4 sm:p-5 space-y-2.5">
+        <section className="card p-4 sm:p-5 space-y-2.5" data-tuto="sorts-emplacements">
           <div className="flex items-center justify-between gap-2">
             <h2 className="section-title">{t('sorts.emplacements.de.sort')}</h2>
             <button
@@ -592,7 +592,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
       {/* Two-column layout on desktop: known spells (left) + catalog (right) */}
       <div className="grid lg:grid-cols-[3fr_2fr] gap-4 items-start min-w-0">
         {/* Known spells */}
-        <section className="card p-4 sm:p-5 space-y-3 min-w-0">
+        <section className="card p-4 sm:p-5 space-y-3 min-w-0" data-tuto="sorts-connus">
           <div className="flex items-center justify-between">
             <h2 className="section-title flex items-center gap-2">
               {t('sorts.sorts.connus')}{' '}
@@ -689,7 +689,10 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                 const maxSlots = slots[group.level - 1] ?? 0;
                 const remaining = maxSlots - (slotsUsed[group.level - 1] ?? 0);
                 return (
-                  <div key={group.level}>
+                  <div
+                    key={group.level}
+                    data-tuto={group.level === 0 ? 'sorts-cantrips' : undefined}
+                  >
                     <div className="flex items-baseline justify-between gap-2 mb-1.5">
                       <span className="text-xs font-semibold text-ink-400 uppercase tracking-wide">
                         {group.level === 0

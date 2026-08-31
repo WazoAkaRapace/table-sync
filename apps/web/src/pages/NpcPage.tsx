@@ -196,7 +196,7 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-2">
+      <div className="flex items-center justify-between flex-wrap gap-2" data-tuto="pnj-liste">
         <div className="flex items-center gap-3">
           {!embedded && <span className="text-sm text-ink-400">{t('pnj.titre')}</span>}
         </div>

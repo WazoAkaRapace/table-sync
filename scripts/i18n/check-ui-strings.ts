@@ -44,7 +44,14 @@ for (const file of walk(ROOT)) {
     // (`pnj.disposition.${d}`) : le mot-liste FR ne doit pas sanctionner
     // le wiring t() — seules les chaînes d'affichage comptent.
     .replace(/'([a-z0-9]+(?:\.[a-z0-9-]+)+)'/g, "''")
-    .replace(/`([a-z0-9]+(?:\.[a-z0-9-]+)+)\.\$\{/g, '`${');
+    .replace(/`([a-z0-9]+(?:\.[a-z0-9-]+)+)\.\$\{/g, '`${')
+    // Visite guidée : les ids d'étapes ({ id: 'portage', … }) et les cibles
+    // tuto('stats-portage') / data-tuto="stats-portage" sont des identifiants
+    // de logique (docs/tutorial-script.md), jamais du texte affiché.
+    .replace(/\bid: '[a-z0-9-]+'/g, "id: ''")
+    .replace(/\btuto\('[a-z0-9-]+'\)/g, "tuto('')")
+    .replace(/data-tuto="[^"]*"/g, 'data-tuto=""')
+    .replace(/dataTuto="[^"]*"/g, 'dataTuto=""');
   const n = [...src.matchAll(ACC)].length + [...src.matchAll(FR_UI)].length;
   if (n > 0) perFile[file.replace(`${ROOT}/`, '')] = n;
 }

@@ -343,7 +343,7 @@ export function SurvivalPanel({
   return (
     <>
       {/* ---------- 1. Vitalité — PV, mort, inspiration/concentration ---------- */}
-      <section className="card p-4 sm:p-5 space-y-3">
+      <section className="card p-4 sm:p-5 space-y-3" data-tuto="survie-vitalite">
         <h2 className="section-title">{t('survie.vitalite')}</h2>
         {/* While shaped, the hero tracks the beast's HP (routed server-side to wild_shape_hp) */}
         {character.wildShapeSlug ? (
@@ -527,7 +527,7 @@ export function SurvivalPanel({
       </section>
 
       {/* ---------- 2. États — conditions + épuisement ---------- */}
-      <section className="card p-4 sm:p-5 space-y-4">
+      <section className="card p-4 sm:p-5 space-y-4" data-tuto="survie-etats">
         <h2 className="section-title">{t('survie.etats')}</h2>
         <div>
           <span className="text-sm font-medium text-ink-700 block mb-1.5">
@@ -608,7 +608,7 @@ export function SurvivalPanel({
 
       {/* ---------- 3. Ressources de classe — traits du catalogue avec compteur ---------- */}
       {resourceFeatures.length > 0 && (
-        <section className="card p-4 sm:p-5 space-y-3">
+        <section className="card p-4 sm:p-5 space-y-3" data-tuto="survie-ressources">
           <h2 className="section-title">{t('survie.ressources.de.classe')}</h2>
           <div className="space-y-1.5">
             {resourceFeatures.map((feature) => {
@@ -681,7 +681,7 @@ export function SurvivalPanel({
       )}
 
       {/* ---------- 4. Repos — dés de vie et boutons réunis (l'économie de récupération) ---------- */}
-      <section className="card p-4 sm:p-5 space-y-3">
+      <section className="card p-4 sm:p-5 space-y-3" data-tuto="survie-repos">
         <h2 className="section-title">{t('survie.repos')}</h2>
         {(() => {
           // Dés de vie PAR LIGNE DE CLASSE (multiclassage SRD : le pool garde
@@ -702,7 +702,10 @@ export function SurvivalPanel({
             }
           };
           return (
-            <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div
+              className="flex items-center justify-between gap-2 flex-wrap"
+              data-tuto="survie-des-vie"
+            >
               <span className="text-sm font-medium text-ink-700 flex items-center gap-1.5">
                 {t('survie.des.de.vie')}
                 {dice.length === 1 ? (
@@ -776,7 +779,7 @@ export function SurvivalPanel({
         (() => {
           const shaped = !!character.wildShapeSlug;
           return (
-            <section className="card p-4 sm:p-5 space-y-2">
+            <section className="card p-4 sm:p-5 space-y-2" data-tuto="survie-forme">
               <div className="flex items-center justify-between gap-2">
                 <h2 className="section-title">{t('survie.forme.sauvage')}</h2>
                 {/* biome-ignore lint/a11y/useSemanticElements: fieldset would add its own border/margin styling and break the compact pips row. */}
@@ -893,7 +896,7 @@ export function SurvivalPanel({
         })()}
 
       {/* ---------- 6. Attaques — options équipées, furtive, sans arme ---------- */}
-      <section className="card p-4 sm:p-5 space-y-3">
+      <section className="card p-4 sm:p-5 space-y-3" data-tuto="survie-attaques">
         <h2 className="section-title">{t('survie.attaques')}</h2>
         {(() => {
           const equippedWeapons = entries.filter((e) => e.equipped && e.item.category === 'weapon');

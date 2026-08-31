@@ -315,7 +315,7 @@ export default function CharacterFeaturesTab({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between" data-tuto="traits-liste">
         <h2 className="section-title">
           {t('traits.traits')}{' '}
           <span className="text-ink-400 text-sm font-normal">({features.length})</span>
@@ -739,7 +739,7 @@ function CatalogCard({
   };
 
   return (
-    <div className="card p-4">
+    <div className="card p-4" data-tuto="traits-catalogue">
       <div className="flex items-center justify-between gap-2">
         <button
           type="button"

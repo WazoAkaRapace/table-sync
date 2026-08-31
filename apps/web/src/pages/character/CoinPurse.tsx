@@ -41,7 +41,7 @@ export function CoinPurse({ coins, readOnly = false, onChange, onBlur }: CoinPur
   const remCp = totalCp % 100;
 
   return (
-    <div>
+    <div data-tuto="inv-bourse">
       <button
         type="button"
         onClick={() => setExpanded((e) => !e)}
