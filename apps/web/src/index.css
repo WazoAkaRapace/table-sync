@@ -43,6 +43,11 @@
 :root {
   /* Light theme only — the app is parchment-themed, not dark-mode */
   color-scheme: light;
+  /* Hauteur réelle du header applicatif sticky (h-14 + encoche) : tout élément
+     sticky qui doit rester visible sous lui colle à
+     calc(var(--app-header-h) + marge) — jamais à top-0/2/3 nu, sinon il
+     s'enfonce derrière le header (vu sur Android, rail d'initiative combat). */
+  --app-header-h: calc(3.5rem + env(safe-area-inset-top));
 }
 
 html,

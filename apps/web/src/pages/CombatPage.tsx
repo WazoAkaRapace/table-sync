@@ -1008,7 +1008,7 @@ function CombatTheatre({
       }`}
     >
       {/* The rail — the whole field, always visible */}
-      <aside className="sticky top-2 z-30 -mx-1 bg-parchment-50/95 px-1 py-1 lg:sticky lg:top-3 lg:z-auto lg:mx-0 lg:max-h-[calc(100vh-5.5rem)] lg:overflow-y-auto lg:bg-transparent lg:px-0 lg:py-0">
+      <aside className="sticky top-[calc(var(--app-header-h)+0.5rem)] z-20 -mx-1 bg-parchment-50/95 px-1 py-1 lg:sticky lg:top-[calc(var(--app-header-h)+0.75rem)] lg:z-auto lg:mx-0 lg:max-h-[calc(100vh-var(--app-header-h)-2rem)] lg:overflow-y-auto lg:bg-transparent lg:px-0 lg:py-0">
         <InitiativeRail
           combatants={combatants}
           turnIndex={encounter.turnIndex}
@@ -1144,7 +1144,7 @@ function CombatTheatre({
 
       {/* Docked stat block (desktop) — rolls feed the damage chip above */}
       {isGM && (
-        <aside className="hidden max-h-[calc(100vh-6rem)] lg:sticky lg:top-3 lg:block">
+        <aside className="hidden lg:sticky lg:top-[calc(var(--app-header-h)+0.75rem)] lg:block lg:max-h-[calc(100vh-var(--app-header-h)-2rem)]">
           {statDock}
         </aside>
       )}

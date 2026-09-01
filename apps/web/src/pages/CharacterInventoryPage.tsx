@@ -864,10 +864,13 @@ export default function CharacterInventoryPage() {
       {/* ---------- Tab navigation — floating mobile dock with sliding indicator ---------- */}
       <div className="lg:hidden fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-30 max-w-[calc(100vw-2rem)]">
         {/* Combat status card — always visible, attached to the top of the dock.
-            Initiative pending: expands inline with input + dice. */}
+            Initiative pending: expands inline with input + dice.
+            Le rentré sous la pilule reste ≤ ~2px : l'anneau du hub central
+            affleure le bord haut de la pilule, un rentré plus profond fait
+            passer la carte SOUS le hub (jonction cassée, vu sur mobile). */}
         {hubCombat?.needsInitiative && hubCombat.myCombatantId ? (
           <div
-            className={`mb-[-6px] mx-auto w-fit max-w-full rounded-t-xl rounded-b-md shadow-md border border-b-0 overflow-hidden transition-all duration-300 bg-yellow-400 border-yellow-500 ${
+            className={`mb-[-1px] mx-auto w-fit max-w-full rounded-t-xl rounded-b-md shadow-md border border-b-0 overflow-hidden transition-all duration-300 bg-yellow-400 border-yellow-500 ${
               hubInitOpen ? 'max-h-44' : 'max-h-12'
             }`}
           >
@@ -951,7 +954,7 @@ export default function CharacterInventoryPage() {
           // initiative card above). One tap ends the turn; the link keeps the
           // path to the full tracker. band-rise: the same 0.2 s sentence the
           // Agir line speaks at the instant the turn becomes yours.
-          <div className="band-rise relative mb-[-6px] mx-auto w-fit max-w-full rounded-t-xl rounded-b-md shadow-md border border-b-0 bg-blood-600 border-blood-700 combat-turn-glow overflow-hidden">
+          <div className="band-rise relative mb-[-1px] mx-auto w-fit max-w-full rounded-t-xl rounded-b-md shadow-md border border-b-0 bg-blood-600 border-blood-700 combat-turn-glow overflow-hidden">
             <div className="relative px-3 py-1.5 text-xs font-bold text-parchment-50 text-center">
               {t('inv.a.toi.de.jouer')}
               <TurnSlash active={turnSlash} />
@@ -978,7 +981,7 @@ export default function CharacterInventoryPage() {
           hubCombat && (
             <Link
               to={`/party/${hubCombat.partyId}/combat?enc=${hubCombat.encounterId}`}
-              className="relative block mb-[-6px] mx-auto w-fit max-w-full px-3 py-1.5 rounded-t-xl rounded-b-md text-xs font-semibold shadow-md border border-b-0 transition-colors bg-ink-900 text-parchment-200 border-ink-700"
+              className="relative block mb-[-1px] mx-auto w-fit max-w-full px-3 py-1.5 rounded-t-xl rounded-b-md text-xs font-semibold shadow-md border border-b-0 transition-colors bg-ink-900 text-parchment-200 border-ink-700"
               aria-label={t('inv.combat.en.cours.ouvrir.le.traqueur')}
             >
               {hubCombat.currentCombatantName
