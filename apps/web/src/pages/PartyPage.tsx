@@ -24,7 +24,7 @@ import api from '../api';
 import { useAuth } from '../auth';
 import { ErrorMsg, LoadingSpinner } from '../components/ui';
 import { useSyncEvent } from '../sync';
-import { copyText } from '../utils';
+import { activeCharactersFirst, copyText } from '../utils';
 
 // ---------- Small pieces of the contents ----------
 
@@ -194,7 +194,17 @@ function MemberCharacters({
           >
             <Portrait c={c} size="sm" />
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-medium text-ink-800">{c.name}</span>
+              <span className="flex min-w-0 items-center gap-2">
+                <span className="truncate text-sm font-medium text-ink-800">{c.name}</span>
+                {c.hidden && (
+                  <span
+                    className="shrink-0 rounded-full bg-ink-100 px-2 py-0.5 text-[11px] font-medium text-ink-600"
+                    title={t('party.invisible.des.autres.joueurs.le.md')}
+                  >
+                    {t('party.cache')}
+                  </span>
+                )}
+              </span>
               {charMeta(c) && (
                 <span className="mt-0.5 block truncate text-xs text-ink-400">{charMeta(c)}</span>
               )}
@@ -345,10 +355,13 @@ export default function PartyPage() {
   if (!party) return <ErrorMsg message={t('party.groupe.introuvable')} />;
 
   const isGM = party.members.some((m) => m.userId === user?.id && m.role === 'gm');
-  const myCharacters = party.characters.filter((c) => c.ownerId === user?.id);
+  // Active sheets read first — hidden (secret prep) entries sink below their
+  // « Caché » marker, in section I as in the MD's section II rows.
+  const characters = activeCharactersFirst(party.characters);
+  const myCharacters = characters.filter((c) => c.ownerId === user?.id);
   const others = party.members.filter((m) => m.userId !== user?.id);
   const charsByOwner = new Map<number, CharacterSummary[]>();
-  for (const c of party.characters) {
+  for (const c of characters) {
     if (c.ownerId === user?.id) continue;
     const list = charsByOwner.get(c.ownerId) ?? [];
     list.push(c);

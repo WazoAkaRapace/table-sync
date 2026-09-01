@@ -66,6 +66,12 @@ export async function copyText(text: string): Promise<boolean> {
   }
 }
 
+/** Active sheets read first — hidden (secret prep) entries sink below their
+ *  « Caché » marker. Stable, so the API's name order holds within each group. */
+export function activeCharactersFirst<T extends { hidden: boolean }>(characters: T[]): T[] {
+  return [...characters].sort((a, b) => Number(a.hidden) - Number(b.hidden));
+}
+
 /**
  * Decode an image file, matte it on WHITE, downscale the long edge to
  * `maxEdge` and re-encode as a JPEG Blob (illustrations: a card or letter

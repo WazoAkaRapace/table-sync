@@ -37,6 +37,7 @@ import {
 } from '../components/ui';
 import { appLocale } from '../i18n';
 import { useSyncEvent } from '../sync';
+import { activeCharactersFirst } from '../utils';
 
 interface Transaction {
   id: number;
@@ -347,9 +348,12 @@ function CharactersTab({
     );
   }
 
+  // Active sheets read first — hidden (secret prep) cards sink below their marker.
+  const ordered = activeCharactersFirst(characters);
+
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {characters.map((c) => {
+      {ordered.map((c) => {
         const inv = inventories[c.id];
         const entries = inv?.entries || [];
         const dexMod = abilityModifier(c.dexterity ?? 10);

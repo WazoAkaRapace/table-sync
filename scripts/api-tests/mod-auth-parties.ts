@@ -181,8 +181,9 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
     6,
     'invite code is exactly 6 chars (matches the join input maxLength)',
   );
-  // Hidden Ombre: GM sees it in characterNames
-  ok(mine[0].characterNames.includes('Ombre'), 'GM sees hidden character name');
+  // Hidden Ombre: the register writes active characters only — GM included
+  ok(!mine[0].characterNames.includes('Ombre'), 'register omits hidden character (GM view)');
+  eq(mine[0].characterCount, 2, 'register counts active characters only (GM view)');
 
   r = await api(base, 'GET', '/api/parties', { token: fx.player.token });
   const bobParty = r.data.parties.find((p: any) => p.id === fx.partyId);

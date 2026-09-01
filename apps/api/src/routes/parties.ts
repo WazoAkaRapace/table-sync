@@ -58,8 +58,9 @@ export async function partyRoutes(app: FastifyInstance) {
       )
       .all();
     // Roster names for the register's current entry — parties are few, one batched query.
-    // Hidden characters of other owners stay out of the names AND the count
-    // (the GM still sees them — GM runs the game).
+    // The register writes ACTIVE characters only: hidden (secret prep) sheets
+    // stay out of the names AND the count for everyone — the party page and
+    // the GM dashboard carry them, with their « Caché » marker.
     const partyIds: number[] = rows.map((r: any) => r.id);
     const rosterByParty = new Map<number, string[]>();
     if (partyIds.length > 0) {
@@ -68,14 +69,13 @@ export async function partyRoutes(app: FastifyInstance) {
           party_id: characters.partyId,
           name: characters.name,
           hidden: characters.hidden,
-          owner_id: characters.ownerId,
         })
         .from(characters)
         .where(inArray(characters.partyId, partyIds))
         .orderBy(sql`${characters.name} COLLATE NOCASE ASC`)
         .all() as any[];
       for (const nr of nameRows) {
-        if (nr.hidden && nr.owner_id !== userId && !isPartyGM(nr.party_id, userId)) continue;
+        if (nr.hidden) continue;
         const list = rosterByParty.get(nr.party_id) ?? [];
         list.push(nr.name);
         rosterByParty.set(nr.party_id, list);
