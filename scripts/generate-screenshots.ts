@@ -761,6 +761,23 @@ async function newSession(browser: Browser, session: Session): Promise<BrowserCo
       localStorage.setItem('dnd-inv-token', token);
       localStorage.setItem('dnd-inv-user', JSON.stringify(user));
       localStorage.setItem('dnd-inv-tour-seen', '1');
+      // Visites propres d'onglet éteintes elles aussi : sans cette clé, le
+      // premier changement d'onglet ouvre le spotlight react-joyride qui
+      // intercepte les clics du pilotage (même liste que e2e/fixtures.ts).
+      localStorage.setItem(
+        'dnd-inv-tour-tabs',
+        JSON.stringify([
+          'survival',
+          'stats',
+          'spells',
+          'skills',
+          'inventory',
+          'features',
+          'description',
+          'npcs',
+          'notes',
+        ]),
+      );
       // Interface EN : i18next lit cette clé au chargement, et l'axios de
       // l'app en déduit l'en-tête Accept-Language des payloads mono-locale.
       if (langCode === 'en') localStorage.setItem('dnd-inv-lang', 'en');
