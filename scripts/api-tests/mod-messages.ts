@@ -336,6 +336,24 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
     await new Promise((res) => setTimeout(res, 400));
     eq(mock.requests.length, 0, 'own-character send pushes nobody');
 
+    // Sa propre note ne l'attend pas : sur un personnage DU MD, le MD est
+    // expéditeur ET propriétaire — les compteurs « non lus côté MD » doivent
+    // l'ignorer (sinon la pastille ne descend jamais, régression vécue).
+    r = await api(base, 'GET', `/api/characters/${A}/messages`, { token: fx.gm.token });
+    eq(r.data.unread, 0, 'thread view: own note not unread');
+    r = await api(base, 'GET', `/api/parties/${fx.partyId}/messages/unread`, {
+      token: fx.gm.token,
+    });
+    eq(r.data.byCharacter[String(A)], undefined, 'badge route ignores the own note');
+    r = await api(base, 'GET', `/api/parties/${fx.partyId}/message-threads`, {
+      token: fx.gm.token,
+    });
+    eq(
+      (r.data.threads as any[]).find((t: any) => t.characterId === A)?.unread,
+      0,
+      'inbox chip ignores the own note',
+    );
+
     // ---------- persistance ----------
     const rows = srv.queryAll(
       'SELECT character_id, party_id, sender_user_id, read_at FROM character_messages WHERE character_id = ? ORDER BY id',

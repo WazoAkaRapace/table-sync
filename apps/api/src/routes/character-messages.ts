@@ -335,7 +335,12 @@ export async function characterMessageRoutes(app: FastifyInstance) {
         mapMessage({ ...r, sender_name: names.get(r.sender_user_id) }, gmSet),
       );
       const last = mapped.length > 0 ? mapped[mapped.length - 1] : null;
-      const unread = mapped.filter((m) => !m.readAt && m.senderUserId === c.owner_id).length;
+      // GM-side waiting = owner-sent by a NON-GM. On a GM-owned character
+      // (préparation secrète), the MD's own notes are sender AND recipient —
+      // they never count as waiting for the MD.
+      const unread = mapped.filter(
+        (m) => !m.readAt && m.senderUserId === c.owner_id && !gmSet.has(m.senderUserId),
+      ).length;
       return {
         characterId: c.id,
         characterName: c.name,
@@ -393,12 +398,15 @@ export async function characterMessageRoutes(app: FastifyInstance) {
 
     const unread: UnreadMessages = { byCharacter: {}, total: 0 };
     for (const c of scope) {
-      // GM side waits for owner-sent; player side waits for GM-sent
+      // GM side waits for owner-sent by a NON-GM (the MD's own notes on a
+      // GM-owned character wait for nobody); player side waits for GM-sent
       const count = rows.filter(
         (r) =>
           r.character_id === c.id &&
           !r.read_at &&
-          (isGM ? r.sender_user_id === c.owner_id : gmSet.has(r.sender_user_id)),
+          (isGM
+            ? r.sender_user_id === c.owner_id && !gmSet.has(r.sender_user_id)
+            : gmSet.has(r.sender_user_id)),
       ).length;
       if (count > 0) {
         unread.byCharacter[String(c.id)] = count;
