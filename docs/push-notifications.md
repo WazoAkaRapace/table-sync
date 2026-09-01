@@ -45,6 +45,14 @@ sw.js (push-only, aucun cache)
   scope du SW (`new URL(p, self.registration.scope)`) : Chrome Android ne
   résout pas les chemins relatifs du champ `icon` et rend un carré blanc
   (desktop s'en accommode) — vécu sur l'appareil, corrigé 2026-09.
+  Le **grand icône** est le sceau (`icon-seal-192.png`, emblème sur disque
+  blanc — l'icône carrée sombre de l'app est illisible sur la nuance
+  sombre) ; le **petit icône** d'Android est un masque alpha teinté : il
+  vient du manifest `purpose: "monochrome"` (`icon-mono.svg`, d20 en trait
+  blanc sur transparent — l'emblème complet, sombre à ~95 % opaque, s'y
+  rendrait en carré plein). ⚠️ le petit icône est figé dans la WebAPK :
+  Android le resynchronise de façon asynchrone après un changement de
+  manifest (jusqu'à ~24 h, ou réinstaller la PWA pour forcer).
 - **Suppression « fenêtre visible »** : si l'app est ouverte à l'écran, le SW
   ne montre pas la notification (le widget de combat/TurnSlash informe déjà).
   C'est la seule suppression v1 — pas de vérification de connexion WS côté

@@ -34,11 +34,15 @@ self.addEventListener('push', (event) => {
       // relatifs du champ `icon` et rend un carré blanc — desktop, lui, s'en
       // accommode. Résolution contre le scope, pas origin, pour rester juste
       // si l'app vit sous un sous-chemin.
+      // Grand icône = le SCEAU (emblème sur disque blanc) : l'icône carrée
+      // sombre de l'app est illisible sur la nuance sombre d'Android. Le
+      // PETIT icône (masque alpha teinté) vient du manifest purpose
+      // "monochrome" — voir icon-mono.svg.
       const abs = (p) => new URL(p, self.registration.scope).href;
       await self.registration.showNotification(payload.title || 'Table Sync', {
         body: payload.body || '',
-        icon: abs('/icon-192.png'),
-        badge: abs('/icon-maskable-192.png'),
+        icon: abs('/icon-seal-192.png'),
+        badge: abs('/icon-mono-192.png'),
         // Même tag = la nouvelle notification remplace la précédente.
         tag: payload.tag,
         data: { url: payload.url || '/parties' },

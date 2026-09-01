@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Table Sync — d20 monochrome">
+  <!-- Icône MONOCHROME (manifest purpose="monochrome") : le d20 du sceau en
+       trait plat blanc sur transparent. Android teinte les petits icônes de
+       notification en masque alpha — l'emblème complet (carré sombre plein)
+       s'y rend en carré vide ; seul un glyph creux reste lisible. -->
+  <g
+    transform="translate(256 262) scale(2.45) translate(-328 -318)"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="14"
+    stroke-linejoin="round"
+    stroke-linecap="round"
+  >
+    <polygon points="328,236 412,284 378,392 278,392 244,284" />
+    <path d="M328 256 L382 288 L360 366 L296 366 L274 288 Z" />
+    <path d="M328 236 L328 256" />
+    <path d="M412 284 L382 288" />
+    <path d="M378 392 L360 366" />
+    <path d="M278 392 L296 366" />
+    <path d="M244 284 L274 288" />
+  </g>
+</svg>
