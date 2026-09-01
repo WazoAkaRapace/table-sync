@@ -21,6 +21,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { type MockGmaHandle, startMockGma } from './mock-gma.ts';
+import { type MockMailjetHandle, startMockMailjet } from './mock-mailjet.ts';
 import { type MockPushHandle, startMockPush } from './mock-push.ts';
 
 const require = createRequire(import.meta.url);
@@ -159,15 +160,21 @@ export interface ServerHandle {
   gma: MockGmaHandle;
   /** The mock push service the subscriptions point at (their endpoints). */
   push: MockPushHandle;
+  /** The mock Mailjet API the transactional emails go to (MAILJET_API_URL). */
+  mailjet: MockMailjetHandle;
   /** Read-only query against the live test DB (WAL allows concurrent readers). */
   query: (sql: string, ...params: unknown[]) => any;
   queryAll: (sql: string, ...params: unknown[]) => any[];
+  /** Write against the live test DB — staging only (e.g. backdating an expiry). */
+  exec: (sql: string, ...params: unknown[]) => void;
   stop: () => Promise<void>;
 }
 
 export interface StartServerOptions {
   /** Boot WITHOUT the VAPID env vars — the push-disabled code path. */
   withoutVapid?: boolean;
+  /** Boot WITHOUT the Mailjet env vars — the email-disabled code path. */
+  withoutEmail?: boolean;
 }
 
 export async function startServer(opts: StartServerOptions = {}): Promise<ServerHandle> {
@@ -176,6 +183,7 @@ export async function startServer(opts: StartServerOptions = {}): Promise<Server
   const port = await freePort(preferred);
   const gmaMock = await startMockGma();
   const pushMock = await startMockPush();
+  const mailjetMock = await startMockMailjet();
   // Real VAPID keypair per run: the signing + encryption code paths only
   // engage with valid key material.
   const vapid = webpush.generateVAPIDKeys();
@@ -210,6 +218,17 @@ export async function startServer(opts: StartServerOptions = {}): Promise<Server
             VAPID_PUBLIC_KEY: vapid.publicKey,
             VAPID_PRIVATE_KEY: vapid.privateKey,
             VAPID_SUBJECT: 'mailto:test-api@example.com',
+          }),
+      // Emails transactionnels : on par défaut ; `withoutEmail` boote le
+      // chemin désactivé. Le provider (notre fetch) pointe vers le mock HTTP.
+      ...(opts.withoutEmail
+        ? {}
+        : {
+            MAILJET_API_URL: mailjetMock.url,
+            MAILJET_API_KEY: 'test-mailjet-key',
+            MAILJET_API_SECRET: 'test-mailjet-secret',
+            EMAIL_FROM_ADDRESS: 'no-reply@test-table-sync.fr',
+            EMAIL_FROM_NAME: 'Table Sync Test',
           }),
     },
     stdio: ['ignore', 'pipe', 'pipe'],
@@ -258,6 +277,12 @@ export async function startServer(opts: StartServerOptions = {}): Promise<Server
     if (!roConn) roConn = new Database(dbPath, { readonly: true });
     return params.length > 0 ? roConn.prepare(sql).all(...params) : roConn.prepare(sql).all();
   };
+  let rwConn: any = null;
+  const exec = (sql: string, ...params: unknown[]) => {
+    if (!rwConn) rwConn = new Database(dbPath);
+    if (params.length > 0) rwConn.prepare(sql).run(...params);
+    else rwConn.prepare(sql).run();
+  };
 
   const stop = async () => {
     child.kill('SIGTERM');
@@ -276,8 +301,14 @@ export async function startServer(opts: StartServerOptions = {}): Promise<Server
     } catch {
       /* already closed */
     }
+    try {
+      rwConn?.close();
+    } catch {
+      /* already closed */
+    }
     await gmaMock.stop();
     await pushMock.stop();
+    await mailjetMock.stop();
     rmSync(dir, { recursive: true, force: true });
   };
 
@@ -290,8 +321,10 @@ export async function startServer(opts: StartServerOptions = {}): Promise<Server
     child,
     gma: gmaMock,
     push: pushMock,
+    mailjet: mailjetMock,
     query,
     queryAll,
+    exec,
     stop,
   };
 }

@@ -17,6 +17,12 @@ interface AuthState {
   logout: () => void;
   /** Recharge l'utilisateur courant depuis /me (profil modifié ailleurs). */
   refreshUser: () => Promise<User>;
+  /**
+   * Adopte une session déjà authentifiée (réinitialisation de mot de passe :
+   * l'API renvoie {token, user} comme login). Publique ici pour que la page
+   * de reset branche le contexte sans dupliquer les clés localStorage.
+   */
+  adoptSession: (token: string, user: User) => void;
 }
 
 const AuthContext = createContext<AuthState>(null!);
@@ -109,8 +115,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }, []);
 
+  const adoptSession = useCallback((t: string, u: User) => {
+    localStorage.setItem('dnd-inv-token', t);
+    localStorage.setItem('dnd-inv-user', JSON.stringify(u));
+    setToken(t);
+    setUser(u);
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, refreshUser }}>
+    <AuthContext.Provider
+      value={{ user, token, loading, login, register, logout, refreshUser, adoptSession }}
+    >
       {children}
     </AuthContext.Provider>
   );

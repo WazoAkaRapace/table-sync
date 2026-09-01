@@ -19,6 +19,16 @@ services:
       # for direct access. TRUST_PROXY=true makes the rate limiter key on
       # X-Real-IP again — only safe when you accept spoofable keys (dev).
       - TRUST_PROXY=true
+      # Optionnel : Web Push (les trois VAPID ensemble, sinon désactivé)
+      - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY:-}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY:-}
+      - VAPID_SUBJECT=${VAPID_SUBJECT:-}
+      # Optionnel : emails transactionnels (réinitialisation de mot de passe)
+      - MAILJET_API_KEY=${MAILJET_API_KEY:-}
+      - MAILJET_API_SECRET=${MAILJET_API_SECRET:-}
+      - EMAIL_FROM_ADDRESS=${EMAIL_FROM_ADDRESS:-}
+      - EMAIL_FROM_NAME=${EMAIL_FROM_NAME:-}
+      - APP_URL=${APP_URL:-}
     restart: unless-stopped
 
   web:

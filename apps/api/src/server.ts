@@ -12,6 +12,7 @@ import { backfillItemBases } from './db/backfill.ts';
 import { runDrizzleMigrations } from './db/drizzle.ts';
 import { migrate } from './db/index.ts';
 import { seedItems, seedMonsters, seedSpells } from './db/seed.ts';
+import { emailEnabled } from './email/config.ts';
 import { pushEnabled } from './push/config.ts';
 import { errorRateLimit } from './rateLimit.ts';
 import { authRoutes } from './routes/auth.ts';
@@ -109,6 +110,9 @@ async function buildServer() {
       url === '/api/auth/login' ||
       url === '/api/auth/register' ||
       url === '/api/auth/logout' ||
+      url === '/api/auth/forgot-password' ||
+      url === '/api/auth/reset-password' ||
+      url === '/api/auth/verify-email' ||
       url === '/ws' ||
       /^\/api\/items\/\d+\/image$/.test(url)
     ) {
@@ -180,6 +184,11 @@ async function start() {
       pushEnabled
         ? '🔔 Push notifications: activé'
         : '🔕 Push notifications: désactivé (VAPID absent)',
+    );
+    console.log(
+      emailEnabled
+        ? '📧 Emails transactionnels: activé (mailjet)'
+        : '📭 Emails transactionnels: désactivés (MAILJET absent)',
     );
   } catch (err) {
     app.log.error(err);

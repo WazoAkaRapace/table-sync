@@ -35,6 +35,9 @@ const TIGHT_ROUTES = new Set([
   '/api/auth/login',
   '/api/auth/register',
   '/api/auth/password',
+  '/api/auth/forgot-password',
+  '/api/auth/reset-password',
+  '/api/auth/verify-email',
   '/api/parties/join',
 ]);
 

@@ -19,6 +19,7 @@ import {
 import { run as authParties } from './api-tests/mod-auth-parties.ts';
 import { run as characters } from './api-tests/mod-characters.ts';
 import { run as combat } from './api-tests/mod-combat.ts';
+import { run as email } from './api-tests/mod-email.ts';
 import { run as featuresNotes } from './api-tests/mod-features-notes.ts';
 import { run as gma } from './api-tests/mod-gma.ts';
 import { run as inventory } from './api-tests/mod-inventory.ts';
@@ -51,6 +52,7 @@ const MODULES: Array<{
   { name: 'wild shape + rests', run: wildshapeRest },
   { name: 'websocket sync', run: syncWs },
   { name: 'push notifications', run: push },
+  { name: 'emails transactionnels', run: email },
 ];
 
 async function main(): Promise<void> {

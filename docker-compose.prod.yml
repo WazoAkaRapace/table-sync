@@ -29,6 +29,14 @@ services:
       - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY:-}
       - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY:-}
       - VAPID_SUBJECT=${VAPID_SUBJECT:-}
+      # Emails transactionnels (reset + vérification) — tout-ou-rien comme
+      # VAPID : clés Mailjet + expéditeur vérifié, sinon forgot-password
+      # répond 503 (docs/transactional-emails.md).
+      - MAILJET_API_KEY=${MAILJET_API_KEY:-}
+      - MAILJET_API_SECRET=${MAILJET_API_SECRET:-}
+      - EMAIL_FROM_ADDRESS=${EMAIL_FROM_ADDRESS:-}
+      - EMAIL_FROM_NAME=${EMAIL_FROM_NAME:-}
+      - APP_URL=${APP_URL:-}
     restart: unless-stopped
 
   web:

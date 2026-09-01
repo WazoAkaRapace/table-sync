@@ -73,6 +73,11 @@ export default function LoginPage() {
           <button type="submit" className="btn-primary w-full" disabled={loading}>
             {loading ? t('auth.connexion.points') : t('auth.se.connecter')}
           </button>
+          <p className="text-center text-sm">
+            <Link to="/mot-de-passe-oublie" className="text-ink-400 hover:underline">
+              {t('login.mot.de.passe.oublie')}
+            </Link>
+          </p>
         </form>
         <p className="text-center text-sm text-ink-400 mt-4">
           {t('auth.pas.de.compte')}{' '}

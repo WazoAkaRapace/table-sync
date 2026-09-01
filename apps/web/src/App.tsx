@@ -19,12 +19,15 @@ const CharacterCreatePage = lazy(() => import('./pages/CharacterCreatePage'));
 const CharacterInventoryPage = lazy(() => import('./pages/CharacterInventoryPage'));
 const ChroniclePage = lazy(() => import('./pages/ChroniclePage'));
 const CombatPage = lazy(() => import('./pages/CombatPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
 const GmDashboardPage = lazy(() => import('./pages/GmDashboardPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const NpcPage = lazy(() => import('./pages/NpcPage'));
 const PartiesPage = lazy(() => import('./pages/PartiesPage'));
 const PartyPage = lazy(() => import('./pages/PartyPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
+const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage'));
 
 function SyncIndicator() {
   const { status } = useSync();
@@ -286,6 +289,9 @@ export default function App() {
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/mot-de-passe-oublie" element={<ForgotPasswordPage />} />
+            <Route path="/reinitialiser-mot-de-passe" element={<ResetPasswordPage />} />
+            <Route path="/verifier-email" element={<VerifyEmailPage />} />
             <Route
               path="/compte"
               element={

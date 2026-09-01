@@ -141,6 +141,13 @@ export interface User {
   displayName: string;
   /** Null pour les comptes créés avant l'ajout de l'email (optionnel pour eux). */
   email: string | null;
+  /** NULL = adresse non vérifiée (clic sur le lien de vérification en attente). */
+  emailVerifiedAt: string | null;
+  /**
+   * Changement d'adresse en attente de vérification : l'adresse `email`
+   * (vérifiée) reste active jusqu'au clic sur le lien envoyé à celle-ci.
+   */
+  pendingEmail: string | null;
   createdAt: string;
 }
 
@@ -171,6 +178,24 @@ export interface UpdateProfilePayload {
 export interface ChangePasswordPayload {
   currentPassword: string;
   newPassword: string;
+}
+
+/** POST /api/auth/forgot-password — la réponse est toujours générique (anti-énumération). */
+export interface ForgotPasswordPayload {
+  email: string;
+  /** Langue de l'e-mail envoyé ('fr' | 'en'), figée au moment de la demande. */
+  locale?: 'fr' | 'en';
+}
+
+/** POST /api/auth/reset-password — succès = AuthResponse (auto-login après reset). */
+export interface ResetPasswordPayload {
+  token: string;
+  newPassword: string;
+}
+
+/** POST /api/auth/verify-email — consommation du lien de vérification. */
+export interface VerifyEmailPayload {
+  token: string;
 }
 
 // ---------- Parties ----------

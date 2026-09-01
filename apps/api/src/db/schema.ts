@@ -42,6 +42,13 @@ export const users = sqliteTable('users', {
   // restent sans email (nullable). Unique sans COLLATE NOCASE : la
   // normalisation applicative suffit, pas de rebuild de table.
   email: text('email').unique('users_email_unique'),
+  // NULL = adresse non vérifiée. Renseigné par le clic sur le lien de
+  // vérification (ou par un reset de mot de passe réussi : le clic sur le
+  // lien e-mail prouve la maîtrise de la boîte).
+  emailVerifiedAt: text('email_verified_at'),
+  // Changement en attente : l'adresse vérifiée reste active jusqu'à ce que
+  // la nouvelle prouve la boîte via son propre lien (unique, NULL multiples ok).
+  pendingEmail: text('pending_email').unique('users_pending_email_unique'),
   createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
 });
 
@@ -705,6 +712,55 @@ export const pushSubscriptions = sqliteTable(
     lastUsedAt: text('last_used_at'),
   },
   (t) => [index('idx_push_subscriptions_user').on(t.userId)],
+);
+
+// ---------- Emails transactionnels (réinitialisation de mot de passe) ----------
+
+/**
+ * Jetons de réinitialisation de mot de passe. Seul le SHA-256 hexadécimal du
+ * jeton est stocké — le jeton brut ne vit que dans le lien e-mail. Un seul
+ * jeton actif par utilisateur (les non-consommés sont supprimés à chaque
+ * demande). `locale` fige la langue de l'e-mail au moment de la demande,
+ * même principe que push_subscriptions.locale.
+ */
+export const passwordResetTokens = sqliteTable(
+  'password_reset_tokens',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    tokenHash: text('token_hash').notNull().unique('password_reset_tokens_hash_unique'),
+    locale: text('locale').notNull().default('fr'),
+    expiresAt: text('expires_at').notNull(),
+    // NULL = en attente ; renseigné à la consommation (usage unique).
+    usedAt: text('used_at'),
+    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+  },
+  (t) => [index('idx_password_reset_tokens_user').on(t.userId)],
+);
+
+/**
+ * Jetons de vérification d'adresse e-mail — mêmes règles de stockage que les
+ * jetons de reset (SHA-256 seulement, usage unique, un seul actif par
+ * utilisateur, locale figée à la demande). TTL plus long (24 h) : la
+ * vérification n'est pas une opération critique comme un changement de mot
+ * de passe.
+ */
+export const emailVerificationTokens = sqliteTable(
+  'email_verification_tokens',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    tokenHash: text('token_hash').notNull().unique('email_verification_tokens_hash_unique'),
+    locale: text('locale').notNull().default('fr'),
+    expiresAt: text('expires_at').notNull(),
+    usedAt: text('used_at'),
+    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+  },
+  (t) => [index('idx_email_verification_tokens_user').on(t.userId)],
 );
 
 /** Mapping local character ↔ GMA player character (written by init + resync). */

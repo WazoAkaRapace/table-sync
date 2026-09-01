@@ -39,6 +39,10 @@ export default function AccountPage() {
   const [passwordError, setPasswordError] = useState('');
   const [savingPassword, setSavingPassword] = useState(false);
 
+  // Renvoi du lien de vérification d'adresse (état ci-dessous : les hooks
+  // doivent rester au-dessus du garde `if (!user)`).
+  const [resendingVerify, setResendingVerify] = useState(false);
+
   // Notifications push — état de CE navigateur. Le useEffect reste au-dessus
   // du garde `if (!user)` : les hooks doivent tourner avant tout retour anticipé.
   const [pushConfig, setPushConfig] = useState<{
@@ -108,6 +112,18 @@ export default function AccountPage() {
       setProfileError(err.response?.data?.error || t('account.enregistrement.impossible'));
     } finally {
       setSavingProfile(false);
+    }
+  }
+
+  async function resendVerification() {
+    setResendingVerify(true);
+    try {
+      await api.post('/api/auth/verify-email/resend');
+      pushToast(t('account.email.lien.renvoye'));
+    } catch (err: any) {
+      pushToast(err.response?.data?.error || t('account.email.renvoi.impossible'), 'error');
+    } finally {
+      setResendingVerify(false);
     }
   }
 
@@ -222,9 +238,16 @@ export default function AccountPage() {
             <p className="text-xs text-ink-400 mt-1">{t('account.c.est.le.nom.que.voit')}</p>
           </div>
           <div>
-            <label className="label" htmlFor="account-email">
-              {t('auth.adresse.e.mail')}
-            </label>
+            <div className="flex items-center gap-2">
+              <label className="label" htmlFor="account-email">
+                {t('auth.adresse.e.mail')}
+              </label>
+              {user.email && user.emailVerifiedAt && !user.pendingEmail && (
+                <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
+                  ✓ {t('account.email.verifiee')}
+                </span>
+              )}
+            </div>
             <input
               id="account-email"
               name="email"
@@ -236,7 +259,37 @@ export default function AccountPage() {
               autoComplete="email"
               inputMode="email"
             />
-            {user.email ? (
+            {user.pendingEmail ? (
+              <div className="mt-2 rounded-lg border border-gold-300 bg-gold-100/60 px-3 py-2">
+                <p className="text-xs text-ink-600">
+                  {t('account.email.en.attente', { email: user.pendingEmail })}
+                </p>
+                <button
+                  type="button"
+                  className="text-xs font-medium text-blood-600 hover:underline mt-1"
+                  onClick={resendVerification}
+                  disabled={resendingVerify}
+                >
+                  {resendingVerify
+                    ? t('account.email.renvoi.points')
+                    : t('account.email.renvoyer.le.lien')}
+                </button>
+              </div>
+            ) : user.email && !user.emailVerifiedAt ? (
+              <div className="mt-2 flex items-center justify-between gap-3">
+                <p className="text-xs text-ink-400">{t('account.email.non.verifiee')}</p>
+                <button
+                  type="button"
+                  className="text-xs font-medium text-blood-600 hover:underline shrink-0"
+                  onClick={resendVerification}
+                  disabled={resendingVerify}
+                >
+                  {resendingVerify
+                    ? t('account.email.renvoi.points')
+                    : t('account.email.renvoyer.le.lien')}
+                </button>
+              </div>
+            ) : user.email ? (
               <p className="text-xs text-ink-400 mt-1">
                 {t('account.laissez.vide.pour.retirer.votre.adresse')}
               </p>
