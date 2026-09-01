@@ -91,6 +91,10 @@ export default function MessageThread({ charId, characterName, ownerName, onErro
         setMarkedUnread(unread);
         queryClient.invalidateQueries({ queryKey });
         queryClient.invalidateQueries({ queryKey: ['messages-unread'] });
+        // Le registre de la boîte MD doit aussi retomber : l'événement WS
+        // « lu » part à l'AUTRE camp — le lecteur n'a que cette invalidation
+        // locale pour voir sa propre pastille s'éteindre.
+        queryClient.invalidateQueries({ queryKey: ['message-threads'] });
         // Une bannière d'arrivée pour CE fil n'a plus de raison d'être
         window.dispatchEvent(new CustomEvent('table-sync:message-read', { detail: { charId } }));
       })
@@ -127,6 +131,10 @@ export default function MessageThread({ charId, characterName, ownerName, onErro
       autoGrow();
       justSent.current = true;
       await queryClient.invalidateQueries({ queryKey });
+      // L'envoi rafraîchit aussi le registre (aperçu + ordre) : l'écho WS ne
+      // revient jamais à l'expéditeur.
+      await queryClient.invalidateQueries({ queryKey: ['message-threads'] });
+      await queryClient.invalidateQueries({ queryKey: ['messages-unread'] });
     } catch (err: any) {
       // Le brouillon reste en zone de saisie — jamais de perte silencieuse
       const tooLong = err?.response?.status === 400;
