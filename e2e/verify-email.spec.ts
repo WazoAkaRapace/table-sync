@@ -61,6 +61,40 @@ test.describe('page de vérification', () => {
   });
 });
 
+playerTest.describe('page de vérification — session présente', () => {
+  playerTest(
+    'régression : un seul POST malgré le /me de démarrage qui remplace l’objet user',
+    async ({ page }) => {
+      // Reproduit la course qui affichait « lien invalide » alors que la
+      // vérification avait réussi : le /me de démarrage résout APRÈS le montage
+      // et remplace l'objet user du contexte → l'effet (avant le garde
+      // firedRef) rejouait le POST sur un jeton déjà consommé.
+      let verifyCalls = 0;
+      await page.route('**/api/auth/verify-email', (route) => {
+        verifyCalls++;
+        return route.fulfill({
+          json: { user: meStub({ emailVerifiedAt: '2026-08-31 12:00:00' }) },
+        });
+      });
+      await page.route('**/api/auth/me', async (route) => {
+        // Objet NEUF (référence différente) livré tard : le remplacement de
+        // user est ce qui relançait l'effet.
+        await new Promise((r) => setTimeout(r, 400));
+        return route.fulfill({
+          json: { user: meStub({ emailVerifiedAt: '2026-08-31 12:00:00' }) },
+        });
+      });
+
+      await page.goto(`${VERIFY}?token=jeton-e2e-valide`);
+      await expect(page.getByText('Adresse vérifiée — merci !')).toBeVisible();
+      // Le succès reste affiché après la résolution tardive du /me.
+      await page.waitForTimeout(800);
+      await expect(page.getByText(/invalide ou expiré/)).toHaveCount(0);
+      expect(verifyCalls).toBe(1);
+    },
+  );
+});
+
 playerTest.describe('Mon compte — état de vérification', () => {
   playerTest('adresse non vérifiée : note + renvoi (stub /me)', async ({ page }) => {
     await page.route('**/api/auth/me', (route) =>

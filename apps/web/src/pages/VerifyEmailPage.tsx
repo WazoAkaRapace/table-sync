@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import api from '../api';
@@ -14,7 +14,20 @@ export default function VerifyEmailPage() {
   const [state, setState] = useState<'pending' | 'ok' | 'error'>('pending');
   const [error, setError] = useState('');
 
+  // La consommation doit partir EXACTEMENT une fois par chargement de page :
+  // le jeton est à usage unique, et l'objet user du contexte est remplacé par
+  // le /me de démarrage (et StrictMode remonte les effets en dev) — un second
+  // POST rejouerait un jeton consommé et écraserait le succès par « lien
+  // invalide » alors que la vérification a BIEN eu lieu.
+  const firedRef = useRef(false);
+  const userRef = useRef(user);
+  userRef.current = user;
+  const refreshRef = useRef(refreshUser);
+  refreshRef.current = refreshUser;
+
   useEffect(() => {
+    if (firedRef.current) return;
+    firedRef.current = true;
     const token = new URLSearchParams(window.location.search).get('token') || '';
     if (!token) {
       setState('error');
@@ -29,13 +42,13 @@ export default function VerifyEmailPage() {
         // vérifié sans reconnexion. Sans session, on ne touche PAS /me —
         // l'intercepteur 401 du client API redirigerait vers /login et
         // masquerait l'écran de succès.
-        if (user) await refreshUser().catch(() => {});
+        if (userRef.current) await refreshRef.current().catch(() => {});
       })
       .catch((err: any) => {
         setState('error');
         setError(err.response?.data?.error || t('verify.invalide'));
       });
-  }, [t, user, refreshUser]);
+  }, [t]);
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
