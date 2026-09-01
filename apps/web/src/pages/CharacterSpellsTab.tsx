@@ -991,7 +991,10 @@ function SlotRail({
           {note && <span className="text-[11px] text-gold-600">{note}</span>}
         </div>
       )}
-      <div className="flex gap-1.5 overflow-x-auto pb-0.5 scroll-smooth-touch">
+      {/* p-0.5 : le ring-1 (ancre pacte / niveau sélectionné) peint 1px HORS
+          boîte — sans dégagement le scroll container (overflow-x-auto rogne
+          aussi en Y) le tranche net en haut et aux extrémités. */}
+      <div className="flex gap-1.5 overflow-x-auto p-0.5 scroll-smooth-touch">
         {levels.map(({ level: lvl, max, used }) => {
           const remaining = max - used;
           const drained = remaining === 0;
