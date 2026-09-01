@@ -125,6 +125,16 @@ Règles :
 | `POST /api/push/unsubscribe` | `{ endpoint }` — suppression, scopée à l'appelant |
 | `POST /api/push/test` | envoie la notification de test à ses propres appareils |
 
+**Auto-réparation du test** (2026-09) : l'état « abonné » de l'UI lit
+l'abonnement du NAVIGATEUR ; si la ligne serveur est morte (404/410
+nettoyés, VAPID régénéré — tous les abonnés orphelins, WebAPK
+réinstallé), l'UI croit « abonné » et n'offre que « Désactiver ». Quand
+`POST /push/test` répond `sent: 0`, Mon compte refait donc un
+**réabonnement forcé** (`resubscribePush` : désabonnement → nouvel
+abonnement contre la clé VAPID courante → re-POST) puis relance le test
+une fois — toast « Abonnement réparé » si ça passe, sinon échec honnête
+avec la première erreur serveur.
+
 ## Tests
 
 - **`npm run test-api`** (module `push notifications`) : cycle complet sur un

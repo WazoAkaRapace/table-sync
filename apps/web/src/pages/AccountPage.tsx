@@ -14,6 +14,7 @@ import {
   PushError,
   pushSecureContext,
   pushSupported,
+  resubscribePush,
 } from '../push';
 import { TUTORIAL_SEEN_KEY, TUTORIAL_TABS_DONE_KEY } from '../tutorial/TutorialHost';
 import { formatSince } from '../utils';
@@ -181,8 +182,28 @@ export default function AccountPage() {
     setPushTesting(true);
     try {
       const res = await api.post('/api/push/test');
-      if ((res.data?.sent ?? 0) > 0) pushToast(t('account.notifications.test.envoye'));
-      else pushToast(t('account.notifications.test.echoue'), 'error');
+      if ((res.data?.sent ?? 0) > 0) {
+        pushToast(t('account.notifications.test.envoye'));
+        return;
+      }
+      // sent 0 : désynchronisation navigateur↔serveur (ligne morte, VAPID
+      // régénéré, WebAPK réinstallé). L'UI croit « abonné » — le seul bouton
+      // visible serait « Désactiver » — on répare d'office : réabonnement
+      // frais contre la clé courante, puis un second test.
+      if (pushConfig?.publicKey) {
+        try {
+          await resubscribePush(pushConfig.publicKey);
+          const retry = await api.post('/api/push/test');
+          if ((retry.data?.sent ?? 0) > 0) {
+            pushToast(t('account.notifications.test.repare'));
+            return;
+          }
+        } catch {
+          /* la réparation elle-même a échoué — toast d'échec honnête */
+        }
+      }
+      const detail = res.data?.errors?.length ? ` ${res.data.errors[0]}` : '';
+      pushToast(`${t('account.notifications.test.echoue')}${detail}`, 'error');
     } catch (err: any) {
       pushToast(err.response?.data?.error || t('account.notifications.test.echoue'), 'error');
     } finally {

@@ -85,3 +85,22 @@ export async function disablePush(): Promise<void> {
   await api.post('/api/push/unsubscribe', { endpoint: sub.endpoint });
   await sub.unsubscribe();
 }
+
+/**
+ * Réabonnement FORCE de ce navigateur : jette l'abonnement actuel et en
+ * crée un neuf contre la clé VAPID courante, puis re-POSTe la ligne serveur.
+ * Répare les désynchronisations navigateur↔serveur : ligne serveur morte
+ * (404/410 nettoyés), clés VAPID régénérées (tous les abonnés orphelins —
+ * l'endpoint FCM reste lié à la clé de création), WebAPK réinstallé.
+ * La permission déjà accordée rend le parcours silencieux.
+ */
+export async function resubscribePush(publicKey: string): Promise<void> {
+  const old = await getPushSubscription();
+  if (old) {
+    // La ligne serveur peut déjà être vide — un échec ici n'invalide pas
+    // la réparation.
+    await api.post('/api/push/unsubscribe', { endpoint: old.endpoint }).catch(() => {});
+    await old.unsubscribe().catch(() => {});
+  }
+  await enablePush(publicKey);
+}

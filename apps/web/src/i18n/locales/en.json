@@ -1737,6 +1737,7 @@
   "account.notifications.test": "Send a test notification",
   "account.notifications.test.encours": "Sending…",
   "account.notifications.test.envoye": "Notification sent — check your screen.",
+  "account.notifications.test.repare": "Subscription repaired — notification sent, check your screen.",
   "account.notifications.test.echoue": "Send failed — try again.",
   "account.notifications.contexte.non.securise": "Notifications require HTTPS: this page is served over plain HTTP. Open the app via its https:// address.",
   "account.notifications.non.supporte": "This browser doesn't support web notifications. On iPhone/iPad: add Table Sync to your home screen (iOS 16.4 or later) and reopen it from its icon.",

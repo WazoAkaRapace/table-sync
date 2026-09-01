@@ -1736,6 +1736,7 @@
   "account.notifications.test": "Envoyer une notification de test",
   "account.notifications.test.encours": "Envoi…",
   "account.notifications.test.envoye": "Notification envoyée — vérifie ton écran.",
+  "account.notifications.test.repare": "Abonnement réparé — notification envoyée, vérifie ton écran.",
   "account.notifications.test.echoue": "Échec de l'envoi — réessaie.",
   "account.notifications.contexte.non.securise": "Les notifications exigent HTTPS : cette page est servie en HTTP simple. Ouvre l'application via son adresse https://.",
   "account.notifications.non.supporte": "Ce navigateur ne gère pas les notifications web. Sur iPhone/iPad : ajoute Table Sync à l'écran d'accueil (iOS 16.4 minimum) puis rouvre-le depuis son icône.",

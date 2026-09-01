@@ -117,4 +117,52 @@ playerTest.describe('notifications push', () => {
     await expect(page.getByText('Notifications désactivées')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Activer les notifications' })).toBeVisible();
   });
+
+  playerTest('test sent:0 → réabonnement forcé puis second test réparé', async ({ page }) => {
+    await stubBrowserPush(page);
+    // État « abonné » côté navigateur alors que la ligne serveur est morte :
+    // l'UI ne doit PAS rester dans l'impasse « Désactiver » sans réparation.
+    await page.addInitScript(() => {
+      (window as any).__pushSubscribed = true;
+    });
+    await page.route('**/api/push/config', (route) =>
+      route.fulfill({ json: { enabled: true, publicKey: `B${'k'.repeat(85)}` } }),
+    );
+    const subscribeCalls: string[] = [];
+    const unsubscribeCalls: string[] = [];
+    await page.route('**/api/push/subscribe', (route) => {
+      subscribeCalls.push(route.request().postData() ?? '');
+      return route.fulfill({ json: { ok: true }, status: 201 });
+    });
+    await page.route('**/api/push/unsubscribe', (route) => {
+      unsubscribeCalls.push(route.request().postData() ?? '');
+      return route.fulfill({ status: 204 });
+    });
+    let testCalls = 0;
+    await page.route('**/api/push/test', (route) => {
+      testCalls += 1;
+      // Premier envoi : la ligne serveur est absente → sent 0.
+      // Après réabonnement : l'appareil est de retour → sent 1.
+      route.fulfill({
+        json:
+          testCalls === 1
+            ? { sent: 0, removed: 0, errors: [] }
+            : { sent: 1, removed: 0, errors: [] },
+      });
+    });
+
+    await page.goto(COMPTE);
+    await expect(page.getByRole('button', { name: 'Désactiver sur ce navigateur' })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Envoyer une notification de test' }).click();
+    await expect(page.getByText('Abonnement réparé')).toBeVisible();
+
+    // La réparation est bien passée par désabonnement + nouvel abonnement.
+    expect(testCalls).toBe(2);
+    expect(unsubscribeCalls).toHaveLength(1);
+    expect(subscribeCalls.length).toBeGreaterThanOrEqual(1);
+    expect(JSON.parse(subscribeCalls[0] || '{}').endpoint).toBe(
+      'https://fcm.googleapis.com/fcm/send/e2e-device-1',
+    );
+  });
 });
