@@ -258,12 +258,14 @@ export default function AccountPage() {
               placeholder={t('account.vous.exemple.fr')}
               autoComplete="email"
               inputMode="email"
+              required
             />
             {user.pendingEmail ? (
               <div className="mt-2 rounded-lg border border-gold-300 bg-gold-100/60 px-3 py-2">
                 <p className="text-xs text-ink-600">
                   {t('account.email.en.attente', { email: user.pendingEmail })}
                 </p>
+                <p className="text-xs text-ink-400 mt-1">{t('account.email.annuler.aide')}</p>
                 <button
                   type="button"
                   className="text-xs font-medium text-blood-600 hover:underline mt-1"
@@ -290,13 +292,9 @@ export default function AccountPage() {
                 </button>
               </div>
             ) : user.email ? (
-              <p className="text-xs text-ink-400 mt-1">
-                {t('account.laissez.vide.pour.retirer.votre.adresse')}
-              </p>
+              <p className="text-xs text-ink-400 mt-1">{t('account.email.non.retirable')}</p>
             ) : (
-              <p className="text-xs text-ink-400 mt-1">
-                {t('account.optionnelle.elle.servira.a.retrouver.votre')}
-              </p>
+              <p className="text-xs text-ink-400 mt-1">{t('account.email.ajout.recommande')}</p>
             )}
           </div>
           {profileError && <ErrorMsg message={profileError} />}

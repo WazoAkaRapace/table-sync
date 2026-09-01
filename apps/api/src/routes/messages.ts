@@ -154,6 +154,7 @@ const EN: Record<string, string> = {
   'adresse e-mail invalide': 'invalid email address',
   'adresse e-mail requise': 'email address required',
   'adresse e-mail trop longue': 'email address too long',
+  'l’adresse e-mail ne peut pas être retirée': 'the email address cannot be removed',
   'already a member': 'already a member',
   already_linked: 'already_linked',
   'annotated copy is referenced elsewhere': 'annotated copy is referenced elsewhere',

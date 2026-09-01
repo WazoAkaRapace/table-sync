@@ -6,6 +6,7 @@
  */
 import type { FastifyRequest } from 'fastify';
 import { emailConfig } from './config.ts';
+import type { TemplateAssets } from './templates/layout.ts';
 
 export function appLinkBase(req: FastifyRequest): string {
   const configured = emailConfig()?.appUrl;
@@ -14,4 +15,15 @@ export function appLinkBase(req: FastifyRequest): string {
     return req.headers.origin.replace(/\/+$/, '');
   }
   return '';
+}
+
+/**
+ * Assets absolus des templates (sceau de l'en-tête). Le PNG est servi par le
+ * web à la même origine que le lien d'action — SVG proscrit : Gmail/Outlook
+ * ne rendent pas le SVG en e-mail. Origine inconnue (appel API direct sans
+ * Origin ni APP_URL) → en-tête typographique seul.
+ */
+export function appAssets(req: FastifyRequest): TemplateAssets {
+  const base = appLinkBase(req);
+  return base ? { logoUrl: `${base}/icon-192.png` } : {};
 }

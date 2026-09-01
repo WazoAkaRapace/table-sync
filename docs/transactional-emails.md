@@ -41,9 +41,14 @@ Navigateur ──POST /api/auth/forgot-password──▶ API ──sha256──�
   requête (correct en dev via le proxy Vite :5173 comme derrière nginx — le web et
   l'API partagent l'origine publique). Helper partagé : `email/links.ts`
   `appLinkBase(req)`.
-- **Templates** (`templates/reset-password.ts`, `templates/verify-email.ts`) : fr/en,
-  texte + HTML inline-CSS minimal dans l'univers parchemin/encre/sang (les webmails
-  retirent classes et `<style>`).
+- **Templates** (`templates/layout.ts` + `reset-password.ts`/`verify-email.ts`) :
+  fr/en, texte + HTML inline-CSS minimal dans l'univers parchemin/encre/sang
+  (les webmails retirent classes et `<style>`). En-tête commun : **sceau PNG**
+  (`/icon-192.png` servi par le web, même origine que le lien d'action —
+  SVG proscrit, Gmail/Outlook ne le rendent pas ; 64 px affichés, dimensions
+  posées en attributs + alt « Table Sync ») au-dessus du mot-symbole doré —
+  images bloquées ou origine inconnue (appel API sans Origin ni APP_URL) :
+  le texte porte seul la marque, la mise en page n'en dépend jamais.
 
 ## Vérification d'adresse e-mail
 
@@ -56,6 +61,10 @@ d'une minute — table `email_verification_tokens`, migration 0017).
   désactivés sur le serveur → no-op silencieux, l'inscription réussit toujours ;
   l'utilisateur relancera depuis Mon compte.
 - **Changement d'adresse** (`PATCH /api/auth/me`) :
+  - **une adresse posée ne se retire plus** : `''` (ou `null`, envoyé par les
+    vieux bundles) → 400 « l'adresse e-mail ne peut pas être retirée ». Les
+    comptes sans email sont un héritage d'avant son obligation à
+    l'inscription — ils posent leur première adresse directement ;
   - adresse actuelle **non vérifiée** (ou absente) : la nouvelle **remplace
     directement** et repart non vérifiée — rien à protéger ;
   - adresse actuelle **vérifiée** : elle **reste active** tant que la nouvelle
@@ -64,7 +73,11 @@ d'une minute — table `email_verification_tokens`, migration 0017).
     Au clic (`POST /api/auth/verify-email`) : `email = pending_email`,
     `email_verified_at = now`, `pending_email = NULL`, jetons reset purgés. Si
     l'adresse a été claimée par un autre compte entre-temps : **409**, l'ancienne
-    adresse reste active, le lien est consommé.
+    adresse reste active, le lien est consommé ;
+  - **annuler un changement en attente** : réenregistrer l'adresse ACTIVE
+    (`PATCH /me` avec l'adresse courante) abandonne le pending et purge son
+    lien de vérification en vol — le retrait étant interdit, c'est la seule
+    porte de sortie d'un changement regrette.
 - **Consommation publique** : le clic peut venir d'un appareil déconnecté — le
   jeton est la preuve, pas la session (`POST /api/auth/verify-email` est en
   allowlist). Renvoi authentifié : `POST /api/auth/verify-email/resend`

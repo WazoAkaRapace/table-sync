@@ -100,6 +100,10 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   ok(String(vmsg.HTMLPart).includes('/verifier-email?token='), 'verify: lien vers /verifier-email');
   const regToken = tokenFrom(vmsg);
   ok(regToken.length >= 40, `verify: jeton brut ≥ 40 caractères (${regToken.length})`);
+  ok(
+    !String(vmsg.HTMLPart).includes('<img'),
+    'verify: sans Origin connue → en-tête typographique seul (repli images bloquées)',
+  );
   const vrow = srv.query(
     'SELECT user_id, token_hash, locale, expires_at FROM email_verification_tokens ORDER BY id DESC LIMIT 1',
   );
@@ -130,10 +134,24 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
     `Basic ${Buffer.from('test-mailjet-key:test-mailjet-secret').toString('base64')}`,
     'mailjet: Basic auth clé:secret',
   );
-  const link = String(msg.HTMLPart).match(/https?:\/\/[^\s"'<>]+/)?.[0] ?? '';
+  // Le sceau précède le CTA dans le HTML : cibler l'URL du lien, pas la
+  // première URL absolue de la page.
+  const link =
+    String(msg.HTMLPart).match(
+      /https?:\/\/[^\s"'<>]+\/reinitialiser-mot-de-passe\?token=[A-Za-z0-9_-]+/,
+    )?.[0] ?? '';
   ok(
     link.startsWith('http://table.example.com/reinitialiser-mot-de-passe?token='),
     `mailjet: lien absolu = Origin + chemin (${link.slice(0, 60)}…)`,
+  );
+  ok(
+    String(msg.HTMLPart).includes('src="http://table.example.com/icon-192.png"'),
+    'mailjet: sceau PNG servi par le web, même origine que le lien',
+  );
+  ok(
+    String(msg.HTMLPart).includes('width="64"') &&
+      String(msg.HTMLPart).includes('alt="Table Sync"'),
+    'mailjet: sceau avec dimensions posées + alt porteur de marque',
   );
   const rawToken = tokenFrom(msg);
   ok(rawToken.length >= 40, `jeton brut ≥ 40 caractères (${rawToken.length})`);
@@ -376,6 +394,77 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   eq(res.status, 200, 'resend: adresse vérifiée');
   res = await api(base, 'POST', '/api/auth/verify-email/resend', { token: regResend.token });
   eq(res.status, 400, 'resend: plus rien à vérifier → 400');
+
+  // ---------- une adresse posée ne se retire plus ----------
+  const regKeep = await register(base, 'keepmail');
+  res = await api(base, 'PATCH', '/api/auth/me', {
+    token: regKeep.token,
+    body: { email: '' },
+  });
+  eq(res.status, 400, 'retrait (chaîne vide) : 400');
+  ok(
+    String(res.data?.error || '').includes('retirée'),
+    'retrait: message « ne peut pas être retirée »',
+  );
+  res = await api(base, 'PATCH', '/api/auth/me', {
+    token: regKeep.token,
+    body: { email: null },
+  });
+  eq(res.status, 400, 'retrait (null, vieux bundles) : 400');
+  eq(userRow('keepmail').email, 'keepmail@example.com', 'retrait: adresse intacte en base');
+
+  // ---------- réenregistrer l'adresse active ANNULE un changement en attente ----------
+  const regCancel = await register(base, 'cancelpend');
+  await waitFor(() => verifyEmails(mj, 'cancelpend@example.com').length >= 1);
+  res = await api(base, 'POST', '/api/auth/verify-email', {
+    body: { token: tokenFrom(verifyEmails(mj, 'cancelpend@example.com').at(-1)) },
+  });
+  eq(res.status, 200, 'cancel: adresse initiale vérifiée');
+  res = await api(base, 'PATCH', '/api/auth/me', {
+    token: regCancel.token,
+    body: { email: 'cancelpend-nouveau@example.com' },
+  });
+  eq(res.status, 200, 'cancel: changement mis en attente');
+  ok(res.data?.user?.pendingEmail === 'cancelpend-nouveau@example.com', 'cancel: pending posé');
+  await waitFor(() => verifyEmails(mj, 'cancelpend-nouveau@example.com').length >= 1);
+  const beforeCount = verifyEmails(mj, 'cancelpend-nouveau@example.com').length;
+  res = await api(base, 'PATCH', '/api/auth/me', {
+    token: regCancel.token,
+    body: { email: 'cancelpend@example.com' }, // ← revenir à l'active
+  });
+  eq(res.status, 200, 'cancel: réenregistrement de l’active → 200');
+  ok(res.data?.user?.pendingEmail === null, 'cancel: le pending est annulé');
+  eq(res.data?.user?.email, 'cancelpend@example.com', 'cancel: l’active est inchangée');
+  await new Promise((r) => setTimeout(r, 300));
+  eq(
+    verifyEmails(mj, 'cancelpend-nouveau@example.com').length,
+    beforeCount,
+    'cancel: aucun nouvel envoi vers l’adresse abandonnée',
+  );
+  eq(
+    srv.query(
+      'SELECT COUNT(*) c FROM email_verification_tokens WHERE user_id = ?',
+      regCancel.user.id,
+    ).c,
+    0,
+    'cancel: le lien de vérification en vol est purgé',
+  );
+
+  // ---------- compte hérité sans email : pose directe ----------
+  const regLegacy = await register(base, 'legacymail');
+  srv.exec('UPDATE users SET email = NULL WHERE username = ?', 'legacymail');
+  res = await api(base, 'PATCH', '/api/auth/me', {
+    token: regLegacy.token,
+    body: { email: 'legacymail@nouveau.fr' },
+  });
+  eq(res.status, 200, 'hérité: pose d’une adresse → 200');
+  eq(res.data?.user?.email, 'legacymail@nouveau.fr', 'hérité: adresse posée directement');
+  ok(res.data?.user?.emailVerifiedAt === null, 'hérité: non vérifiée, lien envoyé');
+  await waitFor(() => verifyEmails(mj, 'legacymail@nouveau.fr').length >= 1);
+  ok(
+    String(verifyEmails(mj, 'legacymail@nouveau.fr').at(-1).TextPart).includes('sécuriser'),
+    'hérité: e-mail de vérification (variante compte)',
+  );
 
   // ---------- purges : changement d'e-mail (direct) ----------
   const purgeMail = await register(base, 'purgemail');

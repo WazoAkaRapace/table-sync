@@ -1,51 +1,27 @@
 /**
- * E-mail de réinitialisation de mot de passe — fr/en, texte + HTML. Le HTML
- * reste volontairement minimal (table centrée, styles inline : les webmails
- * retirent classes et <style>) dans l'univers parchemin/encre/sang de l'app.
+ * E-mail de réinitialisation de mot de passe — fr/en, texte + HTML sur le
+ * squelette partagé (templates/layout.ts) : carte parchemin, en-tête sceau +
+ * mot-symbole, styles inline uniquement.
  */
-
-export interface BuiltEmail {
-  subject: string;
-  text: string;
-  html: string;
-}
+import {
+  type BuiltEmail,
+  C,
+  escapeHtml,
+  headerBlock,
+  htmlWrap,
+  type TemplateAssets,
+} from './layout.ts';
 
 const TTL_MINUTES = 60;
-
-// Palette (tokens du thème, dupliqués en dur : un e-mail n'emporte pas le CSS).
-const C = {
-  page: '#f4ecdc', // fond email (parchemin sombre)
-  card: '#fdfaf3', // parchment-50
-  border: '#ddcb9e', // parchment-300
-  ink: '#6b5640', // ink-500
-  inkSoft: '#7d6850', // ink-400
-  blood: '#a92424', // blood-400 (CTA)
-  gold: '#9a7c48', // gold-600 (titre)
-};
-
-function htmlWrap(inner: string): string {
-  return `<!DOCTYPE html>
-<html lang="fr">
-  <body style="margin:0;padding:0;background:${C.page};font-family:Georgia,'Times New Roman',serif;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.page};padding:24px 12px;">
-      <tr>
-        <td align="center">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:420px;background:${C.card};border:1px solid ${C.border};border-radius:8px;padding:28px 24px;">
-${inner}
-          </table>
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>`;
-}
 
 export function buildResetPasswordEmail(
   displayName: string,
   resetUrl: string,
   locale: 'fr' | 'en',
+  assets: TemplateAssets = {},
 ): BuiltEmail {
   const name = displayName || '';
+  const header = headerBlock(assets);
   if (locale === 'en') {
     return {
       subject: 'Table Sync — reset your password',
@@ -60,10 +36,7 @@ export function buildResetPasswordEmail(
         '',
         '— The Table Sync team',
       ].join('\n'),
-      html: htmlWrap(`            <tr>
-              <td style="color:${C.gold};font-size:18px;font-weight:bold;padding-bottom:12px;">Table Sync</td>
-            </tr>
-            <tr>
+      html: htmlWrap(`${header}            <tr>
               <td style="color:${C.ink};font-size:15px;line-height:1.5;padding-bottom:20px;">
                 Hello ${escapeHtml(name)},<br /><br />
                 You asked to reset your Table Sync password. Click the button below to choose a new one.
@@ -96,10 +69,7 @@ export function buildResetPasswordEmail(
       '',
       "— L'équipe Table Sync",
     ].join('\n'),
-    html: htmlWrap(`            <tr>
-              <td style="color:${C.gold};font-size:18px;font-weight:bold;padding-bottom:12px;">Table Sync</td>
-            </tr>
-            <tr>
+    html: htmlWrap(`${header}            <tr>
               <td style="color:${C.ink};font-size:15px;line-height:1.5;padding-bottom:20px;">
                 Bonjour ${escapeHtml(name)},<br /><br />
                 Vous avez demandé la réinitialisation de votre mot de passe Table Sync. Cliquez sur le bouton ci-dessous pour en choisir un nouveau.
@@ -118,12 +88,4 @@ export function buildResetPasswordEmail(
               </td>
             </tr>`),
   };
-}
-
-function escapeHtml(s: string): string {
-  return s
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;');
 }

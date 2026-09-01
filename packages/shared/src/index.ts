@@ -168,10 +168,14 @@ export interface LoginPayload {
   password: string;
 }
 
-/** PATCH /api/auth/me — champs omis = inchangés ; email null/'' = effacé. */
+/**
+ * PATCH /api/auth/me — champs omis = inchangés. L'email ne peut pas être
+ * retiré : '' est refusé (les comptes sans email sont un héritage d'avant
+ * son obligation à l'inscription).
+ */
 export interface UpdateProfilePayload {
   displayName?: string;
-  email?: string | null;
+  email?: string;
 }
 
 /** POST /api/auth/password */

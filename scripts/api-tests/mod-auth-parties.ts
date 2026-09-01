@@ -123,8 +123,9 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   eq(r.status, 409, 'patch me email taken by another user → 409');
 
   r = await api(base, 'PATCH', '/api/auth/me', { token: eve.token, body: { email: '' } });
-  eq(r.status, 200, 'patch me clear email → 200');
-  eq(r.data.user.email, null, 'cleared email is null');
+  eq(r.status, 400, 'patch me clear email → 400 (une adresse posée ne se retire plus)');
+  r = await api(base, 'PATCH', '/api/auth/me', { token: eve.token, body: { email: null } });
+  eq(r.status, 400, 'patch me null email → 400 (vieux bundles)');
 
   r = await api(base, 'PATCH', '/api/auth/me', { token: eve.token, body: {} });
   eq(r.status, 400, 'patch me empty body → 400');

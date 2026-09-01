@@ -24,7 +24,7 @@ import { getDb } from '../db/index.ts';
 import { cols } from '../db/projections.ts';
 import { emailVerificationTokens, passwordResetTokens, users } from '../db/schema.ts';
 import { emailEnabled } from '../email/config.ts';
-import { appLinkBase } from '../email/links.ts';
+import { appAssets, appLinkBase } from '../email/links.ts';
 import { sendEmail } from '../email/send.ts';
 import { buildResetPasswordEmail } from '../email/templates/reset-password.ts';
 import { buildVerifyEmail } from '../email/templates/verify-email.ts';
@@ -107,7 +107,7 @@ function issueEmailVerification(
   void sendEmail({
     to: email,
     toName: displayName,
-    ...buildVerifyEmail(displayName, link, locale, change),
+    ...buildVerifyEmail(displayName, link, locale, change, appAssets(req)),
   });
 }
 
@@ -233,14 +233,16 @@ export async function authRoutes(app: FastifyInstance) {
 
       const values: {
         displayName?: string;
-        email?: string | null;
+        email?: string;
         emailVerifiedAt?: string | null;
         pendingEmail?: string | null;
       } = {};
       // Post-traitement une fois la ligne mise à jour : adresse à vérifier
-      // (changement direct ou en attente) et purges associées.
+      // (changement direct ou en attente), abandon de changement en attente
+      // et purges associées.
       let verifyTarget: string | null = null;
-      let emailReplaced = false; // l'adresse ACTIVE a changé (ou effacée)
+      let cancelledPending = false; // changement en attente abandonné
+      let emailReplaced = false; // l'adresse ACTIVE a changé
       if (body.displayName !== undefined) {
         const displayName = String(body.displayName).trim();
         if (!displayName || displayName.length > 40) {
@@ -251,50 +253,55 @@ export async function authRoutes(app: FastifyInstance) {
         values.displayName = displayName;
       }
       if (body.email !== undefined) {
-        // '' ou null efface l'email (optionnel pour les anciens comptes) —
-        // la vérification et tout changement en attente partent avec.
         const raw = body.email === null ? '' : String(body.email).trim();
+        // Un compte garde TOUJOURS une adresse une fois posée : '' (ou null,
+        // envoyé par les vieux bundles) est refusé. Les comptes sans email
+        // sont un héritage d'avant son obligation à l'inscription.
         if (!raw) {
-          values.email = null;
-          values.emailVerifiedAt = null;
-          values.pendingEmail = null;
-          emailReplaced = true;
+          return reply
+            .code(400)
+            .send({ error: apiMsg(req, 'l’adresse e-mail ne peut pas être retirée') });
+        }
+        const badEmail = emailError(raw);
+        if (badEmail) return reply.code(400).send({ error: badEmail });
+        const email = normalizeEmail(raw);
+        if (email === row.email) {
+          // Même adresse (la casse se normalise) : réécriture idempotente —
+          // et abandon d'un éventuel changement en attente (revenir à
+          // l'active = renoncer à la nouvelle).
+          values.email = email;
+          if (row.pending_email) {
+            values.pendingEmail = null;
+            cancelledPending = true;
+          }
+        } else if (email === row.pending_email) {
+          // Déjà en attente pour cette adresse : réécriture idempotente.
+          values.pendingEmail = email;
         } else {
-          const badEmail = emailError(raw);
-          if (badEmail) return reply.code(400).send({ error: badEmail });
-          const email = normalizeEmail(raw);
-          if (email === row.email) {
-            // Même adresse (la casse se normalise) : réécriture idempotente,
-            // pas de nouvel envoi ni de dé-vérification.
-            values.email = email;
-          } else if (email === row.pending_email) {
-            // Déjà en attente pour cette adresse : réécriture idempotente.
+          const clash = drizzle
+            .select({ id: users.id })
+            .from(users)
+            .where(eq(users.email, email))
+            .get();
+          if (clash) {
+            return reply
+              .code(409)
+              .send({ error: apiMsg(req, 'cette adresse e-mail est déjà utilisée') });
+          }
+          if (row.email_verified_at) {
+            // Adresse actuelle VÉRIFIÉE : elle reste active tant que la
+            // nouvelle n'a pas prouvé sa boîte — changement en attente.
             values.pendingEmail = email;
+            verifyTarget = email;
           } else {
-            const clash = drizzle
-              .select({ id: users.id })
-              .from(users)
-              .where(eq(users.email, email))
-              .get();
-            if (clash) {
-              return reply
-                .code(409)
-                .send({ error: apiMsg(req, 'cette adresse e-mail est déjà utilisée') });
-            }
-            if (row.email_verified_at) {
-              // Adresse actuelle VÉRIFIÉE : elle reste active tant que la
-              // nouvelle n'a pas prouvé sa boîte — changement en attente.
-              values.pendingEmail = email;
-              verifyTarget = email;
-            } else {
-              // Adresse actuelle absente ou non vérifiée : rien à protéger,
-              // la nouvelle remplace directement et repart de zéro.
-              values.email = email;
-              values.emailVerifiedAt = null;
-              values.pendingEmail = null;
-              verifyTarget = email;
-              emailReplaced = true;
-            }
+            // Adresse actuelle absente (compte hérité) ou non vérifiée :
+            // rien à protéger, la nouvelle remplace directement et repart
+            // de zéro.
+            values.email = email;
+            values.emailVerifiedAt = null;
+            values.pendingEmail = null;
+            verifyTarget = email;
+            emailReplaced = true;
           }
         }
       }
@@ -322,9 +329,17 @@ export async function authRoutes(app: FastifyInstance) {
         throw err;
       }
       if (emailReplaced) {
-        // L'adresse active a changé/effacé : les liens de reset en attente
-        // pointent vers une boîte qui n'est plus rattachée au compte.
+        // L'adresse active a changé : les liens de reset en attente pointent
+        // vers une boîte qui n'est plus rattachée au compte.
         drizzle.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, userId)).run();
+      }
+      if (cancelledPending) {
+        // Changement abandonné : le lien de vérification en vol vers la
+        // nouvelle adresse meurt avec lui.
+        drizzle
+          .delete(emailVerificationTokens)
+          .where(eq(emailVerificationTokens.userId, userId))
+          .run();
       }
       if (verifyTarget) {
         issueEmailVerification(
@@ -444,7 +459,7 @@ export async function authRoutes(app: FastifyInstance) {
           void sendEmail({
             to: row.email,
             toName: row.display_name,
-            ...buildResetPasswordEmail(row.display_name, link, locale),
+            ...buildResetPasswordEmail(row.display_name, link, locale, appAssets(req)),
           });
         }
       }

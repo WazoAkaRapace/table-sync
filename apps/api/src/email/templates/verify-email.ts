@@ -1,54 +1,30 @@
 /**
- * E-mail de vérification d'adresse — fr/en, texte + HTML, même carte sobre
- * que le reset (templates/reset-password.ts) : inline CSS uniquement.
- * `change: true` = l'adresse deviendra la nouvelle adresse du compte
- * (changement demandé depuis un compte déjà vérifié) ; `false` = vérification
- * de l'adresse du compte (inscription ou saisie sur compte non vérifié).
+ * E-mail de vérification d'adresse — fr/en, texte + HTML sur le squelette
+ * partagé (templates/layout.ts). `change: true` = l'adresse deviendra la
+ * nouvelle adresse du compte (changement demandé depuis un compte déjà
+ * vérifié) ; `change: false` = vérification de l'adresse du compte
+ * (inscription ou saisie sur compte non vérifié).
  */
-
-export interface BuiltEmail {
-  subject: string;
-  text: string;
-  html: string;
-}
+import {
+  type BuiltEmail,
+  C,
+  escapeHtml,
+  headerBlock,
+  htmlWrap,
+  type TemplateAssets,
+} from './layout.ts';
 
 const TTL_HOURS = 24;
-
-// Palette (tokens du thème, dupliqués en dur : un e-mail n'emporte pas le CSS).
-const C = {
-  page: '#f4ecdc',
-  card: '#fdfaf3',
-  border: '#ddcb9e',
-  ink: '#6b5640',
-  inkSoft: '#7d6850',
-  blood: '#a92424',
-  gold: '#9a7c48',
-};
-
-function htmlWrap(inner: string): string {
-  return `<!DOCTYPE html>
-<html lang="fr">
-  <body style="margin:0;padding:0;background:${C.page};font-family:Georgia,'Times New Roman',serif;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.page};padding:24px 12px;">
-      <tr>
-        <td align="center">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:420px;background:${C.card};border:1px solid ${C.border};border-radius:8px;padding:28px 24px;">
-${inner}
-          </table>
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>`;
-}
 
 export function buildVerifyEmail(
   displayName: string,
   verifyUrl: string,
   locale: 'fr' | 'en',
   change: boolean,
+  assets: TemplateAssets = {},
 ): BuiltEmail {
   const name = displayName || '';
+  const header = headerBlock(assets);
   if (locale === 'en') {
     const intro = change
       ? `confirm this address belongs to ${name} — it will become the new address of their Table Sync account.`
@@ -66,10 +42,7 @@ export function buildVerifyEmail(
         '',
         '— The Table Sync team',
       ].join('\n'),
-      html: htmlWrap(`            <tr>
-              <td style="color:${C.gold};font-size:18px;font-weight:bold;padding-bottom:12px;">Table Sync</td>
-            </tr>
-            <tr>
+      html: htmlWrap(`${header}            <tr>
               <td style="color:${C.ink};font-size:15px;line-height:1.5;padding-bottom:20px;">
                 Hello ${escapeHtml(name)},<br /><br />
                 One click to ${escapeHtml(intro)}
@@ -105,10 +78,7 @@ export function buildVerifyEmail(
       '',
       "— L'équipe Table Sync",
     ].join('\n'),
-    html: htmlWrap(`            <tr>
-              <td style="color:${C.gold};font-size:18px;font-weight:bold;padding-bottom:12px;">Table Sync</td>
-            </tr>
-            <tr>
+    html: htmlWrap(`${header}            <tr>
               <td style="color:${C.ink};font-size:15px;line-height:1.5;padding-bottom:20px;">
                 Bonjour ${escapeHtml(name)},<br /><br />
                 Un clic pour ${escapeHtml(intro)}
@@ -127,12 +97,4 @@ export function buildVerifyEmail(
               </td>
             </tr>`),
   };
-}
-
-function escapeHtml(s: string): string {
-  return s
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;');
 }
