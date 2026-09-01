@@ -30,10 +30,15 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     (async () => {
       if (await hasVisibleClient()) return;
+      // Icônes en URL ABSOLUE : Chrome Android ne résout pas les chemins
+      // relatifs du champ `icon` et rend un carré blanc — desktop, lui, s'en
+      // accommode. Résolution contre le scope, pas origin, pour rester juste
+      // si l'app vit sous un sous-chemin.
+      const abs = (p) => new URL(p, self.registration.scope).href;
       await self.registration.showNotification(payload.title || 'Table Sync', {
         body: payload.body || '',
-        icon: '/icon-192.png',
-        badge: '/icon-maskable-192.png',
+        icon: abs('/icon-192.png'),
+        badge: abs('/icon-maskable-192.png'),
         // Même tag = la nouvelle notification remplace la précédente.
         tag: payload.tag,
         data: { url: payload.url || '/parties' },

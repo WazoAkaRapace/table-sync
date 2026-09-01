@@ -41,6 +41,10 @@ sw.js (push-only, aucun cache)
 - **Service worker** (`apps/web/public/sw.js`) : volontairement sans handler
   `fetch` — aucun cache offline, le mécanisme de fraîcheur au déploiement
   reste inchangé. Enregistré depuis `main.tsx` (échec silencieux).
+  Les icônes de notification sont résolues en **URL absolues** contre le
+  scope du SW (`new URL(p, self.registration.scope)`) : Chrome Android ne
+  résout pas les chemins relatifs du champ `icon` et rend un carré blanc
+  (desktop s'en accommode) — vécu sur l'appareil, corrigé 2026-09.
 - **Suppression « fenêtre visible »** : si l'app est ouverte à l'écran, le SW
   ne montre pas la notification (le widget de combat/TurnSlash informe déjà).
   C'est la seule suppression v1 — pas de vérification de connexion WS côté
