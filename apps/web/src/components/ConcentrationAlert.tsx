@@ -45,7 +45,7 @@ export default function ConcentrationAlert({
 
   return createPortal(
     <div
-      className="fixed top-16 left-1/2 -translate-x-1/2 z-50 w-[min(92vw,26rem)] px-1"
+      className="fixed top-[calc(var(--app-header-h)+env(safe-area-inset-top)+0.5rem)] left-1/2 -translate-x-1/2 z-50 w-[min(92vw,26rem)] px-1"
       role="alert"
     >
       <div

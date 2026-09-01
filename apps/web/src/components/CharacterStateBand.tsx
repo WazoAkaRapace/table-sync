@@ -616,7 +616,7 @@ export default function CharacterStateBand({
 
       {/* Pinned twin — compact fixed overlay; the flow above never resizes. */}
       {pinned && (
-        <div className="band-drop fixed top-14 inset-x-0 z-20">
+        <div className="band-drop fixed top-[calc(var(--app-header-h)+env(safe-area-inset-top))] inset-x-0 z-20">
           <div className="max-w-6xl mx-auto px-4">
             <section
               aria-label={t('band.etat.du.personnage.epingle')}
