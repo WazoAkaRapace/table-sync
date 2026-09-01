@@ -44,6 +44,7 @@ import {
   items,
   monsters,
 } from '../db/schema.ts';
+import { type PushPayload, type PushSendOptions, sendPushToUser } from '../push/send.ts';
 import { bus } from '../sync/bus.ts';
 import {
   getUserId,
@@ -214,6 +215,56 @@ function sortCombatants(combatants: Combatant[]): Combatant[] {
     // Final tie-break: name
     return a.name.localeCompare(b.name, 'fr');
   });
+}
+
+// ---------- Déclencheurs push (fire-and-forget, docs/push-notifications.md) ----------
+
+/** Push fire-and-forget : un échec d'envoi ne doit jamais toucher la réponse de la route. */
+function pushSafe(userId: number, payload: PushPayload, options?: PushSendOptions): void {
+  sendPushToUser(userId, payload, options).catch((err) =>
+    console.warn('[push] combat:', (err as Error).message),
+  );
+}
+
+/**
+ * Notification « À toi de jouer » : poussée au propriétaire du combattant qui
+ * tient le tour après un démarrage ou une avance (next-turn MD comme fin de
+ * tour joueur). Monstres et vaincus n'ont pas de destinataire — aucun envoi.
+ * ttl 0 : livrer maintenant ou jeter, un tour dépassé ne vaut rien.
+ */
+function notifyTurnPush(enc: any): void {
+  if (enc?.status !== 'active') return;
+  const drizzle = getDrizzle();
+  const sorted = sortCombatants(
+    drizzle
+      .select()
+      .from(combatantsTable)
+      .where(eq(combatantsTable.encounterId, enc.id))
+      .all()
+      .map(mapCombatant),
+  );
+  const current = sorted[enc.turnIndex];
+  if (!current || current.defeated || current.type !== 'player' || !current.characterId) return;
+  const owner = drizzle
+    .select({ owner_id: charactersTable.ownerId })
+    .from(charactersTable)
+    .where(eq(charactersTable.id, current.characterId))
+    .get() as any;
+  if (!owner) return;
+  pushSafe(
+    owner.owner_id,
+    {
+      kind: 'turn',
+      title: { fr: 'À toi de jouer !', en: 'Your turn!' },
+      body: {
+        fr: `Au tour de ${current.name} — round ${enc.round}`,
+        en: `${current.name}'s turn — round ${enc.round}`,
+      },
+      url: `/party/${enc.partyId}/character/${current.characterId}?tab=survival`,
+      tag: `turn:${enc.id}`,
+    },
+    { ttl: 0, urgency: 'high' },
+  );
 }
 
 /** Fetch encounter, verify party membership, return the encounter row or send error. */
@@ -678,6 +729,32 @@ export async function combatRoutes(app: FastifyInstance) {
         action: 'add',
         actorUserId: userId,
       });
+      // --- Push « lance ton initiative » : c'est ici que le combat démarre
+      // pour les joueurs (le MD ne peut pas lancer tant que tout le monde
+      // n'a pas répondu) — un envoi par propriétaire, vers sa fiche, le lien
+      // profond `?combat=init` ouvre la saisie d'initiative.
+      const firstCharByOwner = new Map<number, number>();
+      for (const char of chars) {
+        if (!firstCharByOwner.has(char.owner_id)) firstCharByOwner.set(char.owner_id, char.id);
+      }
+      for (const [ownerId, characterId] of firstCharByOwner) {
+        pushSafe(
+          ownerId,
+          {
+            kind: 'initiative',
+            title: { fr: '⚔ Le combat se prépare !', en: '⚔ Combat is starting!' },
+            body: {
+              fr: `« ${enc.name} » — lance ton initiative !`,
+              en: `"${enc.name}" — roll your initiative!`,
+            },
+            url: `/party/${enc.party_id}/character/${characterId}?combat=init`,
+            tag: `init:${enc.id}`,
+          },
+          // Rattrapable : la rencontre attend l'initiative, mais un push
+          // livré après la fin du combat n'est que du bruit.
+          { ttl: 600, urgency: 'high' },
+        );
+      }
       return reply.code(201).send({ combatants: rows.map(mapCombatant) });
     },
   );
@@ -1110,6 +1187,8 @@ export async function combatRoutes(app: FastifyInstance) {
           action: 'turn',
           actorUserId: userId,
         });
+        // Le premier combattant agissant peut être un PJ : préviens son joueur.
+        notifyTurnPush(started);
         return reply.send({ encounter: mapEncounter(started) });
       }
 
@@ -1127,6 +1206,7 @@ export async function combatRoutes(app: FastifyInstance) {
         action: 'turn',
         actorUserId: userId,
       });
+      notifyTurnPush(row);
       return reply.send({ encounter: mapEncounter(row) });
     },
   );
@@ -1206,6 +1286,7 @@ export async function combatRoutes(app: FastifyInstance) {
         action: 'turn',
         actorUserId: userId,
       });
+      notifyTurnPush(row);
       return reply.send({ encounter: mapEncounter(row) });
     },
   );

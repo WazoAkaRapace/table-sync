@@ -1,10 +1,20 @@
 # Notifications push (Web Push / VAPID)
 
 Fondation d'envoi de notifications **hors application** — écran éteint, app
-fermée ou en arrière-plan. Posée en v1 comme infrastructure générique : un
-seul déclencheur actif (le bouton « notification de test » de Mon compte),
-les autres (tour de jeu, jet de concentration…) s'y branchent via
-`sendPushToUser()` sans toucher au navigateur.
+fermée ou en arrière-plan. Posée en v1 comme infrastructure générique, les
+déclencheurs actifs sont maintenant :
+
+- **le bouton « notification de test »** de Mon compte ;
+- **« ⚔ Le combat se prépare ! »** — le MD ajoute des PJ à une rencontre
+  (`POST /encounters/:id/combatants/player`) : chaque propriétaire est invité
+  à lancer son initiative, le clic ouvre sa fiche avec la saisie d'initiative
+  déployée (`?combat=init`, carte du dock en mobile / tiroir en desktop) ;
+- **« À toi de jouer ! »** — démarrage du combat ou avance de tour
+  (`next-turn` MD comme `end-my-turn` joueur) quand le tour échoit à un PJ :
+  le clic ouvre l'onglet **Survie** de la fiche (`?tab=survie`).
+
+Les déclencheurs suivants (jet de concentration…) se branchent de la même
+façon via `sendPushToUser()` sans toucher au navigateur.
 
 ## Architecture
 

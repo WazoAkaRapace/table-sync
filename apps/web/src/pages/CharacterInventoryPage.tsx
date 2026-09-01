@@ -19,7 +19,7 @@ import {
 } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../auth';
 import CharacterStateBand from '../components/CharacterStateBand';
@@ -236,6 +236,25 @@ export default function CharacterInventoryPage() {
 
   // Active tab — the fiche opens on state (Survie), not on the bag
   const [activeTab, setActiveTab] = useState<CharacterTab>('survival');
+  // Lien profond des notifications push : `?tab=…` (tour de jeu → Survie)
+  // sélectionne l'onglet, `?combat=init` (lance ton initiative) déploie la
+  // carte d'initiative du dock. Les paramètres sont retirés après lecture —
+  // un clic ultérieur sur une notification doit pouvoir re-naviguer même si
+  // la fiche est déjà ouverte (le SW compare aussi la query string).
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab && CHARACTER_TABS.some((t) => t.key === tab)) {
+      setActiveTab(tab as CharacterTab);
+      window.scrollTo(0, 0);
+    }
+    if (searchParams.get('combat') === 'init') setHubInitOpen(true);
+    if (tab || searchParams.get('combat')) {
+      searchParams.delete('tab');
+      searchParams.delete('combat');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
   // Concentration save popup — page-level because the state band's HP quick-edit
   // (pinned above EVERY tab) must surface it wherever the player stands.
   const [concCheck, setConcCheck] = useState<ConcentrationCheck | null>(null);

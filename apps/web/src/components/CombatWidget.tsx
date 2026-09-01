@@ -36,6 +36,13 @@ export default function CombatWidget() {
   const location = useLocation();
   const [combats, setCombats] = useState<ActiveCombat[]>([]);
   const [collapsed, setCollapsed] = useState(true); // minimized by default
+  // Lien profond du push « lance ton initiative » (?combat=init) : déploie le
+  // tiroir au chargement comme sur toute navigation ultérieure (le composant
+  // est monté une fois au niveau App, il ne se remonte pas au changement de
+  // route — d'où l'effet plutôt que l'initialiseur).
+  useEffect(() => {
+    if (new URLSearchParams(location.search).get('combat') === 'init') setCollapsed(false);
+  }, [location.search]);
   const [initInput, setInitInput] = useState('');
   const [initError, setInitError] = useState(false);
   const loadSeq = useRef(0);
