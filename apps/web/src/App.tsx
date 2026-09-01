@@ -6,6 +6,7 @@ import api from './api';
 import { useAuth } from './auth';
 import CombatWidget from './components/CombatWidget';
 import ConcentrationAlert from './components/ConcentrationAlert';
+import MessageAlert, { type MessageAlertPayload } from './components/MessageAlert';
 import { HeaderProvider, useHeaderState } from './headerContext';
 import i18next from './i18n';
 import { useSync, useSyncEvent } from './sync';
@@ -22,6 +23,7 @@ const CombatPage = lazy(() => import('./pages/CombatPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
 const GmDashboardPage = lazy(() => import('./pages/GmDashboardPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
+const MessagesInboxPage = lazy(() => import('./pages/MessagesInboxPage'));
 const NpcPage = lazy(() => import('./pages/NpcPage'));
 const PartiesPage = lazy(() => import('./pages/PartiesPage'));
 const PartyPage = lazy(() => import('./pages/PartyPage'));
@@ -75,6 +77,7 @@ function useRouteTitle(pathname: string): { title: string; backTo?: string } | n
     if (sub === 'gm') return { title: i18next.t('nav.table.du.md'), backTo: partyBase };
     if (sub === 'npcs') return { title: i18next.t('nav.pnj'), backTo: partyBase };
     if (sub === 'combat') return { title: i18next.t('nav.combat'), backTo: partyBase };
+    if (sub === 'messages') return { title: i18next.t('nav.correspondance'), backTo: partyBase };
     if (sub === 'create')
       return { title: i18next.t('create.nouveau.personnage'), backTo: partyBase };
     if (sub.startsWith('character/'))
@@ -251,6 +254,45 @@ function ConcentrationWatcher() {
 }
 
 /**
+ * Shows a correspondence banner when a message:new event targeted this user
+ * (delivery is user-scoped server-side). Own sends are skipped — the echo of
+ * your own POST is not news. A 'read' reflow never banners; opening the
+ * thread dismisses its banner (window event from MessageThread).
+ */
+function MessageWatcher() {
+  const { user } = useAuth();
+  const [notice, setNotice] = useState<MessageAlertPayload | null>(null);
+
+  useSyncEvent(
+    (event) => {
+      if (event.type !== 'message:new' || event.action === 'read') return;
+      if (!user || event.targetUserId !== user.id || event.actorUserId === user.id) return;
+      setNotice({
+        partyId: event.partyId,
+        characterId: event.characterId ?? 0,
+        characterName: event.messageCharacterName ?? '',
+        fromGM: event.messageFromGM ?? false,
+        senderName: event.messageSenderName ?? '',
+      });
+    },
+    [user?.id],
+  );
+
+  // The thread just marked read → its banner retires without a tap
+  useEffect(() => {
+    const onRead = (e: Event) => {
+      const charId = (e as CustomEvent).detail?.charId;
+      setNotice((n) => (n && n.characterId === charId ? null : n));
+    };
+    window.addEventListener('table-sync:message-read', onRead);
+    return () => window.removeEventListener('table-sync:message-read', onRead);
+  }, []);
+
+  if (!notice) return null;
+  return <MessageAlert notice={notice} onDone={() => setNotice(null)} />;
+}
+
+/**
  * Records party opens: entering any /party/:id/* route bumps the member's
  * last_opened_at so the register (/parties) pins the last opened group
  * first. Fires once per party entry — navigating between a party's
@@ -357,6 +399,14 @@ export default function App() {
               }
             />
             <Route
+              path="/party/:partyId/messages"
+              element={
+                <ProtectedRoute>
+                  <MessagesInboxPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/party/:partyId/combat"
               element={
                 <ProtectedRoute>
@@ -370,6 +420,7 @@ export default function App() {
       </main>
       <CombatWidget />
       <ConcentrationWatcher />
+      <MessageWatcher />
       <PartyOpenTracker />
     </HeaderProvider>
   );

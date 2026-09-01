@@ -17,7 +17,8 @@ export type TutorialScriptId =
   | 'features'
   | 'description'
   | 'npcs'
-  | 'notes';
+  | 'notes'
+  | 'messages';
 
 /** Onglets de la fiche (union identique au CharacterTab de la page). */
 export type TutorialTab =
@@ -29,7 +30,8 @@ export type TutorialTab =
   | 'features'
   | 'description'
   | 'npcs'
-  | 'notes';
+  | 'notes'
+  | 'messages';
 
 /** Contexte d'une étape — prédicats `when` du document (§2.3). */
 export interface TutorialCtx {
@@ -161,6 +163,13 @@ export const TUTORIAL_SCRIPTS: Record<TutorialScriptId, TutorialScriptDef> = {
     steps: [
       { id: 'libres', target: tuto('notes-liste') },
       { id: 'partout', target: tuto('notes-liste') },
+    ],
+  },
+  messages: {
+    id: 'messages',
+    steps: [
+      { id: 'fil', target: tuto('messages-fil') },
+      { id: 'partout', target: tuto('messages-fil') },
     ],
   },
 };

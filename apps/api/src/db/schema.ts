@@ -498,6 +498,31 @@ export const characterNotes = sqliteTable(
   (t) => [index('idx_character_notes_char').on(t.characterId)],
 );
 
+// ---------- Correspondance secrète MD ↔ joueur (fil par personnage) ----------
+
+export const characterMessages = sqliteTable(
+  'character_messages',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    characterId: integer('character_id')
+      .notNull()
+      .references(() => characters.id, { onDelete: 'cascade' }),
+    partyId: integer('party_id')
+      .notNull()
+      .references(() => parties.id, { onDelete: 'cascade' }),
+    senderUserId: integer('sender_user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    body: text('body').notNull(),
+    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+    // Lu par le destinataire (le propriétaire pour un message du MD, un MD
+    // pour un message du joueur) — null = non lu. Pas d'édition ni de
+    // suppression : le fil est un journal.
+    readAt: text('read_at'),
+  },
+  (t) => [index('idx_character_messages_char').on(t.characterId, t.createdAt)],
+);
+
 // ---------- SRD Monster catalog (reference data, seeded from 5e-drs.fr) ----------
 
 export const monsters = sqliteTable(

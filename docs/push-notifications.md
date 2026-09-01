@@ -11,7 +11,17 @@ déclencheurs actifs sont maintenant :
   déployée (`?combat=init`, carte du dock en mobile / tiroir en desktop) ;
 - **« À toi de jouer ! »** — démarrage du combat ou avance de tour
   (`next-turn` MD comme `end-my-turn` joueur) quand le tour échoit à un PJ :
-  le clic ouvre l'onglet **Survie** de la fiche (`?tab=survie`).
+  le clic ouvre l'onglet **Survie** de la fiche (`?tab=survie`) ;
+- **« ✉ Le MD vous a écrit » / « Message d'un joueur »** — correspondance
+  secrète (`POST /characters/:id/messages`) : chaque envoi pousse l'autre camp
+  (le propriétaire pour un message du MD, tous les MD pour un message du
+  joueur ; jamais l'expéditeur). Le **corps ne contient jamais le message** —
+  seulement l'émetteur et le personnage : un secret ne s'affiche pas sur un
+  écran de verrouillage. Clic : onglet **Messages** de la fiche
+  (`?tab=messages`) côté joueur, boîte de correspondance (`/party/:id/messages`)
+  côté MD. `tag: 'message:<characterId>'` (une notification par fil),
+  `ttl: 3600, urgency: 'normal'` — pertinent pour la séance, pas pour la
+  semaine.
 
 Les déclencheurs suivants (jet de concentration…) se branchent de la même
 façon via `sendPushToUser()` sans toucher au navigateur.

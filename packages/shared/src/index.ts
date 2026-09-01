@@ -4506,6 +4506,44 @@ export interface ReorderPayload {
   order: number[];
 }
 
+// ---------- Correspondance secrète MD ↔ joueur (fil par personnage) ----------
+
+/** One entry in a character's secret thread. `fromGM` is resolved server-side
+ *  (sender is a party GM) so the UI never trusts a client-sent role. */
+export interface SecretMessage {
+  id: number;
+  characterId: number;
+  senderUserId: number;
+  senderName: string;
+  fromGM: boolean;
+  body: string;
+  createdAt: string;
+  /** Set when the RECIPIENT side read the message (owner or a GM). */
+  readAt: string | null;
+}
+
+/** One register entry of the GM inbox — a character's thread at a glance. */
+export interface MessageThreadSummary {
+  characterId: number;
+  characterName: string;
+  ownerName: string;
+  ownerUserId: number;
+  hidden: boolean;
+  lastMessage: SecretMessage | null;
+  /** Messages waiting for THE CALLER to read (recipient-side unread). */
+  unread: number;
+}
+
+export interface CreateMessagePayload {
+  body: string;
+}
+
+/** Unread counts for the current user across a party's threads. */
+export interface UnreadMessages {
+  byCharacter: Record<string, number>;
+  total: number;
+}
+
 /** List of available template variables for the help UI. */
 export const TEMPLATE_VARIABLES: Array<{ syntax: string; description: string }> = [
   { syntax: '{{name}}', description: 'Nom du personnage' },

@@ -73,6 +73,37 @@ export function activeCharactersFirst<T extends { hidden: boolean }>(characters:
 }
 
 /**
+ * Horodatage de correspondance : la granularité suit la vie d'un fil de
+ * séance — « à l'instant », minutes, puis l'heure du jour, puis la date
+ * (mois abrégé, année seulement si elle change). Les phrases passent par
+ * i18n (commun de la langue active), les valeurs restent brutes.
+ */
+export function formatMessageTime(createdAt: string): string {
+  const normalized = createdAt.includes(' ') ? createdAt.replace(' ', 'T') : createdAt;
+  const d = new Date(normalized);
+  if (Number.isNaN(d.getTime())) return '';
+  const diffMs = Date.now() - d.getTime();
+  if (diffMs < 60_000) return i18next.t('msgs.a.linstant');
+  if (diffMs < 3600_000) return i18next.t('msgs.il.y.a.min', { n: Math.floor(diffMs / 60_000) });
+  const now = new Date();
+  const sameDay =
+    d.getFullYear() === now.getFullYear() &&
+    d.getMonth() === now.getMonth() &&
+    d.getDate() === now.getDate();
+  if (sameDay) {
+    return new Intl.DateTimeFormat(appLocale(), { hour: '2-digit', minute: '2-digit' }).format(d);
+  }
+  if (d.getFullYear() === now.getFullYear()) {
+    return new Intl.DateTimeFormat(appLocale(), { day: 'numeric', month: 'short' }).format(d);
+  }
+  return new Intl.DateTimeFormat(appLocale(), {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(d);
+}
+
+/**
  * Decode an image file, matte it on WHITE, downscale the long edge to
  * `maxEdge` and re-encode as a JPEG Blob (illustrations: a card or letter
  * must stay readable zoomed on a 390px screen — 1280px leaves ~3× native

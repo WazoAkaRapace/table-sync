@@ -12,7 +12,13 @@ import { EventEmitter } from 'node:events';
 import type { ConcentrationCheck } from '@table-sync/shared';
 
 export interface SyncEvent {
-  type: 'inventory:change' | 'character:change' | 'party:change' | 'combat:change' | 'gma:change';
+  type:
+    | 'inventory:change'
+    | 'character:change'
+    | 'party:change'
+    | 'combat:change'
+    | 'gma:change'
+    | 'message:new';
   partyId: number;
   characterId?: number;
   toCharacterId?: number; // for transfers
@@ -41,6 +47,15 @@ export interface SyncEvent {
   actorUserId?: number;
   /** Membership action target (remove/ban/unban) — ws.ts delivers to them directly. */
   targetUserId?: number;
+  /** message:new — the recipient of the secret correspondence update. Delivery
+   *  is user-targeted and NEVER fans out to the party: even the event shape
+   *  (which character got a message) is nobody else's business. */
+  messageCharacterId?: number;
+  /** message:new — did the sender write as the GM? Picks the client banner's target. */
+  messageFromGM?: boolean;
+  /** message:new — display names, so the receiving banner renders without a fetch. */
+  messageCharacterName?: string;
+  messageSenderName?: string;
   /** Concentration save required — pushed to the character's owner (damage taken while concentrating). */
   concentration?: ConcentrationCheck;
 }

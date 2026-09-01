@@ -24,6 +24,7 @@ import api from '../api';
 import { useAuth } from '../auth';
 import { ErrorMsg, LoadingSpinner } from '../components/ui';
 import { useSyncEvent } from '../sync';
+import { useMessagesUnread } from '../useMessagesUnread';
 import { activeCharactersFirst, copyText } from '../utils';
 
 // ---------- Small pieces of the contents ----------
@@ -117,8 +118,21 @@ function TocHeader({ numeral, title, id }: { numeral: string; title: string; id:
   );
 }
 
-/** A ruled annex line that opens somewhere — tool glyph, label, arrow chip. */
-function TocLink({ to, label, glyph }: { to: string; label: string; glyph: string }) {
+/** A ruled annex line that opens somewhere — tool glyph, label, arrow chip.
+ *  `badge` counts what waits behind the door (correspondance non lue). */
+function TocLink({
+  to,
+  label,
+  glyph,
+  badge,
+  badgeLabel,
+}: {
+  to: string;
+  label: string;
+  glyph: string;
+  badge?: number;
+  badgeLabel?: string;
+}) {
   return (
     <li className="border-b border-parchment-200">
       <Link
@@ -129,6 +143,16 @@ function TocLink({ to, label, glyph }: { to: string; label: string; glyph: strin
           {glyph}
         </span>
         <span className="text-sm font-medium text-ink-800">{label}</span>
+        {badge !== undefined && badge > 0 && (
+          <span
+            className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-blood-600 px-1 text-[10px] font-bold text-white"
+            role="status"
+            aria-label={badgeLabel}
+            title={badgeLabel}
+          >
+            {badge > 9 ? '9+' : badge}
+          </span>
+        )}
         <DotLeader />
         <span
           aria-hidden="true"
@@ -283,6 +307,11 @@ export default function PartyPage() {
 
   // Real-time sync: refresh when party membership or characters change
   const currentPartyId = Number(partyId);
+  // Pastille de l'annexe « Correspondance » (MD) — non-lus côté MD du groupe
+  const messagesUnreadQuery = useMessagesUnread(
+    Number.isFinite(currentPartyId) ? currentPartyId : null,
+  );
+  const messagesUnread = messagesUnreadQuery.data?.total ?? 0;
   useSyncEvent(
     (event) => {
       if (event.partyId !== currentPartyId) return;
@@ -481,6 +510,15 @@ export default function PartyPage() {
         <TocHeader numeral="III" title={t('party.outils.annexes')} id="toc-tools" />
         <ul className="list-none">
           {isGM && <TocLink to={`/party/${partyId}/gm`} label={t('party.toc.md')} glyph="🛡" />}
+          {isGM && (
+            <TocLink
+              to={`/party/${partyId}/messages`}
+              label={t('party.toc.correspondance')}
+              glyph="✉️"
+              badge={messagesUnread}
+              badgeLabel={t('msgs.non.lus', { n: messagesUnread })}
+            />
+          )}
           <TocLink to={`/party/${partyId}/combat`} label={t('party.toc.combat')} glyph="⚔" />
           {gmaLinked && (
             <TocLink

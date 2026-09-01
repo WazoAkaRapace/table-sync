@@ -78,6 +78,22 @@ export async function registerWsRoutes(app: FastifyInstance) {
   // Listen to the event bus and fan out to relevant clients
   bus.on('change', (event: SyncEvent) => {
     const message = JSON.stringify(event);
+    // Secret correspondence: user-targeted delivery, full stop. The general
+    // fan-out below must NOT run — even the event's shape (which character
+    // just got a message) would leak activity to the rest of the table.
+    if (event.type === 'message:new') {
+      const target = event.targetUserId;
+      if (target === undefined) return;
+      for (const client of clients) {
+        if (client.userId !== target || client.ws.readyState !== 1) continue;
+        try {
+          client.ws.send(message);
+        } catch {
+          clients.delete(client);
+        }
+      }
+      return;
+    }
     // Targeted delivery: a removed/banned user is no longer a member at fan-out
     // time, so the membership gate below would skip their open tabs. They must
     // still hear the event — their PartyPage flips to "no longer at the table".

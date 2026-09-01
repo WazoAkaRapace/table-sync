@@ -81,6 +81,7 @@ async function injectSession(page: Page, session: SeedSession) {
           'description',
           'npcs',
           'notes',
+          'messages',
         ]),
       );
     },

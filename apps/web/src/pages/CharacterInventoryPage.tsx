@@ -42,8 +42,10 @@ import {
 } from '../components/ui';
 import { useSync, useSyncEvent } from '../sync';
 import { TutorialHost } from '../tutorial/TutorialHost';
+import { UnreadBadge, useMessagesUnread } from '../useMessagesUnread';
 import CharacterDescriptionTab from './CharacterDescriptionTab';
 import CharacterFeaturesTab from './CharacterFeaturesTab';
+import CharacterMessagesTab from './CharacterMessagesTab';
 import CharacterNotesTab from './CharacterNotesTab';
 import CharacterSkillsTab from './CharacterSkillsTab';
 import CharacterSpellsTab from './CharacterSpellsTab';
@@ -73,7 +75,8 @@ type CharacterTab =
   | 'features'
   | 'description'
   | 'npcs'
-  | 'notes';
+  | 'notes'
+  | 'messages';
 
 /** Character sheet tabs (shared by the desktop top bar and the mobile bottom dock).
  *  Play-first order: the state tabs a player opens mid-session lead; the bag
@@ -100,6 +103,7 @@ const CHARACTER_TABS: {
   { key: 'description', label: 'onglet.description', icon: '👤', primary: false },
   { key: 'npcs', label: 'onglet.pnj', icon: '🎭', primary: false },
   { key: 'notes', label: 'onglet.notes', icon: '📝', primary: false },
+  { key: 'messages', label: 'onglet.messages', icon: '✉️', primary: false },
 ];
 const CATALOG_PAGE_SIZE = 30;
 
@@ -147,6 +151,11 @@ export default function CharacterInventoryPage() {
     },
   });
   const isGM = gmQuery.data?.isGM ?? false;
+
+  // Correspondance secrète : pastille de non-lus pour CE personnage (hub
+  // mobile, onglet desktop, grille du hub) — hook avant les gardes de rendu.
+  const messagesUnreadQuery = useMessagesUnread(partyId ? Number(partyId) : null);
+  const messagesUnread = messagesUnreadQuery.data?.byCharacter[String(charId)] ?? 0;
 
   // Inline-editable character name lives in the state band; the portage
   // multiplier too (a derived stat of the encumbrance line).
@@ -847,7 +856,7 @@ export default function CharacterInventoryPage() {
               type="button"
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+              className={`relative flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                 activeTab === tab.key
                   ? 'bg-blood-600 text-white shadow-sm'
                   : 'text-ink-900 hover:bg-parchment-200'
@@ -856,6 +865,13 @@ export default function CharacterInventoryPage() {
             >
               <span aria-hidden="true">{tab.icon}</span>
               <span>{t(tab.label)}</span>
+              {tab.key === 'messages' && messagesUnread > 0 && (
+                <UnreadBadge
+                  count={messagesUnread}
+                  label={t('msgs.non.lus', { n: messagesUnread })}
+                  className="border-parchment-200"
+                />
+              )}
             </button>
           ))}
         </div>
@@ -1073,6 +1089,15 @@ export default function CharacterInventoryPage() {
                 >
                   {moreOpen ? '✕' : hubCombat ? '⚔' : secondary ? secondary.icon : '☰'}
                 </span>
+                {/* Non-lus de correspondance : la pastille vit sur le hub, seul
+                    bouton toujours visible — même combattant, même anneau. */}
+                {messagesUnread > 0 && (
+                  <UnreadBadge
+                    count={messagesUnread}
+                    label={t('msgs.non.lus', { n: messagesUnread })}
+                    className="absolute top-0 right-0"
+                  />
+                )}
               </button>
               {right.map(slot)}
               {/* Sword-cut sweeps the full dock bar on the your-turn edge */}
@@ -1094,11 +1119,12 @@ export default function CharacterInventoryPage() {
             const secondaryTabs = CHARACTER_TABS.filter((t) => !dockPrimaryList.includes(t.key));
             const activeIdx = secondaryTabs.findIndex((t) => t.key === activeTab);
             // Compact 2-column grid anchored just above the dock — stays in
-            // thumb reach. Cells are w-36 (144px) + 8px gaps; the 5th item
-            // spans both columns. No highlight when a dock tab is active.
+            // thumb reach. Cells are w-36 (144px) + 8px gaps; with an ODD
+            // count the last item spans both columns (296px). No highlight
+            // when a dock tab is active.
             const indPos = (idx: number) => {
               const row = Math.floor(idx / 2);
-              const span = idx === 4; // 5th item is full-width
+              const span = secondaryTabs.length % 2 === 1 && idx === secondaryTabs.length - 1;
               return {
                 x: span ? 0 : (idx % 2) * 152,
                 y: row * 48,
@@ -1118,7 +1144,7 @@ export default function CharacterInventoryPage() {
                   )}
                   {secondaryTabs.map((tab, i) => {
                     const active = activeTab === tab.key;
-                    const span = i === 4;
+                    const span = secondaryTabs.length % 2 === 1 && i === secondaryTabs.length - 1;
                     return (
                       <button
                         type="button"
@@ -1138,6 +1164,12 @@ export default function CharacterInventoryPage() {
                           {tab.icon}
                         </span>
                         {t(tab.label)}
+                        {tab.key === 'messages' && messagesUnread > 0 && (
+                          <UnreadBadge
+                            count={messagesUnread}
+                            label={t('msgs.non.lus', { n: messagesUnread })}
+                          />
+                        )}
                       </button>
                     );
                   })}
@@ -1213,6 +1245,13 @@ export default function CharacterInventoryPage() {
             charId={Number(charId)}
             partyId={partyId}
             onSaved={refreshInventory}
+            onError={(msg) => pushToast(msg, 'error')}
+          />
+        )}
+        {activeTab === 'messages' && (
+          <CharacterMessagesTab
+            character={character}
+            charId={Number(charId)}
             onError={(msg) => pushToast(msg, 'error')}
           />
         )}

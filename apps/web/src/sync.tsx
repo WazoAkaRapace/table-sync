@@ -5,13 +5,26 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 // ---------- Types ----------
 
 export interface SyncEvent {
-  type: 'inventory:change' | 'character:change' | 'party:change' | 'combat:change' | 'gma:change';
+  type:
+    | 'inventory:change'
+    | 'character:change'
+    | 'party:change'
+    | 'combat:change'
+    | 'gma:change'
+    | 'message:new';
   partyId: number;
   characterId?: number;
   toCharacterId?: number;
   action?: string;
   itemName?: string;
   actorUserId?: number;
+  /** message:new — user-targeted delivery (the recipient); never a party fan-out. */
+  targetUserId?: number;
+  /** message:new — did the sender write as the GM? Picks the banner's target page. */
+  messageFromGM?: boolean;
+  /** message:new — display names, so the receiving banner renders without a fetch. */
+  messageCharacterName?: string;
+  messageSenderName?: string;
   /** Concentration save required — only relevant to the character's owner. */
   concentration?: {
     characterId: number;

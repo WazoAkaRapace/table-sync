@@ -73,6 +73,7 @@ Les cibles sont **des conteneurs de section stables et toujours présents** (tit
 | `desc-apparence` | Section « Apparence » (repère du bas de page : apparence → visibilité) | `apps/web/src/pages/CharacterDescriptionTab.tsx` | les deux |
 | `pnj-liste` | En-tête + grille PNJ | `apps/web/src/pages/NpcPage.tsx` | les deux |
 | `notes-liste` | En-tête « Notes (n) » | `apps/web/src/pages/CharacterNotesTab.tsx` | les deux |
+| `messages-fil` | Carte « Correspondance » (fil + composeur) | `apps/web/src/components/MessageThread.tsx` | les deux |
 
 ## 4. Habillage commun (bulle)
 
@@ -183,6 +184,13 @@ Se joue à l'arrivée sur la fiche (drapeau absent ou réinitialisé), quel que 
 | 1 | `libres` | `notes-liste` | les deux | **Notes libres** Indices, dettes, promesses… Titre, contenu, ordre, et l'aperçu 👁 pour relire en jeu. | **Free notes** Clues, debts, promises… Title, content, order, and the 👁 preview to reread at the table. |
 | 2 | `partout` | `notes-liste` | les deux | **Sur tous tes écrans** Sauvegardées aussitôt écrites, synchronisées avec ton compte : tablette ce soir, téléphone la semaine prochaine — rien à recopier. | **On every screen** Saved as you type, synced with your account: tablet tonight, phone next week — nothing to copy over. |
 
+
+## 15. Script « Messages » (2 étapes · onglet `messages`)
+
+| # | id | Cible | Vue | Texte FR | Texte EN |
+|---|---|---|---|---|---|
+| 1 | `fil` | `messages-fil` | les deux | **Le canal secret** Échange en privé avec le MD : indices, secrets, révélations que la table ne doit pas entendre. Ce fil appartient à ce personnage — l'historique s'y garde. | **The secret channel** Trade privately with the GM: clues, secrets, revelations the table must not hear. This thread belongs to this character — the history stays here. |
+| 2 | `partout` | `messages-fil` | les deux | **Partout, même hors de la fiche** Un message qui arrive s'affiche en bannière où que vous soyez, une pastille compte les non-lus — et si l'app est fermée, une notification sonne. | **Anywhere, even outside the sheet** An incoming message drops a banner wherever you are, a badge counts the unread — and if the app is closed, a notification fires. |
 ## 15. Réinitialisation — section « Tutoriel » de « Mon compte »
 
 Nouvelle section carte entre « Langue » et « Mot de passe » (`apps/web/src/pages/AccountPage.tsx`), `aria-labelledby` comme ses voisines.

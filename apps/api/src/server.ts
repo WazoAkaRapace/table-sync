@@ -17,6 +17,7 @@ import { pushEnabled } from './push/config.ts';
 import { errorRateLimit } from './rateLimit.ts';
 import { authRoutes } from './routes/auth.ts';
 import { characterFeatureRoutes } from './routes/character-features.ts';
+import { characterMessageRoutes } from './routes/character-messages.ts';
 import { characterNoteRoutes } from './routes/character-notes.ts';
 import { characterSpellRoutes } from './routes/character-spells.ts';
 import { characterRoutes } from './routes/characters.ts';
@@ -139,6 +140,7 @@ async function buildServer() {
   await app.register(characterSpellRoutes, { prefix: '/api' });
   await app.register(characterFeatureRoutes, { prefix: '/api' });
   await app.register(characterNoteRoutes, { prefix: '/api' });
+  await app.register(characterMessageRoutes, { prefix: '/api' });
   await app.register(monsterRoutes, { prefix: '/api' });
   await app.register(combatRoutes, { prefix: '/api' });
   await app.register(wildShapeRoutes, { prefix: '/api' });

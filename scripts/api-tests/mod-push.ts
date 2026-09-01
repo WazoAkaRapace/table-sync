@@ -17,7 +17,7 @@ import { api, eq, type Fixtures, ok, type ServerHandle, startServer } from './ha
 import type { MockPushRequest } from './mock-push.ts';
 
 /** Genuine P-256 subscription keys (base64url, like a real browser). */
-function makeSubscriptionKeys(): { ecdh: ECDH; p256dh: string; auth: string } {
+export function makeSubscriptionKeys(): { ecdh: ECDH; p256dh: string; auth: string } {
   const ecdh = createECDH('prime256v1');
   ecdh.generateKeys();
   return {
@@ -33,7 +33,7 @@ function makeSubscriptionKeys(): { ecdh: ECDH; p256dh: string; auth: string } {
  * salt; the last 16 ciphertext bytes are the GCM tag, and the plaintext ends
  * with the RFC 8188 padding delimiter (0x02, optional trailing zeros).
  */
-function decryptPushBody(ecdh: ECDH, auth: string, body: Buffer): any {
+export function decryptPushBody(ecdh: ECDH, auth: string, body: Buffer): any {
   const salt = body.subarray(0, 16);
   const idlen = body[20];
   const eph = body.subarray(21, 21 + idlen); // server ephemeral public key

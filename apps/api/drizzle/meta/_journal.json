@@ -127,6 +127,13 @@
       "when": 1788213436566,
       "tag": "0017_lazy_salo",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1788293823742,
+      "tag": "0018_character_messages",
+      "breakpoints": true
     }
   ]
 }
