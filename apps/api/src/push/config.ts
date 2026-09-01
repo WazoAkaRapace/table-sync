@@ -24,6 +24,13 @@ if (!pushEnabled && (PUBLIC_KEY || PRIVATE_KEY || SUBJECT)) {
     '[push] VAPID partiellement configuré — VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY et VAPID_SUBJECT (mailto:) sont requis ensemble ; push désactivé',
   );
 }
+// État tranché au boot : « est-ce que le conteneur a bien reçu les clés ? »
+// se vérifie d'un « docker compose logs api | grep push ».
+console.info(
+  pushEnabled
+    ? '[push] VAPID configuré — notifications web push actives'
+    : '[push] VAPID absent — notifications web push désactivées',
+);
 
 export function pushVapidConfig(): PushVapidConfig | null {
   if (!pushEnabled) return null;

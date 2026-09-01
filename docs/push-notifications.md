@@ -52,7 +52,10 @@ sw.js (push-only, aucun cache)
   même si le téléphone est connecté).
 - **VAPID absent = fonctionnalité éteinte proprement** : `GET /api/push/config`
   répond `enabled: false`, `POST /api/push/test` renvoie 503, les abonnements
-  restent stockables. Jamais d'erreur au boot.
+  restent stockables. Jamais d'erreur au boot — mais une ligne de log tranche
+  l'état : `docker compose logs api | grep push` affiche « VAPID configuré —
+  notifications web push actives » ou « VAPID absent — notifications web push
+  désactivées » (et un avertissement si le jeu est PARTIEL).
 
 ## Mise en route (MD / hébergeur)
 
