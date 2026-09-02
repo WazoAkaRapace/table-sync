@@ -630,18 +630,20 @@ export function Modal({
     >
       <div
         ref={modalRef}
-        className="card w-full sm:max-w-md max-h-[85vh] overflow-y-auto rounded-b-none sm:rounded-b-2xl p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))]"
+        className="card w-full break-words sm:max-w-md max-h-[85vh] overflow-y-auto rounded-b-none sm:rounded-b-2xl p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))]"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-label={title}
       >
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="section-title">{title}</h2>
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <h2 className="section-title min-w-0 flex-1 truncate" title={title}>
+            {title}
+          </h2>
           <button
             type="button"
             onClick={onClose}
-            className="btn-ghost text-ink-500 p-1"
+            className="btn-ghost shrink-0 text-ink-500 p-1"
             aria-label={t('common.close')}
           >
             ✕

@@ -352,7 +352,7 @@ function CharactersTab({
   const ordered = activeCharactersFirst(characters);
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {ordered.map((c) => {
         const inv = inventories[c.id];
         const entries = inv?.entries || [];
@@ -669,8 +669,12 @@ function MembersTab({
           <div key={m.userId} className="flex items-center gap-3 p-3">
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                <span className="font-medium text-ink-800">{m.displayName}</span>
-                <span className="text-xs text-ink-400">@{m.username}</span>
+                <span className="min-w-0 max-w-full truncate font-medium text-ink-800">
+                  {m.displayName}
+                </span>
+                <span className="min-w-0 max-w-full truncate text-xs text-ink-400">
+                  @{m.username}
+                </span>
                 <span
                   className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${
                     m.role === 'gm' ? 'bg-blood-600 text-white' : 'bg-parchment-200 text-ink-700'
@@ -729,8 +733,12 @@ function MembersTab({
               <div key={u.userId} className="flex items-center gap-3 p-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <span className="font-medium text-ink-600">{u.displayName}</span>
-                    <span className="text-xs text-ink-400">@{u.username}</span>
+                    <span className="min-w-0 max-w-full truncate font-medium text-ink-600">
+                      {u.displayName}
+                    </span>
+                    <span className="min-w-0 max-w-full truncate text-xs text-ink-400">
+                      @{u.username}
+                    </span>
                   </div>
                   <p className="mt-0.5 text-xs text-ink-400">
                     {t('md.banni.depuis', { since: sinceLabel(u.bannedAt) })}
@@ -811,9 +819,11 @@ function TransactionsTab({ transactions }: { transactions: Transaction[] }) {
       {transactions.map((tx) => (
         <div key={tx.id} className="p-3 flex items-center justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <span className="font-medium">{tx.itemName}</span>
-            <span className="text-sm text-ink-400 ml-2">× {Math.abs(tx.deltaQty)}</span>
-            <div className="text-xs text-ink-400">
+            <span className="flex items-baseline gap-2">
+              <span className="min-w-0 truncate font-medium">{tx.itemName}</span>
+              <span className="shrink-0 text-sm text-ink-400">× {Math.abs(tx.deltaQty)}</span>
+            </span>
+            <div className="truncate text-xs text-ink-400">
               {reasonLabels[tx.reason] || tx.reason}
               {tx.actorName ? ` · ${t('md.par', { name: tx.actorName })}` : ''}
               {' · '}
@@ -824,7 +834,9 @@ function TransactionsTab({ transactions }: { transactions: Transaction[] }) {
             </div>
           </div>
           <span
-            className={`text-sm font-mono font-semibold ${tx.deltaQty > 0 ? 'text-green-600' : 'text-red-600'}`}
+            className={`shrink-0 text-sm font-mono font-semibold ${
+              tx.deltaQty > 0 ? 'text-green-600' : 'text-red-600'
+            }`}
           >
             {tx.deltaQty > 0 ? '+' : ''}
             {tx.deltaQty}
@@ -1082,7 +1094,9 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
               ) : null}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-medium text-ink-800">{item.name}</span>
+                  <span className="min-w-0 max-w-full truncate font-medium text-ink-800">
+                    {item.name}
+                  </span>
                   <CategoryBadge category={item.category} />
                   {item.weightKg !== null && (
                     <span className="text-xs text-ink-400">{item.weightKg} kg</span>
