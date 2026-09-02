@@ -21,7 +21,7 @@
  *              et moments de démo injectés dans le mock.
  *   4. Shots — chaque capture reproduit l'état documenté dans le README.
  *
- * Bilingue : `--lang en` produit les mêmes 17 captures en anglais vers
+ * Bilingue : `--lang en` produit les mêmes 22 captures en anglais vers
  * docs/screenshots-en/ — l'API reçoit ?lang=en sur chaque appel du seed
  * (payloads mono-locale : `name` devient anglais), Chromium démarre en
  * locale en-US avec localStorage dnd-inv-lang=en, et tous les sélecteurs /
@@ -31,7 +31,7 @@
  * captures 11–13 peuvent différer entre deux runs d'une même langue).
  *
  * Usage :
- *   npm run screenshots                    # régénère les 17 captures (FR)
+ *   npm run screenshots                    # régénère les 22 captures (FR)
  *   npm run screenshots -- --only 03,07    # seulement certaines (numéros ou noms)
  *   npm run screenshots -- --lang en       # version anglaise → docs/screenshots-en/
  *   npm run screenshots -- --keep          # laisser les serveurs tourner (debug)
@@ -734,6 +734,45 @@ async function seed(
     },
   ]);
 
+  // — Correspondance secrète : un échange lu sur le fil de Lyra (tampons MD,
+  // réponse à l'encre, « Vu »), un message de Bastien NON lu par le MD (la
+  // pastille du registre) et une confidence du MD à Mira (aperçu du volume).
+  const msg = (sender: Api, charId: number, body: string) =>
+    sender('POST', `/api/characters/${charId}/messages`, { body });
+  await msg(
+    mdCall,
+    lyra.id,
+    S(
+      'La cassette est sous l’autel — n’en parle à personne.',
+      'The reliquary is under the altar — tell no one.',
+    ),
+  );
+  await msg(auCall, lyra.id, S('Je fouille l’autel dès ce soir.', 'I search the altar tonight.'));
+  await msg(
+    mdCall,
+    lyra.id,
+    S('Bien. Préviens-moi avant de forcer le sceau.', 'Good. Warn me before forcing the seal.'),
+  );
+  // Chaque camp lit ce qui lui est adressé — la 18 montre des « Vu » sereins.
+  await auCall('POST', `/api/characters/${lyra.id}/messages/read`, {});
+  await mdCall('POST', `/api/characters/${lyra.id}/messages/read`, {});
+  await msg(
+    baCall,
+    kael.id,
+    S(
+      'Le prêtre noir m’a repéré au marché — il cherche quelqu’un.',
+      'The black priest spotted me at the market — he is looking for someone.',
+    ),
+  ); // NON lu côté MD : la pastille de la 20
+  await msg(
+    mdCall,
+    mira.id,
+    S(
+      'Ton rituel de la veille a laissé une trace sur ton baudrier.',
+      'Your ritual last night left a mark on your baldric.',
+    ),
+  );
+
   return {
     partyId: party.id,
     encounterId: enc,
@@ -746,7 +785,12 @@ async function seed(
 // Playwright — sessions et captures
 // ---------------------------------------------------------------------------
 
-async function newSession(browser: Browser, session: Session): Promise<BrowserContext> {
+async function newSession(
+  browser: Browser,
+  session: Session,
+  opts: { tours?: boolean } = {},
+): Promise<BrowserContext> {
+  const tours = opts.tours ?? true;
   const ctx = await browser.newContext({
     viewport: { width: 390, height: 844 },
     deviceScaleFactor: 1,
@@ -757,32 +801,35 @@ async function newSession(browser: Browser, session: Session): Promise<BrowserCo
     colorScheme: 'light',
   });
   await ctx.addInitScript(
-    ({ token, user, langCode }) => {
+    ({ token, user, langCode, tours }) => {
       localStorage.setItem('dnd-inv-token', token);
       localStorage.setItem('dnd-inv-user', JSON.stringify(user));
-      localStorage.setItem('dnd-inv-tour-seen', '1');
-      // Visites propres d'onglet éteintes elles aussi : sans cette clé, le
-      // premier changement d'onglet ouvre le spotlight react-joyride qui
-      // intercepte les clics du pilotage (même liste que e2e/fixtures.ts).
-      localStorage.setItem(
-        'dnd-inv-tour-tabs',
-        JSON.stringify([
-          'survival',
-          'stats',
-          'spells',
-          'skills',
-          'inventory',
-          'features',
-          'description',
-          'npcs',
-          'notes',
-        ]),
-      );
+      if (tours) {
+        localStorage.setItem('dnd-inv-tour-seen', '1');
+        // Visites propres d'onglet éteintes elles aussi : sans cette clé, le
+        // premier changement d'onglet ouvre le spotlight react-joyride qui
+        // intercepte les clics du pilotage (même liste que e2e/fixtures.ts).
+        localStorage.setItem(
+          'dnd-inv-tour-tabs',
+          JSON.stringify([
+            'survival',
+            'stats',
+            'spells',
+            'skills',
+            'inventory',
+            'features',
+            'description',
+            'npcs',
+            'notes',
+            'messages',
+          ]),
+        );
+      }
       // Interface EN : i18next lit cette clé au chargement, et l'axios de
       // l'app en déduit l'en-tête Accept-Language des payloads mono-locale.
       if (langCode === 'en') localStorage.setItem('dnd-inv-lang', 'en');
     },
-    { token: session.token, user: session.user, langCode: lang },
+    { token: session.token, user: session.user, langCode: lang, tours },
   );
   return ctx;
 }
@@ -864,7 +911,7 @@ async function shoot(page: Page, file: string, opts: { animations?: 'allow' | 'd
 }
 
 // ---------------------------------------------------------------------------
-// Les 17 captures du README
+// Les 22 captures du README
 // ---------------------------------------------------------------------------
 
 interface ShotCtx {
@@ -873,6 +920,12 @@ interface ShotCtx {
   md: BrowserContext;
   aurore: BrowserContext;
   bastien: BrowserContext;
+  /** Session d'Aurore SANS clés de tutoriel — la visite guidée s'y déclenche
+   *  (captures 21–22). */
+  auroreFresh: BrowserContext;
+  /** REST en tant que MD — pour faire ARRIVER un message en pleine capture
+   *  (la bannière de la 19 ne se met en scène pas autrement). */
+  sendAsMd: (charId: number, body: string) => Promise<void>;
 }
 
 // Ces trois-là se prennent après avoir avancé jusqu'au tour des gobelins.
@@ -1189,6 +1242,107 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
       await page.close();
     },
   },
+  {
+    file: '18-correspondance.png',
+    async run(c) {
+      const page = await openSheet(c.aurore, c.webPort, c.refs.partyId, c.refs.chars.lyra);
+      await openTab(page, S('Messages', 'Messages'));
+      await page
+        .getByRole('heading', {
+          name: S('Correspondance avec le MD', 'Correspondence with the GM'),
+        })
+        .waitFor({ timeout: 10_000 });
+      // Laisser le fil se marquer lu et retomber : la capture montre des
+      // « Vu » sereins, le plus récent et le composeur au premier plan
+      // (l'ouverture défile d'elle-même en bas du fil).
+      await page.waitForTimeout(1200);
+      await shoot(page, '18-correspondance.png');
+      await page.close();
+    },
+  },
+  {
+    file: '19-banniere-correspondance.png',
+    async run(c) {
+      const page = await openSheet(c.aurore, c.webPort, c.refs.partyId, c.refs.chars.lyra);
+      await openTab(page, S('Inventaire', 'Inventory')); // un onglet neutre : la bannière tombe « où que vous soyez »
+      await c.sendAsMd(
+        c.refs.chars.lyra,
+        S(
+          'Le prêtre noir a demandé ton nom à l’auberge. Ne dors pas seul.',
+          'The black priest asked for your name at the inn. Do not sleep alone.',
+        ),
+      );
+      await page
+        .getByRole('status')
+        .filter({ hasText: S('Le MD vous a écrit', 'Your GM sent you a message') })
+        .waitFor({ timeout: 10_000 });
+      await page.waitForTimeout(350); // band-rise pose le sceau
+      await shoot(page, '19-banniere-correspondance.png');
+      await page.close();
+    },
+  },
+  {
+    file: '20-boite-md.png',
+    async run(c) {
+      const page = await c.md.newPage();
+      await page.goto(webUrl(c.webPort, `/party/${c.refs.partyId}/messages`), {
+        waitUntil: 'networkidle',
+        timeout: 90_000,
+      });
+      await settle(page, 600);
+      // Le registre porte ses trois volumes — la pastille attend sur Kael.
+      await page
+        .getByRole('button', {
+          name: S(
+            'Ouvrir la correspondance de Kael Aubemarteau',
+            'Open Kael Aubemarteau’s correspondence',
+          ),
+        })
+        .waitFor({ timeout: 10_000 });
+      await shoot(page, '20-boite-md.png');
+      await page.close();
+    },
+  },
+  {
+    file: '21-tutoriel-bienvenue.png',
+    async run(c) {
+      // Session sans clés de tutoriel : la visite d'accueil part d'elle-même
+      // (~800 ms après le chargement de la fiche).
+      const page = await openSheet(c.auroreFresh, c.webPort, c.refs.partyId, c.refs.chars.lyra);
+      await page
+        .getByText(S('Bienvenue sur ta fiche !', 'Welcome to your sheet!'))
+        .first()
+        .waitFor({ timeout: 10_000 });
+      await page.waitForTimeout(500); // le spotlight se pose
+      await shoot(page, '21-tutoriel-bienvenue.png');
+      await page.close();
+    },
+  },
+  {
+    file: '22-tutoriel-hub.png',
+    async run(c) {
+      // Avancer jusqu'à l'étape 4 (mobile) : le spotlight sur le bouton
+      // central du dock — l'onglet Messages y vit aussi.
+      const page = await openSheet(c.auroreFresh, c.webPort, c.refs.partyId, c.refs.chars.lyra);
+      // « Suivant » du tutoriel uniquement — l'aria-label de la carte de
+      // combat (« passer au combattant suivant ») matche aussi le nom.
+      const next = page
+        .getByTestId('floater')
+        .getByRole('button', { name: S('Suivant', 'Next'), exact: true });
+      for (const titre of [
+        S('Ta survie, toujours en vue', 'Your vitals, always in sight'),
+        S('Tes onglets', 'Your tabs'),
+        S('Le bouton central', 'The centre button'),
+      ]) {
+        await next.click();
+        await page.getByText(titre).first().waitFor({ timeout: 10_000 });
+        await page.waitForTimeout(450); // le spotlight glisse vers sa cible
+      }
+      await page.waitForTimeout(250);
+      await shoot(page, '22-tutoriel-hub.png');
+      await page.close();
+    },
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -1229,6 +1383,12 @@ async function main() {
       md: await newSession(browser, mdS),
       aurore: await newSession(browser, auS),
       bastien: await newSession(browser, baS),
+      auroreFresh: await newSession(browser, auS, { tours: false }),
+      sendAsMd: async (charId, body) => {
+        await makeApi(stack.apiPort, mdS.token)('POST', `/api/characters/${charId}/messages`, {
+          body,
+        });
+      },
     };
 
     const selected = SHOTS.filter(

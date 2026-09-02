@@ -92,6 +92,23 @@ Conçue pour être utilisée sur téléphone et tablette pendant la partie : PWA
 |---|---|
 | ![Widget](docs/screenshots/05-widget-combat.png) | ![Formes](docs/screenshots/10-formes.png) |
 
+### ✉️ Correspondance secrète MD ↔ joueur
+- **Un fil par personnage** : le MD échange en privé avec chaque joueur — indices, secrets, révélations que la table ne doit pas entendre. L'historique se garde sur le fil ; seul le MD peut rayer une ligne (confirmation au point de tap)
+- **Visible partout** : un message qui arrive tombe en bannière où que le joueur se trouve, une pastille compte les non-lus — et devient une **notification Web Push** si l'app est fermée (le texte n'apparaît jamais sur l'écran de verrouillage)
+- **Boîte de réception MD** : chaque personnage est un volume du registre — qui attend une réponse se lit en pastille, la plus fraîche correspondance tient l'ordinal sang
+
+| Le fil (joueur) | Bannière d'arrivée | Boîte du MD |
+|---|---|---|
+| ![Fil](docs/screenshots/18-correspondance.png) | ![Bannière](docs/screenshots/19-banniere-correspondance.png) | ![Boîte MD](docs/screenshots/20-boite-md.png) |
+
+### 🎓 Visite guidée embarquée
+- **La fiche s'explique toute seule** : à la première ouverture, un spotlight accueille le joueur (bandeau d'état, onglets, bouton central) — puis chaque onglet joue sa propre visite au premier passage
+- **Rejouable à volonté** depuis « Mon compte → Réinitialiser le tutoriel » ; scripts français et anglais, bulle maison dans le monde parchemin/encre
+
+| Bienvenue | Le bouton central |
+|---|---|
+| ![Bienvenue](docs/screenshots/21-tutoriel-bienvenue.png) | ![Hub](docs/screenshots/22-tutoriel-hub.png) |
+
 ### 📜 GM Assistant — chronique de campagne
 - **Liaison groupe ↔ campagne** [gmassistant.app](https://gmassistant.app) : le MD connecte sa clé API (chiffrée côté serveur, jamais dans le navigateur), relie une campagne existante ou la **crée depuis le groupe** — campagne D&D 5e + les personnages cochés avec leur « joué par » et leur fiche d'identité
 - **Resynchronisation des personnages** à la demande : créations cochables, mises à jour nom / joué par / fiche d'identité (classes, alignement, apparence, personnalité, histoire), orphelins supprimés uniquement d'un geste confirmé — lecture seule partout ailleurs
