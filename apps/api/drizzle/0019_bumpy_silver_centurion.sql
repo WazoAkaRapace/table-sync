@@ -1,0 +1,1 @@
+ALTER TABLE `combatants` ADD `name_hidden` integer DEFAULT 0 NOT NULL;

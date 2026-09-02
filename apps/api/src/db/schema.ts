@@ -607,6 +607,8 @@ export const combatants = sqliteTable(
     sortOrder: integer('sort_order').notNull().default(0),
     defeated: integer('defeated').notNull().default(0),
     cardColor: text('card_color'), // hex color for card background, NULL = default
+    // GM mask: 1 = players see the placeholder name instead of the real one
+    nameHidden: integer('name_hidden').notNull().default(0),
     createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
   },
   (t) => [

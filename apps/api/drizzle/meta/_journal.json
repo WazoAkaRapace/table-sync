@@ -134,6 +134,13 @@
       "when": 1788293823742,
       "tag": "0018_character_messages",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "6",
+      "when": 1788384423372,
+      "tag": "0019_bumpy_silver_centurion",
+      "breakpoints": true
     }
   ]
 }

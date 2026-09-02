@@ -383,13 +383,14 @@ export default function CombatPage() {
     }
   };
 
-  const addMonster = async (slug: string, count: number, name: string) => {
+  const addMonster = async (slug: string, count: number, name: string, nameHidden: boolean) => {
     if (!activeEncounter) return;
     try {
       await api.post(`/api/encounters/${activeEncounter.id}/combatants/monster`, {
         monsterSlug: slug,
         count,
         name,
+        nameHidden,
       });
       await loadEncounter(activeEncounter.id);
     } catch (err: any) {
@@ -1013,6 +1014,7 @@ function CombatTheatre({
           combatants={combatants}
           turnIndex={encounter.turnIndex}
           status={status}
+          isGM={isGM}
           focusId={focusId}
           onFocus={onFocus}
           targetMode={targetMode}
@@ -1158,6 +1160,7 @@ function InitiativeRail({
   combatants,
   turnIndex,
   status,
+  isGM,
   focusId,
   onFocus,
   targetMode,
@@ -1166,6 +1169,7 @@ function InitiativeRail({
   combatants: Combatant[];
   turnIndex: number;
   status: EncounterStatus;
+  isGM: boolean;
   focusId: number | null;
   onFocus: (id: number | null) => void;
   targetMode: boolean;
@@ -1248,6 +1252,15 @@ function InitiativeRail({
                   >
                     {label}
                   </span>
+                  {isGM && c.nameHidden && (
+                    <span
+                      aria-hidden="true"
+                      className="shrink-0 text-xs"
+                      title={t('combat.nom.masque.aide')}
+                    >
+                      🙈
+                    </span>
+                  )}
                   {c.conditions.length > 0 && (
                     <span
                       className={`shrink-0 rounded-full px-1.5 text-[10px] font-semibold ${
@@ -1429,6 +1442,11 @@ function StagePanel({
   const status = encounter.status;
   const label = groupMembers.length > 1 ? memberLabel(combatant) : combatant.name;
   const hp = hpVisible(combatant);
+  // Mask pill tooltip/aria: what players currently see + the reveal action,
+  // with the group note when the toggle covers more than this combatant.
+  const maskHint =
+    (combatant.nameHidden ? t('combat.nom.masque.aide') : t('combat.nom.masquer.aide')) +
+    (groupMembers.length > 1 ? t('combat.nom.masque.groupe') : '');
 
   const submitInitiative = () => {
     const v = parseInt(initInput, 10);
@@ -1465,7 +1483,9 @@ function StagePanel({
               <span className="text-sm font-medium text-ink-400">{t('combat.mort.vaincu')}</span>
             )}
           </div>
-          <h2 className="mt-1 font-display text-2xl font-bold leading-tight sm:text-3xl">
+          {/* The name carries its own mask — the toggle sits beside what it
+              hides. Ink idiom (printed mark), never blood: not "now", a state. */}
+          <h2 className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 font-display text-2xl font-bold leading-tight sm:text-3xl">
             {sheetPath ? (
               <Link
                 to={sheetPath}
@@ -1476,6 +1496,25 @@ function StagePanel({
               </Link>
             ) : (
               label
+            )}
+            {isGM && combatant.type === 'monster' && (
+              <button
+                type="button"
+                onClick={() => onPatch(combatant.id, { nameHidden: !combatant.nameHidden })}
+                aria-pressed={combatant.nameHidden}
+                title={maskHint}
+                aria-label={maskHint}
+                className={
+                  combatant.nameHidden
+                    ? 'rounded-full bg-ink-100 px-3 py-1.5 font-sans text-xs font-medium text-ink-600 transition-colors hover:bg-ink-300/50'
+                    : 'rounded-full border border-parchment-300 px-3 py-1.5 font-sans text-xs font-medium text-ink-400 transition-colors hover:border-ink-300 hover:text-ink-600'
+                }
+              >
+                <span aria-hidden="true">{combatant.nameHidden ? '🙈' : '👁'}</span>{' '}
+                {combatant.nameHidden
+                  ? t('combat.nom.masque.aux.joueurs')
+                  : t('combat.nom.masquer.le.nom')}
+              </button>
             )}
           </h2>
         </div>

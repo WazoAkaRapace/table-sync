@@ -15,7 +15,7 @@ import { Modal, NumberField } from './ui';
 interface Props {
   open: boolean;
   onClose: () => void;
-  onAdd: (slug: string, count: number, name: string) => void;
+  onAdd: (slug: string, count: number, name: string, nameHidden: boolean) => void;
 }
 
 export default function AddMonsterModal({ open, onClose, onAdd }: Props) {
@@ -25,6 +25,7 @@ export default function AddMonsterModal({ open, onClose, onAdd }: Props) {
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<MonsterSummary | null>(null);
   const [count, setCount] = useState(1);
+  const [nameHidden, setNameHidden] = useState(false);
 
   // Debounced search
   useEffect(() => {
@@ -50,17 +51,19 @@ export default function AddMonsterModal({ open, onClose, onAdd }: Props) {
 
   const handleAdd = useCallback(() => {
     if (!selected) return;
-    onAdd(selected.slug, count, selected.name);
+    onAdd(selected.slug, count, selected.name, nameHidden);
     setSelected(null);
     setSearch('');
     setCount(1);
+    setNameHidden(false);
     onClose();
-  }, [selected, count, onAdd, onClose]);
+  }, [selected, count, nameHidden, onAdd, onClose]);
 
   const handleClose = () => {
     setSelected(null);
     setSearch('');
     setCount(1);
+    setNameHidden(false);
     onClose();
   };
 
@@ -162,6 +165,32 @@ export default function AddMonsterModal({ open, onClose, onAdd }: Props) {
                 {t('ajmonstre.groupe.de.monstres', { count })}
               </span>
             </div>
+          </div>
+          {/* GM mask — ink idiom (the register's « Caché » mark), not blood:
+              a printed state, not an action */}
+          <div className="mt-4">
+            <label
+              className={`flex cursor-pointer select-none items-start gap-3 rounded-lg border p-3 transition-colors ${
+                nameHidden
+                  ? 'border-ink-400 bg-ink-100/70'
+                  : 'border-parchment-200 hover:border-ink-300 hover:bg-parchment-100'
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={nameHidden}
+                onChange={(e) => setNameHidden(e.target.checked)}
+                className="mt-0.5 w-4 h-4 accent-ink-600"
+              />
+              <span className="min-w-0">
+                <span className="block text-sm font-medium text-ink-800">
+                  {t('ajmonstre.masquer.le.nom')}
+                </span>
+                <span className="mt-0.5 block text-xs leading-relaxed text-ink-400">
+                  {t('ajmonstre.masquer.le.nom.aide')}
+                </span>
+              </span>
+            </label>
           </div>
           <div className="flex gap-2 mt-4">
             <button type="button" onClick={handleClose} className="btn-secondary flex-1">

@@ -5252,6 +5252,13 @@ export interface CombatantCondition {
   duration: number | null;
 }
 
+/**
+ * Name shown to non-GM viewers of a name-hidden monster combatant. The server
+ * substitutes it for the real name (data-layer French, like monster names);
+ * the real name never reaches the player client.
+ */
+export const HIDDEN_COMBATANT_NAME = 'Créature inconnue';
+
 export interface Combatant {
   id: number;
   encounterId: number;
@@ -5259,6 +5266,13 @@ export interface Combatant {
   characterId: number | null; // set when type === 'player'
   monsterSlug: string | null; // catalog ref when type === 'monster'
   name: string; // display name (player char name / monster name)
+  /**
+   * GM mask on the name: players (non-GM viewers) receive
+   * HIDDEN_COMBATANT_NAME instead of the real name. The GM keeps the real
+   * name and this flag lets the UI mark it as masked. Grouped monsters share
+   * the mask — toggling one member covers the whole group.
+   */
+  nameHidden: boolean;
   count: number; // group size (1 for players, ≥1 for monster groups)
   groupId: number | null; // shared by grouped monsters (same initiative, independent HP)
   initiative: number | null; // null = not yet rolled
@@ -5331,6 +5345,8 @@ export interface AddMonsterPayload {
   monsterSlug: string;
   count?: number;
   name?: string;
+  /** Mask the name from players at add time (whole group). */
+  nameHidden?: boolean;
 }
 
 export interface AddPlayerPayload {
@@ -5349,6 +5365,8 @@ export interface PatchCombatantPayload {
   conditions?: CombatantCondition[];
   defeated?: boolean;
   cardColor?: string | null;
+  /** GM mask on the name — grouped monsters fan out to the whole group. */
+  nameHidden?: boolean;
 }
 
 export interface SetInitiativePayload {

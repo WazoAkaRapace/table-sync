@@ -656,6 +656,131 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
     'hidden character pulled from non-ended fights',
   );
 
+  // ---------- GM name mask (hidden enemy names) ----------
+  const encMask = (
+    await api(base, 'POST', `/api/parties/${P}/encounters`, {
+      token: fx.gm.token,
+      body: { name: 'Mystère' },
+    })
+  ).data.encounter;
+
+  // masked at add time — every group member carries the mask
+  r = await api(base, 'POST', `/api/encounters/${encMask.id}/combatants/monster`, {
+    token: fx.gm.token,
+    body: { monsterSlug: goblin.slug, count: 2, name: 'Ombre encapuchonnée', nameHidden: true },
+  });
+  eq(r.status, 201, 'add masked monster group');
+  ok(
+    r.data.combatants.every((c: any) => c.nameHidden === true),
+    'group created masked',
+  );
+  ok(
+    r.data.combatants.every((c: any) => c.name === 'Ombre encapuchonnée'),
+    'GM keeps the real name',
+  );
+  const masked1 = r.data.combatants[0];
+
+  // an unmasked monster of another type stays readable
+  const wolf =
+    srv.query(
+      "SELECT slug FROM monsters WHERE name_fr LIKE '%oup%' AND hit_dice IS NOT NULL LIMIT 1",
+    ) ??
+    srv.query(
+      'SELECT slug FROM monsters WHERE hit_dice IS NOT NULL AND slug != ? LIMIT 1',
+      goblin.slug,
+    );
+  const openMon = (
+    await api(base, 'POST', `/api/encounters/${encMask.id}/combatants/monster`, {
+      token: fx.gm.token,
+      body: { monsterSlug: wolf.slug, count: 1 },
+    })
+  ).data.combatants[0];
+  eq(openMon.nameHidden, false, 'plain add stays unmasked');
+
+  // a player combatant so fx.player can read the detail
+  await api(base, 'POST', `/api/encounters/${encMask.id}/combatants/player`, {
+    token: fx.gm.token,
+    body: { characterId: fx.charBran.id },
+  });
+
+  // player view: placeholder + flag, real name never leaves the server
+  r = await api(base, 'GET', `/api/encounters/${encMask.id}`, { token: fx.player.token });
+  const pMasked = r.data.encounter.combatants.find((c: any) => c.id === masked1.id);
+  eq(pMasked.name, 'Créature inconnue', 'player reads the placeholder name');
+  eq(pMasked.nameHidden, true, 'mask flag travels for UI marks');
+  eq(
+    r.data.encounter.combatants.find((c: any) => c.id === openMon.id).name,
+    srv.query('SELECT name_fr AS n FROM monsters WHERE slug = ?', wolf.slug).n,
+    'unmasked monster name stays readable',
+  );
+  ok(
+    !JSON.stringify(r.data.encounter.combatants).includes('Ombre'),
+    'real name absent from the player payload',
+  );
+
+  // GM view: real name + flag
+  r = await api(base, 'GET', `/api/encounters/${encMask.id}`, { token: fx.gm.token });
+  eq(
+    r.data.encounter.combatants.find((c: any) => c.id === masked1.id).name,
+    'Ombre encapuchonnée',
+    'GM still reads the real name',
+  );
+
+  // roster: the register masks the group for players
+  r = await api(base, 'GET', `/api/parties/${P}/encounters`, { token: fx.player.token });
+  const maskSummary = r.data.encounters.find((e: any) => e.id === encMask.id);
+  const maskEntry = maskSummary.roster.find((x: any) => x.name === 'Créature inconnue');
+  ok(maskEntry && maskEntry.count === 2, 'roster masks the group');
+  ok(!JSON.stringify(maskSummary.roster).includes('Ombre'), 'roster leaks nothing');
+
+  // joining the masked group without the flag → whole group stays coherent
+  r = await api(base, 'POST', `/api/encounters/${encMask.id}/combatants/monster`, {
+    token: fx.gm.token,
+    body: { monsterSlug: goblin.slug, count: 1, name: 'Ombre encapuchonnée' },
+  });
+  eq(r.data.combatants[0].nameHidden, true, 'late joiner inherits the group mask');
+
+  // mask toggle is GM-only
+  r = await api(base, 'PATCH', `/api/combatants/${masked1.id}`, {
+    token: fx.player.token,
+    body: { nameHidden: false },
+  });
+  eq(r.status, 403, 'mask toggle non-GM → 403');
+
+  // reveal from the card → group-wide, player sees the name
+  r = await api(base, 'PATCH', `/api/combatants/${masked1.id}`, {
+    token: fx.gm.token,
+    body: { nameHidden: false },
+  });
+  eq(r.data.combatant.nameHidden, false, 'reveal returns the state');
+  const maskRows = srv.queryAll(
+    'SELECT name_hidden AS n FROM combatants WHERE group_id = ?',
+    masked1.groupId,
+  );
+  ok(
+    maskRows.every((x: any) => x.n === 0),
+    'whole group unmasked',
+  );
+  r = await api(base, 'GET', `/api/encounters/${encMask.id}`, { token: fx.player.token });
+  eq(
+    r.data.encounter.combatants.find((c: any) => c.id === masked1.id).name,
+    'Ombre encapuchonnée',
+    'player sees the revealed name',
+  );
+
+  // hide again → placeholder returns
+  await api(base, 'PATCH', `/api/combatants/${masked1.id}`, {
+    token: fx.gm.token,
+    body: { nameHidden: true },
+  });
+  r = await api(base, 'GET', `/api/encounters/${encMask.id}`, { token: fx.player.token });
+  eq(
+    r.data.encounter.combatants.find((c: any) => c.id === masked1.id).name,
+    'Créature inconnue',
+    're-hidden → placeholder again',
+  );
+  await api(base, 'DELETE', `/api/encounters/${encMask.id}`, { token: fx.gm.token });
+
   // ---------- delete combatant ----------
   r = await api(base, 'DELETE', `/api/combatants/${gob1.id}`, { token: fx.player.token });
   eq(r.status, 403, 'delete combatant non-GM → 403');

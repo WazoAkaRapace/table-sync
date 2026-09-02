@@ -29,6 +29,7 @@ import {
   abilityModifier,
   CONCENTRATION_BREAKING_CONDITIONS_FR,
   computeAC,
+  HIDDEN_COMBATANT_NAME,
   rollHitPoints,
 } from '@table-sync/shared';
 import { and, desc, eq, exists, inArray, sql } from 'drizzle-orm';
@@ -80,6 +81,7 @@ function mapCombatant(row: any): Combatant {
     characterId: row.character_id ?? row.characterId ?? null,
     monsterSlug: row.monster_slug ?? row.monsterSlug ?? null,
     name: row.name,
+    nameHidden: !!(row.name_hidden ?? row.nameHidden),
     count: row.count ?? 1,
     groupId: row.group_id ?? row.groupId ?? null,
     initiative: row.initiative ?? null,
@@ -151,9 +153,11 @@ function equippedAcRows(characterId: number): any[] {
  * Aggregate combatants of several encounters into roster previews: characters
  * first (alphabetical), then monster groups by descending size. Grouped and
  * ungrouped monsters sharing a name are merged — the register only needs
- * "Gobelin ×6", not six rows.
+ * "Gobelin ×6", not six rows. For non-GM viewers, masked monster names become
+ * the shared placeholder — distinct hidden groups merge into one line, which
+ * keeps even their count-by-type secret.
  */
-function buildRosters(encounterIds: number[]): Map<number, EncounterRosterEntry[]> {
+function buildRosters(encounterIds: number[], gm: boolean): Map<number, EncounterRosterEntry[]> {
   const byEncounter = new Map<number, Map<string, EncounterRosterEntry>>();
   if (encounterIds.length > 0) {
     const rows = getDrizzle()
@@ -161,16 +165,19 @@ function buildRosters(encounterIds: number[]): Map<number, EncounterRosterEntry[
         encounter_id: combatantsTable.encounterId,
         name: combatantsTable.name,
         type: combatantsTable.type,
+        name_hidden: combatantsTable.nameHidden,
       })
       .from(combatantsTable)
       .where(inArray(combatantsTable.encounterId, encounterIds))
       .all() as any[];
     for (const row of rows) {
+      const masked = !gm && row.type === 'monster' && row.name_hidden;
+      const displayName = masked ? HIDDEN_COMBATANT_NAME : row.name;
       const perEncounter =
         byEncounter.get(row.encounter_id) ?? new Map<string, EncounterRosterEntry>();
-      const key = `${row.type}:${row.name}`;
+      const key = `${row.type}:${displayName}`;
       const entry = perEncounter.get(key) ?? {
-        name: row.name,
+        name: displayName,
         count: 0,
         player: row.type === 'player',
       };
@@ -341,7 +348,10 @@ export async function combatRoutes(app: FastifyInstance) {
           .all();
       }
 
-      const rosters = buildRosters(rows.map((r) => r.id));
+      const rosters = buildRosters(
+        rows.map((r) => r.id),
+        gm,
+      );
       return reply.send({
         encounters: rows.map((r) => mapEncounterSummary(r, rosters.get(r.id) ?? [])),
       });
@@ -432,6 +442,10 @@ export async function combatRoutes(app: FastifyInstance) {
         );
         combatants = combatants.map((c) => {
           if (c.characterId !== null && myCharIds.has(c.characterId)) return c; // own combatant
+          // GM name mask: the placeholder substitutes the real name BEFORE it
+          // ever leaves the server — the leak is impossible by construction,
+          // whichever player surface renders it.
+          if (c.nameHidden && c.type === 'monster') c.name = HIDDEN_COMBATANT_NAME;
           // Stable per-combatant jitter (±8 % on the tier boundaries): the same
           // monster always flips wording at the same hidden ratio, and players
           // can't average their way back to exact HP from repeated reads.
@@ -562,6 +576,7 @@ export async function combatRoutes(app: FastifyInstance) {
           group_id: combatantsTable.groupId,
           initiative: combatantsTable.initiative,
           sort_order: combatantsTable.sortOrder,
+          name_hidden: combatantsTable.nameHidden,
         })
         .from(combatantsTable)
         .where(
@@ -573,6 +588,15 @@ export async function combatRoutes(app: FastifyInstance) {
         )
         .limit(1)
         .get() as any;
+
+      // GM mask: explicit intent covers every member of the group; a late
+      // joiner without intent (flag absent) inherits the group's mask.
+      const nameHidden =
+        body.nameHidden !== undefined
+          ? body.nameHidden
+            ? 1
+            : 0
+          : (existingGroup?.name_hidden ?? 0);
 
       // Unique group id — Date.now() alone can collide when two different
       // monster types are added within the same millisecond, which would
@@ -596,6 +620,7 @@ export async function combatRoutes(app: FastifyInstance) {
               type: 'monster',
               monsterSlug: monster.slug,
               name,
+              nameHidden,
               count,
               groupId,
               initiative: sharedInitiative,
@@ -610,6 +635,25 @@ export async function combatRoutes(app: FastifyInstance) {
           createdIds.push(id);
         }
       })();
+
+      // An explicit mask flag realigns the whole group — the members share one
+      // name on screen, and a mixed group would show players a half-masked name.
+      if (
+        body.nameHidden !== undefined &&
+        existingGroup &&
+        existingGroup.name_hidden !== nameHidden
+      ) {
+        drizzle
+          .update(combatantsTable)
+          .set({ nameHidden })
+          .where(
+            and(
+              eq(combatantsTable.encounterId, enc.id),
+              eq(combatantsTable.groupId, existingGroup.group_id),
+            ),
+          )
+          .run();
+      }
 
       const rows = drizzle
         .select(cols(combatantsTable))
@@ -862,9 +906,25 @@ export async function combatRoutes(app: FastifyInstance) {
       if (body.conditions !== undefined) values.conditions = JSON.stringify(body.conditions);
       if (body.defeated !== undefined) values.defeated = body.defeated ? 1 : 0;
       if (body.cardColor !== undefined) values.cardColor = body.cardColor;
+      if (body.nameHidden !== undefined) values.nameHidden = body.nameHidden ? 1 : 0;
 
       if (Object.keys(values).length === 0) {
         return reply.code(400).send({ error: apiMsg(req, 'no fields to update') });
+      }
+
+      // Grouped monsters share one name — the mask fans out to the whole
+      // group (the own row is covered twice, idempotently).
+      if (body.nameHidden !== undefined && combatant.group_id) {
+        drizzle
+          .update(combatantsTable)
+          .set({ nameHidden: body.nameHidden ? 1 : 0 })
+          .where(
+            and(
+              eq(combatantsTable.encounterId, combatant.encounter_id),
+              eq(combatantsTable.groupId, combatant.group_id),
+            ),
+          )
+          .run();
       }
 
       // Auto-set defeated when HP hits 0; auto-clear when HP goes above 0
