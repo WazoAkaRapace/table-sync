@@ -8,9 +8,9 @@
 
 </div>
 
-Le compagnon de campagne partagé, pour le MD et les joueurs. Application web **mobile-first** de gestion de fiche de personnage, d'inventaire et de **combat** pour D&D 5e — entièrement en **français**, poids en **kilogrammes**, avec un moteur de règles SRD complet et de la **synchronisation en temps réel** entre le MD et les joueurs.
+Le compagnon de campagne partagé, pour le MD et les joueurs. Application web **mobile-first** de gestion de fiche de personnage, d'inventaire et de **combat** pour D&D 5e — entièrement en **français**, poids en **kilogrammes**, avec un moteur de règles SRD complet et une **synchronisation en temps réel** entre le MD et les joueurs.
 
-Conçue pour être utilisée sur téléphone et tablette pendant la partie : PWA installable, chaque joueur sur son écran, le MD sur le sien.
+Pensée pour le téléphone et la tablette pendant la partie : PWA installable, chaque joueur sur son écran, le MD sur le sien.
 
 ![Groupes](docs/screenshots/01-parties.png)
 
@@ -33,7 +33,7 @@ Conçue pour être utilisée sur téléphone et tablette pendant la partie : PWA
 - **PV** avec édition directe, dés de vie (compteur dépense/récupération), sauvegardes contre la mort à 0 PV
 - **Concentration** : case à cocher ; si le joueur subit des dégâts (depuis sa fiche **ou** depuis le traqueur du MD), une notification lui demande un jet de Constitution DD 10 ou ½ dégâts ; les états incapacitants et les 0 PV rompent automatiquement la concentration
 - Épuisement 1–6, 16 états SRD avec durées, inspiration, ration/eau (survie Chult)
-- **Forme sauvage** (Druide) : formes selon DD et vol/nage par niveau, liste limitée aux **bêtes déjà vues** (👁), PV lancés aux dés, bloc de stats consultable, barre de PV de la forme intégrée au traqueur, retour auto avec dégâts excédentaires
+- **Forme sauvage** (Druide) : formes selon DD et vol/nage par niveau, liste limitée aux **bêtes déjà vues** (👁), PV tirés aux dés, bloc de stats consultable, barre de PV de la forme intégrée au traqueur, retour auto avec dégâts excédentaires
 
 | Attaques & PV | Forme sauvage |
 |---|---|
@@ -46,14 +46,14 @@ Conçue pour être utilisée sur téléphone et tablette pendant la partie : PWA
 - **Sorts toujours préparés** : domaine divin du Clerc, terrain du Cercle de la Terre du Druide, serment du Paladin — fusionnés dans la liste avec le marqueur ◆, hors quota de préparation
 - Aperçu des dés au niveau choisi : dégâts ⚔ orange, **soins ✚ verts** (dés + modificateur de caractéristique pour Soins, Mot de guérison…), DD de sauvegarde et bonus d'attaque
 
-| Grimoire | Lancer (avec dégâts upcastés) |
+| Grimoire | Lancer (incantation supérieure) |
 |---|---|
 | ![Sorts](docs/screenshots/06-sorts.png) | ![Lancer](docs/screenshots/07-lancer-sort.png) |
 
 ### 🔀 Multiclassage (SRD 5.1)
 - **Feuille guidée « ＋ Ajouter une classe »** : carte des prérequis de caractéristiques (⚠ jamais bloquant), maîtrises acquises selon la table SRD, sous-classe verrouillée jusqu'à son palier RAW
 - **Emplacements : deux pools** quand l'Occultiste s'y mêle — Incantation (table de l'incantateur multiclassé) et **magie de pacte** en or (recharge au repos court), interchangeables (SRD)
-- **Sorts à classe d'origine** : DD et bonus d'attaque par classe lancante, compteurs de préparation par classe (chacune comme si mono-classe)
+- **Sorts à classe d'origine** : DD et bonus d'attaque par classe incantatrice, compteurs de préparation par classe (chacune comme si mono-classe)
 - **Dés de vie par type de dé** (5d10 + 3d8), dépense au repos court et budget de récupération au repos long
 - Règles au niveau de CLASSE : attaque supplémentaire non cumulative (max), attaque sournoise, dés d'arts martiaux, aura du Paladin, critique amélioré du Champion, prérequis, expertise cumulée
 
@@ -69,7 +69,7 @@ Conçue pour être utilisée sur téléphone et tablette pendant la partie : PWA
 ![Caractéristiques](docs/screenshots/08-caracteristiques.png)
 
 ### 🗡️ Traqueur de combat (MD)
-- **Rencontres** : monstres du bestiaire **964 bêtes**, groupés par type avec initiative partagée, **PV lancés aux dés de vie**
+- **Rencontres** : monstres du bestiaire **964 bêtes**, groupés par type avec initiative partagée, **PV tirés aux dés de vie**
 - Ajout des PJ en un clic, initiative saisie par les joueurs depuis leur écran
 - **Démarrage en un clic**, avancement des tours (groupes sautés ensemble), tours et rounds
 - Dégâts / soins / demi-dégâts / vaincu, édition directe PV/CA, couleurs de cartes
@@ -93,7 +93,7 @@ Conçue pour être utilisée sur téléphone et tablette pendant la partie : PWA
 | ![Widget](docs/screenshots/05-widget-combat.png) | ![Formes](docs/screenshots/10-formes.png) |
 
 ### ✉️ Correspondance secrète MD ↔ joueur
-- **Un fil par personnage** : le MD échange en privé avec chaque joueur — indices, secrets, révélations que la table ne doit pas entendre. L'historique se garde sur le fil ; seul le MD peut rayer une ligne (confirmation au point de tap)
+- **Un fil par personnage** : le MD échange en privé avec chaque joueur — indices, secrets, révélations que la table ne doit pas entendre. L'historique reste sur le fil ; seul le MD peut rayer une ligne, d'un geste confirmé
 - **Visible partout** : un message qui arrive tombe en bannière où que le joueur se trouve, une pastille compte les non-lus — et devient une **notification Web Push** si l'app est fermée (le texte n'apparaît jamais sur l'écran de verrouillage)
 - **Boîte de réception MD** : chaque personnage est un volume du registre — qui attend une réponse se lit en pastille, la plus fraîche correspondance tient l'ordinal sang
 
@@ -111,7 +111,7 @@ Conçue pour être utilisée sur téléphone et tablette pendant la partie : PWA
 
 ### 📜 GM Assistant — chronique de campagne
 - **Liaison groupe ↔ campagne** [gmassistant.app](https://gmassistant.app) : le MD connecte sa clé API (chiffrée côté serveur, jamais dans le navigateur), relie une campagne existante ou la **crée depuis le groupe** — campagne D&D 5e + les personnages cochés avec leur « joué par » et leur fiche d'identité
-- **Resynchronisation des personnages** à la demande : créations cochables, mises à jour nom / joué par / fiche d'identité (classes, alignement, apparence, personnalité, histoire), orphelins supprimés uniquement d'un geste confirmé — lecture seule partout ailleurs
+- **Resynchronisation des personnages** à la demande : créations cochables, mises à jour nom / joué par / fiche d'identité (classes, alignement, apparence, personnalité, histoire), orphelins supprimés d'un geste confirmé — lecture seule partout ailleurs
 - **Chronique** (📜 en annexes, ouverte à toute la table) : registre des séances — ordinaux romains = numéros de séance, la dernière en entrée courante — résumés multi-styles (Résumé, En bref, Héraut, Conte, Ironique, Sonnet…) et **moments mémorables enluminés par type** (⚔ épique gravé en or, 🕯 tragique en italique éteint, 🗝 intrigant à la clé…)
 - **Cache serveur** (TTL 5 min, rafraîchissement MD, event temps réel) : une panne GM Assistant n'affiche jamais d'écran d'erreur au joueur — la chronique sert son dernier cachet, honnêtement marqué
 
@@ -151,7 +151,7 @@ Sous VS Code : l'extension `biomejs.biome` formate à la sauvegarde (réglages d
 
 ## ✅ CI
 
-À chaque PR et push sur `main`, [ci-test.yml](.github/workflows/ci-test.yml) exécute le lint Biome, le typecheck (`tsc -b`, web + shared), les 6 suites de règles, la suite d'intégration API (avec sa porte de couverture 100 % des sites de requêtes) et, en job parallèle, la suite E2E Playwright (`npm run test:e2e` — API + vite jetables sur base neuve, jamais les bases dev/Docker).
+À chaque PR et push sur `main`, [ci-test.yml](.github/workflows/ci-test.yml) exécute le lint Biome, le typecheck (`tsc -b`, web + shared), les 6 suites de règles, la suite d'intégration API (avec sa porte « zéro SQL brut » : aucune requête hors Drizzle) et, en job parallèle, la suite E2E Playwright (`npm run test:e2e` — API + vite jetables sur base neuve, jamais les bases dev/Docker).
 
 ## 📜 Licence & données
 
