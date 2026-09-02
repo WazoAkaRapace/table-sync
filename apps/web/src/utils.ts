@@ -77,9 +77,14 @@ export function activeCharactersFirst<T extends { hidden: boolean }>(characters:
  * séance — « à l'instant », minutes, puis l'heure du jour, puis la date
  * (mois abrégé, année seulement si elle change). Les phrases passent par
  * i18n (commun de la langue active), les valeurs restent brutes.
+ *
+ * Le stockage est SQLite datetime('now') = UTC SANS marqueur — sans le « Z »
+ * ajouté ici, new Date() lirait l'heure UTC comme une heure LOCALE et
+ * l'affichage décalerait du fuseau du lecteur.
  */
 export function formatMessageTime(createdAt: string): string {
-  const normalized = createdAt.includes(' ') ? createdAt.replace(' ', 'T') : createdAt;
+  let normalized = createdAt.includes(' ') ? createdAt.replace(' ', 'T') : createdAt;
+  if (!/[Zz]$/.test(normalized) && !/[+-]\d{2}:?\d{2}$/.test(normalized)) normalized += 'Z';
   const d = new Date(normalized);
   if (Number.isNaN(d.getTime())) return '';
   const diffMs = Date.now() - d.getTime();
