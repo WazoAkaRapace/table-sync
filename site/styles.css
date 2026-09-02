@@ -696,6 +696,85 @@ html[lang="en"] [lang="fr"] {
   color: var(--ink-500);
 }
 
+/* ---------- Vues élargies : la tablette du joueur, l'écran du MD ----------
+   La même app sur un plus grand verre : la fiche du joueur posée à plat sur
+   tablette (23), la rencontre du MD entière sur ordinateur (24). La vue vit
+   sous le poste de consultation, pleine largeur de l'entrée. */
+
+.entry-wide {
+  grid-column: 1 / -1;
+}
+
+/* La tablette : le vocabulaire du cadre téléphone, simplement posé plus
+   large — un verre plus grand, pas un autre objet */
+.entry-wide .shot-frame {
+  max-width: min(24rem, 100%);
+  margin-inline: auto;
+}
+
+/* L'ordinateur du MD : une fenêtre de navigateur — trois pastilles parchemin,
+   l'adresse en mono, comme le terminal du Repos long parle au MD qui héberge */
+.shot-desk {
+  max-width: 56rem;
+  margin-inline: auto;
+}
+
+.deskframe {
+  border-radius: 14px;
+  border: 1px solid var(--parchment-300);
+  background: var(--parchment-100);
+  padding: 0.45rem;
+  box-shadow: var(--shadow-card);
+  transition:
+    box-shadow 0.3s var(--ease),
+    transform 0.3s var(--ease);
+}
+
+.shot:hover .deskframe {
+  box-shadow: var(--shadow-raised);
+  transform: translateY(-3px);
+}
+
+.deskframe-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.3rem 0.35rem 0.45rem;
+}
+
+.deskframe-dots {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.deskframe-dots i {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: var(--parchment-300);
+}
+
+.deskframe-url {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: var(--ink-500);
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid var(--parchment-200);
+  border-radius: 999px;
+  padding: 0.12rem 0.75rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deskframe img {
+  border-radius: 8px;
+  width: 100%;
+  height: auto;
+}
+
 /* ---------- Le poste de consultation (saisons de captures ≥ 3) ----------
    Un seul téléphone vivant : les vues superposées dans le cadre, un dock de
    pilules dessous — le vocabulaire du dock de l'app, la pile remplacée. */
@@ -1235,7 +1314,8 @@ html[lang="en"] .wire::after {
     animation: none;
   }
 
-  .shot:hover .shot-frame {
+  .shot:hover .shot-frame,
+  .shot:hover .deskframe {
     transform: none;
   }
 
@@ -1333,7 +1413,8 @@ html[lang="en"] .wire::after {
 /* Les écrans de téléphone invitent au clic ; dans un poste, seule la vue
    active écoute */
 .shot-frame img,
-.portrait-frame img {
+.portrait-frame img,
+.deskframe img {
   cursor: zoom-in;
 }
 

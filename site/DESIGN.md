@@ -110,13 +110,29 @@ translateY(−3px), 0.3s `--ease` ; aucun soulèvement en mouvement réduit).
 Les cadres de la paire portrait du hero utilisent la variante calme :
 rayons 20/13 px, matelas 8 px, pas de survol ; leur entrée (les deux
 téléphones se posent sur la table, 0.55 s / 0.5 s décalées de 100 ms, coupée
-en mouvement réduit) est l'unique moment signé du hero. Attributs `width`/`height` (390×844) partout — zéro décalage
+en mouvement réduit) est l'unique moment signé du hero. Attributs `width`/`height` partout (390×844 pour les cadres téléphone, 820×1180 et 1440×900 pour les vues élargies) — zéro décalage
 de mise en page.
 
 **Toute série multi-captures vit en poste de consultation** (`.phonepost`) :
 un seul grand téléphone vivant à pilules, jamais une chaîne ni une grille de
 cadres identiques. `.shot` reste l'exception d'une capture unique (entrée I,
 sous la démo).
+
+## Les vues élargies (tablette du joueur, écran du MD)
+
+La même app vit sur des verres plus grands : la fiche du joueur posée à plat
+sur tablette (entrée II, `23-fiche-tablette.png`, 820×1180) et la rencontre
+du MD entière sur ordinateur (entrée III, `24-traqueur-bureau.png`,
+1440×900). Chaque vue se pose **sous le poste de consultation** de son
+entrée, pleine largeur (`.entry-wide`, `grid-column: 1/-1`).
+
+| Dispositif | Recette |
+|---|---|
+| La tablette | le vocabulaire du cadre `.shot-frame` (rayons 30/21, matelas 9 px), simplement posé plus large — `max-width: min(24rem, 100%)` centré. Un verre plus grand, pas un autre objet : pas de chrome factice |
+| La fenêtre bureau | `.deskframe` : une fenêtre de navigateur — bordure `parchment-300` sur `parchment-100`, rayon 14, matelas 0.45rem ; barre `aria-hidden` à trois pastilles `parchment-300` + adresse en mono 0.72rem sur pilule blanche 65 % (`table-sync.local/party/1/combat`). La figure `.shot-desk` plafonne à 56rem centrée |
+| Survol | le soulèvement du cadre téléphone (`shadow-raised` + translateY(−3px)), coupé en mouvement réduit |
+| Visionneuse / EN | les images suivent les cadres téléphone partout : clic = plein écran, `main.js` échange le dossier `screenshots/` ↔ `screenshots-en/` (sélecteurs `.shot-frame img, .portrait-frame img, .deskframe img`) |
+| Motion | `.entry-wide` se pose en fin de séquence d'entrée, après la colonne visuelle (stagger +70 ms par vue) |
 
 ## Le poste de consultation (toutes les séries multi-captures)
 
@@ -141,8 +157,8 @@ Règle : les vues d'un poste se chargent toutes (pas de `lazy` — l'échange ne
 ## La visionneuse plein écran
 
 Chaque écran de téléphone (paire du hero, poste de consultation, cadres des
-séries) s'ouvre en plein écran au clic — la visionneuse de l'app, portée
-telle quelle.
+séries, fenêtre bureau des vues élargies) s'ouvre en plein écran au clic —
+la visionneuse de l'app, portée telle quelle.
 
 | Dispositif | Recette |
 |---|---|
@@ -177,7 +193,7 @@ après l'autre ») étendu au scroll.
 | Le filet de tête | `.entry-head::after` (trait explicite, plus de border) : `scaleX(0)` → `rule-draw` 0.45s origine gauche — la plume trace la règle |
 | Les entrées réglées | chaque `li` de `.subentries` se pose en stagger ×70 ms (`register-rise`, montée 12 px + fondu 0.35s), plafonné à 6 — une seule liste-stagger par entrée |
 | Les preuves | `.proof` tamponne après la dernière entrée réglée |
-| La colonne visuelle | poste/démo/capture arrive en fin de séquence (`max(delay, 180ms)`) |
+| La colonne visuelle | poste/démo/capture arrive en fin de séquence (`max(delay, 180ms)`) ; les vues élargies `.entry-wide` suivent en stagger ×70 ms |
 | Le hero | la fiche se remplit à l'arrivée : nom → slogan → offre → champs → verbes (×70 ms) puis les six tuiles FOR→CHA (×60 ms) ; la paire de téléphones se pose en parallèle (son entrée propre) |
 | Repos long | les enfants du panneau se posent, le terminal clôt (+40 ms) |
 | Personnalité / pied | quadrants ×90 ms, colonnes du pied ×80 ms — le pied à son observateur propre |

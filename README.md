@@ -68,6 +68,10 @@ Pensée pour le téléphone et la tablette pendant la partie : PWA installable, 
 
 ![Caractéristiques](docs/screenshots/08-caracteristiques.png)
 
+La même fiche **sur tablette** — les caractéristiques s'étalent sur trois colonnes, le dock reste sous le pouce :
+
+![Fiche sur tablette](docs/screenshots/23-fiche-tablette.png)
+
 ### 🗡️ Traqueur de combat (MD)
 - **Rencontres** : monstres du bestiaire **964 bêtes**, groupés par type avec initiative partagée, **PV tirés aux dés de vie**
 - Ajout des PJ en un clic, initiative saisie par les joueurs depuis leur écran
@@ -80,6 +84,10 @@ Pensée pour le téléphone et la tablette pendant la partie : PWA installable, 
 | Table du MD | Traqueur de combat | Bloc de stats |
 |---|---|---|
 | ![Table du MD](docs/screenshots/11-table-md.png) | ![Traqueur](docs/screenshots/12-traqueur.png) | ![Bloc de stats](docs/screenshots/13-bloc-stats.png) |
+
+**Sur ordinateur**, le traqueur occupe tout l'écran : rail d'initiative à gauche, scène du tour au centre, bloc de stats amarré à droite.
+
+![Traqueur sur ordinateur](docs/screenshots/24-traqueur-bureau.png)
 
 ### 🔄 Temps réel & multi-appareils
 - **Synchronisation WebSocket** : tout le monde voit les mêmes PV, états, initiative, en direct — le MD blesse, la fiche du joueur suit ; le joueur se soigne, le traqueur suit

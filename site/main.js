@@ -93,18 +93,21 @@
 
   // Les captures EN vivent en assets/screenshots-en/<même nom> (copiées au
   // déploiement depuis docs/screenshots-en/) — un seul <img> par vue, le src
-  // est échangé, jamais le DOM dupliqué.
+  // est échangé, jamais le DOM dupliqué. La fenêtre bureau (.deskframe) suit
+  // le même échange que les cadres téléphone et portrait.
   const applyShots = () => {
-    document.querySelectorAll('.shot-frame img, .portrait-frame img').forEach((img) => {
-      const src = img.getAttribute('src') ?? '';
-      const name = src.split('/').pop();
-      if (src.startsWith('assets/screenshots')) {
-        const next = SHOT_DIR[lang] + name;
-        if (next !== src) {
-          img.setAttribute('src', next);
+    document
+      .querySelectorAll('.shot-frame img, .portrait-frame img, .deskframe img')
+      .forEach((img) => {
+        const src = img.getAttribute('src') ?? '';
+        const name = src.split('/').pop();
+        if (src.startsWith('assets/screenshots')) {
+          const next = SHOT_DIR[lang] + name;
+          if (next !== src) {
+            img.setAttribute('src', next);
+          }
         }
-      }
-    });
+      });
     // la visionneuse, si elle vient d'être ouverte, suit la langue active
     if (viewerImg) {
       viewerImg.src = viewerImg.src.replace(
@@ -342,6 +345,11 @@
       if (media) {
         armReveal(media, Math.max(delay, 180));
       }
+      // Les vues élargies (tablette du joueur, écran du MD) se posent en fin
+      // d'entrée, sous le poste de consultation
+      entry.querySelectorAll('.entry-wide').forEach((wide, i) => {
+        armReveal(wide, Math.max(delay, 180) + STEP * (i + 1));
+      });
     }
   };
 
@@ -509,14 +517,16 @@
   if (viewer && viewerFrame) {
     // Chaque écran de téléphone s'ouvre en plein écran ; dans un poste de
     // consultation, c'est la vue ACTIVE qui s'ouvre (les autres n'écoutent pas)
-    document.querySelectorAll('.shot-frame img, .portrait-frame img').forEach((img) => {
-      img.addEventListener('click', () => {
-        if (img.classList.contains('phonepost-view') && !img.classList.contains('is-active')) {
-          return;
-        }
-        openViewer(img);
+    document
+      .querySelectorAll('.shot-frame img, .portrait-frame img, .deskframe img')
+      .forEach((img) => {
+        img.addEventListener('click', () => {
+          if (img.classList.contains('phonepost-view') && !img.classList.contains('is-active')) {
+            return;
+          }
+          openViewer(img);
+        });
       });
-    });
 
     viewer.addEventListener('click', (event) => {
       if (event.target === viewer || event.target === viewerClose) closeViewer();

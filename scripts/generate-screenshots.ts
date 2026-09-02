@@ -3,7 +3,7 @@
  * docs/screenshots-en/*.png via --lang en).
  *
  * Monte une stack jetable entièrement isolée (aucun risque pour les vraies
- * campagnes) puis pilote Chromium via Playwright en viewport mobile 390×844 :
+ * campagnes) puis pilote Chromium via Playwright :
  *
  *   1. API   — tsx apps/api/src/server.ts sur un port libre, SQLite neuf
  *              (data/db/screenshots-demo.sqlite, gitignoré) ; le serveur
@@ -20,8 +20,13 @@
  *              côté GM Assistant : init (campagne + PJ) puis séances, résumés
  *              et moments de démo injectés dans le mock.
  *   4. Shots — chaque capture reproduit l'état documenté dans le README.
+ *              Viewports : mobile 390×844 (la majorité des captures, la fiche
+ *              est mobile-first), tablette 820×1180 pour la fiche du joueur
+ *              (23) et bureau 1440×900 pour le traqueur du MD (24) — les
+ *              captures de vue élargie créent leur propre contexte Playwright
+ *              via newSession().
  *
- * Bilingue : `--lang en` produit les mêmes 22 captures en anglais vers
+ * Bilingue : `--lang en` produit les mêmes 24 captures en anglais vers
  * docs/screenshots-en/ — l'API reçoit ?lang=en sur chaque appel du seed
  * (payloads mono-locale : `name` devient anglais), Chromium démarre en
  * locale en-US avec localStorage dnd-inv-lang=en, et tous les sélecteurs /
@@ -31,7 +36,7 @@
  * captures 11–13 peuvent différer entre deux runs d'une même langue).
  *
  * Usage :
- *   npm run screenshots                    # régénère les 22 captures (FR)
+ *   npm run screenshots                    # régénère les 24 captures (FR)
  *   npm run screenshots -- --only 03,07    # seulement certaines (numéros ou noms)
  *   npm run screenshots -- --lang en       # version anglaise → docs/screenshots-en/
  *   npm run screenshots -- --keep          # laisser les serveurs tourner (debug)
@@ -788,14 +793,16 @@ async function seed(
 async function newSession(
   browser: Browser,
   session: Session,
-  opts: { tours?: boolean } = {},
+  opts: { tours?: boolean; viewport?: { width: number; height: number }; desktop?: boolean } = {},
 ): Promise<BrowserContext> {
   const tours = opts.tours ?? true;
   const ctx = await browser.newContext({
-    viewport: { width: 390, height: 844 },
+    // Mobile 390×844 par défaut ; les captures de vue élargie (tablette 23,
+    // bureau 24) passent leur viewport et basculent en pointeur non tactile.
+    viewport: opts.viewport ?? { width: 390, height: 844 },
     deviceScaleFactor: 1,
-    isMobile: true,
-    hasTouch: true,
+    isMobile: !opts.desktop,
+    hasTouch: !opts.desktop,
     locale: lang === 'en' ? 'en-US' : 'fr-FR',
     timezoneId: 'Europe/Paris',
     colorScheme: 'light',
@@ -911,12 +918,16 @@ async function shoot(page: Page, file: string, opts: { animations?: 'allow' | 'd
 }
 
 // ---------------------------------------------------------------------------
-// Les 22 captures du README
+// Les 24 captures du README
 // ---------------------------------------------------------------------------
 
 interface ShotCtx {
   webPort: number;
   refs: SeedRefs;
+  /** Navigateur + sessions brutes : les captures multi-viewport (23, 24)
+   *  bâtissent leur propre contexte via newSession(). */
+  browser: Browser;
+  sessions: { md: Session; aurore: Session; bastien: Session };
   md: BrowserContext;
   aurore: BrowserContext;
   bastien: BrowserContext;
@@ -928,8 +939,13 @@ interface ShotCtx {
   sendAsMd: (charId: number, body: string) => Promise<void>;
 }
 
-// Ces trois-là se prennent après avoir avancé jusqu'au tour des gobelins.
-const GM_SHOTS = new Set(['11-table-md.png', '12-traqueur.png', '13-bloc-stats.png']);
+// Celles-ci se prennent après avoir avancé jusqu'au tour des gobelins.
+const GM_SHOTS = new Set([
+  '11-table-md.png',
+  '12-traqueur.png',
+  '13-bloc-stats.png',
+  '24-traqueur-bureau.png',
+]);
 
 const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
   {
@@ -1133,17 +1149,18 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
         .first()
         .click();
       // La scène affiche un <h2> au nom du combattant focalisé — le rail le
-      // numérote « Ogre 1 » mais la scène titre un monstre seul « Ogre ».
-      await page.getByRole('heading', { name: 'Ogre', exact: true }).waitFor({ timeout: 10_000 });
+      // numérote « Ogre 1 » mais la scène titre un monstre seul « Ogre ». Le
+      // nom accessible du h2 embarque aussi le bouton « 👁 Masquer le nom »
+      // (GM + monstre) : on ancre sur le préfixe, jamais sur l'exactitude.
+      await page.getByRole('heading', { name: /^Ogre/ }).waitFor({ timeout: 10_000 });
       await page
         .getByRole('button', { name: /📜\s*Stats/ })
         .first()
         .click();
       // Sur mobile le bloc de stats est une feuille portée SANS role="dialog" —
-      // on attend son titre (le second <h2> « Ogre », après celui de la scène).
-      await page.getByRole('heading', { name: 'Ogre', exact: true }).last().waitFor({
-        timeout: 10_000,
-      });
+      // on attend son titre : le second <h2> « Ogre » (porté en fin de DOM),
+      // après celui de la scène.
+      await page.getByRole('heading', { name: /^Ogre/ }).last().waitFor({ timeout: 10_000 });
       await page.waitForTimeout(600);
       await shoot(page, '13-bloc-stats.png');
       await page.close();
@@ -1343,6 +1360,70 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
       await page.close();
     },
   },
+  {
+    file: '23-fiche-tablette.png',
+    async run(c) {
+      // La fiche du joueur sur tablette (820×1180, iPad portrait) : tuiles de
+      // caractéristiques sur 3 colonnes, stats dérivées sur 4 — le dock
+      // mobile reste sous le pouce (il ne cède la place qu'à 1024 px).
+      const ctx = await newSession(c.browser, c.sessions.aurore, {
+        viewport: { width: 820, height: 1180 },
+      });
+      try {
+        const page = await openSheet(ctx, c.webPort, c.refs.partyId, c.refs.chars.lyra);
+        await openTab(page, S('Caractéristiques', 'Abilities'));
+        await page
+          .getByText(S('Statistiques dérivées', 'Derived statistics'))
+          .first()
+          .waitFor({ timeout: 10_000 });
+        await page.waitForTimeout(300);
+        await shoot(page, '23-fiche-tablette.png');
+        await page.close();
+      } finally {
+        await ctx.close();
+      }
+    },
+  },
+  {
+    file: '24-traqueur-bureau.png',
+    async run(c) {
+      // L'écran du MD sur ordinateur (1440×900) : la page Combat s'ouvre en
+      // trois colonnes — rail d'initiative à gauche, scène du tour au centre,
+      // bloc de stats amarré à droite (clic « 📜 Stats » sur l'ogre focalisé).
+      const ctx = await newSession(c.browser, c.sessions.md, {
+        viewport: { width: 1440, height: 900 },
+        desktop: true,
+      });
+      try {
+        const page = await ctx.newPage();
+        await page.goto(
+          webUrl(c.webPort, `/party/${c.refs.partyId}/combat?enc=${c.refs.encounterId}`),
+          { waitUntil: 'networkidle', timeout: 90_000 },
+        );
+        await settle(page, 600);
+        await page.getByText(S('Tour suivant', 'Next turn')).first().waitFor({ timeout: 10_000 });
+        await page
+          .getByRole('button', { name: /^Ogre 1,/ })
+          .first()
+          .click();
+        // La scène titre l'ogre d'un <h2> dont le nom accessible embarque le
+        // bouton « 👁 Masquer le nom » — ancre sur le préfixe, pas l'exact.
+        await page.getByRole('heading', { name: /^Ogre/ }).waitFor({ timeout: 10_000 });
+        await page
+          .getByRole('button', { name: /📜\s*Stats/ })
+          .first()
+          .click();
+        // Le bloc amarré porte son propre <h2> « Ogre », après celui de la
+        // scène dans le DOM (l'aside est la 3e colonne de la grille).
+        await page.getByRole('heading', { name: /^Ogre/ }).last().waitFor({ timeout: 10_000 });
+        await page.waitForTimeout(600);
+        await shoot(page, '24-traqueur-bureau.png');
+        await page.close();
+      } finally {
+        await ctx.close();
+      }
+    },
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -1366,7 +1447,7 @@ async function main() {
     const { sessions, ...refs } = await seed(stack.apiPort, stack.gma.state);
     const [mdS, auS, baS] = sessions;
 
-    console.log('🎭 Ouverture de Chromium (390×844, mobile)…');
+    console.log('🎭 Ouverture de Chromium (mobile 390×844 · tablette et bureau à la demande)…');
     let browser: Browser;
     try {
       browser = await chromium.launch();
@@ -1380,6 +1461,8 @@ async function main() {
     const ctx: ShotCtx = {
       webPort: stack.webPort,
       refs,
+      browser,
+      sessions: { md: mdS, aurore: auS, bastien: baS },
       md: await newSession(browser, mdS),
       aurore: await newSession(browser, auS),
       bastien: await newSession(browser, baS),
