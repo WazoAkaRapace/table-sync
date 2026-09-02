@@ -21,6 +21,11 @@ COPY apps/web/ ./apps/web/
 # Empty VITE_API_URL means the frontend uses same-origin (nginx proxies /api)
 ARG VITE_API_URL=""
 ENV VITE_API_URL=$VITE_API_URL
+
+# Version stampée dans le bundle + version.json — le SHA du commit en CI,
+# « dev » en local. L'ARG transite par ENV : vite.config.ts lit process.env.
+ARG APP_VERSION=dev
+ENV APP_VERSION=$APP_VERSION
 WORKDIR /app/apps/web
 # Typecheck first: vite/esbuild strips types without checking them.
 # `tsc -b` also covers packages/shared (imported as raw TS sources).

@@ -505,6 +505,12 @@ export default function AccountPage() {
         </form>
       </section>
 
+      {/* Version du build — SHA du commit servi (dev en local). Le bandeau
+          de mise à jour compare cette version à /version.json. */}
+      <p className="pt-2 text-center font-mono text-[10px] text-ink-300">
+        Table Sync · {__APP_VERSION__}
+      </p>
+
       <ToastStack
         toasts={toasts}
         onDismiss={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))}

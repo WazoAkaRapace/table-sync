@@ -86,6 +86,7 @@ Pensée pour le téléphone et la tablette pendant la partie : PWA installable, 
 - Notifications poussées : demande d'initiative, jet de concentration, tour du joueur (widget flottant)
 - **Notifications Web Push** hors app (écran éteint, app fermée) : abonnement par appareil depuis Mon compte, chaîne VAPID complète côté serveur ([docs](docs/push-notifications.md)) — requiert un accès HTTPS
 - PNJ partagés avec secrets réservés au MD, notes par personnage, traits avec compteurs (Rage, Divinité…)
+- **Mises à jour PWA proprement versionnées** : chaque commit produit une version (SHA) servie en `version.json` no-cache — l'app qui tourne la compare au retour au premier plan et propose la recharge d'un bandeau (version visible dans Mon compte)
 - Installable comme **PWA** sur téléphone/tablette
 
 | Widget de combat (joueur) | Formes (bêtes vues) |

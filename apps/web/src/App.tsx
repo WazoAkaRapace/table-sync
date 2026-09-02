@@ -7,6 +7,7 @@ import { useAuth } from './auth';
 import CombatWidget from './components/CombatWidget';
 import ConcentrationAlert from './components/ConcentrationAlert';
 import MessageAlert, { type MessageAlertPayload } from './components/MessageAlert';
+import UpdateBanner from './components/UpdateBanner';
 import { HeaderProvider, useHeaderState } from './headerContext';
 import i18next from './i18n';
 import { useSync, useSyncEvent } from './sync';
@@ -423,6 +424,7 @@ export default function App() {
       <CombatWidget />
       <ConcentrationWatcher />
       <MessageWatcher />
+      <UpdateBanner />
       <PartyOpenTracker />
     </HeaderProvider>
   );
