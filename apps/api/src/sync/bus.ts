@@ -42,7 +42,8 @@ export interface SyncEvent {
     | 'link'
     | 'unlink'
     | 'init'
-    | 'sync';
+    | 'sync'
+    | 'delete';
   itemName?: string;
   actorUserId?: number;
   /** Membership action target (remove/ban/unban) — ws.ts delivers to them directly. */

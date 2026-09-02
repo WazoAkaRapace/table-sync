@@ -9,15 +9,27 @@ import MessageThread from '../components/MessageThread';
 interface Props {
   character: Character;
   charId: number;
+  /** Vue MD (fiche d'un joueur) : la rature s'offre ligne à ligne. */
+  canModerate?: boolean;
   onError: (msg: string) => void;
 }
 
-export default function CharacterMessagesTab({ character, charId, onError }: Props) {
+export default function CharacterMessagesTab({
+  character,
+  charId,
+  canModerate = false,
+  onError,
+}: Props) {
   return (
     // Mesure de lecture : le fil est de la prose — sur desktop la carte se
     // resserre (≈ le volet MD de la boîte) au lieu d'étirer ses lignes.
     <div className="mx-auto max-w-2xl">
-      <MessageThread charId={charId} characterName={character.name} onError={onError} />
+      <MessageThread
+        charId={charId}
+        characterName={character.name}
+        canModerate={canModerate}
+        onError={onError}
+      />
     </div>
   );
 }

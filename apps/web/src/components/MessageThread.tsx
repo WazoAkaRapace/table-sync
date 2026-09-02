@@ -6,8 +6,9 @@
  * parchemin, séparées par des filets. Le MD parle avec son tampon (le même
  * dispositif que le roster), le personnage répond à l'encre sous son nom.
  * Le non-lu porte un point sang ; « Vu » (read_at du destinataire) coche les
- * messages de l'appelant. Le fil est un journal : rien ne s'édite, rien ne
- * se supprime.
+ * messages de l'appelant. Le fil est un journal : rien ne s'édite — et seul
+ * le MD peut rayer une ligne (la sienne comme celle du joueur), confirmée
+ * au point de tap.
  */
 
 import type { SecretMessage } from '@table-sync/shared';
@@ -18,7 +19,7 @@ import api from '../api';
 import { useAuth } from '../auth';
 import { useSyncEvent } from '../sync';
 import { formatMessageTime } from '../utils';
-import { EmptyState, ErrorMsg, LoadingSpinner } from './ui';
+import { ConfirmButton, EmptyState, ErrorMsg, LoadingSpinner } from './ui';
 
 const MAX_LENGTH = 2000;
 
@@ -27,6 +28,8 @@ interface Props {
   characterName: string;
   /** Nom du joueur — affiché dans l'en-tête du volet MD. */
   ownerName?: string;
+  /** Vue MD : chaque ligne porte sa suppression (confirmée sur place). */
+  canModerate?: boolean;
   onError: (msg: string) => void;
 }
 
@@ -43,7 +46,13 @@ function GmStamp() {
   );
 }
 
-export default function MessageThread({ charId, characterName, ownerName, onError }: Props) {
+export default function MessageThread({
+  charId,
+  characterName,
+  ownerName,
+  canModerate = false,
+  onError,
+}: Props) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -144,6 +153,23 @@ export default function MessageThread({ charId, characterName, ownerName, onErro
     }
   }, [draft, sending, charId, queryClient, queryKey, onError, t, autoGrow]);
 
+  // Rature MD : la ligne disparaît des deux côtés (l'événement 'delete'
+  // rafraîchit la vue ouverte de l'autre camp ; les compteurs dérivés
+  // retombent seuls).
+  const remove = useCallback(
+    async (messageId: number) => {
+      try {
+        await api.delete(`/api/character-messages/${messageId}`);
+        await queryClient.invalidateQueries({ queryKey });
+        await queryClient.invalidateQueries({ queryKey: ['message-threads'] });
+        await queryClient.invalidateQueries({ queryKey: ['messages-unread'] });
+      } catch {
+        onError(t('msgs.suppression.impossible'));
+      }
+    },
+    [queryClient, queryKey, onError, t],
+  );
+
   // ---------- Auto-scroll : le plus récent vit en bas ----------
   const bottomRef = useRef<HTMLDivElement>(null);
   const initialScrollDone = useRef(false);
@@ -219,6 +245,18 @@ export default function MessageThread({ charId, characterName, ownerName, onErro
                   <time className="font-mono text-[10px] text-ink-400">
                     {formatMessageTime(m.createdAt)}
                   </time>
+                  {canModerate && (
+                    <ConfirmButton
+                      onConfirm={() => void remove(m.id)}
+                      className="text-ink-400 hover:text-red-500 text-sm p-1 rounded-full transition-colors"
+                      armedClassName="bg-red-600 hover:bg-red-700 text-white! px-2.5 py-1 font-semibold"
+                      title={t('msgs.supprimer.message')}
+                      ariaLabel={t('msgs.supprimer.message')}
+                      confirmChildren={t('msgs.supprimer')}
+                    >
+                      ×
+                    </ConfirmButton>
+                  )}
                 </div>
                 <p
                   className={`mt-1.5 text-sm leading-relaxed whitespace-pre-wrap break-words ${

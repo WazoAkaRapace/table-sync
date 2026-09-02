@@ -1252,6 +1252,7 @@ export default function CharacterInventoryPage() {
           <CharacterMessagesTab
             character={character}
             charId={Number(charId)}
+            canModerate={isGM}
             onError={(msg) => pushToast(msg, 'error')}
           />
         )}

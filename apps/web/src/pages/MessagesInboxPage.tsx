@@ -196,6 +196,7 @@ export default function MessagesInboxPage() {
                   charId={selected.characterId}
                   characterName={selected.characterName}
                   ownerName={selected.ownerName}
+                  canModerate
                   onError={setThreadError}
                 />
               </div>

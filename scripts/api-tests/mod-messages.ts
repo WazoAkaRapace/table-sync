@@ -364,6 +364,57 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
     eq(rows[0].sender_user_id, fx.gm.userId, 'first message from the GM');
     ok(rows[0].read_at !== null, 'read_at persisted for the read message');
     eq(rows[1].read_at !== null, true, 'GM read the reply too');
+
+    // ---------- Rature MD : le journal reste, mais le MD peut rayer ----------
+    let thread = (await api(base, 'GET', `/api/characters/${B}/messages`, { token: fx.gm.token }))
+      .data;
+    const replyMsg = thread.messages.find((m: any) => !m.fromGM);
+    ok(!!replyMsg, 'the player reply is there before pruning');
+
+    r = await api(base, 'DELETE', `/api/character-messages/${replyMsg.id}`, {
+      token: fx.player.token,
+    });
+    eq(r.status, 403, 'the owner CANNOT delete (MD only)');
+    r = await api(base, 'DELETE', `/api/character-messages/${replyMsg.id}`, {
+      token: fx.outsider.token,
+    });
+    eq(r.status, 403, 'outsider cannot delete');
+    r = await api(base, 'DELETE', '/api/character-messages/999999', { token: fx.gm.token });
+    eq(r.status, 404, 'unknown message → 404');
+
+    r = await api(base, 'DELETE', `/api/character-messages/${replyMsg.id}`, {
+      token: fx.gm.token,
+    });
+    eq(r.status, 204, 'GM prunes the player reply');
+    const delEvent = await waitMsg(
+      bobWs.messages,
+      (m) => m.type === 'message:new' && m.action === 'delete',
+      5000,
+    );
+    eq(delEvent.targetUserId, fx.player.userId, "the delete reflows the owner's open view");
+    thread = (await api(base, 'GET', `/api/characters/${B}/messages`, { token: fx.gm.token })).data;
+    ok(!thread.messages.some((m: any) => m.id === replyMsg.id), 'reply gone from the thread');
+    eq(thread.messages.length, 1, 'the secret line remains');
+
+    // Rayer un message NON LU fait retomber le badge du destinataire (compteur dérivé)
+    r = await api(base, 'POST', `/api/characters/${B}/messages`, {
+      token: fx.gm.token,
+      body: { body: 'Secret éphémère.' },
+    });
+    eq(r.status, 201, 'ephemeral secret sent');
+    const ephemeral = r.data.message;
+    r = await api(base, 'GET', `/api/parties/${fx.partyId}/messages/unread`, {
+      token: fx.player.token,
+    });
+    eq(r.data.byCharacter[String(B)], 1, 'player badge counts the ephemeral');
+    r = await api(base, 'DELETE', `/api/character-messages/${ephemeral.id}`, {
+      token: fx.gm.token,
+    });
+    eq(r.status, 204, 'ephemeral pruned');
+    r = await api(base, 'GET', `/api/parties/${fx.partyId}/messages/unread`, {
+      token: fx.player.token,
+    });
+    eq(r.data.total, 0, 'badge dropped with the pruned unread');
   } finally {
     bobWs.close();
     gmWs.close();

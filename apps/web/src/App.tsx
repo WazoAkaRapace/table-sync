@@ -256,8 +256,9 @@ function ConcentrationWatcher() {
 /**
  * Shows a correspondence banner when a message:new event targeted this user
  * (delivery is user-scoped server-side). Own sends are skipped — the echo of
- * your own POST is not news. A 'read' reflow never banners; opening the
- * thread dismisses its banner (window event from MessageThread).
+ * your own POST is not news. 'read' reflows and 'delete' prunings never
+ * banner; opening the thread dismisses its banner (window event from
+ * MessageThread).
  */
 function MessageWatcher() {
   const { user } = useAuth();
@@ -265,7 +266,8 @@ function MessageWatcher() {
 
   useSyncEvent(
     (event) => {
-      if (event.type !== 'message:new' || event.action === 'read') return;
+      // Only a LANDED message banners — reflows and deletions stay silent
+      if (event.type !== 'message:new' || (event.action && event.action !== 'new')) return;
       if (!user || event.targetUserId !== user.id || event.actorUserId === user.id) return;
       setNotice({
         partyId: event.partyId,

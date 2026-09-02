@@ -3,8 +3,9 @@
  *
  * Star topology — the GM exchanges with every character, a player only with
  * the GM(s). The thread is owner+GM readable (STRICTER than notes, which any
- * member can read: another party member gets 403 here). No edit, no delete:
- * le fil est un journal.
+ * member can read: another party member gets 403 here). Le fil est un
+ * journal : rien ne s'édite — et seul le MD peut supprimer un message
+ * (le sien comme celui du joueur), au point de tap dans l'interface.
  *
  * Sync: every write emits `message:new` with targetUserId — ws.ts delivers to
  * the recipient only, never a party fan-out. Push rides the VAPID infra
@@ -117,13 +118,14 @@ function notifyMessagePush(recipientId: number, char: any, message: SecretMessag
 
 /** Emit a targeted message:new to the OTHER side of the thread.
  *  action 'new' = a message landed (banner-worthy); 'read' = the recipient
- *  side just read (only « Vu » ticks and badges reflow). */
+ *  side just read (only « Vu » ticks and badges reflow); 'delete' = the MD
+ *  pruned a message (views reflow, no banner). */
 function emitToSide(
   partyId: number,
   characterId: number,
   actorUserId: number,
   recipientIds: number[],
-  action: 'new' | 'read',
+  action: 'new' | 'read' | 'delete',
   fromGM: boolean,
   senderName = '',
   characterName = '',
@@ -294,6 +296,33 @@ export async function characterMessageRoutes(app: FastifyInstance) {
       emitToSide(char.party_id, charId, userId, otherSide(char, userId, gmUserIds), 'read', true);
     }
     return { ok: true, read: result.changes };
+  });
+
+  // ---------- MD pruning: delete any message in any thread ----------
+  app.delete('/character-messages/:messageId', async (req, reply) => {
+    const userId = requireUser(req, reply);
+    if (!userId) return;
+    const messageId = Number((req.params as any).messageId);
+    const drizzle = getDrizzle();
+    const row = drizzle
+      .select(cols(characterMessages))
+      .from(characterMessages)
+      .where(eq(characterMessages.id, messageId))
+      .get() as any;
+    if (!row) return reply.code(404).send({ error: apiMsg(req, 'Message not found') });
+    const char = getCharacter(drizzle, row.character_id);
+    if (!char) return reply.code(404).send({ error: apiMsg(req, 'Message not found') });
+    // MD only — the journal stays intact for players, but the table's master
+    // can strike any line (their own note like the player's reply)
+    if (!isPartyGM(char.party_id, userId))
+      return reply.code(403).send({ error: apiMsg(req, 'GM only') });
+
+    drizzle.delete(characterMessages).where(eq(characterMessages.id, messageId)).run();
+    // The other side's open view loses the line live ('delete' reflows views,
+    // never banners); unread counters are derived and drop by themselves.
+    const gmUserIds = getGMUserIds(drizzle, char.party_id);
+    emitToSide(char.party_id, char.id, userId, otherSide(char, userId, gmUserIds), 'delete', true);
+    return reply.code(204).send();
   });
 
   // ---------- GM inbox: one register entry per character thread ----------

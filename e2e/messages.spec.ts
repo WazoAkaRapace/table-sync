@@ -88,6 +88,23 @@ gmTest(
       timeout: 10_000,
     });
 
+    // — La rature MD : la ligne disparaît des DEUX côtés sans recharger —
+    //    confirmation au point de tap (1er appui arme, 2e confirme).
+    const replyRow = gmPage
+      .locator('[data-tuto="messages-fil"] li', { hasText: 'Je fouille l’autel dès ce soir.' })
+      .first();
+    const del = replyRow.getByRole('button', { name: 'Supprimer ce message' });
+    await del.click();
+    await del.click();
+    await expect(gmPage.getByText('Je fouille l’autel dès ce soir.', { exact: true })).toHaveCount(
+      0,
+      { timeout: 10_000 },
+    );
+    // Chez la joueuse (Messages ouvert) : le reflow 'delete' emporte la ligne
+    await expect(
+      playerPage.getByText('Je fouille l’autel dès ce soir.', { exact: true }),
+    ).toHaveCount(0, { timeout: 10_000 });
+
     await playerCtx.close();
   },
 );
