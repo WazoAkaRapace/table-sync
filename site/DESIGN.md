@@ -121,14 +121,16 @@ sous la démo).
 ## Les vues élargies (tablette du joueur, écran du MD)
 
 La même app vit sur des verres plus grands : la fiche du joueur posée à plat
-sur tablette (entrée II, `23-fiche-tablette.png`, 820×1180) et la rencontre
-du MD entière sur ordinateur (entrée III, `24-traqueur-bureau.png`,
-1440×900). Chaque vue se pose **sous le poste de consultation** de son
-entrée, pleine largeur (`.entry-wide`, `grid-column: 1/-1`).
+sur tablette — en portrait (entrée II, `23-fiche-tablette.png`, 820×1180) et
+en paysage sans dock (entrée II, `25-survie-paysage.png`, 1180×820, la barre
+d'onglets du haut a remplacé le hub) — et la rencontre du MD entière sur
+ordinateur (entrée III, `24-traqueur-bureau.png`, 1440×900). Chaque vue se
+pose **sous le poste de consultation** de son entrée, pleine largeur
+(`.entry-wide`, `grid-column: 1/-1`).
 
 | Dispositif | Recette |
 |---|---|
-| La tablette | le vocabulaire du cadre `.shot-frame` (rayons 30/21, matelas 9 px), simplement posé plus large — `max-width: min(24rem, 100%)` centré. Un verre plus grand, pas un autre objet : pas de chrome factice |
+| La paire tablette | `.tablet-pair` : le portrait (19rem) et le paysage (30rem) côte à côte, `flex-wrap` centré, écart 1.6rem — sous ~50rem d'air la paire se replie empilée. Cadres `.shot-frame` inchangés (rayons 30/21, matelas 9 px) : un verre plus grand, pas un autre objet, pas de chrome factice |
 | La fenêtre bureau | `.deskframe` : une fenêtre de navigateur — bordure `parchment-300` sur `parchment-100`, rayon 14, matelas 0.45rem ; barre `aria-hidden` à trois pastilles `parchment-300` + adresse en mono 0.72rem sur pilule blanche 65 % (`table-sync.local/party/1/combat`). La figure `.shot-desk` plafonne à 56rem centrée |
 | Survol | le soulèvement du cadre téléphone (`shadow-raised` + translateY(−3px)), coupé en mouvement réduit |
 | Visionneuse / EN | les images suivent les cadres téléphone partout : clic = plein écran, `main.js` échange le dossier `screenshots/` ↔ `screenshots-en/` (sélecteurs `.shot-frame img, .portrait-frame img, .deskframe img`) |

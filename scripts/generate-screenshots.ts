@@ -21,12 +21,13 @@
  *              et moments de démo injectés dans le mock.
  *   4. Shots — chaque capture reproduit l'état documenté dans le README.
  *              Viewports : mobile 390×844 (la majorité des captures, la fiche
- *              est mobile-first), tablette 820×1180 pour la fiche du joueur
- *              (23) et bureau 1440×900 pour le traqueur du MD (24) — les
- *              captures de vue élargie créent leur propre contexte Playwright
+ *              est mobile-first), tablette 820×1180 en portrait pour la fiche
+ *              (23) et 1180×820 en paysage pour la Survie sans dock (25),
+ *              bureau 1440×900 pour le traqueur du MD (24) — les captures de
+ *              vue élargie créent leur propre contexte Playwright
  *              via newSession().
  *
- * Bilingue : `--lang en` produit les mêmes 24 captures en anglais vers
+ * Bilingue : `--lang en` produit les mêmes 25 captures en anglais vers
  * docs/screenshots-en/ — l'API reçoit ?lang=en sur chaque appel du seed
  * (payloads mono-locale : `name` devient anglais), Chromium démarre en
  * locale en-US avec localStorage dnd-inv-lang=en, et tous les sélecteurs /
@@ -36,7 +37,7 @@
  * captures 11–13 peuvent différer entre deux runs d'une même langue).
  *
  * Usage :
- *   npm run screenshots                    # régénère les 24 captures (FR)
+ *   npm run screenshots                    # régénère les 25 captures (FR)
  *   npm run screenshots -- --only 03,07    # seulement certaines (numéros ou noms)
  *   npm run screenshots -- --lang en       # version anglaise → docs/screenshots-en/
  *   npm run screenshots -- --keep          # laisser les serveurs tourner (debug)
@@ -918,7 +919,7 @@ async function shoot(page: Page, file: string, opts: { animations?: 'allow' | 'd
 }
 
 // ---------------------------------------------------------------------------
-// Les 24 captures du README
+// Les 25 captures du README
 // ---------------------------------------------------------------------------
 
 interface ShotCtx {
@@ -1378,6 +1379,26 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
           .waitFor({ timeout: 10_000 });
         await page.waitForTimeout(300);
         await shoot(page, '23-fiche-tablette.png');
+        await page.close();
+      } finally {
+        await ctx.close();
+      }
+    },
+  },
+  {
+    file: '25-survie-paysage.png',
+    async run(c) {
+      // La Survie sur tablette en paysage (1180×820, iPad Air) : ≥ 1024 px le
+      // dock flottant s'efface devant la barre d'onglets du haut — Survie est
+      // l'onglet d'accueil, la fiche se lit comme sur un ordinateur.
+      const ctx = await newSession(c.browser, c.sessions.aurore, {
+        viewport: { width: 1180, height: 820 },
+      });
+      try {
+        const page = await openSheet(ctx, c.webPort, c.refs.partyId, c.refs.chars.lyra);
+        await page.getByText(S('❤️ Vitalité', '❤️ Vitality')).first().waitFor({ timeout: 10_000 });
+        await page.waitForTimeout(300);
+        await shoot(page, '25-survie-paysage.png');
         await page.close();
       } finally {
         await ctx.close();

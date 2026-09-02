@@ -72,6 +72,10 @@ La même fiche **sur tablette** — les caractéristiques s'étalent sur trois c
 
 ![Fiche sur tablette](docs/screenshots/23-fiche-tablette.png)
 
+En **paysage**, la barre d'onglets remplace le dock et la Survie s'étale à pleine largeur :
+
+![Survie sur tablette en paysage](docs/screenshots/25-survie-paysage.png)
+
 ### 🗡️ Traqueur de combat (MD)
 - **Rencontres** : monstres du bestiaire **964 bêtes**, groupés par type avec initiative partagée, **PV tirés aux dés de vie**
 - Ajout des PJ en un clic, initiative saisie par les joueurs depuis leur écran

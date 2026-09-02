@@ -698,18 +698,35 @@ html[lang="en"] [lang="fr"] {
 
 /* ---------- Vues élargies : la tablette du joueur, l'écran du MD ----------
    La même app sur un plus grand verre : la fiche du joueur posée à plat sur
-   tablette (23), la rencontre du MD entière sur ordinateur (24). La vue vit
-   sous le poste de consultation, pleine largeur de l'entrée. */
+   tablette (23 en portrait, 25 en paysage sans dock) et la rencontre du MD
+   entière sur ordinateur (24). Les vues vivent sous le poste de consultation
+   de leur entrée, pleine largeur (`.entry-wide`, `grid-column: 1/-1`). */
 
 .entry-wide {
   grid-column: 1 / -1;
 }
 
-/* La tablette : le vocabulaire du cadre téléphone, simplement posé plus
-   large — un verre plus grand, pas un autre objet */
-.entry-wide .shot-frame {
-  max-width: min(24rem, 100%);
-  margin-inline: auto;
+/* La paire tablette : le portrait (Caractéristiques) et le paysage (Survie)
+   côte à côte, le vocabulaire du cadre téléphone simplement posé plus large.
+   Sous ~50rem d'air, la paire se replie empilée, centrée */
+.tablet-pair {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 1.6rem;
+}
+
+.tablet-pair .shot {
+  margin: 0;
+}
+
+.tablet-pair .shot:first-child {
+  flex: 0 1 19rem;
+}
+
+.tablet-pair .shot:last-child {
+  flex: 0 1 30rem;
 }
 
 /* L'ordinateur du MD : une fenêtre de navigateur — trois pastilles parchemin,
