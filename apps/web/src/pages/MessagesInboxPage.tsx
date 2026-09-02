@@ -59,12 +59,15 @@ export default function MessagesInboxPage() {
     [partyId],
   );
 
-  // Sur desktop, le premier fil (le plus frais) s'ouvre d'emblée — la boîte
-  // commence à travailler ; sur mobile, le registre reste la porte.
+  // Sur desktop, le premier fil VISIBLE (le plus frais — les cachés restent
+  // en préparation repliée) s'ouvre d'emblée — la boîte commence à
+  // travailler ; sur mobile, le registre reste la porte.
   useEffect(() => {
     if (selectedId !== null || !threadsQuery.data?.length) return;
+    const first = threadsQuery.data.find((th) => !th.hidden);
+    if (!first) return;
     if (window.matchMedia('(min-width: 1024px)').matches) {
-      setSelectedId(threadsQuery.data[0].characterId);
+      setSelectedId(first.characterId);
     }
   }, [threadsQuery.data, selectedId]);
 
@@ -75,12 +78,83 @@ export default function MessagesInboxPage() {
     return () => clearTimeout(timer);
   }, [threadError]);
 
+  // Personnages cachés : repliés par défaut — la préparation secrète ne
+  // prend pas la place des volumes de la table.
+  const [hiddenOpen, setHiddenOpen] = useState(false);
+
   if (roleQuery.isPending) return <LoadingSpinner label={t('app.chargement')} />;
   if (roleQuery.data !== true) return <Navigate to={`/party/${partyId}`} replace />;
 
   const threads = threadsQuery.data ?? [];
+  const visibleThreads = threads.filter((th) => !th.hidden);
+  const hiddenThreads = threads.filter((th) => th.hidden);
+  const hiddenUnread = hiddenThreads.reduce((sum, th) => sum + th.unread, 0);
   const totalUnread = threads.reduce((sum, th) => sum + th.unread, 0);
   const selected = threads.find((th) => th.characterId === selectedId) ?? null;
+
+  /** Une entrée du registre ; `inHidden` omet la pastille « Caché » —
+   *  le repli qui la porte l'a déjà dite. */
+  const renderEntry = (th: MessageThreadSummary, i: number, inHidden = false) => {
+    const isOpen = th.characterId === selectedId;
+    const courant = i === 0;
+    return (
+      <li key={th.characterId} className="border-b border-parchment-200">
+        <button
+          type="button"
+          onClick={() => setSelectedId(th.characterId)}
+          aria-current={isOpen ? 'true' : undefined}
+          aria-label={t('msgs.vue.boite', { name: th.characterName })}
+          className={`group -mx-3 flex w-[calc(100%+1.5rem)] items-start gap-4 rounded-lg px-3 ${
+            isOpen ? 'py-4 bg-parchment-100' : 'py-3.5 transition-colors hover:bg-parchment-100/70'
+          } text-left`}
+        >
+          <span
+            aria-hidden="true"
+            className={`w-10 shrink-0 text-right font-display ${
+              courant ? 'pt-0.5 text-lg text-blood-500' : 'pt-0.5 text-lg text-ink-400'
+            }`}
+          >
+            {toRoman(i + 1)}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="flex min-w-0 items-baseline justify-between gap-2">
+              <span
+                className={`truncate font-display text-lg leading-snug ${
+                  th.unread > 0 ? 'font-bold text-ink-900' : 'font-semibold text-ink-700'
+                }`}
+              >
+                {th.characterName}
+              </span>
+              <span className="flex shrink-0 items-center gap-1.5">
+                {th.unread > 0 && (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-blood-600 px-1 text-[10px] font-bold text-white">
+                    {th.unread > 9 ? '9+' : th.unread}
+                  </span>
+                )}
+                {th.lastMessage && (
+                  <time className="font-mono text-[10px] text-ink-400">
+                    {formatMessageTime(th.lastMessage.createdAt)}
+                  </time>
+                )}
+              </span>
+            </span>
+            <span className="mt-0.5 flex min-w-0 items-center gap-1.5">
+              {th.hidden && !inHidden && (
+                <span className="shrink-0 rounded-full bg-ink-100 px-2 py-0.5 text-[11px] font-medium text-ink-600">
+                  {t('party.cache')}
+                </span>
+              )}
+              <span className="truncate text-sm text-ink-400">
+                {th.lastMessage
+                  ? `${th.lastMessage.fromGM ? 'MD' : th.characterName} : ${th.lastMessage.body}`
+                  : `@${th.ownerName} — ${t('msgs.aucun.message.md')}`}
+              </span>
+            </span>
+          </span>
+        </button>
+      </li>
+    );
+  };
 
   return (
     <div className="mx-auto w-full max-w-3xl">
@@ -110,74 +184,56 @@ export default function MessagesInboxPage() {
         // une carte levée ne se pose jamais à ras d'un filet réglé.
         <div className="lg:grid lg:grid-cols-[minmax(17rem,21rem)_minmax(0,1fr)] lg:gap-8 lg:pt-6">
           {/* ---------- Le registre des fils — épinglé SOUS l'en-tête (formule
-              maison), défilement interne quand la table s'agrandit ---------- */}
+              maison), défilement interne quand la table s'agrandit.
+              Les personnages cachés (préparation secrète) se replient sous
+              une ligne de conduite — ils ne prennent pas la place des volumes
+              de la table, et une pastille signale ce qui y attend.
+              px-3 (pas -mx-1/px-1) : la nappe -mx-3 des entrées déborde de
+              12 px — dans un conteneur overflow-y-auto, l'axe X passe en
+              auto et ce débordement faisait Barre de défilement horizontale ;
+              le padding l'absorbe (scrollWidth == clientWidth). ---------- */}
           <ol
-            className="list-none lg:sticky lg:top-[calc(var(--app-header-h)+env(safe-area-inset-top)+0.75rem)] lg:z-20 lg:-mx-1 lg:max-h-[calc(100vh-var(--app-header-h)-env(safe-area-inset-top)-2rem)] lg:self-start lg:overflow-y-auto lg:bg-parchment-50/95 lg:px-1 lg:py-1"
+            className="list-none lg:sticky lg:top-[calc(var(--app-header-h)+env(safe-area-inset-top)+0.75rem)] lg:z-20 lg:max-h-[calc(100vh-var(--app-header-h)-env(safe-area-inset-top)-2rem)] lg:self-start lg:overflow-y-auto lg:bg-parchment-50/95 lg:px-3 lg:py-1"
             data-tuto="messages-boite"
           >
-            {threads.map((th, i) => {
-              const isOpen = th.characterId === selectedId;
-              const courant = i === 0;
-              return (
-                <li key={th.characterId} className="border-b border-parchment-200">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedId(th.characterId)}
-                    aria-current={isOpen ? 'true' : undefined}
-                    aria-label={t('msgs.vue.boite', { name: th.characterName })}
-                    className={`group -mx-3 flex w-[calc(100%+1.5rem)] items-start gap-4 rounded-lg px-3 ${
-                      isOpen
-                        ? 'py-4 bg-parchment-100'
-                        : 'py-3.5 transition-colors hover:bg-parchment-100/70'
-                    } text-left`}
+            {visibleThreads.map((th, i) => renderEntry(th, i))}
+            {hiddenThreads.length > 0 && (
+              <li className="border-b border-parchment-200">
+                <button
+                  type="button"
+                  onClick={() => setHiddenOpen((o) => !o)}
+                  aria-expanded={hiddenOpen}
+                  className="group -mx-3 flex min-h-11 w-[calc(100%+1.5rem)] items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-parchment-100/70"
+                >
+                  {/* Chevron maison des replis (groupes d'inventaire) : ▼
+                      pivoté fermé, transition de la même courbe */}
+                  <span
+                    aria-hidden="true"
+                    className={`w-10 shrink-0 text-right text-sm text-ink-400 chevron ${
+                      hiddenOpen ? 'is-open' : 'is-closed'
+                    }`}
                   >
-                    <span
-                      aria-hidden="true"
-                      className={`w-10 shrink-0 text-right font-display ${
-                        courant ? 'pt-0.5 text-lg text-blood-500' : 'pt-0.5 text-lg text-ink-400'
-                      }`}
-                    >
-                      {toRoman(i + 1)}
+                    ▼
+                  </span>
+                  <span className="text-sm font-medium text-ink-500">
+                    {t(
+                      hiddenThreads.length === 1
+                        ? 'msgs.personnage.cache'
+                        : 'msgs.personnages.caches',
+                    )}{' '}
+                    ({hiddenThreads.length})
+                  </span>
+                  {hiddenUnread > 0 && (
+                    <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-blood-600 px-1 text-[10px] font-bold text-white">
+                      {hiddenUnread > 9 ? '9+' : hiddenUnread}
                     </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="flex min-w-0 items-baseline justify-between gap-2">
-                        <span
-                          className={`truncate font-display text-lg leading-snug ${
-                            th.unread > 0 ? 'font-bold text-ink-900' : 'font-semibold text-ink-700'
-                          }`}
-                        >
-                          {th.characterName}
-                        </span>
-                        <span className="flex shrink-0 items-center gap-1.5">
-                          {th.unread > 0 && (
-                            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-blood-600 px-1 text-[10px] font-bold text-white">
-                              {th.unread > 9 ? '9+' : th.unread}
-                            </span>
-                          )}
-                          {th.lastMessage && (
-                            <time className="font-mono text-[10px] text-ink-400">
-                              {formatMessageTime(th.lastMessage.createdAt)}
-                            </time>
-                          )}
-                        </span>
-                      </span>
-                      <span className="mt-0.5 flex min-w-0 items-center gap-1.5">
-                        {th.hidden && (
-                          <span className="shrink-0 rounded-full bg-ink-100 px-2 py-0.5 text-[11px] font-medium text-ink-600">
-                            {t('party.cache')}
-                          </span>
-                        )}
-                        <span className="truncate text-sm text-ink-400">
-                          {th.lastMessage
-                            ? `${th.lastMessage.fromGM ? 'MD' : th.characterName} : ${th.lastMessage.body}`
-                            : `@${th.ownerName} — ${t('msgs.aucun.message.md')}`}
-                        </span>
-                      </span>
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
+                  )}
+                  <span className="min-w-2 flex-1" aria-hidden="true" />
+                </button>
+              </li>
+            )}
+            {hiddenOpen &&
+              hiddenThreads.map((th, idx) => renderEntry(th, visibleThreads.length + idx, true))}
           </ol>
 
           {/* ---------- Le fil ouvert ---------- */}

@@ -6,6 +6,7 @@
  * matières porte la porte MD.
  */
 import { expect } from 'playwright/test';
+import { API_BASE } from './env';
 import { gmTest, seed, sheetUrl } from './fixtures';
 
 const TOUR_TABS = JSON.stringify([
@@ -115,4 +116,35 @@ gmTest("l'annexe « Correspondance » ouvre la boîte du MD", async ({ page }) =
   await expect(door).toBeVisible();
   await door.click();
   await expect(page.getByRole('heading', { name: 'Correspondance', exact: true })).toBeVisible();
+});
+
+gmTest('les personnages cachés se replient sous une ligne du registre', async ({ page }) => {
+  // Un personnage caché à nous (préparation secrète) — la spec est autonome.
+  const charRes = await fetch(`${API_BASE}/api/parties/${seed().partyId}/characters`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${seed().gm.token}`, 'content-type': 'application/json' },
+    body: JSON.stringify({
+      name: 'Silas Corbeau',
+      characterClass: 'Roublard',
+      level: 3,
+      hidden: true,
+    }),
+    signal: AbortSignal.timeout(5000),
+  });
+  expect(charRes.ok, `création Silas (caché) → ${charRes.status}`).toBe(true);
+
+  await page.goto(`/party/${seed().partyId}/messages`);
+  const reg = page.locator('[data-tuto="messages-boite"]');
+
+  // Repliés par défaut : le volume secret n'occupe pas le registre…
+  const fold = reg.getByRole('button', { name: /Personnages? cachés?/ });
+  await expect(fold).toBeVisible();
+  await expect(fold).toHaveAttribute('aria-expanded', 'false');
+  await expect(reg.getByRole('button', { name: /Silas Corbeau/ })).toHaveCount(0);
+
+  // …un geste le déplie, et le volume s'ouvre comme les autres.
+  await fold.click();
+  await expect(fold).toHaveAttribute('aria-expanded', 'true');
+  await reg.getByRole('button', { name: /Silas Corbeau/ }).click();
+  await expect(page.getByRole('heading', { name: 'Correspondance — Silas Corbeau' })).toBeVisible();
 });

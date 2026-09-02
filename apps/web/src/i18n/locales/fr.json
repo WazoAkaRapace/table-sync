@@ -782,6 +782,8 @@
   "msgs.supprimer.message": "Supprimer ce message",
   "msgs.suppression.impossible": "La suppression a échoué — réessaie.",
   "msgs.ouvrir": "Ouvrir",
+  "msgs.personnages.caches": "Personnages cachés",
+  "msgs.personnage.cache": "Personnage caché",
   "msgs.vu": "Vu",
   "msgs.vue.boite": "Ouvrir la correspondance de {{name}}",
   "notes.aucune.note": "Aucune note",

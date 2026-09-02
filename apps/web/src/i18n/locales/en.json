@@ -782,6 +782,8 @@
   "msgs.supprimer.message": "Delete this message",
   "msgs.suppression.impossible": "Delete failed — try again.",
   "msgs.ouvrir": "Open",
+  "msgs.personnages.caches": "Hidden characters",
+  "msgs.personnage.cache": "Hidden character",
   "msgs.vu": "Seen",
   "msgs.vue.boite": "Open {{name}}'s correspondence",
   "notes.aucune.note": "No note",
