@@ -206,14 +206,21 @@ export default function MessagesInboxPage() {
                   className="group -mx-3 flex min-h-11 w-[calc(100%+1.5rem)] items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-parchment-100/70"
                 >
                   {/* Chevron maison des replis (groupes d'inventaire) : ▼
-                      pivoté fermé, transition de la même courbe */}
+                      pivoté fermé. La rotation vit sur une boîte ÉTROITE
+                      qui épouse le glyph — sur la colonne w-10 entière, le
+                      ▼ aligné à droite décrivait un quart de cercle au
+                      lieu de pivoter sur place. */}
                   <span
                     aria-hidden="true"
-                    className={`w-10 shrink-0 text-right text-sm text-ink-400 chevron ${
-                      hiddenOpen ? 'is-open' : 'is-closed'
-                    }`}
+                    className="w-10 shrink-0 text-right text-sm text-ink-400"
                   >
-                    ▼
+                    <span
+                      className={`inline-block w-4 text-center chevron ${
+                        hiddenOpen ? 'is-open' : 'is-closed'
+                      }`}
+                    >
+                      ▼
+                    </span>
                   </span>
                   <span className="text-sm font-medium text-ink-500">
                     {t(
