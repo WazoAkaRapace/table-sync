@@ -106,7 +106,9 @@ export default function MessagesInboxPage() {
           <EmptyState icon="✉️" title={t('msgs.correspondance')} hint={t('msgs.aucun.message.md')} />
         </div>
       ) : (
-        <div className="lg:grid lg:grid-cols-[minmax(17rem,21rem)_minmax(0,1fr)] lg:gap-8">
+        // Deux volets — sur desktop ils descendent SOUS la double règle :
+        // une carte levée ne se pose jamais à ras d'un filet réglé.
+        <div className="lg:grid lg:grid-cols-[minmax(17rem,21rem)_minmax(0,1fr)] lg:gap-8 lg:pt-6">
           {/* ---------- Le registre des fils — épinglé SOUS l'en-tête (formule
               maison), défilement interne quand la table s'agrandit ---------- */}
           <ol
