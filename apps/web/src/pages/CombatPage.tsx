@@ -1222,7 +1222,7 @@ function InitiativeRail({
                 onClick={() => (targetMode ? onApplyDamage(c.id) : onFocus(c.id))}
                 aria-current={isCurrent ? 'true' : undefined}
                 aria-label={ariaParts.join(', ')}
-                className={`relative flex min-h-[52px] w-24 flex-col justify-center gap-1 rounded-lg border px-2 py-1.5 text-left transition-colors lg:w-full lg:flex-row lg:items-center lg:gap-2 ${
+                className={`relative flex min-h-[52px] w-auto min-w-24 max-w-44 flex-col justify-center gap-1 rounded-lg border px-2 py-1.5 text-left transition-colors lg:w-full lg:max-w-full ${
                   isCurrent
                     ? 'border-blood-600 bg-blood-600 text-parchment-50 shadow-sm'
                     : isFocused
@@ -1289,7 +1289,6 @@ function InitiativeRail({
                     current={c.hitPoints ?? 0}
                     max={c.maxHitPoints ?? 1}
                     size="xs"
-                    className="lg:w-24 lg:shrink-0"
                     trackClassName={isCurrent ? 'bg-blood-800/40' : 'bg-parchment-200'}
                   />
                 )}
