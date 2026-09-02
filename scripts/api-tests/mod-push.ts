@@ -174,6 +174,12 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
     );
     eq(String(hit.headers['content-encoding']), 'aes128gcm', 'payload encrypted per RFC 8291');
     ok(hit.body.length > 0, 'encrypted body present');
+    // Déchiffré : le test porte `force` — le SW supprime les push quand
+    // l'app est visible, or on teste justement app ouverte ; sans force le
+    // bouton « ne fait rien » (régression vécue).
+    const testPayload = decryptPushBody(keysB.ecdh, keysB.auth, hit.body);
+    eq(testPayload.kind, 'test', 'test push kind');
+    eq(testPayload.force, true, 'test push forces display even with app visible');
   }
   ok(
     !!srv.query('SELECT last_used_at FROM push_subscriptions WHERE endpoint = ?', endpointB)

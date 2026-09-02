@@ -14,7 +14,9 @@
 
 // Une fenêtre visible = l'app est à l'écran : le WebSocket et le widget de
 // combat informent déjà (TurnSlash, dock), une notification serait du bruit.
-// On n'affiche que si l'app est fermée ou en arrière-plan.
+// On n'affiche que si l'app est fermée ou en arrière-plan — SAUF payload
+// `force` : la notification de TEST vérifie la chaîne app ouverte, la
+// supprimer la ferait « ne rien faire ».
 async function hasVisibleClient() {
   const windowClients = await self.clients.matchAll({ type: 'window', visible: true });
   return windowClients.length > 0;
@@ -29,7 +31,7 @@ self.addEventListener('push', (event) => {
   }
   event.waitUntil(
     (async () => {
-      if (await hasVisibleClient()) return;
+      if (!payload.force && (await hasVisibleClient())) return;
       // Icônes en URL ABSOLUE : Chrome Android ne résout pas les chemins
       // relatifs du champ `icon` et rend un carré blanc — desktop, lui, s'en
       // accommode. Résolution contre le scope, pas origin, pour rester juste

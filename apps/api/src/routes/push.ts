@@ -101,6 +101,10 @@ export async function pushRoutes(app: FastifyInstance) {
           en: 'Notifications on — the whole chain works.',
         },
         url: '/parties',
+        // Le SW supprime les push quand l'app est visible — or on teste
+        // justement app ouverte. Force l'affichage : sans lui, le bouton
+        // « paraît ne rien faire ».
+        force: true,
       },
       { ttl: 60, urgency: 'normal' },
     );

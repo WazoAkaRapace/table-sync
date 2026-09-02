@@ -35,6 +35,10 @@ export interface PushPayload {
   url: string;
   /** Regroupe les notifications d'un même sujet (la nouvelle remplace l'ancienne). */
   tag?: string;
+  /** Afficher MÊME si l'app est visible (le SW supprime sinon : l'app ouverte
+   *  informe déjà). La notification de TEST l'exige — on la clique app
+   *  ouverte précisément pour vérifier la chaîne. */
+  force?: boolean;
 }
 
 export interface PushSendOptions {
@@ -83,6 +87,7 @@ export async function sendPushToUser(
             body: resolveLocalized(payload.body, sub.locale),
             url: payload.url,
             ...(payload.tag ? { tag: payload.tag } : {}),
+            ...(payload.force ? { force: true } : {}),
           }),
           {
             vapidDetails: config,

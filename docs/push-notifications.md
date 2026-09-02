@@ -65,9 +65,11 @@ sw.js (push-only, aucun cache)
   manifest (jusqu'à ~24 h, ou réinstaller la PWA pour forcer).
 - **Suppression « fenêtre visible »** : si l'app est ouverte à l'écran, le SW
   ne montre pas la notification (le widget de combat/TurnSlash informe déjà).
-  C'est la seule suppression v1 — pas de vérification de connexion WS côté
-  serveur (multi-appareils : la tablette en arrière-plan doit être notifiée
-  même si le téléphone est connecté).
+  Exception : un payload `force: true` s'affiche quand même — la notification
+  de TEST l'exige (on la clique app ouverte précisément pour vérifier la
+  chaîne ; sans elle, le bouton paraissait ne rien faire). Pas de vérification
+  de connexion WS côté serveur (multi-appareils : la tablette en arrière-plan
+  doit être notifiée même si le téléphone est connecté).
 - **VAPID absent = fonctionnalité éteinte proprement** : `GET /api/push/config`
   répond `enabled: false`, `POST /api/push/test` renvoie 503, les abonnements
   restent stockables. Jamais d'erreur au boot — mais une ligne de log tranche
