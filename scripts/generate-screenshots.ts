@@ -27,7 +27,7 @@
  * locale en-US avec localStorage dnd-inv-lang=en, et tous les sélecteurs /
  * textes attendus passent par S(fr, en) avec les chaînes EXACTES du
  * catalogue EN (apps/web/src/i18n/locales/en.json — ne pas inventer).
- * Les PV des monstres restent lancés aux dés (randomité volontaire : les
+ * Les PV des monstres restent tirés aux dés (randomité volontaire : les
  * captures 11–13 peuvent différer entre deux runs d'une même langue).
  *
  * Usage :
@@ -1264,7 +1264,7 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
     file: '19-banniere-correspondance.png',
     async run(c) {
       const page = await openSheet(c.aurore, c.webPort, c.refs.partyId, c.refs.chars.lyra);
-      await openTab(page, S('Inventaire', 'Inventory')); // un onglet neutre : la bannière tombe « où que vous soyez »
+      await openTab(page, S('Inventaire', 'Inventory')); // un onglet neutre : la bannière tombe « où que tu sois »
       await c.sendAsMd(
         c.refs.chars.lyra,
         S(

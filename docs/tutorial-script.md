@@ -8,7 +8,7 @@
 |---|---|
 | D1 | **Périmètre v1 = fiche joueur** : les 9 onglets + l'habillage partagé (bandeau d'état, dock mobile/hub, barre d'onglets desktop). Les surfaces du MD (table, traqueur) feront l'objet d'un script ultérieur. |
 | D2 | **Forme = un script par onglet + une visite « Bienvenue »** (5 étapes). La chaîne *Bienvenue → Survie* se joue quand le drapeau `dnd-inv-tour-seen` est absent (première visite) ou après une réinitialisation. |
-| D3 | **Déclenchement/rejeu = « Réinitialiser le tutoriel » dans « Mon compte »** (§15). Pas de bouton ❓ dans la fiche. Le tutoriel absorbe l'ancienne carte « Bienvenue ! » de l'inventaire et **réutilise la clé `dnd-inv-tour-seen`** — les fixtures e2e existantes continuent de le supprimer sans changement. |
+| D3 | **Déclenchement/rejeu = « Réinitialiser le tutoriel » dans « Mon compte »** (§16). Pas de bouton ❓ dans la fiche. Le tutoriel absorbe l'ancienne carte « Bienvenue ! » de l'inventaire et **réutilise la clé `dnd-inv-tour-seen`** — les fixtures e2e existantes continuent de le supprimer sans changement. |
 | D4 | **Mobile d'abord, desktop s'adapte** : scripts partagés, étapes marquées `mobile` / `desktop` / `les deux`, cibles alternatives (dock vs barre d'onglets) résolues au moment de la construction. |
 | D5 | **Moteur = react-joyride v3** (`react-joyride@^3.2` + `@floating-ui/react-dom`). React 19 compatible depuis v3 (mars 2026) ; les crochets `before` par étape portent notre orchestration de changement d'onglet, le polling de cible absorbe le remontage des panneaux (`key={activeTab}`), le rendu est portaled (règle AGENTS.md). Sans balise (déclenchement par drapeau), clics sur l'overlay bloqués, Échap quitte. Bulle maison : `.card` + boutons de la maison (§4). |
 
@@ -107,9 +107,9 @@ Se joue à l'arrivée sur la fiche (drapeau absent ou réinitialisé), quel que 
 | 2 | `attaques` | `survie-attaques` | les deux | **⚔ Attaques** Tes armes avec les bons chiffres : la puce 🎯 donne le bonus, ⚔ les dégâts, ✨ la magie. Caractéristique, maîtrise, style de combat… tout est calculé selon les règles. | **⚔ Attacks** Your weapons with the right numbers: the 🎯 chip shows the attack bonus, ⚔ damage, ✨ magic. Ability, proficiency, fighting style… it's all computed by the rules. |
 | 3 | `des-vie` | `survie-des-vie` | les deux | **🎲 Dés de vie** Ta réserve de dés de vie, un compteur par classe. Un repos long t'en rend la moitié ; pendant un repos court, dépenses-en pour te soigner. | **🎲 Hit dice** Your hit-dice pool, one counter per class. A long rest returns half of them; during a short rest, spend them to heal. |
 | 4 | `etats` | `survie-etats` | les deux | **🎭 États** Conditions et épuisement, avec durées. Ils suivent ton personnage partout : ta fiche et le traqueur du MD restent synchronisés. | **🎭 Conditions** Conditions and exhaustion, with durations. They follow your character everywhere: your sheet and the GM's tracker stay in sync. |
-| 5 | `ressources` | `survie-ressources` | les deux | **⚡ Ressources de classe** Furie, ki, points de sorcellerie… les compteurs de tes traits, avec leur maximum calculé à ton niveau actuel. | **⚡ Class resources** Rage, ki, sorcery points… your features' counters, with their maximum computed at your current level. |
+| 5 | `ressources` | `survie-ressources` | les deux | **⚡ Ressources de classe** Rage, ki, points de sorcellerie… les compteurs de tes traits, avec leur maximum calculé à ton niveau actuel. | **⚡ Class resources** Rage, ki, sorcery points… your features' counters, with their maximum computed at your current level. |
 | 6 | `repos` | `survie-repos` | les deux | **⛺ Repos court, 🌙 repos long** Un appui applique les règles : emplacements, ressources, dés de vie. Et ton MD te voit te reposer en direct. | **⛺ Short rest, 🌙 long rest** One tap applies the rules: slots, resources, hit dice. And your GM watches you rest live. |
-| 7 | `forme` | `survie-forme` | les deux · `when` druide | **🐾 Forme sauvage** Choisis une bête déjà vue : la fiche gère ses PV, le retour automatique à 0 et les portes de CR selon ton niveau. | **🐾 Wild shape** Pick a beast you've seen: the sheet tracks its HP, the auto-revert at 0, and the CR gates for your level. |
+| 7 | `forme` | `survie-forme` | les deux · `when` druide | **🐾 Forme sauvage** Choisis une bête déjà vue : la fiche gère ses PV, le retour automatique à 0 et le DD maximal selon ton niveau. | **🐾 Wild shape** Pick a beast you've seen: the sheet tracks its HP, the auto-revert at 0, and the CR gates for your level. |
 
 ## 7. Script « Caractéristiques » (5 étapes · onglet `stats`)
 
@@ -128,7 +128,7 @@ Se joue à l'arrivée sur la fiche (drapeau absent ou réinitialisé), quel que 
 | 1 | `sauvegardes` | `skills-sauvegardes` | les deux | **Jets de sauvegarde** Tes six sauvegardes, avec bonus de maîtrise quand il s'applique — et l'aura du paladin s'ajoute toute seule dès le niveau 6. | **Saving throws** Your six saves, with proficiency where it applies — and the paladin's aura adds itself from level 6. |
 | 2 | `competences` | `skills-competences` | les deux | **○, ●, puis ◉** Un appui passe de rien à la maîtrise ● ; un second, à l'expertise ◉ (double bonus). Les emplacements d'expertise sont comptés selon ta classe. | **○, ●, then ◉** One tap goes from nothing to proficiency ●; a second one, to expertise ◉ (double bonus). Expertise slots are counted per your class. |
 | 3 | `outils-langues` | `skills-outils-langues` | les deux | **Outils & langues** 39 outils et 16 langues du SRD, plus tes propres entrées. L'expertise vaut aussi pour les outils de voleur. | **Tools & languages** 39 SRD tools and 16 languages, plus your own entries. Expertise applies to thieves' tools too. |
-| 4 | `maitrises` | `skills-maitrises` | les deux | **Maîtrise d'armes** Celles de ta classe par défaut. Arme exotique gagnée en jeu ? Ajoute-la — sinon la fiche marque ⚠ les attaques non qualifiées. | **Weapon proficiency** Your class's list by default. Exotic blade won in play? Add it — otherwise the sheet flags ⚠ unproficient attacks. |
+| 4 | `maitrises` | `skills-maitrises` | les deux | **Maîtrise d'armes** Celles de ta classe par défaut. Arme exotique gagnée en jeu ? Ajoute-la — sinon la fiche signale ⚠ les attaques non qualifiées. | **Weapon proficiency** Your class's list by default. Exotic blade won in play? Add it — otherwise the sheet flags ⚠ unproficient attacks. |
 
 ## 9. Script « Sorts » (6 étapes · onglet `spells`)
 
@@ -157,7 +157,7 @@ Se joue à l'arrivée sur la fiche (drapeau absent ou réinitialisé), quel que 
 
 | # | id | Cible | Vue | Texte FR | Texte EN |
 |---|---|---|---|---|---|
-| 1 | `catalogue` | `traits-catalogue` | les deux | **Catalogue de classe** Les 307 traits officiels du SRD, par classe et niveau — Fougue, Inflexible, Conduit divin… L'officialité, à un appui. | **Class catalog** The 307 official SRD features, by class and level — Rage, Relentless Rage, Channel Divinity… Officialdom, one tap away. |
+| 1 | `catalogue` | `traits-catalogue` | les deux | **Catalogue de classe** Les 307 traits officiels du SRD, par classe et niveau — Fougue, Inflexible, Conduit divin… L'officiel, à un appui. | **Class catalog** The 307 official SRD features, by class and level — Action Surge, Indomitable, Channel Divinity… Officialdom, one tap away. |
 | 2 | `ajout` | `traits-catalogue` | les deux | **Ajout en 1 clic** Chaque trait arrive avec sa description et, s'il a un compteur, sa réserve : furie 2/2, points de ki… réglés à ton niveau. | **One-click add** Each feature arrives with its description and, if it has a counter, its pool: rage 2/2, ki points… set to your level. |
 | 3 | `compteurs` | `traits-liste` | les deux | **Repos courts, repos longs** Chaque compteur coche ce qu'il récupère — pré-coché selon le SRD. Décoche pour gérer à la main. | **Short rests, long rests** Each counter ticks what it recovers — pre-checked per the SRD. Untick to manage it by hand. |
 | 4 | `ma-liste` | `traits-liste` | les deux | **Tes traits, tes repères** Ta liste reste éditable : renomme, réordonne, ajoute ce que le MD accorde hors catalogue. | **Your features, your landmarks** Your list stays editable: rename, reorder, add whatever the GM grants off-catalog. |
@@ -189,9 +189,10 @@ Se joue à l'arrivée sur la fiche (drapeau absent ou réinitialisé), quel que 
 
 | # | id | Cible | Vue | Texte FR | Texte EN |
 |---|---|---|---|---|---|
-| 1 | `fil` | `messages-fil` | les deux | **Le canal secret** Échange en privé avec le MD : indices, secrets, révélations que la table ne doit pas entendre. Ce fil appartient à ce personnage — l'historique s'y garde. | **The secret channel** Trade privately with the GM: clues, secrets, revelations the table must not hear. This thread belongs to this character — the history stays here. |
-| 2 | `partout` | `messages-fil` | les deux | **Partout, même hors de la fiche** Un message qui arrive s'affiche en bannière où que vous soyez, une pastille compte les non-lus — et si l'app est fermée, une notification sonne. | **Anywhere, even outside the sheet** An incoming message drops a banner wherever you are, a badge counts the unread — and if the app is closed, a notification fires. |
-## 15. Réinitialisation — section « Tutoriel » de « Mon compte »
+| 1 | `fil` | `messages-fil` | les deux | **Le canal secret** Échange en privé avec le MD : indices, secrets, révélations que la table ne doit pas entendre. Ce fil appartient à ce personnage — l'historique y reste. | **The secret channel** Trade privately with the GM: clues, secrets, revelations the table must not hear. This thread belongs to this character — the history stays here. |
+| 2 | `partout` | `messages-fil` | les deux | **Partout, même hors de la fiche** Un message qui arrive s'affiche en bannière où que tu sois, une pastille compte les non-lus — et si l'app est fermée, une notification sonne. | **Anywhere, even outside the sheet** An incoming message drops a banner wherever you are, a badge counts the unread — and if the app is closed, a notification fires. |
+
+## 16. Réinitialisation — section « Tutoriel » de « Mon compte »
 
 Nouvelle section carte entre « Langue » et « Mot de passe » (`apps/web/src/pages/AccountPage.tsx`), `aria-labelledby` comme ses voisines.
 
@@ -204,7 +205,7 @@ Nouvelle section carte entre « Langue » et « Mot de passe » (`apps/web/src/p
 
 Le bouton efface `dnd-inv-tour-seen` **et** `dnd-inv-tour-tabs` (localStorage, donc par navigateur) et affiche le toast. À la prochaine ouverture d'une fiche, la chaîne *Bienvenue → Survie* se rejoue — puis chaque onglet retrouve sa visite propre au premier passage.
 
-## 16. Déclenchement et enchaînement
+## 17. Déclenchement et enchaînement
 
 - **Première visite** : `dnd-inv-tour-seen` absent ⇒ la chaîne *Bienvenue → Survie* démarre après le chargement de la fiche (≈ 800 ms, comme l'ancienne carte). La fin ou l'abandon (Échap, « Passer ») écrit `'1'` dans le drapeau.
 - **Visite propre d'onglet** : le premier passage sur un onglet (changement d'onglet uniquement, jamais au montage) déclenche son script — une fois la visite d'accueil passée. Terminé **ou** passé ⇒ l'onglet est coché dans `dnd-inv-tour-tabs` (JSON array) et ne se redéclenche plus. La Survie est cochée par la chaîne d'accueil ; un « Passer » sur l'accueil ne déclenche pas aussitôt la Survie déjà affichée (déclencheurs limités aux changements d'onglet).

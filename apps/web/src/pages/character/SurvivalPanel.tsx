@@ -872,7 +872,7 @@ export function SurvivalPanel({
                     {(character.level ?? 2) >= 8 &&
                       character.druidCircle !== 'lune' &&
                       t('survie.vol.seul')}
-                    {t('survie.pv.lances.aux.des.de.la.forme')}
+                    {t('survie.pv.tires.aux.des.de.la.forme')}
                   </p>
                   {character.druidCircle === 'lune' && (
                     <p className="text-[10px] text-ink-500">
