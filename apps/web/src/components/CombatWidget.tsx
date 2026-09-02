@@ -2,11 +2,12 @@
  * Floating combat widget for players.
  *
  * Appears bottom-left (minimized by default) when a combat is active or
- * in setup in one of the user's parties. Shows whose turn it is, and if
- * the player hasn't rolled initiative yet, provides an input.
+ * in setup in the sheet's party. Shows whose turn it is, and if the
+ * player hasn't rolled initiative yet, provides an input.
  *
- * Only renders on the player's own character sheet page.
- * The GM uses the full CombatPage route.
+ * Only renders — and only loads — on the player's own character sheet,
+ * scoped to that sheet's party (a player doesn't fight in two groups at
+ * once). The GM uses the full CombatPage route.
  */
 
 import type { Combatant, EncounterDetail } from '@table-sync/shared';
@@ -15,14 +16,13 @@ import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../auth';
-import { useSyncEvent } from '../sync';
+import { useSync, useSyncEvent } from '../sync';
 import TurnSlash, { combatVibrate, useTurnSlash } from './TurnSlash';
 
 interface ActiveCombat {
   encounter: EncounterDetail;
   partyId: number;
-  partyName: string;
-  myCombatant: Combatant | null;
+  myCombatant: Combatant;
   currentCombatant: Combatant | null;
 }
 
@@ -50,81 +50,88 @@ export default function CombatWidget() {
   // Only show on a character sheet route
   const charMatch = location.pathname.match(/^\/party\/(\d+)\/character\/(\d+)/);
   const isCharacterSheet = !!charMatch;
+  const partyId = charMatch ? Number(charMatch[1]) : null;
   const charId = charMatch ? Number(charMatch[2]) : null;
 
+  // Ownership probe: the widget may only render — and only load — on the
+  // player's OWN sheet. On anyone else's (or off-sheet) it stays silent.
+  const [isMyCharacter, setIsMyCharacter] = useState(false);
+  useEffect(() => {
+    if (!user || !charId) {
+      setIsMyCharacter(false);
+      return;
+    }
+    api
+      .get(`/api/characters/${charId}`)
+      .then((res) => setIsMyCharacter(res.data.character?.ownerId === user.id))
+      .catch(() => setIsMyCharacter(false));
+  }, [user, charId]);
+
+  const canLoad = !!user && isCharacterSheet && isMyCharacter;
+
   const loadCombats = useCallback(async () => {
-    if (!user) return;
+    if (!user || !partyId || !charId) return;
     // Race guard: rapid sync events + the 30s poll can overlap; only the
     // latest run may commit its result, otherwise a stale (pre-add) response
     // could overwrite a fresh one and hide the widget.
     const seq = ++loadSeq.current;
     try {
-      // Fetch all parties the user belongs to
-      const partiesRes = await api.get('/api/parties');
-      const parties = partiesRes.data.parties || [];
-      const activeCombats: ActiveCombat[] = [];
-
-      await Promise.all(
-        parties.map(async (p: any) => {
-          try {
-            const encRes = await api.get(`/api/parties/${p.id}/encounters`);
-            const encounters = encRes.data.encounters || [];
-            // Find active encounters AND setup encounters (where initiative may be pending)
-            const relevant = encounters.filter(
-              (e: any) => e.status === 'active' || e.status === 'setup',
-            );
-            for (const encSummary of relevant) {
-              const detailRes = await api.get(`/api/encounters/${encSummary.id}`);
-              const encounter: EncounterDetail = detailRes.data.encounter;
-              const currentCombatant = encounter.combatants[encounter.turnIndex] ?? null;
-              activeCombats.push({
-                encounter,
-                partyId: p.id,
-                partyName: p.name,
-                myCombatant: null, // resolved below
-                currentCombatant,
-              });
-            }
-          } catch {
-            // skip (e.g., 403 if not in the encounter)
-          }
-        }),
-      );
-
-      // For each combat, find the player's combatant (matching by party characters).
-      // Filter out combats where the player has no combatant (not in the fight).
-      for (const combat of activeCombats) {
+      // One party — the sheet's. The list is already scoped server-side:
+      // non-GM members only see fights one of their characters is in.
+      const encRes = await api.get(`/api/parties/${partyId}/encounters`);
+      const encounters = encRes.data.encounters || [];
+      const relevant = encounters.filter((e: any) => e.status === 'active' || e.status === 'setup');
+      const mine: ActiveCombat[] = [];
+      for (const summary of relevant) {
         try {
-          const partyRes = await api.get(`/api/parties/${combat.partyId}`);
-          const myCharIds = (partyRes.data.characters || [])
-            .filter((c: any) => c.ownerId === user.id)
-            .map((c: any) => c.id);
-          combat.myCombatant =
-            combat.encounter.combatants.find(
-              (c) => c.characterId !== null && myCharIds.includes(c.characterId),
-            ) ?? null;
+          const detailRes = await api.get(`/api/encounters/${summary.id}`);
+          const encounter: EncounterDetail = detailRes.data.encounter;
+          // The widget tracks THIS sheet's character (same rule as the
+          // mobile combat card), not every character the user owns.
+          const myCombatant = encounter.combatants.find((c) => c.characterId === charId) ?? null;
+          if (!myCombatant) continue;
+          mine.push({
+            encounter,
+            partyId,
+            myCombatant,
+            currentCombatant: encounter.combatants[encounter.turnIndex] ?? null,
+          });
         } catch {
-          // skip
+          // skip (e.g., 403 if not in the encounter)
         }
       }
-      // Only keep combats where the player is actually a combatant
-      const myCombats = activeCombats.filter((c) => c.myCombatant !== null);
-
-      if (seq === loadSeq.current) setCombats(myCombats);
+      if (seq === loadSeq.current) setCombats(mine);
     } catch {
       if (seq === loadSeq.current) setCombats([]);
     }
-  }, [user]);
+  }, [user, partyId, charId]);
+
+  // Switching sheets must not flash the previous sheet's fights
+  // biome-ignore lint/correctness/useExhaustiveDependencies: charId is a reset key — clearing on sheet change is the whole point
+  useEffect(() => {
+    setCombats([]);
+  }, [charId]);
 
   useEffect(() => {
+    if (!canLoad) return;
     loadCombats();
     // Refresh every 30s as a fallback (sync events handle real-time)
     const interval = setInterval(loadCombats, 30000);
     return () => clearInterval(interval);
-  }, [loadCombats]);
+  }, [canLoad, loadCombats]);
+
+  // Events fired while the socket was down are lost forever — resync the
+  // moment it reconnects instead of waiting for the next 30s tick.
+  const { status: syncStatus } = useSync();
+  const prevSyncStatus = useRef<typeof syncStatus | null>(null);
+  useEffect(() => {
+    const wasDown = prevSyncStatus.current !== null && prevSyncStatus.current !== 'connected';
+    prevSyncStatus.current = syncStatus;
+    if (syncStatus === 'connected' && wasDown && canLoad) loadCombats();
+  }, [syncStatus, canLoad, loadCombats]);
 
   useSyncEvent((event) => {
-    if (event.type === 'combat:change') {
+    if (event.type === 'combat:change' && event.partyId === partyId && canLoad) {
       loadCombats();
     }
   }, []);
@@ -167,31 +174,15 @@ export default function CombatWidget() {
     }
   };
 
-  // Only show on the player's OWN character sheet
-  const [isMyCharacter, setIsMyCharacter] = useState(false);
-  useEffect(() => {
-    if (!user || !charId) {
-      setIsMyCharacter(false);
-      return;
-    }
-    api
-      .get(`/api/characters/${charId}`)
-      .then((res) => setIsMyCharacter(res.data.character?.ownerId === user.id))
-      .catch(() => setIsMyCharacter(false));
-  }, [user, charId]);
-
   // Priority: my turn > needs initiative > active combat
   // Nobody's turn is active while the encounter is still in setup.
   const myTurn = combats.find(
-    (c) =>
-      c.encounter.status === 'active' &&
-      c.myCombatant &&
-      c.currentCombatant?.id === c.myCombatant.id,
+    (c) => c.encounter.status === 'active' && c.currentCombatant?.id === c.myCombatant.id,
   );
   const isMyTurn = !!myTurn;
 
   // Haptic cue the moment initiative is requested (phone in pocket)
-  const needsInitAnywhere = combats.some((c) => c.myCombatant?.initiative === null);
+  const needsInitAnywhere = combats.some((c) => c.myCombatant.initiative === null);
   const prevNeedsInit = useRef(false);
   useEffect(() => {
     const rising = needsInitAnywhere && !prevNeedsInit.current;
@@ -204,9 +195,9 @@ export default function CombatWidget() {
 
   if (!user || !isCharacterSheet || !isMyCharacter || combats.length === 0) return null;
 
-  const needsInit = combats.find((c) => c.myCombatant?.initiative === null);
+  const needsInit = combats.find((c) => c.myCombatant.initiative === null);
   const combat = myTurn ?? needsInit ?? combats[0];
-  const needsInitiative = combat.myCombatant?.initiative === null;
+  const needsInitiative = combat.myCombatant.initiative === null;
   const isSetup = combat.encounter.status === 'setup';
 
   if (collapsed) {
@@ -261,7 +252,7 @@ export default function CombatWidget() {
           <div className="flex items-center gap-2">
             <span className="text-lg">⚔</span>
             <div>
-              <div className="text-xs font-semibold text-ink-700">{combat.partyName}</div>
+              <div className="text-xs font-semibold text-ink-700">{combat.encounter.name}</div>
               <div className="text-xs text-ink-400">
                 {isSetup
                   ? t('widget.preparation')
@@ -317,7 +308,7 @@ export default function CombatWidget() {
           )}
 
           {/* Initiative entry */}
-          {needsInitiative && combat.myCombatant && (
+          {needsInitiative && (
             <div className="p-2 rounded-lg bg-yellow-50 border border-yellow-200">
               <p className="text-xs text-ink-600 mb-1">
                 {t('widget.nom.saisis.ton.initiative', { name: combat.myCombatant.name })}
@@ -336,7 +327,7 @@ export default function CombatWidget() {
                     if (e.key !== 'Enter') return;
                     const v = parseInt(initInput, 10);
                     if (Number.isNaN(v)) return;
-                    const ok = await setInitiative(combat.encounter.id, combat.myCombatant!.id, v);
+                    const ok = await setInitiative(combat.encounter.id, combat.myCombatant.id, v);
                     if (ok) setInitInput('');
                   }}
                   placeholder="—"
@@ -349,7 +340,7 @@ export default function CombatWidget() {
                   onClick={async () => {
                     const v = parseInt(initInput, 10);
                     if (Number.isNaN(v)) return;
-                    const ok = await setInitiative(combat.encounter.id, combat.myCombatant!.id, v);
+                    const ok = await setInitiative(combat.encounter.id, combat.myCombatant.id, v);
                     if (ok) setInitInput('');
                   }}
                   className="btn-primary text-xs px-2 py-1"
@@ -361,8 +352,8 @@ export default function CombatWidget() {
                   onClick={() =>
                     setInitiative(
                       combat.encounter.id,
-                      combat.myCombatant!.id,
-                      rollD20(combat.myCombatant!.initiativeBonus),
+                      combat.myCombatant.id,
+                      rollD20(combat.myCombatant.initiativeBonus),
                     )
                   }
                   className="btn-secondary text-xs px-2 py-1"
@@ -380,7 +371,7 @@ export default function CombatWidget() {
           )}
 
           {/* My combatant status */}
-          {combat.myCombatant && !needsInitiative && (
+          {!needsInitiative && (
             <div className="flex items-center justify-between text-xs text-ink-500">
               <span>
                 {combat.myCombatant.name} · init {combat.myCombatant.initiative}
