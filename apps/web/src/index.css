@@ -94,6 +94,15 @@ a:focus-visible,
   outline-offset: 2px;
 }
 
+/* Glyphes emoji — force la police emoji colorée. Les codepoints de l'ancien
+   bloc (☀️ U+2600, ⛈️ U+26C8, ❄️ U+2744…) peuvent rester en présentation
+   texte monochrome dans la pile serif du corps, quand les U+1F3xx basculent
+   seuls vers l'emoji. Noto Emoji (monochrome) en dernier filet : Linux sans
+   police couleur garde un glyphe lisible. */
+.emoji-glyph {
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Noto Emoji', sans-serif;
+}
+
 /* Hide number input spinners */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {

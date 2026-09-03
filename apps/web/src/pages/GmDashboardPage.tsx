@@ -32,6 +32,7 @@ import {
   Fab,
   LoadingSpinner,
   Modal,
+  TabButton,
   type Toast,
   ToastStack,
 } from '../components/ui';
@@ -266,30 +267,6 @@ function DisbandPartySection({
         </Modal>
       )}
     </div>
-  );
-}
-
-function TabButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
-        active
-          ? 'border-blood-600 text-blood-700'
-          : 'border-transparent text-ink-400 hover:text-ink-700'
-      }`}
-    >
-      {children}
-    </button>
   );
 }
 

@@ -10,6 +10,7 @@ export interface SyncEvent {
     | 'character:change'
     | 'party:change'
     | 'combat:change'
+    | 'campaign:change'
     | 'gma:change'
     | 'message:new';
   partyId: number;

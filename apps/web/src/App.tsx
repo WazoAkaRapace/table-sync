@@ -21,6 +21,7 @@ const CharacterCreatePage = lazy(() => import('./pages/CharacterCreatePage'));
 const CharacterInventoryPage = lazy(() => import('./pages/CharacterInventoryPage'));
 const ChroniclePage = lazy(() => import('./pages/ChroniclePage'));
 const CombatPage = lazy(() => import('./pages/CombatPage'));
+const DmNotebookPage = lazy(() => import('./pages/DmNotebookPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
 const GmDashboardPage = lazy(() => import('./pages/GmDashboardPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
@@ -78,6 +79,7 @@ function useRouteTitle(pathname: string): { title: string; backTo?: string } | n
     if (sub === 'gm') return { title: i18next.t('nav.table.du.md'), backTo: partyBase };
     if (sub === 'npcs') return { title: i18next.t('nav.pnj'), backTo: partyBase };
     if (sub === 'combat') return { title: i18next.t('nav.combat'), backTo: partyBase };
+    if (sub === 'carnet') return { title: i18next.t('nav.carnet'), backTo: partyBase };
     if (sub === 'messages') return { title: i18next.t('nav.correspondance'), backTo: partyBase };
     if (sub === 'create')
       return { title: i18next.t('create.nouveau.personnage'), backTo: partyBase };
@@ -382,6 +384,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <GmDashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/party/:partyId/carnet"
+              element={
+                <ProtectedRoute>
+                  <DmNotebookPage />
                 </ProtectedRoute>
               }
             />

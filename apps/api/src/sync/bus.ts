@@ -17,6 +17,7 @@ export interface SyncEvent {
     | 'character:change'
     | 'party:change'
     | 'combat:change'
+    | 'campaign:change'
     | 'gma:change'
     | 'message:new';
   partyId: number;
@@ -43,6 +44,11 @@ export interface SyncEvent {
     | 'unlink'
     | 'init'
     | 'sync'
+    // Carnet du MD — 'clock' couvre jour/saison/météo (avance et correction)
+    | 'clock'
+    | 'note'
+    | 'quest'
+    | 'countdown'
     | 'delete';
   itemName?: string;
   actorUserId?: number;

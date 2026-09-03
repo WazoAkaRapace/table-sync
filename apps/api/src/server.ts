@@ -16,6 +16,7 @@ import { emailEnabled } from './email/config.ts';
 import { pushEnabled } from './push/config.ts';
 import { errorRateLimit } from './rateLimit.ts';
 import { authRoutes } from './routes/auth.ts';
+import { campaignRoutes } from './routes/campaign.ts';
 import { characterFeatureRoutes } from './routes/character-features.ts';
 import { characterMessageRoutes } from './routes/character-messages.ts';
 import { characterNoteRoutes } from './routes/character-notes.ts';
@@ -146,6 +147,7 @@ async function buildServer() {
   await app.register(wildShapeRoutes, { prefix: '/api' });
   await app.register(domainSpellRoutes, { prefix: '/api' });
   await app.register(restRoutes, { prefix: '/api' });
+  await app.register(campaignRoutes, { prefix: '/api' });
   await app.register(gmaRoutes, { prefix: '/api' });
   await app.register(pushRoutes, { prefix: '/api' });
 

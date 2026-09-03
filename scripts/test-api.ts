@@ -17,6 +17,7 @@ import {
   startServer,
 } from './api-tests/harness.ts';
 import { run as authParties } from './api-tests/mod-auth-parties.ts';
+import { run as campaign } from './api-tests/mod-carnet.ts';
 import { run as characters } from './api-tests/mod-characters.ts';
 import { run as combat } from './api-tests/mod-combat.ts';
 import { run as email } from './api-tests/mod-email.ts';
@@ -48,6 +49,7 @@ const MODULES: Array<{
   { name: 'spells', run: spells },
   { name: 'features + notes', run: featuresNotes },
   { name: 'npcs + monsters', run: npcsMonsters },
+  { name: 'carnet du MD', run: campaign },
   { name: 'combat', run: combat },
   { name: 'correspondance secrète', run: messages },
   { name: 'multiclassage', run: multiclass },

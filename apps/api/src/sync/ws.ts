@@ -171,10 +171,14 @@ export async function registerWsRoutes(app: FastifyInstance) {
       }
       // Echo suppression: don't send the event back to the user who triggered it.
       // They already have the optimistic result from their own API call.
-      // Exceptions: combat:change and character:change — a user can be GM in
-      // one tab and player in another (own character in the fight), and those
-      // views must stay in sync (initiative widget, HP mirroring).
-      const isEchoExempt = event.type === 'combat:change' || event.type === 'character:change';
+      // Exceptions: combat:change, character:change and campaign:change — a
+      // user can be GM in one tab and player in another (own character in the
+      // fight), and the MD runs on several screens (laptop + tablet) whose
+      // carnet must stay in sync (initiative widget, HP mirroring, clock).
+      const isEchoExempt =
+        event.type === 'combat:change' ||
+        event.type === 'character:change' ||
+        event.type === 'campaign:change';
       if (event.actorUserId && client.userId === event.actorUserId && !isEchoExempt) continue;
       // Hidden-character events stop at owner / GM connections
       if (restrictTo && !restrictTo.has(client.userId)) continue;

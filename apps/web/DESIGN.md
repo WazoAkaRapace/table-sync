@@ -127,6 +127,24 @@ primaires) ; tous les autres états sont des marques imprimées.
 | Disposition | desktop `lg:grid-cols-[15rem_minmax(0,1fr)_340px]` (échelle \| scène \| bloc) ; mobile : échelle horizontale puis scène |
 
 
+## Le carnet du MD — la page du même nom (`DmNotebookPage.tsx`, `/party/:id/carnet`)
+
+La quatrième page réglée, entièrement GM-only : derrière une porte d'annexes
+que les joueurs ne voient pas, chaque contenu parle son dialecte natif —
+le sang porte « maintenant + action primaire » (le « +1 jour », l'ordinal de
+la quête courante), tout le reste est encre.
+
+| Dispositif | Recette |
+|---|---|
+| La porte | ligne réglée 📓 « Carnet du MD » dans les annexes du groupe, points de conduite + **valeur de queue** « Jour 13 · 1 quête en cours » en mono (`TocLink`'s `queue` — l'idiome du code d'invitation étendu aux valeurs mesurées), rafraîchie en direct sur `campaign:change` ; invisible aux joueurs, qui voient l'état calme « réservé au MD » s'ils forcent l'URL |
+| Tête de page | titre `font-display` centré + double règle (grammaire des pages-outil), méta « Jour N · saison — X quête(s) en cours » |
+| Onglets internes | barre `TabButton` (souligné sang), dérivée de `?tab=`, comptes entre parenthèses ; le panneau change par `sheet-tab-swap` (clé React sur l'onglet — un mouvement par changement, jamais au rafraîchissement) |
+| Onglet Calendrier | carte de travail `.card` : le jour en **grande figure** Cinzel (bouton tapable → édition inline = correction SANS archivage), « Semaine ⌈jour/7⌉ · saison » (select invisible au repos), **« +1 jour » = l'unique porte sang**, optimiste (figure + registre avancent avant le POST) ; météo = texte libre + 5 préréglages emoji (☀️🌧️⛈️❄️🌫️) ; **comptes à rebours = lignes d'annexe à points de conduite** — libellé, filet pointillé, valeur `J−N` en mono (échu = « Dépassé de N j » `ink-400`, aujourd'hui = `ink-900`), ✎ édition inline, ConfirmButton × ; « Jours passés » = registre compact inversé (`Jour 12 · ⛈️ Orage`), seuls les jours AVEC météo y entrent |
+| Onglet Quêtes | registre à cycle de vie, **jumelle du registre des rencontres** : en cours = ordinal `blood-500` `text-2xl` + titre `text-2xl` ; préparation = ordinaux `ink-400` ; terminées/échouées = compactes `ink-300` avec méta date (⚫ partagé, le texte distingue) ; entrée dépliable (chevron ▼) → corps markdown + pastilles de statut (chips `aria-pressed`, courante = `bg-ink-800` remplie — l'encre, le sang est pris) + verbes ✎/Confirmer ; page vierge = chemin de création inline sous l'état vide, sinon ghost « ＋ Nouvelle quête » + Modal |
+| Onglet Notes | cartes `.card` triables (`SortableGrid`) + modal Édition/Aperçu + recherche — la grammaire des notes de fiche, `renderMarkdown` partagé (`components/markdown.ts`) |
+| Onglet PNJ | la page PNJ existante incrustée (`NpcPage embedded`) — les secrets y arrivent au MD (verrou serveur : GM seul lit ET écrit `secret`) |
+
+
 ## Composants — `src/components/ui.tsx`
 
 | Composant | Usage | Points clés |
@@ -139,6 +157,7 @@ primaires) ; tous les autres états sont des marques imprimées.
 | `EncumbranceBar` | portage et paliers | affiche conséquences de règle au moment où elles s'appliquent ; `compact` = variante une-ligne du bandeau (barre fine + lecture mono + palier, conséquence conservée) |
 | `CharacterStateBand` | bandeau d'état de la fiche joueur (`components/CharacterStateBand.tsx`) | rail réglé épinglé sous l'en-tête : identité (renomme inline) + phrase d'état (PV avec segment temp bleu + puce `+N`, CA, sorts, états) + ligne de combat (`CombatLine` : appel d'initiative / Agir / tour quiet, `aria-live` sur la copie statique) + encombrance compact ; panneau dépliable (états, emplacements par niveau, PV ±1/±5 — **les dégâts absorbent les PV temp d'abord**, debouncés 700 ms en UN patch portant les deux champs, pour le jet de concentration sur le total) ; jumeau fixe compact au défilement (`band-drop`, IntersectionObserver — le flux ne change jamais de hauteur) ; le multiplicateur de portage vit dans l'onglet Caractéristiques (tuile « Portage max » des Statistiques dérivées) |
 | `ConfirmButton` | suppression en deux temps — LE motif des suppressions de contenu | arme le contrôle **sur place** (rouge + `pulse-warn` : « Supprimer ? » en pilule sur les ×, « Confirmer ? » sur les liens verbes), 4 s puis retombe, Échap/blur désarment ; 2ᵉ tap confirme ; n'bulle pas au parent |
+| `TabButton` | onglets internes des pages-outil (Table du MD, Carnet) | souligné sang sur l'actif, encre au repos ; le conteneur porte `overflow-x-auto no-scrollbar` |
 | `ToastStack` / `Toast` | retours d'action | bas d'écran, `aria-live` |
 | `RarityBadge` `CategoryBadge` `WeightBadge` `CostBadge` | métadonnées d'objet | |
 | `EmptyState` `LoadingSpinner` `ErrorMsg` | états de page | |

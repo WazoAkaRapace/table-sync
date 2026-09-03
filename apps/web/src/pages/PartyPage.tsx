@@ -119,19 +119,22 @@ function TocHeader({ numeral, title, id }: { numeral: string; title: string; id:
 }
 
 /** A ruled annex line that opens somewhere — tool glyph, label, arrow chip.
- *  `badge` counts what waits behind the door (correspondance non lue). */
+ *  `badge` counts what waits behind the door (correspondance non lue);
+ *  `queue` is a trailing measured value (the carnet's campaign clock). */
 function TocLink({
   to,
   label,
   glyph,
   badge,
   badgeLabel,
+  queue,
 }: {
   to: string;
   label: string;
   glyph: string;
   badge?: number;
   badgeLabel?: string;
+  queue?: string;
 }) {
   return (
     <li className="border-b border-parchment-200">
@@ -154,6 +157,7 @@ function TocLink({
           </span>
         )}
         <DotLeader />
+        {queue && <span className="shrink-0 font-mono text-xs text-ink-500">{queue}</span>}
         <span
           aria-hidden="true"
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-parchment-300 text-sm text-ink-500 transition-colors group-hover:border-blood-600 group-hover:text-blood-600"
@@ -263,6 +267,32 @@ export default function PartyPage() {
   const [inviteCopyFailed, setInviteCopyFailed] = useState(false);
   // Chronique annex: shown only once a GM Assistant campaign is linked.
   const [gmaLinked, setGmaLinked] = useState(false);
+  // Carnet du MD annex — GM only. The door's queue value carries the campaign
+  // clock so the MD reads « Jour 12 · 2 quêtes en cours » without entering.
+  const [carnetClock, setCarnetClock] = useState<{ day: number; activeQuests: number } | null>(
+    null,
+  );
+  const isGmMember = !!party && party.members.some((m) => m.userId === user?.id && m.role === 'gm');
+
+  const loadCarnetClock = useCallback(async () => {
+    if (!partyId || !isGmMember) return;
+    try {
+      const res = await api.get(`/api/parties/${partyId}/campaign`);
+      const c = res.data?.campaign;
+      if (c)
+        setCarnetClock({
+          day: c.state.day,
+          activeQuests: (c.quests as Array<{ status: string }>).filter((q) => q.status === 'active')
+            .length,
+        });
+    } catch {
+      setCarnetClock(null);
+    }
+  }, [partyId, isGmMember]);
+
+  useEffect(() => {
+    if (isGmMember) loadCarnetClock();
+  }, [isGmMember, loadCarnetClock]);
 
   const loadGmaLink = useCallback(async () => {
     if (!partyId) return;
@@ -325,6 +355,11 @@ export default function PartyPage() {
         loadGmaLink();
         return;
       }
+      if (event.type === 'campaign:change') {
+        // The MD moved the clock or edited the carnet — refresh the door's queue.
+        loadCarnetClock();
+        return;
+      }
       load(true); // silent — no spinner flash on sync updates
     },
     [currentPartyId],
@@ -383,7 +418,7 @@ export default function PartyPage() {
   }
   if (!party) return <ErrorMsg message={t('party.groupe.introuvable')} />;
 
-  const isGM = party.members.some((m) => m.userId === user?.id && m.role === 'gm');
+  const isGM = isGmMember;
   // Active sheets read first — hidden (secret prep) entries sink below their
   // « Caché » marker, in section I as in the MD's section II rows.
   const characters = activeCharactersFirst(party.characters);
@@ -517,6 +552,21 @@ export default function PartyPage() {
               glyph="✉️"
               badge={messagesUnread}
               badgeLabel={t('msgs.non.lus', { n: messagesUnread })}
+            />
+          )}
+          {isGM && (
+            <TocLink
+              to={`/party/${partyId}/carnet`}
+              label={t('party.toc.carnet')}
+              glyph="📓"
+              queue={
+                carnetClock
+                  ? t('party.carnet.queue', {
+                      day: carnetClock.day,
+                      count: carnetClock.activeQuests,
+                    })
+                  : undefined
+              }
             />
           )}
           <TocLink to={`/party/${partyId}/combat`} label={t('party.toc.combat')} glyph="⚔" />

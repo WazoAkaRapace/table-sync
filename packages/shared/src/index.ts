@@ -4506,6 +4506,137 @@ export interface ReorderPayload {
   order: number[];
 }
 
+// ---------- Carnet du MD (journal de campagne privé au MD) ----------
+
+/** Les 4 saisons — le MD avance la sienne à la main (pas de mois au compteur). */
+export type CampaignSeason = 'spring' | 'summer' | 'autumn' | 'winter';
+
+export const CAMPAIGN_SEASONS: CampaignSeason[] = ['spring', 'summer', 'autumn', 'winter'];
+
+export const CAMPAIGN_SEASON_LABELS_FR: Record<CampaignSeason, string> = {
+  spring: 'Printemps',
+  summer: 'Été',
+  autumn: 'Automne',
+  winter: 'Hiver',
+};
+
+/** L'horloge de campagne : une ligne par groupe (créée au premier accès MD). */
+export interface CampaignState {
+  partyId: number;
+  day: number;
+  season: CampaignSeason;
+  /** Météo du jour courant — texte libre (« ☀️ Dégagé », « Pluie chaude »…). */
+  weather: string | null;
+}
+
+/** Un jour archivé : figé quand l'horloge avance (le journal des jours passés). */
+export interface CampaignDay {
+  partyId: number;
+  day: number;
+  weather: string | null;
+}
+
+/** Échéance nommée. La cible est un jour ABSOLU — l'affichage « J−N » est
+ *  dérivé (targetDay − jour courant), donc corriger le jour ne casse rien. */
+export interface CampaignCountdown {
+  id: number;
+  partyId: number;
+  label: string;
+  targetDay: number;
+  createdAt: string;
+}
+
+/** Note du carnet — même grammaire que les notes de fiche, au niveau du groupe. */
+export interface DmNote {
+  id: number;
+  partyId: number;
+  title: string;
+  content: string | null;
+  sortOrder: number;
+  updatedAt: string;
+  createdAt: string;
+}
+
+export type DmQuestStatus = 'preparation' | 'active' | 'done' | 'failed';
+
+export const DM_QUEST_STATUSES: DmQuestStatus[] = ['active', 'preparation', 'done', 'failed'];
+
+export const DM_QUEST_STATUS_LABELS_FR: Record<DmQuestStatus, string> = {
+  preparation: 'Préparation',
+  active: 'En cours',
+  done: 'Terminée',
+  failed: 'Échouée',
+};
+
+export interface DmQuest {
+  id: number;
+  partyId: number;
+  title: string;
+  body: string | null;
+  status: DmQuestStatus;
+  sortOrder: number;
+  updatedAt: string;
+  createdAt: string;
+}
+
+/** Réponse unique de GET /parties/:id/campaign — tout le carnet en un appel. */
+export interface CampaignPayload {
+  state: CampaignState;
+  countdowns: CampaignCountdown[];
+  days: CampaignDay[];
+  notes: DmNote[];
+  quests: DmQuest[];
+}
+
+export interface PatchCampaignStatePayload {
+  /** Correction directe du numéro de jour (erreur de comptage, saut de voyage). */
+  day?: number;
+  season?: CampaignSeason;
+  weather?: string | null;
+}
+
+export interface AdvanceCampaignPayload {
+  /** Jours à avancer (défaut 1 ; plafonné). */
+  steps?: number;
+}
+
+export interface CreateCampaignCountdownPayload {
+  label: string;
+  targetDay: number;
+}
+
+export interface PatchCampaignCountdownPayload {
+  label?: string;
+  targetDay?: number;
+}
+
+export interface CreateDmNotePayload {
+  title: string;
+  content?: string;
+}
+
+export interface PatchDmNotePayload {
+  title?: string;
+  content?: string | null;
+}
+
+export interface CreateDmQuestPayload {
+  title: string;
+  body?: string;
+  status?: DmQuestStatus;
+}
+
+export interface PatchDmQuestPayload {
+  title?: string;
+  body?: string | null;
+  status?: DmQuestStatus;
+}
+
+/** Différentiel d'un compte à rebours, calculé côté client (jamais stocké). */
+export function countdownRemaining(targetDay: number, day: number): number {
+  return targetDay - day;
+}
+
 // ---------- Correspondance secrète MD ↔ joueur (fil par personnage) ----------
 
 /** One entry in a character's secret thread. `fromGM` is resolved server-side

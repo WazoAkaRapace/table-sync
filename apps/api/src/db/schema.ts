@@ -618,6 +618,94 @@ export const combatants = sqliteTable(
   ],
 );
 
+// ---------- Carnet du MD (journal de campagne — privé au MD, party-scoped) ----------
+
+/** L'horloge de campagne : une ligne par groupe, créée au premier accès.
+ *  `weather` = météo du jour COURANT ; figée dans campaign_days à l'avance. */
+export const campaignState = sqliteTable(
+  'campaign_state',
+  {
+    partyId: integer('party_id')
+      .primaryKey()
+      .references(() => parties.id, { onDelete: 'cascade' }),
+    day: integer('day').notNull().default(1),
+    season: text('season').notNull().default('spring'),
+    weather: text('weather'),
+    updatedAt: text('updated_at').notNull().default(sql`(datetime('now'))`),
+  },
+  (_t) => [
+    check('campaign_state_season_check', sql`season IN ('spring','summer','autumn','winter')`),
+  ],
+);
+
+/** Jours passés : une ligne par jour archivé (upsert à chaque avance de l'horloge). */
+export const campaignDays = sqliteTable(
+  'campaign_days',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    partyId: integer('party_id')
+      .notNull()
+      .references(() => parties.id, { onDelete: 'cascade' }),
+    day: integer('day').notNull(),
+    weather: text('weather'),
+    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+  },
+  (t) => [unique('campaign_days_party_day_unique').on(t.partyId, t.day)],
+);
+
+/** Échéances nommées — la cible est un jour absolu, l'affichage « J−N » est dérivé. */
+export const campaignCountdowns = sqliteTable(
+  'campaign_countdowns',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    partyId: integer('party_id')
+      .notNull()
+      .references(() => parties.id, { onDelete: 'cascade' }),
+    label: text('label').notNull(),
+    targetDay: integer('target_day').notNull(),
+    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+  },
+  (t) => [index('idx_campaign_countdowns_party').on(t.partyId)],
+);
+
+/** Notes du carnet — la grammaire des notes de fiche, au niveau du groupe. */
+export const dmNotes = sqliteTable(
+  'dm_notes',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    partyId: integer('party_id')
+      .notNull()
+      .references(() => parties.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    content: text('content'),
+    sortOrder: integer('sort_order').notNull().default(0),
+    updatedAt: text('updated_at').notNull().default(sql`(datetime('now'))`),
+    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+  },
+  (t) => [index('idx_dm_notes_party').on(t.partyId)],
+);
+
+/** Quêtes du carnet — registre à cycle de vie (préparation → en cours → terminée/échouée). */
+export const dmQuests = sqliteTable(
+  'dm_quests',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    partyId: integer('party_id')
+      .notNull()
+      .references(() => parties.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    body: text('body'),
+    status: text('status').notNull().default('preparation'),
+    sortOrder: integer('sort_order').notNull().default(0),
+    updatedAt: text('updated_at').notNull().default(sql`(datetime('now'))`),
+    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+  },
+  (t) => [
+    index('idx_dm_quests_party').on(t.partyId),
+    check('dm_quests_status_check', sql`status IN ('preparation','active','done','failed')`),
+  ],
+);
+
 // ---------- GM Assistant integration (group ↔ campaign link + chronicle cache) ----------
 // Our writes over there are exactly two: the one-time init (campaign + player
 // characters created FROM the group) and the GM-triggered character resync

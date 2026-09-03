@@ -448,6 +448,35 @@ export function EmptyState({ icon, title, hint }: { icon: string; title: string;
   );
 }
 
+// ---------- In-page tab bar ----------
+// The app's tab row for tool pages (Table du MD, Carnet): underline blood on
+// the active tab, ink at rest. Scrolls horizontally on narrow viewports
+// (`overflow-x-auto no-scrollbar` is the caller's job on the container).
+
+export function TabButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+        active
+          ? 'border-blood-600 text-blood-700'
+          : 'border-transparent text-ink-400 hover:text-ink-700'
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
 // ---------- Two-step destructive confirm ----------
 // First click arms (warn style + 4s auto-revert), second click fires onConfirm.
 // Clicks never bubble to a parent card handler.
