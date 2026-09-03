@@ -393,6 +393,17 @@ input[type="number"] {
     background-color 200ms ease-out;
 }
 
+/* iOS 26, PWA autonome : WebKit laisse le viewport désynchronisé après la
+   fermeture du clavier (offsetTop bloqué, hauteur jamais rétablie) — les
+   position:fixed ancrés au bas restent figés à la géométrie du clavier ouvert
+   et flottent en plein écran. IOSViewportAnchor.tsx écrit l'écart réel dans
+   --vv-shift sur <html> (rien hors iOS standalone — la classe y est inerte).
+   Compose avec -translate-x-1/2 : Tailwind v4 passe par la propriété
+   `translate`, pas par `transform`. */
+.vv-anchor {
+  transform: translateY(var(--vv-shift, 0px));
+}
+
 /* Dock entrance — one authored arrival on page load */
 @keyframes dock-rise {
   from {

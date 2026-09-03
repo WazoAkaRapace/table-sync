@@ -6,6 +6,7 @@ import api from './api';
 import { useAuth } from './auth';
 import CombatWidget from './components/CombatWidget';
 import ConcentrationAlert from './components/ConcentrationAlert';
+import IOSViewportAnchor from './components/IOSViewportAnchor';
 import MessageAlert, { type MessageAlertPayload } from './components/MessageAlert';
 import UpdateBanner from './components/UpdateBanner';
 import { HeaderProvider, useHeaderState } from './headerContext';
@@ -330,6 +331,8 @@ function RouteFallback() {
 export default function App() {
   return (
     <HeaderProvider>
+      {/* iOS standalone : garde le dock ancré au bas visible (bug clavier iOS 26) */}
+      <IOSViewportAnchor />
       <Nav />
       <main className="max-w-6xl mx-auto px-4 py-6 pb-[calc(6rem+env(safe-area-inset-bottom))]">
         <Suspense fallback={<RouteFallback />}>
