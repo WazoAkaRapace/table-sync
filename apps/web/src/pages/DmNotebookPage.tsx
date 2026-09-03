@@ -788,24 +788,32 @@ function DayLedgerRow({
   }
 
   return (
-    <li className="grid grid-cols-[5rem_minmax(0,1fr)_auto] items-baseline gap-x-3 gap-y-0.5 border-b border-parchment-100 py-2 text-sm last:border-b-0">
-      <span className="text-right font-mono text-ink-500">
-        {t('carnet.jours.passe', { day: day.day })}
-      </span>
-      <span className="min-w-0 truncate text-ink-600">
-        {day.weather ?? t('carnet.cal.meteo.inconnue')}
-      </span>
+    <li className="border-b border-parchment-100 last:border-b-0">
+      {/* Toute la ligne est la porte d'édition — le ✎ n'est que le rappel */}
       <button
         type="button"
-        className="shrink-0 p-1 text-ink-400 hover:text-blood-600"
-        aria-label={t('carnet.jours.modifier', { day: day.day })}
         onClick={() => setEditing(true)}
+        className="-mx-2 grid w-full grid-cols-[5rem_minmax(0,1fr)_auto] items-baseline gap-x-3 gap-y-0.5 rounded-lg px-2 py-2 text-left text-sm transition-colors hover:bg-parchment-100/70"
+        aria-label={t('carnet.jours.modifier', { day: day.day })}
       >
-        ✎
+        <span className="text-right font-mono text-ink-500">
+          {t('carnet.jours.passe', { day: day.day })}
+        </span>
+        <span className="min-w-0 truncate text-ink-600">
+          {day.weather ?? t('carnet.cal.meteo.inconnue')}
+        </span>
+        <span
+          aria-hidden="true"
+          className="shrink-0 p-1 text-ink-400"
+        >
+          ✎
+        </span>
+        {day.note && (
+          <span className="col-start-2 col-end-4 block whitespace-pre-line text-ink-500">
+            {day.note}
+          </span>
+        )}
       </button>
-      {day.note && (
-        <p className="col-start-2 col-end-4 whitespace-pre-line text-ink-500">{day.note}</p>
-      )}
     </li>
   );
 }
