@@ -802,10 +802,7 @@ function DayLedgerRow({
         <span className="min-w-0 truncate text-ink-600">
           {day.weather ?? t('carnet.cal.meteo.inconnue')}
         </span>
-        <span
-          aria-hidden="true"
-          className="shrink-0 p-1 text-ink-400"
-        >
+        <span aria-hidden="true" className="shrink-0 p-1 text-ink-400">
           ✎
         </span>
         {day.note && (
