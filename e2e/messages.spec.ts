@@ -147,4 +147,13 @@ gmTest('les personnages cachés se replient sous une ligne du registre', async (
   await expect(fold).toHaveAttribute('aria-expanded', 'true');
   await reg.getByRole('button', { name: /Silas Corbeau/ }).click();
   await expect(page.getByRole('heading', { name: 'Correspondance — Silas Corbeau' })).toBeVisible();
+
+  // Mobile : le fil REMPLACE le registre (fini de défiler la liste pour
+  // atteindre le fil) ; le retour réglé ramène le registre.
+  await expect(reg).toBeHidden();
+  await page.getByRole('button', { name: '← Correspondance' }).click();
+  await expect(reg).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Correspondance — Silas Corbeau' })).toHaveCount(
+    0,
+  );
 });

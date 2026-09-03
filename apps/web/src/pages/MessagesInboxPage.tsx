@@ -92,20 +92,34 @@ export default function MessagesInboxPage() {
   const totalUnread = threads.reduce((sum, th) => sum + th.unread, 0);
   const selected = threads.find((th) => th.characterId === selectedId) ?? null;
 
+  /** Ouvre un volume ; sur mobile le fil REMPLACE le registre — on repart
+   *  de la tête du fil, pas du bas de la liste qu'on vient de parcourir. */
+  const openThread = (id: number) => {
+    setSelectedId(id);
+    if (!window.matchMedia('(min-width: 1024px)').matches) window.scrollTo({ top: 0 });
+  };
+
   /** Une entrée du registre ; `inHidden` omet la pastille « Caché » —
-   *  le repli qui la porte l'a déjà dite. */
+   *  le repli qui la porte l'a déjà dite. Les entrées se posent sous la
+   *  règle comme au registre des groupes (register-rise, stagger plafonné) ;
+   *  dépliés, les volumes cachés rejoignent la même phrase. */
   const renderEntry = (th: MessageThreadSummary, i: number, inHidden = false) => {
     const isOpen = th.characterId === selectedId;
     const courant = i === 0;
+    const rank = inHidden ? i - visibleThreads.length : i;
     return (
-      <li key={th.characterId} className="border-b border-parchment-200">
+      <li
+        key={th.characterId}
+        className="register-rise border-b border-parchment-200"
+        style={{ animationDelay: `${Math.min(rank + 1, inHidden ? 3 : 5) * 60}ms` }}
+      >
         <button
           type="button"
-          onClick={() => setSelectedId(th.characterId)}
+          onClick={() => openThread(th.characterId)}
           aria-current={isOpen ? 'true' : undefined}
           aria-label={t('msgs.vue.boite', { name: th.characterName })}
-          className={`group -mx-3 flex w-[calc(100%+1.5rem)] items-start gap-4 rounded-lg px-3 ${
-            isOpen ? 'py-4 bg-parchment-100' : 'py-3.5 transition-colors hover:bg-parchment-100/70'
+          className={`group -mx-3 flex w-[calc(100%+1.5rem)] items-start gap-4 rounded-lg px-3 transition-colors ${
+            isOpen ? 'py-4 bg-parchment-100' : 'py-3.5 hover:bg-parchment-100/70'
           } text-left`}
         >
           <span
@@ -185,6 +199,9 @@ export default function MessagesInboxPage() {
         <div className="lg:grid lg:grid-cols-[minmax(17rem,21rem)_minmax(0,1fr)] lg:gap-8 lg:pt-6">
           {/* ---------- Le registre des fils — épinglé SOUS l'en-tête (formule
               maison), défilement interne quand la table s'agrandit.
+              MOBILE : ouvrir un volume REMPLACE le registre (retour « ←
+              Correspondance ») — sinon il fallait défiler toute la liste
+              pour atteindre le fil. Desktop : deux volets, registre maintenu.
               Les personnages cachés (préparation secrète) se replient sous
               une ligne de conduite — ils ne prennent pas la place des volumes
               de la table, et une pastille signale ce qui y attend.
@@ -193,12 +210,17 @@ export default function MessagesInboxPage() {
               auto et ce débordement faisait Barre de défilement horizontale ;
               le padding l'absorbe (scrollWidth == clientWidth). ---------- */}
           <ol
-            className="list-none lg:sticky lg:top-[calc(var(--app-header-h)+env(safe-area-inset-top)+0.75rem)] lg:z-20 lg:max-h-[calc(100vh-var(--app-header-h)-env(safe-area-inset-top)-2rem)] lg:self-start lg:overflow-y-auto lg:bg-parchment-50/95 lg:px-3 lg:py-1"
+            className={`list-none ${
+              selectedId !== null ? 'hidden lg:block ' : ''
+            }lg:sticky lg:top-[calc(var(--app-header-h)+env(safe-area-inset-top)+0.75rem)] lg:z-20 lg:max-h-[calc(100vh-var(--app-header-h)-env(safe-area-inset-top)-2rem)] lg:self-start lg:overflow-y-auto lg:bg-parchment-50/95 lg:px-3 lg:py-1`}
             data-tuto="messages-boite"
           >
             {visibleThreads.map((th, i) => renderEntry(th, i))}
             {hiddenThreads.length > 0 && (
-              <li className="border-b border-parchment-200">
+              <li
+                className="register-rise border-b border-parchment-200"
+                style={{ animationDelay: `${Math.min(visibleThreads.length + 1, 5) * 60}ms` }}
+              >
                 <button
                   type="button"
                   onClick={() => setHiddenOpen((o) => !o)}
@@ -250,20 +272,30 @@ export default function MessagesInboxPage() {
                 {/* Retour réglé mobile — desktop garde le registre épinglé */}
                 <button
                   type="button"
-                  onClick={() => setSelectedId(null)}
+                  onClick={() => {
+                    setSelectedId(null);
+                    if (!window.matchMedia('(min-width: 1024px)').matches) {
+                      window.scrollTo({ top: 0 });
+                    }
+                  }}
                   className="btn-ghost text-sm text-ink-500 lg:hidden"
                 >
                   ← {t('nav.correspondance')}
                 </button>
                 {threadError && <ErrorMsg message={threadError} />}
-                <MessageThread
-                  key={selected.characterId}
-                  charId={selected.characterId}
-                  characterName={selected.characterName}
-                  ownerName={selected.ownerName}
-                  canModerate
-                  onError={setThreadError}
-                />
+                {/* Le geste qui travaille — le registre est l'échelle, le fil
+                    est la scène : changer de volume fait entrer la scène par
+                    stage-swap (le même verbe que le théâtre du tour, clé sur
+                    le volume ouvert — un seul moment par ouverture). */}
+                <div key={selected.characterId} className="stage-swap">
+                  <MessageThread
+                    charId={selected.characterId}
+                    characterName={selected.characterName}
+                    ownerName={selected.ownerName}
+                    canModerate
+                    onError={setThreadError}
+                  />
+                </div>
               </div>
             ) : (
               <p className="hidden pt-8 text-center text-sm text-ink-400 lg:block">
