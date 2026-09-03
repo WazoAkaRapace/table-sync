@@ -5,7 +5,6 @@ import type {
   Item,
   ItemCategory,
   LocationWeight,
-  PartyDetail,
   Rarity,
   StorageLocation,
 } from '@table-sync/shared';
@@ -43,6 +42,7 @@ import {
 import { useSync, useSyncEvent } from '../sync';
 import { TutorialHost } from '../tutorial/TutorialHost';
 import { UnreadBadge, useMessagesUnread } from '../useMessagesUnread';
+import { usePartyRole } from '../usePartyRole';
 import CharacterDescriptionTab from './CharacterDescriptionTab';
 import CharacterFeaturesTab from './CharacterFeaturesTab';
 import CharacterMessagesTab from './CharacterMessagesTab';
@@ -138,18 +138,9 @@ export default function CharacterInventoryPage() {
   const [dismissedError, setDismissedError] = useState('');
 
   // Party role: the GM can edit any sheet in their party (mirrors the
-  // server's isPartyGM check)
-  const gmQuery = useQuery({
-    queryKey: ['party-role', Number(partyId), user?.id ?? null],
-    enabled: !!partyId && !!user,
-    queryFn: async () => {
-      const res = await api.get<PartyDetail>(`/api/parties/${partyId}`);
-      return {
-        isGM: res.data.members.some((m) => m.userId === user?.id && m.role === 'gm'),
-        playersCreateItems: res.data.party.playersCreateItems,
-      };
-    },
-  });
+  // server's isPartyGM check) — hook partagé, l'entrée ['party-role'] n'a
+  // qu'une forme pour tous ses lecteurs
+  const gmQuery = usePartyRole(partyId ? Number(partyId) : null);
   const isGM = gmQuery.data?.isGM ?? false;
 
   // Correspondance secrète : pastille de non-lus pour CE personnage (hub

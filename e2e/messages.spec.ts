@@ -118,6 +118,31 @@ gmTest("l'annexe « Correspondance » ouvre la boîte du MD", async ({ page }) =
   await expect(page.getByRole('heading', { name: 'Correspondance', exact: true })).toBeVisible();
 });
 
+gmTest(
+  'la boîte tient après un passage par une fiche (cache party-role partagé)',
+  async ({ page }) => {
+    // Régression : la fiche et la boîte peuplaient la MÊME entrée de cache
+    // ['party-role'] avec deux formes différentes (objet vs booléen) — la boîte
+    // lisait l'objet de la fiche, n'y trouvait pas son `true` et renvoyait au
+    // groupe sans un mot. On chauffe le cache côté fiche, puis on entre dans la
+    // boîte par navigation SPA (pas de rechargement : le cache doit survivre).
+    const roleLoaded = page.waitForResponse(
+      (r) =>
+        r.request().method() === 'GET' &&
+        new URL(r.url()).pathname === `/api/parties/${seed().partyId}`,
+    );
+    await page.goto(sheetUrl(seed().guerrier.id));
+    await roleLoaded;
+
+    await page.getByRole('link', { name: 'Retour' }).click();
+    await page.getByRole('link', { name: 'Correspondance' }).click();
+
+    // La boîte reste la boîte : l'URL ne retombe pas sur la page du groupe.
+    await expect(page.getByRole('heading', { name: 'Correspondance', exact: true })).toBeVisible();
+    await expect(page).toHaveURL(/\/messages$/);
+  },
+);
+
 gmTest('les personnages cachés se replient sous une ligne du registre', async ({ page }) => {
   // Un personnage caché à nous (préparation secrète) — la spec est autonome.
   const charRes = await fetch(`${API_BASE}/api/parties/${seed().partyId}/characters`, {

@@ -12,34 +12,24 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useParams } from 'react-router-dom';
 import api from '../api';
-import { useAuth } from '../auth';
 import MessageThread from '../components/MessageThread';
 import { EmptyState, ErrorMsg, LoadingSpinner } from '../components/ui';
 import { useSyncEvent } from '../sync';
+import { usePartyRole } from '../usePartyRole';
 import { formatMessageTime, toRoman } from '../utils';
 
 export default function MessagesInboxPage() {
   const { t } = useTranslation();
-  const { user } = useAuth();
   const { partyId } = useParams<{ partyId: string }>();
   const queryClient = useQueryClient();
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [threadError, setThreadError] = useState('');
 
-  const roleQuery = useQuery({
-    queryKey: ['party-role', Number(partyId), user?.id ?? null],
-    enabled: !!partyId && !!user,
-    queryFn: async () => {
-      const res = await api.get<{ members: { userId: number; role: string }[] }>(
-        `/api/parties/${partyId}`,
-      );
-      return res.data.members.some((m) => m.userId === user?.id && m.role === 'gm');
-    },
-  });
+  const roleQuery = usePartyRole(partyId ? Number(partyId) : null);
 
   const threadsQuery = useQuery({
     queryKey: ['message-threads', Number(partyId)],
-    enabled: !!partyId && !!user && roleQuery.data === true,
+    enabled: !!partyId && roleQuery.data?.isGM === true,
     queryFn: async () => {
       const res = await api.get<{ threads: MessageThreadSummary[] }>(
         `/api/parties/${partyId}/message-threads`,
@@ -83,7 +73,21 @@ export default function MessagesInboxPage() {
   const [hiddenOpen, setHiddenOpen] = useState(false);
 
   if (roleQuery.isPending) return <LoadingSpinner label={t('app.chargement')} />;
-  if (roleQuery.data !== true) return <Navigate to={`/party/${partyId}`} replace />;
+  // Un échec de chargement n'est pas un « tu n'es pas le MD » : la connexion
+  // se dit, le bouton retente — jamais de renvoi muet au groupe.
+  if (roleQuery.isError) {
+    return (
+      <div className="mx-auto w-full max-w-xl space-y-3">
+        <ErrorMsg message={t('msgs.impossible.charger')} />
+        <div className="text-center">
+          <button type="button" className="btn-secondary" onClick={() => roleQuery.refetch()}>
+            {t('party.reessayer')}
+          </button>
+        </div>
+      </div>
+    );
+  }
+  if (roleQuery.data?.isGM !== true) return <Navigate to={`/party/${partyId}`} replace />;
 
   const threads = threadsQuery.data ?? [];
   const visibleThreads = threads.filter((th) => !th.hidden);
