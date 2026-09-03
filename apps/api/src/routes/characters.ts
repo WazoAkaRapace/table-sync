@@ -12,6 +12,7 @@ import {
   CLASS_SUBCLASSES,
   CONCENTRATION_BREAKING_CONDITIONS_FR,
   computeAC,
+  raceSpeedMeters,
 } from '@table-sync/shared';
 import { and, desc, eq, inArray, ne, sql } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
@@ -124,6 +125,12 @@ export async function characterRoutes(app: FastifyInstance) {
       if (maxHp < 1) return reply.code(400).send({ error: apiMsg(req, 'maxHp must be ≥ 1') });
       const currentHp = body.currentHp ?? maxHp;
       const capMult = body.capacityMultiplier ?? 1;
+      // Vitesse de base : explicite (fiche libre) sinon dérivée de l'espèce
+      // SRD (petites races 7,5 m, Elfe des bois 10,5 m…), repli 9 m.
+      const speed =
+        typeof body.speed === 'number' && Number.isFinite(body.speed) && body.speed >= 0
+          ? body.speed
+          : (raceSpeedMeters(body.race) ?? 9);
       const skillProficiencies = (body.skillProficiencies ?? []).filter(
         (s): s is string => typeof s === 'string' && s.trim().length > 0,
       );
@@ -153,6 +160,7 @@ export async function characterRoutes(app: FastifyInstance) {
           languages: JSON.stringify(languages),
           maxHp,
           currentHp,
+          speed,
           hidden: body.hidden ? 1 : 0,
         })
         .returning({ id: characters.id })
@@ -382,6 +390,17 @@ export async function characterRoutes(app: FastifyInstance) {
         const validated = validateClassEntries(body.classes);
         if (!validated.ok) return reply.code(400).send({ error: validated.error });
         replaceCharacterClasses(char.id, validated.entries);
+      }
+      // Espèce modifiée sans vitesse explicite : la vitesse de base SUIT
+      // l'espèce tant que le joueur ne l'a pas personnalisée. « Pas touchée »
+      // = encore la valeur par défaut de son espèce d'origine (9 m, ou celle
+      // dérivée à la création depuis 2026-09).
+      if (body.race !== undefined && body.speed === undefined) {
+        const oldDefault = raceSpeedMeters(char.race) ?? 9;
+        if (char.speed === oldDefault) {
+          const next = raceSpeedMeters(body.race) ?? 9;
+          if (next !== char.speed) values.speed = next;
+        }
       }
       if (Object.keys(values).length === 0 && body.classes === undefined) {
         return reply.code(400).send({ error: apiMsg(req, 'no fields to update') });

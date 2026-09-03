@@ -12,6 +12,7 @@ import {
   DND_CLASSES,
   DND_RACES,
   DND_SKILLS,
+  raceSpeedMeters,
   STANDARD_ARRAY,
 } from '@table-sync/shared';
 
@@ -120,6 +121,17 @@ check('PV L1 barbare CON 14', averageMaxHp(1, 12, 14), 14);
 check('PV L3 magicien CON 10', averageMaxHp(3, 6, 10), 6 + 2 * 4);
 check('PV L5 roublard CON 12', averageMaxHp(5, 8, 12), 9 + 4 * 6);
 check('PV jamais sous le niveau', averageMaxHp(4, 6, 1), 4);
+
+// Vitesses de base par espèce (SRD 5.1, en mètres)
+check('vitesse — Humain 9 m', raceSpeedMeters('Humain'), 9);
+check('vitesse — Nain 7,5 m', raceSpeedMeters('Nain'), 7.5);
+check('vitesse — Nain des collines hérite 7,5 m', raceSpeedMeters('Nain des collines'), 7.5);
+check('vitesse — Halfelin 7,5 m', raceSpeedMeters('Halfelin'), 7.5);
+check('vitesse — Gnome des rochers hérite 7,5 m', raceSpeedMeters('Gnome des rochers'), 7.5);
+check('vitesse — Elfe 9 m', raceSpeedMeters('Elfe'), 9);
+check('vitesse — Elfe des bois 10,5 m', raceSpeedMeters('Elfe des bois'), 10.5);
+check('vitesse — espèce inconnue → null', raceSpeedMeters('Klingon'), null);
+check('vitesse — sans espèce → null', raceSpeedMeters(null), null);
 
 if (failures > 0) {
   console.error(`\n${failures} échec(s)`);

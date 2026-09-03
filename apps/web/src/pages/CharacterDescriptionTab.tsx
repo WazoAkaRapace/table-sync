@@ -20,6 +20,7 @@ import {
   LAND_CIRCLES,
   multiclassPrereqStatuses,
   type PatchCharacterPayload,
+  raceSpeedMeters,
 } from '@table-sync/shared';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -207,7 +208,18 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
 
   const commitRace = () => {
     if (raceDraft === (character.race ?? '')) return;
-    patchCharacter({ race: raceDraft.trim() || null }, t('desc.erreur.de.mise.a.jour'));
+    // Espèce changée : la vitesse de base suit si le joueur ne l'avait pas
+    // personnalisée (même règle que l'API — ici on l'envoie explicitement
+    // pour un seul aller-retour).
+    const race = raceDraft.trim() || null;
+    const oldDefault = raceSpeedMeters(character.race) ?? 9;
+    const speedUntouched = (character.speed ?? 9) === oldDefault;
+    const nextSpeed = raceSpeedMeters(race);
+    const payload: PatchCharacterPayload = { race };
+    if (speedUntouched && nextSpeed !== null && nextSpeed !== character.speed) {
+      payload.speed = nextSpeed;
+    }
+    patchCharacter(payload, t('desc.erreur.de.mise.a.jour'));
   };
 
   const commitBackground = () => {

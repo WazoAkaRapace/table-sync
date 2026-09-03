@@ -65,6 +65,59 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   eq(r.status, 200, 'get character');
   eq(r.data.character.name, 'Zed', 'character name');
   eq(r.data.character.copper, 0, 'coin purse present');
+  // Vitesse dérivée de l'espèce à la création (Demi-elfe → 9 m)
+  eq(r.data.character.speed, 9, 'create derives speed from species (Demi-elfe 9 m)');
+
+  // ---------- vitesse : dérivation espèce + suivi au changement ----------
+
+  // Petite race à la création → 7,5 m (Halfelin), sans vitesse explicite.
+  const pip = await createCharacter(base, fx.player.token, P, {
+    name: 'Pip',
+    race: 'Halfelin',
+  });
+  r = await api(base, 'GET', `/api/characters/${pip.id}`, { token: fx.player.token });
+  eq(r.data.character.speed, 7.5, 'create Halfelin → 7.5 m (species-derived)');
+
+  // Sous-espèce : Elfe des bois → 10,5 m.
+  const lego = await createCharacter(base, fx.player.token, P, {
+    name: 'Légolas',
+    race: 'Elfe des bois',
+  });
+  r = await api(base, 'GET', `/api/characters/${lego.id}`, { token: fx.player.token });
+  eq(r.data.character.speed, 10.5, 'create Elfe des bois → 10.5 m (subrace override)');
+
+  // Vitesse explicite : elle gagne sur l'espèce (fiche libre).
+  const bolt = await createCharacter(base, fx.player.token, P, {
+    name: 'Bolt',
+    race: 'Halfelin',
+    speed: 12,
+  });
+  r = await api(base, 'GET', `/api/characters/${bolt.id}`, { token: fx.player.token });
+  eq(r.data.character.speed, 12, 'create explicit speed wins over species');
+
+  // Changer d'espèce sans avoir touché la vitesse → la vitesse suit.
+  r = await api(base, 'PATCH', `/api/characters/${pip.id}`, {
+    token: fx.player.token,
+    body: { race: 'Humain' },
+  });
+  eq(r.status, 200, 'patch race only → 200');
+  eq(r.data.character.speed, 9, 'speed follows species change (Halfelin → Humain: 7.5 → 9)');
+
+  // Vitesse personnalisée → un changement d'espèce ne l'écrase PAS.
+  r = await api(base, 'PATCH', `/api/characters/${bolt.id}`, {
+    token: fx.player.token,
+    body: { race: 'Humain' },
+  });
+  eq(r.status, 200, 'patch race with custom speed → 200');
+  eq(r.data.character.speed, 12, 'custom speed survives species change');
+
+  // Espèce inconnue → repli 9 m à la création.
+  const xeno = await createCharacter(base, fx.player.token, P, {
+    name: 'Xéno',
+    race: 'Klingon',
+  });
+  r = await api(base, 'GET', `/api/characters/${xeno.id}`, { token: fx.player.token });
+  eq(r.data.character.speed, 9, 'create unknown species → fallback 9 m');
 
   r = await api(base, 'GET', '/api/characters/999999', { token: fx.gm.token });
   eq(r.status, 404, 'get 404');

@@ -31,6 +31,7 @@ import {
   findClass,
   formatModifier,
   proficiencyBonus,
+  raceSpeedMeters,
   STANDARD_ARRAY,
 } from '@table-sync/shared';
 import type { TFunction } from 'i18next';
@@ -837,8 +838,12 @@ export default function CharacterCreatePage() {
               <StatTile label={t('create.ca')} value={String(acr.ac)} note={acr.source} />
               <StatTile
                 label={t('create.vitesse')}
-                value={t('create.vitesse.defaut')}
-                note={t('create.vitesse.note')}
+                value={`${raceSpeedMeters(effectiveRace) ?? 9} m`}
+                note={
+                  raceSpeedMeters(effectiveRace) !== null
+                    ? t('create.vitesse.espece')
+                    : t('create.vitesse.note')
+                }
               />
             </div>
 

@@ -1734,16 +1734,37 @@ export function classSkillChoices(className: string | null | undefined): ClassSk
 }
 
 /** One-line flavor + teaching description; traits/languages are cited but
- *  never mechanically applied (creation is catalog-names-only by design). */
+ * never mechanically applied (creation is catalog-names-only by design). */
 export interface SubraceInfo {
   name: string; // full French display name: "Nain des collines", "Haut-elfe"
   description: string;
+  /** Vitesse de base en mètres (SRD) — absent = celle de l'espèce. */
+  speedMeters?: number;
 }
 
 export interface RaceInfo {
   name: string;
   description: string;
   subraces: SubraceInfo[];
+  /** Vitesse de base en mètres (SRD 5.1 : 9 m par défaut, petites races 7,5 m). */
+  speedMeters: number;
+}
+
+/**
+ * Vitesse de base d'une espèce/sous-espèce SRD (en mètres), null si le nom
+ * ne fait pas partie du catalogue (race personnalisée ou inconnue).
+ * Le nom stocké est la sous-race si elle a été choisie ("Elfe des bois"),
+ * sinon l'espèce ("Elfe") — les deux formes résolvent.
+ */
+export function raceSpeedMeters(raceName: string | null | undefined): number | null {
+  if (!raceName) return null;
+  const race = DND_RACES.find((r) => r.name === raceName);
+  if (race) return race.speedMeters;
+  for (const r of DND_RACES) {
+    const sub = r.subraces.find((s) => s.name === raceName);
+    if (sub) return sub.speedMeters ?? r.speedMeters;
+  }
+  return null;
 }
 
 /** SRD 5.1 races in French (5e-drs naming). */
@@ -1751,12 +1772,14 @@ export const DND_RACES: RaceInfo[] = [
   {
     name: 'Humain',
     description: 'Adaptables et ambitieux — le peuple le plus répandu de tous les mondes.',
+    speedMeters: 9,
     subraces: [],
   },
   {
     name: 'Nain',
     description:
       'Endurants, mémoire longue, vision dans le noir, résistance au poison ; langue naine.',
+    speedMeters: 7.5,
     subraces: [
       { name: 'Nain des collines', description: 'Avisé et tenace — le nain le plus répandu.' },
       {
@@ -1769,9 +1792,14 @@ export const DND_RACES: RaceInfo[] = [
     name: 'Elfe',
     description:
       'Gracieux et quasi immortels ; transe au lieu de sommeil, vision dans le noir ; langue elfique.',
+    speedMeters: 9,
     subraces: [
       { name: 'Haut-elfe', description: 'Érudit — un tour de magie de plus dans le sang.' },
-      { name: 'Elfe des bois', description: 'Rapide et féerique, âme des forêts profondes.' },
+      {
+        name: 'Elfe des bois',
+        description: 'Rapide et féerique, âme des forêts profondes.',
+        speedMeters: 10.5,
+      },
       {
         name: 'Elfe noir (drow)',
         description: 'Enfant de l’Outreterre, magie innée des ténèbres.',
@@ -1781,6 +1809,7 @@ export const DND_RACES: RaceInfo[] = [
   {
     name: 'Halfelin',
     description: 'Petits, chanceux et intrépides — ils se faufilent partout ; langue halfeline.',
+    speedMeters: 7.5,
     subraces: [
       {
         name: 'Halfelin pied-léger',
@@ -1795,6 +1824,7 @@ export const DND_RACES: RaceInfo[] = [
   {
     name: 'Gnome',
     description: 'Vifs et curieux, astuce légendaire, vision dans le noir ; langue gnome.',
+    speedMeters: 7.5,
     subraces: [
       {
         name: 'Gnome des forêts',
@@ -1810,17 +1840,20 @@ export const DND_RACES: RaceInfo[] = [
     name: 'Demi-elfe',
     description:
       'Deux mondes dans le sang : vision dans le noir, héritage féerique, deux langues de plus.',
+    speedMeters: 9,
     subraces: [],
   },
   {
     name: 'Demi-orc',
     description: 'Impressionnant, inébranlable, coups sauvages ; langue orc.',
+    speedMeters: 9,
     subraces: [],
   },
   {
     name: 'Tieffelin',
     description:
       'Héritage infernal au premier regard ; résistance au feu, magie des ténèbres ; langue infernale.',
+    speedMeters: 9,
     subraces: [],
   },
 ];
