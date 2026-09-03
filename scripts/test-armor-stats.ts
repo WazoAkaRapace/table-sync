@@ -654,12 +654,15 @@ check(
   'Immobilisé + armure lourde FOR insuffisante → toujours 0 (jamais négatif)',
   computeSpeed(
     { characterClass: 'Guerrier', level: 5, speed: 3, strength: 8 },
-    [entry(mkArmor({ name: 'Plate', nameFr: 'Harnois', acBase: 18, strMin: 15, description: '' }))]
-      ,
+    [entry(mkArmor({ name: 'Plate', nameFr: 'Harnois', acBase: 18, strMin: 15, description: '' }))],
     'fr',
     { tier: 'overburdened' },
   ),
-  { speed: 0, bonus: -3, sources: ['Armure lourde −3 m (FOR insuffisante)', '⛔ Surcharge — immobilisé'] },
+  {
+    speed: 0,
+    bonus: -3,
+    sources: ['Armure lourde −3 m (FOR insuffisante)', '⛔ Surcharge — immobilisé'],
+  },
 );
 check(
   'Paliers EN — libellés anglais',
