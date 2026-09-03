@@ -27,6 +27,7 @@ npm run test-weapon-stats  # Weapon/monk/unarmed/fighting-style/sneak/extra-atta
 npm run test-armor-stats   # AC/magic-armor/speed/wild-shape/unarmored-defense checks
 npm run test-class-features # Class-feature catalog, resources, applyRest, pact table, crit range
 npm run test-multiclass-rules # Multiclassage SRD 5.1 : pools, prérequis, niveau de classe, dés de vie
+npm run test-coin-rules    # Bourse : totals, format greedy, encaisser, dépenser avec rendu de monnaie (casse minimale)
 npm run test-api           # API integration suite + zero-raw-SQL gate (boots a throwaway server)
 npm run test:e2e           # Playwright browser E2E (boots its own throwaway API + vite stack, fresh e2e.sqlite)
 npm run site               # Marketing site: assemble site/assets from docs/ + serve on :4188 (no-cache)

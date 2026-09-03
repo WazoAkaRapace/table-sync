@@ -269,6 +269,19 @@ export async function characterRoutes(app: FastifyInstance) {
           .code(400)
           .send({ error: apiMsg(req, 'vitesse invalide (nombre positif en mètres)') });
       }
+      // Coins are whole, non-negative counts — anything else is a client bug
+      for (const coinKey of ['copper', 'silver', 'electrum', 'gold', 'platinum'] as const) {
+        const coinValue = body[coinKey];
+        if (
+          coinValue !== undefined &&
+          (typeof coinValue !== 'number' || !Number.isFinite(coinValue))
+        ) {
+          return reply
+            .code(400)
+            .send({ error: apiMsg(req, 'montant de bourse invalide (nombre entier positif)') });
+        }
+      }
+      const COIN_CLAMP_MAX = 999_999_999;
       const allowed: (keyof PatchCharacterPayload)[] = [
         'name',
         'strength',
@@ -379,6 +392,8 @@ export async function characterRoutes(app: FastifyInstance) {
             values[prop] = JSON.stringify(body[key]);
           } else if (typeof body[key] === 'boolean') {
             values[prop] = body[key] ? 1 : 0;
+          } else if (['copper', 'silver', 'electrum', 'gold', 'platinum'].includes(key)) {
+            values[prop] = Math.min(COIN_CLAMP_MAX, Math.max(0, Math.trunc(body[key] as number)));
           } else {
             values[prop] = body[key];
           }

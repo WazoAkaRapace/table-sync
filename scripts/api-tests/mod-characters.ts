@@ -152,6 +152,36 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   });
   eq(r.status, 400, 'patch invalid speed → 400');
 
+  // ---------- coin purse clamping (server-side: whole, non-negative counts) ----------
+  const purseChar = await createCharacter(base, fx.player.token, P, { name: 'Tirelire' });
+  r = await api(base, 'PATCH', `/api/characters/${purseChar.id}`, {
+    token: fx.player.token,
+    body: { gold: -50 },
+  });
+  eq(r.status, 200, 'patch negative gold accepted (clamped)');
+  eq(
+    srv.query('SELECT gold FROM characters WHERE id = ?', purseChar.id).gold,
+    0,
+    'negative gold clamped to 0',
+  );
+  r = await api(base, 'PATCH', `/api/characters/${purseChar.id}`, {
+    token: fx.player.token,
+    body: { silver: 12.9 },
+  });
+  eq(r.status, 200, 'patch fractional silver accepted (truncated)');
+  eq(
+    srv.query('SELECT silver FROM characters WHERE id = ?', purseChar.id).silver,
+    12,
+    'fractional silver truncated to whole coins',
+  );
+  r = await api(base, 'PATCH', `/api/characters/${purseChar.id}`, {
+    token: fx.player.token,
+    body: { copper: 'beaucoup' },
+  });
+  eq(r.status, 400, 'patch non-numeric coin → 400');
+  r = await api(base, 'DELETE', `/api/characters/${purseChar.id}`, { token: fx.gm.token });
+  eq(r.status, 204, 'purse clamp test char deleted');
+
   // Big multi-field patch: JSON arrays, booleans, null weapon proficiencies,
   // subclass columns, coins, wild shape seen list.
   r = await api(base, 'PATCH', `/api/characters/${zed.id}`, {

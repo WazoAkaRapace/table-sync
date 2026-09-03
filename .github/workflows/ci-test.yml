@@ -57,6 +57,8 @@ jobs:
         run: npm run test-class-features
       - name: Règles — multiclassage
         run: npm run test-multiclass-rules
+      - name: Règles — bourse (change-making)
+        run: npm run test-coin-rules
 
       - name: Rules suite - creation data
         run: npm run test-creation-data

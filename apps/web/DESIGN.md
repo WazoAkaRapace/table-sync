@@ -145,6 +145,27 @@ la quête courante), tout le reste est encre.
 | Onglet PNJ | la page PNJ existante incrustée (`NpcPage embedded`) — les secrets y arrivent au MD (verrou serveur : GM seul lit ET écrit `secret`) |
 
 
+## La bourse et son changeur (`CoinPurse.tsx` / `CoinTransactionModal.tsx`, onglet Inventaire)
+
+La bourse est une carte repliable de l'inventaire dont la grammaire est celle
+des valeurs mesurées : **les figures reposent, les transactions passent par
+le changeur**. La carte ne propose plus d'édition inline — le modal est
+l'unique surface de gestion, et le moteur de rendu de monnaie vit dans le
+partagé (`spendCoins`, casse minimale : pièces exactes d'abord, puis la plus
+petite pièce suffisante est cassée en cascade PC→PA→PO→PP, l'électrum hors de
+la chaîne décimale).
+
+| Dispositif | Recette |
+|---|---|
+| En-tête de carte | bouton « Bourse (31 PO 5 PC) » — total PO + reliquat PC, inchangé depuis toujours (e2e y ancre l'attente) |
+| Figures au repos | déplié : 5 tuiles `grid-cols-2 sm:grid-cols-5` — pastille de métal colorée (cuivre #b87333, argent #c0c0c0, électrum #a89968, or #d4af37, platine #e5e4e2) + libellé `.label`, valeur en `font-mono text-xl` encre ; spectateur (lecture seule) : figures seules, aucune porte |
+| Les portes | deux `btn-secondary` « ＋ Encaisser » / « − Dépenser » — le verbe est présélectionné à l'ouverture du modal |
+| Le modal du changeur | `Modal` standard (feuille mobile) : fieldset de 3 chips `aria-pressed` (＋ Encaisser / − Dépenser / ✎ Corriger, active = `bg-ink-800` remplie — l'encre, le sang est pris), 5 lignes pastille + stepper − [`NumberField` mono] + (cibles 44 px) |
+| Le grand livre | sous filet `parchment-200`, `aria-live="polite"` : « Bourse » (valeur réelle, encre claire) → « Après » (`font-mono font-semibold`) — **la bourse réelle détenue, jamais une conversion canonique** (32 PO · 5 PA, pas « 3 PP ») ; « Il manque X » (PO→PA→PC, jamais PE/PP) verrouille le CTA sans crier ; « Monnaie rendue — 1 PO cassée en 10 PA » en `text-xs ink-500`, encre imprimée |
+| Le CTA | `btn-primary` portant le verbe ET le montant (« Dépenser 5 PA », montant mono dans le libellé) ; « Corriger » édite la bourse telle quelle (draft pré-rempli, l'ancienne édition inline) et **reste verrouillé tant que le draft ne diffère pas de la bourse** — une correction identique n'est pas une opération |
+| Persistance | un seul PATCH plein-purse (`action: 'coins'` en WS), toast « Bourse mise à jour » ; l'API clampe les 5 pièces en entiers ≥ 0 (400 sur non-numérique) |
+
+
 ## Composants — `src/components/ui.tsx`
 
 | Composant | Usage | Points clés |

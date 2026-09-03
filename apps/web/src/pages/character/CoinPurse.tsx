@@ -1,14 +1,13 @@
 import type { Character } from '@table-sync/shared';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { NumberField } from '../../components/ui';
 import { coinLabel } from '../../i18n/labels';
 import type { CoinsState } from './types';
 
-// ---------- Coin purse (auto-save, distinct colored glyphs) ----------
+// ---------- Coin purse (figures at rest, transactions through the modal) ----------
 
 // Coin fields with distinct CSS-colored glyphs instead of identical emoji
-const COIN_FIELDS: {
+export const COIN_FIELDS: {
   key: keyof Pick<Character, 'copper' | 'silver' | 'electrum' | 'gold' | 'platinum'>;
   unit: 'cp' | 'sp' | 'ep' | 'gp' | 'pp';
   color: string;
@@ -20,15 +19,18 @@ const COIN_FIELDS: {
   { key: 'platinum', unit: 'pp', color: '#e5e4e2' }, // platinum (white-silver)
 ];
 
+/** The three verbs of the coin modal: receive / spend / correct the purse. */
+export type CoinMode = 'gain' | 'spend' | 'set';
+
 interface CoinPurseProps {
   coins: CoinsState;
-  /** Viewer mode: display amounts without inputs. */
+  /** Viewer mode: display amounts without the transaction doors. */
   readOnly?: boolean;
-  onChange: (key: keyof CoinsState, val: number) => void;
-  onBlur: () => void;
+  /** Opens the coin modal with the given verb preselected. */
+  onOpenExchange: (mode: CoinMode) => void;
 }
 
-export function CoinPurse({ coins, readOnly = false, onChange, onBlur }: CoinPurseProps) {
+export function CoinPurse({ coins, readOnly = false, onOpenExchange }: CoinPurseProps) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const totalCp =
@@ -63,9 +65,16 @@ export function CoinPurse({ coins, readOnly = false, onChange, onBlur }: CoinPur
       <div className={`expand-grid ${expanded ? '' : 'is-collapsed'}`}>
         <div className="expand-inner">
           <div className="mt-4">
+            {/* Figures at rest — measured values in mono, like every ledger line */}
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
               {COIN_FIELDS.map(({ key, unit, color }) => (
-                <label key={key} className="block" htmlFor={`coin-${key}`}>
+                <div
+                  key={key}
+                  role="img"
+                  aria-label={`${t('bourse.quantite.de.coinlabel.unit', {
+                    coinLabel_unit: coinLabel(unit),
+                  })} : ${coins[key]}`}
+                >
                   <span className="label flex items-center gap-1.5">
                     <span
                       className="inline-block w-3 h-3 rounded-full border border-parchment-300 shrink-0"
@@ -74,34 +83,29 @@ export function CoinPurse({ coins, readOnly = false, onChange, onBlur }: CoinPur
                     />
                     {coinLabel(unit)}
                   </span>
-                  {readOnly ? (
-                    <div
-                      className="input bg-parchment-100 text-ink-700 flex items-center justify-between"
-                      role="img"
-                      aria-label={t('bourse.quantite.de.coinlabel.unit', {
-                        coinLabel_unit: coinLabel(unit),
-                      })}
-                    >
-                      <span>{coins[key]}</span>
-                      <span className="text-xs text-ink-400">{unit}</span>
-                    </div>
-                  ) : (
-                    <NumberField
-                      id={`coin-${key}`}
-                      min={0}
-                      className="input"
-                      value={coins[key]}
-                      zeroAsEmpty
-                      onChange={(n) => onChange(key, n)}
-                      onBlur={onBlur}
-                      aria-label={t('bourse.quantite.de.coinlabel.unit', {
-                        coinLabel_unit: coinLabel(unit),
-                      })}
-                    />
-                  )}
-                </label>
+                  <div className="mt-1 font-mono text-xl text-ink-900 leading-8">{coins[key]}</div>
+                </div>
               ))}
             </div>
+
+            {!readOnly && (
+              <div className="grid grid-cols-2 gap-3 mt-4">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => onOpenExchange('gain')}
+                >
+                  ＋ {t('bourse.encaisser')}
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => onOpenExchange('spend')}
+                >
+                  − {t('bourse.depenser')}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

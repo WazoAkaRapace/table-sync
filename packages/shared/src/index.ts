@@ -4941,6 +4941,106 @@ export const COIN_LABELS_FR: Record<CostUnit, string> = {
   pp: 'PP', // Pièce de Platine
 };
 
+/** Denominations from lowest to highest value. */
+export const COIN_ORDER: readonly CostUnit[] = ['cp', 'sp', 'ep', 'gp', 'pp'];
+
+/** How many coins of the break-target unit ONE coin of a unit breaks into (cp breaks nothing). */
+export const COIN_BREAK_RATIO: Record<CostUnit, number> = {
+  cp: 0,
+  sp: 10, // 1 PA = 10 PC
+  ep: 5, // 1 PE = 5 PA
+  gp: 10, // 1 PO = 10 PA
+  pp: 10, // 1 PP = 10 PO
+};
+
+/** The unit ONE coin of a unit breaks into (cp breaks into nothing). The
+ * decimal chain runs PC→PA→PO→PP — electrum sits OUTSIDE it: an electrum
+ * coin breaks into 5 PA, and a gold coin breaks into 10 PA (never into 2 PE). */
+export const COIN_BREAK_INTO: Record<CostUnit, CostUnit | null> = {
+  cp: null,
+  sp: 'cp',
+  ep: 'sp',
+  gp: 'sp',
+  pp: 'gp',
+};
+
+/** A purse (or transaction amount) expressed per denomination. */
+export type CoinAmounts = Record<CostUnit, number>;
+
+export const EMPTY_COINS: CoinAmounts = { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 };
+
+/** Total value of a purse, expressed in copper pieces. */
+export function coinsTotalCp(amounts: CoinAmounts): number {
+  return COIN_ORDER.reduce(
+    (sum, unit) => sum + Math.max(0, Math.floor(amounts[unit] ?? 0)) * COIN_TO_CP[unit],
+    0,
+  );
+}
+
+/** Canonical display parts of a copper total, largest denomination first (greedy). */
+export function formatCoinCp(totalCp: number): { qty: number; unit: CostUnit }[] {
+  const parts: { qty: number; unit: CostUnit }[] = [];
+  let rest = Math.max(0, Math.floor(totalCp));
+  for (const unit of [...COIN_ORDER].reverse()) {
+    const qty = Math.floor(rest / COIN_TO_CP[unit]);
+    if (qty > 0) parts.push({ qty, unit });
+    rest -= qty * COIN_TO_CP[unit];
+  }
+  return parts;
+}
+
+/** Add coins to a purse, denomination by denomination. No regrouping: the
+ * purse keeps the shape the table handed over. */
+export function gainCoins(purse: CoinAmounts, gain: CoinAmounts): CoinAmounts {
+  const next = { ...purse };
+  for (const unit of COIN_ORDER) next[unit] += Math.max(0, Math.floor(gain[unit] ?? 0));
+  return next;
+}
+
+export type SpendResult =
+  | { ok: true; purse: CoinAmounts; breaks: { unit: CostUnit; count: number }[] }
+  | { ok: false; shortfallCp: number };
+
+/** Minimal-breakage change-making: pay `spend` out of `purse`. Exact coins
+ * are taken first (the purse keeps its shape wherever it can); the remainder
+ * is covered with loose smaller coins, then by breaking the smallest coin
+ * that still overshoots — cascading down and landing the change in the
+ * denominations it was broken into. Pure: returns the new purse, which coins
+ * had to be broken, or the copper shortfall. */
+export function spendCoins(purse: CoinAmounts, spend: CoinAmounts): SpendResult {
+  const next: CoinAmounts = { ...purse };
+  let debtCp = 0;
+  for (const unit of COIN_ORDER) {
+    const want = Math.max(0, Math.floor(spend[unit] ?? 0));
+    const take = Math.min(Math.max(0, next[unit]), want);
+    next[unit] -= take;
+    debtCp += (want - take) * COIN_TO_CP[unit];
+  }
+  if (debtCp === 0) return { ok: true, purse: next, breaks: [] };
+  if (coinsTotalCp(next) < debtCp) {
+    return { ok: false, shortfallCp: debtCp - coinsTotalCp(next) };
+  }
+  const breaks = new Map<CostUnit, number>();
+  while (debtCp > 0) {
+    const unit = COIN_ORDER.find((u) => next[u] > 0);
+    if (unit === undefined) return { ok: false, shortfallCp: debtCp }; // unreachable after the guard
+    const value = COIN_TO_CP[unit];
+    if (value <= debtCp) {
+      // Pay with as many of these loose coins as the debt can absorb.
+      const use = Math.min(next[unit], Math.floor(debtCp / value));
+      next[unit] -= use;
+      debtCp -= use * value;
+    } else {
+      // Overshoot: break ONE coin into its break-target unit, then loop.
+      const lower = COIN_BREAK_INTO[unit] as CostUnit; // cp (value 1) never overshoots
+      next[unit] -= 1;
+      next[lower] += COIN_BREAK_RATIO[unit];
+      breaks.set(unit, (breaks.get(unit) ?? 0) + 1);
+    }
+  }
+  return { ok: true, purse: next, breaks: [...breaks].map(([unit, count]) => ({ unit, count })) };
+}
+
 export const RARITY_LABELS_FR: Record<Rarity, string> = {
   common: 'Commun',
   uncommon: 'Peu commun',

@@ -31,6 +31,48 @@ playerTest.describe('Inventaire (guerrier)', () => {
     await expect(page.getByRole('button', { name: /Bourse \(31 PO/ })).toBeVisible();
   });
 
+  playerTest('la bourse encaisse, dépense et rend la monnaie', async ({ page }) => {
+    // Départ : 31 PO (laissé par le test précédent). Le parcours du changeur :
+    // encaisser, dépenser avec casse de pièce, fonds insuffisants.
+    const bourseCard = page.locator('[data-tuto="inv-bourse"]');
+    const modal = page.getByRole('dialog');
+
+    // On déploie la carte une bonne fois — elle reste ouverte entre les passages.
+    await bourseCard.getByRole('button', { name: /Bourse \(/ }).click();
+
+    // --- Encaisser 2 PO : 31 → 33 PO ---
+    await bourseCard.getByRole('button', { name: '＋ Encaisser' }).click();
+    await modal.getByLabel('Quantité de PO').fill('2');
+    await modal.getByRole('button', { name: 'Encaisser 2 PO' }).click();
+    await expect(page.getByRole('button', { name: /Bourse \(33 PO/ })).toBeVisible();
+
+    // --- Dépenser 5 PA sans menue monnaie : 1 PO cassée en 10 PA ---
+    await bourseCard.getByRole('button', { name: '− Dépenser' }).click();
+    await modal.getByLabel('Quantité de PA').fill('5');
+    // Le grand livre montre la bourse réelle, pas une conversion canonique.
+    await expect(modal.getByText('32 PO · 5 PA')).toBeVisible();
+    await expect(modal.getByText(/1 PO cassée en 10 PA/)).toBeVisible();
+    await modal.getByRole('button', { name: 'Dépenser 5 PA' }).click();
+    await expect(page.getByRole('button', { name: /Bourse \(32 PO/ })).toBeVisible();
+
+    // --- Fonds insuffisants : le manque s'affiche, le CTA se verrouille ---
+    await bourseCard.getByRole('button', { name: '− Dépenser' }).click();
+    await modal.getByLabel('Quantité de PP').fill('999');
+    await expect(modal.getByText(/Il manque/)).toBeVisible();
+    await expect(modal.getByRole('button', { name: /^Dépenser/ })).toBeDisabled();
+    await page.keyboard.press('Escape');
+    await expect(modal).toBeHidden();
+
+    // --- Corriger : remet la bourse au seed (31 PO) pour les specs suivantes ---
+    await bourseCard.getByRole('button', { name: '− Dépenser' }).click();
+    await modal.getByRole('button', { name: /✎ Corriger/ }).click();
+    await expect(modal.getByLabel('Quantité de PO')).toHaveValue('32'); // draft pré-rempli
+    await modal.getByLabel('Quantité de PA').fill('0');
+    await modal.getByLabel('Quantité de PO').fill('31');
+    await modal.getByRole('button', { name: 'Corriger la bourse' }).click();
+    await expect(page.getByRole('button', { name: /Bourse \(31 PO/ })).toBeVisible();
+  });
+
   playerTest('une arme déploie ses dégâts calculés (FOR 16 → 1d8+3)', async ({ page }) => {
     await expandCategory(page, 'Arme');
     const rowButton = page.getByRole('button', { name: 'Épée longue, 1 exemplaire' });

@@ -25,6 +25,7 @@
     "test-skill-stats": "tsx scripts/test-skill-stats.ts",
     "test-class-features": "tsx scripts/test-class-features.ts",
     "test-multiclass-rules": "tsx scripts/test-multiclass-rules.ts",
+    "test-coin-rules": "tsx scripts/test-coin-rules.ts",
     "test-creation-data": "tsx scripts/test-creation-data.ts",
     "test-api": "tsx scripts/test-api.ts",
     "test:e2e": "playwright test",

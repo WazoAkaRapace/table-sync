@@ -52,7 +52,8 @@ import CharacterSpellsTab from './CharacterSpellsTab';
 import CharacterStatsTab from './CharacterStatsTab';
 import { CatalogSearch } from './character/CatalogSearch';
 import { CategoryGroup } from './character/CategoryGroup';
-import { CoinPurse } from './character/CoinPurse';
+import { type CoinMode, CoinPurse } from './character/CoinPurse';
+import { CoinTransactionModal } from './character/CoinTransactionModal';
 import { LocationWeightBar } from './character/LocationWeightBar';
 import { NewLocationModal } from './character/NewLocationModal';
 import { SurvivalPanel } from './character/SurvivalPanel';
@@ -180,7 +181,7 @@ export default function CharacterInventoryPage() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const confirmDeleteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Coin purse (auto-save on blur)
+  // Coin purse (display draft; transactions go through the coin modal)
   const [coins, setCoins] = useState<CoinsState>({
     copper: 0,
     silver: 0,
@@ -188,7 +189,8 @@ export default function CharacterInventoryPage() {
     gold: 0,
     platinum: 0,
   });
-  const [coinsDirty, setCoinsDirty] = useState(false);
+  // The coin modal's open door: 'gain' | 'spend' — null = closed ('set' only via chips)
+  const [coinExchange, setCoinExchange] = useState<CoinMode | null>(null);
 
   // Catalog (in bottom-sheet on mobile, right column on desktop)
   const [catalogOpen, setCatalogOpen] = useState(false); // mobile sheet
@@ -617,19 +619,22 @@ export default function CharacterInventoryPage() {
     });
   };
 
-  // Coin purse: auto-save on blur when dirty
-  const saveCoins = useCallback(async () => {
-    if (!coinsDirty) return;
-    markLocalMutation();
-    try {
-      await saveCoinsMutation.mutateAsync(coins);
-      setCoinsDirty(false);
-      await refreshInventory();
-      pushToast(t('inv.bourse.mise.a.jour'));
-    } catch (err) {
-      pushToast(apiError(err, t('inv.erreur.de.sauvegarde')), 'error');
-    }
-  }, [coins, coinsDirty, pushToast, refreshInventory, markLocalMutation, saveCoinsMutation, t]);
+  // Coin purse: a confirmed transaction lands as one full-purse PATCH — the
+  // change-making already ran client-side in the shared engine
+  const savePurse = useCallback(
+    async (next: CoinsState) => {
+      markLocalMutation();
+      try {
+        await saveCoinsMutation.mutateAsync(next);
+        await refreshInventory();
+        pushToast(t('inv.bourse.mise.a.jour'));
+        setCoinExchange(null);
+      } catch (err) {
+        pushToast(apiError(err, t('inv.erreur.de.sauvegarde')), 'error');
+      }
+    },
+    [pushToast, refreshInventory, markLocalMutation, saveCoinsMutation, t],
+  );
 
   const dismissError = () => setDismissedError(error);
 
@@ -1409,17 +1414,9 @@ export default function CharacterInventoryPage() {
               </section>
             </div>
 
-            {/* ---------- Coin purse (auto-save on blur) ---------- */}
+            {/* ---------- Coin purse (figures at rest, transactions via the modal) ---------- */}
             <section className="card p-4 sm:p-5">
-              <CoinPurse
-                coins={coins}
-                readOnly={!canEdit}
-                onChange={(key, val) => {
-                  setCoins((c) => ({ ...c, [key]: Math.max(0, val) }));
-                  setCoinsDirty(true);
-                }}
-                onBlur={saveCoins}
-              />
+              <CoinPurse coins={coins} readOnly={!canEdit} onOpenExchange={setCoinExchange} />
             </section>
           </>
         )}
@@ -1444,6 +1441,15 @@ export default function CharacterInventoryPage() {
       >
         {catalogContent}
       </BottomSheet>
+
+      {/* ---------- Coin transaction modal ---------- */}
+      <CoinTransactionModal
+        open={coinExchange !== null}
+        initialMode={coinExchange ?? 'gain'}
+        coins={coins}
+        onClose={() => setCoinExchange(null)}
+        onConfirm={savePurse}
+      />
 
       {/* ---------- Transfer modal ---------- */}
       <TransferModal
