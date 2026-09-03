@@ -1868,5 +1868,8 @@
   "carnet.nt.vierge.hint": "Prep, schemes, table reminders — everything the DM must not forget.",
   "carnet.nt.aucun.resultat": "No results",
   "carnet.nt.modifie.recherche": "Adjust your search to find a note.",
-  "carnet.nt.titre.placeholder": "Port Nyanzaru schemes, dungeon traps…"
+  "carnet.nt.titre.placeholder": "Port Nyanzaru schemes, dungeon traps…",
+  "carnet.cal.note": "Day note",
+  "carnet.cal.note.placeholder": "What happened today…",
+  "carnet.jours.modifier": "Edit day {{day}}"
 }

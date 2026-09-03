@@ -4527,13 +4527,18 @@ export interface CampaignState {
   season: CampaignSeason;
   /** Météo du jour courant — texte libre (« ☀️ Dégagé », « Pluie chaude »…). */
   weather: string | null;
+  /** Journal du jour courant — figé dans campaign_days quand l'horloge avance. */
+  note: string | null;
 }
 
-/** Un jour archivé : figé quand l'horloge avance (le journal des jours passés). */
+/** Un jour archivé : figé quand l'horloge avance (le journal des jours passés).
+ *  N'entre au registre que s'il porte météo OU note. */
 export interface CampaignDay {
+  id: number;
   partyId: number;
   day: number;
   weather: string | null;
+  note: string | null;
 }
 
 /** Échéance nommée. La cible est un jour ABSOLU — l'affichage « J−N » est
@@ -4593,6 +4598,13 @@ export interface PatchCampaignStatePayload {
   day?: number;
   season?: CampaignSeason;
   weather?: string | null;
+  note?: string | null;
+}
+
+/** Retouche a posteriori d'un jour archivé (registre des jours passés). */
+export interface PatchCampaignDayPayload {
+  weather?: string | null;
+  note?: string | null;
 }
 
 export interface AdvanceCampaignPayload {

@@ -20,6 +20,7 @@ import type {
   DmQuest,
   DmQuestStatus,
   PatchCampaignCountdownPayload,
+  PatchCampaignDayPayload,
   PatchCampaignStatePayload,
   PatchDmNotePayload,
   PatchDmQuestPayload,
@@ -44,6 +45,7 @@ import { apiMsg } from './messages.ts';
 
 const MAX_DAY = 100000; // ~274 ans de campagne — au-delà, c'est une erreur de saisie
 const MAX_WEATHER_LEN = 200;
+const MAX_NOTE_LEN = 500; // le journal d'un jour tient en quelques lignes
 const MAX_TITLE_LEN = 200;
 const MAX_LABEL_LEN = 120;
 const DAYS_LEDGER_LIMIT = 30; // jours passés servis (les plus récents d'abord)
@@ -51,11 +53,23 @@ const DAYS_LEDGER_LIMIT = 30; // jours passés servis (les plus récents d'abord
 // ---------- Mappers ----------
 
 function mapState(row: any): CampaignState {
-  return { partyId: row.party_id, day: row.day, season: row.season, weather: row.weather ?? null };
+  return {
+    partyId: row.party_id,
+    day: row.day,
+    season: row.season,
+    weather: row.weather ?? null,
+    note: row.note ?? null,
+  };
 }
 
 function mapDay(row: any): CampaignDay {
-  return { partyId: row.party_id, day: row.day, weather: row.weather ?? null };
+  return {
+    id: row.id,
+    partyId: row.party_id,
+    day: row.day,
+    weather: row.weather ?? null,
+    note: row.note ?? null,
+  };
 }
 
 function mapCountdown(row: any): CampaignCountdown {
@@ -132,18 +146,20 @@ function ensureCampaignState(drizzle: Drizzle, partyId: number): any {
     : existing;
 }
 
-/** Freeze the current day into the ledger — only when the MD noted its
- *  weather: a day without météo has nothing to remember, and multi-day jumps
- *  would spam the register with empty lines (upsert on conflict so a
- *  corrected day overwrites rather than duplicates). */
+/** Freeze the current day into the ledger — only when the MD noted something:
+ *  un jour sans météo NI note n'a rien à dire au registre, et les sauts
+ *  multi-jours ne le rempliraient que de lignes vides (upsert on conflict so
+ *  a corrected day overwrites rather than duplicates). */
 function archiveCurrentDay(drizzle: Drizzle, partyId: number, state: any): void {
-  if (!state.weather) return;
+  const weather = state.weather ?? null;
+  const note = state.note ?? null;
+  if (!weather && !note) return;
   drizzle
     .insert(campaignDays)
-    .values({ partyId, day: state.day, weather: state.weather })
+    .values({ partyId, day: state.day, weather, note })
     .onConflictDoUpdate({
       target: [campaignDays.partyId, campaignDays.day],
-      set: { weather: state.weather },
+      set: { weather, note },
     })
     .run();
 }
@@ -240,12 +256,13 @@ export async function campaignRoutes(app: FastifyInstance) {
       const drizzle = getDrizzle();
       const state = ensureCampaignState(drizzle, partyId);
       const newDay = Math.min(state.day + steps, MAX_DAY);
-      // Le jour qui s'achève est figé avec sa météo ; le nouveau jour démarre clair.
+      // Le jour qui s'achève est figé avec sa météo et son journal ; le
+      // nouveau jour démarre clair.
       getDb().transaction(() => {
         archiveCurrentDay(drizzle, partyId, state);
         drizzle
           .update(campaignState)
-          .set({ day: newDay, weather: null, updatedAt: sql`datetime('now')` })
+          .set({ day: newDay, weather: null, note: null, updatedAt: sql`datetime('now')` })
           .where(eq(campaignState.partyId, partyId))
           .run();
       })();
@@ -298,6 +315,13 @@ export async function campaignRoutes(app: FastifyInstance) {
         }
         values.weather = weather;
       }
+      if (body.note !== undefined) {
+        const note = cleanOptionalText(body.note, MAX_NOTE_LEN);
+        if (note === undefined) {
+          return reply.code(400).send({ error: apiMsg(req, 'invalid note') });
+        }
+        values.note = note;
+      }
       if (Object.keys(values).length === 0) {
         return reply.code(400).send({ error: apiMsg(req, 'no fields to update') });
       }
@@ -313,6 +337,72 @@ export async function campaignRoutes(app: FastifyInstance) {
         .get();
       bus.emitChange({ type: 'campaign:change', partyId, action: 'clock', actorUserId: userId });
       return reply.send({ state: mapState(updated) });
+    },
+  );
+
+  // ---------- Retouch a past day (the ledger stays honest) ----------
+
+  app.patch(
+    '/campaign-days/:id',
+    async (
+      req: FastifyRequest<{ Params: { id: string }; Body: PatchCampaignDayPayload }>,
+      reply: FastifyReply,
+    ) => {
+      const userId = requireUser(req, reply);
+      if (userId === null) return;
+      const drizzle = getDrizzle();
+      const row = drizzle
+        .select(cols(campaignDays))
+        .from(campaignDays)
+        .where(eq(campaignDays.id, Number(req.params.id)))
+        .get() as any;
+      if (!row) return reply.code(404).send({ error: apiMsg(req, 'day not found') });
+      if (!gmGuard(req, reply, row.party_id, userId)) return;
+
+      const body = req.body || ({} as PatchCampaignDayPayload);
+      const values: Record<string, unknown> = {};
+      if (body.weather !== undefined) {
+        const weather = cleanOptionalText(body.weather, MAX_WEATHER_LEN);
+        if (weather === undefined) {
+          return reply.code(400).send({ error: apiMsg(req, 'invalid weather') });
+        }
+        values.weather = weather;
+      }
+      if (body.note !== undefined) {
+        const note = cleanOptionalText(body.note, MAX_NOTE_LEN);
+        if (note === undefined) {
+          return reply.code(400).send({ error: apiMsg(req, 'invalid note') });
+        }
+        values.note = note;
+      }
+      if (Object.keys(values).length === 0) {
+        return reply.code(400).send({ error: apiMsg(req, 'no fields to update') });
+      }
+      drizzle.update(campaignDays).set(values).where(eq(campaignDays.id, row.id)).run();
+      // Un jour vidé de sa météo ET de son journal n'a plus rien à faire
+      // au registre — la ligne part au lieu de traîner vide.
+      const updated = drizzle
+        .select(cols(campaignDays))
+        .from(campaignDays)
+        .where(eq(campaignDays.id, row.id))
+        .get() as any;
+      if (!updated.weather && !updated.note) {
+        drizzle.delete(campaignDays).where(eq(campaignDays.id, row.id)).run();
+        bus.emitChange({
+          type: 'campaign:change',
+          partyId: row.party_id,
+          action: 'clock',
+          actorUserId: userId,
+        });
+        return reply.send({ day: null });
+      }
+      bus.emitChange({
+        type: 'campaign:change',
+        partyId: row.party_id,
+        action: 'clock',
+        actorUserId: userId,
+      });
+      return reply.send({ day: mapDay(updated) });
     },
   );
 

@@ -1867,5 +1867,8 @@
   "carnet.nt.vierge.hint": "Préparation, intrigues, rappels de table — tout ce que le MD ne doit pas oublier.",
   "carnet.nt.aucun.resultat": "Aucun résultat",
   "carnet.nt.modifie.recherche": "Modifie ta recherche pour retrouver une note.",
-  "carnet.nt.titre.placeholder": "Intrigues de Port Nyanzaru, pièges du donjon…"
+  "carnet.nt.titre.placeholder": "Intrigues de Port Nyanzaru, pièges du donjon…",
+  "carnet.cal.note": "Note du jour",
+  "carnet.cal.note.placeholder": "Ce qui s'est passé aujourd'hui…",
+  "carnet.jours.modifier": "Modifier le jour {{day}}"
 }

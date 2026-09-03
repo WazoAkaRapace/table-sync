@@ -621,7 +621,8 @@ export const combatants = sqliteTable(
 // ---------- Carnet du MD (journal de campagne — privé au MD, party-scoped) ----------
 
 /** L'horloge de campagne : une ligne par groupe, créée au premier accès.
- *  `weather` = météo du jour COURANT ; figée dans campaign_days à l'avance. */
+ *  `weather`/`note` = météo et journal du jour COURANT ; figés dans
+ *  campaign_days quand l'horloge avance. */
 export const campaignState = sqliteTable(
   'campaign_state',
   {
@@ -631,6 +632,7 @@ export const campaignState = sqliteTable(
     day: integer('day').notNull().default(1),
     season: text('season').notNull().default('spring'),
     weather: text('weather'),
+    note: text('note'),
     updatedAt: text('updated_at').notNull().default(sql`(datetime('now'))`),
   },
   (_t) => [
@@ -638,7 +640,8 @@ export const campaignState = sqliteTable(
   ],
 );
 
-/** Jours passés : une ligne par jour archivé (upsert à chaque avance de l'horloge). */
+/** Jours passés : une ligne par jour archivé (upsert à chaque avance de
+ *  l'horloge) — n'entre au registre que si le jour porte météo OU note. */
 export const campaignDays = sqliteTable(
   'campaign_days',
   {
@@ -648,6 +651,7 @@ export const campaignDays = sqliteTable(
       .references(() => parties.id, { onDelete: 'cascade' }),
     day: integer('day').notNull(),
     weather: text('weather'),
+    note: text('note'),
     createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
   },
   (t) => [unique('campaign_days_party_day_unique').on(t.partyId, t.day)],

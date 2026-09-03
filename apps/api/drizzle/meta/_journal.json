@@ -148,6 +148,13 @@
       "when": 1788438964926,
       "tag": "0020_nasty_karen_page",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "6",
+      "when": 1788444243378,
+      "tag": "0021_pink_captain_stacy",
+      "breakpoints": true
     }
   ]
 }

@@ -96,8 +96,57 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   eq(r.data.state.day, 16, 'bounded multi-day jump');
 
   r = await api(base, 'GET', `/api/parties/${P}/campaign`, { token: fx.gm.token });
-  eq(r.data.campaign.days.length, 1, 'only weathered days enter the ledger');
+  eq(r.data.campaign.days.length, 1, 'only noted days enter the ledger');
   eq(r.data.campaign.days[0].day, 12, 'ledger newest first');
+
+  // ---------- Journal du jour : note courante, archivage, retouche ----------
+  r = await api(base, 'PATCH', `/api/parties/${P}/campaign`, {
+    token: fx.gm.token,
+    body: { note: 'Embuscade sur la piste — un blessé.' },
+  });
+  eq(r.data.state.note, 'Embuscade sur la piste — un blessé.', 'note du jour enregistrée');
+
+  r = await api(base, 'POST', `/api/parties/${P}/campaign/advance`, {
+    token: fx.gm.token,
+    body: {},
+  });
+  eq(r.data.state.day, 17, 'day advanced again');
+  eq(r.data.state.note, null, 'le nouveau jour démarre sans note');
+  const day16 = srv.query('SELECT note FROM campaign_days WHERE party_id = ? AND day = 16', P);
+  eq(day16?.note, 'Embuscade sur la piste — un blessé.', 'la note se fige avec le jour');
+
+  r = await api(base, 'GET', `/api/parties/${P}/campaign`, { token: fx.gm.token });
+  eq(r.data.campaign.days.length, 2, 'un jour sans météo mais avec note entre au registre');
+
+  const dayRow = r.data.campaign.days.find((d: any) => d.day === 16);
+  r = await api(base, 'PATCH', `/api/campaign-days/${dayRow.id}`, {
+    token: fx.player.token,
+    body: { note: 'X' },
+  });
+  eq(r.status, 403, 'retouche jour passé joueur → 403');
+  r = await api(base, 'PATCH', '/api/campaign-days/999999', {
+    token: fx.gm.token,
+    body: { note: 'X' },
+  });
+  eq(r.status, 404, 'jour passé 404');
+  r = await api(base, 'PATCH', `/api/campaign-days/${dayRow.id}`, {
+    token: fx.gm.token,
+    body: { weather: '🌧️ Pluie', note: 'Embuscade sur la piste.' },
+  });
+  eq(r.status, 200, 'jour passé retouché');
+  eq(r.data.day.weather, '🌧️ Pluie', 'météo retouchée');
+  eq(r.data.day.note, 'Embuscade sur la piste.', 'note retouchée');
+
+  // Vider météo ET note : la ligne quitte le registre au lieu de traîner vide
+  r = await api(base, 'PATCH', `/api/campaign-days/${dayRow.id}`, {
+    token: fx.gm.token,
+    body: { weather: null, note: null },
+  });
+  eq(r.status, 200, 'jour vidé');
+  eq(r.data.day, null, 'jour vidé = ligne retirée du registre');
+  r = await api(base, 'GET', `/api/parties/${P}/campaign`, { token: fx.gm.token });
+  eq(r.data.campaign.days.length, 1, 'registre retombé au seul jour météo');
+  eq(r.data.campaign.days[0].note, null, 'le jour météo porte sa note (null)');
 
   // ---------- Comptes à rebours ----------
   r = await api(base, 'POST', `/api/parties/${P}/campaign/countdowns`, {
