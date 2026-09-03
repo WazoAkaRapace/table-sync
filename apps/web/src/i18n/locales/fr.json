@@ -1768,7 +1768,7 @@
   "tuto.messages.partout.titre": "Partout, même hors de la fiche",
   "tuto.messages.partout.texte": "Un message qui arrive s'affiche en bannière où que tu sois, une pastille compte les non-lus — et si l'app est fermée, une notification sonne.",
   "account.tutoriel": "Tutoriel",
-  "account.tutoriel.aide": "La visite guidée présente la fiche : bandeau d'état, onglets, survie, sorts, inventaire…",
+  "account.tutoriel.aide": "La visite guidée présente la fiche : bandeau d'état, onglets, survie, sorts, inventaire… Elle est suivie sur ton compte : déjà vue sur un appareil, elle ne se rejoue pas sur les autres.",
   "account.tutoriel.bouton": "Réinitialiser le tutoriel",
   "account.tutoriel.toast": "Visite guidée réactivée — elle démarre à la prochaine fiche ouverte.",
   "account.notifications": "Notifications",

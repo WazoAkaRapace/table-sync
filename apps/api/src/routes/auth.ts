@@ -64,6 +64,14 @@ function emailError(raw: string): string | null {
 }
 
 function sanitizeUser(row: any): User {
+  let tutorialTabsDone: string[] = [];
+  try {
+    const raw = JSON.parse(row.tutorial_tabs_done ?? '[]');
+    if (Array.isArray(raw))
+      tutorialTabsDone = raw.filter((id): id is string => typeof id === 'string');
+  } catch {
+    /* JSON illisible : aucun onglet visité */
+  }
   return {
     id: row.id,
     username: row.username,
@@ -71,6 +79,8 @@ function sanitizeUser(row: any): User {
     email: row.email ?? null,
     emailVerifiedAt: row.email_verified_at ?? null,
     pendingEmail: row.pending_email ?? null,
+    tutorialSeenAt: row.tutorial_seen_at ?? null,
+    tutorialTabsDone,
     createdAt: row.created_at,
   };
 }
@@ -236,6 +246,8 @@ export async function authRoutes(app: FastifyInstance) {
         email?: string;
         emailVerifiedAt?: string | null;
         pendingEmail?: string | null;
+        tutorialSeenAt?: string | null;
+        tutorialTabsDone?: string;
       } = {};
       // Post-traitement une fois la ligne mise à jour : adresse à vérifier
       // (changement direct ou en attente), abandon de changement en attente
@@ -306,6 +318,29 @@ export async function authRoutes(app: FastifyInstance) {
         }
       }
 
+      if (body.tutorialSeenAt !== undefined) {
+        if (body.tutorialSeenAt === null) {
+          // Réarmement (« Réinitialiser le tutoriel ») : la visite repart de
+          // zéro sur tous les appareils, onglets inclus.
+          values.tutorialSeenAt = null;
+          values.tutorialTabsDone = '[]';
+        } else {
+          const when = new Date(body.tutorialSeenAt);
+          if (Number.isNaN(when.getTime())) {
+            return reply.code(400).send({ error: apiMsg(req, 'horodatage de tutoriel invalide') });
+          }
+          values.tutorialSeenAt = when.toISOString();
+        }
+      }
+      if (body.tutorialTabsDone !== undefined) {
+        if (!Array.isArray(body.tutorialTabsDone)) {
+          return reply
+            .code(400)
+            .send({ error: apiMsg(req, 'liste d’onglets de tutoriel invalide') });
+        }
+        const ids = [...new Set(body.tutorialTabsDone.filter((id) => typeof id === 'string'))];
+        values.tutorialTabsDone = JSON.stringify(ids);
+      }
       if (Object.keys(values).length === 0) {
         return reply.code(400).send({ error: apiMsg(req, 'aucun champ à mettre à jour') });
       }

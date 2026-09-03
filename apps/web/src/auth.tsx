@@ -2,6 +2,7 @@ import type { User } from '@table-sync/shared';
 import type React from 'react';
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import api from './api';
+import { syncTutorialWithServer } from './tutorial/serverSync';
 
 interface AuthState {
   user: User | null;
@@ -61,6 +62,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .then((res) => {
           setUser(res.data.user);
           localStorage.setItem('dnd-inv-user', JSON.stringify(res.data.user));
+          // Visite guidée : convergence serveur ↔ localStorage AVANT que
+          // loading passe à false — aucune page (donc aucun déclencheur de
+          // visite) ne peut se monter avec un état périmé.
+          syncTutorialWithServer(res.data.user);
         })
         .catch(() => {
           localStorage.removeItem('dnd-inv-token');

@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "df26cde9-4926-4c8a-a502-e4e101c22093",
-  "prevId": "851863e3-38ce-4aa9-ab72-11b616b5ba90",
+  "id": "98da1bbd-8b0f-4dac-b377-466fab344302",
+  "prevId": "34827485-b399-4a11-ad79-9664fcb39ea4",
   "tables": {
     "campaign_countdowns": {
       "name": "campaign_countdowns",
@@ -103,6 +103,13 @@
           "notNull": false,
           "autoincrement": false
         },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "text",
@@ -169,6 +176,13 @@
         },
         "weather": {
           "name": "weather",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "note": {
+          "name": "note",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
@@ -4216,6 +4230,20 @@
         },
         "pending_email": {
           "name": "pending_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "tutorial_seen_at": {
+          "name": "tutorial_seen_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "tutorial_tabs_done": {
+          "name": "tutorial_tabs_done",
           "type": "text",
           "primaryKey": false,
           "notNull": false,

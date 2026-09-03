@@ -148,6 +148,10 @@ export interface User {
    * (vérifiée) reste active jusqu'au clic sur le lien envoyé à celle-ci.
    */
   pendingEmail: string | null;
+  /** Visite guidée déjà vue (côté serveur) — NULL = jamais vue. */
+  tutorialSeenAt: string | null;
+  /** Ids des onglets dont la visite propre a déjà été jouée. */
+  tutorialTabsDone: string[];
   createdAt: string;
 }
 
@@ -176,6 +180,13 @@ export interface LoginPayload {
 export interface UpdateProfilePayload {
   displayName?: string;
   email?: string;
+  /**
+   * Synchronisation de la visite guidée : `tutorialSeenAt: null` réarme la
+   * visite (bouton « Réinitialiser »), une valeur ISO la marque vue ;
+   * `tutorialTabsDone` remplace la liste des onglets visités.
+   */
+  tutorialSeenAt?: string | null;
+  tutorialTabsDone?: string[];
 }
 
 /** POST /api/auth/password */

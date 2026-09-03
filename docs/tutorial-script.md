@@ -203,11 +203,11 @@ Nouvelle section carte entre « Langue » et « Mot de passe » (`apps/web/src/p
 | `account.tutoriel.bouton` | Réinitialiser le tutoriel | Reset tutorial |
 | `account.tutoriel.toast` | Visite guidée réactivée — elle démarre à la prochaine fiche ouverte. | Guided tour re-enabled — it starts next time you open a sheet. |
 
-Le bouton efface `dnd-inv-tour-seen` **et** `dnd-inv-tour-tabs` (localStorage, donc par navigateur) et affiche le toast. À la prochaine ouverture d'une fiche, la chaîne *Bienvenue → Survie* se rejoue — puis chaque onglet retrouve sa visite propre au premier passage.
+Le bouton efface `dnd-inv-tour-seen` **et** `dnd-inv-tour-tabs` (localStorage) **et** réarme le serveur (`PATCH /api/auth/me { tutorialSeenAt: null }`) : le suivi suit le COMPTE, pas le navigateur — la réinitialisation rejoue la visite sur tous les appareils, et réciproquement un compte ayant déjà vu la visite ne la rejoue pas sur un nouvel appareil (convergence serveur → localStorage au chargement de session, cf. `tutorial/serverSync.ts`). Le toast s'affiche. À la prochaine ouverture d'une fiche, la chaîne *Bienvenue → Survie* se rejoue — puis chaque onglet retrouve sa visite propre au premier passage.
 
 ## 17. Déclenchement et enchaînement
 
-- **Première visite** : `dnd-inv-tour-seen` absent ⇒ la chaîne *Bienvenue → Survie* démarre après le chargement de la fiche (≈ 800 ms, comme l'ancienne carte). La fin ou l'abandon (Échap, « Passer ») écrit `'1'` dans le drapeau.
+- **Première visite** : `dnd-inv-tour-seen` absent ⇒ la chaîne *Bienvenue → Survie* démarre après le chargement de la fiche (≈ 800 ms, comme l'ancienne carte). La fin ou l'abandon (Échap, « Passer ») écrit `'1'` dans le drapeau — localement **et côté serveur** (`tutorial_seen_at`), si bien qu'un nouvel appareil du même compte n'aura plus la visite.
 - **Visite propre d'onglet** : le premier passage sur un onglet (changement d'onglet uniquement, jamais au montage) déclenche son script — une fois la visite d'accueil passée. Terminé **ou** passé ⇒ l'onglet est coché dans `dnd-inv-tour-tabs` (JSON array) et ne se redéclenche plus. La Survie est cochée par la chaîne d'accueil ; un « Passer » sur l'accueil ne déclenche pas aussitôt la Survie déjà affichée (déclencheurs limités aux changements d'onglet).
 - **Après réinitialisation** : les deux clés disparaissent — la chaîne d'accueil rejoue, puis chaque onglet retrouve sa visite au premier passage.
 - **Vue MD sur une fiche joueur** : le tutoriel se joue aussi (lecture) ; les textes d'édition restent valides (« ton MD » devient le lecteur).

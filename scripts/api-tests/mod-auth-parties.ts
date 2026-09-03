@@ -122,6 +122,49 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   });
   eq(r.status, 409, 'patch me email taken by another user → 409');
 
+  // ---------- tutoriel : suivi serveur de la visite guidée ----------
+  r = await api(base, 'GET', '/api/auth/me', { token: eve.token });
+  eq(r.data.user.tutorialSeenAt, null, 'me: tutorialSeenAt null par défaut');
+  eq(JSON.stringify(r.data.user.tutorialTabsDone), '[]', 'me: tutorialTabsDone [] par défaut');
+
+  r = await api(base, 'PATCH', '/api/auth/me', {
+    token: eve.token,
+    body: { tutorialSeenAt: '2026-09-03T12:00:00.000Z' },
+  });
+  eq(r.status, 200, 'patch me tutorialSeenAt → 200');
+  eq(r.data.user.tutorialSeenAt, '2026-09-03T12:00:00.000Z', 'patch me returns tutorialSeenAt');
+
+  r = await api(base, 'PATCH', '/api/auth/me', {
+    token: eve.token,
+    body: { tutorialTabsDone: ['survival', 'stats', 'stats', 42] },
+  });
+  eq(r.status, 200, 'patch me tutorialTabsDone → 200');
+  eq(
+    JSON.stringify(r.data.user.tutorialTabsDone),
+    JSON.stringify(['survival', 'stats']),
+    'patch me tutorialTabsDone dédoublonné, non-chaînes écartées',
+  );
+
+  r = await api(base, 'PATCH', '/api/auth/me', {
+    token: eve.token,
+    body: { tutorialSeenAt: null },
+  });
+  eq(r.status, 200, 'patch me tutorialSeenAt null (reset) → 200');
+  eq(r.data.user.tutorialSeenAt, null, 'reset clears tutorialSeenAt');
+  eq(JSON.stringify(r.data.user.tutorialTabsDone), '[]', 'reset clears tutorialTabsDone');
+
+  r = await api(base, 'PATCH', '/api/auth/me', {
+    token: eve.token,
+    body: { tutorialSeenAt: 'pas-une-date' },
+  });
+  eq(r.status, 400, 'patch me invalid tutorialSeenAt → 400');
+
+  r = await api(base, 'PATCH', '/api/auth/me', {
+    token: eve.token,
+    body: { tutorialTabsDone: 'survival' },
+  });
+  eq(r.status, 400, 'patch me non-array tutorialTabsDone → 400');
+
   r = await api(base, 'PATCH', '/api/auth/me', { token: eve.token, body: { email: '' } });
   eq(r.status, 400, 'patch me clear email → 400 (une adresse posée ne se retire plus)');
   r = await api(base, 'PATCH', '/api/auth/me', { token: eve.token, body: { email: null } });

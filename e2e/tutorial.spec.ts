@@ -1,13 +1,28 @@
 import { expect } from 'playwright/test';
+import { API_BASE } from './env';
 import { openTab, playerTest, seed, sheetUrl } from './fixtures';
 
 /**
  * Visite guidée (docs/tutorial-script.md) : démarrage auto au premier
  * chargement, enchaînement Bienvenue → Survie, abandon par « Passer »,
- * drapeau localStorage, et rejeu via « Mon compte → Réinitialiser le
- * tutoriel ». La fixture pré-positionne le drapeau ; chaque test le retire
- * après coup (les init scripts s'exécutent dans l'ordre d'enregistrement).
+ * drapeau partagé serveur + localStorage, et rejeu via « Mon compte →
+ * Réinitialiser le tutoriel ». La fixture pré-positionne le drapeau LOCAL ;
+ * depuis la synchro serveur, chaque test qui retire ce drapeau doit AUSSI
+ * réarmer le serveur (PATCH tutorialSeenAt: null) — sinon la convergence
+ * le repose au chargement suivant (les init scripts s'exécutent dans
+ * l'ordre d'enregistrement).
  */
+
+/** Réarme l'état visite guidée côté serveur pour la joueuse seedée. */
+async function resetServerTutorial(): Promise<void> {
+  const s = seed();
+  const res = await fetch(`${API_BASE}/api/auth/me`, {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json', authorization: `Bearer ${s.player.token}` },
+    body: JSON.stringify({ tutorialSeenAt: null }),
+  });
+  if (!res.ok) throw new Error(`reset tutoriel serveur : ${res.status} ${await res.text()}`);
+}
 
 /** Avance jusqu'au « Terminer » — tolère les étapes sautées (cible absente,
  *  ex. ressources de classe sur un guerrier sans traits : joyride avance
@@ -27,6 +42,7 @@ async function advanceToFinish(page: import('playwright/test').Page) {
 
 playerTest.describe('visite guidée', () => {
   playerTest('démarre sur une fiche vierge de drapeau et avance', async ({ page }) => {
+    await resetServerTutorial();
     await page.addInitScript(() => localStorage.removeItem('dnd-inv-tour-seen'));
     await page.goto(sheetUrl(seed().guerrier.id));
 
@@ -50,8 +66,9 @@ playerTest.describe('visite guidée', () => {
   });
 
   playerTest(
-    "la chaîne Bienvenue → Survie change d'onglet et pose le drapeau",
+    "la chaîne Bienvenue → Survie change d'onglet et pose le drapeau (serveur inclus)",
     async ({ page }) => {
+      await resetServerTutorial();
       await page.addInitScript(() => localStorage.removeItem('dnd-inv-tour-seen'));
       await page.goto(sheetUrl(seed().guerrier.id));
 
@@ -74,6 +91,7 @@ playerTest.describe('visite guidée', () => {
   );
 
   playerTest('« Passer » arrête la visite sans enchaîner et pose le drapeau', async ({ page }) => {
+    await resetServerTutorial();
     await page.addInitScript(() => localStorage.removeItem('dnd-inv-tour-seen'));
     await page.goto(sheetUrl(seed().guerrier.id));
 
@@ -111,7 +129,32 @@ playerTest.describe('visite guidée', () => {
     },
   );
 
+  // Le CŒUR du stockage serveur : un compte ayant déjà vu la visite ne la
+  // rejoue pas sur un navigateur vierge (nouvel appareil) — le drapeau
+  // serveur l'emporte sur l'absence de drapeau local.
+  playerTest('vu côté serveur : pas de visite sur un navigateur vierge', async ({ page }) => {
+    const s = seed();
+    const mark = await fetch(`${API_BASE}/api/auth/me`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${s.player.token}` },
+      body: JSON.stringify({ tutorialSeenAt: new Date().toISOString() }),
+    });
+    if (!mark.ok) throw new Error(`marquage serveur : ${mark.status}`);
+
+    // Navigateur vierge : la fixture pose le drapeau local, on le retire
+    // (script enregistré après le sien → il gagne).
+    await page.addInitScript(() => {
+      localStorage.removeItem('dnd-inv-tour-seen');
+      localStorage.removeItem('dnd-inv-tour-tabs');
+    });
+    await page.goto(sheetUrl(s.guerrier.id));
+    await expect(page.getByRole('heading', { name: '❤️ Vitalité' })).toBeVisible();
+    await page.waitForTimeout(1500);
+    await expect(page.getByRole('alertdialog')).toHaveCount(0);
+  });
+
   playerTest('locale EN — la visite parle anglais', async ({ page }) => {
+    await resetServerTutorial();
     await page.addInitScript(() => {
       localStorage.setItem('dnd-inv-lang', 'en');
       localStorage.removeItem('dnd-inv-tour-seen');
@@ -126,6 +169,9 @@ playerTest.describe('visite guidée', () => {
   // Visites propres d'onglet : premier passage = sa visite, une seule fois.
   playerTest('le premier passage sur un onglet déclenche sa visite propre', async ({ page }) => {
     // La fixture marque tout comme vu ; on ne réarme que l'inventaire.
+    // (reset serveur aussi : la convergence fusionnerait les onglets du
+    //  serveur dans le local, réarmant l'inventaire par la même occasion.)
+    await resetServerTutorial();
     await page.addInitScript(() =>
       localStorage.setItem(
         'dnd-inv-tour-tabs',
@@ -167,6 +213,7 @@ playerTest.describe('visite guidée', () => {
     playerTest.use({ viewport: { width: 1280, height: 800 } });
 
     playerTest("la visite cible la barre d'onglets haute", async ({ page }) => {
+      await resetServerTutorial();
       await page.addInitScript(() => localStorage.removeItem('dnd-inv-tour-seen'));
       await page.goto(sheetUrl(seed().guerrier.id));
 

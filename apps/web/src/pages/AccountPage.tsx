@@ -16,7 +16,7 @@ import {
   pushSupported,
   resubscribePush,
 } from '../push';
-import { TUTORIAL_SEEN_KEY, TUTORIAL_TABS_DONE_KEY } from '../tutorial/TutorialHost';
+import { resetTutorial } from '../tutorial/serverSync';
 import { formatSince } from '../utils';
 
 /**
@@ -414,7 +414,7 @@ export default function AccountPage() {
         <p className="text-xs text-ink-400 mt-4">{t('account.notifications.appareil.note')}</p>
       </section>
 
-      {/* ---------- Tutoriel — rejeu de la visite guidée (par navigateur) ---------- */}
+      {/* ---------- Tutoriel — rejeu de la visite guidée (suivi au compte) ---------- */}
       <section className="card p-5 sm:p-6" aria-labelledby="account-tutorial-title">
         <h2 id="account-tutorial-title" className="section-title mb-4">
           {t('account.tutoriel')}
@@ -423,12 +423,7 @@ export default function AccountPage() {
         <button
           type="button"
           onClick={() => {
-            try {
-              localStorage.removeItem(TUTORIAL_SEEN_KEY);
-              localStorage.removeItem(TUTORIAL_TABS_DONE_KEY);
-            } catch {
-              /* localStorage bloqué — le bouton reste sans effet visible */
-            }
+            resetTutorial();
             pushToast(t('account.tutoriel.toast'));
           }}
           className="btn-secondary"

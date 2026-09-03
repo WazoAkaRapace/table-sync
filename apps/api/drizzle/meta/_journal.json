@@ -155,6 +155,13 @@
       "when": 1788444243378,
       "tag": "0021_pink_captain_stacy",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "6",
+      "when": 1788459375642,
+      "tag": "0022_fine_zarek",
+      "breakpoints": true
     }
   ]
 }

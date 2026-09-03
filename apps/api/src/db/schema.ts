@@ -49,6 +49,13 @@ export const users = sqliteTable('users', {
   // Changement en attente : l'adresse vérifiée reste active jusqu'à ce que
   // la nouvelle prouve la boîte via son propre lien (unique, NULL multiples ok).
   pendingEmail: text('pending_email').unique('users_pending_email_unique'),
+  // Visite guidée vue (serveur) : NULL = jamais vue. Horodatage plutôt que
+  // booléen pour dater l'adoption et faciliter le diagnostic. Synchronisé
+  // depuis le localStorage historique au premier chargement post-migration.
+  tutorialSeenAt: text('tutorial_seen_at'),
+  // Onglets dont la visite propre a déjà été jouée — JSON array d'ids
+  // (['survival', 'stats', …]). NULL = aucun (nouveau compte ou reset).
+  tutorialTabsDone: text('tutorial_tabs_done'),
   createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
 });
 

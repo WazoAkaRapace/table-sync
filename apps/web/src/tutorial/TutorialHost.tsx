@@ -19,6 +19,7 @@ import {
   type TutorialScriptId,
   type TutorialTab,
 } from './scripts';
+import { markTutorialSeen, markTutorialTabDone } from './serverSync';
 import { TutorialTooltip } from './TutorialTooltip';
 
 function useViewport(): 'mobile' | 'desktop' {
@@ -125,23 +126,14 @@ export const TUTORIAL_SEEN_KEY = 'dnd-inv-tour-seen';
 /** Onglets dont la visite propre a déjà été jouée (JSON array d'ids). */
 export const TUTORIAL_TABS_DONE_KEY = 'dnd-inv-tour-tabs';
 
-function readDoneTabs(): string[] {
+/** Lecture locale (convergée avec le serveur au chargement de session). */
+export function readDoneTabs(): string[] {
   try {
     const raw = localStorage.getItem(TUTORIAL_TABS_DONE_KEY);
-    return raw ? (JSON.parse(raw) as string[]) : [];
+    const parsed = raw ? (JSON.parse(raw) as unknown) : [];
+    return Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === 'string') : [];
   } catch {
     return [];
-  }
-}
-
-function markTabDone(id: string): void {
-  try {
-    const done = readDoneTabs();
-    if (!done.includes(id)) {
-      localStorage.setItem(TUTORIAL_TABS_DONE_KEY, JSON.stringify([...done, id]));
-    }
-  } catch {
-    /* localStorage bloqué — l'onglet rejouera sa visite, dégradation acceptable */
   }
 }
 
@@ -153,6 +145,8 @@ export function TutorialHost({ character, canEdit, activeTab, onNavigateTab }: T
   const ctx = useMemo(() => buildTutorialCtx(character, canEdit), [character, canEdit]);
 
   // Départ : drapeau absent + fiche chargée (le character arrive avec la query).
+  // Le drapeau est convergé avec le serveur par AuthProvider AVANT le premier
+  // rendu de page (gate loading) — ici, localStorage reflète déjà le compte.
   useEffect(() => {
     if (startedRef.current || !character) return;
     let seen = true;
@@ -194,12 +188,8 @@ export function TutorialHost({ character, canEdit, activeTab, onNavigateTab }: T
   }, [character, scriptId, activeTab]);
 
   const handleEnd = useCallback((ended: TutorialScriptId, completed: boolean) => {
-    try {
-      localStorage.setItem(TUTORIAL_SEEN_KEY, '1');
-    } catch {
-      /* localStorage bloqué — la visite rejouera, dégradation acceptable */
-    }
-    if (ended !== 'shell') markTabDone(ended);
+    markTutorialSeen();
+    if (ended !== 'shell') markTutorialTabDone(ended);
     const chain = TUTORIAL_SCRIPTS[ended].chain;
     // Seul un script terminé enchaîne ; « Passer » arrête la visite entière.
     setScriptId(completed && chain ? chain : null);

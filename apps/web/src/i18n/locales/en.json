@@ -1769,7 +1769,7 @@
   "tuto.messages.partout.titre": "Anywhere, even outside the sheet",
   "tuto.messages.partout.texte": "An incoming message drops a banner wherever you are, a badge counts the unread — and if the app is closed, a notification fires.",
   "account.tutoriel": "Tutorial",
-  "account.tutoriel.aide": "The guided tour walks you through the sheet: status band, tabs, survival, spells, inventory…",
+  "account.tutoriel.aide": "The guided tour walks you through the sheet: status band, tabs, survival, spells, inventory… It follows your account: once seen on one device, it doesn't replay on the others.",
   "account.tutoriel.bouton": "Reset tutorial",
   "account.tutoriel.toast": "Guided tour re-enabled — it starts next time you open a sheet.",
   "account.notifications": "Notifications",
