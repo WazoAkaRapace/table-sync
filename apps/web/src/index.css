@@ -100,7 +100,7 @@ a:focus-visible,
    seuls vers l'emoji. Noto Emoji (monochrome) en dernier filet : Linux sans
    police couleur garde un glyphe lisible. */
 .emoji-glyph {
-  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Noto Emoji', sans-serif;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Noto Emoji", sans-serif;
 }
 
 /* Hide number input spinners */
