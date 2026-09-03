@@ -34,7 +34,7 @@
     "i18n:ratchet": "tsx scripts/i18n/check-ui-strings.ts"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.10",
+    "@biomejs/biome": "^2.5.11",
     "concurrently": "^10.0.5",
     "drizzle-orm": "^0.45.2",
     "playwright": "^1.62.1",
