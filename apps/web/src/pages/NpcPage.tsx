@@ -314,6 +314,7 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
         }}
         partyId={partyId!}
         npc={editing}
+        isGM={isGM}
         onSaved={handleSaved}
         onError={(msg) => flash('error', msg)}
       />
@@ -432,7 +433,7 @@ function NpcCard({
         <p className="text-sm text-ink-700 whitespace-pre-line">{npc.description}</p>
       )}
 
-      {/* Secret (only visible if API returned it — i.e. creator or GM) */}
+      {/* Secret (only visible if the API returned it — GM only) */}
       {hasSecret && (
         <div className="mt-1 border-t border-parchment-200 pt-2">
           <button
@@ -494,11 +495,13 @@ interface NpcFormModalProps {
   onClose: () => void;
   partyId: string;
   npc: Npc | null;
+  /** Le secret est le champ du MD — jamais montré ni envoyé par un joueur. */
+  isGM: boolean;
   onSaved: () => void | Promise<void>;
   onError: (msg: string) => void;
 }
 
-function NpcFormModal({ open, onClose, partyId, npc, onSaved, onError }: NpcFormModalProps) {
+function NpcFormModal({ open, onClose, partyId, npc, isGM, onSaved, onError }: NpcFormModalProps) {
   const { t } = useTranslation();
   const isEdit = npc !== null;
 
@@ -555,9 +558,9 @@ function NpcFormModal({ open, onClose, partyId, npc, onSaved, onError }: NpcForm
           disposition,
           status,
           description: description.trim() || null,
-          secret: secret.trim() || null,
           isShared,
         };
+        if (isGM) payload.secret = secret.trim() || null;
         await api.patch(`/api/npcs/${npc.id}`, payload);
       } else {
         const payload: CreateNpcPayload = {
@@ -568,9 +571,9 @@ function NpcFormModal({ open, onClose, partyId, npc, onSaved, onError }: NpcForm
           disposition,
           status,
           description: description.trim() || undefined,
-          secret: secret.trim() || undefined,
           isShared,
         };
+        if (isGM) payload.secret = secret.trim() || undefined;
         await api.post(`/api/parties/${partyId}/npcs`, payload);
       }
       await onSaved();
@@ -693,22 +696,24 @@ function NpcFormModal({ open, onClose, partyId, npc, onSaved, onError }: NpcForm
           />
         </div>
 
-        <div>
-          <label className="label" htmlFor="npc-secret">
-            {t('pnj.secret')}
-          </label>
-          <textarea
-            id="npc-secret"
-            className="input"
-            rows={2}
-            value={secret}
-            onChange={(e) => setSecret(e.target.value)}
-            placeholder={t('pnj.informes.cachees.visibles.par.le.createur')}
-          />
-          <span className="text-xs text-ink-400 mt-1 block">
-            {t('pnj.le.secret.n.est.jamais.partage')}
-          </span>
-        </div>
+        {isGM && (
+          <div>
+            <label className="label" htmlFor="npc-secret">
+              {t('pnj.secret')}
+            </label>
+            <textarea
+              id="npc-secret"
+              className="input"
+              rows={2}
+              value={secret}
+              onChange={(e) => setSecret(e.target.value)}
+              placeholder={t('pnj.informes.cachees.visibles.par.le.createur')}
+            />
+            <span className="text-xs text-ink-400 mt-1 block">
+              {t('pnj.le.secret.n.est.jamais.partage')}
+            </span>
+          </div>
+        )}
 
         <label className="flex items-center gap-2 cursor-pointer select-none">
           <input

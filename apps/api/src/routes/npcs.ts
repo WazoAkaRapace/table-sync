@@ -1,7 +1,9 @@
 /**
  * NPC routes: CRUD with party-level sharing + private visibility.
  * Any party member can create NPCs. Creator chooses shared/private.
- * Secrets are visible only to creator + GM.
+ * Secrets belong to the GM ALONE: only a GM reads or writes the field —
+ * not even the player who created the NPC (the GM may add a secret to a
+ * player's NPC later; it must stay invisible to them).
  */
 
 import type { CreateNpcPayload, PatchNpcPayload } from '@table-sync/shared';
@@ -90,11 +92,7 @@ export async function npcRoutes(app: FastifyInstance) {
         .orderBy(npcs.sortOrder, sql`${npcs.name} COLLATE NOCASE ASC`)
         .all();
 
-      const npcsOut = rows.map((r: any) => {
-        // Secret visible to creator + GM
-        const canSeeSecret = gm || r.created_by === userId;
-        return mapNpc(r, canSeeSecret);
-      });
+      const npcsOut = rows.map((r: any) => mapNpc(r, gm));
 
       return reply.send({ npcs: npcsOut });
     },
@@ -112,6 +110,7 @@ export async function npcRoutes(app: FastifyInstance) {
       const partyId = Number(req.params.partyId);
       if (!isPartyMember(partyId, userId))
         return reply.code(403).send({ error: apiMsg(req, 'not a member') });
+      const gm = isPartyGM(partyId, userId);
 
       const body = req.body || ({} as CreateNpcPayload);
       if (!body.name?.trim())
@@ -139,7 +138,8 @@ export async function npcRoutes(app: FastifyInstance) {
           disposition: body.disposition || 'neutral',
           status: body.status || 'alive',
           description: body.description || null,
-          secret: body.secret || null,
+          // A player's POST never carries a secret — GM-only field
+          secret: gm ? body.secret || null : null,
           isShared: body.isShared === false ? 0 : 1,
           sortOrder: maxOrder + 1,
         })
@@ -150,7 +150,7 @@ export async function npcRoutes(app: FastifyInstance) {
 
       bus.emitChange({ type: 'party:change', partyId, action: 'custom-item', actorUserId: userId });
 
-      return reply.code(201).send({ npc: mapNpc(row, true) });
+      return reply.code(201).send({ npc: mapNpc(row, gm) });
     },
   );
 
@@ -186,12 +186,15 @@ export async function npcRoutes(app: FastifyInstance) {
         ['disposition', 'disposition'],
         ['status', 'status'],
         ['description', 'description'],
-        ['secret', 'secret'],
+        // 'secret' is deliberately absent here: only a GM PATCH may touch it
       ];
       for (const [key, column] of editable) {
         const val = (body as Record<string, unknown>)[key];
         if (val === undefined) continue;
         values[column] = val;
+      }
+      if (gm && body.secret !== undefined) {
+        values.secret = body.secret;
       }
       if (body.isShared !== undefined) {
         values.isShared = body.isShared ? 1 : 0;
@@ -211,7 +214,7 @@ export async function npcRoutes(app: FastifyInstance) {
         actorUserId: userId,
       });
 
-      return reply.send({ npc: mapNpc(row, gm || row.created_by === userId) });
+      return reply.send({ npc: mapNpc(row, gm) });
     },
   );
 

@@ -33,7 +33,7 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   eq(r.status, 201, 'create shared npc');
   const sharedNpc = r.data.npc;
   eq(sharedNpc.isShared, true, 'shared by default');
-  eq(sharedNpc.secret, 'Espionne les héros', 'creator sees the secret');
+  eq(sharedNpc.secret, null, "a player's POST never stores a secret");
 
   r = await api(base, 'POST', `/api/parties/${P}/npcs`, {
     token: fx.player.token,
@@ -42,17 +42,46 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   const privateNpc = r.data.npc;
   eq(privateNpc.isShared, false, 'private npc');
 
-  // player sees shared + own private; GM sees all; secrets gated to creator+GM
+  // The GM writes the secret afterwards — the creator must never see it again
+  r = await api(base, 'PATCH', `/api/npcs/${sharedNpc.id}`, {
+    token: fx.gm.token,
+    body: { secret: 'Espionne les héros' },
+  });
+  eq(r.status, 200, 'GM sets the secret');
+  eq(r.data.npc.secret, 'Espionne les héros', 'GM sees the secret');
+
+  // player sees shared + own private; GM sees all; secrets gated to the GM ALONE
   r = await api(base, 'GET', `/api/parties/${P}/npcs`, { token: fx.gm.token });
   eq(r.data.npcs.length, 2, 'GM sees all npcs');
-  ok(r.data.npcs.find((n: any) => n.id === sharedNpc.id).secret, 'GM sees the secret');
-  r = await api(base, 'GET', `/api/parties/${P}/npcs`, { token: fx.gm.token }); // also exercises gm branch of the same query
+  eq(
+    r.data.npcs.find((n: any) => n.id === sharedNpc.id).secret,
+    'Espionne les héros',
+    'GM sees the secret',
+  );
   r = await api(base, 'GET', `/api/parties/${P}/npcs`, { token: fx.player.token });
   eq(r.data.npcs.length, 2, 'player sees shared + own private');
-  ok(
-    !r.data.npcs.find((n: any) => n.id === sharedNpc.id).secret !== undefined,
-    'secret field present',
+  eq(
+    r.data.npcs.find((n: any) => n.id === sharedNpc.id).secret,
+    null,
+    'the creator never sees the secret',
   );
+  eq(r.data.npcs[0].secret, null, 'secret field present (null) for players');
+
+  // A player PATCH carrying a secret is ignored on that field, others apply
+  r = await api(base, 'PATCH', `/api/npcs/${sharedNpc.id}`, {
+    token: fx.player.token,
+    body: { role: 'Guide royal', secret: 'tentative d’écriture' },
+  });
+  eq(r.status, 200, 'creator patches non-secret fields');
+  eq(r.data.npc.secret, null, 'player PATCH response carries no secret');
+  eq(r.data.npc.role, 'Guide royal', 'other fields applied');
+  r = await api(base, 'GET', `/api/parties/${P}/npcs`, { token: fx.gm.token });
+  eq(
+    r.data.npcs.find((n: any) => n.id === sharedNpc.id).secret,
+    'Espionne les héros',
+    "player's secret write ignored",
+  );
+
   // another member (player2 is not a member anymore → rejoin for this check)
   await api(base, 'POST', '/api/parties/join', {
     token: fx.player2.token,
