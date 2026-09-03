@@ -14,6 +14,7 @@ import {
   computeAC,
   computeEncumbrance,
   computeSpeed,
+  type EncumbranceState,
   fightingStylesOf,
   findClass,
   formatModifier,
@@ -36,6 +37,8 @@ interface Props {
   character: Character;
   charId: number;
   entries: InventoryEntry[];
+  /** État de portage (barre de sac) — paliers appliqués à la vitesse. */
+  encumbrance: EncumbranceState;
   onSaved: () => Promise<void>;
   onError: (msg: string) => void;
 }
@@ -50,7 +53,14 @@ const ABILITY_FIELDS: { key: keyof Character; ability: AbilityKey }[] = [
   { key: 'charisma', ability: 'charisma' },
 ];
 
-export default function CharacterStatsTab({ character, charId, entries, onSaved, onError }: Props) {
+export default function CharacterStatsTab({
+  character,
+  charId,
+  entries,
+  encumbrance,
+  onSaved,
+  onError,
+}: Props) {
   const { t } = useTranslation();
   // Langue des chaînes calculées par le moteur (sources CA/vitesse, libellés
   // de défense sans armure) — relue à chaque rendu, le changement de langue
@@ -116,7 +126,7 @@ export default function CharacterStatsTab({ character, charId, entries, onSaved,
   };
 
   // Armor-dependent class speed features (Moine / Barbare)
-  const speedResult = computeSpeed(character, entries, lang);
+  const speedResult = computeSpeed(character, entries, lang, encumbrance);
 
   // Derived stats
   const level = character.level ?? 1;

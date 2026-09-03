@@ -1201,6 +1201,7 @@ export default function CharacterInventoryPage() {
             character={character}
             charId={Number(charId)}
             entries={entries}
+            encumbrance={encumbrance}
             onSaved={refreshInventory}
             onError={(msg) => pushToast(msg, 'error')}
           />

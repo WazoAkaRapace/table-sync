@@ -3284,6 +3284,10 @@ export interface SpeedResult {
  * Effective speed with SRD armor-dependent class features:
  *  - Moine, Déplacement sans armure: +bonus while wearing no armor and no shield
  *  - Barbare, Déplacement rapide (level 5+): +3 m unless wearing heavy armor
+ *  - Surcharge (variante PHB p.176, déjà suivie par la barre de portage) :
+ *    encombré −3 m, lourdement encombré −6 m, au-delà du maximum immobilisé
+ *    (0 m) — passe l'état renvoyé par computeEncumbrance ; sans lui (contexte
+ *    sans inventaire, p. ex. création), aucun malus.
  * lang: langue des libellés `sources` ('fr' par défaut — identique octet par octet).
  */
 export function computeSpeed(
@@ -3300,6 +3304,7 @@ export function computeSpeed(
     equipped: boolean;
   }>,
   lang: AppLang = 'fr',
+  encumbrance?: { tier: EncumbranceState['tier'] },
 ): SpeedResult {
   const base = character.speed ?? 9;
 
@@ -3372,6 +3377,24 @@ export function computeSpeed(
       pickLang(lang, 'Armure lourde −3 m (FOR insuffisante)', 'Heavy armor −3 m (low STR)'),
     );
   }
+
+  // Surcharge (variante PHB p.176) : la barre de portage suit déjà ces paliers
+  // et le badge en annonce les effets — la vitesse les applique.
+  if (encumbrance) {
+    if (encumbrance.tier === 'encumbered') {
+      speed -= 3;
+      sources.push(pickLang(lang, 'Encombré −3 m', 'Encumbered −3 m'));
+    } else if (encumbrance.tier === 'heavilyEncumbered') {
+      speed -= 6;
+      sources.push(pickLang(lang, 'Lourdement encombré −6 m', 'Heavily encumbered −6 m'));
+    } else if (encumbrance.tier === 'overburdened') {
+      speed = 0;
+      sources.push(pickLang(lang, '⛔ Surcharge — immobilisé', '⛔ Overloaded — immobilized'));
+    }
+  }
+
+  // Les malus ne rendent jamais la vitesse négative.
+  if (speed < 0) speed = 0;
 
   return { speed, bonus: speed - base, sources };
 }

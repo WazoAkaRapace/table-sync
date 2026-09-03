@@ -607,5 +607,67 @@ const frHide = {
 const hideAc = computeAC([{ item: frHide as any, equipped: true }], 4);
 check('Mono-locale FR + clé → Peau = medium (DEX 4 plafonné)', hideAc.ac, 14);
 
+// --- Surcharge (variante PHB p.176) : paliers appliqués à la vitesse ---
+check(
+  'Sans état de portage → aucun malus (rétrocompatible)',
+  computeSpeed({ characterClass: 'Guerrier', level: 5, speed: 9 }, []),
+  { speed: 9, bonus: 0, sources: [] },
+);
+check(
+  'Encombré → −3 m (9 → 6)',
+  computeSpeed({ characterClass: 'Guerrier', level: 5, speed: 9 }, [], 'fr', {
+    tier: 'encumbered',
+  }),
+  { speed: 6, bonus: -3, sources: ['Encombré −3 m'] },
+);
+check(
+  'Lourdement encombré → −6 m (9 → 3)',
+  computeSpeed({ characterClass: 'Guerrier', level: 5, speed: 9 }, [], 'fr', {
+    tier: 'heavilyEncumbered',
+  }),
+  { speed: 3, bonus: -6, sources: ['Lourdement encombré −6 m'] },
+);
+check(
+  'Surcharge maximale → immobilisé (0 m)',
+  computeSpeed({ characterClass: 'Guerrier', level: 5, speed: 9 }, [], 'fr', {
+    tier: 'overburdened',
+  }),
+  { speed: 0, bonus: -9, sources: ['⛔ Surcharge — immobilisé'] },
+);
+check(
+  'Paliers se cumulent avec les bonus de classe (Moine 6 : 9+4.5−3 = 10.5, encombré)',
+  computeSpeed({ characterClass: 'Moine', level: 6, speed: 9 }, [], 'fr', { tier: 'encumbered' }),
+  {
+    speed: 10.5,
+    bonus: 1.5,
+    sources: ['Déplacement sans armure +4.5 m', 'Encombré −3 m'],
+  },
+);
+check(
+  'Non encombré → malus nul explicite',
+  computeSpeed({ characterClass: 'Guerrier', level: 5, speed: 9 }, [], 'fr', {
+    tier: 'unencumbered',
+  }),
+  { speed: 9, bonus: 0, sources: [] },
+);
+check(
+  'Immobilisé + armure lourde FOR insuffisante → toujours 0 (jamais négatif)',
+  computeSpeed(
+    { characterClass: 'Guerrier', level: 5, speed: 3, strength: 8 },
+    [entry(mkArmor({ name: 'Plate', nameFr: 'Harnois', acBase: 18, strMin: 15, description: '' }))]
+      ,
+    'fr',
+    { tier: 'overburdened' },
+  ),
+  { speed: 0, bonus: -3, sources: ['Armure lourde −3 m (FOR insuffisante)', '⛔ Surcharge — immobilisé'] },
+);
+check(
+  'Paliers EN — libellés anglais',
+  computeSpeed({ characterClass: 'Guerrier', level: 5, speed: 9 }, [], 'en', {
+    tier: 'heavilyEncumbered',
+  }),
+  { speed: 3, bonus: -6, sources: ['Heavily encumbered −6 m'] },
+);
+
 console.log(failures === 0 ? '\n✅ All armor stats checks pass' : `\n❌ ${failures} failure(s)`);
 process.exit(failures === 0 ? 0 : 1);
