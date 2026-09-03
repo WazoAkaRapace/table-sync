@@ -39,7 +39,7 @@
     "concurrently": "^10.0.5",
     "drizzle-orm": "^0.45.2",
     "playwright": "^1.62.1",
-    "tsx": "^4.19.2",
+    "tsx": "^4.23.13",
     "typescript": "^7.0.2"
   },
   "engines": {
