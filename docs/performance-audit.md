@@ -1,15 +1,18 @@
 # Audit performance & connectivité — vieille tablette, lien lent (2026-09)
 
 > **État d'implémentation (branche `perf/connectivity-optimizations`, 2026-09-04) :**
-> tout l'audit est implémenté SAUF le heartbeat WebSocket (§P2-11 — décision
-> « no heartbeat » documentée + verrouillée par les asserts de
-> `mod-sync-stress.ts`, à rediscuter séparément). Les gains mesurés :
+> tout l'audit est implémenté, Y COMPRIS le heartbeat WebSocket (§P2-11,
+> décidé après re-discussion : balayage serveur au ping protocole
+> `WS_HEARTBEAT_MS` + sonde applicative client tolérante à la latence —
+> voir `apps/api/src/sync/ws.ts` et `apps/web/src/sync.tsx` ; la suite
+> test-api tourne à `WS_HEARTBEAT_MS=0` et `mod-heartbeat.ts` épingle le
+> chemin sur une instance dédiée). Les gains mesurés :
 > coquille de login ~994 KB brut → ~132 KB gzippés (compression + régimes
 > i18n/catalogues), 304 sans corps sur les catalogues SRD, inventaire en
 > résumé (~80 % de prose en moins), recherche monstres sans UDF par ligne,
 > resync globale à la reconnexion WS (spec e2e `offline-resync.spec.ts`),
 > et le recalcul local des poids après mutation (moteur partagé
-> `computeInventoryWeights`). Suites : lint ✓, 5 règles ✓, test-api ✓ (18
+> `computeInventoryWeights`). Suites : lint ✓, 5 règles ✓, test-api ✓ (20
 > modules + asserts ETag/résumé), e2e 82/82 ✓.
 
 **Objectif :** la table joue sur une vieille tablette avec un réseau instable et à forte latence.

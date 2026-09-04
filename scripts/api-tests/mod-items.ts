@@ -26,7 +26,10 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   const etag = r.headers?.get('etag');
   ok(!!etag, 'items list carries an ETag');
   if (etag) {
-    r = await api(base, 'GET', '/api/items', { token: fx.gm.token, headers: { 'If-None-Match': etag } });
+    r = await api(base, 'GET', '/api/items', {
+      token: fx.gm.token,
+      headers: { 'If-None-Match': etag },
+    });
     eq(r.status, 304, 'items list revalidates to 304');
   }
   if (withProse[0]) {

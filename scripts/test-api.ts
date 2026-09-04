@@ -23,6 +23,7 @@ import { run as combat } from './api-tests/mod-combat.ts';
 import { run as email } from './api-tests/mod-email.ts';
 import { run as featuresNotes } from './api-tests/mod-features-notes.ts';
 import { run as gma } from './api-tests/mod-gma.ts';
+import { run as heartbeat } from './api-tests/mod-heartbeat.ts';
 import { run as inventory } from './api-tests/mod-inventory.ts';
 import { run as itemAnnotations } from './api-tests/mod-item-annotations.ts';
 import { run as itemImages } from './api-tests/mod-item-images.ts';
@@ -32,6 +33,7 @@ import { run as multiclass } from './api-tests/mod-multiclass.ts';
 import { run as npcsMonsters } from './api-tests/mod-npcs-monsters.ts';
 import { run as push } from './api-tests/mod-push.ts';
 import { run as spells } from './api-tests/mod-spells.ts';
+import { run as syncStress } from './api-tests/mod-sync-stress.ts';
 import { run as syncWs } from './api-tests/mod-sync-ws.ts';
 import { run as wildshapeRest } from './api-tests/mod-wildshape-rest.ts';
 
@@ -55,13 +57,18 @@ const MODULES: Array<{
   { name: 'multiclassage', run: multiclass },
   { name: 'wild shape + rests', run: wildshapeRest },
   { name: 'websocket sync', run: syncWs },
+  { name: 'stress websocket', run: syncStress },
+  { name: 'heartbeat websocket', run: heartbeat },
   { name: 'push notifications', run: push },
   { name: 'emails transactionnels', run: email },
 ];
 
 async function main(): Promise<void> {
   console.log('[test-api] booting throwaway API server…');
-  const srv = await startServer();
+  // WS_HEARTBEAT_MS=0 : les modules websocket sync/stress exigent un canal
+  // totalement muet au repos (zéro trame ping/pong) — le heartbeat est épinglé
+  // par mod-heartbeat.ts sur SA PROPRE instance à balayage rapide.
+  const srv = await startServer({ extraEnv: { WS_HEARTBEAT_MS: '0' } });
   let exitCode = 0;
   try {
     console.log('[test-api] building fixtures…');

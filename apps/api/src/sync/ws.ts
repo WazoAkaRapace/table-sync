@@ -9,6 +9,22 @@
  *
  * Echo suppression: the actor who triggered the change is NOT sent the
  * event (they already have the optimistic update from their own mutation).
+ *
+ * Heartbeat (2026-09, « vieille tablette ») : le canal ne transporte jamais
+ * de trafic client → serveur après la poignée de main, donc une coupure
+ * silencieuse (Wi-Fi tombé sans FIN, radio suspendue par l'OS) laissait le
+ * socket « OPEN » des deux côtés pendant de longues minutes. Deux couches :
+ *  - balayage serveur : ping PROTOCOLE toutes les WS_HEARTBEAT_MS (défaut
+ *    30 s) — les navigateurs auto-pongent (invisible au JS de la page), ça
+ *    garde chaud le chemin (NAT/nginx) et débranche (`terminate()`) les
+ *    fantômes après HEARTBEAT_MISSES balayages sans vie ;
+ *  - sonde applicative : la page envoie {type:'ping'} quand son canal est
+ *    calme et attend {type:'pong'} — seule façon pour le JS de détecter un
+ *    lien à demi-ouvert. L'accusé 'connected' annonce `heartbeat:true` pour
+ *    qu'un client récent ne sonde pas (et ne flappe pas) contre un vieux
+ *    serveur. La RÉPONSE pong est envoyée même à WS_HEARTBEAT_MS=0 : le
+ *    test-api boote la suite à 0 (modules sync/stress déterministes — zéro
+ *    trame), et mod-heartbeat.ts boote sa propre instance à 300 ms.
  */
 
 import type { WebSocket } from '@fastify/websocket';
@@ -22,6 +38,21 @@ interface ClientInfo {
   userId: number;
   ws: WebSocket;
   partyIds: Set<number>; // cached at connection time
+  /** Sweep liveness: any pong or inbound frame marks it back alive. */
+  isAlive: boolean;
+  /** Consecutive sweeps without any sign of life (cull at HEARTBEAT_MISSES). */
+  missedPings: number;
+}
+
+/** Balayages sans réponse avant débranchement (tolérant à la latence haute). */
+const HEARTBEAT_MISSES = 2;
+
+/** WS_HEARTBEAT_MS : période de balayage en ms. `0` = heartbeat éteint. */
+function heartbeatIntervalMs(): number {
+  const raw = process.env.WS_HEARTBEAT_MS;
+  if (raw === undefined || raw === '') return 30_000;
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
 }
 
 // All connected clients
@@ -38,6 +69,39 @@ function getUserPartyIds(userId: number): Set<number> {
 }
 
 export async function registerWsRoutes(app: FastifyInstance) {
+  // Sweep serveur : ping protocole périodique, terminate() des muets. Une
+  // seule horloge pour tous les clients (pas de timer par socket) ; no-op
+  // quand la table est vide. `terminate()` plutôt que `close()` : un close
+  // enverrait une poignée de main de fermeture… au peer précisément mort.
+  const heartbeatMs = heartbeatIntervalMs();
+  if (heartbeatMs > 0) {
+    const sweep = setInterval(() => {
+      for (const client of clients) {
+        if (client.isAlive) {
+          client.missedPings = 0;
+        } else {
+          client.missedPings++;
+          if (client.missedPings >= HEARTBEAT_MISSES) {
+            clients.delete(client);
+            try {
+              client.ws.terminate();
+            } catch {}
+            continue;
+          }
+        }
+        client.isAlive = false;
+        try {
+          client.ws.ping();
+        } catch {
+          clients.delete(client);
+        }
+      }
+    }, heartbeatMs);
+    app.addHook('onClose', async () => {
+      clearInterval(sweep);
+    });
+  }
+
   // In @fastify/websocket v11, the handler receives (socket, req) — socket IS the WebSocket
   app.get('/ws', { websocket: true }, (socket: WebSocket, req: FastifyRequest) => {
     // Prefer the Sec-WebSocket-Protocol header (keeps tokens out of URLs/proxy logs);
@@ -64,6 +128,8 @@ export async function registerWsRoutes(app: FastifyInstance) {
       userId,
       ws: socket,
       partyIds: getUserPartyIds(userId), // cache once, no per-event DB queries
+      isAlive: true,
+      missedPings: 0,
     };
     clients.add(clientInfo);
 
@@ -71,8 +137,28 @@ export async function registerWsRoutes(app: FastifyInstance) {
       clients.delete(clientInfo);
     });
 
-    // Send a confirmation message
-    socket.send(JSON.stringify({ type: 'connected', userId }));
+    // Auto-pong du navigateur : signe de vie pour le balayage serveur.
+    socket.on('pong', () => {
+      clientInfo.isAlive = true;
+    });
+
+    // Sonde applicative de la page (voir en-tête). Toute trame entrante
+    // compte comme vie ; seule la sonde reçoit une réponse.
+    socket.on('message', (raw: unknown) => {
+      clientInfo.isAlive = true;
+      try {
+        const msg = JSON.parse(String(raw));
+        if (msg && msg.type === 'ping') {
+          socket.send(JSON.stringify({ type: 'pong' }));
+        }
+      } catch {
+        /* trame non-JSON : ignorée */
+      }
+    });
+
+    // Send a confirmation message — `heartbeat` tells recent clients the
+    // server will answer their liveness probes (older clients ignore it).
+    socket.send(JSON.stringify({ type: 'connected', userId, heartbeat: heartbeatMs > 0 }));
   });
 
   // Listen to the event bus and fan out to relevant clients

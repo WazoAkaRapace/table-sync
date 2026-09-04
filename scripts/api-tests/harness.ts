@@ -177,6 +177,8 @@ export interface StartServerOptions {
   withoutVapid?: boolean;
   /** Boot WITHOUT the Mailjet env vars — the email-disabled code path. */
   withoutEmail?: boolean;
+  /** Extra env for this boot (wins over process.env) — e.g. WS_HEARTBEAT_MS. */
+  extraEnv?: Record<string, string>;
 }
 
 export async function startServer(opts: StartServerOptions = {}): Promise<ServerHandle> {
@@ -232,6 +234,7 @@ export async function startServer(opts: StartServerOptions = {}): Promise<Server
             EMAIL_FROM_ADDRESS: 'no-reply@test-table-sync.fr',
             EMAIL_FROM_NAME: 'Table Sync Test',
           }),
+      ...(opts.extraEnv ?? {}),
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
