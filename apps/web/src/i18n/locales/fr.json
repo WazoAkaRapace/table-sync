@@ -684,6 +684,8 @@
   "ajmonstre.recherche": "Recherche…",
   "ajmonstre.retour": "← Retour",
   "app.chargement": "Chargement…",
+  "app.hors.ligne": "Hors ligne — la synchronisation reprendra à la reconnexion",
+  "err.chargement.module": "Le téléchargement d\u2019un module de l\u2019application a échoué (connexion interrompue ?)",
   "app.mise.a.jour.dispo": "Une mise à jour est prête — recharge pour la recevoir.",
   "app.recharger": "Recharger",
   "app.mes.groupes": "Mes groupes",

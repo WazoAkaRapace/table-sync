@@ -4,6 +4,12 @@ import { appLang } from './i18n';
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '',
   headers: { 'Content-Type': 'application/json' },
+  // Une requête ne doit jamais tourner à l'infini : sur une radio black-holeée,
+  // le défaut axios (0 = attendre) laissait des spinners et des lignes
+  // « busy » bloquées jusqu'au timeout TCP de l'OS (des minutes). Les appels
+  // légitimement longs (uploads multipart, refresh externes) passent un
+  // timeout par requête plus généreux.
+  timeout: 15_000,
 });
 
 // Attach JWT token to every request

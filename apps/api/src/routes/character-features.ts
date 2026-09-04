@@ -17,7 +17,7 @@ import type {
   PatchCharacterFeaturePayload,
   ReorderPayload,
 } from '@table-sync/shared';
-import { classFeatureResourceMax, findClassFeature } from '@table-sync/shared';
+import { classFeatureResourceMax, findClassFeature } from '@table-sync/shared/classFeatures';
 import { eq, inArray, sql } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../db/drizzle.ts';

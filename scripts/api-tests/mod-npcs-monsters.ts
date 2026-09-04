@@ -125,6 +125,14 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   r = await api(base, 'GET', `/api/monsters?search=${encodeURIComponent('gobelin')}`, {
     token: fx.gm.token,
   });
+
+  // Colonne search_text précalculée : insensible aux accents, couvre le nom
+  // FR ET le texte de l'overlay EN (l'ancienne forme UDF couvrait pareil).
+  ok(r.data.monsters.length > 0, "monsters search 'gobelin' matches via search_text");
+  r = await api(base, 'GET', `/api/monsters?search=${encodeURIComponent('GOBELIN')}`, {
+    token: fx.gm.token,
+  });
+  ok(r.data.monsters.length > 0, 'monster search is case-insensitive');
   ok(r.data.monsters.length > 0, "accent-insensitive 'gobelin' search");
 
   r = await api(base, 'GET', `/api/monsters?search=${encodeURIComponent('humanoïde')}`, {

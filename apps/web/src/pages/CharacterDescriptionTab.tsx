@@ -11,7 +11,6 @@
 import {
   type Character,
   type CharacterClassEntry,
-  CLASS_SUBCLASSES,
   classesOf,
   FIGHTING_STYLE_CLASSES,
   FIGHTING_STYLE_LABELS_FR,
@@ -22,6 +21,7 @@ import {
   type PatchCharacterPayload,
   raceSpeedMeters,
 } from '@table-sync/shared';
+import { CLASS_SUBCLASSES } from '@table-sync/shared/classFeatures';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../api';

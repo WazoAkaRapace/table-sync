@@ -100,33 +100,6 @@ function channelDivinityUses(level: number): number {
   return 1;
 }
 
-/** Dés d'inspiration bardique : d6, d8@5, d10@10, d12@15. */
-export function bardicInspirationDie(level: number): string {
-  if (level >= 15) return '1d12';
-  if (level >= 10) return '1d10';
-  if (level >= 5) return '1d8';
-  return '1d6';
-}
-
-/** Dés du Chant reposant (Barde) : d6@2, d8@9, d10@13, d12@17. */
-export function songOfRestDie(level: number): string {
-  if (level >= 17) return '1d12';
-  if (level >= 13) return '1d10';
-  if (level >= 9) return '1d8';
-  return '1d6';
-}
-
-/** Manifestations occultes connues (PHB 2014) : 2@2, 3@5, 4@7, 5@9, 6@12, 7@15, 8@18. */
-export function eldritchInvocationsCount(level: number): number {
-  if (level >= 18) return 8;
-  if (level >= 15) return 7;
-  if (level >= 12) return 6;
-  if (level >= 9) return 5;
-  if (level >= 7) return 4;
-  if (level >= 5) return 3;
-  return 2;
-}
-
 // ---------- Capacités de classe (base) ----------
 
 export const CLASS_FEATURES: Record<string, ClassFeatureDef[]> = {

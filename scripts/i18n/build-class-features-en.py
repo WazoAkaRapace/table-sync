@@ -451,12 +451,9 @@ def main():
   with open(OUT, 'w') as f:
     f.write('// GÉNÉRÉ par scripts/i18n/build-class-features-en.py — ne pas éditer à la main.\n')
     f.write('// Source : miroir GitHub de 2014.5e.tools (voir docs/i18n-english-plan.md).\n\n')
-    f.write('export const CLASS_NAMES_EN: Record<string, string> = ')
-    f.write(json.dumps(CLASS_NAMES_EN, ensure_ascii=False, indent=2).replace("'", "'"))
-    f.write(';\n\n')
-    f.write('export const SUBCLASS_SHORTNAMES_EN: Record<string, string> = ')
-    f.write(json.dumps(subclass_labels, ensure_ascii=False, indent=2))
-    f.write(';\n\n')
+    # CLASS_NAMES_EN / SUBCLASS_SHORTNAMES_EN ne sont plus émises ici :
+    # déplacées dans catalogs.en.ts (éditées à la main) pour que index.ts les
+    # réexporte sans entraîner les ~150 KB de descriptions de ce fichier.
     f.write('export const CLASS_FEATURES_EN: Record<string, { name: string; description: string }> = ')
     f.write(json.dumps(out, ensure_ascii=False, indent=2))
     f.write(';\n')

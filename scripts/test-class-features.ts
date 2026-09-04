@@ -4,23 +4,25 @@
  * Run: npm run test-class-features
  */
 import {
-  applyRest,
   type Character,
   type CharacterFeature,
-  CLASS_FEATURES,
-  CLASS_SUBCLASSES,
-  classFeatureResourceMax,
   criticalRange,
   DND_CLASSES,
-  effectiveFeatureReset,
   eldritchInvocationsCount,
-  featuresForCharacter,
-  findClassFeature,
   maxSpellSlots,
-  nextClassFeatureGain,
   renderFeatureTemplate,
   SPELL_SLOTS_PACT,
 } from '@table-sync/shared';
+import {
+  CLASS_FEATURES,
+  CLASS_SUBCLASSES,
+  classFeatureResourceMax,
+  effectiveFeatureReset,
+  featuresForCharacter,
+  findClassFeature,
+  nextClassFeatureGain,
+} from '@table-sync/shared/classFeatures';
+import { applyRest } from '@table-sync/shared/rests';
 
 let failures = 0;
 function check(label: string, actual: unknown, expected: unknown) {

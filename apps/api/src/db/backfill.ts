@@ -5,7 +5,8 @@
 import { resolveItemBases } from '@table-sync/shared';
 import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { getDrizzle } from './drizzle.ts';
-import { items } from './schema.ts';
+import { getDb, normalizeText } from './index.ts';
+import { items, monsters } from './schema.ts';
 
 export function backfillItemBases(): void {
   const db = getDrizzle();
@@ -63,4 +64,37 @@ export function backfillItemBases(): void {
   if (pending.length > 0) {
     console.log(`[backfill] item bases: ${resolved}/${pending.length} unresolved rows keyed`);
   }
+}
+
+/**
+ * Backfill monsters.search_text : texte de recherche normalisé (nom FR +
+ * type + overlay EN brut) précalculé une fois, pour que la route de recherche
+ * fasse un LIKE simple au lieu d'appeler l'UDF normalize() sur trois colonnes
+ * de chacune des 964 lignes. Idempotent — ne touche que les lignes NULL
+ * (le seed n'écrit pas la colonne, le boot la remplit).
+ */
+export function backfillMonsterSearchText(): void {
+  const db = getDrizzle();
+  const pending = db
+    .select({
+      slug: monsters.slug,
+      nameFr: monsters.nameFr,
+      type: monsters.type,
+      overlayEn: monsters.overlayEn,
+    })
+    .from(monsters)
+    .where(isNull(monsters.searchText))
+    .all();
+  if (pending.length === 0) return;
+  // better-sqlite3 : .transaction(fn) RETOURNE une fonction enveloppée —
+  // l'invoquer (pattern « ()(); » des routes, cf. inventory.ts transfer).
+  getDb().transaction(() => {
+    for (const row of pending) {
+      const text = normalizeText(
+        `${row.nameFr ?? ''} ${row.type ?? ''} ${row.overlayEn ?? ''}`.replace(/\s+/g, ' ').trim(),
+      );
+      db.update(monsters).set({ searchText: text }).where(eq(monsters.slug, row.slug)).run();
+    }
+  })();
+  console.log(`[backfill] monsters.search_text rempli pour ${pending.length} lignes`);
 }

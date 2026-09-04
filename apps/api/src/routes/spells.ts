@@ -13,6 +13,7 @@ import { getDrizzle } from '../db/drizzle.ts';
 import { cols } from '../db/projections.ts';
 import { spells } from '../db/schema.ts';
 import { mapSpell, requireUser } from './helpers.ts';
+import { sendCachedJson } from './httpCache.ts';
 import { type AppLang, langFromReq, pickLocalized } from './lang.ts';
 import { apiMsg } from './messages.ts';
 
@@ -164,12 +165,20 @@ export async function spellRoutes(app: FastifyInstance) {
       ).n;
 
       const lang = langFromReq(req);
-      return reply.send({
-        spells: rows.map((r: any) => withSpellEnMeta(mapSpell(r, lang), lang)),
-        total,
-        limit: lim,
-        offset: off,
-      });
+      // Résumés sans prose (la fiche de sort charge GET /spells/:id à
+      // l'ouverture) + négociation ETag : catalogue SRD seed-only, la
+      // fenêtre max-age épargne la revalidation sur liaison lente.
+      return sendCachedJson(
+        req,
+        reply,
+        {
+          spells: rows.map((r: any) => withSpellEnMeta(mapSpell(r, lang, true), lang)),
+          total,
+          limit: lim,
+          offset: off,
+        },
+        { maxAge: 300 },
+      );
     },
   );
 
@@ -184,13 +193,18 @@ export async function spellRoutes(app: FastifyInstance) {
       .from(spells)
       .orderBy(spells.level, sql`${spells.nameFr} COLLATE NOCASE ASC`)
       .all();
-    return reply.send({
-      spells: rows.map((r: any) => ({
-        id: r.id,
-        name: pickLocalized(lang, r.name, r.name_fr),
-        level: r.level,
-      })),
-    });
+    return sendCachedJson(
+      req,
+      reply,
+      {
+        spells: rows.map((r: any) => ({
+          id: r.id,
+          name: pickLocalized(lang, r.name, r.name_fr),
+          level: r.level,
+        })),
+      },
+      { maxAge: 3600 },
+    );
   });
 
   // ---------- Get single spell ----------

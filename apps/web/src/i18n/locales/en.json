@@ -684,6 +684,8 @@
   "ajmonstre.recherche": "Search…",
   "ajmonstre.retour": "← Back",
   "app.chargement": "Loading…",
+  "app.hors.ligne": "Offline — sync will resume on reconnect",
+  "err.chargement.module": "An app module failed to download (connection dropped?)",
   "app.mise.a.jour.dispo": "An update is ready — reload to receive it.",
   "app.recharger": "Reload",
   "app.mes.groupes": "My parties",

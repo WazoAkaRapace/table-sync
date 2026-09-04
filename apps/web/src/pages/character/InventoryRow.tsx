@@ -6,7 +6,7 @@ import {
   proficiencyBonus,
   resolveMagicArmorBase,
 } from '@table-sync/shared';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ItemVignette } from '../../components/ItemImageViewer';
 import { Chip, RarityBadge, WeightBadge } from '../../components/ui';
@@ -16,6 +16,7 @@ import {
   mundaneArmorLabel,
   weaponPropertyLabel,
 } from '../../i18n/labels';
+import { useItemDescription } from '../../lazyDetails';
 import { LOCATION_TYPE_ICON } from './types';
 
 // ---------- Inventory row ----------
@@ -68,8 +69,12 @@ export function InventoryRow({
   const isEmptyWater = !!(entry.notes?.includes('empty') && item.survivalTags?.includes('water'));
   const effectiveWeightKg = isEmptyWater ? EMPTY_WATERSKIN_KG : item.weightKg;
   const totalWeight = effectiveWeightKg !== null ? effectiveWeightKg * quantity : null;
+  // Description paresseuse : les listes servent description:null + un drapeau
+  // hasDescription — la prose se charge à l'ouverture de la ligne.
+  const lazyDescription = useItemDescription(item, expanded);
   const hasDetails =
     !!item.description ||
+    item.hasDescription === true ||
     item.damageDice ||
     item.acBase !== null ||
     item.strMin !== null ||
@@ -78,6 +83,13 @@ export function InventoryRow({
     !!entry.notes ||
     item.hasImage; // un objet réduit à son image (carte sans texte) reste dépliable
   const itemName = item.name;
+  // Stats d'arme mémoïsées : computeWeaponStats (résolution d'armes magiques =
+  // tri + regex sur la table SRD) tournait à CHAQUE render de chaque ligne,
+  // y compris repliée — la page re-render au moindre état local.
+  const weaponStats = useMemo(
+    () => (item.category === 'weapon' ? computeWeaponStats(item, character) : null),
+    [item, character],
+  );
 
   // Locations available to move this item to (everything except the active one)
   const otherLocations = locations.filter((l) => l.id !== activeLocationId);
@@ -323,8 +335,8 @@ export function InventoryRow({
               <div className={`expand-grid mt-3 ${expanded ? '' : 'is-collapsed'}`}>
                 <div className="expand-inner">
                   <div className="border-t border-parchment-200 pt-3 space-y-2">
-                    {item.description && (
-                      <p className="text-sm text-ink-700 whitespace-pre-line">{item.description}</p>
+                    {lazyDescription && (
+                      <p className="text-sm text-ink-700 whitespace-pre-line">{lazyDescription}</p>
                     )}
                     {item.aliases && item.aliases.length > 0 && (
                       <p className="text-xs text-ink-400">
@@ -347,7 +359,7 @@ export function InventoryRow({
                     {/* Computed attack & damage from character stats (weapons) */}
                     {item.category === 'weapon' &&
                       (() => {
-                        const stats = computeWeaponStats(item, character);
+                        const stats = weaponStats;
                         if (!stats) return null;
                         const abilityLabel = abilityShort(stats.ability);
                         const archery =

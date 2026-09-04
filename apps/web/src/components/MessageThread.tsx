@@ -197,7 +197,8 @@ export default function MessageThread({
   }, [messages]);
 
   if (query.isPending) return <LoadingSpinner label={t('msgs.chargement')} />;
-  if (query.error) return <ErrorMsg message={t('msgs.impossible.charger')} />;
+  if (query.error)
+    return <ErrorMsg message={t('msgs.impossible.charger')} onRetry={() => void query.refetch()} />;
 
   const placeholder = isGMView
     ? t('msgs.ecrire.au.joueur', { name: characterName })

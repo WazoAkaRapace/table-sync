@@ -8,7 +8,7 @@ import type {
   Rarity,
   StorageLocation,
 } from '@table-sync/shared';
-import { findClass } from '@table-sync/shared';
+import { computeInventoryWeights, findClass } from '@table-sync/shared';
 import {
   keepPreviousData,
   useInfiniteQuery,
@@ -16,11 +16,12 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../auth';
+import { invalidateCombat, useActiveEncounters } from '../combatLive';
 import CharacterStateBand from '../components/CharacterStateBand';
 import ConcentrationAlert from '../components/ConcentrationAlert';
 import {
@@ -40,7 +41,7 @@ import {
   ToastStack,
 } from '../components/ui';
 import { useSync, useSyncEvent } from '../sync';
-import { TutorialHost } from '../tutorial/TutorialHost';
+import { TUTORIAL_SCRIPTS } from '../tutorial/scripts';
 import { UnreadBadge, useMessagesUnread } from '../useMessagesUnread';
 import { usePartyRole } from '../usePartyRole';
 import CharacterDescriptionTab from './CharacterDescriptionTab';
@@ -70,6 +71,33 @@ import NpcPage from './NpcPage';
 
 const CATALOG_PAGE_SIZE = 30;
 
+// Visite guidée : joyride (~75 KB avec floating-ui) n'a pas sa place dans le
+// chunk de la fiche pour les joueurs qui ont tout vu — chargement paresseux,
+// gardé par une lecture locale des mêmes clés que TutorialHost. Le calcul
+// refait à chaque montage de la page : « Réinitialiser le tutoriel » (Mon
+// compte) efface les clés, le prochain montage de fiche les relit.
+const TutorialHost = lazy(() =>
+  import('../tutorial/TutorialHost').then((m) => ({ default: m.TutorialHost })),
+);
+function tutorialPending(): boolean {
+  try {
+    if (!localStorage.getItem('dnd-inv-tour-seen')) return true;
+    const raw = localStorage.getItem('dnd-inv-tour-tabs');
+    let done: string[] = [];
+    if (raw) {
+      const parsed: unknown = JSON.parse(raw);
+      if (Array.isArray(parsed)) done = parsed.filter((x): x is string => typeof x === 'string');
+    }
+    // Seuls les scripts PAR ONGLET s'enregistrent dans dnd-inv-tour-tabs
+    // (TutorialHost : `if (ended !== 'shell') markTutorialTabDone(ended)`) —
+    // la chaîne d'accueil 'shell' ne doit donc pas compter comme dû.
+    const owedTabs = Object.keys(TUTORIAL_SCRIPTS).filter((k) => k !== 'shell');
+    return owedTabs.some((tab) => !done.includes(tab));
+  } catch {
+    return true; // localStorage bloqué : on monte, TutorialHost gère sa dégradation
+  }
+}
+
 // ---------- Main component ----------
 
 export default function CharacterInventoryPage() {
@@ -77,6 +105,11 @@ export default function CharacterInventoryPage() {
   const { user } = useAuth();
   const { partyId, charId } = useParams<{ partyId: string; charId: string }>();
   const queryClient = useQueryClient();
+  // Visite guidée : évalué au montage (avant les gardes de rendu — règle des
+  // hooks). Si une visite reste possible, TutorialHost (joyride, ~75 KB) se
+  // charge en chunk paresseux ; sinon les joueurs établis ne le téléchargent
+  // jamais.
+  const [tutorialMaybePending] = useState(tutorialPending);
 
   // ---------- Inventory / character state (react-query) ----------
   // ['inventory', charId] is the single source of truth for the sheet: every
@@ -158,7 +191,7 @@ export default function CharacterInventoryPage() {
   const [catalogOpen, setCatalogOpen] = useState(false); // mobile sheet
   const [moreOpen, setMoreOpen] = useState(false); // mobile « Plus » tabs sheet
   // Mobile combat: the dock hub doubles as the combat indicator
-  const [hubCombat, setHubCombat] = useState<{
+  type HubCombat = {
     encounterId: number;
     partyId: number;
     status: string;
@@ -168,7 +201,7 @@ export default function CharacterInventoryPage() {
     currentCombatantName: string | null;
     myCombatantId: number | null;
     initiativeBonus: number;
-  } | null>(null);
+  };
   const [hubInitOpen, setHubInitOpen] = useState(false);
   const [hubInitInput, setHubInitInput] = useState('');
   const [hubInitError, setHubInitError] = useState(false);
@@ -386,6 +419,50 @@ export default function CharacterInventoryPage() {
     [charId, queryClient],
   );
 
+  // Mutation locale SANS re-téléchargement : l'API renvoie l'entrée mutée
+  // ({ entry } des PATCH/POST) — on l'applique au cache react-query et on
+  // RECALCULE les poids avec le même moteur partagé que la route GET
+  // (computeInventoryWeights). Sur liaison lente, une quantité = 1 RTT au
+  // lieu de 2 (PATCH + fiche entière).
+  const applyEntryChange = useCallback(
+    (change: { entry?: InventoryEntry; removedId?: number }) => {
+      queryClient.setQueryData<CharacterInventory>(['inventory', Number(charId)], (prev) => {
+        if (!prev) return prev;
+        const carried = findCarriedLocation(prev.locations)?.id ?? null;
+        let entries = prev.entries;
+        if (change.removedId !== undefined) {
+          entries = entries.filter((e) => e.id !== change.removedId);
+        } else if (change.entry) {
+          const incoming = {
+            ...change.entry,
+            storageLocationId: change.entry.storageLocationId ?? carried,
+          };
+          const i = entries.findIndex((e) => e.id === incoming.id);
+          entries =
+            i >= 0 ? entries.map((e, k) => (k === i ? incoming : e)) : [...entries, incoming];
+        }
+        const weights = computeInventoryWeights(
+          prev.character,
+          entries,
+          prev.locations,
+          prev.encumbranceMode ?? 'standard',
+          carried,
+        );
+        return {
+          ...prev,
+          entries,
+          encumbrance: weights.encumbrance,
+          locationWeights: weights.locationWeights,
+        };
+      });
+    },
+    [charId, queryClient],
+  );
+  const flashEntry = useCallback((entryId: number) => {
+    setFlashEntryId(entryId);
+    setTimeout(() => setFlashEntryId(null), 1200);
+  }, []);
+
   // Stepper: -1 / +1. At 0, enter confirm-delete state instead of silent delete.
   const stepQuantity = async (entry: InventoryEntry, delta: number) => {
     const next = entry.quantity + delta;
@@ -399,8 +476,12 @@ export default function CharacterInventoryPage() {
     }
     await withBusy(entry.id, async () => {
       try {
-        await patchEntryMutation.mutateAsync({ id: entry.id, patch: { quantity: next } });
-        await refreshInventory(entry.id);
+        const res = await patchEntryMutation.mutateAsync({
+          id: entry.id,
+          patch: { quantity: next },
+        });
+        applyEntryChange({ entry: res.data.entry });
+        flashEntry(entry.id);
       } catch (err) {
         pushToast(apiError(err, t('inv.erreur.de.mise.a.jour')), 'error');
       }
@@ -417,8 +498,12 @@ export default function CharacterInventoryPage() {
     }
     await withBusy(entry.id, async () => {
       try {
-        await patchEntryMutation.mutateAsync({ id: entry.id, patch: { quantity: qty } });
-        await refreshInventory(entry.id);
+        const res = await patchEntryMutation.mutateAsync({
+          id: entry.id,
+          patch: { quantity: qty },
+        });
+        applyEntryChange({ entry: res.data.entry });
+        flashEntry(entry.id);
       } catch (err) {
         pushToast(apiError(err, t('inv.erreur')), 'error');
       }
@@ -432,7 +517,7 @@ export default function CharacterInventoryPage() {
       try {
         await deleteEntryMutation.mutateAsync(entry.id);
         if (expandedId === entry.id) setExpandedId(null);
-        await refreshInventory();
+        applyEntryChange({ removedId: entry.id });
         pushToast(t('inv.retire.du.sac.a.dos', { name: entry.item.name || entry.item.name }));
       } catch (err) {
         pushToast(apiError(err, t('inv.erreur.de.suppression')), 'error');
@@ -448,11 +533,12 @@ export default function CharacterInventoryPage() {
   const toggleEquipped = async (entry: InventoryEntry) => {
     await withBusy(entry.id, async () => {
       try {
-        await patchEntryMutation.mutateAsync({
+        const res = await patchEntryMutation.mutateAsync({
           id: entry.id,
           patch: { equipped: !entry.equipped },
         });
-        await refreshInventory(entry.id);
+        applyEntryChange({ entry: res.data.entry });
+        flashEntry(entry.id);
       } catch (err) {
         pushToast(apiError(err, t('inv.erreur')), 'error');
       }
@@ -464,11 +550,11 @@ export default function CharacterInventoryPage() {
     setAddingItemId(item.id);
     try {
       // Send the carried location id as null (carried), non-carried as its id
-      await addCatalogItemMutation.mutateAsync({
+      const res = await addCatalogItemMutation.mutateAsync({
         itemId: item.id,
         storageLocationId: activeLocationId,
       });
-      await refreshInventory();
+      applyEntryChange({ entry: res.data.entry });
       pushToast(t('inv.ajoute.au.sac.a.dos', { name: item.name }));
     } catch (err) {
       pushToast(apiError(err, t('inv.impossible.d.ajouter.l.objet')), 'error');
@@ -512,6 +598,9 @@ export default function CharacterInventoryPage() {
           form.append('image', createItemImage.staged.blob, 'illustration.jpg');
           await api.put(`/api/items/${created.id}/image`, form, {
             headers: { 'Content-Type': 'multipart/form-data' },
+            // Upload 5 Mo max sur liaison lente : hors du timeout axios par
+            // défaut (15 s) pensé pour le JSON.
+            timeout: 120_000,
           });
         } catch {
           pushToast(t('inv.illustration.non.envoyee'), 'error');
@@ -563,11 +652,12 @@ export default function CharacterInventoryPage() {
   const moveEntryToLocation = async (entry: InventoryEntry, locationId: number) => {
     await withBusy(entry.id, async () => {
       try {
-        await patchEntryMutation.mutateAsync({
+        const res = await patchEntryMutation.mutateAsync({
           id: entry.id,
           patch: { storageLocationId: locationId },
         });
-        await refreshInventory(entry.id);
+        applyEntryChange({ entry: res.data.entry });
+        flashEntry(entry.id);
         const target = data?.locations.find((l) => l.id === locationId);
         pushToast(
           t('inv.deplace.vers', {
@@ -603,71 +693,41 @@ export default function CharacterInventoryPage() {
   // ---------- Combat indicator hooks ----------
   // MUST stay above the render guards: hooks after a conditional return
   // change the hook count between renders and crash React (#310).
-  // The sync listener bumps a counter that re-runs the effect below.
-  const [combatRefresh, setCombatRefresh] = useState(0);
+  // combat:change invalide le cache PARTAGÉ ['combat-encounters'] (hub mobile
+  // + bandeau d'en-tête dédupliqués — un événement = une seule cascade
+  // liste+détails, en parallèle, staleTime 5 s contre les rafales).
   useSyncEvent(
     (event) => {
       if (event.partyId === Number(partyId) && event.type === 'combat:change') {
-        setCombatRefresh((n) => n + 1);
+        invalidateCombat(queryClient, partyId);
       }
     },
-    [partyId],
+    [partyId, queryClient],
   );
 
-  // Mobile combat: check if this character is in an active/setup encounter.
-  // Only setState when the combat status actually changes to avoid re-render loops.
-  const hubCombatRef = useRef<string>('');
-  // biome-ignore lint/correctness/useExhaustiveDependencies: deps narrowed on purpose — full data?.character would refetch encounters on every inventory refresh; the hubCombatRef snapshot guard makes extra runs safe, and combatRefresh is a manual bump that works around the server-side echo suppression.
-  useEffect(() => {
-    if (!user || !data?.character) return;
-    let alive = true;
-    const load = async () => {
-      try {
-        const encRes = await api.get(`/api/parties/${partyId}/encounters`);
-        const encounters = encRes.data.encounters || [];
-        const relevant = encounters.filter(
-          (e: any) => e.status === 'active' || e.status === 'setup',
-        );
-        for (const enc of relevant) {
-          const det = await api.get(`/api/encounters/${enc.id}`);
-          const detail = det.data.encounter;
-          const mine = detail.combatants.find((c: any) => c.characterId === Number(charId));
-          if (mine) {
-            const current = detail.combatants[detail.turnIndex];
-            const dexMod = Math.floor(((data?.character?.dexterity ?? 10) - 10) / 2);
-            const next = {
-              encounterId: detail.id,
-              partyId: detail.partyId,
-              status: detail.status,
-              round: detail.round,
-              needsInitiative: mine.initiative === null,
-              isMyTurn: detail.status === 'active' && current?.id === mine.id,
-              currentCombatantName: current?.name ?? null,
-              myCombatantId: mine.id,
-              initiativeBonus: mine.initiativeBonus ?? dexMod,
-            };
-            // Only update state if the combat snapshot actually changed
-            const key = JSON.stringify(next);
-            if (alive && key !== hubCombatRef.current) {
-              hubCombatRef.current = key;
-              setHubCombat(next);
-            }
-            return;
-          }
-        }
-        if (alive && hubCombatRef.current !== '') {
-          hubCombatRef.current = '';
-          setHubCombat(null);
-        }
-      } catch {
-        /* silent */
-      }
-    };
-    load();
-    return () => {
-      alive = false;
-    };
-  }, [user, partyId, charId, data?.character?.ownerId, combatRefresh]);
+  const hubEncountersQuery = useActiveEncounters(Number(partyId) || null, !!user);
+  const hubCombat: HubCombat | null = useMemo(() => {
+    const character = data?.character;
+    if (!character) return null;
+    const dexMod = Math.floor(((character.dexterity ?? 10) - 10) / 2);
+    for (const detail of hubEncountersQuery.data ?? []) {
+      const mine = detail.combatants.find((c: any) => c.characterId === Number(charId));
+      if (!mine) continue;
+      const current = detail.combatants[detail.turnIndex];
+      return {
+        encounterId: detail.id,
+        partyId: detail.partyId,
+        status: detail.status,
+        round: detail.round,
+        needsInitiative: mine.initiative === null,
+        isMyTurn: detail.status === 'active' && current?.id === mine.id,
+        currentCombatantName: current?.name ?? null,
+        myCombatantId: mine.id,
+        initiativeBonus: mine.initiativeBonus ?? dexMod,
+      };
+    }
+    return null;
+  }, [hubEncountersQuery.data, data?.character, charId]);
 
   // "Your turn" sword-cut on the mobile combat indicator (dock card + hub)
   const turnSlash = useTurnSlash(!!hubCombat?.isMyTurn);
@@ -692,24 +752,39 @@ export default function CharacterInventoryPage() {
     try {
       await api.post(`/api/encounters/${hubCombat.encounterId}/end-my-turn`);
       // combat:change is echo-EXEMPT (a user can be GM in one tab and player
-      // in another), so the sync listener already bumps combatRefresh; this
-      // manual bump covers the event losing the race.
-      setCombatRefresh((n) => n + 1);
+      // in another), so the sync listener already invalidates the shared cache; this
+      // manual invalidation covers the event losing the race.
+      invalidateCombat(queryClient, partyId);
     } catch {
       // Most likely the MD advanced the same turn a beat earlier
       pushToast(t('inv.le.tour.a.deja.change'), 'error');
-      setCombatRefresh((n) => n + 1);
+      invalidateCombat(queryClient, partyId);
     } finally {
       setEndingTurn(false);
     }
   };
+
+  // ---------- Dérivations d'inventaire (AVANT les gardes — règle des hooks) ----------
+  // Mémoïsées : chaque frappe dans la recherche catalogue (état local de la
+  // page) re-filtrait + re-groupait + re-triait tout l'inventaire.
+  const locations = data?.locations ?? [];
+  const activeLocation =
+    locations.find((l) => l.id === activeLocationId) ??
+    findCarriedLocation(locations) ??
+    locations[0];
+  const activeLocationResolvedId = activeLocation?.id ?? null;
+  const entries = useMemo(
+    () => (data?.entries ?? []).filter((e) => e.storageLocationId === activeLocationResolvedId),
+    [data?.entries, activeLocationResolvedId],
+  );
+  const grouped = useMemo(() => groupByCategory(entries), [entries]);
 
   // ---------- Render guards ----------
   if (loading) return <LoadingSpinner label={t('inv.chargement.du.sac.a.dos')} />;
   if (error && !data) return <ErrorMsg message={error} />;
   if (!data) return <ErrorMsg message={t('inv.personnage.introuvable')} />;
 
-  const { character, encumbrance, locations, locationWeights } = data;
+  const { character, encumbrance, locationWeights } = data;
 
   // Only the sheet owner or the party GM can edit (the API enforces the same rule)
   const canEdit = data.character.ownerId === user?.id || isGM;
@@ -722,24 +797,12 @@ export default function CharacterInventoryPage() {
     ? ['survival', 'stats', 'spells', 'skills']
     : ['survival', 'stats', 'features', 'skills'];
 
-  // Resolve the active location (fall back to carried, then first)
-  const activeLocation: StorageLocation | undefined =
-    locations.find((l) => l.id === activeLocationId) ??
-    findCarriedLocation(locations) ??
-    locations[0];
-  const activeLocationResolvedId = activeLocation?.id ?? null;
   const isActiveCarried = activeLocation?.type === 'carried';
-
-  // Filter entries to the active location (each entry has a storageLocationId)
-  const entries = data.entries.filter((e) => e.storageLocationId === activeLocationResolvedId);
 
   // Active location's weight info (for the per-location bar)
   const activeLocationWeight: LocationWeight | undefined = locationWeights.find(
     (lw) => lw.locationId === activeLocationResolvedId,
   );
-
-  // Group entries by category for collapsible sections
-  const grouped = groupByCategory(entries);
 
   // Catalog content (shared between desktop column and mobile bottom-sheet)
   const catalogContent = (
@@ -861,7 +924,7 @@ export default function CharacterInventoryPage() {
                         // The combat:change echo is suppressed server-side for the
                         // actor, so the hub card would keep asking for initiative.
                         // Bump the refresh counter to reload the combat status now.
-                        setCombatRefresh((n) => n + 1);
+                        invalidateCombat(queryClient, partyId);
                         await refreshInventory();
                       } catch {
                         setHubInitError(true);
@@ -1478,13 +1541,15 @@ export default function CharacterInventoryPage() {
       </Modal>
 
       {/* ---------- Visite guidée (déclenchement + scripts : docs/tutorial-script.md) ---------- */}
-      {data && user && (
-        <TutorialHost
-          character={data.character}
-          canEdit={canEdit}
-          activeTab={activeTab}
-          onNavigateTab={setActiveTab}
-        />
+      {data && user && tutorialMaybePending && (
+        <Suspense fallback={null}>
+          <TutorialHost
+            character={data.character}
+            canEdit={canEdit}
+            activeTab={activeTab}
+            onNavigateTab={setActiveTab}
+          />
+        </Suspense>
       )}
 
       {/* ---------- Toast stack ---------- */}

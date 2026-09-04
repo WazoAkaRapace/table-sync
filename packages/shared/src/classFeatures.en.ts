@@ -1,63 +1,8 @@
 // GÉNÉRÉ par scripts/i18n/build-class-features-en.py — ne pas éditer à la main.
 // Source : miroir GitHub de 2014.5e.tools (voir docs/i18n-english-plan.md).
-
-export const CLASS_NAMES_EN: Record<string, string> = {
-  Artificier: 'Artificer',
-  Barbare: 'Barbarian',
-  Barde: 'Bard',
-  Clerc: 'Cleric',
-  Druide: 'Druid',
-  Ensorceleur: 'Sorcerer',
-  Guerrier: 'Fighter',
-  Magicien: 'Wizard',
-  Moine: 'Monk',
-  Occultiste: 'Warlock',
-  Paladin: 'Paladin',
-  Rôdeur: 'Ranger',
-  Roublard: 'Rogue',
-};
-
-export const SUBCLASS_SHORTNAMES_EN: Record<string, string> = {
-  'Artificier/alchimiste': 'Alchemist',
-  'Artificier/artilleur': 'Artillerist',
-  'Artificier/forgeron-de-guerre': 'Battle Smith',
-  'Barbare/berserker': 'Berserker',
-  'Barbare/totem': 'Totem Warrior',
-  'Barde/savoir': 'Lore',
-  'Clerc/vie': 'Life',
-  'Clerc/lumiere': 'Light',
-  'Clerc/nature': 'Nature',
-  'Clerc/tempete': 'Tempest',
-  'Clerc/tromperie': 'Trickery',
-  'Clerc/guerre': 'War',
-  'Clerc/savoir': 'Knowledge',
-  'Druide/terre': 'Land',
-  'Druide/lune': 'Moon',
-  'Ensorceleur/draconique': 'Draconic',
-  'Ensorceleur/sauvage': 'Wild',
-  'Guerrier/champion': 'Champion',
-  'Guerrier/maitre-de-guerre': 'Battle Master',
-  'Guerrier/chevalier-occulte': 'Eldritch Knight',
-  'Magicien/abjuration': 'Abjuration',
-  'Magicien/evocation': 'Evocation',
-  'Magicien/divination': 'Divination',
-  'Magicien/enchantement': 'Enchantment',
-  'Magicien/illusion': 'Illusion',
-  'Magicien/invocation': 'Conjuration',
-  'Magicien/necromancie': 'Necromancy',
-  'Magicien/transmutation': 'Transmutation',
-  'Moine/main-ouverte': 'Open Hand',
-  'Occultiste/archfee': 'Archfey',
-  'Occultiste/fielon': 'Fiend',
-  'Occultiste/grand-ancien': 'Great Old One',
-  'Paladin/devotion': 'Devotion',
-  'Paladin/anciennes': 'Ancients',
-  'Paladin/vengeance': 'Vengeance',
-  'Rôdeur/chasseur': 'Hunter',
-  'Roublard/voleur': 'Thief',
-  'Roublard/assassin': 'Assassin',
-  'Roublard/escroc-arcanique': 'Arcane Trickster',
-};
+// Les petites tables (CLASS_NAMES_EN, SUBCLASS_SHORTNAMES_EN) vivent dans
+// catalogs.en.ts : index.ts les réexporte pour toute l'app sans entraîner
+// les ~150 KB de descriptions qui suivent.
 
 export const CLASS_FEATURES_EN: Record<string, { name: string; description: string }> = {
   'artificier-bricolage-magique': {

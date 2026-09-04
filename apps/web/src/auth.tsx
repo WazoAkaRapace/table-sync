@@ -67,11 +67,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // visite) ne peut se monter avec un état périmé.
           syncTutorialWithServer(res.data.user);
         })
-        .catch(() => {
-          localStorage.removeItem('dnd-inv-token');
-          localStorage.removeItem('dnd-inv-user');
-          setToken(null);
-          setUser(null);
+        .catch((err: any) => {
+          // Ne purger la session QUE sur un 401 réel (jeton expiré) : ouvrir
+          // la PWA dans un trou réseau doit garder la session cachée, pas
+          // déconnecter le joueur (leçon tablette : ERR_NETWORK ≠ session
+          // invalide). L'utilisateur localStorage est conservé — /me sera
+          // rejoué au prochain lancement.
+          if (err?.response?.status === 401) {
+            localStorage.removeItem('dnd-inv-token');
+            localStorage.removeItem('dnd-inv-user');
+            setToken(null);
+            setUser(null);
+          } else {
+            setToken(savedToken);
+            setUser(savedUserParsed);
+          }
         })
         .finally(() => setLoading(false));
     } else {

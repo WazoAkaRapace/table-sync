@@ -9,11 +9,11 @@ import type {
 } from '@table-sync/shared';
 import {
   abilityModifier,
-  CLASS_SUBCLASSES,
   CONCENTRATION_BREAKING_CONDITIONS_FR,
   computeAC,
   raceSpeedMeters,
 } from '@table-sync/shared';
+import { CLASS_SUBCLASSES } from '@table-sync/shared/classFeatures';
 import { and, desc, eq, inArray, ne, sql } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../db/drizzle.ts';

@@ -12,12 +12,9 @@ import {
   computeUnarmedStats,
   computeWeaponStats,
   DND_CONDITIONS_FR,
-  effectiveFeatureReset,
   extraAttacksOf,
   fightingStylesOf,
   findClass,
-  findClassFeature,
-  findClassFeatureClass,
   formatModifier,
   hitDiceByClassOf,
   proficiencyBonus,
@@ -26,7 +23,12 @@ import {
   wildShapeDurationHours,
   wildShapeMaxCR,
 } from '@table-sync/shared';
-import { useEffect, useState } from 'react';
+import {
+  effectiveFeatureReset,
+  findClassFeature,
+  findClassFeatureClass,
+} from '@table-sync/shared/classFeatures';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../../api';
 import { CONDITION_ICONS } from '../../components/ConditionsEditor';
@@ -77,6 +79,17 @@ export function SurvivalPanel({
   onNotice,
   onConcentrationCheck,
 }: SurvivalPanelProps) {
+  // Stats d'armes équipées mémoïsées : computeWeaponStats (résolution
+  // d'armes magiques = tri + regex sur la table SRD) tournait pour chaque
+  // arme équipée à CHAQUE render du panneau — c'est l'onglet par défaut.
+  const equippedStats = useMemo(
+    () =>
+      entries
+        .filter((e) => e.equipped && e.item.category === 'weapon')
+        .map((e) => ({ e, stats: computeWeaponStats(e.item, character) })),
+    [entries, character],
+  );
+
   const { t } = useTranslation();
   const [exhaustion, setExhaustion] = useState(character.exhaustion);
   const [conditions, setConditions] = useState<string[]>(character.conditions);
@@ -899,12 +912,10 @@ export function SurvivalPanel({
       <section className="card p-4 sm:p-5 space-y-3" data-tuto="survie-attaques">
         <h2 className="section-title">{t('survie.attaques')}</h2>
         {(() => {
-          const equippedWeapons = entries.filter((e) => e.equipped && e.item.category === 'weapon');
-          if (equippedWeapons.length === 0) return null;
+          if (equippedStats.length === 0) return null;
           return (
             <div className="space-y-1.5">
-              {equippedWeapons.map((e) => {
-                const stats = computeWeaponStats(e.item, character);
+              {equippedStats.map(({ e, stats }) => {
                 const itemName = e.item.name;
                 if (!stats) {
                   return (

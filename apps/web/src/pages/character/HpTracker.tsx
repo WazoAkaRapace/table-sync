@@ -34,6 +34,27 @@ export function HpTracker({
   useEffect(() => {
     setTempHp(character.tempHp);
   }, [character.tempHp]);
+  // Écriture EXTERNE (tracker GM, autre appareil) pendant qu'un patch
+  // debouncé attend encore : elle le supplante — sinon notre valeur absolue
+  // calculée au clic partirait APRÈS la sienne et l'écraserait (fenêtre de
+  // course élargie par la latence). Le PATCH déjà parti, lui, est couvert par
+  // le rollback d'erreur ci-dessous.
+  useEffect(() => {
+    if (!patchTimer.current) return;
+    const external =
+      (pendingPatch.current.currentHp !== undefined &&
+        pendingPatch.current.currentHp !== character.currentHp) ||
+      (pendingPatch.current.tempHp !== undefined &&
+        pendingPatch.current.tempHp !== character.tempHp) ||
+      (pendingPatch.current.maxHp !== undefined && pendingPatch.current.maxHp !== character.maxHp);
+    if (!external) return;
+    clearTimeout(patchTimer.current);
+    patchTimer.current = null;
+    pendingPatch.current = {};
+    setMaxHp(character.maxHp);
+    setCurrentHp(character.currentHp);
+    setTempHp(character.tempHp);
+  }, [character.currentHp, character.tempHp, character.maxHp]);
 
   const patchFields = async (fields: Record<string, number>) => {
     markLocalMutation();
@@ -43,6 +64,12 @@ export function HpTracker({
       if (res?.data?.concentrationCheck) onConcentrationCheck(res.data.concentrationCheck);
       await onSaved();
     } catch (err: any) {
+      // Rollback de l'optimiste : sans ça, le PV affiché (déjà modifié par les
+      // steppers) reste faux jusqu'au prochain refetch — le joueur croit son
+      // dégât enregistré alors que le serveur n'a rien vu.
+      setMaxHp(character.maxHp);
+      setCurrentHp(character.currentHp);
+      setTempHp(character.tempHp);
       onError(err.response?.data?.error || 'Erreur');
     }
   };
@@ -85,12 +112,34 @@ export function HpTracker({
   };
 
   // Don't lose a pending debounced change if the user navigates away.
+  // Les callbacks passent par des refs : les mettre dans les deps
+  // réenregistrerait le cleanup à chaque render du parent et FLUSHERAIT le
+  // patch debouncé en pleine frappe.
+  const onConcentrationCheckRef = useRef(onConcentrationCheck);
+  onConcentrationCheckRef.current = onConcentrationCheck;
+  const onErrorRef = useRef(onError);
+  onErrorRef.current = onError;
   useEffect(
     () => () => {
       if (patchTimer.current) clearTimeout(patchTimer.current);
       const fields = pendingPatch.current;
       if (Object.keys(fields).length > 0) {
-        api.patch(`/api/characters/${charId}`, fields).catch(() => {});
+        // Silencieux = édition perdue sans prévenir (l'UI affichait déjà la
+        // valeur) — on ne peut plus resynchroniser (composant démonté), mais
+        // le joueur doit savoir. Le jet de concentration éventuel part aussi.
+        api
+          .patch(`/api/characters/${charId}`, fields)
+          .then((res) => {
+            if (res?.data?.concentrationCheck)
+              onConcentrationCheckRef.current(res.data.concentrationCheck);
+          })
+          .catch((err: any) => {
+            try {
+              onErrorRef.current(err?.response?.data?.error || 'Erreur');
+            } catch {
+              /* page déjà partie : rien de plus à faire */
+            }
+          });
       }
     },
     [charId],

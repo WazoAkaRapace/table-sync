@@ -6,23 +6,24 @@
 import {
   type Character,
   type CharacterFeature,
-  CLASS_FEATURES,
-  CLASS_FEATURES_EN,
-  CLASS_SUBCLASSES,
-  type ClassFeatureDef,
   classesOf,
   DND_CLASSES,
-  effectiveFeatureReset,
   FEATURE_CATEGORY_LABELS_FR,
   type FeatureCategory,
-  type FeatureResetType,
   findClass,
-  findClassFeature,
-  findClassFeatureClass,
-  nextClassFeatureGains,
   renderFeatureTemplate,
   TEMPLATE_VARIABLES,
 } from '@table-sync/shared';
+import {
+  CLASS_FEATURES,
+  CLASS_SUBCLASSES,
+  type ClassFeatureDef,
+  effectiveFeatureReset,
+  type FeatureResetType,
+  findClassFeature,
+  findClassFeatureClass,
+  nextClassFeatureGains,
+} from '@table-sync/shared/classFeatures';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../api';
@@ -58,24 +59,39 @@ const TEMPLATE_VAR_KEYS: Record<string, string> = {
   '{{max_hp}}': 'traits.var.max.hp',
 };
 
-// Affichage EN : le catalogue SRD a sa table anglaise (classFeatures.en.ts),
-// les lignes stockées restent FR — on superpose via catalogId.
+// Affichage EN : le catalogue SRD a sa table anglaise (~150 KB), chargée
+// dynamiquement UNIQUEMENT quand l'interface est en anglais — la fiche est
+// française par offre, les joueurs FR ne paient pas le catalogue EN sur le
+// fil. Le temps du chargement, l'affiche retombe sur le texte FR stocké.
+let EN_FEATURES: Record<string, { name: string; description: string }> | null = null;
+function useEnFeatureNames(): void {
+  const [, force] = useState(0);
+  useEffect(() => {
+    if (appLang() !== 'en' || EN_FEATURES) return;
+    let alive = true;
+    import('@table-sync/shared/classFeatures.en').then((m) => {
+      EN_FEATURES = m.CLASS_FEATURES_EN;
+      if (alive) force((n) => n + 1);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+}
 function featName(f: { title: string; catalogId?: string | null }): string {
-  return (
-    (appLang() === 'en' && f.catalogId ? CLASS_FEATURES_EN[f.catalogId]?.name : null) ?? f.title
-  );
+  return (appLang() === 'en' && f.catalogId ? EN_FEATURES?.[f.catalogId]?.name : null) ?? f.title;
 }
 function featDesc(f: { description: string | null; catalogId?: string | null }): string | null {
   return (
-    (appLang() === 'en' && f.catalogId ? CLASS_FEATURES_EN[f.catalogId]?.description : null) ??
+    (appLang() === 'en' && f.catalogId ? EN_FEATURES?.[f.catalogId]?.description : null) ??
     f.description
   );
 }
 function defName(d: { id: string; name: string }): string {
-  return (appLang() === 'en' ? CLASS_FEATURES_EN[d.id]?.name : null) ?? d.name;
+  return (appLang() === 'en' ? EN_FEATURES?.[d.id]?.name : null) ?? d.name;
 }
 function defDesc(d: { id: string; description: string }): string {
-  return (appLang() === 'en' ? CLASS_FEATURES_EN[d.id]?.description : null) ?? d.description;
+  return (appLang() === 'en' ? EN_FEATURES?.[d.id]?.description : null) ?? d.description;
 }
 
 interface Props {
@@ -101,6 +117,7 @@ export default function CharacterFeaturesTab({
   onSaved,
   onError,
 }: Props) {
+  useEnFeatureNames();
   const { t } = useTranslation();
   const [features, setFeatures] = useState<CharacterFeature[]>([]);
   const [loading, setLoading] = useState(true);

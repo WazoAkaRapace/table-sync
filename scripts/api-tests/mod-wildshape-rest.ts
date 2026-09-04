@@ -4,7 +4,8 @@
  * Covers every .prepare site in routes/wildshape.ts and routes/rest.ts,
  * plus the wild-shape branches of characters.ts PATCH.
  */
-import { CLASS_FEATURES } from '@table-sync/shared';
+
+import { CLASS_FEATURES } from '@table-sync/shared/classFeatures';
 import { api, createCharacter, eq, type Fixtures, ok, type ServerHandle } from './harness.ts';
 
 export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promise<void> {

@@ -10,12 +10,12 @@
 import {
   type Character,
   type CharacterClassEntry,
-  CLASS_SUBCLASSES,
   DND_CLASSES,
   findClass,
   MULTICLASS_PREREQUISITES,
   MULTICLASS_PROFICIENCIES_GAINED,
 } from '@table-sync/shared';
+import { CLASS_SUBCLASSES } from '@table-sync/shared/classFeatures';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BottomSheet } from './ui';

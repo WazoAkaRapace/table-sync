@@ -10,7 +10,6 @@
  * and applyRest (per-class hit dice + pact reset + class-level counters).
  */
 import {
-  applyRest,
   auraOfProtectionBonus,
   averageMaxHpMulti,
   type CharacterClassEntry,
@@ -33,6 +32,7 @@ import {
   totalLevel,
   unarmoredDefensesOf,
 } from '@table-sync/shared';
+import { applyRest } from '@table-sync/shared/rests';
 import { classFeatureResourceMax, findClassFeature } from '../packages/shared/src/classFeatures.ts';
 
 let failures = 0;

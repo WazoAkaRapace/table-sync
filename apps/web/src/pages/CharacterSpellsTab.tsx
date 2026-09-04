@@ -27,6 +27,7 @@ import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../api';
 import CastSpellSheet from '../components/CastSpellSheet';
+import { SpellProse } from '../components/SpellProse';
 import { BottomSheet, Chip, ErrorMsg } from '../components/ui';
 import { abilityShort, classNameLabel, damageType, schoolLabel } from '../i18n/labels';
 
@@ -822,13 +823,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
                               </div>
                               {isExpanded && (
                                 <div className="px-3 pb-3 pt-2 border-t border-parchment-200 text-xs text-ink-600 space-y-2 bg-parchment-50">
-                                  <p>{spell.description}</p>
-                                  {spell.higherLevel && (
-                                    <p className="text-ink-400 italic">
-                                      <strong>{t('sorts.aux.niveaux.superieurs')}</strong>{' '}
-                                      {spell.higherLevel}
-                                    </p>
-                                  )}
+                                  <SpellProse spell={spell} />
                                   <SpellStatBadges
                                     spell={spell}
                                     castingMod={modForSpell(cs.classSource)}
@@ -1435,12 +1430,7 @@ function SpellCatalog({
                   </div>
                   {isExpanded && (
                     <div className="px-3 pb-3 pt-2 border-t border-parchment-200 text-xs text-ink-600 space-y-2 bg-parchment-50">
-                      <p>{spell.description}</p>
-                      {spell.higherLevel && (
-                        <p className="text-ink-400 italic">
-                          <strong>{t('sorts.aux.niveaux.superieurs')}</strong> {spell.higherLevel}
-                        </p>
-                      )}
+                      <SpellProse spell={spell} />
                       <SpellStatBadges
                         spell={spell}
                         castingMod={castingMod}

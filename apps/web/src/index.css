@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+/* Cinzel auto-hébergé (variable 400–700, subset latin — 26 KB) : l'ancien
+   <link> Google Fonts croisait deux origines tierces dans le chemin critique
+   de la première peinture (DNS+TLS avant tout texte). L'URL est hashée par
+   Vite (import asset) → cache immutable 1 an. */
+@font-face {
+  font-family: "Cinzel";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("./assets/fonts/cinzel-var.woff2") format("woff2");
+}
+
 @theme {
   --color-parchment-50: #fdfaf3;
   --color-parchment-100: #f7f0e1;
@@ -130,9 +142,15 @@ input[type="number"] {
   scroll-behavior: smooth;
 }
 
-/* Card shadow — real depth, not a zero-offset halo */
+/* Card shadow — real depth, not a zero-offset halo.
+   PAS de backdrop-blur ici : chaque .card (donc chaque ligne d'inventaire,
+   chaque rangée de catalogue) en ferait une surface de re-floutage GPU —
+   sur une vieille tablette, des dizaines de backdrop-filter captaient le
+   scroll sous 20 fps. Le fond reste translucide (le parchemin se devine),
+   seul le flou disparaît ; les couches VRAIMENT flottantes (dock, bandeau)
+   gardent leur backdrop-blur propre. */
 .card {
-  @apply bg-white/85 backdrop-blur-sm rounded-2xl border border-parchment-200;
+  @apply bg-white/85 rounded-2xl border border-parchment-200;
   box-shadow:
     0 1px 2px rgba(42, 31, 20, 0.04),
     0 4px 12px rgba(42, 31, 20, 0.03);
@@ -473,22 +491,37 @@ input[type="number"] {
 /* ---------- Combat widget: "your turn" sword-cut ---------- */
 
 /* Persistent full-perimeter glow while it's your turn: state feedback,
-   calm heartbeat (not decoration) — reuses the hub-button glow hue. */
+   calm heartbeat (not decoration) — reuses the hub-button glow hue.
+   Le box-shadow est STATIQUE sur un pseudo-élément ; seule l'OPACITÉ
+   s'anime (propriété compositable) : animer box-shadow directement
+   imposait un repaint complet à chaque frame — jusqu'à 3 éléments
+   simultanés pendant tout le tour du joueur. */
+.combat-turn-glow {
+  position: relative;
+}
+.combat-turn-glow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  /* Anneau INTÉRIEUR + halo extérieur : l'anneau reste visible même sur
+     l'unique site porteur overflow-hidden (la carte combat mobile, qui
+     rogne le halo extérieur du pseudo-élément). */
+  box-shadow:
+    inset 0 0 0 1px rgba(185, 28, 28, 0.5),
+    0 0 0 3px rgba(185, 28, 28, 0.55),
+    0 4px 18px 4px rgba(185, 28, 28, 0.45);
+  animation: combat-turn-glow 1.8s ease-in-out infinite;
+}
 @keyframes combat-turn-glow {
   0%,
   100% {
-    box-shadow:
-      0 0 0 2px rgba(185, 28, 28, 0.3),
-      0 3px 10px 1px rgba(185, 28, 28, 0.3);
+    opacity: 0.55;
   }
   50% {
-    box-shadow:
-      0 0 0 3px rgba(185, 28, 28, 0.55),
-      0 4px 18px 4px rgba(185, 28, 28, 0.45);
+    opacity: 1;
   }
-}
-.combat-turn-glow {
-  animation: combat-turn-glow 1.8s ease-in-out infinite;
 }
 
 /* The cut: a blade with a white-hot parchment core and blood edges sweeps
@@ -627,15 +660,18 @@ input[type="number"] {
   border-radius: 1rem;
   border: 2px solid rgba(185, 28, 28, 0.55);
   pointer-events: none;
+  /* box-shadow statique + opacité animée (compositable) — l'animation du
+     box-shadow repeignait CHAQUE carte de combatant à chaque frame. */
+  box-shadow: 0 0 18px 4px rgba(185, 28, 28, 0.32);
   animation: target-breathe 1.6s ease-in-out infinite;
 }
 @keyframes target-breathe {
   0%,
   100% {
-    box-shadow: 0 0 10px 1px rgba(185, 28, 28, 0.18);
+    opacity: 0.55;
   }
   50% {
-    box-shadow: 0 0 18px 4px rgba(185, 28, 28, 0.32);
+    opacity: 1;
   }
 }
 .combat-target:active {

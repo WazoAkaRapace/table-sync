@@ -1,6 +1,15 @@
 import type { User } from '@table-sync/shared';
+import { useQueryClient } from '@tanstack/react-query';
 import type React from 'react';
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 // ---------- Types ----------
 
@@ -65,7 +74,9 @@ function buildWsUrl(): string {
 // ---------- Provider ----------
 
 export function SyncProvider({ user, children }: { user: User | null; children: React.ReactNode }) {
+  const queryClient = useQueryClient();
   const [status, setStatus] = useState<ConnectionStatus>('disconnected');
+  const statusRef = useRef<ConnectionStatus>('disconnected');
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectDelay = useRef(1000);
@@ -78,6 +89,11 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
   // refresh), and dropping either would leave one view stale.
   const pendingEvents = useRef<SyncEvent[]>([]);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const updateStatus = useCallback((next: ConnectionStatus) => {
+    statusRef.current = next;
+    setStatus(next);
+  }, []);
 
   const dispatchToHandlers = useCallback((event: SyncEvent) => {
     for (const handler of handlersRef.current) {
@@ -96,14 +112,14 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
         wsRef.current = null;
       }
 
-      setStatus('connecting');
+      updateStatus('connecting');
       const url = buildWsUrl();
       // Auth via subprotocol header keeps the JWT out of URLs and proxy logs.
       const ws = new WebSocket(url, [token]);
       wsRef.current = ws;
 
       ws.onopen = () => {
-        setStatus('connected');
+        updateStatus('connected');
         reconnectDelay.current = 1000; // reset backoff
       };
 
@@ -141,24 +157,61 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
       };
 
       ws.onclose = () => {
-        setStatus('disconnected');
+        updateStatus('disconnected');
         wsRef.current = null;
         // Auto-reconnect with exponential backoff (1s → 2s → 4s → ... → 10s max)
+        // + JITTER (×0,5–1,5) : après un restart serveur, toute la table ne
+        // doit pas frapper la poignée de main WS dans la même seconde.
         if (reconnectDelay.current < 10000) {
           reconnectDelay.current = Math.min(reconnectDelay.current * 2, 10000);
         }
-        reconnectTimeout.current = setTimeout(() => {
-          const savedToken = localStorage.getItem('dnd-inv-token');
-          if (savedToken) connect(savedToken);
-        }, reconnectDelay.current);
+        reconnectTimeout.current = setTimeout(
+          () => {
+            const savedToken = localStorage.getItem('dnd-inv-token');
+            if (savedToken) connect(savedToken);
+          },
+          reconnectDelay.current * (0.5 + Math.random()),
+        );
       };
 
       ws.onerror = () => {
         // onclose will handle reconnect
       };
     },
-    [dispatchToHandlers],
+    [dispatchToHandlers, updateStatus],
   );
+
+  // Resynchronisation à la (re)connexion : les événements WS tombés pendant
+  // le trou sont perdus (pas de replay par design) — les requêtes ACTIVES se
+  // réactualisent, chaque surface rattrape l'état manqué. CombatWidget le
+  // faisait seul ; la fiche, le tracker et les messages en bénéficient aussi.
+  const prevStatus = useRef<ConnectionStatus>('disconnected');
+  useEffect(() => {
+    if (prevStatus.current !== 'connected' && status === 'connected') {
+      queryClient.invalidateQueries();
+    }
+    prevStatus.current = status;
+  }, [status, queryClient]);
+
+  // Reprise de premier plan : si le socket est tombé pendant l'arrière-plan
+  // (l'OS coupe souvent les timers/sockets), on NE SUBIT PAS le backoff en
+  // cours — reconnexion immédiate. La resync ci-dessus rattrape les manqués.
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (statusRef.current !== 'connected') {
+        if (reconnectTimeout.current) {
+          clearTimeout(reconnectTimeout.current);
+          reconnectTimeout.current = null;
+        }
+        reconnectDelay.current = 1000;
+        const savedToken = localStorage.getItem('dnd-inv-token');
+        if (savedToken && user) connect(savedToken);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [connect, user]);
 
   // Connect on login, disconnect on logout
   useEffect(() => {
@@ -171,7 +224,7 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
         wsRef.current.close();
         wsRef.current = null;
       }
-      setStatus('disconnected');
+      updateStatus('disconnected');
     }
 
     return () => {
@@ -183,7 +236,7 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
         wsRef.current = null;
       }
     };
-  }, [user, connect]);
+  }, [user, connect, updateStatus]);
 
   const subscribe = useCallback((handler: (event: SyncEvent) => void) => {
     handlersRef.current.add(handler);
@@ -196,11 +249,15 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
   // Echo suppression is handled server-side (ws.ts skips the actor).
   const markLocalMutation = useCallback(() => {}, []);
 
-  return (
-    <SyncContext.Provider value={{ status, subscribe, markLocalMutation }}>
-      {children}
-    </SyncContext.Provider>
+  // Valeur mémoïsée : un objet inline recréait l'identité à chaque render du
+  // provider — chaque flap de connexion re-renderait TOUS les consommateurs
+  // (SyncopeIndicator, CombatWidget, fiche, tracker…).
+  const contextValue = useMemo(
+    () => ({ status, subscribe, markLocalMutation }),
+    [status, subscribe, markLocalMutation],
   );
+
+  return <SyncContext.Provider value={contextValue}>{children}</SyncContext.Provider>;
 }
 
 export function useSync() {

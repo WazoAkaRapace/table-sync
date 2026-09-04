@@ -14,6 +14,26 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   ok(r.data.items.length > 0, 'seeded items returned');
   ok(r.data.total >= r.data.items.length, 'total present');
 
+  // Régime connectivité : listes en RÉSUMÉ (description à null + drapeau
+  // hasDescription) et négociation ETag (304 sans corps) — la prose ne
+  // descend qu'avec GET /items/:id.
+  const withProse = r.data.items.filter((it: any) => it.hasDescription);
+  ok(withProse.length > 0, 'some items flag hasDescription');
+  ok(
+    r.data.items.every((it: any) => it.description === null),
+    'list serves description:null (summary mode)',
+  );
+  const etag = r.headers?.get('etag');
+  ok(!!etag, 'items list carries an ETag');
+  if (etag) {
+    r = await api(base, 'GET', '/api/items', { token: fx.gm.token, headers: { 'If-None-Match': etag } });
+    eq(r.status, 304, 'items list revalidates to 304');
+  }
+  if (withProse[0]) {
+    r = await api(base, 'GET', `/api/items/${withProse[0].id}`, { token: fx.gm.token });
+    ok(!!r.data.item?.description, 'item detail serves the prose');
+  }
+
   r = await api(base, 'GET', '/api/items?search=longue', { token: fx.gm.token });
   ok(r.data.total > 0, "search 'longue' finds the longsword");
 

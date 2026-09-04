@@ -12,6 +12,16 @@ import Database from 'better-sqlite3';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /** Resolve the monorepo root (3 levels up from apps/api/src/db/). */
+/** Normalisation identique à l'UDF SQL normalize() (les deux se répondent) :
+ *  sans diacritiques + minuscules. Exportée pour les backfills JS. */
+export function normalizeText(text: string | null): string {
+  if (!text) return '';
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
 function monorepoRoot(): string {
   return resolve(__dirname, '..', '..', '..', '..');
 }
@@ -51,13 +61,7 @@ export function getDb(): DB {
 
   // Register a normalize() function for accent-insensitive search.
   // Strips diacritics (é→e, è→e, ç→c) and lowercases.
-  dbInstance.function('normalize', (text: string | null): string => {
-    if (!text) return '';
-    return text
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase();
-  });
+  dbInstance.function('normalize', (text: string | null): string => normalizeText(text));
 
   // Test instrumentation: with DB_SQL_TRACE=<file>, record every prepared
   // statement + its callsite. scripts/api-tests/coverage.ts turns the trace

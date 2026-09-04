@@ -13,13 +13,15 @@
  */
 
 import type { Combatant, EncounterDetail } from '@table-sync/shared';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../auth';
-import { useSync, useSyncEvent } from '../sync';
+import { invalidateCombat, useActiveEncounters } from '../combatLive';
+import { useSyncEvent } from '../sync';
 import TurnSlash, { combatVibrate, useTurnSlash } from './TurnSlash';
 
 interface ActiveCombat {
@@ -37,7 +39,7 @@ export default function CombatWidget() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const location = useLocation();
-  const [combats, setCombats] = useState<ActiveCombat[]>([]);
+  const queryClient = useQueryClient();
   // The strip mounts inside the app header's right cluster (#header-combat-slot,
   // rendered by Nav, hidden below lg). Portal keeps the live widget state
   // flowing into it — the header never knows about combat.
@@ -51,7 +53,6 @@ export default function CombatWidget() {
   });
   const [initInput, setInitInput] = useState('');
   const [initError, setInitError] = useState(false);
-  const loadSeq = useRef(0);
 
   // Only show on a character sheet route
   const charMatch = location.pathname.match(/^\/party\/(\d+)\/character\/(\d+)/);
@@ -75,72 +76,51 @@ export default function CombatWidget() {
 
   const canLoad = !!user && isCharacterSheet && isMyCharacter;
 
-  const loadCombats = useCallback(async () => {
-    if (!user || !partyId || !charId) return;
-    // Race guard: rapid sync events + the 30s poll can overlap; only the
-    // latest run may commit its result, otherwise a stale (pre-add) response
-    // could overwrite a fresh one and hide the widget.
-    const seq = ++loadSeq.current;
-    try {
-      // One party — the sheet's. The list is already scoped server-side:
-      // non-GM members only see fights one of their characters is in.
-      const encRes = await api.get(`/api/parties/${partyId}/encounters`);
-      const encounters = encRes.data.encounters || [];
-      const relevant = encounters.filter((e: any) => e.status === 'active' || e.status === 'setup');
-      const mine: ActiveCombat[] = [];
-      for (const summary of relevant) {
-        try {
-          const detailRes = await api.get(`/api/encounters/${summary.id}`);
-          const encounter: EncounterDetail = detailRes.data.encounter;
-          // The widget tracks THIS sheet's character (same rule as the
-          // mobile combat card), not every character the user owns.
-          const myCombatant = encounter.combatants.find((c) => c.characterId === charId) ?? null;
-          if (!myCombatant) continue;
-          mine.push({
-            encounter,
-            partyId,
-            myCombatant,
-            currentCombatant: encounter.combatants[encounter.turnIndex] ?? null,
-          });
-        } catch {
-          // skip (e.g., 403 if not in the encounter)
-        }
-      }
-      if (seq === loadSeq.current) setCombats(mine);
-    } catch {
-      if (seq === loadSeq.current) setCombats([]);
-    }
-  }, [user, partyId, charId]);
+  // Cache PARTAGÉ avec la fiche (hub mobile) : useActiveEncounters déduplique
+  // les cascades liste+détails (un combat:change = UNE cascade pour tout le
+  // navigateur, staleTime 5 s contre les rafales) et la reconnexion WS
+  // réinvalide TOUT (SyncProvider) — le resync dédié d'avant est couvert.
+  const encountersQuery = useActiveEncounters(partyId, canLoad);
+  const combats: ActiveCombat[] = useMemo(() => {
+    if (!encountersQuery.data || !charId) return [];
+    // The widget tracks THIS sheet's character (same rule as the
+    // mobile combat card), not every character the user owns.
+    return encountersQuery.data
+      .map((encounter): ActiveCombat | null => {
+        const myCombatant = encounter.combatants.find((c) => c.characterId === charId) ?? null;
+        if (!myCombatant) return null;
+        return {
+          encounter,
+          partyId: Number(partyId),
+          myCombatant,
+          currentCombatant: encounter.combatants[encounter.turnIndex] ?? null,
+        };
+      })
+      .filter((c): c is ActiveCombat => c !== null);
+  }, [encountersQuery.data, charId, partyId]);
 
-  // Switching sheets must not flash the previous sheet's fights
-  // biome-ignore lint/correctness/useExhaustiveDependencies: charId is a reset key — clearing on sheet change is the whole point
-  useEffect(() => {
-    setCombats([]);
-  }, [charId]);
-
+  // Filet de sécurité 30 s — le temps réel vient des événements WS. Ne tourne
+  // QUE visible + large écran (le bandeau vit dans un slot hidden lg:flex :
+  // sur mobile il est invisible, la carte dockée de la fiche a la main, et
+  // un onglet en arrière-plan n'a personne à prévenir).
   useEffect(() => {
     if (!canLoad) return;
-    loadCombats();
-    // Refresh every 30s as a fallback (sync events handle real-time)
-    const interval = setInterval(loadCombats, 30000);
+    const interval = setInterval(() => {
+      if (document.visibilityState !== 'visible') return;
+      if (!window.matchMedia('(min-width: 1024px)').matches) return;
+      void encountersQuery.refetch();
+    }, 30000);
     return () => clearInterval(interval);
-  }, [canLoad, loadCombats]);
+  }, [canLoad, encountersQuery]);
 
-  // Events fired while the socket was down are lost forever — resync the
-  // moment it reconnects instead of waiting for the next 30s tick.
-  const { status: syncStatus } = useSync();
-  const prevSyncStatus = useRef<typeof syncStatus | null>(null);
-  useEffect(() => {
-    const wasDown = prevSyncStatus.current !== null && prevSyncStatus.current !== 'connected';
-    prevSyncStatus.current = syncStatus;
-    if (syncStatus === 'connected' && wasDown && canLoad) loadCombats();
-  }, [syncStatus, canLoad, loadCombats]);
-
-  useSyncEvent((event) => {
-    if (event.type === 'combat:change' && event.partyId === partyId && canLoad) {
-      loadCombats();
-    }
-  }, []);
+  useSyncEvent(
+    (event) => {
+      if (event.type === 'combat:change' && event.partyId === partyId && canLoad) {
+        invalidateCombat(queryClient, partyId);
+      }
+    },
+    [canLoad, partyId, queryClient],
+  );
 
   const setInitiative = async (
     encounterId: number,
@@ -152,7 +132,7 @@ export default function CombatWidget() {
         initiative: value,
       });
       setInitError(false);
-      loadCombats();
+      invalidateCombat(queryClient, partyId);
       return true;
     } catch {
       // The player must know the roll didn't save — otherwise they wait for a
@@ -170,11 +150,11 @@ export default function CombatWidget() {
     try {
       await api.post(`/api/encounters/${encounterId}/end-my-turn`);
       // combat:change is echo-exempt (GM tab + player tab), so our own sync
-      // listener reloads; loadCombats() again covers the event losing the race
+      // listener reloads; the invalidation below covers the event losing the race
       // (e.g. a 403 because the MD advanced the same turn a beat earlier).
-      await loadCombats();
+      await invalidateCombat(queryClient, partyId);
     } catch {
-      await loadCombats();
+      await invalidateCombat(queryClient, partyId);
     } finally {
       setEndingTurn(false);
     }

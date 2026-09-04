@@ -8,6 +8,8 @@ import CombatWidget from './components/CombatWidget';
 import ConcentrationAlert from './components/ConcentrationAlert';
 import IOSViewportAnchor from './components/IOSViewportAnchor';
 import MessageAlert, { type MessageAlertPayload } from './components/MessageAlert';
+import { OfflineBanner } from './components/OfflineBanner';
+import { RouteBoundary } from './components/RouteBoundary';
 import UpdateBanner from './components/UpdateBanner';
 import { HeaderProvider, useHeaderState } from './headerContext';
 import i18next from './i18n';
@@ -338,105 +340,108 @@ export default function App() {
       {/* iOS standalone : garde le dock ancré au bas visible (bug clavier iOS 26) */}
       <IOSViewportAnchor />
       <Nav />
+      <OfflineBanner />
       <main className="max-w-6xl mx-auto px-4 py-6 pb-[calc(6rem+env(safe-area-inset-bottom))]">
-        <Suspense fallback={<RouteFallback />}>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/mot-de-passe-oublie" element={<ForgotPasswordPage />} />
-            <Route path="/reinitialiser-mot-de-passe" element={<ResetPasswordPage />} />
-            <Route path="/verifier-email" element={<VerifyEmailPage />} />
-            <Route
-              path="/compte"
-              element={
-                <ProtectedRoute>
-                  <AccountPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/parties"
-              element={
-                <ProtectedRoute>
-                  <PartiesPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/party/:partyId"
-              element={
-                <ProtectedRoute>
-                  <PartyPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/party/:partyId/create"
-              element={
-                <ProtectedRoute>
-                  <CharacterCreatePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/party/:partyId/character/:charId"
-              element={
-                <ProtectedRoute>
-                  <CharacterInventoryPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/party/:partyId/gm"
-              element={
-                <ProtectedRoute>
-                  <GmDashboardPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/party/:partyId/carnet"
-              element={
-                <ProtectedRoute>
-                  <DmNotebookPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/party/:partyId/npcs"
-              element={
-                <ProtectedRoute>
-                  <NpcPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/party/:partyId/chronique"
-              element={
-                <ProtectedRoute>
-                  <ChroniclePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/party/:partyId/messages"
-              element={
-                <ProtectedRoute>
-                  <MessagesInboxPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/party/:partyId/combat"
-              element={
-                <ProtectedRoute>
-                  <CombatPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="*" element={<Navigate to="/parties" replace />} />
-          </Routes>
-        </Suspense>
+        <RouteBoundary>
+          <Suspense fallback={<RouteFallback />}>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/mot-de-passe-oublie" element={<ForgotPasswordPage />} />
+              <Route path="/reinitialiser-mot-de-passe" element={<ResetPasswordPage />} />
+              <Route path="/verifier-email" element={<VerifyEmailPage />} />
+              <Route
+                path="/compte"
+                element={
+                  <ProtectedRoute>
+                    <AccountPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/parties"
+                element={
+                  <ProtectedRoute>
+                    <PartiesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/party/:partyId"
+                element={
+                  <ProtectedRoute>
+                    <PartyPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/party/:partyId/create"
+                element={
+                  <ProtectedRoute>
+                    <CharacterCreatePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/party/:partyId/character/:charId"
+                element={
+                  <ProtectedRoute>
+                    <CharacterInventoryPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/party/:partyId/gm"
+                element={
+                  <ProtectedRoute>
+                    <GmDashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/party/:partyId/carnet"
+                element={
+                  <ProtectedRoute>
+                    <DmNotebookPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/party/:partyId/npcs"
+                element={
+                  <ProtectedRoute>
+                    <NpcPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/party/:partyId/chronique"
+                element={
+                  <ProtectedRoute>
+                    <ChroniclePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/party/:partyId/messages"
+                element={
+                  <ProtectedRoute>
+                    <MessagesInboxPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/party/:partyId/combat"
+                element={
+                  <ProtectedRoute>
+                    <CombatPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="*" element={<Navigate to="/parties" replace />} />
+            </Routes>
+          </Suspense>
+        </RouteBoundary>
       </main>
       <CombatWidget />
       <ConcentrationWatcher />

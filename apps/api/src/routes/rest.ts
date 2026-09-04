@@ -10,7 +10,8 @@
  * Permission: character owner or party GM (same as PATCH /characters/:id).
  */
 
-import { applyRest, type FeatureResetType } from '@table-sync/shared';
+import type { FeatureResetType } from '@table-sync/shared/classFeatures';
+import { applyRest } from '@table-sync/shared/rests';
 import { and, eq, ne } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../db/drizzle.ts';

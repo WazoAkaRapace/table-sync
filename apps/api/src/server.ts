@@ -3,12 +3,13 @@
  * Runs the dev API on http://localhost:4000
  */
 
+import compress from '@fastify/compress';
 import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
 import multipart from '@fastify/multipart';
 import websocket from '@fastify/websocket';
 import Fastify from 'fastify';
-import { backfillItemBases } from './db/backfill.ts';
+import { backfillItemBases, backfillMonsterSearchText } from './db/backfill.ts';
 import { runDrizzleMigrations } from './db/drizzle.ts';
 import { migrate } from './db/index.ts';
 import { seedItems, seedMonsters, seedSpells } from './db/seed.ts';
@@ -74,6 +75,12 @@ async function buildServer() {
   });
 
   // Plugins
+  // Compression des réponses JSON (gzip/brotli selon Accept-Encoding) — sans
+  // elle, chaque payload traverse le fil en brut (~5× trop gros sur une
+  // liaison lente). Seuil 1 Ko : les petites réponses (< ETag/health) partent
+  // telles quelles. nginx ne re-comprime jamais ce qui porte déjà un
+  // Content-Encoding, aucun double travail.
+  await app.register(compress, { threshold: 1024 });
   await app.register(cors, CORS_ORIGINS.length > 0 ? { origin: CORS_ORIGINS } : { origin: true });
   await app.register(jwt, {
     secret: JWT_SECRET,
@@ -176,6 +183,11 @@ async function start() {
     seedMonsters();
   } catch (err) {
     console.warn(`[server] monster seed skipped: ${(err as Error).message}`);
+  }
+  try {
+    backfillMonsterSearchText();
+  } catch (err) {
+    console.warn(`[server] monster search backfill skipped: ${(err as Error).message}`);
   }
 
   const app = await buildServer();

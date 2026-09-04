@@ -89,19 +89,34 @@ export default function GmDashboardPage() {
     load();
   }, [load]);
 
-  // Real-time sync: refresh when any inventory/character/party change happens in this party
+  // Real-time sync — FILTRÉ par type : ce dashboard ne vit que de
+  // personnages/inventaire/journal. Écouter TOUT déclenchait un rechargement
+  // complet (et N refetch d'inventaires) à CHAQUE tour de combat, campagne
+  // ou message du groupe. Sur character:change ciblé, seule la fiche du
+  // personnage changé est rafraîchie (bump → CharactersTab).
   const currentPartyId = Number(partyId);
+  const [syncedCharacter, setSyncedCharacter] = useState<{ id: number; n: number } | null>(null);
   useSyncEvent(
     (event) => {
-      if (event.partyId === currentPartyId) {
-        load(true); // silent — no spinner flash on sync updates
+      if (event.partyId !== currentPartyId) return;
+      if (
+        event.type === 'character:change' &&
+        event.characterId != null &&
+        !event.action?.includes('delete')
+      ) {
+        load(true); // silent — roster stats (HP, niveaux)
+        setSyncedCharacter({ id: event.characterId, n: (syncedCharacter?.n ?? 0) + 1 });
+        return;
+      }
+      if (event.type === 'party:change' || event.type === 'inventory:change') {
+        load(true); // roster/objets custom/journal des transactions
       }
     },
-    [currentPartyId],
+    [currentPartyId, syncedCharacter],
   );
 
   if (loading) return <LoadingSpinner />;
-  if (error) return <ErrorMsg message={error} />;
+  if (error) return <ErrorMsg message={error} onRetry={() => void load()} />;
   if (!party) return <ErrorMsg message={t('md.groupe.introuvable')} />;
 
   // Zone de danger — tab Réglages visible au MD seulement (l'API vérifie aussi)
@@ -138,7 +153,12 @@ export default function GmDashboardPage() {
       </div>
 
       {tab === 'characters' && (
-        <CharactersTab characters={party.characters} partyId={partyId!} onReload={load} />
+        <CharactersTab
+          characters={party.characters}
+          partyId={partyId!}
+          onReload={load}
+          syncedCharacter={tab === 'characters' ? syncedCharacter : null}
+        />
       )}
 
       {tab === 'transactions' && <TransactionsTab transactions={transactions} />}
@@ -274,10 +294,13 @@ function CharactersTab({
   characters,
   partyId,
   onReload,
+  syncedCharacter,
 }: {
   characters: CharacterSummary[];
   partyId: string;
   onReload: () => void;
+  /** Coup de pouce ciblé : un character:change ne rafraîche que SA fiche. */
+  syncedCharacter: { id: number; n: number } | null;
 }) {
   const { t } = useTranslation();
   const [deleteTarget, setDeleteTarget] = useState<CharacterSummary | null>(null);
@@ -297,9 +320,25 @@ function CharactersTab({
     setInventories(map);
   }, []);
 
+  // Clé = ids joints (pas l'identité du tableau) : un rechargement du groupe
+  // qui ne change PAS le roster ne redescend plus les N fiches complètes.
+  const rosterKey = characters.map((c) => c.id).join(',');
+  // biome-ignore lint/correctness/useExhaustiveDependencies: rosterKey résume `characters` — une identité de tableau neuve sans changement de roster ne doit pas redescendre les N fiches
   useEffect(() => {
     if (characters.length > 0) loadInventories(characters);
-  }, [characters, loadInventories]);
+  }, [rosterKey, loadInventories]);
+
+  // Refetch ciblé d'UNE fiche (character:change du joueur concerné).
+  useEffect(() => {
+    if (!syncedCharacter) return;
+    const id = syncedCharacter.id;
+    api
+      .get<CharacterInventory>(`/api/characters/${id}/inventory`)
+      .then((res) => {
+        setInventories((prev) => ({ ...prev, [id]: res.data }));
+      })
+      .catch(() => {});
+  }, [syncedCharacter]);
 
   async function confirmDelete() {
     if (!deleteTarget) return;
@@ -972,6 +1011,8 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
             // navigateur poser la boundary multipart (sinon FST_INVALID_MULTIPART).
             await api.put(`/api/items/${itemId}/image`, form, {
               headers: { 'Content-Type': 'multipart/form-data' },
+              // Upload sur liaison lente : hors du timeout axios par défaut (15 s).
+              timeout: 120_000,
             });
           } else if (imageValue.removed) {
             await api.delete(`/api/items/${itemId}/image`);

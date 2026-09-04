@@ -5,7 +5,7 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import { AuthProvider, useAuth } from './auth';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import './i18n';
+import { initI18n } from './i18n';
 import { registerServiceWorker } from './push';
 import { SyncProvider } from './sync';
 import './index.css';
@@ -37,16 +37,20 @@ function AppWithSync() {
 // Service worker push-only (aucun cache) : pas critique, échec silencieux.
 void registerServiceWorker();
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <AuthProvider>
-            <AppWithSync />
-          </AuthProvider>
-        </BrowserRouter>
-      </QueryClientProvider>
-    </ErrorBoundary>
-  </React.StrictMode>,
-);
+// Le rendu n'a lieu qu'i18n prêt (FR : bundle statique, immédiat ; EN : un
+// chunk dynamique) — aucun composant ne peut s'afficher avec des clés brutes.
+initI18n().then(() => {
+  ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+      <ErrorBoundary>
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <AuthProvider>
+              <AppWithSync />
+            </AuthProvider>
+          </BrowserRouter>
+        </QueryClientProvider>
+      </ErrorBoundary>
+    </React.StrictMode>,
+  );
+});

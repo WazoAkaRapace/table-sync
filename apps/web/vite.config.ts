@@ -42,6 +42,10 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
+    // Cible large pour les vieilles tablettes : le défaut Vite 8
+    // (« baseline-widely-available » ≈ Chrome 107 / Safari 16) produirait un
+    // bundle qu'un WebView plus ancien ne peut même pas parser.
+    target: 'es2020',
     // Production sourcemaps off: a 2.6 MB .map was shipping in dist/assets.
     // Dev sourcemaps come from the dev server and are unaffected by this flag.
     sourcemap: false,

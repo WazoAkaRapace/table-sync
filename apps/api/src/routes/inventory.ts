@@ -6,7 +6,7 @@
 import {
   type AddInventoryPayload,
   type CharacterInventory,
-  computeEncumbrance,
+  computeInventoryWeights,
   type PatchInventoryPayload,
   type TransferPayload,
 } from '@table-sync/shared';
@@ -28,7 +28,6 @@ import { bus } from '../sync/bus.ts';
 import {
   attachCharacterClasses,
   characterVisibleTo,
-  imageRevision,
   isOwnerOrGM,
   isPartyGM,
   isPartyMember,
@@ -36,7 +35,7 @@ import {
   mapInventoryEntry,
   requireUser,
 } from './helpers.ts';
-import { langFromReq, pickLocalized } from './lang.ts';
+import { langFromReq } from './lang.ts';
 import { apiMsg } from './messages.ts';
 
 /**
@@ -182,143 +181,39 @@ export async function inventoryRoutes(app: FastifyInstance) {
       }));
 
       const lang = langFromReq(req);
-      const cleanEntries = cleanRows.map((r: any) => ({
-        id: r.id,
-        characterId: r.character_id,
-        itemId: r.item_id,
-        item: {
-          id: r.i_id,
-          source: r.i_source,
-          partyId: r.i_party_id,
-          category: r.i_category,
-          name: pickLocalized(lang, r.i_name, r.i_name_fr),
-          rarity: r.i_rarity,
-          weightKg: r.i_weight_kg,
-          costQty: r.i_cost_qty,
-          costUnit: r.i_cost_unit,
-          description: pickLocalized(lang, r.i_description_en, r.i_description),
-          baseWeapon: r.i_base_weapon ?? null,
-          baseArmor: r.i_base_armor ?? null,
-          armorFamily: r.i_armor_family ?? null,
-          magicBonus: r.i_magic_bonus ?? null,
-          damageDice: r.i_damage_dice,
-          damageType: r.i_damage_type,
-          acBase: r.i_ac_base,
-          strMin: r.i_str_min,
-          stealthDisadvantage: !!r.i_stealth_disadvantage,
-          properties: r.i_properties_json ? JSON.parse(r.i_properties_json) : [],
-          survivalTags: r.i_survival_tags
-            ? typeof r.i_survival_tags === 'string'
-              ? JSON.parse(r.i_survival_tags)
-              : r.i_survival_tags
-            : [],
-          imagePath: r.i_image_path,
-          hasImage: !!r.i_image_url,
-          imageRev: r.i_image_url ? imageRevision(r.i_image_url) : null,
-          derivedFromItemId: r.i_derived_from_item_id ?? null,
-        },
-        quantity: r.quantity,
-        equipped: !!r.equipped,
-        notes: r.notes,
-        storageLocationId: r.storage_location_id ?? carriedLocId,
-        addedAt: r.added_at,
-      })) as any[];
+      // Objets embarqués en RÉSUMÉ (description à null via mapInventoryEntry) :
+      // la fiche entière re-descend après CHAQUE mutation et à chaque événement
+      // de synchronisation — la prose des objets en était le gros du fil. Les
+      // lignes la chargent à l'ouverture (GET /items/:id, mis en cache client).
+      const cleanEntries = cleanRows.map((r: any) => {
+        const entry = mapInventoryEntry(r, lang);
+        if (entry.storageLocationId == null) entry.storageLocationId = carriedLocId;
+        return entry;
+      }) as any[];
 
-      // ---- Compute per-location weights ----
-      const COIN_WEIGHT_KG = 0.01;
-      const coinCount = char.copper + char.silver + char.electrum + char.gold + char.platinum;
-      const coinWeightKg = coinCount * COIN_WEIGHT_KG;
-
-      const EMPTY_WATERSKIN_KG = 0.268; // leather skin only, without water
-
-      const locationWeights = locations.map((loc: any) => {
-        const locEntries = cleanEntries.filter(
-          (e: any) => (e.storageLocationId ?? carriedLocId) === loc.id,
-        );
-        const itemsWeight = locEntries.reduce((sum: number, e: any) => {
-          let w = e.item.weightKg;
-          // Empty waterskins weigh less (just the leather, no water)
-          if (
-            e.notes?.includes('empty') &&
-            e.item.survivalTags &&
-            Array.isArray(e.item.survivalTags) &&
-            e.item.survivalTags.includes('water')
-          ) {
-            w = EMPTY_WATERSKIN_KG;
-          }
-          return sum + (typeof w === 'number' ? w * e.quantity : 0);
-        }, 0);
-
-        // Compute max capacity for this location
-        let maxCap: number | null = null;
-        if (loc.type === 'carried') {
-          // Uses character's STR formula
-          maxCap = char.strength * 7.5 * (char.capacity_multiplier ?? 1);
-        } else if (loc.type === 'mount') {
-          // Mount: STR × 7.5 × multiplier
-          const mountStr = loc.strength ?? 10;
-          maxCap = mountStr * 7.5 * (loc.multiplier ?? 1);
-        } else if (loc.type === 'container') {
-          // Fixed capacity
-          maxCap = loc.capacityKg;
-        }
-
-        // For "carried": add coins + container own_weights
-        let effectiveWeight = itemsWeight;
-        if (loc.type === 'carried') {
-          effectiveWeight += coinWeightKg;
-          // Add own weight of all containers on this character
-          for (const l of locations) {
-            if (l.type === 'container') effectiveWeight += l.ownWeightKg || 0;
-          }
-        }
-
-        const pct = maxCap && maxCap > 0 ? Math.min(100, (effectiveWeight / maxCap) * 100) : 0;
-
-        return {
-          locationId: loc.id,
-          locationName: loc.name,
-          locationType: loc.type,
-          itemsWeightKg: +itemsWeight.toFixed(3),
-          ownWeightKg:
-            loc.type === 'carried'
-              ? +(
-                  coinWeightKg +
-                  locations
-                    .filter((l: any) => l.type === 'container')
-                    .reduce((s: number, l: any) => s + (l.ownWeightKg || 0), 0)
-                ).toFixed(3)
-              : 0,
-          maxCapacityKg:
-            maxCap !== null && maxCap !== undefined && !Number.isNaN(maxCap)
-              ? +maxCap.toFixed(2)
-              : null,
-          pct,
-        };
-      });
-
-      // ---- Carried encumbrance (uses the "carried" location weight) ----
-      const carriedWeight = locationWeights.find((lw: any) => lw.locationType === 'carried');
-      const carriedTotal = (carriedWeight?.itemsWeightKg ?? 0) + (carriedWeight?.ownWeightKg ?? 0);
-
-      const encumbrance = computeEncumbrance(
-        +carriedTotal.toFixed(3),
-        char.strength,
-        char.encumbrance_mode,
-        +coinWeightKg.toFixed(3),
-        char.capacity_multiplier ?? 1,
-      );
-
+      // ---- Poids par emplacement + encombrement (moteur partagé) ----
+      // Extrait vers packages/shared (computeInventoryWeights) : le client le
+      // rejoue après une mutation locale (setQueryData) sans re-télécharger
+      // la fiche — UNE seule implémentation des deux côtés du fil.
       // Multiclassage : joindre les lignes de classe (source de vérité moteur)
       attachCharacterClasses([char]);
       const character = mapCharacter(char);
+      const weights = computeInventoryWeights(
+        character,
+        cleanEntries,
+        locations,
+        char.encumbrance_mode,
+        carriedLocId,
+      );
 
       const result: CharacterInventory = {
         character,
         entries: cleanEntries,
-        encumbrance,
+        // Mode exposé pour que le client recalcule les poids localement
+        encumbranceMode: char.encumbrance_mode,
+        encumbrance: weights.encumbrance,
         locations,
-        locationWeights,
+        locationWeights: weights.locationWeights,
       };
       return reply.send(result);
     },

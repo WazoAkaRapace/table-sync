@@ -533,6 +533,8 @@ export function ItemImageViewer({
       // multipart (sinon FST_INVALID_MULTIPART, leçon GmDashboardPage).
       await api.post(`/api/inventory/${editableEntryId}/annotation`, form, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        // Upload sur liaison lente : hors du timeout axios par défaut (15 s).
+        timeout: 120_000,
       });
       // La suppression d'écho WS saute l'auteur : on invalide soi-même la
       // feuille — la ligne re-render sur le dérivé (même libellé, glyphe intact).

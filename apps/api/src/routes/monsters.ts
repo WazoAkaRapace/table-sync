@@ -9,13 +9,14 @@ import {
   monsterDamageTypeEn,
   parseMonsterActionCombatInfo,
 } from '@table-sync/shared';
-import { eq, or, sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../db/drizzle.ts';
 import { cols } from '../db/projections.ts';
 import { monsters } from '../db/schema.ts';
 import { requireUser } from './helpers.ts';
-import { type AppLang, langFromReq, pickLocalized } from './lang.ts';
+import { sendCachedJson } from './httpCache.ts';
+import { type AppLang, langFromReq } from './lang.ts';
 import { apiMsg } from './messages.ts';
 
 interface MonsterQuery {
@@ -133,7 +134,9 @@ function mapMonster(row: any, lang: AppLang = 'fr'): Monster {
 function mapMonsterSummary(row: any, lang: AppLang = 'fr'): MonsterSummary {
   return {
     slug: row.slug,
-    name: pickLocalized(lang, parseOverlay(row)?.name, row.name_fr),
+    // Overlay parsé UNIQUEMENT en anglais (le JSON fait ~1,6 KB/monstre,
+    // la requête ne le sélectionne même plus en FR).
+    name: lang === 'en' ? (parseOverlay(row)?.name ?? row.name_fr) : row.name_fr,
     type: row.type ?? '',
     size: row.size ?? 'M',
     challengeRating: row.challenge_rating ?? 0,
@@ -175,22 +178,23 @@ export async function monsterRoutes(app: FastifyInstance) {
       const { search } = req.query || {};
       const lim = Math.min(parseInt(req.query.limit || '20', 10) || 20, 100);
 
-      // normalize() (registered on the shared better-sqlite3 handle) strips
-      // diacritics and lowercases — accent-insensitive search.
+      const lang = langFromReq(req);
+      // Recherche sur la colonne PRÉCALCULÉE search_text (normalisée au
+      // seed/backfill : nom FR + type + overlay EN concaténés) — l'ancienne
+      // forme appelait l'UDF JS normalize() sur les trois colonnes de CHAQUE
+      // ligne (dont l'overlay de ~1,6 KB), ~3000 appels JS par recherche.
+      // Seul le MOTIF passe encore par normalize() (une fois par requête).
+      // L'overlay EN n'est sélectionné que pour l'affichage anglais.
       const conditions =
         search !== undefined && search !== ''
-          ? or(
-              sql`normalize(${monsters.nameFr}) LIKE normalize(${`%${search}%`})`,
-              sql`normalize(${monsters.type}) LIKE normalize(${`%${search}%`})`,
-              sql`normalize(${monsters.overlayEn}) LIKE normalize(${`%${search}%`})`,
-            )
+          ? sql`${monsters.searchText} LIKE normalize(${`%${search}%`})`
           : undefined;
 
       const rows = getDrizzle()
         .select({
           slug: monsters.slug,
           name_fr: monsters.nameFr,
-          overlay_en: monsters.overlayEn,
+          ...(lang === 'en' ? { overlay_en: monsters.overlayEn } : {}),
           type: monsters.type,
           size: monsters.size,
           challenge_rating: monsters.challengeRating,
@@ -203,8 +207,12 @@ export async function monsterRoutes(app: FastifyInstance) {
         .limit(lim)
         .all();
 
-      const lang = langFromReq(req);
-      return reply.send({ monsters: rows.map((r) => mapMonsterSummary(r, lang)) });
+      return sendCachedJson(
+        req,
+        reply,
+        { monsters: rows.map((r) => mapMonsterSummary(r, lang)) },
+        { maxAge: 3600 },
+      );
     },
   );
 

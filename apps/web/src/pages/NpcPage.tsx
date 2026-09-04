@@ -102,11 +102,14 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
     load();
   }, [load]);
 
-  // Real-time sync
+  // Real-time sync — FILTRÉ : les PNJ (et le détail de groupe pour la
+  // visibilité) ne bougent que sur party:change (type qu'émettent aussi les
+  // écritures PNJ côté API). Avant, CHAQUE tour de combat rechargeait les
+  // PNJ + le groupe — NpcPage est embarquée dans la fiche de chaque joueur.
   const currentPartyId = Number(partyId);
   useSyncEvent(
     (event) => {
-      if (event.partyId === currentPartyId) {
+      if (event.partyId === currentPartyId && event.type === 'party:change') {
         load(true); // silent — no spinner flash on sync updates
       }
     },

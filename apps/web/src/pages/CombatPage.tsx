@@ -223,22 +223,31 @@ export default function CombatPage() {
     sheetAction,
   );
 
+  // Garde de course (pattern loadSeq de CombatWidget) : sur liaison latente,
+  // une réponse GET retardée ne doit pas écraser un état plus récent — chaque
+  // appel prend un jeton, seule la dernière réponse gagne.
+  const loadSeq = useRef(0);
+  const encounterSeq = useRef(0);
+
   const load = useCallback(
     async (silent = false) => {
       if (!partyId) return;
+      const seq = ++loadSeq.current;
       if (!silent) setLoading(true);
       try {
         const [partyRes, encRes] = await Promise.all([
           api.get(`/api/parties/${partyId}`),
           api.get(`/api/parties/${partyId}/encounters`),
         ]);
+        if (seq !== loadSeq.current) return;
         setParty(partyRes.data);
         setEncounters(encRes.data.encounters || []);
         setError('');
       } catch (err: any) {
+        if (seq !== loadSeq.current) return;
         setError(err.response?.data?.error || t('combat.erreur'));
       } finally {
-        setLoading(false);
+        if (seq === loadSeq.current) setLoading(false);
       }
     },
     [partyId, t],
@@ -263,10 +272,13 @@ export default function CombatPage() {
 
   const loadEncounter = useCallback(
     async (id: number, silent = false) => {
+      const seq = ++encounterSeq.current;
       try {
         const res = await api.get(`/api/encounters/${id}`);
+        if (seq !== encounterSeq.current) return;
         setActiveEncounter(res.data.encounter);
       } catch {
+        if (seq !== encounterSeq.current) return;
         // Silent refreshes keep the stale view; a failed explicit open must say so.
         if (!silent) setError(t('combat.impossible.de.charger.la.rencontre'));
       }

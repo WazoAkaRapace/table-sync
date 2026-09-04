@@ -29,7 +29,7 @@ import {
   fightingStylesOf,
   type InventoryEntry,
 } from '@table-sync/shared';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import api from '../api';
@@ -120,20 +120,26 @@ export default function CharacterStateBand({
 
   const level = character.level ?? 1;
 
-  // CA — same computation as the Caractéristiques tab (source localisée)
-  const dexMod = abilityModifier(character.dexterity ?? 10);
-  const acResult = computeAC(
-    entries,
-    dexMod,
-    fightingStylesOf(character).has('defense'),
-    character,
-    appLang(),
+  // CA — same computation as the Caractéristiques tab (source localisée).
+  // Mémoïsée : computeAC balaie tout l'inventaire (résolutions d'armures
+  // magiques incluses) et tournait à CHAQUE render du bandeau — le moindre
+  // état local de la page la déclenchait.
+  const acResult = useMemo(
+    () =>
+      computeAC(
+        entries,
+        abilityModifier(character.dexterity ?? 10),
+        fightingStylesOf(character).has('defense'),
+        character,
+        appLang(),
+      ),
+    [entries, character],
   );
   const effectiveAC = character.armorClassOverride ?? acResult.ac;
 
   // Emplacements : les DEUX pools (multiclassage — le pacte recharge au repos
   // court et vit sa vie à côté de l'incantation).
-  const pools = computeSpellcastingPools(character);
+  const pools = useMemo(() => computeSpellcastingPools(character), [character]);
   const slotsUsed = character.spellSlotsUsed ?? [];
   const pactUsed = character.pactSlotsUsed ?? [];
   const slotRows = pools.spellcasting

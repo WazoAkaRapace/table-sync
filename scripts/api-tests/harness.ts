@@ -89,6 +89,8 @@ function nextIp(): string {
 export interface ApiResponse {
   status: number;
   data: any;
+  /** En-têtes de réponse bruts (fetch Headers) — ETag des catalogues. */
+  headers?: Headers;
 }
 
 export async function api(
@@ -110,7 +112,7 @@ export async function api(
   if (res.status !== 204) {
     data = await res.json().catch(() => null);
   }
-  return { status: res.status, data };
+  return { status: res.status, data, headers: res.headers };
 }
 
 /** Mint a JWT for a user id directly (HS256, same secret as the test server). */

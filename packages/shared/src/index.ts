@@ -4,20 +4,14 @@
  */
 
 import { DND_SKILLS_EN } from './catalogs.en.ts';
-import {
-  bardicInspirationDie,
-  classFeatureResourceMax,
-  effectiveFeatureReset,
-  eldritchInvocationsCount,
-  type FeatureResetType,
-  findClassFeature,
-  findClassFeatureClass,
-  songOfRestDie,
-} from './classFeatures.ts';
+// Type uniquement (effacé à la compilation) : aucune dépendance RUNTIME vers
+// classFeatures.ts ne doit partir d'ici — ce module est importé par CHAQUE
+// page, et une import statique trainerait les ~270 KB de catalogues FR+EN
+// dans le chunk commun. Le catalogue et ses helpers vivent derrière
+// '@table-sync/shared/classFeatures' ; applyRest derrière '@table-sync/shared/rests'.
+import type { FeatureResetType } from './classFeatures.ts';
 
 export * from './catalogs.en.ts';
-export * from './classFeatures.en.ts';
-export * from './classFeatures.ts';
 export * from './labels.en.ts';
 
 // ---------- Langue des chaînes calculées ----------
@@ -75,6 +69,9 @@ export interface Item {
   costUnit: CostUnit | null;
   /** Localisée par l'API selon la langue de la requête (repli FR si absent). */
   description: string | null;
+  /** Vrai s'il existe une description (les listes servent description:null
+   *  en mode résumé — l'UI charge la prose à l'ouverture). */
+  hasDescription?: boolean;
   /** Clés de base stables (calculées à l'import/création — voir
    *  docs/i18n-engine-refactor-plan.md) : le moteur ne parse plus les noms. */
   baseWeapon: string | null;
@@ -607,13 +604,16 @@ export interface CharacterSummary {
   eyes: string | null;
   hair: string | null;
   portraitUrl: string | null;
-  personalityTraits: string | null;
-  ideals: string | null;
-  bonds: string | null;
-  flaws: string | null;
-  appearance: string | null;
-  backstory: string | null;
-  alliesOrganizations: string | null;
+  // Champs prose OPTIONNELS : les rosters (détail de groupe, listes de
+  // personnages) ne les servent plus — seules les fiches COMPLÈTES
+  // (mapCharacter : GET /characters/:id, inventaire) les portent.
+  personalityTraits?: string | null;
+  ideals?: string | null;
+  bonds?: string | null;
+  flaws?: string | null;
+  appearance?: string | null;
+  backstory?: string | null;
+  alliesOrganizations?: string | null;
   armorClassOverride: number | null;
   deathSaveSuccesses: number; // 0-3
   deathSaveFailures: number; // 0-3
@@ -4318,6 +4318,38 @@ export const FEATURE_CATEGORY_LABELS_FR: Record<FeatureCategory, string> = {
   custom: 'Personnalisé',
 };
 
+// ---------- Petites formules de ressources (dépendances du gabarit) ----------
+// Déplacées depuis classFeatures.ts : pures, minuscules et nécessaires au
+// rendu des gabarits {{bardic_die}} ci-dessous — les garder ici évite à
+// index.ts de dépendre du catalogue (voir l'import type plus haut).
+
+/** Dés d'inspiration bardique : d6, d8@5, d10@10, d12@15. */
+export function bardicInspirationDie(level: number): string {
+  if (level >= 15) return '1d12';
+  if (level >= 10) return '1d10';
+  if (level >= 5) return '1d8';
+  return '1d6';
+}
+
+/** Dés du Chant reposant (Barde) : d6@2, d8@9, d10@13, d12@17. */
+export function songOfRestDie(level: number): string {
+  if (level >= 17) return '1d12';
+  if (level >= 13) return '1d10';
+  if (level >= 9) return '1d8';
+  return '1d6';
+}
+
+/** Manifestations occultes connues (PHB 2014) : 2@2, 3@5, 4@7, 5@9, 6@12, 7@15, 8@18. */
+export function eldritchInvocationsCount(level: number): number {
+  if (level >= 18) return 8;
+  if (level >= 15) return 7;
+  if (level >= 12) return 6;
+  if (level >= 9) return 5;
+  if (level >= 7) return 4;
+  if (level >= 5) return 3;
+  return 2;
+}
+
 /**
  * Render a feature template by replacing {{variable}} tokens with computed
  * values from the character's stats. Unknown variables are left as-is.
@@ -4403,145 +4435,6 @@ export function renderFeatureTemplate(text: string, character: Character): strin
   return text.replace(/\{\{(\w+:[\w]+|\w+)\}\}/g, (match, key: string) => {
     return vars[key] ?? match; // Leave unknown variables as-is
   });
-}
-
-// ---------- Rests (repos court / repos long, SRD) ----------
-
-/** What a rest changes: the character PATCH plus catalog-feature counter resets. */
-export interface RestResult {
-  characterPatch: PatchCharacterPayload;
-  /** Per-class hit-dice totals to persist on the character_classes rows. */
-  classHitDice: Array<{ classKey: string; hitDiceUsed: number }>;
-  featureResets: Array<{
-    featureId: number;
-    counterMax: number;
-    counterCurrent: number;
-  }>;
-  /** Hit dice spent on the rest (counted — the PLAYER rolls them at the table). */
-  diceSpent: number;
-  /** Total HP actually regained (the player-entered healing, capped at max HP). */
-  healed: number;
-}
-
-/**
- * Apply a short or long rest (pure — returns the patch, the caller persists it).
- *
- * Short rest: pact-magic slots restored (Occultiste), wild shape uses reset,
- * short-rest catalog counters reset, optional hit-dice spending. The dice are
- * rolled BY THE PLAYER at the table — we only count them (hitDiceSpent) and
- * apply the healing they announce (healedHp), capped at max HP; any HP regained
- * clears death saves.
- *
- * Long rest: HP to max, temp HP to 0, all slots restored, half the level (min 1)
- * hit dice regained, exhaustion −1, death saves cleared, concentration dropped,
- * wild shape uses reset, every catalog counter reset (max recomputed from the
- * formula at the current level). Conditions and food/water are untouched
- * (conditions persist through rests per SRD; survival flow is separate).
- */
-export function applyRest(
-  character: Character,
-  features: Array<
-    Pick<CharacterFeature, 'id' | 'catalogId' | 'resetType' | 'counterMax' | 'counterCurrent'>
-  >,
-  options: { type: 'short' | 'long'; hitDiceSpent?: number; healedHp?: number },
-): RestResult {
-  const level = character.level ?? 1;
-  const classes = classesOf(character);
-  const dice = hitDiceByClassOf(character);
-  const patch: PatchCharacterPayload = {};
-  let classHitDice: RestResult['classHitDice'] = [];
-
-  // Counters to reset on this rest type. The PLAYER'S reset choice
-  // (resetType — the checkboxes) overrides the catalog's SRD rule: the catalog
-  // pre-fills, it doesn't automate. With no player choice, a catalog trait
-  // follows its SRD rule, evaluated at the level of the class that GRANTS it
-  // (SRD multiclassing) — never the character's total level.
-  const featureResets: RestResult['featureResets'] = [];
-  for (const feature of features) {
-    if ((feature.counterMax ?? 0) <= 0) continue;
-    const owner = feature.catalogId ? findClassFeatureClass(feature.catalogId) : null;
-    const ownerLevel = owner
-      ? (classes.find((c) => findClass(c.classKey)?.name === owner)?.level ?? level)
-      : level;
-    const effective = effectiveFeatureReset(feature, ownerLevel);
-    // 'short' recharges on short AND long rests; 'long' only on long; 'none' never
-    if (effective !== 'short' && !(effective === 'long' && options.type === 'long')) continue;
-    // Catalog formula when the trait is catalog-linked with a resource,
-    // otherwise the stored max (manual trait, or counter added by hand)
-    const def = feature.catalogId ? findClassFeature(feature.catalogId) : null;
-    const max = def?.resource
-      ? (classFeatureResourceMax(def, character) ?? feature.counterMax ?? 0)
-      : (feature.counterMax ?? 0);
-    if (max <= 0) continue; // unlimited (Rage @20) or invalid: nothing to track
-    featureResets.push({ featureId: feature.id, counterMax: max, counterCurrent: max });
-  }
-
-  // Hit-dice spending on a short rest: the player rolls their own dice at the
-  // table — we only COUNT them (FIFO across class lines when they spend a
-  // plain count) and apply the healing they announce (capped).
-  let diceSpent = 0;
-  let healed = 0;
-  if (options.type === 'short') {
-    const available = dice.reduce((sum, d) => sum + Math.max(0, d.max - d.used), 0);
-    diceSpent = Math.max(0, Math.min(options.hitDiceSpent ?? 0, available));
-    const announced = Math.max(0, Math.floor(options.healedHp ?? 0));
-    if (diceSpent > 0) {
-      let left = diceSpent;
-      classHitDice = dice.map((d) => {
-        const take = Math.min(Math.max(0, d.max - d.used), left);
-        left -= take;
-        return { classKey: d.classKey, hitDiceUsed: d.used + take };
-      });
-      patch.hitDiceUsed = (character.hitDiceUsed ?? 0) + diceSpent;
-    }
-    if (announced > 0) {
-      const currentHp = Math.min(
-        character.maxHp ?? Number.POSITIVE_INFINITY,
-        character.currentHp + announced,
-      );
-      healed = currentHp - character.currentHp; // what was actually applied
-      patch.currentHp = currentHp;
-      // Regaining any HP ends the death-save tally (SRD)
-      patch.deathSaveSuccesses = 0;
-      patch.deathSaveFailures = 0;
-    }
-  }
-
-  if (options.type === 'short') {
-    // Pact magic recharges on a short rest (Occultiste — its own pool)
-    if (classes.some((c) => findClass(c.classKey)?.name === 'Occultiste')) {
-      patch.pactSlotsUsed = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-    }
-    if (classes.some((c) => findClass(c.classKey)?.name === 'Druide')) {
-      patch.wildShapeUses = 2;
-    }
-  } else {
-    patch.currentHp = character.maxHp;
-    patch.tempHp = 0;
-    patch.spellSlotsUsed = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-    patch.pactSlotsUsed = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-    // Long rest: regain up to half the TOTAL dice pool, minimum 1 (SRD);
-    // restored front-loaded by class-line order (the SRD leaves the choice
-    // of which dice to the player — FIFO is the documented default).
-    const totalDice = dice.reduce((sum, d) => sum + d.max, 0);
-    const budget = Math.max(1, Math.floor(totalDice / 2));
-    let left = budget;
-    classHitDice = dice.map((d) => {
-      const regain = Math.min(d.used, left);
-      left -= regain;
-      return { classKey: d.classKey, hitDiceUsed: d.used - regain };
-    });
-    patch.hitDiceUsed = classHitDice.reduce((sum, p) => sum + p.hitDiceUsed, 0);
-    patch.exhaustion = Math.max(0, character.exhaustion - 1);
-    patch.deathSaveSuccesses = 0;
-    patch.deathSaveFailures = 0;
-    patch.concentrating = false;
-    if (classes.some((c) => findClass(c.classKey)?.name === 'Druide')) {
-      patch.wildShapeUses = 2;
-    }
-  }
-
-  return { characterPatch: patch, classHitDice, featureResets, diceSpent, healed };
 }
 
 // ---------- Character notes (free-form with simple formatting) ----------
@@ -4834,6 +4727,9 @@ export interface EncumbranceState {
 }
 
 export interface CharacterInventory {
+  /** Mode d'encombrement du groupe — le client RECALCULE les poids après une
+   *  mutation locale (setQueryData) sans re-télécharger toute la fiche. */
+  encumbranceMode?: EncumbranceMode;
   character: Character;
   entries: InventoryEntry[];
   encumbrance: EncumbranceState;
@@ -4925,6 +4821,127 @@ export function computeEncumbrance(
 // ---------- Coin conversion ----------
 
 /** Convert all coins to copper pieces (lowest denomination). */
+// ---------- Poids par emplacement (portage) ----------
+// Extrait de routes/inventory.ts (2026-09, régime connectivité) : le client
+// rejoue ce calcul après une mutation locale (setQueryData de l'entrée
+// modifiée) au lieu de re-télécharger toute la fiche — UNE source de vérité
+// partagée par l'API et le web.
+
+/** Gourde vide : seulement le cuir (~0,268 kg), pas les 2,268 kg pleines. */
+export const EMPTY_WATERSKIN_KG = 0.268;
+/** Poids d'une pièce (monnaie) en kg. */
+export const COIN_WEIGHT_KG = 0.01;
+
+export interface InventoryWeights {
+  locationWeights: LocationWeight[];
+  encumbrance: EncumbranceState;
+  /** Poids porté total (objets + monnaie + conteneurs) en kg. */
+  carriedTotalKg: number;
+  coinWeightKg: number;
+}
+
+/**
+ * Poids par emplacement + encombrement porté. `carriedLocationId` : l'id de
+ * l'emplacement « porté » (les entrées à location NULL y sont rattachées —
+ * convention des gourdes vides). Pur : aucun accès réseau ni DB.
+ */
+export function computeInventoryWeights(
+  character: {
+    strength: number;
+    capacityMultiplier?: number | null;
+    copper?: number | null;
+    silver?: number | null;
+    electrum?: number | null;
+    gold?: number | null;
+    platinum?: number | null;
+  },
+  entries: Array<
+    Pick<InventoryEntry, 'quantity' | 'notes' | 'storageLocationId'> & {
+      item: Pick<Item, 'weightKg' | 'survivalTags'>;
+    }
+  >,
+  locations: StorageLocation[],
+  encumbranceMode: EncumbranceMode,
+  carriedLocationId: number | null,
+): InventoryWeights {
+  const coinCount =
+    (character.copper ?? 0) +
+    (character.silver ?? 0) +
+    (character.electrum ?? 0) +
+    (character.gold ?? 0) +
+    (character.platinum ?? 0);
+  const coinWeightKg = coinCount * COIN_WEIGHT_KG;
+  const capacityMultiplier = character.capacityMultiplier ?? 1;
+
+  const locationWeights: LocationWeight[] = locations.map((loc) => {
+    const locEntries = entries.filter((e) => (e.storageLocationId ?? carriedLocationId) === loc.id);
+    const itemsWeight = locEntries.reduce((sum, e) => {
+      let w = e.item.weightKg;
+      // Gourde vide : seulement le cuir
+      if (
+        e.notes?.includes('empty') &&
+        e.item.survivalTags &&
+        Array.isArray(e.item.survivalTags) &&
+        e.item.survivalTags.includes('water')
+      ) {
+        w = EMPTY_WATERSKIN_KG;
+      }
+      return sum + (typeof w === 'number' ? w * e.quantity : 0);
+    }, 0);
+
+    let maxCap: number | null = null;
+    if (loc.type === 'carried') {
+      maxCap = character.strength * 7.5 * capacityMultiplier;
+    } else if (loc.type === 'mount') {
+      maxCap = (loc.strength ?? 10) * 7.5 * (loc.multiplier ?? 1);
+    } else if (loc.type === 'container') {
+      maxCap = loc.capacityKg;
+    }
+
+    let effectiveWeight = itemsWeight;
+    if (loc.type === 'carried') {
+      effectiveWeight += coinWeightKg;
+      for (const l of locations) {
+        if (l.type === 'container') effectiveWeight += l.ownWeightKg || 0;
+      }
+    }
+
+    const pct = maxCap && maxCap > 0 ? Math.min(100, (effectiveWeight / maxCap) * 100) : 0;
+
+    return {
+      locationId: loc.id,
+      locationName: loc.name,
+      locationType: loc.type,
+      itemsWeightKg: +itemsWeight.toFixed(3),
+      ownWeightKg:
+        loc.type === 'carried'
+          ? +(
+              coinWeightKg +
+              locations
+                .filter((l) => l.type === 'container')
+                .reduce((sum, l) => sum + (l.ownWeightKg || 0), 0)
+            ).toFixed(3)
+          : 0,
+      maxCapacityKg:
+        maxCap !== null && maxCap !== undefined && !Number.isNaN(maxCap)
+          ? +maxCap.toFixed(2)
+          : null,
+      pct,
+    };
+  });
+
+  const carried = locationWeights.find((lw) => lw.locationType === 'carried');
+  const carriedTotal = (carried?.itemsWeightKg ?? 0) + (carried?.ownWeightKg ?? 0);
+  const encumbrance = computeEncumbrance(
+    +carriedTotal.toFixed(3),
+    character.strength,
+    encumbranceMode,
+    +coinWeightKg.toFixed(3),
+    capacityMultiplier,
+  );
+  return { locationWeights, encumbrance, carriedTotalKg: +carriedTotal.toFixed(3), coinWeightKg };
+}
+
 export const COIN_TO_CP: Record<CostUnit, number> = {
   cp: 1,
   sp: 10,

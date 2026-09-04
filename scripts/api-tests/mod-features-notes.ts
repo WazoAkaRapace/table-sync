@@ -3,7 +3,8 @@
  * Covers every .prepare site in routes/character-features.ts and
  * routes/character-notes.ts.
  */
-import { CLASS_FEATURES } from '@table-sync/shared';
+
+import { CLASS_FEATURES } from '@table-sync/shared/classFeatures';
 import { api, eq, type Fixtures, ok, type ServerHandle } from './harness.ts';
 
 const ALL_FEATURES = Object.values(CLASS_FEATURES).flat();

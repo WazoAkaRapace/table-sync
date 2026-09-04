@@ -425,13 +425,20 @@ export function LoadingSpinner({ label }: { label?: string }) {
   );
 }
 
-export function ErrorMsg({ message }: { message: string }) {
+export function ErrorMsg({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
     <div
-      className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm"
+      className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm flex items-center justify-between gap-3"
       role="alert"
     >
-      {message}
+      <span>{message}</span>
+      {/* Sur liaison capricieuse, une bannière passive force la navigation pour
+          rejouer la requête — le bouton la rejoue sur place. */}
+      {onRetry && (
+        <button type="button" className="btn-secondary shrink-0 text-sm" onClick={onRetry}>
+          ↻
+        </button>
+      )}
     </div>
   );
 }

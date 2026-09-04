@@ -539,6 +539,10 @@ export const monsters = sqliteTable(
     nameFr: text('name_fr').notNull(),
     /** Overlay anglais (nom + bloc de stat texte) — voir data/monsters-en.json. */
     overlayEn: text('overlay_en'),
+    /** Recherche normalisée PRÉCALCULÉE (nom FR + type + overlay EN concaténés,
+     *  sans diacritiques) — la recherche LIKE évite les appels UDF normalize()
+     *  par ligne. Remplie au backfill de boot (idempotent, voir db/backfill.ts). */
+    searchText: text('search_text'),
     type: text('type'),
     subtype: text('subtype'),
     size: text('size'),

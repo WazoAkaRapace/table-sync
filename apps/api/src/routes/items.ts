@@ -14,6 +14,7 @@ import { cols } from '../db/projections.ts';
 import { items, parties, partyMembers } from '../db/schema.ts';
 import { bus } from '../sync/bus.ts';
 import { isPartyGM, isPartyMember, mapItem, requireUser } from './helpers.ts';
+import { sendCachedJson } from './httpCache.ts';
 import { langFromReq } from './lang.ts';
 import { apiMsg } from './messages.ts';
 
@@ -119,8 +120,12 @@ export async function itemRoutes(app: FastifyInstance) {
         drizzle.select({ n: sql<number>`count(*)` }).from(items).where(filter).get() as any
       ).n;
 
-      return reply.send({
-        items: rows.map((r: any) => mapItem(r, langFromReq(req))),
+      // Résumés SANS description : la recherche joueur du catalogue n'affiche
+      // jamais la prose. Exception : l'onglet Objets custom du MD (source=
+      // custom) rend et édite les descriptions — il les garde.
+      const summary = source !== 'custom';
+      return sendCachedJson(req, reply, {
+        items: rows.map((r: any) => mapItem(r, langFromReq(req), summary)),
         total,
         limit: lim,
         offset: off,

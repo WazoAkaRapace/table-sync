@@ -11,9 +11,7 @@ import {
   type CharacterFeature,
   type CharacterSpell,
   type CharacterSummary,
-  CLASS_SUBCLASSES,
   type CostUnit,
-  type FeatureResetType,
   findClass,
   type InventoryEntry,
   type Item,
@@ -22,6 +20,7 @@ import {
   type Spell,
   type SpellSchool,
 } from '@table-sync/shared';
+import { CLASS_SUBCLASSES, type FeatureResetType } from '@table-sync/shared/classFeatures';
 import { and, eq, inArray, ne, sql } from 'drizzle-orm';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../db/drizzle.ts';
@@ -248,8 +247,16 @@ export function replaceCharacterClasses(characterId: number, entries: CharacterC
   })();
 }
 
-/** Map a raw DB row to the Item domain type. */
-export function mapItem(row: any, lang: AppLang = 'fr'): Item {
+/**
+ * Map a raw DB row to the Item domain type.
+ *
+ * `summary = true` sert les listes : description à null (+ hasDescription
+ * pour que l'UI sache qu'une prose existe et la charge à l'ouverture). La
+ * description moyenne fait ~0,5 KB — sur une page de catalogue ou une fiche
+ * entière qui re-descend après CHAQUE mutation, c'était le gros du fil.
+ */
+export function mapItem(row: any, lang: AppLang = 'fr', summary = false): Item {
+  const description = pickLocalized(lang, row.description_en, row.description);
   return {
     id: row.id,
     source: row.source,
@@ -261,7 +268,8 @@ export function mapItem(row: any, lang: AppLang = 'fr'): Item {
     weightKg: row.weight_kg,
     costQty: row.cost_qty,
     costUnit: row.cost_unit as CostUnit | null,
-    description: pickLocalized(lang, row.description_en, row.description),
+    description: summary ? null : description,
+    hasDescription: !!description,
     baseWeapon: row.base_weapon ?? null,
     baseArmor: row.base_armor ?? null,
     armorFamily: row.armor_family ?? null,
@@ -361,13 +369,7 @@ export function mapCharacterSummary(row: any): CharacterSummary {
     eyes: row.eyes ?? null,
     hair: row.hair ?? null,
     portraitUrl: row.portrait_url ?? null,
-    personalityTraits: row.personality_traits ?? null,
-    ideals: row.ideals ?? null,
-    bonds: row.bonds ?? null,
-    flaws: row.flaws ?? null,
-    appearance: row.appearance ?? null,
-    backstory: row.backstory ?? null,
-    alliesOrganizations: row.allies_organizations ?? null,
+    // (champs prose : volontairement absents du résumé — voir mapCharacter)
     armorClassOverride: row.armor_class_override ?? null,
     deathSaveSuccesses: row.death_save_successes ?? 0,
     deathSaveFailures: row.death_save_failures ?? 0,
@@ -402,6 +404,15 @@ export function mapCharacterSummary(row: any): CharacterSummary {
 export function mapCharacter(row: any): Character {
   return {
     ...mapCharacterSummary(row),
+    // Prose : les fiches COMPLÈTES seules — l'onglet Description est le seul
+    // lecteur, les rosters (parties.ts, listes) ne paient plus les multi-KB.
+    personalityTraits: row.personality_traits ?? null,
+    ideals: row.ideals ?? null,
+    bonds: row.bonds ?? null,
+    flaws: row.flaws ?? null,
+    appearance: row.appearance ?? null,
+    backstory: row.backstory ?? null,
+    alliesOrganizations: row.allies_organizations ?? null,
     notes: row.notes,
     copper: row.copper,
     silver: row.silver,
@@ -443,11 +454,13 @@ export function mapInventoryEntry(row: any, lang: AppLang = 'fr'): InventoryEntr
       }
     : row;
 
+  // Objets embarqués TOUJOURS en résumé (sans prose) — la fiche entière
+  // re-descend après chaque mutation, la description se charge à l'ouverture.
   return {
     id: row.id,
     characterId: row.character_id,
     itemId: row.item_id,
-    item: mapItem(itemRow, lang),
+    item: mapItem(itemRow, lang, true),
     quantity: row.quantity,
     equipped: !!row.equipped,
     notes: row.notes,
@@ -461,7 +474,12 @@ export function mapInventoryEntry(row: any, lang: AppLang = 'fr'): InventoryEntr
  * Handles snake_case → camelCase and JSON parsing of
  * components / classes_json / damage_json / dc_json.
  */
-export function mapSpell(row: any, lang: AppLang = 'fr'): Spell {
+/**
+ * `summary = true` sert les listes de sorts (catalogue, sorts connus) :
+ * description/higherLevel à null — la feuille d'incantation (SpellDetailSheet)
+ * et l'aperçu détaillé chargent GET /spells/:id à l'ouverture.
+ */
+export function mapSpell(row: any, lang: AppLang = 'fr', summary = false): Spell {
   return {
     id: row.id,
     srdIndex: row.srd_index,
@@ -475,8 +493,8 @@ export function mapSpell(row: any, lang: AppLang = 'fr'): Spell {
     duration: row.duration ?? null,
     concentration: !!row.concentration,
     ritual: !!row.ritual,
-    description: pickLocalized(lang, row.description, row.description_fr),
-    higherLevel: pickLocalized(lang, row.higher_level, row.higher_level_fr),
+    description: summary ? null : pickLocalized(lang, row.description, row.description_fr),
+    higherLevel: summary ? null : pickLocalized(lang, row.higher_level, row.higher_level_fr),
     attackType: row.attack_type ?? null,
     // damage_json / dc_json are kept as raw JSON strings per the Spell type
     damageJson: row.damage_json ?? null,
@@ -517,7 +535,7 @@ export function mapCharacterSpell(row: any, lang: AppLang = 'fr'): CharacterSpel
   return {
     id: row.id,
     characterId: row.character_id,
-    spell: mapSpell(spellRow, lang),
+    spell: mapSpell(spellRow, lang, true),
     prepared: !!row.prepared,
     classSource: row.class_source ?? null,
     sortOrder: row.sort_order ?? 0,
