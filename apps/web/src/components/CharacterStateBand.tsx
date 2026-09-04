@@ -475,8 +475,9 @@ export default function CharacterStateBand({
           </div>
 
           {/* Combat line — the static copy is the live region (status changes
-            announce themselves); the pinned twin stays silent to avoid double
-            announcements. */}
+              announce themselves); the pinned twin stays silent to avoid double
+              announcements. Hidden at lg+: the header combat strip (CombatWidget)
+              owns the wide-screen combat line — one instrument per surface. */}
           <CombatLine
             combat={combat}
             combatHref={combatHref}
@@ -484,6 +485,7 @@ export default function CharacterStateBand({
             onOpenInitiative={onOpenInitiative}
             isCaster={isCaster}
             live
+            className="lg:hidden"
           />
 
           {/* Encumbrance — the derived display; its multiplier input lives in
@@ -669,6 +671,7 @@ export default function CharacterStateBand({
                   onNavigate={onNavigate}
                   onOpenInitiative={onOpenInitiative}
                   isCaster={isCaster}
+                  className="lg:hidden"
                 />
               </div>
             </section>
@@ -687,6 +690,7 @@ function CombatLine({
   onOpenInitiative,
   isCaster,
   live = false,
+  className,
 }: {
   combat: StateBandCombat | null;
   combatHref: string | null;
@@ -694,11 +698,16 @@ function CombatLine({
   onOpenInitiative: () => void;
   isCaster: boolean;
   live?: boolean;
+  className?: string;
 }) {
   const { t } = useTranslation();
   if (!combat) return null;
   return (
-    <div role={live ? 'status' : undefined} aria-live={live ? 'polite' : undefined}>
+    <div
+      role={live ? 'status' : undefined}
+      aria-live={live ? 'polite' : undefined}
+      className={className}
+    >
       {combat.needsInitiative ? (
         <div className="band-rise flex gap-2">
           <button

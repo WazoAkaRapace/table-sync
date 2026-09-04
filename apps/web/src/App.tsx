@@ -147,6 +147,10 @@ function Nav() {
           )}
         </div>
         <div className="flex items-center gap-2 sm:gap-4">
+          {/* Mount point for the player's combat strip (CombatWidget portals
+              here on the player's own sheet, lg+). Empty and invisible
+              everywhere else. */}
+          <div id="header-combat-slot" className="hidden lg:flex items-center min-w-0" />
           {override?.action && (
             <Link
               to={override.action.to}

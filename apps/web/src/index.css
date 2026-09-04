@@ -557,6 +557,23 @@ input[type="number"] {
   }
 }
 
+/* ---------- Combat strip (header, lg+) ---------- */
+
+/* Compact controls inside the 40px pill. The .input / .btn-* component classes
+   and the global `button { text-base }` rule are un-layered CSS, so Tailwind
+   utilities (py-1, text-xs…) layered under them never win — the strip carries
+   its own descendant overrides instead. Specificity 0,2,0 beats all three. */
+.combat-strip .input {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+.combat-strip .btn-primary,
+.combat-strip .btn-secondary {
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
 /* ---------- Welcome register (PartiesPage) ---------- */
 
 /* Register arrival — title then entries rise under the head rule, capped

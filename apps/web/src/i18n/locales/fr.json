@@ -1055,6 +1055,7 @@
   "widget.combat.en.cours": "Combat en cours",
   "widget.preparation": "Préparation",
   "widget.tour.round": "Tour {{round}}",
+  "widget.header.tour": "Tour de {{name}} · Manche {{round}}",
   "widget.nom.saisis.ton.initiative": "{{name}} — saisis ton initiative :",
   "widget.lancer.d20.dex": "Lancer d20 + DEX",
   "band.niv.level": " · Niv {{level}}",

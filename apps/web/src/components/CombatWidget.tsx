@@ -1,17 +1,20 @@
 /**
- * Floating combat widget for players.
+ * Player combat strip, docked in the app header's right side (lg+).
  *
- * Appears bottom-left (minimized by default) when a combat is active or
- * in setup in the sheet's party. Shows whose turn it is, and if the
- * player hasn't rolled initiative yet, provides an input.
+ * Persistent by design: the header is sticky, so the encounter, the current
+ * actor, my initiative, the initiative input and "end my turn" stay visible
+ * while the player scrolls and navigates their sheet — the old left-edge
+ * drawer floated over the very content it was supposed to watch over.
  *
  * Only renders — and only loads — on the player's own character sheet,
  * scoped to that sheet's party (a player doesn't fight in two groups at
- * once). The GM uses the full CombatPage route.
+ * once). Below lg the in-page docked combat card owns this job; the GM uses
+ * the full CombatPage route.
  */
 
 import type { Combatant, EncounterDetail } from '@table-sync/shared';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router-dom';
 import api from '../api';
@@ -35,14 +38,17 @@ export default function CombatWidget() {
   const { user } = useAuth();
   const location = useLocation();
   const [combats, setCombats] = useState<ActiveCombat[]>([]);
-  const [collapsed, setCollapsed] = useState(true); // minimized by default
-  // Lien profond du push « lance ton initiative » (?combat=init) : déploie le
-  // tiroir au chargement comme sur toute navigation ultérieure (le composant
-  // est monté une fois au niveau App, il ne se remonte pas au changement de
-  // route — d'où l'effet plutôt que l'initialiseur).
+  // The strip mounts inside the app header's right cluster (#header-combat-slot,
+  // rendered by Nav, hidden below lg). Portal keeps the live widget state
+  // flowing into it — the header never knows about combat.
+  // The mount point only exists once the session has resolved (Nav renders
+  // null while user is null), so probe after every render until it appears;
+  // the setHeaderSlot(null) misses are React bail-out no-ops.
+  const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null);
   useEffect(() => {
-    if (new URLSearchParams(location.search).get('combat') === 'init') setCollapsed(false);
-  }, [location.search]);
+    const el = document.getElementById('header-combat-slot');
+    if (el) setHeaderSlot(el);
+  });
   const [initInput, setInitInput] = useState('');
   const [initError, setInitError] = useState(false);
   const loadSeq = useRef(0);
@@ -194,204 +200,154 @@ export default function CombatWidget() {
   const slashActive = useTurnSlash(isMyTurn);
 
   if (!user || !isCharacterSheet || !isMyCharacter || combats.length === 0) return null;
+  if (!headerSlot) return null;
 
   const needsInit = combats.find((c) => c.myCombatant.initiative === null);
   const combat = myTurn ?? needsInit ?? combats[0];
   const needsInitiative = combat.myCombatant.initiative === null;
-  const isSetup = combat.encounter.status === 'setup';
 
-  if (collapsed) {
-    // Vertical tab attached to the left edge of the screen, mid-height.
-    // On your turn the static glow gives way to the pulsing combat-turn-glow.
-    const glowColor = isMyTurn
-      ? 'combat-turn-glow'
-      : needsInitiative
-        ? 'shadow-[0_0_0_3px_rgba(202,138,4,0.4),0_0_20px_rgba(202,138,4,0.6)]'
-        : 'shadow-lg';
-    return (
-      <button
-        type="button"
-        onClick={() => setCollapsed(false)}
-        className={`hidden lg:flex fixed left-0 top-1/2 -translate-y-1/2 z-40 w-10 h-16 rounded-r-xl rounded-l-none shadow-lg items-center justify-center text-xl leading-none transition-all active:scale-95 border-2 border-l-0 border-parchment-50 ${
-          isMyTurn
-            ? 'bg-blood-600 hover:bg-blood-700 text-parchment-50'
-            : needsInitiative
-              ? 'bg-yellow-500 hover:bg-yellow-600 text-ink-900'
-              : 'bg-ink-900 hover:bg-ink-800 text-parchment-50'
-        } ${glowColor}`}
-        title={
-          isMyTurn
-            ? t('widget.a.toi.de.jouer.title')
-            : needsInitiative
-              ? t('widget.saisis.ton.initiative')
-              : t('widget.combat.en.cours')
-        }
-      >
-        ⚔
-        <TurnSlash active={slashActive} />
-      </button>
-    );
-  }
+  // One quiet instrument on the dark ink header: encounter (→ tracker) on the
+  // left, live turn status, then the state's single action. Blood = your turn
+  // (glow + sword-cut, same signature as the dock), gold = initiative owed.
+  const statusText = needsInitiative
+    ? t('widget.lance.ton.initiative')
+    : isMyTurn
+      ? t('widget.a.toi.de.jouer.title')
+      : combat.currentCombatant
+        ? t('widget.header.tour', {
+            name: combat.currentCombatant.name,
+            round: combat.encounter.round,
+          })
+        : combat.encounter.status === 'active'
+          ? t('widget.tour.round', { round: combat.encounter.round })
+          : t('widget.preparation');
 
-  return (
-    // Outer wrapper centers the drawer vertically; the inner card slides
-    // out from the left edge on mount (drawer-enter animates the inner
-    // element only, so the centering translate is never fought over).
-    <div className="hidden lg:block fixed left-0 top-1/2 -translate-y-1/2 z-40">
-      <div
-        className={`relative w-72 max-h-[80vh] overflow-y-auto rounded-r-2xl rounded-l-none shadow-xl border-2 border-l-0 bg-white drawer-enter ${
-          isMyTurn
-            ? 'border-blood-500 combat-turn-glow'
-            : needsInitiative
-              ? 'border-yellow-500'
-              : 'border-ink-300'
-        }`}
+  const submitInitiative = async () => {
+    const v = parseInt(initInput, 10);
+    if (Number.isNaN(v)) return;
+    const ok = await setInitiative(combat.encounter.id, combat.myCombatant.id, v);
+    if (ok) setInitInput('');
+  };
+
+  return createPortal(
+    <div
+      className={`combat-strip relative flex items-center gap-2 h-10 max-w-full pl-2.5 pr-1.5 rounded-lg border shadow-sm ${
+        isMyTurn
+          ? 'border-blood-500 bg-blood-900/40 combat-turn-glow'
+          : needsInitiative
+            ? 'border-yellow-500 bg-ink-800'
+            : 'border-ink-600 bg-ink-800'
+      }`}
+    >
+      <TurnSlash active={slashActive} />
+
+      {/* Encounter — the door to the tracker (deep link opens it directly) */}
+      <Link
+        to={`/party/${combat.partyId}/combat?enc=${combat.encounter.id}`}
+        title={t('widget.voir.le.combat')}
+        className="group flex items-center gap-1.5 min-w-0 shrink"
       >
-        <TurnSlash active={slashActive} />
-        <div className="flex items-center justify-between p-3 border-b border-parchment-200">
-          <div className="flex items-center gap-2">
-            <span className="text-lg">⚔</span>
-            <div>
-              <div className="text-xs font-semibold text-ink-700">{combat.encounter.name}</div>
-              <div className="text-xs text-ink-400">
-                {isSetup
-                  ? t('widget.preparation')
-                  : t('widget.tour.round', { round: combat.encounter.round })}
-              </div>
-            </div>
-          </div>
+        <span className="text-base leading-none shrink-0" aria-hidden="true">
+          ⚔
+        </span>
+        <span
+          className="text-xs font-semibold text-parchment-100 truncate max-w-40 group-hover:text-parchment-50 transition-colors"
+          title={combat.encounter.name}
+        >
+          {combat.encounter.name}
+        </span>
+      </Link>
+      <span className="w-px h-5 bg-parchment-50/20 shrink-0" aria-hidden="true" />
+
+      {/* Turn status — the live region (transitions announce themselves);
+          controls stay OUTSIDE it so typing never re-announces */}
+      <div role="status" aria-live="polite" className="flex items-center gap-2 min-w-0">
+        <span
+          className={`text-xs whitespace-nowrap truncate ${
+            isMyTurn
+              ? 'font-bold text-parchment-50'
+              : needsInitiative
+                ? 'font-bold text-yellow-300'
+                : 'text-parchment-200'
+          }`}
+        >
+          {statusText}
+        </span>
+        {combat.myCombatant.initiative !== null && (
+          <span
+            className="font-mono text-[11px] text-parchment-300 bg-ink-900/60 border border-ink-600 rounded px-1.5 py-0.5 shrink-0"
+            title={t('widget.mon.initiative')}
+          >
+            init {combat.myCombatant.initiative}
+          </span>
+        )}
+      </div>
+
+      {/* Initiative entry — deployed for as long as the roll is owed */}
+      {needsInitiative && (
+        <div className="flex items-center gap-1 shrink-0">
+          <input
+            type="number"
+            min={1}
+            max={40}
+            value={initInput}
+            onChange={(e) => {
+              setInitInput(e.target.value);
+              if (initError) setInitError(false);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') void submitInitiative();
+            }}
+            placeholder="—"
+            aria-label={t('widget.mon.initiative')}
+            autoFocus
+            className="input input-compact"
+          />
+          <button type="button" onClick={() => void submitInitiative()} className="btn-primary">
+            OK
+          </button>
           <button
             type="button"
-            onClick={() => setCollapsed(true)}
-            className="text-ink-400 hover:text-ink-700 text-sm"
-            title={t('widget.reduire')}
+            onClick={() =>
+              setInitiative(
+                combat.encounter.id,
+                combat.myCombatant.id,
+                rollD20(combat.myCombatant.initiativeBonus),
+              )
+            }
+            className="btn-secondary"
+            title={t('widget.lancer.d20.dex')}
           >
-            ◀
+            🎲
           </button>
+          {initError && (
+            <span
+              className="text-sm leading-none text-red-400"
+              title={t('widget.echec.de.l.enregistrement.reessaie')}
+            >
+              <span aria-hidden="true">⚠</span>
+              <span className="sr-only" role="alert">
+                {t('widget.echec.de.l.enregistrement.reessaie')}
+              </span>
+            </span>
+          )}
         </div>
+      )}
 
-        <div className="p-3 space-y-2">
-          {/* Initiative request banner */}
-          {needsInitiative && (
-            <div className="text-center py-2 px-3 rounded-lg bg-yellow-400 text-ink-900 font-bold">
-              {t('widget.lance.ton.initiative')}
-            </div>
-          )}
-
-          {/* My turn banner + the action that closes it */}
-          {isMyTurn && (
-            <>
-              <div className="text-center py-2 px-3 rounded-lg bg-blood-600 text-parchment-50 font-bold">
-                {t('widget.a.toi.de.jouer')}
-              </div>
-              <button
-                type="button"
-                onClick={() => endMyTurn(combat.encounter.id)}
-                disabled={endingTurn}
-                className="btn-primary w-full min-h-[44px] text-sm"
-                aria-label={t('widget.terminer.mon.tour.passer.au.combattant')}
-              >
-                {t('widget.j.ai.fini.mon.tour')}
-              </button>
-            </>
-          )}
-
-          {/* Current actor (only during active combat) */}
-          {combat.currentCombatant && !isMyTurn && !needsInitiative && (
-            <div className="text-sm text-ink-600">
-              {t('widget.au.tour.de')}
-              <strong>{combat.currentCombatant.name}</strong>
-              <span className="text-ink-400 ml-1">
-                (init {combat.currentCombatant.initiative ?? '—'})
-              </span>
-            </div>
-          )}
-
-          {/* Initiative entry */}
-          {needsInitiative && (
-            <div className="p-2 rounded-lg bg-yellow-50 border border-yellow-200">
-              <p className="text-xs text-ink-600 mb-1">
-                {t('widget.nom.saisis.ton.initiative', { name: combat.myCombatant.name })}
-              </p>
-              <div className="flex items-center gap-1">
-                <input
-                  type="number"
-                  min={1}
-                  max={40}
-                  value={initInput}
-                  onChange={(e) => {
-                    setInitInput(e.target.value);
-                    if (initError) setInitError(false);
-                  }}
-                  onKeyDown={async (e) => {
-                    if (e.key !== 'Enter') return;
-                    const v = parseInt(initInput, 10);
-                    if (Number.isNaN(v)) return;
-                    const ok = await setInitiative(combat.encounter.id, combat.myCombatant.id, v);
-                    if (ok) setInitInput('');
-                  }}
-                  placeholder="—"
-                  aria-label={t('widget.mon.initiative')}
-                  className="input input-compact text-sm py-1"
-                  autoFocus
-                />
-                <button
-                  type="button"
-                  onClick={async () => {
-                    const v = parseInt(initInput, 10);
-                    if (Number.isNaN(v)) return;
-                    const ok = await setInitiative(combat.encounter.id, combat.myCombatant.id, v);
-                    if (ok) setInitInput('');
-                  }}
-                  className="btn-primary text-xs px-2 py-1"
-                >
-                  OK
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setInitiative(
-                      combat.encounter.id,
-                      combat.myCombatant.id,
-                      rollD20(combat.myCombatant.initiativeBonus),
-                    )
-                  }
-                  className="btn-secondary text-xs px-2 py-1"
-                  title={t('widget.lancer.d20.dex')}
-                >
-                  🎲
-                </button>
-              </div>
-              {initError && (
-                <p className="text-xs text-red-600 mt-1" role="alert">
-                  {t('widget.echec.de.l.enregistrement.reessaie')}
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* My combatant status */}
-          {!needsInitiative && (
-            <div className="flex items-center justify-between text-xs text-ink-500">
-              <span>
-                {combat.myCombatant.name} · init {combat.myCombatant.initiative}
-              </span>
-              <span>
-                ❤ {combat.myCombatant.hitPoints}/{combat.myCombatant.maxHitPoints}
-              </span>
-            </div>
-          )}
-
-          {/* Link to combat page — enc param opens the encounter directly
-            (CombatPage reads it, then strips it from the URL) */}
-          <Link
-            to={`/party/${combat.partyId}/combat?enc=${combat.encounter.id}`}
-            className="block text-center text-xs text-blood-600 hover:text-blood-700 pt-1"
-          >
-            {t('widget.voir.le.combat')}
-          </Link>
-        </div>
-      </div>
-    </div>
+      {/* "J'ai fini mon tour" — closes the player's own turn from the strip;
+          the server re-checks that the caller's combatant holds the turn */}
+      {isMyTurn && (
+        <button
+          type="button"
+          onClick={() => endMyTurn(combat.encounter.id)}
+          disabled={endingTurn}
+          className="btn-primary whitespace-nowrap shrink-0"
+          aria-label={t('widget.terminer.mon.tour.passer.au.combattant')}
+        >
+          {t('widget.j.ai.fini.mon.tour')}
+        </button>
+      )}
+    </div>,
+    headerSlot,
   );
 }

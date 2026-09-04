@@ -8,7 +8,7 @@ déclencheurs actifs sont maintenant :
 - **« ⚔ Le combat se prépare ! »** — le MD ajoute des PJ à une rencontre
   (`POST /encounters/:id/combatants/player`) : chaque propriétaire est invité
   à lancer son initiative, le clic ouvre sa fiche avec la saisie d'initiative
-  déployée (`?combat=init`, carte du dock en mobile / tiroir en desktop) ;
+  déployée (`?combat=init`, carte du dock en mobile / bande de combat de l'en-tête en desktop) ;
 - **« À toi de jouer ! »** — démarrage du combat ou avance de tour
   (`next-turn` MD comme `end-my-turn` joueur) quand le tour échoit à un PJ :
   le clic ouvre l'onglet **Survie** de la fiche (`?tab=survie`) ;
@@ -64,7 +64,7 @@ sw.js (push-only, aucun cache)
   Android le resynchronise de façon asynchrone après un changement de
   manifest (jusqu'à ~24 h, ou réinstaller la PWA pour forcer).
 - **Suppression « fenêtre visible »** : si l'app est ouverte à l'écran, le SW
-  ne montre pas la notification (le widget de combat/TurnSlash informe déjà).
+  ne montre pas la notification (la bande de combat d'en-tête / la carte du dock et TurnSlash informent déjà).
   Exception : un payload `force: true` s'affiche quand même — la notification
   de TEST l'exige (on la clique app ouverte précisément pour vérifier la
   chaîne ; sans elle, le bouton paraissait ne rien faire). Pas de vérification
