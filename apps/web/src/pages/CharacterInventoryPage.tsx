@@ -56,6 +56,7 @@ import { type CoinMode, CoinPurse } from './character/CoinPurse';
 import { CoinTransactionModal } from './character/CoinTransactionModal';
 import { LocationWeightBar } from './character/LocationWeightBar';
 import { NewLocationModal } from './character/NewLocationModal';
+import { CHARACTER_TABS, type CharacterTab, SheetTabBar } from './character/SheetTabBar';
 import { SurvivalPanel } from './character/SurvivalPanel';
 import { TransferModal } from './character/TransferModal';
 import {
@@ -67,45 +68,6 @@ import {
 } from './character/types';
 import NpcPage from './NpcPage';
 
-type CharacterTab =
-  | 'inventory'
-  | 'survival'
-  | 'stats'
-  | 'spells'
-  | 'skills'
-  | 'features'
-  | 'description'
-  | 'npcs'
-  | 'notes'
-  | 'messages';
-
-/** Character sheet tabs (shared by the desktop top bar and the mobile bottom dock).
- *  Play-first order: the state tabs a player opens mid-session lead; the bag
- *  and the record tabs follow. */
-const CHARACTER_TABS: {
-  key: CharacterTab;
-  label: string;
-  icon: string;
-  primary: boolean;
-  short?: string;
-}[] = [
-  { key: 'survival', label: 'onglet.survie', icon: '🩸', primary: true, short: 'onglet.survie' },
-  {
-    key: 'stats',
-    label: 'onglet.caracteristiques',
-    icon: '⚔️',
-    primary: true,
-    short: 'onglet.caract',
-  },
-  { key: 'spells', label: 'onglet.sorts', icon: '✨', primary: true, short: 'onglet.sorts' },
-  { key: 'skills', label: 'onglet.competences', icon: '🎯', primary: true, short: 'onglet.comp' },
-  { key: 'inventory', label: 'onglet.inventaire', icon: '🎒', primary: false },
-  { key: 'features', label: 'onglet.traits', icon: '📋', primary: false, short: 'onglet.traits' },
-  { key: 'description', label: 'onglet.description', icon: '👤', primary: false },
-  { key: 'npcs', label: 'onglet.pnj', icon: '🎭', primary: false },
-  { key: 'notes', label: 'onglet.notes', icon: '📝', primary: false },
-  { key: 'messages', label: 'onglet.messages', icon: '✉️', primary: false },
-];
 const CATALOG_PAGE_SIZE = 30;
 
 // ---------- Main component ----------
@@ -840,38 +802,10 @@ export default function CharacterInventoryPage() {
         />
       )}
 
-      {/* ---------- Tab navigation — desktop top bar (settles 60ms behind the band) ---------- */}
-      <div
-        className="sheet-rise -mx-4 px-4 sm:mx-0 sm:px-0 hidden lg:block"
-        style={{ animationDelay: '60ms' }}
-        data-tuto="tabbar"
-      >
-        <div className="flex items-center gap-1 bg-parchment-100 rounded-xl p-1 overflow-x-auto no-scrollbar">
-          {CHARACTER_TABS.map((tab) => (
-            <button
-              type="button"
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`relative flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                activeTab === tab.key
-                  ? 'bg-blood-600 text-white shadow-sm'
-                  : 'text-ink-900 hover:bg-parchment-200'
-              }`}
-              aria-pressed={activeTab === tab.key}
-            >
-              <span aria-hidden="true">{tab.icon}</span>
-              <span>{t(tab.label)}</span>
-              {tab.key === 'messages' && messagesUnread > 0 && (
-                <UnreadBadge
-                  count={messagesUnread}
-                  label={t('msgs.non.lus', { n: messagesUnread })}
-                  className="border-parchment-200"
-                />
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* ---------- Tab navigation — desktop top bar, mesurée (settle 60ms
+              behind the band) : les onglets de queue se replient derrière
+              « ⋯ Plus » quand la mesure manque, pastille de non-lus en tête ---------- */}
+      <SheetTabBar activeTab={activeTab} onSelect={setActiveTab} messagesUnread={messagesUnread} />
 
       {/* ---------- Tab navigation — floating mobile dock with sliding indicator ---------- */}
       <div className="vv-anchor lg:hidden fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-30 max-w-[calc(100vw-2rem)]">

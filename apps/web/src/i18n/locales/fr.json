@@ -856,6 +856,8 @@
   "onglet.pnj": "PNJ",
   "onglet.messages": "Messages",
   "onglet.notes": "Notes",
+  "onglet.plus": "Plus",
+  "onglet.plus.aria": "Autres onglets",
   "nav.table.du.md": "🛡 Table du MD",
   "create.step.identite": "Identité",
   "create.step.classe": "Classe",

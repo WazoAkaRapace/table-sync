@@ -857,6 +857,8 @@
   "onglet.pnj": "NPCs",
   "onglet.messages": "Messages",
   "onglet.notes": "Notes",
+  "onglet.plus": "More",
+  "onglet.plus.aria": "More tabs",
   "nav.table.du.md": "🛡 DM’s Table",
   "create.step.identite": "Identity",
   "create.step.classe": "Class",
