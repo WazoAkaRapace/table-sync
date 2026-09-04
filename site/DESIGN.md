@@ -8,7 +8,7 @@ build, servie par GitHub Pages — et son parti pris structurel est le produit
 lui-même : **la landing EST une fiche de personnage D&D 5e** (graine 28d9a99e,
 candidat 5/7). L'en-tête de fiche (sceau, champs, portrait) sert de hero, les
 six caractéristiques FOR→CHA portent les preuves, les capacités défilent en
-registre à ordinaux romains I–VI, et le « Repos long » est l'auto-hébergement.
+registre à ordinaux romains I–IX, et le « Repos long » est l'auto-hébergement.
 Refusé : l'agencement hero→fonctionnalités→CTA du SaaS. Deux familles de
 surfaces, comme dans l'app : la carte blanche levée (`.panel`) pour le hero,
 la démo et le déploiement ; la surface réglée — entrées à même le parchemin,
@@ -60,7 +60,7 @@ sélection `gold-100`. Titres h1–h3 en Cinzel 600, `text-wrap: balance`.
 | CTA | deux boutons 44 px : « Code source sur GitHub » (primaire `blood-600`) + « Auto-héberger en 3 commandes » (secondaire `parchment-200`, ancre interne) |
 | Six tuiles (`abilities`) | FOR→CHA, grille 2→3→6 colonnes (640/1024px) ; tuile blanche 60 % bordée `parchment-200`, rayon 12 ; libellé Cinzel 0.72rem espacé 0.18em, **score Cinzel 2.2rem `ink-800`**, fait 0.82rem `ink-500` |
 | Tuile courante | DEX (le temps réel, la différenciatrice) porte `.is-lead` : score `blood-600`. Une seule tuile sang — l'équivalent de l'entrée courante du registre |
-| Personnalité (VI) | les quatre quadrants de fiche 5e (TRAITS / IDÉAUX / LIENS / DÉFAUTS), cartes blanches 60 % 2 colonnes — entrée du registre à part entière, comme le bloc personnalité d'une vraie feuille |
+| Personnalité (VII) | les quatre quadrants de fiche 5e (TRAITS / IDÉAUX / LIENS / DÉFAUTS), cartes blanches 60 % 2 colonnes — entrée du registre à part entière, comme le bloc personnalité d'une vraie feuille |
 | Pied | double règle de tête, 3 colonnes (L'OUTIL / DONNÉES & RÈGLES / LE DÉPÔT), rangée sceau 36 px « fait pour la table » |
 
 ## La grammaire du registre sur cette page
@@ -124,7 +124,7 @@ La même app vit sur des verres plus grands : la fiche du joueur posée à plat
 sur tablette — en portrait (entrée II, `23-fiche-tablette.png`, 820×1180) et
 en paysage sans dock (entrée II, `25-survie-paysage.png`, 1180×820, la barre
 d'onglets du haut a remplacé le hub) — et la rencontre du MD entière sur
-ordinateur (entrée III, `24-traqueur-bureau.png`, 1440×900). Chaque vue se
+ordinateur (entrée IV, `24-traqueur-bureau.png`, 1440×900). Chaque vue se
 pose **sous le poste de consultation** de son entrée, pleine largeur
 (`.entry-wide`, `grid-column: 1/-1`).
 
@@ -138,12 +138,12 @@ pose **sous le poste de consultation** de son entrée, pleine largeur
 
 ## Le poste de consultation (toutes les séries multi-captures)
 
-Cinq postes servent la page : la fiche du joueur (entrée II, 4 vues),
-l'écran du MD (entrée III, Traqueur / Bloc de stats / Table du MD), la
-correspondance secrète (entrée IV, Le fil / Bannière / Boîte du MD), la
-chronique (entrée V, Séances / Moments) et la visite guidée (entrée VII,
-Bienvenue / Le hub). Chacun est câblé indépendamment (`main.js` boucle sur
-`.phonepost`).
+Six postes servent la page : la fiche du joueur (entrée II, 3 vues), le sac et
+la bourse (entrée III, Inventaire / Catalogue / La bourse / Monnaie), l'écran
+du MD (entrée IV, Traqueur / Bloc de stats / Table du MD), la correspondance
+secrète (entrée V, Le fil / Bannière / Boîte du MD), la chronique (entrée VI,
+Séances / Moments) et la visite guidée (entrée VIII, Bienvenue / Le hub).
+Chacun est câblé indépendamment (`main.js` boucle sur `.phonepost`).
 
 | Dispositif | Recette |
 |---|---|

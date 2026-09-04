@@ -12,6 +12,7 @@ import { SortableCard, SortableGrid } from '../components/SortableGrid';
 import { ConfirmButton, EmptyState, Modal } from '../components/ui';
 import { appLocale } from '../i18n';
 import { useSyncEvent } from '../sync';
+import { parseSqliteDate } from '../utils';
 
 interface Props {
   character: Character;
@@ -197,7 +198,7 @@ export default function CharacterNotesTab({
                   )}
                   <span className="text-[10px] text-ink-400 mt-auto">
                     {t('notes.modifie.le', {
-                      date: new Date(`${note.updatedAt}Z`).toLocaleDateString(appLocale()),
+                      date: parseSqliteDate(note.updatedAt).toLocaleDateString(appLocale()),
                     })}
                   </span>
                 </div>

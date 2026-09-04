@@ -16,18 +16,19 @@ import { Chip, EmptyState, ErrorMsg, LoadingSpinner } from '../components/ui';
 import { useHeaderOverride } from '../headerContext';
 import { appLang, appLocale } from '../i18n';
 import { useSyncEvent } from '../sync';
-import { toRoman } from '../utils';
+import { parseSqliteDate, toRoman } from '../utils';
 
 function playedAtLabel(playedAt: string | null, t: (key: string) => string): string {
   if (!playedAt) return t('chronique.date.inconnue');
-  const d = new Date(playedAt);
+  // Date seule : parsée en LOCAL (parseSqliteDate) pour afficher le jour écrit.
+  const d = parseSqliteDate(playedAt);
   if (Number.isNaN(d.getTime())) return playedAt;
   return d.toLocaleDateString(appLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 function fetchedAtLabel(fetchedAt: string | null): string | null {
   if (!fetchedAt) return null;
-  const d = new Date(fetchedAt);
+  const d = parseSqliteDate(fetchedAt);
   if (Number.isNaN(d.getTime())) return null;
   return d.toLocaleTimeString(appLocale(), { hour: '2-digit', minute: '2-digit' });
 }

@@ -46,7 +46,7 @@ import {
 } from '../components/ui';
 import { appLocale } from '../i18n';
 import { useSyncEvent } from '../sync';
-import { toRoman } from '../utils';
+import { parseSqliteDate, toRoman } from '../utils';
 import NpcPage from './NpcPage';
 
 type NotebookTab = 'notes' | 'quests' | 'calendar' | 'npcs';
@@ -964,7 +964,7 @@ function QuestsTab({ campaign, partyId, reload, onError }: TabProps) {
                         <span className="mt-0.5 block text-sm text-ink-400">
                           {QUEST_STATUS_GLYPH[quest.status]} {t(`carnet.qu.status.${quest.status}`)}
                           {isCompact &&
-                            ` · ${new Date(`${quest.updatedAt}Z`).toLocaleDateString(appLocale())}`}
+                            ` · ${parseSqliteDate(quest.updatedAt).toLocaleDateString(appLocale())}`}
                         </span>
                       </span>
                       <span
@@ -1338,7 +1338,7 @@ function NotesTab({ campaign, partyId, reload, onError, setCampaign }: TabProps)
                   )}
                   <span className="mt-auto text-[10px] text-ink-400">
                     {t('notes.modifie.le', {
-                      date: new Date(`${note.updatedAt}Z`).toLocaleDateString(appLocale()),
+                      date: parseSqliteDate(note.updatedAt).toLocaleDateString(appLocale()),
                     })}
                   </span>
                 </div>

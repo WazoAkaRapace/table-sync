@@ -34,23 +34,37 @@ function AppWithSync() {
   );
 }
 
-// Service worker push-only (aucun cache) : pas critique, échec silencieux.
-void registerServiceWorker();
+// Drapeau posé par la garde inline de index.html quand le navigateur est
+// sous le plancher CSS du bundle (Safari 16.4 / Chromium 111 / Firefox 128).
+declare global {
+  interface Window {
+    __TS_UNSUPPORTED__?: boolean;
+  }
+}
 
-// Le rendu n'a lieu qu'i18n prêt (FR : bundle statique, immédiat ; EN : un
-// chunk dynamique) — aucun composant ne peut s'afficher avec des clés brutes.
-initI18n().then(() => {
-  ReactDOM.createRoot(document.getElementById('root')!).render(
-    <React.StrictMode>
-      <ErrorBoundary>
-        <QueryClientProvider client={queryClient}>
-          <BrowserRouter>
-            <AuthProvider>
-              <AppWithSync />
-            </AuthProvider>
-          </BrowserRouter>
-        </QueryClientProvider>
-      </ErrorBoundary>
-    </React.StrictMode>,
-  );
-});
+function boot() {
+  // Service worker push-only (aucun cache) : pas critique, échec silencieux.
+  void registerServiceWorker();
+
+  // Le rendu n'a lieu qu'i18n prêt (FR : bundle statique, immédiat ; EN : un
+  // chunk dynamique) — aucun composant ne peut s'afficher avec des clés brutes.
+  initI18n().then(() => {
+    ReactDOM.createRoot(document.getElementById('root')!).render(
+      <React.StrictMode>
+        <ErrorBoundary>
+          <QueryClientProvider client={queryClient}>
+            <BrowserRouter>
+              <AuthProvider>
+                <AppWithSync />
+              </AuthProvider>
+            </BrowserRouter>
+          </QueryClientProvider>
+        </ErrorBoundary>
+      </React.StrictMode>,
+    );
+  });
+}
+
+// Navigateur trop ancien : l'écran statique posé par index.html reste en
+// place — pas de boot React par-dessus.
+if (!window.__TS_UNSUPPORTED__) boot();

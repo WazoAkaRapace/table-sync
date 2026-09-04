@@ -38,7 +38,7 @@ import {
 } from '../components/ui';
 import { appLocale } from '../i18n';
 import { useSyncEvent } from '../sync';
-import { activeCharactersFirst } from '../utils';
+import { activeCharactersFirst, parseSqliteDate } from '../utils';
 
 interface Transaction {
   id: number;
@@ -579,7 +579,7 @@ function CharactersTab({
 
 /** SQLite datetime ("2026-05-21 15:30:00") → « mai 2026 » (register's since-format). */
 function sinceLabel(sqliteDate: string): string {
-  const d = new Date(sqliteDate.replace(' ', 'T'));
+  const d = parseSqliteDate(sqliteDate);
   if (Number.isNaN(d.getTime())) return '';
   return d.toLocaleDateString(appLocale(), { month: 'short', year: 'numeric' });
 }
@@ -843,7 +843,7 @@ function TransactionsTab({ transactions }: { transactions: Transaction[] }) {
               {reasonLabels[tx.reason] || tx.reason}
               {tx.actorName ? ` · ${t('md.par', { name: tx.actorName })}` : ''}
               {' · '}
-              {new Date(tx.at).toLocaleString(appLocale(), {
+              {parseSqliteDate(tx.at).toLocaleString(appLocale(), {
                 dateStyle: 'short',
                 timeStyle: 'short',
               })}

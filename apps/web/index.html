@@ -28,6 +28,45 @@
   </head>
   <body>
     <div id="root"></div>
+
+    <!-- Garde navigateur : le CSS produit par Tailwind v4 exige @property,
+         oklch et color-mix — plancher effectif Safari 16.4 / Chromium 111 /
+         Firefox 128 (le target JS « es2020 » de Vite ne rattrape pas le CSS).
+         En dessous, la page s'afficherait cassée en silence : transformations
+         qui fuient, couleurs tombées. Ce script inline s'exécute avant le
+         bundle (les scripts module sont différés) ; si le navigateur manque
+         un pilier, on pose un écran statique bilingue et on pose le drapeau
+         __TS_UNSUPPORTED__ que main.tsx lit pour ne pas booter React. -->
+    <script>
+      // biome-ignore lint/complexity/useArrowFunction: cette garde doit rester en ES5 (var, function) — elle s'exécute précisément sur des navigateurs trop anciens pour parse un bundle es2020.
+      (function () {
+        var ok =
+          typeof CSS !== 'undefined' &&
+          typeof CSS.registerProperty === 'function' &&
+          typeof CSS.supports === 'function' &&
+          CSS.supports('color', 'color-mix(in oklab, red, blue)');
+        if (ok) return;
+        window.__TS_UNSUPPORTED__ = true;
+        var root = document.getElementById('root');
+        if (root) {
+          root.innerHTML =
+            '<div style="max-width:34rem;margin:0 auto;padding:3rem 1.25rem;font-family:Georgia,serif;color:#2a1f14;line-height:1.6;text-align:left">' +
+            '<h1 style="font-size:1.5rem;margin:0 0 0.75rem">Navigateur trop ancien</h1>' +
+            '<p style="margin:0 0 0.5rem">Table Sync exige un navigateur récent : Safari 16.4+, Chrome/Edge 111+ ou Firefox 128+. Mettez votre navigateur à jour, puis rechargez la page.</p>' +
+            '<p style="margin:1.5rem 0 0.5rem;font-weight:700">Browser not supported</p>' +
+            '<p style="margin:0">Table Sync needs a recent browser: Safari 16.4+, Chrome/Edge 111+ or Firefox 128+. Update your browser, then reload the page.</p>' +
+            '</div>';
+        }
+      })();
+    </script>
+
+    <noscript>
+      <div style="max-width:34rem;margin:0 auto;padding:3rem 1.25rem;font-family:Georgia,serif;color:#2a1f14">
+        <p>Table Sync exige JavaScript — activez-le, puis rechargez la page.</p>
+        <p>Table Sync requires JavaScript — enable it, then reload the page.</p>
+      </div>
+    </noscript>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

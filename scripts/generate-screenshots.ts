@@ -22,12 +22,12 @@
  *   4. Shots — chaque capture reproduit l'état documenté dans le README.
  *              Viewports : mobile 390×844 (la majorité des captures, la fiche
  *              est mobile-first), tablette 820×1180 en portrait pour la fiche
- *              (23) et 1180×820 en paysage pour la Survie sans dock (25),
- *              bureau 1440×900 pour le traqueur du MD (24) — les captures de
- *              vue élargie créent leur propre contexte Playwright
- *              via newSession().
+ *              (23) et 1180×820 en paysage pour la Survie sans dock (25) et
+ *              la demande d'initiative dans l'en-tête (30), bureau 1440×900
+ *              pour le traqueur du MD (24) — les captures de vue élargie
+ *              créent leur propre contexte Playwright via newSession().
  *
- * Bilingue : `--lang en` produit les mêmes 25 captures en anglais vers
+ * Bilingue : `--lang en` produit les mêmes 30 captures en anglais vers
  * docs/screenshots-en/ — l'API reçoit ?lang=en sur chaque appel du seed
  * (payloads mono-locale : `name` devient anglais), Chromium démarre en
  * locale en-US avec localStorage dnd-inv-lang=en, et tous les sélecteurs /
@@ -37,7 +37,7 @@
  * captures 11–13 peuvent différer entre deux runs d'une même langue).
  *
  * Usage :
- *   npm run screenshots                    # régénère les 25 captures (FR)
+ *   npm run screenshots                    # régénère les 30 captures (FR)
  *   npm run screenshots -- --only 03,07    # seulement certaines (numéros ou noms)
  *   npm run screenshots -- --lang en       # version anglaise → docs/screenshots-en/
  *   npm run screenshots -- --keep          # laisser les serveurs tourner (debug)
@@ -910,6 +910,32 @@ async function expandInventoryCategories(page: Page) {
   }
 }
 
+/** Dresse l'état « lance ton initiative » : l'embuscade en cours est close,
+ *  « Embuscade batiri » naît en préparation et Lyra y est ajoutée — le geste
+ *  même du MD qui, en prod, déclenche la notification push. Idempotent : la
+ *  29 comme la 30 peuvent s'exécuter seules. */
+async function ensureInitiativeEncounter(c: ShotCtx): Promise<void> {
+  const name = S('Embuscade batiri', 'Batiri Ambush');
+  const list = await c.mdApi<{ encounters: { id: number; name: string; status: string }[] }>(
+    'GET',
+    `/api/parties/${c.refs.partyId}/encounters`,
+  );
+  if (list.encounters.some((e) => e.name === name && e.status === 'setup')) return;
+  for (const e of list.encounters) {
+    if (e.status === 'active') {
+      await c.mdApi('PATCH', `/api/encounters/${e.id}`, { status: 'ended' });
+    }
+  }
+  const { encounter } = await c.mdApi<{ encounter: { id: number } }>(
+    'POST',
+    `/api/parties/${c.refs.partyId}/encounters`,
+    { name },
+  );
+  await c.mdApi('POST', `/api/encounters/${encounter.id}/combatants/player`, {
+    characterIds: [c.refs.chars.lyra],
+  });
+}
+
 async function shoot(page: Page, file: string, opts: { animations?: 'allow' | 'disabled' } = {}) {
   await page.screenshot({
     path: path.join(OUT_DIR, file),
@@ -919,7 +945,7 @@ async function shoot(page: Page, file: string, opts: { animations?: 'allow' | 'd
 }
 
 // ---------------------------------------------------------------------------
-// Les 25 captures du README
+// Les 30 captures du README
 // ---------------------------------------------------------------------------
 
 interface ShotCtx {
@@ -938,6 +964,10 @@ interface ShotCtx {
   /** REST en tant que MD — pour faire ARRIVER un message en pleine capture
    *  (la bannière de la 19 ne se met en scène pas autrement). */
   sendAsMd: (charId: number, body: string) => Promise<void>;
+  /** REST en tant que MD, usage général — les captures tardives (29–30)
+   *  remodèlent le monde : clore l'embuscade, dresser celle qui réclame
+   *  l'initiative. */
+  mdApi: Api;
 }
 
 // Celles-ci se prennent après avoir avancé jusqu'au tour des gobelins.
@@ -947,6 +977,12 @@ const GM_SHOTS = new Set([
   '13-bloc-stats.png',
   '24-traqueur-bureau.png',
 ]);
+
+// Captures tardives : elles clorent l'embuscade et dressent « Embuscade
+// batiri » (préparation, Lyra ajoutée) — l'état « lance ton initiative ».
+// Elles coulent APRÈS les captures GM : le remodelage du monde ne doit rien
+// casser aux autres, et chaque capture peut s'exécuter seule (--only 29).
+const INIT_SHOTS = new Set(['29-initiative-mobile.png', '30-initiative-tablette.png']);
 
 const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
   {
@@ -974,6 +1010,122 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
         .first()
         .waitFor({ timeout: 10_000 });
       await shoot(page, '02-inventaire.png');
+      await page.close();
+    },
+  },
+  {
+    file: '26-catalogue.png',
+    async run(c) {
+      // Le catalogue en feuille du bas (FAB mobile) : recherche instantanée
+      // « corde » — résultats avec poids en kg, prix et badge de rareté.
+      const page = await openSheet(c.aurore, c.webPort, c.refs.partyId, c.refs.chars.lyra);
+      await openTab(page, S('Inventaire', 'Inventory'));
+      await page
+        .getByRole('button', {
+          name: S('Ajouter un objet au catalogue', 'Add an item from the catalog'),
+        })
+        .click();
+      const sheet = page.getByRole('dialog');
+      await sheet.waitFor({ timeout: 10_000 });
+      await sheet
+        .getByLabel(S('Rechercher dans le catalogue', 'Search the catalog'))
+        .fill(S('corde', 'rope'));
+      await sheet
+        .getByText(S('Corde en chanvre (15 mètres)', 'Rope, hempen (50 feet)'))
+        .first()
+        .waitFor({ timeout: 10_000 });
+      await page.waitForTimeout(400); // la feuille se pose, les cartes se rangent
+      await shoot(page, '26-catalogue.png');
+      await page.close();
+    },
+  },
+  {
+    file: '27-bourse.png',
+    async run(c) {
+      // La bourse dépliée, figures au repos : les cinq coupures (Lyra : 60 PC,
+      // 24 PO), le total en pièces d'or, les portes Encaisser / Dépenser.
+      const page = await openSheet(c.aurore, c.webPort, c.refs.partyId, c.refs.chars.lyra);
+      await openTab(page, S('Inventaire', 'Inventory'));
+      // Attendre les groupes : sur une page froide, react-query n'a pas encore
+      // rendu les en-têtes — expandInventoryCategories sortirait aussitôt et
+      // la page resterait trop courte pour ancrer la bourse.
+      await page
+        .getByText(S(/Arme\s*\(\s*\d+\s*\)/, /Weapon\s*\(\s*\d+\s*\)/))
+        .first()
+        .waitFor({ timeout: 10_000 });
+      // Groupes dépliés (même pose que la 02) — sinon la page est trop courte
+      // et la bourse, collée au bas, ne peut pas remonter au-dessus des UI
+      // fixes (carte de combat + dock, ~230 px).
+      await expandInventoryCategories(page);
+      const purse = page.locator('[data-tuto="inv-bourse"]');
+      await purse.scrollIntoViewIfNeeded();
+      await purse.locator('button[aria-expanded="false"]').click();
+      await page
+        .getByRole('button', { name: S('＋ Encaisser', '＋ Gain') })
+        .waitFor({ timeout: 10_000 });
+      // La transition expand-grid (0.25 s) doit être FINIE avant d'ancre :
+      // sinon le document grandit encore, maxScroll clamp trop tôt et la
+      // bourse reste basse, sous la carte de combat.
+      await page.waitForFunction(
+        () => {
+          const el = document.querySelector('[data-tuto="inv-bourse"]');
+          if (!el) return false;
+          return el.getAnimations({ subtree: true }).every((a) => a.playState === 'finished');
+        },
+        undefined,
+        { timeout: 5_000 },
+      );
+      // La bourse est le DERNIER bloc de l'onglet : l'ancre clampe à
+      // maxScroll et la carte se pose au plus haut possible (top ≈ 354) —
+      // les portes Encaisser/Dépenser dégagent la carte de combat fixée en
+      // bas. Une passe de re-ancrage par image couvre tout décalage tardif.
+      await page.waitForFunction(
+        () => {
+          const el = document.querySelector('[data-tuto="inv-bourse"]');
+          if (!el) return false;
+          const rect = el.getBoundingClientRect();
+          if (rect.top > 400) {
+            window.scrollTo({ top: rect.top + window.scrollY - 96, behavior: 'instant' });
+            return false;
+          }
+          return true;
+        },
+        undefined,
+        { timeout: 10_000 },
+      );
+      // Capture SANS animations:'disabled' — la passe de Playwright qui
+      // fige les animations annule les transitions expand-grid déjà finies
+      // et rend les groupes repliés (constaté au md5 : la même page, propre
+      // en capture nue, sort repliée avec l'option). Tout est immobile ici :
+      // on attend les animations ci-dessus, 'allow' ne change rien d'autre.
+      await shoot(page, '27-bourse.png', { animations: 'allow' });
+      await page.close();
+    },
+  },
+  {
+    file: '28-bourse-monnaie.png',
+    async run(c) {
+      // Le changeur : dépenser 15 PA sans une pièce d'argent sur soi — la
+      // bourse casse 1 PO en 10 PA, rend la monnaie et affiche le comptoir
+      // avant → après. La démonstration du rendu de monnaie AUTOMATIQUE.
+      const page = await openSheet(c.aurore, c.webPort, c.refs.partyId, c.refs.chars.lyra);
+      await openTab(page, S('Inventaire', 'Inventory'));
+      const purse = page.locator('[data-tuto="inv-bourse"]');
+      await purse.scrollIntoViewIfNeeded();
+      await purse.locator('button[aria-expanded="false"]').click();
+      await page
+        .getByRole('button', { name: S('− Dépenser', '− Spend') })
+        .waitFor({ timeout: 10_000 });
+      await page.getByRole('button', { name: S('− Dépenser', '− Spend') }).click();
+      const dialog = page.getByRole('dialog');
+      await dialog.waitFor({ timeout: 10_000 });
+      await dialog.getByLabel(S('Quantité de PA', 'Quantity of sp')).fill('15');
+      // 60 PC + 24 PO − 15 PA : la pièce d'or cassée est le geste du changeur
+      await dialog
+        .getByText(S('1 PO cassée en 10 PA', '1 gp broken into 10 sp'))
+        .waitFor({ timeout: 10_000 });
+      await page.waitForTimeout(300);
+      await shoot(page, '28-bourse-monnaie.png');
       await page.close();
     },
   },
@@ -1445,6 +1597,71 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
       }
     },
   },
+  {
+    file: '29-initiative-mobile.png',
+    async run(c) {
+      // La demande d'initiative sur téléphone : le MD vient d'ajouter Lyra à
+      // « Embuscade batiri » (préparation) — le déclencheur même de la
+      // notification « lance ton initiative ». Le lien profond ?combat=init
+      // (celui du clic sur la notification) déploie la carte dorée au-dessus
+      // du dock : champ « Ton initiative », OK, dé.
+      await ensureInitiativeEncounter(c);
+      const page = await c.aurore.newPage();
+      await page.goto(
+        webUrl(c.webPort, `/party/${c.refs.partyId}/character/${c.refs.chars.lyra}?combat=init`),
+        { waitUntil: 'networkidle', timeout: 90_000 },
+      );
+      await settle(page);
+      // La carte dorée, déployée d'office par le lien profond. La bande
+      // d'état porte elle aussi un bouton « Lance ton initiative ! » — on
+      // ancre sur la bascule de la carte du dock, la seule avec
+      // aria-expanded, et on exige qu'elle soit dépliée.
+      const card = page.locator('button[aria-expanded="true"]').filter({
+        hasText: S('🎲 Lance ton initiative !', '🎲 Roll your initiative!'),
+      });
+      await card.waitFor({ timeout: 10_000 });
+      await page.getByLabel(S('Ton initiative', 'Your initiative')).waitFor({ timeout: 10_000 });
+      await page.waitForTimeout(400); // le dépliage se pose (max-h-44)
+      await shoot(page, '29-initiative-mobile.png');
+      await page.close();
+    },
+  },
+  {
+    file: '30-initiative-tablette.png',
+    async run(c) {
+      // La même demande sur tablette en paysage (1180×820) : ≥1024 px, la
+      // carte du dock cède la place à la bande de combat de l'en-tête —
+      // contour doré, « Lance ton initiative ! » en or, champ + OK + dé
+      // déployés tant que le jet est dû, nom de la rencontre portant vers
+      // le traqueur.
+      await ensureInitiativeEncounter(c);
+      const ctx = await newSession(c.browser, c.sessions.aurore, {
+        viewport: { width: 1180, height: 820 },
+      });
+      try {
+        const page = await ctx.newPage();
+        await page.goto(
+          webUrl(c.webPort, `/party/${c.refs.partyId}/character/${c.refs.chars.lyra}?combat=init`),
+          { waitUntil: 'networkidle', timeout: 90_000 },
+        );
+        await settle(page);
+        // La bande sonde #header-combat-slot jusqu'à ce que la session
+        // résolve — elle finit toujours par s'y poser.
+        await page.getByLabel(S('Mon initiative', 'My initiative')).waitFor({
+          timeout: 10_000,
+        });
+        await page
+          .getByText(S('Embuscade batiri', 'Batiri Ambush'))
+          .first()
+          .waitFor({ timeout: 10_000 });
+        await page.waitForTimeout(400);
+        await shoot(page, '30-initiative-tablette.png');
+        await page.close();
+      } finally {
+        await ctx.close();
+      }
+    },
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -1493,6 +1710,7 @@ async function main() {
           body,
         });
       },
+      mdApi: makeApi(stack.apiPort, mdS.token),
     };
 
     const selected = SHOTS.filter(
@@ -1515,15 +1733,19 @@ async function main() {
 
     // Ordre important : les captures joueur se font pendant le tour de Lyra
     // (la 05 montre « À toi de jouer ! »), puis on avance jusqu'aux gobelins
-    // pour l'état « combat en cours » des captures MD.
+    // pour l'état « combat en cours » des captures MD. Les captures tardives
+    // (29–30) coulent en dernier : elles closent l'embuscade et dressent
+    // « Embuscade batiri » — l'état « lance ton initiative ».
     const gmShots = selected.filter((s) => GM_SHOTS.has(s.file));
-    const playerShots = selected.filter((s) => !GM_SHOTS.has(s.file));
+    const initShots = selected.filter((s) => INIT_SHOTS.has(s.file));
+    const playerShots = selected.filter((s) => !GM_SHOTS.has(s.file) && !INIT_SHOTS.has(s.file));
     const advanceTurn = () =>
       makeApi(stack.apiPort, mdS.token)('POST', `/api/encounters/${refs.encounterId}/next-turn`);
     if (gmShots.length > 0 && playerShots.length === 0) await advanceTurn(); // déjà en tour gobelins
     for (const s of playerShots) await runShot(s);
     if (gmShots.length > 0 && playerShots.length > 0) await advanceTurn();
     for (const s of gmShots) await runShot(s);
+    for (const s of initShots) await runShot(s);
 
     await browser.close();
 

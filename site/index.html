@@ -75,8 +75,8 @@
       mesurées.
       STORY: le visiteur (joueur ou MD 5e francophone) reconnaît une fiche en
       une seconde, lit les six preuves comme des caractéristiques, descend le
-      registre des capacités (temps réel → fiche → MD → chronique), et repart
-      par GitHub + docker compose.
+      registre des capacités (temps réel → fiche → sac et bourse → MD →
+      chronique), et repart par GitHub + docker compose.
       FIRST VIEWPORT: sceau + nom + champs de fiche + portrait = capture
       réelle de l'app, six tuiles FOR→CHA pleine largeur, CTA sang.
       FORM: fiche de personnage 5e (candidat 5/7, graine 28d9a99e).
@@ -335,26 +335,6 @@
           <div class="entry-copy">
             <ul class="subentries">
               <li>
-                <h3><span lang="fr">Inventaire &amp; bourse</span><span lang="en">Inventory &amp; coin purse</span></h3>
-                <p>
-                  <span lang="fr">646 objets du SRD en recherche instantanée, pesés en
-                  kilogrammes. L'encombrance se déclenche par paliers et affiche ses
-                  effets sur la vitesse au moment où ils s'appliquent. Emplacements de
-                  stockage (porté, montures, conteneurs) et bourse
-                  PC/PA/PE/PO/PP&nbsp;: l'argent pèse. Sur chaque arme, des
-                  puces calculées&nbsp;: bonus d'attaque détaillé au clic, dés de
-                  dégâts, bonus magique ✨, alerte ⚠ non qualifié.</span><span
-                    lang="en"
-                    >All 646 SRD items in instant search, weighed in kilograms.
-                    Encumbrance triggers by tier and shows its speed effects the moment
-                    they apply. Storage locations (carried, mounts, containers) and a
-                    CP/SP/EP/GP/PP purse — coins have weight. Every weapon carries
-                    computed chips: attack bonus breakdown on tap, damage dice, magic
-                    bonus ✨, non-proficient ⚠ warning.</span
-                  >
-                </p>
-              </li>
-              <li>
                 <h3><span lang="fr">Sorts</span><span lang="en">Spells</span></h3>
                 <p>
                   <span lang="fr">490 sorts du SRD et des extensions, tout en français.
@@ -420,10 +400,9 @@
               </li>
             </ul>
             <ul class="proof" aria-label="Preuves" data-en-aria-label="Evidence">
-              <li><span lang="fr">646 objets</span><span lang="en">646 items</span></li>
               <li><span lang="fr">490 sorts</span><span lang="en">490 spells</span></li>
               <li><span lang="fr">16 états</span><span lang="en">16 conditions</span></li>
-              <li><span lang="fr">poids en kg</span><span lang="en">weights in kg</span></li>
+              <li><span lang="fr">2 pools multiclasse</span><span lang="en">multiclass: 2 pools</span></li>
               <li><span lang="fr">téléphone → tablette</span><span lang="en">phone → tablet</span></li>
             </ul>
           </div>
@@ -431,15 +410,6 @@
             <div class="shot-frame phonepost-screen">
               <img
                 class="phonepost-view is-active"
-                src="assets/screenshots/02-inventaire.png"
-                alt="Inventaire d'un personnage : objets, poids en kilogrammes, bourse"
-                data-en-alt="Character inventory: items, weights in kilograms, coin purse"
-                width="390"
-                height="844"
-                decoding="async"
-              />
-              <img
-                class="phonepost-view"
                 src="assets/screenshots/07-lancer-sort.png"
                 alt="Lancement d'un sort avec incantation supérieure et dégâts mis à l'échelle"
                 data-en-alt="Casting a spell with upcasting and damage scaled live"
@@ -472,15 +442,6 @@
                 class="is-active"
                 aria-pressed="true"
                 data-view="0"
-                data-caption="646 objets pesés en kilogrammes, bourse et paliers d'encombrance"
-                data-en-caption="646 items weighed in kilograms, coin purse and encumbrance tiers"
-              >
-                <span lang="fr">Inventaire</span><span lang="en">Inventory</span>
-              </button>
-              <button
-                type="button"
-                aria-pressed="false"
-                data-view="1"
                 data-caption="Incantation supérieure : dégâts mis à l'échelle en direct"
                 data-en-caption="Upcasting: damage scaled live"
               >
@@ -489,7 +450,7 @@
               <button
                 type="button"
                 aria-pressed="false"
-                data-view="2"
+                data-view="1"
                 data-caption="Forme sauvage : bêtes déjà vues, PV tirés aux dés"
                 data-en-caption="Wild shape: beasts you've seen, HP rolled on dice"
               >
@@ -498,7 +459,7 @@
               <button
                 type="button"
                 aria-pressed="false"
-                data-view="3"
+                data-view="2"
                 data-caption="Multiclasse : deux pools d'emplacements"
                 data-en-caption="Multiclassing: two slot pools"
               >
@@ -506,7 +467,7 @@
               </button>
             </div>
             <figcaption class="phonepost-caption" aria-live="polite">
-              646 objets pesés en kilogrammes, bourse et paliers d'encombrance
+              Incantation supérieure : dégâts mis à l'échelle en direct
             </figcaption>
           </figure>
           <div class="entry-wide tablet-pair">
@@ -554,9 +515,175 @@
         </div>
       </section>
 
-      <section class="entry wrap" id="md">
+      <section class="entry wrap" id="inventaire">
         <div class="entry-head">
           <span class="entry-ordinal" aria-hidden="true">III</span>
+          <h2 class="entry-title"><span lang="fr">Le sac et la bourse</span><span lang="en">The pack and the purse</span></h2>
+        </div>
+        <div class="entry-body">
+          <div class="entry-copy">
+            <ul class="subentries">
+              <li>
+                <h3><span lang="fr">Pesé au kilogramme</span><span lang="en">Weighed in kilograms</span></h3>
+                <p>
+                  <span lang="fr">646 objets du SRD, tous en français, chacun pesé en
+                  kilogrammes. Une recherche, un geste&nbsp;: l'objet rejoint la feuille
+                  avec son poids et son prix. Les armes affichent leurs chiffres
+                  calculés — atteinte 🎯, dégâts ⚔, magie ✨, et l'avertissement ⚠
+                  quand la main n'est pas qualifiée.</span><span
+                    lang="en"
+                    >646 SRD items, all in French, each weighed in kilograms. One
+                    search, one tap: the item joins the sheet with its weight and
+                    price. Weapons show their computed numbers — attack 🎯,
+                    damage ⚔, magic ✨, and the ⚠ when the hand isn't
+                    proficient.</span
+                  >
+                </p>
+              </li>
+              <li>
+                <h3><span lang="fr">Un sac qui sait ses limites</span><span lang="en">A pack that knows its limits</span></h3>
+                <p>
+                  <span lang="fr">Emplacements nommés — sur soi, en transport — et
+                  encombrance par paliers&nbsp;: la feuille dit quand le sac commence
+                  à peser, puis quand il pèse trop. Un objet de trop&nbsp;? Il se
+                  transfère au compagnon en un geste, de joueur à joueur.</span><span
+                    lang="en"
+                    >Named spots — carried, stowed — and encumbrance by tiers: the
+                    sheet tells you when the pack starts to weigh, then when it
+                    weighs too much. One item too many? Hand it to a companion in
+                    a gesture, player to player.</span
+                  >
+                </p>
+              </li>
+              <li>
+                <h3><span lang="fr">La bourse compte toute seule</span><span lang="en">The purse counts on its own</span></h3>
+                <p>
+                  <span lang="fr">Cinq coupures, de la pièce de cuivre à la pièce de
+                  platine, et un total rendu en pièces d'or. L'encaissement garde la
+                  forme du tas&nbsp;: trente PA et deux PO tombés d'un coffre restent
+                  trente PA et deux PO — le total, lui, se met à jour.</span><span
+                    lang="en"
+                    >Five denominations, copper to platinum, and a total given in
+                    gold pieces. Gains keep the pile's shape: thirty sp and two gp
+                    from a chest stay thirty sp and two gp — the total updates
+                    itself.</span
+                  >
+                </p>
+              </li>
+              <li>
+                <h3><span lang="fr">…et rend la monnaie</span><span lang="en">…and makes change</span></h3>
+                <p>
+                  <span lang="fr">Dépenser sans la coupe exacte ne casse rien&nbsp;:
+                  la bourse paye d'abord les pièces justes, puis les menues, et ne
+                  casse que la plus petite pièce qui dépasse — 1 PO en 10 PA, jamais
+                  plus. Le comptoir montre l'avant et l'après, monnaie rendue en
+                  clair.</span><span
+                    lang="en"
+                    >Spending without the exact coins breaks nothing: the purse
+                    pays the right coins first, then the loose small ones, and only
+                    breaks the smallest coin that overshoots — 1 gp into 10 sp,
+                    never more. The counter shows before and after, change spelled
+                    out.</span
+                  >
+                </p>
+              </li>
+            </ul>
+            <ul class="proof" aria-label="Preuves" data-en-aria-label="Evidence">
+              <li><span lang="fr">646 objets · kg</span><span lang="en">646 items · kg</span></li>
+              <li><span lang="fr">PC · PA · PE · PO · PP</span><span lang="en">cp · sp · ep · gp · pp</span></li>
+              <li><span lang="fr">rendu de monnaie minimal</span><span lang="en">minimal change-making</span></li>
+              <li><span lang="fr">paliers d'encombrance</span><span lang="en">encumbrance tiers</span></li>
+              <li><span lang="fr">transferts PJ ↔ PJ</span><span lang="en">player ↔ player transfers</span></li>
+            </ul>
+          </div>
+          <figure class="phonepost" aria-label="Vues du sac et de la bourse" data-en-aria-label="Pack and purse views">
+            <div class="shot-frame phonepost-screen">
+              <img
+                class="phonepost-view is-active"
+                src="assets/screenshots/02-inventaire.png"
+                alt="Inventaire d'un personnage : objets, poids en kilogrammes, bourse"
+                data-en-alt="Character inventory: items, weights in kilograms, coin purse"
+                width="390"
+                height="844"
+                decoding="async"
+              />
+              <img
+                class="phonepost-view"
+                src="assets/screenshots/26-catalogue.png"
+                alt="Catalogue d'objets : recherche « corde », poids et prix sur chaque résultat"
+                data-en-alt="Item catalog: searching &ldquo;rope&rdquo;, weight and price on every result"
+                width="390"
+                height="844"
+                decoding="async"
+              />
+              <img
+                class="phonepost-view"
+                src="assets/screenshots/27-bourse.png"
+                alt="Bourse dépliée : cinq coupures, total en pièces d'or, portes Encaisser et Dépenser"
+                data-en-alt="Open coin purse: five denominations, total in gold pieces, Gain and Spend doors"
+                width="390"
+                height="844"
+                decoding="async"
+              />
+              <img
+                class="phonepost-view"
+                src="assets/screenshots/28-bourse-monnaie.png"
+                alt="Dépense de 15 pièces d'argent : une pièce d'or cassée en dix, monnaie rendue automatiquement"
+                data-en-alt="Spending 15 silver: one gold piece broken into ten, change made automatically"
+                width="390"
+                height="844"
+                decoding="async"
+              />
+            </div>
+            <div class="phonepost-dock">
+              <button
+                type="button"
+                class="is-active"
+                aria-pressed="true"
+                data-view="0"
+                data-caption="646 objets pesés en kilogrammes, bourse et paliers d'encombrance"
+                data-en-caption="646 items weighed in kilograms, coin purse and encumbrance tiers"
+              >
+                <span lang="fr">Inventaire</span><span lang="en">Inventory</span>
+              </button>
+              <button
+                type="button"
+                aria-pressed="false"
+                data-view="1"
+                data-caption="Le catalogue du SRD à une recherche : chaque objet avec son poids et son prix"
+                data-en-caption="The SRD catalog one search away: every item with its weight and price"
+              >
+                <span lang="fr">Catalogue</span><span lang="en">Catalog</span>
+              </button>
+              <button
+                type="button"
+                aria-pressed="false"
+                data-view="2"
+                data-caption="Cinq coupures, un total en pièces d'or"
+                data-en-caption="Five denominations, one total in gold"
+              >
+                <span lang="fr">La bourse</span><span lang="en">The purse</span>
+              </button>
+              <button
+                type="button"
+                aria-pressed="false"
+                data-view="3"
+                data-caption="Rendu de monnaie automatique : 1 PO cassée en 10 PA"
+                data-en-caption="Automatic change: 1 gp broken into 10 sp"
+              >
+                <span lang="fr">Monnaie</span><span lang="en">Change</span>
+              </button>
+            </div>
+            <figcaption class="phonepost-caption" aria-live="polite">
+              646 objets pesés en kilogrammes, bourse et paliers d'encombrance
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="entry wrap" id="md">
+        <div class="entry-head">
+          <span class="entry-ordinal" aria-hidden="true">IV</span>
           <h2 class="entry-title"><span lang="fr">L'écran du MD</span><span lang="en">The GM screen</span></h2>
         </div>
         <div class="entry-body">
@@ -719,7 +846,7 @@
 
       <section class="entry wrap" id="correspondance">
         <div class="entry-head">
-          <span class="entry-ordinal" aria-hidden="true">IV</span>
+          <span class="entry-ordinal" aria-hidden="true">V</span>
           <h2 class="entry-title"><span lang="fr">La correspondance secrète</span><span lang="en">The secret correspondence</span></h2>
         </div>
         <div class="entry-body">
@@ -845,7 +972,7 @@
 
       <section class="entry wrap" id="chronique">
         <div class="entry-head">
-          <span class="entry-ordinal" aria-hidden="true">V</span>
+          <span class="entry-ordinal" aria-hidden="true">VI</span>
           <h2 class="entry-title"><span lang="fr">La chronique</span><span lang="en">The chronicle</span></h2>
         </div>
         <div class="entry-body">
@@ -952,7 +1079,7 @@
 
       <section class="entry wrap" id="personnalite" aria-label="Personnalité" data-en-aria-label="Personality">
         <div class="entry-head">
-          <span class="entry-ordinal" aria-hidden="true">VI</span>
+          <span class="entry-ordinal" aria-hidden="true">VII</span>
           <h2 class="entry-title"><span lang="fr">Personnalité</span><span lang="en">Personality</span></h2>
         </div>
         <div class="personality">
@@ -1005,7 +1132,7 @@
 
       <section class="entry wrap" id="tutoriel">
         <div class="entry-head">
-          <span class="entry-ordinal" aria-hidden="true">VII</span>
+          <span class="entry-ordinal" aria-hidden="true">VIII</span>
           <h2 class="entry-title"><span lang="fr">La visite guidée</span><span lang="en">The guided tour</span></h2>
         </div>
         <div class="entry-body">
@@ -1114,7 +1241,7 @@
         <div class="panel deploy">
           <div class="entry-copy">
             <div class="entry-head entry-head-compact">
-              <span class="entry-ordinal" aria-hidden="true">VIII</span>
+              <span class="entry-ordinal" aria-hidden="true">IX</span>
               <h2 class="entry-title"><span lang="fr">Repos long : auto-hébergement</span><span lang="en">Long rest: self-hosting</span></h2>
             </div>
             <p>

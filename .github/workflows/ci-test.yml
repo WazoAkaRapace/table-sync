@@ -86,10 +86,11 @@ jobs:
   # ---- Browser E2E: parallel to validate (own throwaway stack + fresh DB) ----
   # The workflow-level PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD keeps `npm ci` fast;
   # the explicit `playwright install` below is unaffected by it and fetches
-  # just the chromium build the suite needs.
+  # the chromium build (full suite) + webkit build (@smoke subset — Safari's
+  # engine, the iPads at the table) the suite needs.
   e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
 
@@ -101,8 +102,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Chromium for Playwright
-        run: npx playwright install --with-deps chromium
+      - name: Install Chromium & WebKit for Playwright
+        run: npx playwright install --with-deps chromium webkit
 
       # Playwright's webServer boots the API (tsx + fresh data/db/e2e.sqlite)
       # and vite dev (proxy /api + /ws), then global-setup seeds the campaign

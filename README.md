@@ -20,13 +20,16 @@ Pensée pour le téléphone et la tablette pendant la partie : PWA installable, 
 - **646 objets** du SRD 5e (catalogue consultable, recherche instantanée)
 - Poids en **kilogrammes** + encombrance par paliers avec effets sur la vitesse
 - Emplacements de stockage (porté, montures, conteneurs avec poids propre)
-- Bourse (PC/PA/PE/PO/PP) — l'argent pèse !
+- Bourse (PC/PA/PE/PO/PP) — l'argent pèse ! Encaissement/dépense avec **rendu de monnaie automatique** à casse minimale (une pièce d'or cassée en dix pièces d'argent, jamais plus)
 - Transfert d'objets entre personnages en temps réel
 - **Puces de combat calculées** sur chaque arme : bonus d'attaque avec détail au clic (FOR/DEX + maîtrise + magique), dés de dégâts avec type en français, variante à deux mains, bonus magique ✨, ⚠ non qualifié — les **armes magiques** retrouvent leur arme de base depuis la description SRD
 
 | Inventaire | Arme avec stats calculées |
 |---|---|
 | ![Inventaire](docs/screenshots/02-inventaire.png) | ![Arme](docs/screenshots/03-arme-calcul.png) |
+| ![Catalogue](docs/screenshots/26-catalogue.png) | ![Bourse](docs/screenshots/27-bourse.png) |
+
+![Rendu de monnaie automatique — 1 PO cassée en 10 PA](docs/screenshots/28-bourse-monnaie.png)
 
 ### 🩸 Survie & combat du personnage
 - **Options d'attaque** : chaque arme équipée affichée avec ses jets (attaques ×2/×3/×4 pour les classes martiales, attaque furtive du Roublard, frappe sans arme avec dé d'arts martiaux du Moine)
@@ -104,6 +107,24 @@ En **paysage**, la barre d'onglets remplace le dock et la Survie s'étale à ple
 | Widget de combat (joueur) | Formes (bêtes vues) |
 |---|---|
 | ![Widget](docs/screenshots/05-widget-combat.png) | ![Formes](docs/screenshots/10-formes.png) |
+
+La **demande d'initiative** suit le joueur partout : carte dorée déployée au-dessus du dock sur téléphone, bande dorée dans l'en-tête sur tablette en paysage — champ, OK et dé, tant que le jet est dû.
+
+| Demande d'initiative (téléphone) | Demande d'initiative (tablette, paysage) |
+|---|---|
+| ![Initiative téléphone](docs/screenshots/29-initiative-mobile.png) | ![Initiative tablette](docs/screenshots/30-initiative-tablette.png) |
+
+### 🌐 Compatibilité navigateurs
+
+Le plancher est fixé par la feuille de style générée par Tailwind v4 (`@property`, `oklch`, `color-mix`) — la cible JavaScript `es2020` du build ne rattrape pas le CSS :
+
+| Navigateur | Version minimale |
+|---|---|
+| Safari / iPadOS | **16.4** (mars 2023) — aussi le plancher des notifications push iOS |
+| Chrome / Edge / WebView Android | **111** (mars 2023) |
+| Firefox | **128** (juillet 2024) |
+
+En dessous, une garde inline dans `index.html` remplace la page par un écran statique « Navigateur trop ancien » (bilingue) au lieu d'une mise en page cassée en silence. La suite E2E rejoue les parcours de lecture sur WebKit (le moteur des iPad) en plus de Chromium.
 
 ### ✉️ Correspondance secrète MD ↔ joueur
 - **Un fil par personnage** : le MD échange en privé avec chaque joueur — indices, secrets, révélations que la table ne doit pas entendre. L'historique reste sur le fil ; seul le MD peut rayer une ligne, d'un geste confirmé

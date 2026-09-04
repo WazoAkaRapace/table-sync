@@ -164,7 +164,7 @@ export default function MonsterStatBlock({
   );
 
   const body = (
-    <div className="overflow-y-auto p-4 flex-1">
+    <div className="overflow-y-auto overscroll-contain p-4 flex-1">
       {loading && (
         <p className="text-sm text-ink-400 text-center py-8">
           {t('bestiaire.chargement.du.stat.block')}

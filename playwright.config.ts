@@ -51,6 +51,14 @@ export default defineConfig({
     timezoneId: 'Europe/Paris',
     trace: 'on-first-retry',
   },
+  // Deux projets, une seule stack/base partagée (workers: 1, passage
+  // séquentiel) : Chromium joue TOUTE la suite ; WebKit — le moteur des
+  // iPad/Safari de la table, là où les bugs de rendu se cachent — rejoue le
+  // sous-ensemble « @smoke » : specs LECTURE SEULE, sûres de repasser après
+  // la passe Chromium (les specs qui attendent un état seedé intact — combat
+  // « en attente » par ex. — ne passent qu'une fois par base). Tagger un
+  // titre de test « @smoke » l'ajoute au balayage WebKit.
+  projects: [{ name: 'chromium' }, { name: 'webkit', grep: /@smoke/ }],
   webServer: [
     {
       // L'API (migrations + seed du catalogue) avant listen — santé = prête.

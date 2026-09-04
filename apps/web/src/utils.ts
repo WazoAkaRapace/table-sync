@@ -21,13 +21,30 @@ export function toRoman(n: number): string {
   return out || 'I';
 }
 
-/** SQLite timestamps are space-separated; Safari rejects those in Date().
- *  The « depuis/since » prefix reads the active language through the i18next
- *  singleton (keys commun.depuis / commun.since) — signature unchanged for
- *  callers outside this zone. */
+/**
+ * Horodatage SQLite → Date, pour tout temps brut servi par l'API.
+ *
+ * datetime('now') produit « 2026-05-21 15:30:00 » : forme à espace (rejetée
+ * par le Date() de Safari) et UTC sans marqueur (sans le « Z », new Date()
+ * lirait l'heure UTC comme une heure LOCALE et l'affichage décalerait du
+ * fuseau du lecteur). Les dates seules « YYYY-MM-DD » (jours du carnet,
+ * sessions du GM Assistant) sont parsées en LOCAL : le jour affiché reste
+ * le jour écrit, quel que soit le fuseau du lecteur. Les ISO complets
+ * (avec Z ou décalage) passent intacts.
+ */
+export function parseSqliteDate(value: string): Date {
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (dateOnly) return new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]));
+  let normalized = value.includes(' ') ? value.replace(' ', 'T') : value;
+  if (!/[Zz]$/.test(normalized) && !/[+-]\d{2}:?\d{2}$/.test(normalized)) normalized += 'Z';
+  return new Date(normalized);
+}
+
+/** « Depuis » stamp for living things. The prefix reads the active language
+ *  through the i18next singleton (keys commun.depuis / commun.since) —
+ *  signature unchanged for callers outside this zone. */
 export function formatSince(createdAt: string): string {
-  const normalized = createdAt.includes(' ') ? createdAt.replace(' ', 'T') : createdAt;
-  const d = new Date(normalized);
+  const d = parseSqliteDate(createdAt);
   if (Number.isNaN(d.getTime())) return '';
   const fmt = new Intl.DateTimeFormat(appLocale(), { month: 'short', year: 'numeric' });
   return `${i18next.t('commun.depuis')} ${fmt.format(d)}`;
@@ -37,8 +54,7 @@ export function formatSince(createdAt: string): string {
  *  The prefix (FR « créée », EN « created ») is passed by the caller via t() so it
  *  follows the active language (i18n fragments). */
 export function formatCreated(createdAt: string, prefix: string): string {
-  const normalized = createdAt.includes(' ') ? createdAt.replace(' ', 'T') : createdAt;
-  const d = new Date(normalized);
+  const d = parseSqliteDate(createdAt);
   if (Number.isNaN(d.getTime())) return '';
   const fmt = new Intl.DateTimeFormat(appLocale(), { month: 'short', year: 'numeric' });
   return `${prefix} ${fmt.format(d)}`;
@@ -76,16 +92,11 @@ export function activeCharactersFirst<T extends { hidden: boolean }>(characters:
  * Horodatage de correspondance : la granularité suit la vie d'un fil de
  * séance — « à l'instant », minutes, puis l'heure du jour, puis la date
  * (mois abrégé, année seulement si elle change). Les phrases passent par
- * i18n (commun de la langue active), les valeurs restent brutes.
- *
- * Le stockage est SQLite datetime('now') = UTC SANS marqueur — sans le « Z »
- * ajouté ici, new Date() lirait l'heure UTC comme une heure LOCALE et
- * l'affichage décalerait du fuseau du lecteur.
+ * i18n (commun de la langue active), les valeurs restent brutes. Le
+ * décodage du temps brut est celui de parseSqliteDate().
  */
 export function formatMessageTime(createdAt: string): string {
-  let normalized = createdAt.includes(' ') ? createdAt.replace(' ', 'T') : createdAt;
-  if (!/[Zz]$/.test(normalized) && !/[+-]\d{2}:?\d{2}$/.test(normalized)) normalized += 'Z';
-  const d = new Date(normalized);
+  const d = parseSqliteDate(createdAt);
   if (Number.isNaN(d.getTime())) return '';
   const diffMs = Date.now() - d.getTime();
   if (diffMs < 60_000) return i18next.t('msgs.a.linstant');

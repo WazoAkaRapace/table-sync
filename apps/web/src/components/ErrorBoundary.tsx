@@ -40,7 +40,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     const { error } = this.state;
     if (error) {
       return (
-        <div className="flex min-h-screen items-center justify-center p-4">
+        <div className="flex min-h-dvh items-center justify-center p-4">
           <div className="card w-full max-w-md p-6" role="alert">
             <div className="mb-2 text-4xl" aria-hidden="true">
               🎲

@@ -40,7 +40,7 @@ export default function ResetPasswordPage() {
   const linkError = error !== '' && error !== t('reset.mots.de.passe.differents');
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
+    <div className="min-h-dvh flex items-center justify-center px-4">
       <div className="card w-full max-w-sm p-6 sm:p-8">
         <div className="text-center mb-6">
           <img src="/icon-seal.svg" alt="" aria-hidden="true" className="w-20 h-20 mx-auto mb-3" />

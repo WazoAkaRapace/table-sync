@@ -666,7 +666,7 @@ export function Modal({
     >
       <div
         ref={modalRef}
-        className="card w-full break-words sm:max-w-md max-h-[85vh] overflow-y-auto rounded-b-none sm:rounded-b-2xl p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))]"
+        className="card w-full break-words sm:max-w-md max-h-[85vh] overflow-y-auto overscroll-contain rounded-b-none sm:rounded-b-2xl p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))]"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -756,7 +756,9 @@ export function BottomSheet({
             ✕
           </button>
         </div>
-        <div className={`overflow-y-auto p-4 flex-1 ${bodyClassName}`}>{children}</div>
+        <div className={`overflow-y-auto overscroll-contain p-4 flex-1 ${bodyClassName}`}>
+          {children}
+        </div>
         {footer && (
           <div className="flex gap-2 p-4 border-t border-parchment-200 shrink-0">{footer}</div>
         )}
