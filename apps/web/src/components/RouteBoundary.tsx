@@ -35,7 +35,9 @@ export class RouteBoundary extends Component<{ children: ReactNode }, RouteBound
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error('[RouteBoundary] Erreur de route interceptée :', error, info.componentStack);
+    // Sans accent dans la chaîne : le ratchet i18n compte tout caractère
+    // accentué hors commentaires, même dans un console.error.
+    console.error('[RouteBoundary] Erreur de route :', error, info.componentStack);
   }
 
   componentDidUpdate(_prev: unknown, prevState: RouteBoundaryState) {
