@@ -482,6 +482,9 @@ export interface Npc {
   description: string | null;
   secret: string | null; // null if not visible to requesting user
   isShared: boolean;
+  // Shared + true: any party member may edit the CONTENT (never delete, never
+  // the sharing flags — those stay with the creator/GM). Meaningless when private.
+  allowMemberEdit: boolean;
   sortOrder: number;
 }
 
@@ -495,6 +498,7 @@ export interface CreateNpcPayload {
   description?: string;
   secret?: string;
   isShared?: boolean;
+  allowMemberEdit?: boolean;
 }
 
 export interface PatchNpcPayload {
@@ -507,6 +511,9 @@ export interface PatchNpcPayload {
   description?: string | null;
   secret?: string | null;
   isShared?: boolean;
+  // Ignored unless the caller is the creator or the GM (the flags are the
+  // owner's alone to tick/untick)
+  allowMemberEdit?: boolean;
 }
 
 export const NPC_DISPOSITION_LABELS_FR: Record<NpcDisposition, string> = {

@@ -1,6 +1,9 @@
 /**
  * NPC routes: CRUD with party-level sharing + private visibility.
  * Any party member can create NPCs. Creator chooses shared/private.
+ * A shared NPC may also carry `allowMemberEdit` (creator/GM alone tick it):
+ * every party member may then edit the CONTENT — never delete it, never
+ * touch the sharing flags (those stay with the creator/GM).
  * Secrets belong to the GM ALONE: only a GM reads or writes the field —
  * not even the player who created the NPC (the GM may add a secret to a
  * player's NPC later; it must stay invisible to them).
@@ -30,6 +33,7 @@ export interface NpcRow {
   description: string | null;
   secret: string | null;
   isShared: boolean;
+  allowMemberEdit: boolean;
   sortOrder: number;
 }
 
@@ -51,6 +55,7 @@ function mapNpc(row: any, includeSecret: boolean): NpcRow {
     description: row.description,
     secret: includeSecret ? row.secret || null : null,
     isShared: !!row.is_shared,
+    allowMemberEdit: !!row.allow_member_edit,
     sortOrder: row.sort_order ?? 0,
   };
 }
@@ -141,6 +146,8 @@ export async function npcRoutes(app: FastifyInstance) {
           // A player's POST never carries a secret — GM-only field
           secret: gm ? body.secret || null : null,
           isShared: body.isShared === false ? 0 : 1,
+          // Group edit rides on sharing — meaningless on a private NPC
+          allowMemberEdit: body.isShared === false ? 0 : body.allowMemberEdit ? 1 : 0,
           sortOrder: maxOrder + 1,
         })
         .returning({ id: npcs.id })
@@ -154,7 +161,7 @@ export async function npcRoutes(app: FastifyInstance) {
     },
   );
 
-  // ---------- Update NPC (creator or GM) ----------
+  // ---------- Update NPC (creator, GM, or any member when allowed) ----------
   app.patch(
     '/npcs/:npcId',
     async (
@@ -172,7 +179,15 @@ export async function npcRoutes(app: FastifyInstance) {
       if (!npc) return reply.code(404).send({ error: apiMsg(req, 'NPC not found') });
 
       const gm = isPartyGM(npc.party_id, userId);
-      if (npc.created_by !== userId && !gm) {
+      // The sharing flags are the owner's alone — the GM keeps full control
+      const mayManage = npc.created_by === userId || gm;
+      // Shared + allowMemberEdit: any party member may edit the CONTENT
+      const memberEditor =
+        !mayManage &&
+        !!npc.is_shared &&
+        !!npc.allow_member_edit &&
+        isPartyMember(npc.party_id, userId);
+      if (!mayManage && !memberEditor) {
         return reply.code(403).send({ error: apiMsg(req, 'only the creator or GM can edit') });
       }
 
@@ -196,8 +211,12 @@ export async function npcRoutes(app: FastifyInstance) {
       if (gm && body.secret !== undefined) {
         values.secret = body.secret;
       }
-      if (body.isShared !== undefined) {
-        values.isShared = body.isShared ? 1 : 0;
+      if (mayManage && (body.isShared !== undefined || body.allowMemberEdit !== undefined)) {
+        // Group edit rides on sharing: a private NPC never carries it,
+        // and un-sharing drops the group-edit grant in the same write
+        const nextShared = body.isShared !== undefined ? !!body.isShared : !!npc.is_shared;
+        values.isShared = nextShared ? 1 : 0;
+        values.allowMemberEdit = nextShared && body.allowMemberEdit ? 1 : 0;
       }
 
       if (Object.keys(values).length === 0) {

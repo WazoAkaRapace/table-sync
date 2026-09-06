@@ -114,6 +114,77 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   r = await api(base, 'DELETE', `/api/npcs/${privateNpc.id}`, { token: fx.player.token });
   eq(r.status, 204, 'creator deletes private npc');
 
+  // ---------- npcs: édition par le groupe (allowMemberEdit) ----------
+  // player2 est (re)membre du groupe depuis le bloc ci-dessus
+  r = await api(base, 'POST', `/api/parties/${P}/npcs`, {
+    token: fx.player.token,
+    body: { name: 'Registre du comptoir', isShared: true, allowMemberEdit: true },
+  });
+  eq(r.status, 201, 'create shared + member-edit npc');
+  const memberEditNpc = r.data.npc;
+  eq(memberEditNpc.isShared, true, 'shared at creation');
+  eq(memberEditNpc.allowMemberEdit, true, 'allowMemberEdit at creation');
+
+  r = await api(base, 'POST', `/api/parties/${P}/npcs`, {
+    token: fx.player.token,
+    body: { name: 'Carnet intime', isShared: false, allowMemberEdit: true },
+  });
+  eq(r.status, 201, 'create private npc with grant attempted');
+  eq(r.data.npc.allowMemberEdit, false, 'a private npc never carries the grant');
+
+  // Le membre édite le contenu — le cœur de la demande
+  r = await api(base, 'PATCH', `/api/npcs/${memberEditNpc.id}`, {
+    token: fx.player2.token,
+    body: { description: 'Prix mis à jour', secret: 'vol' },
+  });
+  eq(r.status, 200, 'member edits content when allowed');
+  eq(r.data.npc.description, 'Prix mis à jour', 'member content edit applied');
+  eq(r.data.npc.secret, null, "member's secret write still ignored");
+
+  // Les drapeaux restent au créateur : portés par un membre, ils sont ignorés
+  r = await api(base, 'PATCH', `/api/npcs/${memberEditNpc.id}`, {
+    token: fx.player2.token,
+    body: { role: 'Comptable', isShared: false, allowMemberEdit: false },
+  });
+  eq(r.status, 200, 'member patch with flags accepted');
+  eq(r.data.npc.role, 'Comptable', 'content field applied');
+  eq(r.data.npc.isShared, true, 'member cannot un-share');
+  eq(r.data.npc.allowMemberEdit, true, 'member cannot revoke group edit');
+
+  r = await api(base, 'DELETE', `/api/npcs/${memberEditNpc.id}`, { token: fx.player2.token });
+  eq(r.status, 403, 'member cannot delete even with group edit');
+
+  // Le créateur reprend la main : retrait du drapeau → le membre est verrouillé
+  r = await api(base, 'PATCH', `/api/npcs/${memberEditNpc.id}`, {
+    token: fx.player.token,
+    body: { allowMemberEdit: false },
+  });
+  eq(r.status, 200, 'owner revokes group edit');
+  eq(r.data.npc.allowMemberEdit, false, 'grant revoked');
+  r = await api(base, 'PATCH', `/api/npcs/${memberEditNpc.id}`, {
+    token: fx.player2.token,
+    body: { description: 'X' },
+  });
+  eq(r.status, 403, 'member locked out after revoke');
+
+  // Re-grant puis dé-partage : le drapeau tombe dans la même écriture
+  await api(base, 'PATCH', `/api/npcs/${memberEditNpc.id}`, {
+    token: fx.player.token,
+    body: { allowMemberEdit: true },
+  });
+  r = await api(base, 'PATCH', `/api/npcs/${memberEditNpc.id}`, {
+    token: fx.player.token,
+    body: { isShared: false, allowMemberEdit: true },
+  });
+  eq(r.status, 200, 'owner un-shares');
+  eq(r.data.npc.isShared, false, 'un-shared');
+  eq(r.data.npc.allowMemberEdit, false, 'group edit drops with sharing');
+  r = await api(base, 'PATCH', `/api/npcs/${memberEditNpc.id}`, {
+    token: fx.player2.token,
+    body: { description: 'X' },
+  });
+  eq(r.status, 403, 'member locked out once the npc is private');
+
   // ---------- monsters ----------
   const goblin =
     srv.query("SELECT slug FROM monsters WHERE name_fr LIKE '%obelin%' LIMIT 1") ??

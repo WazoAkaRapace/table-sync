@@ -297,7 +297,10 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
                   <NpcCard
                     key={npc.id}
                     npc={npc}
-                    canEdit={isGM || npc.createdBy === user?.id}
+                    canEdit={
+                      isGM || npc.createdBy === user?.id || (npc.isShared && npc.allowMemberEdit)
+                    }
+                    canDelete={isGM || npc.createdBy === user?.id}
                     onEdit={() => openEdit(npc)}
                     onDelete={() => setDeleting(npc)}
                   />
@@ -318,6 +321,8 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
         partyId={partyId!}
         npc={editing}
         isGM={isGM}
+        // Les drapeaux de partage restent au créateur (et au MD)
+        canManageSharing={isGM || editing === null || editing.createdBy === user?.id}
         onSaved={handleSaved}
         onError={(msg) => flash('error', msg)}
       />
@@ -361,17 +366,21 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
 function NpcCard({
   npc,
   canEdit,
+  canDelete,
   onEdit,
   onDelete,
 }: {
   npc: Npc;
   canEdit: boolean;
+  /** Supprimer reste au créateur/MD — l'édition de groupe ne l'accorde pas */
+  canDelete: boolean;
   onEdit: () => void;
   onDelete: () => void;
 }) {
   const { t } = useTranslation();
   const [showSecret, setShowSecret] = useState(false);
   const hasSecret = npc.secret !== null && npc.secret.trim() !== '';
+  const groupEditable = npc.isShared && npc.allowMemberEdit;
 
   return (
     <article className="card p-4 flex flex-col gap-2 hover:shadow-md transition-shadow">
@@ -401,6 +410,16 @@ function NpcCard({
         >
           {npc.isShared ? '🔗' : '🔒'}
         </span>
+        {groupEditable && (
+          <span
+            className="shrink-0 text-base"
+            title={t('pnj.modifiable.par.le.groupe')}
+            role="img"
+            aria-label={t('pnj.modifiable.par.le.groupe')}
+          >
+            ✏️
+          </span>
+        )}
       </div>
 
       {/* Role + status + disposition row */}
@@ -476,14 +495,16 @@ function NpcCard({
             >
               {t('pnj.modifier')}
             </button>
-            <button
-              type="button"
-              onClick={onDelete}
-              className="text-xs px-2 py-1 rounded-lg text-red-600 hover:bg-red-50"
-              aria-label={t('pnj.supprimer.npc.name', { npc_name: npc.name })}
-            >
-              🗑
-            </button>
+            {canDelete && (
+              <button
+                type="button"
+                onClick={onDelete}
+                className="text-xs px-2 py-1 rounded-lg text-red-600 hover:bg-red-50"
+                aria-label={t('pnj.supprimer.npc.name', { npc_name: npc.name })}
+              >
+                🗑
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -500,11 +521,22 @@ interface NpcFormModalProps {
   npc: Npc | null;
   /** Le secret est le champ du MD — jamais montré ni envoyé par un joueur. */
   isGM: boolean;
+  /** Créateur (ou MD, ou création) : seul habilité à toucher les drapeaux de partage. */
+  canManageSharing: boolean;
   onSaved: () => void | Promise<void>;
   onError: (msg: string) => void;
 }
 
-function NpcFormModal({ open, onClose, partyId, npc, isGM, onSaved, onError }: NpcFormModalProps) {
+function NpcFormModal({
+  open,
+  onClose,
+  partyId,
+  npc,
+  isGM,
+  canManageSharing,
+  onSaved,
+  onError,
+}: NpcFormModalProps) {
   const { t } = useTranslation();
   const isEdit = npc !== null;
 
@@ -517,6 +549,7 @@ function NpcFormModal({ open, onClose, partyId, npc, isGM, onSaved, onError }: N
   const [description, setDescription] = useState('');
   const [secret, setSecret] = useState('');
   const [isShared, setIsShared] = useState(true);
+  const [allowMemberEdit, setAllowMemberEdit] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   // Reset / pre-fill whenever the modal opens (or target npc changes)
@@ -532,6 +565,7 @@ function NpcFormModal({ open, onClose, partyId, npc, isGM, onSaved, onError }: N
       setDescription(npc.description ?? '');
       setSecret(npc.secret ?? '');
       setIsShared(npc.isShared);
+      setAllowMemberEdit(npc.isShared && npc.allowMemberEdit);
     } else {
       setName('');
       setRole('');
@@ -542,6 +576,7 @@ function NpcFormModal({ open, onClose, partyId, npc, isGM, onSaved, onError }: N
       setDescription('');
       setSecret('');
       setIsShared(true);
+      setAllowMemberEdit(false);
     }
     setSubmitting(false);
   }, [open, npc]);
@@ -561,8 +596,12 @@ function NpcFormModal({ open, onClose, partyId, npc, isGM, onSaved, onError }: N
           disposition,
           status,
           description: description.trim() || null,
-          isShared,
         };
+        // Un éditeur « groupe » ne porte que le contenu — jamais les drapeaux
+        if (canManageSharing) {
+          payload.isShared = isShared;
+          payload.allowMemberEdit = isShared && allowMemberEdit;
+        }
         if (isGM) payload.secret = secret.trim() || null;
         await api.patch(`/api/npcs/${npc.id}`, payload);
       } else {
@@ -575,6 +614,7 @@ function NpcFormModal({ open, onClose, partyId, npc, isGM, onSaved, onError }: N
           status,
           description: description.trim() || undefined,
           isShared,
+          allowMemberEdit: isShared && allowMemberEdit,
         };
         if (isGM) payload.secret = secret.trim() || undefined;
         await api.post(`/api/parties/${partyId}/npcs`, payload);
@@ -718,18 +758,50 @@ function NpcFormModal({ open, onClose, partyId, npc, isGM, onSaved, onError }: N
           </div>
         )}
 
-        <label className="flex items-center gap-2 cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={isShared}
-            onChange={(e) => setIsShared(e.target.checked)}
-            className="w-4 h-4 accent-blood-600"
-          />
-          <span className="text-sm font-medium text-ink-700">
-            {t('pnj.partage.avec.le.groupe')}
+        {canManageSharing ? (
+          <>
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={isShared}
+                onChange={(e) => setIsShared(e.target.checked)}
+                className="w-4 h-4 accent-blood-600"
+              />
+              <span className="text-sm font-medium text-ink-700">
+                {t('pnj.partage.avec.le.groupe')}
+              </span>
+              <span className="text-xs text-ink-400">
+                {t('pnj.sinon.visible.par.le.createur.et')}
+              </span>
+            </label>
+            <label
+              className={`flex items-center gap-2 select-none pl-6 ${
+                isShared ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={isShared && allowMemberEdit}
+                onChange={(e) => setAllowMemberEdit(e.target.checked)}
+                disabled={!isShared}
+                className="w-4 h-4 accent-blood-600"
+              />
+              <span className="text-sm font-medium text-ink-700">
+                {t('pnj.autoriser.le.groupe.a.modifier')}
+              </span>
+              <span className="text-xs text-ink-400">
+                {t('pnj.membres.ne.peuvent.pas.supprimer')}
+              </span>
+            </label>
+          </>
+        ) : (
+          // Éditeur « groupe » : contenu seulement — la pastille encre des
+          // états discrets (idiome « Caché »), le sang est réservé
+          <span className="inline-flex items-center gap-1.5 self-start text-xs font-medium text-ink-600 bg-ink-100 rounded-full px-2.5 py-1">
+            <span aria-hidden="true">✏️</span>
+            {t('pnj.vous.pouvez.modifier.ce.pnj.partage')}
           </span>
-          <span className="text-xs text-ink-400">{t('pnj.sinon.visible.par.le.createur.et')}</span>
-        </label>
+        )}
 
         <button type="submit" disabled={submitting} className="btn-primary w-full">
           {submitting ? t('pnj.enregistrement') : isEdit ? t('common.save') : t('pnj.creer.le.pnj')}

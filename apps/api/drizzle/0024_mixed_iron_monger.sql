@@ -1,0 +1,1 @@
+ALTER TABLE `npcs` ADD `allow_member_edit` integer DEFAULT 0 NOT NULL;

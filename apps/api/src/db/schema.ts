@@ -394,6 +394,9 @@ export const npcs = sqliteTable(
     description: text('description'),
     secret: text('secret'),
     isShared: integer('is_shared').notNull().default(1),
+    // Partagé + 1 : tout membre du groupe peut modifier le CONTENU (jamais
+    // supprimer, jamais les drapeaux de partage — ils restent au créateur/MD)
+    allowMemberEdit: integer('allow_member_edit').notNull().default(0),
     sortOrder: integer('sort_order').notNull().default(0),
     createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
   },

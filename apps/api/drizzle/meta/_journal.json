@@ -169,6 +169,13 @@
       "when": 1788512784805,
       "tag": "0023_rich_lethal_legion",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "6",
+      "when": 1788680110678,
+      "tag": "0024_mixed_iron_monger",
+      "breakpoints": true
     }
   ]
 }
