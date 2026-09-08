@@ -1,53 +1,330 @@
-# Design System — apps/web
+---
+name: Table Sync
+description: Le grimoire clair de la table — fiches, inventaire et traqueur de combat D&D 5e en français
+colors:
+  parchment: "#fdfaf3"
+  parchment-raised: "#f7f0e1"
+  parchment-line: "#ece0c4"
+  parchment-deep: "#ddcb9e"
+  ink: "#2a1f14"
+  ink-strong: "#3a2b1c"
+  ink-mid: "#5b4733"
+  ink-soft: "#6b5640"
+  ink-muted: "#7d6850"
+  ink-faint: "#a8926f"
+  blood: "#7a1f1f"
+  blood-hover: "#651515"
+  blood-mark: "#8b1a1a"
+  blood-ring: "#c05151"
+  gold: "#d4af37"
+  gold-soft: "#e3c766"
+  rule-good: "#22c55e"
+  rule-mid: "#eab308"
+  rule-low: "#ef4444"
+  rule-critical: "#b91c1c"
+typography:
+  display:
+    fontFamily: "Cinzel, Georgia, serif"
+    fontWeight: 700
+    lineHeight: 1.25
+  body:
+    fontFamily: "Iowan Old Style, Palatino, Georgia, serif"
+    fontSize: "1rem"
+    fontWeight: 400
+    lineHeight: 1.5
+  mono:
+    fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace"
+    fontSize: "0.875rem"
+rounded:
+  control: "12px"
+  card: "16px"
+  pill: "9999px"
+components:
+  button-primary:
+    backgroundColor: "{colors.blood}"
+    textColor: "#ffffff"
+    rounded: "{rounded.control}"
+    padding: "10px 16px"
+  button-secondary:
+    backgroundColor: "{colors.parchment-line}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.control}"
+    padding: "10px 16px"
+  button-ghost:
+    textColor: "{colors.ink-soft}"
+    rounded: "{rounded.control}"
+    padding: "8px 12px"
+  button-ghost-hover:
+    backgroundColor: "{colors.parchment-raised}"
+  card:
+    backgroundColor: "rgba(255, 255, 255, 0.85)"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.card}"
+  input:
+    backgroundColor: "#ffffff"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.control}"
+    padding: "10px 12px"
+---
 
-<!-- impeccable:design-doc -->
+# Design System — Table Sync (apps/web)
+
+## Overview
+
+**Creative North Star: « Le grimoire clair »**
 
 Le monde visuel de l'app : **parchemin, encre, sang, or** — un grimoire clair
-(light-only, pas de dark mode), mobile-first, en français. Les couleurs de
-règles (vert/jaune/orange/rouge des paliers d'encombrance et des PV)
-enseignent l'état du personnage ; les teintes parchemin/encre portent le
-registre. Une seule famille d'icônes : les glyphes emoji existants
+(light-only, pas de dark mode), mobile-first, en français. Une page de
+grimoire posée sur une table éclairée : le parchemin porte tout, l'encre
+imprime le registre, et le sang — rare — marque l'instant qui se joue
+maintenant. La lisibilité prime à chaque taille d'écran, du laptop du MD en
+pièce tamisée au téléphone tenu à une main.
+
+Les couleurs de règles (vert/jaune/orange/rouge des paliers d'encombrance et
+des PV) enseignent l'état du personnage ; les teintes parchemin/encre portent
+le registre. Une seule famille d'icônes : les glyphes emoji existants
 (🛡 ❤ ⚔ 🎯), utilisés avec constance. Deux familles de surfaces : la carte
 levée (`.card`) pour les panneaux de travail, et la surface réglée — entrées
-posées à même le parchemin, séparées par des filets — pour les pages-liste
+posées à même le parchemin, séparées par des filets — pour les pages-listes
 pleine largeur.
 
-## Tokens — `src/index.css` `@theme`
+**Key Characteristics:**
 
-Quatre rampes sémantiques. **Règle : n'utiliser une nuance (`ink-600`,
-`blood-50`…) que si elle est définie dans `@theme`** — Tailwind v4 ne génère
-rien pour une classe inconnue, l'erreur serait silencieuse.
+- Mobile-first, tout en français, vocabulaire D&D 5e (FOR/DEX/CON, DD/CA/PV).
+- Le sang porte « maintenant + action primaire » ; tout le reste est encre.
+- Deux familles de surfaces seulement : carte levée ou surface réglée.
+- Le mono est réservé aux valeurs mesurées ; le display Cinzel aux titres.
+- Un moment signé de motion par surface, coupé sous `prefers-reduced-motion`.
 
-| Rampe | Rôle | Nuances |
+## Colors
+
+Quatre rampes sémantiques définies dans `src/index.css` (`@theme`) — le
+parchemin porte les fonds, l'encre le texte, le sang l'action, l'or
+l'accent. **Règle : n'utiliser une nuance (`ink-600`, `blood-50`…) que si
+elle est définie dans `@theme`** — Tailwind v4 ne génère rien pour une
+classe inconnue, l'erreur serait silencieuse.
+
+### Primary
+
+- **Sang** (#7a1f1f `blood-600`, survol #651515 `blood-700`): LE rouge
+  d'action — boutons primaires, pilule « Tour N », ordinal de l'entrée
+  courante, halo du tour. Sa rareté est sa force.
+- **Marque de sang** (#8b1a1a `blood-500`, anneau #c05151 `blood-300`):
+  l'ordinal de l'entrée courante du registre, les anneaux d'accent.
+
+### Secondary
+
+- **Or** (#d4af37 `gold-400`, clair #e3c766 `gold-300`): la magie et
+  l'accent doré — chips ✨ d'arme magique, appel d'initiative dû. Jamais
+  déco gratuite.
+
+### Neutral
+
+- **Parchemin** (#fdfaf3 `parchment-50`): fond de page, teinté de deux
+  halos radiaux (or 6 % en haut, sang 4 % en bas).
+- **Parchemin soulevé** (#f7f0e1 `parchment-100`): nappes de survol, fonds
+  de pastilles.
+- **Filet** (#ece0c4 `parchment-200`): séparateurs d'entrées, bordures de
+  cartes et de badges.
+- **Filet profond** (#ddcb9e `parchment-300`): bordures actives, règle de
+  tête secondaire.
+- **Encre** (#2a1f14 `ink-900`, #3a2b1c `ink-800`): texte courant et
+  fort ; #5b4733 `ink-600`, #6b5640 `ink-500`, #7d6850 `ink-400`,
+  #a8926f `ink-300` déclinent en méta, hint, imprimé discret.
+
+### Rule Colors (hors `@theme`, palette Tailwind standard)
+
+`green/yellow/orange/red` portent les paliers de règle — encombrance,
+PV, conditions. Chaque teinte porte un sens de règle : ne pas les
+réutiliser comme décoration. Paliers PV : ≤ 0 `red-700`, ≤ 25 %
+`red-500`, ≤ 50 % `yellow-500`, sinon `green-500`.
+
+### Named Rules
+
+**La règle du sang.** Le sang porte « maintenant + action primaire »
+uniquement — détent courant, pilule Tour, boutons primaires, l'unique porte
+sang de chaque page. Tous les autres états sont des marques imprimées
+en encre.
+
+**La règle d'une seule porte.** UN seul élément sang par page : l'action
+primaire du moment. Les autres portes restent encre (flèche `ink-300` →
+`blood-600` au survol au plus).
+
+## Typography
+
+**Display Font:** Cinzel (fallback Georgia, serif) — titres, ordinaux
+romains, noms porteurs d'identité.
+**Body Font:** Iowan Old Style (fallback Palatino, Georgia, serif) — le
+texte.
+**Label/System Font:** Inter (fallback system-ui, sans-serif) — filet de
+sécurité système.
+**Mono:** réservé aux valeurs mesurées.
+
+**Character:** L'estampe d'un grimoire imprimé — la capitale gravure de
+Cinzel titre la page, l'Old Style lit comme un livre, et le mono mesure
+comme un instrument.
+
+### Hierarchy
+
+- **Display** (Cinzel 700, `text-2xl`/`sm:text-3xl`, `leading-tight`):
+  titre de page centré, nom de rencontre, nom du combattant à la scène.
+- **Section title** (Cinzel 600, `text-lg` — `.section-title`): LE style
+  de titre de section, sur tout `h2` de carte ou de feuille.
+- **Titre d'entrée** (Cinzel 600, `text-lg`→`text-2xl` selon le cycle de
+  vie): noms du registre.
+- **Body** (Iowan 400, 1rem/1.5): le texte ; méta et hints en
+  `text-sm text-ink-400/500`.
+- **Label** (medium, `text-sm` — `.label`): libellés de champs.
+- **Mono** (`font-mono`): PV, CA, initiative, durées, codes d'invitation,
+  `J−N` — la mesure, jamais la déco.
+
+### Named Rules
+
+**La règle du mono mesuré.** Le mono est réservé aux valeurs mesurées
+(PV, CA, initiative, durées, codes). Un mono décoratif est un faux
+instrument.
+
+## Layout
+
+Mobile-first : le dock flottant (Survie · Caract. · hub adaptatif par
+classe) porte la navigation fiche ; ≥ `lg` (1024 px) reprend la barre
+d'onglets desktop (mesurée, débord replié derrière « ⋯ Plus ») et l'en-tête
+sticky `h-14` (`var(--app-header-h)`) avec son slot `#header-combat-slot`.
+Cibles tactiles ≥ 44 px partout ; ornements décoratifs `aria-hidden`.
+
+- **Conteneurs** : pages-listes pleine largeur en `max-w-3xl` ; fiche en
+  `max-w-6xl` ; le théâtre du combat en grille 3 colonnes
+  `lg:grid-cols-[15rem_minmax(0,1fr)_340px]` (échelle | scène | bloc).
+- **Sur-tête** : la double règle de tête (`border-t-2 parchment-400` + à
+  3 px `border-t parchment-300`) ferme chaque tête de page centrée.
+- **Éléments ancrés au bas** (dock, hub, scrim) portent `.vv-anchor` —
+  parade iOS standalone au clavier (`--vv-shift`) ; tout nouveau UI mobile
+  ancré au bas doit porter la classe.
+- **Overlays** : bottom sheets portaled sur `document.body` — le
+  `backdrop-blur` de `.card` crée un containing block qui casse
+  `position: fixed` dedans.
+- **Hooks avant gardes de rendu** : anywhere with early returns, les hooks
+  conditionnels comptés par React passent AU-DESSUS des guards.
+
+## Elevation & Depth
+
+Deux profondeurs, jamais trois. La surface réglée est plate — des entrées
+posées à même le parchemin, séparées par des filets 1 px. La carte levée
+`.card` est l'unique relief : blanc 85 %, bordure `parchment-200`, ombre
+réelle douce. PAS de `backdrop-blur` sur `.card` (des dizaines de
+backdrop-filter capturaient le scroll sur vieille tablette) — les overlays
+(Modal, BottomSheet) gardent le leur.
+
+### Shadow Vocabulary
+
+- **Carte au repos** (`.card`): `0 1px 2px rgba(42,31,20,0.04), 0 4px 12px
+  rgba(42,31,20,0.03)` — offset + flou réel, jamais un halo à offset nul.
+- **Carte en drag** (`.card-dragging`): `0 4px 8px rgba(42,31,20,0.08),
+  0 14px 32px rgba(42,31,20,0.14)` + `scale(1.01)` — le lift EST le
+  moment ; rien d'autre ne bouge.
+- **Halo du tour** (`.combat-turn-glow`): anneau intérieur + halo
+  extérieur sang pulsé 1,8 s — le seul halo coloré du système, réservé à
+  « c'est ton tour ».
+
+### Named Rules
+
+**La règle des deux surfaces.** La carte levée pour les panneaux de
+travail, la surface réglée pour les registres. Pas de troisième surface,
+pas de carte dans la carte.
+
+## Shapes
+
+Le rayon suit le rang : cartes `16px` (`rounded-2xl`), contrôles et
+champs `12px` (`rounded-xl`), pilules pleines (`9999px`) pour les petites
+pastilles d'état (Tour N, Init, compteurs de conditions). Les bordures
+sont des filets `1px parchment-200`, l'accent rarement `parchment-300`.
+La géométrie signature : la double règle de tête, le filet qui court
+jusqu'au bord, la nappe de survol déborder en négatif (`-mx-3 px-3`) sans
+toucher aux filets.
+
+## Components
+
+Les contrôles parlent fort mais court : sang pour l'action primaire, encre
+pour le reste, chaque verbe à taille de combat (≥ 44 px). Composants dans
+`src/components/ui.tsx`.
+
+| Composant | Usage | Points clés |
 |---|---|---|
-| `parchment-*` | fonds, surfaces, bordures neutres | 50–500 |
-| `ink-*` | texte et icônes (brun d'encre) | 100, 300–900 |
-| `blood-*` | actions primaires, dégâts, danger | 50–900 |
-| `gold-*` | magie, accents dorés | 100, 300–700 |
+| `Modal` | dialogues centrés (desktop) | focus trap, Échap, restore le focus |
+| `BottomSheet` | feuilles mobiles portaled | `size` (md/lg), `mobileOnly`, `footer`, `bodyClassName` ; Échap + scroll lock |
+| `Fab` | bouton d'action flottant `+` | `mobileOnly`, `raised` (au-dessus du dock) |
+| `HpBar` | barre de PV partout (fiche, combat, forme animale) | paliers unifiés : ≤0 `red-700`, ≤25 % `red-500`, ≤50 % `yellow-500`, sinon `green-500` ; `temp` = PV temporaires en segment `blue-500` au-delà du remplissage + aria « +N temporaires » ; `size` xs/sm/md, `showText`, `trackClassName` ; `role="progressbar"` |
+| `Chip` | pastille de stat (attaque 🎯, dégâts ⚔, DD 🛡, ×N, +magique ✨) | `tone` (orange/red/blood/blue/amber/gold/indigo), `soft`, `title` = info-bulle de décomposition |
+| `EncumbranceBar` | portage et paliers | affiche conséquences de règle au moment où elles s'appliquent ; `compact` = variante une-ligne du bandeau |
+| `CharacterStateBand` | bandeau d'état de la fiche joueur | rail réglé épinglé + jumeau fixe compact au défilement (`band-drop`) ; le flux ne change jamais de hauteur |
+| `CombatWidget` | bande de combat d'en-tête (lg+, fiche du joueur uniquement) | pilule portaled dans `#header-combat-slot` ; `.combat-strip` scope les tailles compactes (les `.btn-*` hors couches écrasent les utilitaires) |
+| `ConfirmButton` | suppression en deux temps — LE motif des suppressions de contenu | arme le contrôle **sur place** (rouge + `pulse-warn`), 4 s puis retombe, Échap/blur désarment |
+| `TabButton` | onglets internes des pages-outil | souligné sang sur l'actif, encre au repos |
+| `ToastStack` / `Toast` | retours d'action | bas d'écran, `aria-live` |
+| `RarityBadge` `CategoryBadge` `WeightBadge` `CostBadge` | métadonnées d'objet | rareté teintée (`rarity-*`), jamais grise |
+| `EmptyState` `LoadingSpinner` `ErrorMsg` | états de page | libellés français (« Ouverture du registre… ») |
 
-Typographie : `--font-display` (Cinzel — titres et ordinaux romains),
-`--font-body` (Iowan Old Style — texte), `--font-sans` (Inter — fallback
-système). Le mono (`font-mono`) est réservé aux valeurs mesurées : PV, CA,
-initiative, durées, codes d'invitation.
+**Échelle de confirmation** — toute suppression se confirme au point de
+tap, jamais ailleurs dans la carte : `ConfirmButton` arme le contrôle
+lui-même ; les lignes d'inventaire et l'oubli de sort remplacent la ligne
+sur place ; le `Modal` avec texte de conséquences est réservé aux entités
+entières dont la suppression est en cascade. État armé = rouge +
+`pulse-warn`, partout la même signature.
 
-Couleurs de règles (palette Tailwind standard, hors `@theme`) :
-`green/yellow/orange/red` pour les paliers d'encombrance, les PV, les
-conditions. Chaque teinte porte un sens de règle — ne pas les réutiliser
-comme décoration.
+### Buttons
 
-## Classes CSS — `src/index.css`
+- **Primary** (`btn-primary`): sang plein (#7a1f1f → #651515 au survol),
+  blanc, `12px`, `10px 16px`, `active:scale-[0.98]`, désactivé 50 %.
+- **Secondary** (`btn-secondary`): `parchment-200` → `parchment-300` au
+  survol, encre.
+- **Ghost** (`btn-ghost`): transparent, encre douce, nappe
+  `parchment-100` au survol — le verbe discret des pieds et têtes de
+  registres.
+- **Repos** (`btn-rest-short`/`btn-rest-long`): membres teintés du
+  système (indigo = court, violet = long), l'exception documentée.
 
-- `.card` — surface de base : blanc 85 %, flou léger, bordure
-  `parchment-200`, ombre réelle (offset + flou), rayon 16px.
-- `.btn-primary` / `.btn-secondary` / `.btn-ghost` — les trois boutons.
-  Primaire = `blood-600` plein.
-- `.btn-rest-short` / `.btn-rest-long` — les actions de repos (Onglet Survie),
-  membres teintés du système de boutons (indigo = court, violet = long).
-- `.input`, `.label`, `.input-compact` — champs de formulaire.
-- `.section-title` — LE style de titre de section : `font-display text-lg
-  font-semibold`. Tout `h2` de carte ou de feuille l'utilise.
-- `.rarity-*` — badges de rareté (teinte par rareté, jamais gris).
-- `.bar-*` — remplissage des barres d'encombrance.
+### Inputs
+
+- **Champ** (`.input`): blanc, filet `parchment-300`, `12px`, focus =
+  anneau `blood-500/30` + filet sang ; `.input-compact` pour les mesures
+  serrées ; champs numériques = `NumberField` (jamais de clamp manuel).
+- **Label** (`.label`): `text-sm medium encre-700`, associé par
+  `htmlFor`/`id` (exigé par le lint).
+
+## Do's and Don'ts
+
+### Do:
+
+- **Do** ajouter toute nouvelle nuance à la rampe `@theme` correspondante,
+  en respectant l'ordre de luminosité.
+- **Do** titrer toute nouvelle section avec `.section-title` (+ classes
+  utilitaires si besoin).
+- **Do** créer toute nouvelle pastille de stat avec `Chip` et un `tone`
+  existant ; un nouveau `tone` seulement si le sens est réellement
+  distinct.
+- **Do** poser tout overlay plein écran via `Modal` ou `BottomSheet`,
+  jamais un `fixed inset-0` manuel.
+- **Do** construire toute nouvelle page-liste pleine largeur sur la
+  surface réglée (double règle de tête + entrées réglées) — `.card`
+  reste l'outil des panneaux de travail.
+- **Do** donner à tout `<button>` un `type` explicite et à tout label un
+  `htmlFor`/`id` (exigé par le lint).
+- **Do** couper tout mouvement sous `prefers-reduced-motion`, avec un
+  état statique lisible quand le mouvement porte l'information.
+
+### Don't:
+
+- **Don't** créer une nouvelle barre de PV : `HpBar` (`size`,
+  `showText`, `trackClassName`) couvre les cas.
+- **Don't** inventer un second système d'icônes : les glyphes emoji
+  existants (🛡 ❤ ⚔ 🎯), avec constance.
+- **Don't** réutiliser les couleurs de règle (vert/jaune/orange/rouge)
+  comme décoration — chaque teinte porte un sens.
+- **Don't** poser un second élément sang sur une page, ni teinter un
+  état statique en sang : le sang est « maintenant + action primaire ».
+- **Don't** mettre du mono ailleurs que sur une valeur mesurée.
+- **Don't** add dark mode, un second monde visuel, ou un habillage de
+  campagne : l'outil D&D est générique, le monde est parchemin/encre/sang/or.
 
 ## Surfaces réglées — le registre & la table des matières
 
@@ -126,7 +403,6 @@ primaires) ; tous les autres états sont des marques imprimées.
 | Bloc de stats | desktop : colonne droite 340 px `sticky` (panneau amarré) ; mobile : modal ; jamais reporté d'une rencontre à l'autre |
 | Disposition | desktop `lg:grid-cols-[15rem_minmax(0,1fr)_340px]` (échelle \| scène \| bloc) ; mobile : échelle horizontale puis scène |
 
-
 ## Le carnet du MD — la page du même nom (`DmNotebookPage.tsx`, `/party/:id/carnet`)
 
 La quatrième page réglée, entièrement GM-only : derrière une porte d'annexes
@@ -143,7 +419,6 @@ la quête courante), tout le reste est encre.
 | Onglet Quêtes | registre à cycle de vie, **jumelle du registre des rencontres** : en cours = ordinal `blood-500` `text-2xl` + titre `text-2xl` ; préparation = ordinaux `ink-400` ; terminées/échouées = compactes `ink-300` avec méta date (⚫ partagé, le texte distingue) ; entrée dépliable (chevron ▼) → corps markdown + pastilles de statut (chips `aria-pressed`, courante = `bg-ink-800` remplie — l'encre, le sang est pris) + verbes ✎/Confirmer ; page vierge = chemin de création inline sous l'état vide, sinon ghost « ＋ Nouvelle quête » + Modal |
 | Onglet Notes | cartes `.card` triables (`SortableGrid`) + modal Édition/Aperçu + recherche — la grammaire des notes de fiche, `renderMarkdown` partagé (`components/markdown.ts`) |
 | Onglet PNJ | la page PNJ existante incrustée (`NpcPage embedded`) — les secrets y arrivent au MD (verrou serveur : GM seul lit ET écrit `secret`) |
-
 
 ## La bourse et son changeur (`CoinPurse.tsx` / `CoinTransactionModal.tsx`, onglet Inventaire)
 
@@ -164,33 +439,6 @@ la chaîne décimale).
 | Le grand livre | sous filet `parchment-200`, `aria-live="polite"` : « Bourse » (valeur réelle, encre claire) → « Après » (`font-mono font-semibold`) — **la bourse réelle détenue, jamais une conversion canonique** (32 PO · 5 PA, pas « 3 PP ») ; « Il manque X » (PO→PA→PC, jamais PE/PP) verrouille le CTA sans crier ; « Monnaie rendue — 1 PO cassée en 10 PA » en `text-xs ink-500`, encre imprimée |
 | Le CTA | `btn-primary` portant le verbe ET le montant (« Dépenser 5 PA », montant mono dans le libellé) ; « Corriger » édite la bourse telle quelle (draft pré-rempli, l'ancienne édition inline) et **reste verrouillé tant que le draft ne diffère pas de la bourse** — une correction identique n'est pas une opération |
 | Persistance | un seul PATCH plein-purse (`action: 'coins'` en WS), toast « Bourse mise à jour » ; l'API clampe les 5 pièces en entiers ≥ 0 (400 sur non-numérique) |
-
-
-## Composants — `src/components/ui.tsx`
-
-| Composant | Usage | Points clés |
-|---|---|---|
-| `Modal` | dialogues centrés (desktop) | focus trap, Échap, restore le focus |
-| `BottomSheet` | feuilles mobiles portaled | `size` (md/lg), `mobileOnly`, `footer`, `bodyClassName` ; Échap + scroll lock |
-| `Fab` | bouton d'action flottant `+` | `mobileOnly`, `raised` (au-dessus du dock) |
-| `HpBar` | barre de PV partout (fiche, combat, forme animale) | paliers unifiés : ≤0 `red-700`, ≤25 % `red-500`, ≤50 % `yellow-500`, sinon `green-500` ; `temp` = PV temporaires en segment `blue-500` au-delà du remplissage (à PV pleins, il coiffe la fin) + aria « +N temporaires » ; `size` xs/sm/md, `showText`, `trackClassName` ; `role="progressbar"` |
-| `Chip` | pastille de stat (attaque 🎯, dégâts ⚔, DD 🛡, ×N, +magique ✨) | `tone` (orange/red/blood/blue/amber/gold/indigo), `soft`, `title` = info-bulle de décomposition |
-| `EncumbranceBar` | portage et paliers | affiche conséquences de règle au moment où elles s'appliquent ; `compact` = variante une-ligne du bandeau (barre fine + lecture mono + palier, conséquence conservée) |
-| `CharacterStateBand` | bandeau d'état de la fiche joueur (`components/CharacterStateBand.tsx`) | rail réglé épinglé sous l'en-tête : identité (renomme inline) + phrase d'état (PV avec segment temp bleu + puce `+N`, CA, sorts, états) + ligne de combat (`CombatLine`, `lg:hidden` — en lg+ la bande de combat de l'en-tête possède la ligne : appel d'initiative / Agir / tour quiet, `aria-live` sur la copie statique) + encombrance compact ; panneau dépliable (états, emplacements par niveau, PV ±1/±5 — **les dégâts absorbent les PV temp d'abord**, debouncés 700 ms en UN patch portant les deux champs, pour le jet de concentration sur le total) ; jumeau fixe compact au défilement (`band-drop`, IntersectionObserver — le flux ne change jamais de hauteur) ; le multiplicateur de portage vit dans l'onglet Caractéristiques (tuile « Portage max » des Statistiques dérivées) |
-| `CombatWidget` | bande de combat d'en-tête (lg+, `components/CombatWidget.tsx`) — la fiche du joueur lui-même uniquement | une pilule portaled dans `#header-combat-slot` du Nav sombre (`hidden lg:flex`) : ⚔ nom de rencontre (porte vers le traqueur, lien profond `?enc=`) · statut de tour `aria-live` (« Tour de X · Manche N » / « À toi de jouer ! » / « 🎲 Lance ton initiative ! ») · puce `init N` mono ; initiative due = pilule or + saisie inline (input + OK + 🎲) déployée tant que le lancer est dû ; ton tour = pilule sang + `combat-turn-glow` + sword-cut + « ✓ J'ai fini mon tour » ; pilule `h-10` sur l'en-tête `h-14` — les tailles compactes des contrôles vivent dans `.combat-strip` (index.css), car `.input`/`.btn-*` et `button { text-base }` hors couches écrasent les utilitaires Tailwind ; persistante par design (l'en-tête est sticky — l'ancien tiroir à gauche flottait sur la fiche ouverte) |
-| `ConfirmButton` | suppression en deux temps — LE motif des suppressions de contenu | arme le contrôle **sur place** (rouge + `pulse-warn` : « Supprimer ? » en pilule sur les ×, « Confirmer ? » sur les liens verbes), 4 s puis retombe, Échap/blur désarment ; 2ᵉ tap confirme ; n'bulle pas au parent |
-| `TabButton` | onglets internes des pages-outil (Table du MD, Carnet) | souligné sang sur l'actif, encre au repos ; le conteneur porte `overflow-x-auto no-scrollbar` |
-| `ToastStack` / `Toast` | retours d'action | bas d'écran, `aria-live` |
-| `RarityBadge` `CategoryBadge` `WeightBadge` `CostBadge` | métadonnées d'objet | |
-| `EmptyState` `LoadingSpinner` `ErrorMsg` | états de page | |
-
-**Échelle de confirmation** — toute suppression se confirme au point de tap,
-jamais ailleurs dans la carte : `ConfirmButton` arme le contrôle lui-même
-(× des cartes traits/notes/objets personnalisés, lien portrait, verbes du
-combat, pastille transport) ; les lignes d'inventaire et l'oubli de sort
-remplacent la ligne sur place ; le `Modal` avec texte de conséquences est
-réservé aux entités entières (personnage, PNJ) dont la suppression est en
-cascade. État armé = rouge + `pulse-warn`, partout la même signature.
 
 ## Motion
 
@@ -224,19 +472,3 @@ décoratifs — filets du registre, ordinaux romains — sont `aria-hidden`.
 Barres = `progressbar`
 avec `aria-valuetext` en français (« 8/20 PV », « 0.0 kg sur 120 kg »).
 Dialogues = `role="dialog"` + `aria-modal` + Échap.
-
-## Étendre le système
-
-1. Nouvelle nuance → l'ajouter à la rampe `@theme` correspondante, en
-   respectant l'ordre de luminosité.
-2. Nouveau titre → `.section-title` (+ classes utilitaires si besoin), pas
-   de style ad hoc.
-3. Nouvelle pastille de stat → `Chip` avec un `tone` existant ; nouveau
-   `tone` seulement si le sens est réellement distinct.
-4. Nouvelle barre de PV → **jamais** : `HpBar` (`size`, `showText`,
-   `trackClassName` couvrent les cas).
-5. Overlay plein écran → `Modal` ou `BottomSheet` avant tout markup
-   `fixed inset-0` manuel.
-6. Nouvelle page-liste pleine largeur → la surface réglée du registre
-   (double règle de tête + entrées réglées), pas une grille de cartes ;
-   `.card` reste l'outil des panneaux de travail.
