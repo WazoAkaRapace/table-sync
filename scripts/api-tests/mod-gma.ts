@@ -234,7 +234,16 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
     { id: 'sn-e1', name: 'Rahadin', order: 0 },
     { id: 'sn-e2', name: 'Wakanga O’tamu', order: 1 },
   ]);
-  mock.sessionNpcs.set('sess-e2', [{ id: 'sn-e3', name: 'Rahadin', order: 0 }]);
+  mock.sessionNpcs.set('sess-e2', [
+    { id: 'sn-e3', name: 'Rahadin', order: 0 },
+    // Session-only NPC — no campaign counterpart: derived into the rail.
+    {
+      id: 'sn-e4',
+      name: 'Blink',
+      description: 'Une gamine des rues, yeux vifs, mains plus vite encore.',
+      order: 1,
+    },
+  ]);
 
   r = await api(base, 'GET', `/api/parties/${party4.id}/gma/entities`, {
     token: fx.player.token,
@@ -291,7 +300,17 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   eq(r.status, 200, 'member reads the entities rail');
   eq(r.data.stale, false, 'fresh after first fetch');
   eq(r.data.campaignTitle, 'Campagne Repérés', 'campaign title served');
-  eq(r.data.entities.length, 3, 'the campaign NPCs are served, all three');
+  eq(r.data.entities.length, 4, 'campaign NPCs + session-only NPCs served');
+  const railBlink = r.data.entities.find((e: any) => e.name === 'Blink');
+  ok(!!railBlink, 'session-only NPC derived into the rail');
+  eq(railBlink.id, 'sn:blink', 'synthetic id from the normalized name');
+  eq(
+    railBlink.description,
+    'Une gamine des rues, yeux vifs, mains plus vite encore.',
+    'session description carried over',
+  );
+  eq(railBlink.sessions.length, 1, 'seen in the session that reported it');
+  eq(railBlink.sessions[0].ordinal, 2, 'appearance ordinal derived');
   const railRahadin = r.data.entities.find((e: any) => e.id === 'ent-rahadinE');
   ok(!!railRahadin, 'Rahadin on the rail');
   eq(railRahadin.linkedNpc?.id, importedNpcId, 'already linked by the import above');
@@ -340,7 +359,7 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   r = await api(base, 'GET', `/api/parties/${party4.id}/gma/entities?refresh=1`, {
     token: fx.gm.token,
   });
-  eq(r.data.entities.length, 4, 'GM refresh refetches entities');
+  eq(r.data.entities.length, 5, 'GM refresh refetches entities');
   r = await api(base, 'POST', `/api/parties/${party4.id}/npcs`, {
     token: fx.player.token,
     body: { name: 'Potion rouge', description: 'Base.' },
@@ -467,7 +486,7 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   });
   eq(r.status, 200, 'outage: entities still served');
   eq(r.data.stale, true, 'flagged stale');
-  eq(r.data.entities.length, 4, 'old cache intact');
+  eq(r.data.entities.length, 5, 'old cache intact');
   mock.failMode = 'off';
 
   // ---------- discard (« Écarter ») ----------

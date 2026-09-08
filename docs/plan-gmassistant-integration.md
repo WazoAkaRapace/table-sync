@@ -205,16 +205,22 @@ ouvre directement en lecture), modales standard pour la confirmation de liaison
 remplacement, « Ajouter la description » quand la liaison n'a jamais pris le
 texte, « Délier » en ConfirmButton). Clés i18n `pnj.gma.*` (fr + en).
 
-**Contrat vérifié contre la spec réelle** (2026-09, `backend.gmassistant.app/v1/openapi.yaml`) :
-les PNJ de campagne vivent à `GET /campaigns/{id}/npcs` (il n'existe PAS de
-route `/entities` — un premier jet l'appelait et récoltait un 404 silencieux,
-d'où un rail vide) ; la description n'est pas dans le jeu creux par défaut
-(`fields=id,name,description,order` obligatoire) ; les apparitions en séance
-sont des enregistrements séparés sans référence aux PNJ de campagne —
-rapprochement PAR NOM (accents/casse mis à part), une requête par séance,
-UNE SEULE FOIS par séance (`gma_sessions.npcs_fetched_at`, migration 0027) —
-une séance nouvelle ne coûte qu'un appel, une campagne installée ne coûte
-rien ; l'échec d'une séance est reporté au TTL suivant sans couler le rail.
+**Contrat vérifié CONTRE LA CAMPAGNE RÉELLE** (2026-09, spec
+`backend.gmassistant.app/v1/openapi.yaml` + sonde live avec clé lecture) :
+il n'existe PAS de route `/entities` (un premier jet l'appelait → 404
+silencieux → rail vide) ; les PNJ **de campagne** vivent à
+`GET /campaigns/{id}/npcs` (description hors jeu creux par défaut —
+`fields=id,name,description,order` obligatoire) — et cette liste est souvent
+VIDE : l'assistant catalogue les PNJ **PAR SÉANCE**
+(`GET …/sessions/{sid}/npcs`, ids propres, descriptions complètes). Le rail
+est donc l'union des deux couches : les PNJ de campagne sont canoniques
+(id réel, description autoritaire) ; les PNJ de séance sont agrégés PAR NOM
+en rangées synthétiques (`sn:<nom>`) quand aucun PNJ de campagne ne porte le
+nom — description = la plus longue vue. « Vu en séance » = les séances dont
+l'enregistrement mentionne le nom. Une requête par séance, UNE SEULE FOIS par
+séance (`gma_sessions.npcs_fetched_at`, migration 0027) — une séance nouvelle
+coûte un appel, une campagne installée rien ; l'échec d'une séance est
+reporté au TTL suivant sans couler le rail.
 
 ## 8. Tests
 
