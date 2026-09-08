@@ -25,7 +25,7 @@ import type {
   GmaSaveKeyPayload,
   GmaSyncCharactersPayload,
 } from '@table-sync/shared';
-import { and, eq, notInArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, notInArray, sql } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../db/drizzle.ts';
 import { getDb } from '../db/index.ts';
@@ -275,6 +275,11 @@ async function syncSessions(partyId: number, link: any, key: string): Promise<st
   const oldRecapsAt = new Map<string, string | null>(
     old.map((r) => [r.session_id, r.recaps_fetched_at]),
   );
+  // « Vu en séance » appearances are fetched once per session — a surviving
+  // session keeps its marker across the replace.
+  const oldNpcsAt = new Map<string, string | null>(
+    old.map((r) => [r.session_id, r.npcs_fetched_at]),
+  );
   const ids = list.map((s) => String(s.id));
   getDb().transaction(() => {
     const drizzle = getDrizzle();
@@ -289,6 +294,7 @@ async function syncSessions(partyId: number, link: any, key: string): Promise<st
           playedAt: s.played_at ?? null,
           sortOrder: Number.isInteger(s.order) ? s.order : 0,
           recapsFetchedAt: oldRecapsAt.get(String(s.id)) ?? null,
+          npcsFetchedAt: oldNpcsAt.get(String(s.id)) ?? null,
         })
         .run();
     }
@@ -427,7 +433,9 @@ function cachedEntities(partyId: number): any[] {
     .all() as any[];
 }
 
-/** Entity types that are clearly not characters — filtered out of the rail. */
+/** Entity types that are clearly not characters — kept defensively: the real
+ *  API serves NPCs from their own collection (no `type` field), so cached rows
+ *  carry NULL, but nothing here should break if a typed shape ever appears. */
 const NON_NPC_ENTITY_TYPES = new Set([
   'location',
   'place',
@@ -438,55 +446,118 @@ const NON_NPC_ENTITY_TYPES = new Set([
   'quest',
 ]);
 
-/**
- * GMA session ids an entity appeared in. Defensive on purpose — the payload
- * shape carries an id list (`session_ids`) or id objects (`sessions`), both
- * survive here.
- */
-function entitySessionIds(e: any): string[] {
-  const raw = e.session_ids ?? e.sessions;
-  if (!Array.isArray(raw)) return [];
-  const ids = raw
-    .map((s: any) => (typeof s === 'string' ? s : s != null && 'id' in s ? s.id : null))
-    .filter((id: unknown) => id !== null && id !== undefined);
-  return [...new Set(ids.map(String))];
+/** Name matching for « Vu en séance »: accents & case aside, same name. */
+function normalizeGmaName(s: unknown): string {
+  return String(s ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 /**
- * Refetch the campaign's entities into the cache (replace-all, one
- * transaction, party-level freshness marker on the link row). Session
- * appearances ride along. Throws GmaError upstream on failure (cache intact).
+ * Refetch the campaign's NPCs into the cache (replace-all, one transaction,
+ * party-level freshness marker on the link row). Verified against the GMA
+ * spec (backend.gmassistant.app/v1/openapi.yaml): campaign NPCs live at
+ * GET /campaigns/{id}/npcs — descriptions are NOT in the sparse default,
+ * hence the explicit fields. « Vu en séance » has no direct link upstream:
+ * session NPCs are separate records (their own ids), matched BY NAME — one
+ * call per session, once per session (npcs_fetched_at), so a busy campaign
+ * costs nothing at steady state. Throws GmaError upstream on a list failure
+ * (cache intact); a single session's failure only postpones its appearances
+ * to the next TTL. Throws GmaError upstream on failure (cache intact).
  */
 async function syncEntities(partyId: number, link: any, key: string): Promise<string> {
-  const list = await gmaListAll<any>(key, `/campaigns/${link.gma_campaign_id}/entities`, {
-    fields: 'id,name,description,type,order,session_ids',
+  // Appearances lean on the sessions cache — make sure it exists even when
+  // the chronicle was never opened (best-effort, ordinals degrade without it).
+  if (cachedSessions(partyId).length === 0) {
+    try {
+      await syncSessions(partyId, link, key);
+    } catch {
+      /* no sessions → no appearances, the rail still serves */
+    }
+  }
+  const list = await gmaListAll<any>(key, `/campaigns/${link.gma_campaign_id}/npcs`, {
+    fields: 'id,name,description,order',
     limit: '500',
   });
   const fetchedAt = nowIso();
+  const byNormName = new Map<string, string[]>();
+  for (const e of list) {
+    const k = normalizeGmaName(e.name);
+    if (!k) continue;
+    const ids = byNormName.get(k) ?? [];
+    ids.push(String(e.id));
+    byNormName.set(k, ids);
+  }
+
+  // Sessions never processed → fetch their NPC lists, then mark them done.
+  const fresh = cachedSessions(partyId).filter((s: any) => !s.npcs_fetched_at);
+  const freshIds: string[] = [];
+  const appearances: Array<{ entityId: string; sessionId: string }> = [];
+  for (const s of fresh) {
+    const sessionId = String(s.session_id);
+    try {
+      const sessionNpcs = await gmaListAll<any>(
+        key,
+        `/campaigns/${link.gma_campaign_id}/sessions/${sessionId}/npcs`,
+        { fields: 'id,name', limit: '500' },
+      );
+      for (const sn of sessionNpcs) {
+        for (const entityId of byNormName.get(normalizeGmaName(sn.name)) ?? []) {
+          appearances.push({ entityId, sessionId });
+        }
+      }
+      freshIds.push(sessionId);
+    } catch {
+      // Unmarked on purpose — retried on the next TTL window.
+    }
+  }
+
   getDb().transaction(() => {
     const drizzle = getDrizzle();
     drizzle.delete(gmaEntities).where(eq(gmaEntities.partyId, partyId)).run();
-    drizzle.delete(gmaEntitySessions).where(eq(gmaEntitySessions.partyId, partyId)).run();
     for (const e of list) {
-      const entityId = String(e.id);
       drizzle
         .insert(gmaEntities)
         .values({
           partyId,
-          entityId,
+          entityId: String(e.id),
           name: String(e.name ?? 'Sans nom'),
           description: e.description ?? null,
           type: e.type ?? null,
           sortOrder: Number.isInteger(e.order) ? e.order : 0,
         })
         .run();
-      for (const sessionId of entitySessionIds(e)) {
-        drizzle
-          .insert(gmaEntitySessions)
-          .values({ partyId, entityId, sessionId })
-          .onConflictDoNothing()
-          .run();
-      }
+    }
+    // Only the sessions just processed are re-derived; already-processed
+    // sessions keep their rows (and disappeared sessions' rows are filtered
+    // out at read time by the ordinal join).
+    if (freshIds.length > 0) {
+      drizzle
+        .delete(gmaEntitySessions)
+        .where(
+          and(
+            eq(gmaEntitySessions.partyId, partyId),
+            inArray(gmaEntitySessions.sessionId, freshIds),
+          ),
+        )
+        .run();
+    }
+    for (const a of appearances) {
+      drizzle
+        .insert(gmaEntitySessions)
+        .values({ partyId, entityId: a.entityId, sessionId: a.sessionId })
+        .onConflictDoNothing()
+        .run();
+    }
+    for (const sessionId of freshIds) {
+      drizzle
+        .update(gmaSessions)
+        .set({ npcsFetchedAt: fetchedAt })
+        .where(and(eq(gmaSessions.partyId, partyId), eq(gmaSessions.sessionId, sessionId)))
+        .run();
     }
     drizzle
       .update(partyGmaLinks)

@@ -214,41 +214,27 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
     { id: 'sess-e1', title: 'L’arrivée', played_at: '2026-07-01', order: 0 },
     { id: 'sess-e2', title: 'Le marché', played_at: null, order: 1 },
   ]);
-  mock.entities.set(CAMPAIGN_ENTITIES, [
+  mock.npcs.set(CAMPAIGN_ENTITIES, [
     {
       id: 'ent-rahadinE',
       name: 'Rahadin',
       description: 'Chambellan spectral. Ne quitte jamais son clavecin.',
-      type: 'npc',
-      session_ids: ['sess-e1', 'sess-e2'],
       order: 0,
     },
     {
       id: 'ent-wakangaE',
       name: 'Wakanga O’tamu',
       description: 'Mage guide de Port Nyanzaru.',
-      type: 'npc',
-      session_ids: ['sess-e1'],
       order: 1,
     },
-    {
-      id: 'ent-muetE',
-      name: 'Silence d’outre-tombe',
-      description: null,
-      type: 'npc',
-      session_ids: [],
-      order: 2,
-    },
-    // A place the assistant also catalogued — filtered out of the rail.
-    {
-      id: 'ent-portE',
-      name: 'Port de Baldur',
-      description: 'Le port himself.',
-      type: 'location',
-      session_ids: ['sess-e1'],
-      order: 3,
-    },
+    { id: 'ent-muetE', name: 'Silence d’outre-tombe', description: null, order: 2 },
   ]);
+  // Appearances live per-session — separate records matched by name.
+  mock.sessionNpcs.set('sess-e1', [
+    { id: 'sn-e1', name: 'Rahadin', order: 0 },
+    { id: 'sn-e2', name: 'Wakanga O’tamu', order: 1 },
+  ]);
+  mock.sessionNpcs.set('sess-e2', [{ id: 'sn-e3', name: 'Rahadin', order: 0 }]);
 
   r = await api(base, 'GET', `/api/parties/${party4.id}/gma/entities`, {
     token: fx.player.token,
@@ -305,7 +291,7 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   eq(r.status, 200, 'member reads the entities rail');
   eq(r.data.stale, false, 'fresh after first fetch');
   eq(r.data.campaignTitle, 'Campagne Repérés', 'campaign title served');
-  eq(r.data.entities.length, 3, 'location-typed entity filtered, NPCs served');
+  eq(r.data.entities.length, 3, 'the campaign NPCs are served, all three');
   const railRahadin = r.data.entities.find((e: any) => e.id === 'ent-rahadinE');
   ok(!!railRahadin, 'Rahadin on the rail');
   eq(railRahadin.linkedNpc?.id, importedNpcId, 'already linked by the import above');
@@ -345,12 +331,10 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   // …and append needs content-edit rights on the NPC (link alone stays legal).
   // ent-charterE (with a description) joins the rail first — an entity
   // WITHOUT one never triggers the append question.
-  mock.entities.get(CAMPAIGN_ENTITIES)!.push({
+  mock.npcs.get(CAMPAIGN_ENTITIES)!.push({
     id: 'ent-charterE',
     name: 'Charte du port',
     description: 'Scellée de cire verte.',
-    type: 'npc',
-    session_ids: ['sess-e2'],
     order: 4,
   });
   r = await api(base, 'GET', `/api/parties/${party4.id}/gma/entities?refresh=1`, {
@@ -397,7 +381,7 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   eq(r.status, 404, 'link to an invisible npc 404 (no leak)');
 
   // Pull: replace after a GMA-side edit, append on a link-only row.
-  mock.entities.get(CAMPAIGN_ENTITIES)!.find((e: any) => e.id === 'ent-wakangaE')!.description =
+  mock.npcs.get(CAMPAIGN_ENTITIES)!.find((e: any) => e.id === 'ent-wakangaE')!.description =
     'Mage guide, gravement inquiet.';
   r = await api(base, 'GET', `/api/parties/${party4.id}/gma/entities?refresh=1`, {
     token: fx.gm.token,

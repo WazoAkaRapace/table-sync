@@ -47,8 +47,9 @@ for (const file of walk(ROOT)) {
     .replace(/`([a-z0-9]+(?:\.[a-z0-9-]+)+)\.\$\{/g, '`${')
     // Intérieurs d'interpolation ${…} : des identifiants, jamais du texte
     // affiché (le mot-listé vivrait dans la DÉFINITION de la variable,
-    // comptée là-bas). Sans ça, `pnj.disposition.${npc.disposition}`
-    // re-sanctionne le wiring selon le nom du membre interpolé.
+    // comptée là-bas). Sans ça, le wiring t() serait sanctionné selon le nom
+    // du membre interpolé.
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: la chaîne de remplacement vise littéralement "${}"
     .replace(/\$\{[^}]*\}/g, '${}')
     // Visite guidée : les ids d'étapes ({ id: 'portage', … }) et les cibles
     // tuto('stats-portage') / data-tuto="stats-portage" sont des identifiants

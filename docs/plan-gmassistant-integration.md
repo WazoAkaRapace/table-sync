@@ -24,7 +24,8 @@ Objectif produit : le MD connecte son compte [GM Assistant](https://gmassistant.
 | `DELETE /campaigns/{id}/player-characters/{pid}` | **resync** : suppression explicite d'un PJ orphelin | full_access |
 | `GET /campaigns/{id}/sessions` | liste des séances (défaut : `id,title,played_at,order`, tri `order`) | read |
 | `GET /campaigns/{id}/sessions/{sid}/recaps` | tous les résumés d'une séance, `default` en premier | read |
-| `GET /campaigns/{id}/entities` | **PNJ repérés** : entités de la campagne (champs attendus `id,name,description,type,order` + associations de séances — `session_ids` ou `sessions` ; le parseur accepte les deux formes) | read |
+| `GET /campaigns/{id}/npcs` | **PNJ repérés** : les PNJ de la campagne (champs `id,name,description,order` — la description N'EST PAS dans le jeu creux par défaut, il faut l'élargir via `fields=`) | read |
+| `GET /campaigns/{id}/sessions/{sid}/npcs` | **Vu en séance** : PNJ de la séance — des enregistrements SÉPARÉS (leurs propres ids, aucun lien vers les PNJ de campagne), rapprochés PAR NOM | read |
 
 - **Conventions à respecter** : pagination par curseur (`page.next_cursor` à relayer verbatim, `limit` max 500) ; erreurs en enveloppe `{error:{code,message,status}}` avec `code` open enum (`unauthorized`, `insufficient_scope`, `not_found`, `rate_limited`…) ; `429` + `Retry-After` ; tolérer champs/enum inconnus ; `ETag`/`GMA-Revision` dispo (on ignore au J1, on note pour plus tard).
 - **Piège scope** : rien ne permet de lire le scope d'une clé (ni `/account`). Une clé `read` échoue à l'init avec `403 insufficient_scope` → il faut un message clair à ce moment-là.
@@ -204,11 +205,16 @@ ouvre directement en lecture), modales standard pour la confirmation de liaison
 remplacement, « Ajouter la description » quand la liaison n'a jamais pris le
 texte, « Délier » en ConfirmButton). Clés i18n `pnj.gma.*` (fr + en).
 
-**Hypothèse à revalider contre la spec GMA réelle** : la forme exacte de
-`GET /campaigns/{id}/entities` (champs + associations de séance). Le parseur est
-défensif (`session_ids` liste d'ids ou `sessions` liste d'objets) ; si la vraie
-API diffère, l'adaptation tient dans `syncEntities`/`entitySessionIds` sans
-toucher l'UX.
+**Contrat vérifié contre la spec réelle** (2026-09, `backend.gmassistant.app/v1/openapi.yaml`) :
+les PNJ de campagne vivent à `GET /campaigns/{id}/npcs` (il n'existe PAS de
+route `/entities` — un premier jet l'appelait et récoltait un 404 silencieux,
+d'où un rail vide) ; la description n'est pas dans le jeu creux par défaut
+(`fields=id,name,description,order` obligatoire) ; les apparitions en séance
+sont des enregistrements séparés sans référence aux PNJ de campagne —
+rapprochement PAR NOM (accents/casse mis à part), une requête par séance,
+UNE SEULE FOIS par séance (`gma_sessions.npcs_fetched_at`, migration 0027) —
+une séance nouvelle ne coûte qu'un appel, une campagne installée ne coûte
+rien ; l'échec d'une séance est reporté au TTL suivant sans couler le rail.
 
 ## 8. Tests
 

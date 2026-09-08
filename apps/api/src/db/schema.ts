@@ -782,6 +782,9 @@ export const gmaSessions = sqliteTable(
     // Per-session content freshness marker — recaps AND memorable moments
     // (fetched together). null = content never fetched.
     recapsFetchedAt: text('recaps_fetched_at'),
+    // When this session's NPC list was fetched for « Vu en séance » (once per
+    // session — new sessions get their appearances on the next entities sync).
+    npcsFetchedAt: text('npcs_fetched_at'),
   },
   (t) => [primaryKey({ columns: [t.partyId, t.sessionId] })],
 );

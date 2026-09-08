@@ -1,0 +1,1 @@
+ALTER TABLE `gma_sessions` ADD `npcs_fetched_at` text;
