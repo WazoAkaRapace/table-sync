@@ -43,7 +43,7 @@ declare global {
 }
 
 function boot() {
-  // Service worker push-only (aucun cache) : pas critique, échec silencieux.
+  // Service worker (push + cache de coquille) : pas critique, échec silencieux.
   void registerServiceWorker();
 
   // Le rendu n'a lieu qu'i18n prêt (FR : bundle statique, immédiat ; EN : un

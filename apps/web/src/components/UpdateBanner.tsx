@@ -1,29 +1,53 @@
 /**
  * Bandeau de mise à jour PWA — le chaînon manquant du déploiement.
  *
- * Le SW est volontairement push-only (aucun cache offline) : la fraîcheur
- * vient du cache HTTP. Mais un index.html heuristiquement caché laisse
- * l'appareil sur un VIEUX bundle jusqu'au force-refresh — d'où ce contrôle :
- * le build porte sa version (SHA du commit, __APP_VERSION__) et le serveur
- * sert dist/version.json en no-cache ; quand les deux divergent, la version
- * en ligne est plus fraîche que celle qui tourne — on propose le rechargement.
+ * Le build porte sa version (SHA du commit, __APP_VERSION__) et le serveur
+ * sert dist/version.json en no-cache : quand les deux divergent, une version
+ * plus fraîche est en ligne. Plutôt que d'offrir un rechargement à froid, le
+ * bandeau DÉCLENCHE le travail : registration.update() fait installer le
+ * nouveau service worker, qui précache la coquille en tâche de fond. Le
+ * bandeau ne paraît qu'une fois ce précache annoncé fini (message
+ * « precache-done » du SW, ou sonde « precache-status » si l'installation
+ * datait d'une visite précédente) — « Recharger » retombe alors dans un
+ * cache tiède : échange instantané, même sur la radio lente de la table.
  *
- * Vérifications : au chargement, au retour au premier plan (l'appareil sort
- * de sa poche) et toutes les 30 min. Un ✕ discret écarte UNE version : le
- * bandeau reviendra à la suivante.
+ * Filets de sécurité : sans service worker, ou si le précache traîne
+ * au-delà du délai de secours (radio noire, quota), le bandeau paraît
+ * quand même — le rechargement HTTP fonctionne toujours.
+ *
+ * Vérifications de dérive : au chargement, au retour au premier plan
+ * (l'appareil sort de sa poche) et toutes les 30 min. Un ✕ discret écarte
+ * UNE version : le bandeau reviendra à la suivante.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
 const CHECK_INTERVAL_MS = 30 * 60 * 1000;
+/** Secours : sans « precache-done » d'ici là, on montre le bandeau —
+ *  recharger sans cache tiède vaut mieux qu'attendre indéfiniment. */
+const WARMUP_TIMEOUT_MS = 120_000;
+/** Sonde « precache-status » au contrôleur tant que le broadcast n'est pas
+ *  arrivé (l'installation a pu être consommée lors d'une visite précédente). */
+const STATUS_POLL_MS = 5_000;
+
+/** Délai au-delà duquel navigator.serviceWorker.ready est abandonné : le
+ *  secours prend le relais, le rechargement HTTP reste possible. */
+const READY_TIMEOUT_MS = 10_000;
+
+type PrecacheMessage = { type?: string; version?: string; failed?: number };
 
 export default function UpdateBanner() {
   const { t } = useTranslation();
   const [pendingVersion, setPendingVersion] = useState<string | null>(null);
+  // Le précache de pendingVersion est annoncé fini (ou délai de secours écoulé).
+  const [ready, setReady] = useState(false);
   // Sentinelle '' (jamais une version réelle) : « rien d'écarté ».
   const [dismissed, setDismissed] = useState('');
+  // Miroir pour l'écouteur de messages (évite la closure périmée).
+  const pendingRef = useRef<string | null>(null);
+  pendingRef.current = pendingVersion;
 
   const check = useCallback(async () => {
     try {
@@ -33,6 +57,7 @@ export default function UpdateBanner() {
       const served = data.version;
       if (!served || served === __APP_VERSION__) {
         setPendingVersion(null);
+        setReady(false);
         return;
       }
       setPendingVersion(served);
@@ -54,7 +79,64 @@ export default function UpdateBanner() {
     };
   }, [check]);
 
-  if (pendingVersion === null || pendingVersion === dismissed) return null;
+  // Warm-up : à la dérive de version, faire installer + précacher la
+  // nouvelle coquille PENDANT que l'utilisateur joue ; écouter « precache-done ».
+  useEffect(() => {
+    if (!pendingVersion || ready) return;
+    let cancelled = false;
+
+    const fallback = window.setTimeout(() => {
+      if (!cancelled) setReady(true);
+    }, WARMUP_TIMEOUT_MS);
+
+    const sw = navigator.serviceWorker;
+    if (!sw) {
+      setReady(true);
+      return () => window.clearTimeout(fallback);
+    }
+
+    const onMessage = (event: MessageEvent) => {
+      const data = event.data as PrecacheMessage | null;
+      if (data?.type === 'precache-done' && data.version === pendingRef.current) {
+        setReady(true);
+      }
+    };
+    sw.addEventListener('message', onMessage);
+
+    void (async () => {
+      // sw.ready : l'enregistrement (boot de main.tsx) peut encore être en
+      // vol — on l'attend un peu, sinon le secours montre le bandeau.
+      const reg = await Promise.race([
+        sw.ready.catch(() => null),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), READY_TIMEOUT_MS)),
+      ]);
+      if (cancelled) return;
+      if (!reg) {
+        setReady(true);
+        return;
+      }
+      // Onglet vivant : le navigateur ne revérifie sw.js qu'aux navigations —
+      // c'est ce coup de pouce qui lance l'installation du nouveau SW.
+      try {
+        await reg.update();
+      } catch {
+        /* hors ligne : le délai de secours prendra le relais */
+      }
+    })();
+
+    const ask = () => sw.controller?.postMessage({ type: 'precache-status' });
+    ask();
+    const poll = window.setInterval(ask, STATUS_POLL_MS);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(fallback);
+      window.clearInterval(poll);
+      sw.removeEventListener('message', onMessage);
+    };
+  }, [pendingVersion, ready]);
+
+  if (!pendingVersion || !ready || pendingVersion === dismissed) return null;
 
   return createPortal(
     <div

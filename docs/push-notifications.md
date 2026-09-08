@@ -38,7 +38,7 @@ Mon compte → Activer
                                    POST /api/push/test ──────────▶ POST chiffré
                                                                     (VAPID signé,
                                                                      aes128gcm)
-sw.js (push-only, aucun cache)
+sw.js (push + cache de coquille versionnée)
   push → showNotification      ◀── livraison
   (fenêtre visible → silence : le WebSocket gère déjà)
   notificationclick → focus / openWindow(data.url)
@@ -48,9 +48,23 @@ sw.js (push-only, aucun cache)
   du push service est la clé naturelle, upsert à la re-souscription). La
   colonne `locale` fige la langue au moment de l'abonnement — le serveur
   localise titre/corps, le SW n'affiche que ce qu'il reçoit.
-- **Service worker** (`apps/web/public/sw.js`) : volontairement sans handler
-  `fetch` — aucun cache offline, le mécanisme de fraîcheur au déploiement
-  reste inchangé. Enregistré depuis `main.tsx` (échec silencieux).
+- **Service worker** (`apps/web/public/sw.js`) : push **et** cache de
+  coquille (2026-09). Le handler `fetch` est SCOPÉ : `/api/*` et
+  `/version.json` ne passent jamais par lui (données vivantes au réseau,
+  la sonde de version doit voir le vrai serveur) ; les navigations sont
+  réseau d'abord (coquille revalidée à chaque chargement, cache en repli
+  hors ligne) ; `/assets/*` et les fichiers racine précachés sont servis
+  cache d'abord — le même contrat que leur `Cache-Control immutable`, en
+  instantané. Le **précache** est un manifeste (version + URLs de dist/)
+  injecté en tête de `dist/sw.js` par le plugin vite
+  « table-sync:precache-sw » : chaque déploiement change les octets du SW →
+  réinstallation → précache dans un cache `table-sync-shell-v<version>`,
+  anciens purgés à l'activation. Le **bandeau de mise à jour**
+  (`UpdateBanner`) déclenche `registration.update()` à la dérive de version
+  puis n'annonce « Recharger » qu'une fois le précache fini (protocole
+  page ↔ SW : broadcast `precache-done`, sonde `precache-status` ; filets :
+  pas de SW ou 120 s sans nouvelle → bandeau quand même). Enregistré
+  depuis `main.tsx` (échec silencieux).
   Les icônes de notification sont résolues en **URL absolues** contre le
   scope du SW (`new URL(p, self.registration.scope)`) : Chrome Android ne
   résout pas les chemins relatifs du champ `icon` et rend un carré blanc
@@ -168,8 +182,9 @@ avec la première erreur serveur.
   web-push chiffre vers `p256dh`, des octets aléatoires échoueraient avant
   tout HTTP.
 - **`e2e/notifications.spec.ts`** : carte Mon compte (note serveur sans
-  VAPID, note d'incompatibilité, SW enregistré `clients.claim`) + cycle
-  activer/test/désactiver avec navigateur simulé (stubs `page.route` +
+  VAPID, note d'incompatibilité, SW enregistré `clients.claim`, protocole
+  de précache — le contrôleur répond `precache-done` à `precache-status`) +
+  cycle activer/test/désactiver avec navigateur simulé (stubs `page.route` +
   `addInitScript`). Un vrai abonnement exigerait le push service de Chromium
   — hors CI ; la chaîne réelle est celle de test-api + validation manuelle.
 - **Manuel** (dev localhost) : `npm run vapid-keys` → exporter les 3 vars →
@@ -179,6 +194,13 @@ avec la première erreur serveur.
 
 - **nginx** : `location = /sw.js` en `no-cache` — la regex des assets
   (`immutable`, 1 an) gèlerait le SW et brickerait toute mise à jour push.
+- **Cache de coquille** : `/api/*`, `/ws` et `/version.json` ne doivent
+  JAMAIS entrer dans le manifeste de précache ni dans le handler `fetch` —
+  la sonde de version du bandeau et la fraîcheur des données en dépendent.
+  Les fichiers précachés changent à chaque build (hashés) : pas de
+  révision manuelle à maintenir. iOS peut évacuer le cache d'une PWA
+  longtemps inactive : le cache-d'abord retombe alors sur le réseau
+  (remplissage au fil des requêtes), sans casse.
 - **iOS** : pas de `Notification` dans l'onglet Safari, uniquement via la
   PWA installée — `pushSupported()` est faux, la carte l'explique.
 - **web-push exige des endpoints https** (module `https` codé en dur) — le

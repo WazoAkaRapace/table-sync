@@ -58,12 +58,35 @@ playerTest.describe('notifications push', () => {
     await expect(page.getByRole('button', { name: 'Activer les notifications' })).toHaveCount(0);
   });
 
-  playerTest('service worker push-only enregistré et actif', async ({ page }) => {
+  playerTest('service worker enregistré et actif', async ({ page }) => {
     await page.goto(COMPTE);
     // clients.claim() dans le SW → controller non nul dès l'activation.
     await page.waitForFunction(() => navigator.serviceWorker.controller !== null, null, {
       timeout: 10_000,
     });
+  });
+
+  playerTest('protocole de précache : le contrôleur répond « precache-done »', async ({ page }) => {
+    await page.goto(COMPTE);
+    await page.waitForFunction(() => navigator.serviceWorker.controller !== null, null, {
+      timeout: 10_000,
+    });
+    // Le bandeau de mise à jour sonde le SW via « precache-status » ; un
+    // contrôleur actif a par construction fini son installation — il doit
+    // répondre avec la version de SON manifeste (dev : manifeste vide).
+    const reply = await page.evaluate(
+      () =>
+        new Promise<{ type?: string; version?: string }>((resolve) => {
+          navigator.serviceWorker.addEventListener(
+            'message',
+            (event) => resolve(event.data as { type?: string; version?: string }),
+            { once: true },
+          );
+          navigator.serviceWorker.controller?.postMessage({ type: 'precache-status' });
+        }),
+    );
+    expect(reply.type).toBe('precache-done');
+    expect(reply.version).toBeTruthy();
   });
 
   playerTest('navigateur sans PushManager : note d’incompatibilité (iOS)', async ({ page }) => {

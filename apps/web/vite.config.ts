@@ -1,4 +1,4 @@
-import { writeFile } from 'node:fs/promises';
+import { readdir, readFile, writeFile } from 'node:fs/promises';
 import react from '@vitejs/plugin-react';
 import { defineConfig, type Plugin } from 'vite';
 
@@ -21,8 +21,47 @@ function versionJson(): Plugin {
   };
 }
 
+/**
+ * Précache de coquille du service worker : liste le contenu de dist/ et
+ * injecte le manifeste (version + URLs) en tête de dist/sw.js — sous la clé
+ * `self.__PRECACHE_MANIFEST__`, que public/sw.js lit avec un repli « dev ».
+ * Chaque déploiement change les octets du SW → réinstallation → précache du
+ * nouveau jeu dans un cache versionné (purge à l'activation). Les /api, /ws
+ * et version.json n'y figurent jamais : le SW ne les intercepte pas.
+ * closeBundle court après la copie de public/ : on réécrit la copie dist,
+ * la source public/sw.js reste le manifeste vide de dev.
+ */
+function precacheSw(): Plugin {
+  return {
+    name: 'table-sync:precache-sw',
+    apply: 'build',
+    async closeBundle() {
+      const [dist, assets] = await Promise.all([
+        readdir('dist'),
+        readdir('dist/assets').catch(() => [] as string[]),
+      ]);
+      const rootAssets = dist
+        .filter((f) => /\.(png|svg)$/.test(f) || f === 'manifest.json')
+        .sort()
+        .map((f) => `/${f}`);
+      const hashed = assets
+        .filter((f) => /\.(js|css|woff2?|png|svg|jpe?g|webp|gif)$/.test(f))
+        .sort()
+        .map((f) => `/assets/${f}`);
+      const manifest = { version: APP_VERSION, urls: ['/', ...rootAssets, ...hashed] };
+      const swPath = 'dist/sw.js';
+      let sw = await readFile(swPath, 'utf8');
+      const line = `self.__PRECACHE_MANIFEST__ = ${JSON.stringify(manifest)};\n`;
+      sw = /self\.__PRECACHE_MANIFEST__ = .*;\n/.test(sw)
+        ? sw.replace(/self\.__PRECACHE_MANIFEST__ = .*;\n/, line)
+        : line + sw;
+      await writeFile(swPath, sw);
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), versionJson()],
+  plugins: [react(), versionJson(), precacheSw()],
   define: {
     __APP_VERSION__: JSON.stringify(APP_VERSION),
   },

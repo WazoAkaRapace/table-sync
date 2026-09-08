@@ -2,7 +2,9 @@
  * Notifications Web Push côté navigateur : enregistrement du service worker
  * et cycle d'abonnement de CE navigateur (l'abonnement est par appareil —
  * chaque tablette/navigateur s'abonne séparément depuis Mon compte).
- * Le service worker (`public/sw.js`) est push-only, sans cache offline.
+ * Le service worker (`public/sw.js`) gère le push ET le cache de coquille
+ * (précaché au build, scoped : jamais /api, /ws ni /version.json) —
+ * docs/push-notifications.md fait foi.
  */
 import api from './api';
 
