@@ -463,6 +463,72 @@ export function gmaMomentTypeLabel(type: string | null, lang: 'fr' | 'en' = 'fr'
   return table[type] ?? type;
 }
 
+// ---------- GM Assistant entities (« PNJ repérés ») ----------
+
+/** A session an entity appeared in (chronicle order, 1-based ordinal). */
+export interface GmaEntitySessionRef {
+  id: string;
+  /** Session number — render as a roman ordinal (I, II, III…). */
+  ordinal: number;
+  title: string;
+  playedAt: string | null;
+}
+
+/** The local NPC side of an entity link, as seen by the requesting member. */
+export interface GmaEntityLinkedNpc {
+  id: number;
+  name: string;
+  /** Who clicked « Lier » — display + the unlink permission (MD/creator/linker). */
+  linkedByUserId: number;
+  linkedByName: string;
+  linkedAt: string;
+  lastPullAt: string | null;
+  /** GMA's description was ever taken into the NPC (import/append/pull). */
+  textPulled: boolean;
+  /** GMA changed its description since the last pull (hint + re-pull offer). */
+  descriptionUpdated: boolean;
+}
+
+/** A campaign entity reported by GM Assistant (an NPC the assistant catalogued). */
+export interface GmaEntity {
+  id: string;
+  name: string;
+  description: string | null;
+  /** Open enum upstream ('npc' | 'location' | …) — the rail serves NPCs only. */
+  type: string | null;
+  /** Sessions where the entity appeared (chronicle order). */
+  sessions: GmaEntitySessionRef[];
+  /** The linked local NPC when it exists AND is visible to the requester. */
+  linkedNpc: GmaEntityLinkedNpc | null;
+  /** The table dismissed it from the rail — restore brings it back. */
+  discarded: boolean;
+}
+
+export interface GmaEntitiesResponse {
+  entities: GmaEntity[];
+  campaignTitle: string | null;
+  fetchedAt: string | null;
+  /** Cache served past its TTL / upstream unreachable — still readable. */
+  stale: boolean;
+}
+
+export interface GmaImportEntityResult {
+  npc: Npc;
+  entityId: string;
+}
+
+export interface GmaLinkEntityPayload {
+  npcId: number;
+  /** Append GMA's description to the NPC's own text (needs content-edit rights). */
+  appendDescription?: boolean;
+}
+
+export interface GmaPullEntityPayload {
+  npcId: number;
+  /** true = append GMA's description; false (default) = replace. */
+  append?: boolean;
+}
+
 // ---------- NPCs ----------
 
 export type NpcDisposition = 'friendly' | 'neutral' | 'hostile' | 'unknown';

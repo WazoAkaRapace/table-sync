@@ -176,6 +176,20 @@
       "when": 1788680110678,
       "tag": "0024_mixed_iron_monger",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "6",
+      "when": 1788846754130,
+      "tag": "0025_living_sleepwalker",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "6",
+      "when": 1788850642261,
+      "tag": "0026_harsh_agent_zero",
+      "breakpoints": true
     }
   ]
 }

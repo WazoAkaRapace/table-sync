@@ -27,6 +27,8 @@ export interface MockGmaState {
   recaps: Map<string, Array<Record<string, any>>>;
   /** sessionId → memorable moments */
   moments: Map<string, Array<Record<string, any>>>;
+  /** campaignId → campaign entities (the assistant's catalogued NPCs/places) */
+  entities: Map<string, Array<Record<string, any>>>;
   /** 'down' = simulate an outage (destroy the socket → network error). */
   failMode: 'off' | 'down';
   /** One-shot: fail the next player-character POST with this message. */
@@ -129,6 +131,47 @@ function freshState(): MockGmaState {
         ],
       ],
     ]),
+    entities: new Map([
+      [
+        CAMPAIGN_EXISTING,
+        [
+          {
+            id: 'ent-rahadin',
+            name: 'Rahadin',
+            description: 'Chambellan spectral du château Ravenloft. Ne quitte jamais son clavecin.',
+            type: 'npc',
+            session_ids: ['sess-1', 'sess-3'],
+            order: 0,
+          },
+          {
+            id: 'ent-wakanga',
+            name: 'Wakanga O’tamu',
+            description: 'Mage guide de Port Nyanzaru, bienveillant mais occupé.',
+            type: 'npc',
+            session_ids: ['sess-1'],
+            order: 1,
+          },
+          {
+            id: 'ent-muet',
+            name: 'Silence d’outre-tombe',
+            description: null,
+            type: 'npc',
+            session_ids: [],
+            order: 2,
+          },
+          // A place the assistant also catalogued — filtered out of the rail.
+          {
+            id: 'ent-port',
+            name: 'Port de Baldur',
+            description: null,
+            type: 'location',
+            session_ids: ['sess-1'],
+            order: 3,
+          },
+        ],
+      ],
+      [CAMPAIGN_OTHER, []],
+    ]),
     failMode: 'off',
     failNextPcPost: null,
     requests: [],
@@ -140,6 +183,7 @@ function freshState(): MockGmaState {
       state.sessions = fresh.sessions;
       state.recaps = fresh.recaps;
       state.moments = fresh.moments;
+      state.entities = fresh.entities;
       state.failMode = 'off';
       state.failNextPcPost = null;
       state.requests = [];
@@ -246,6 +290,7 @@ function handle(req: IncomingMessage, res: any, state: MockGmaState): void {
         state.campaigns.set(id, campaign);
         state.pcs.set(id, []);
         state.sessions.set(id, []);
+        state.entities.set(id, []);
         return respond(201, campaign);
       }
     }
@@ -321,6 +366,12 @@ function handle(req: IncomingMessage, res: any, state: MockGmaState): void {
     const momentsMatch = path.match(/^\/campaigns\/([^/]+)\/sessions\/([^/]+)\/memorable-moments$/);
     if (momentsMatch && req.method === 'GET') {
       const list = state.moments.get(momentsMatch[2]) ?? [];
+      return respond(200, page(list, 500, url.searchParams.get('cursor')));
+    }
+    // ---- campaign entities (the assistant's catalogued NPCs/places) ----
+    const entitiesMatch = path.match(/^\/campaigns\/([^/]+)\/entities$/);
+    if (entitiesMatch && req.method === 'GET') {
+      const list = state.entities.get(entitiesMatch[1]) ?? [];
       return respond(200, page(list, 500, url.searchParams.get('cursor')));
     }
     errorEnvelope(res, 404, 'not_found', `No mock route for ${req.method} ${path}`);

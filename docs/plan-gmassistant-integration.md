@@ -1,6 +1,6 @@
-# Plan — Intégration GM Assistant (liaison groupe ↔ campagne + chronique des séances)
+# Plan — Intégration GM Assistant (liaison groupe ↔ campagne + chronique des séances + PNJ repérés)
 
-Branche : `feat/gmassistant-integration` · Statut : **implémenté** (jalons 1–4 ; API + UI + tests `mod-gma` verts, écrans vérifiés au navigateur contre le mock GMA)
+Branche : `feat/gmassistant-integration` · Statut : **implémenté** (jalons 1–4 + PNJ repérés ; API + UI + tests `mod-gma` verts, écrans vérifiés au navigateur contre le mock GMA)
 
 Objectif produit : le MD connecte son compte [GM Assistant](https://gmassistant.app), lie un **groupe** (notre `party`) à une **campagne** GMA — existante ou **créée depuis le groupe avec les personnages sélectionnés** — puis **resynchronise les personnages** quand la table change (nouvelle fiche, renommée, nouveau propriétaire) ; et toute la table relit les **résumés de séance** dans notre app, en français, sans quitter leurs fiches.
 
@@ -24,6 +24,7 @@ Objectif produit : le MD connecte son compte [GM Assistant](https://gmassistant.
 | `DELETE /campaigns/{id}/player-characters/{pid}` | **resync** : suppression explicite d'un PJ orphelin | full_access |
 | `GET /campaigns/{id}/sessions` | liste des séances (défaut : `id,title,played_at,order`, tri `order`) | read |
 | `GET /campaigns/{id}/sessions/{sid}/recaps` | tous les résumés d'une séance, `default` en premier | read |
+| `GET /campaigns/{id}/entities` | **PNJ repérés** : entités de la campagne (champs attendus `id,name,description,type,order` + associations de séances — `session_ids` ou `sessions` ; le parseur accepte les deux formes) | read |
 
 - **Conventions à respecter** : pagination par curseur (`page.next_cursor` à relayer verbatim, `limit` max 500) ; erreurs en enveloppe `{error:{code,message,status}}` avec `code` open enum (`unauthorized`, `insufficient_scope`, `not_found`, `rate_limited`…) ; `429` + `Retry-After` ; tolérer champs/enum inconnus ; `ETag`/`GMA-Revision` dispo (on ignore au J1, on note pour plus tard).
 - **Piège scope** : rien ne permet de lire le scope d'une clé (ni `/account`). Une clé `read` échoue à l'init avec `403 insufficient_scope` → il faut un message clair à ce moment-là.
@@ -151,9 +152,67 @@ Même mécanique que les onglets existants (`characters/transactions/custom/memb
 - Rate limit (le nôtre, erreur-seule) : les routes GMA peuvent échouer → elles restent sous le quota 40/min ; le cache-first + stale-on-error fait que le joueur normal n'en produit aucune.
 - Dégradation : clé supprimée/révoquée → liens en « clé expirée », la chronique sert le dernier cache avec avertissement, seul le MD voit l'action de réparation.
 
+## 7bis. PNJ repérés — les entités de campagne au registre des joueurs (2026-09)
+
+Lecture seule supplémentaire (la ligne rouge tient : toujours zéro écriture entité
+chez GMA). Toute la table voit les PNJ que l'assistant catalogue, et **chaque
+membre** les réconcilie avec le registre : **ajouter** l'absent (PNJ partagé +
+liaison en un geste) ou **lier** l'existant (la fiche garde son contenu ; la
+liaison peut *proposer* d'ajouter la description GMA à la suite de la sienne —
+jamais silencieusement).
+
+**Le rail** (`NpcPage`, un carton repliable d'une ligne au-dessus des filtres,
+absent tant qu'il n'y a rien à lier — zéro bruit) : une rangée par entité non
+liée (nom + extrait 2 lignes + « Vu en séance — I · III »), et trois états
+portent toute la fonction : *à ajouter* (« ＋ Ajouter »), *suggestion* (un PNJ du
+registre porte le même nom, accents/casse mis à part → « Lier à {nom} », avec
+« Autre PNJ… » en évasion vers un sélecteur), *lié* (la rangée disparaît, le
+badge or 📜 apparaît sur la carte). Les lieux/entités non-personnages restent en
+cache mais ne servent pas le rail (`NON_NPC_ENTITY_TYPES`).
+
+**Les tables** — `gma_entities` (cache PK `party_id, entity_id` : nom,
+description, type, ordre), `gma_entity_sessions` (apparences par séance — nourrit
+« Vu en séance », ordinaux dérivés du cache des séances), `gma_npc_links`
+(liaison locale : `npc_id` **CASCADE** — un PNJ supprimé revient au rail, aucun
+orphelin à gérer puisque nous n'écrivons jamais là-bas ; `gma_entity_id` UNIQUE,
+`UNIQUE(party_id, npc_id)` ; `description_hash` SHA-256 = la dernière version du
+texte GMA prise, pour le drapeau « GM Assistant a mis à jour sa description »).
+Purge sur déliaison : les trois tables disparaissent avec le reste.
+
+**Les routes** (membre — sauf refresh GM) :
+
+| Route | Porte | Rôle |
+|---|---|---|
+| `GET /api/parties/:id/gma/entities[?refresh=1]` | membre (refresh : GM) | cache-first + stale-on-error, `linkedNpc` joint **filtré par visibilité** (une entité liée à un PNJ privé est absente de la liste des autres), ordinaux de séance ; veille aussi à ce que le cache des séances existe (les ordinaux en dépendent) |
+| `POST …/entities/:eid/import` | membre | crée le PNJ partagé (`disposition: 'unknown'`, créateur = l'acteur) + liaison + hash — cache froid réchauffé une fois si besoin (même robustesse que les recaps) |
+| `POST …/entities/:eid/link {npcId, appendDescription?}` | membre | liaison seule ; `appendDescription` exige les droits d'édition du CONTENU du PNJ (créateur/MD/éditeur autorisé) sinon 403 — la liaison seule reste légale ; cible invisible → 404 (jamais de fuite) |
+| `POST …/entities/:eid/pull {npcId, append?}` | membre avec droits contenu | reprend la description (remplace par défaut, `append` pour ajouter) ; entité disparue chez GMA → 404 « délie le PNJ » |
+| `DELETE …/entities/:eid/link` | MD, créateur du PNJ, ou celui qui a lié | retire le badge ; le PNJ reste |
+| `POST …/entities/:eid/discard` · `DELETE …/entities/:eid/discard` | membre | **Écarter** : masque un PNJ inutile du rail pour TOUTE la table (et le restaure) — table dédiée `gma_entity_discards`, le drapeau survit à chaque rafraîchissement du cache ; rien ne remonte chez GMA, purge à la déliaison |
+
+Événements : `gma:change` (action `entity`, type ajouté à l'union des DEUX
+copies — `bus.ts` et `sync.tsx`) pour l'état des liaisons, `party:change` quand
+le contenu d'un PNJ bouge (l'onglet PNJ de chaque fiche suit déjà ce type).
+
+**Côté web** : badge 📜 or sur la carte (porte la fiche d'origine : campagne,
+« lié par X le … · dernière reprise … », séances avec leurs titres — chaque
+rangée ouvre la lecture de la chronique), ligne « Vu en séance — I · III » sous
+la description (ordinaux romains, liens profonds `?seance=<id>` que la Chronique
+ouvre directement en lecture), modales standard pour la confirmation de liaison
+(les deux descriptions côte à côte), le sélecteur de PNJ et la fiche d'origine
+(« Reprendre la description » en ConfirmButton avec avertissement de
+remplacement, « Ajouter la description » quand la liaison n'a jamais pris le
+texte, « Délier » en ConfirmButton). Clés i18n `pnj.gma.*` (fr + en).
+
+**Hypothèse à revalider contre la spec GMA réelle** : la forme exacte de
+`GET /campaigns/{id}/entities` (champs + associations de séance). Le parseur est
+défensif (`session_ids` liste d'ids ou `sessions` liste d'objets) ; si la vraie
+API diffère, l'adaptation tient dans `syncEntities`/`entitySessionIds` sans
+toucher l'UX.
+
 ## 8. Tests
 
-- **`scripts/api-tests/mod-gma.ts`** (ajouté à `test-api.ts`) : le harness démarre un **mini-serveur mock GMA** (http node, port libre) et passe `GMA_BASE_URL` au boot : `/account` (401 sauf clé test), `/campaigns` (liste + POST), `/player-characters` (GET/POST/PATCH/DELETE), `/sessions`, `/sessions/:id/recaps` (2 styles). Scénarios : save/valide/rejet de clé ; portes (joueur ≠ GM ≠ non-membre) ; liaison + 409 ; init (payloads exacts, échec partiel PJ sans rollback) ; resync (`dryRun` du diff, `PATCH` exact sur renommé/changement de propriétaire, `POST` + lien sur nouveau, suppression orphelin explicite, échec d'un item sans interruption) ; sessions cache + TTL + `refresh` ; stale-on-error (mock coupé) ; event WS.
+- **`scripts/api-tests/mod-gma.ts`** (ajouté à `test-api.ts`) : le harness démarre un **mini-serveur mock GMA** (http node, port libre) et passe `GMA_BASE_URL` au boot : `/account` (401 sauf clé test), `/campaigns` (liste + POST), `/player-characters` (GET/POST/PATCH/DELETE), `/sessions`, `/sessions/:id/recaps` (2 styles), `/entities` (PNJ + un lieu à filtrer). Scénarios : save/valide/rejet de clé ; portes (joueur ≠ GM ≠ non-membre) ; liaison + 409 ; init (payloads exacts, échec partiel PJ sans rollback) ; resync (`dryRun` du diff, `PATCH` exact sur renommé/changement de propriétaire, `POST` + lien sur nouveau, suppression orphelin explicite, échec d'un item sans interruption) ; sessions cache + TTL + `refresh` ; stale-on-error (mock coupé) ; **PNJ repérés** (import sur cache froid, 409 double import, filtrage des lieux, ordinaux d'apparences, append réservé aux éditeurs du contenu, cible invisible 404 sans fuite, pull remplacer/ajouter, drapeau « description mise à jour », déliaison et permissions, entité liée à un PNJ privé invisible des autres, purge à la déliaison) ; event WS.
 - E2E Playwright : plus tard (J5) — la vue chronique joueur avec cache seedé.
 
 ## 9. Jalons
@@ -166,7 +225,7 @@ Même mécanique que les onglets existants (`characters/transactions/custom/memb
 
 ## 10. Hors périmètre (réservé au futur, l'architecture le permet déjà)
 
-Moments mémorables & scènes en lecture ; entités de campagne (PNJ/lieux GMA) en lecture ; publication publique GMA (`is_public`) avec lien de partage ; déclenchement d'analyses (coûte des crédits — jamais sans garde-fou explicite) ; ETag/`If-None-Match` pour ne re-payer que le nécessaire.
+Moments mémorables & scènes en lecture (les moments sont déjà cachés pour la chronique) ; **moments/chronique → traces sur le registre PNJ** (les orateurs des moments comme noms liés) ; publication publique GMA (`is_public`) avec lien de partage ; déclenchement d'analyses (coûte des crédits — jamais sans garde-fou explicite) ; ETag/`If-None-Match` pour ne re-payer que le nécessaire.
 
 ## 11. Hypothèses à valider (marquées, non bloquantes)
 

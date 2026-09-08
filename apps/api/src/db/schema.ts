@@ -760,6 +760,8 @@ export const partyGmaLinks = sqliteTable(
     // Party-wide sessions-list freshness marker (lives here, not on the rows:
     // an empty campaign has no rows to carry a timestamp).
     sessionsFetchedAt: text('sessions_fetched_at'),
+    // Same idea for the entities cache (« PNJ repérés »).
+    entitiesFetchedAt: text('entities_fetched_at'),
     createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
     updatedAt: text('updated_at').notNull().default(sql`(datetime('now'))`),
   },
@@ -819,6 +821,41 @@ export const gmaMoments = sqliteTable(
     primaryKey({ columns: [t.partyId, t.sessionId, t.momentId] }),
     index('idx_gma_moments_session').on(t.partyId, t.sessionId),
   ],
+);
+
+/**
+ * Cache of the linked campaign's entities — the NPCs GM Assistant catalogues
+ * as it analyses sessions (the « PNJ repérés » rail). Read-only upstream: we
+ * never write entities on GMA (the integration's red line holds).
+ */
+export const gmaEntities = sqliteTable(
+  'gma_entities',
+  {
+    partyId: integer('party_id')
+      .notNull()
+      .references(() => parties.id, { onDelete: 'cascade' }),
+    entityId: text('entity_id').notNull(),
+    name: text('name').notNull(),
+    description: text('description'),
+    // Open enum upstream ('npc' | 'location' | …) — the rail serves NPCs,
+    // other types stay cached but filtered at read time.
+    type: text('type'),
+    sortOrder: integer('sort_order').notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.partyId, t.entityId] })],
+);
+
+/** Which sessions an entity appeared in — feeds « Vu en séance ». */
+export const gmaEntitySessions = sqliteTable(
+  'gma_entity_sessions',
+  {
+    partyId: integer('party_id')
+      .notNull()
+      .references(() => parties.id, { onDelete: 'cascade' }),
+    entityId: text('entity_id').notNull(),
+    sessionId: text('session_id').notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.partyId, t.entityId, t.sessionId] })],
 );
 
 // ---------- Push notifications (Web Push / VAPID) ----------
@@ -918,4 +955,58 @@ export const gmaPcLinks = sqliteTable(
     unique('gma_pc_links_party_character_unique').on(t.partyId, t.characterId),
     index('idx_gma_pc_links_party').on(t.partyId),
   ],
+);
+
+/**
+ * Mapping local NPC ↔ GMA entity (the « PNJ repérés » link). CASCADE on the
+ * NPC — we never write entities upstream, so a deleted local NPC simply
+ * returns to the rail as addable again; there is no orphan to manage (unlike
+ * gma_pc_links). A GMA entity links to at most one NPC, and vice versa.
+ */
+export const gmaNpcLinks = sqliteTable(
+  'gma_npc_links',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    partyId: integer('party_id')
+      .notNull()
+      .references(() => parties.id, { onDelete: 'cascade' }),
+    npcId: integer('npc_id')
+      .notNull()
+      .references(() => npcs.id, { onDelete: 'cascade' }),
+    gmaEntityId: text('gma_entity_id').notNull().unique('gma_npc_links_entity_unique'),
+    linkedByUserId: integer('linked_by_user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    // SHA-256 hex of GMA's description at the last content flow (import,
+    // link-with-append, or pull) — powers the « GM Assistant a mis à jour sa
+    // description » hint. NULL = linked without ever taking the text.
+    descriptionHash: text('description_hash'),
+    lastPullAt: text('last_pull_at'),
+    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+  },
+  (t) => [
+    unique('gma_npc_links_party_npc_unique').on(t.partyId, t.npcId),
+    index('idx_gma_npc_links_party').on(t.partyId),
+  ],
+);
+
+/**
+ * Entities the table discarded from the « PNJ repérés » rail (GMA keeps
+ * reporting useless NPCs). Own table — NOT a flag on gma_entities — so a
+ * discard survives every cache refresh (the entities cache is replace-all).
+ * Nothing goes upstream: GMA keeps the entity, we just stop offering it.
+ */
+export const gmaEntityDiscards = sqliteTable(
+  'gma_entity_discards',
+  {
+    partyId: integer('party_id')
+      .notNull()
+      .references(() => parties.id, { onDelete: 'cascade' }),
+    entityId: text('entity_id').notNull(),
+    discardedByUserId: integer('discarded_by_user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+  },
+  (t) => [primaryKey({ columns: [t.partyId, t.entityId] })],
 );

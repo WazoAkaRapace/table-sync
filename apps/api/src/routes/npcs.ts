@@ -40,7 +40,7 @@ export interface NpcRow {
 /** npcs.* + the creator's display_name (JOIN users) — the shape mapNpc reads. */
 const NPC_WITH_CREATOR = { ...cols(npcs), creator_name: users.displayName };
 
-function mapNpc(row: any, includeSecret: boolean): NpcRow {
+export function mapNpc(row: any, includeSecret: boolean): NpcRow {
   return {
     id: row.id,
     partyId: row.party_id,

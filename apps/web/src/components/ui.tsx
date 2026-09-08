@@ -660,13 +660,13 @@ export function Modal({
   if (!open) return null;
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40"
+      className="modal-scrim fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40"
       role="presentation"
       onClick={onClose}
     >
       <div
         ref={modalRef}
-        className="card w-full break-words sm:max-w-md max-h-[85vh] overflow-y-auto overscroll-contain rounded-b-none sm:rounded-b-2xl p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))]"
+        className="modal-enter card w-full break-words sm:max-w-md max-h-[85vh] overflow-y-auto overscroll-contain rounded-b-none sm:rounded-b-2xl p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))]"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"

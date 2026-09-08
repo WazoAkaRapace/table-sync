@@ -44,6 +44,8 @@ export interface SyncEvent {
     | 'unlink'
     | 'init'
     | 'sync'
+    // PNJ repérés — a GMA entity was imported/linked/pulled/unlinked
+    | 'entity'
     // Carnet du MD — 'clock' couvre jour/saison/météo (avance et correction)
     | 'clock'
     | 'note'

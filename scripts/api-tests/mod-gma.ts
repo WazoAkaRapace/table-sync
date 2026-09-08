@@ -1,9 +1,11 @@
 /**
  * GM Assistant integration: account key, campaign link, one-time init,
  * character resync (dryRun / apply / orphans / explicit delete / partial
- * failure), and the chronicle cache (TTL window, GM-only refresh flag,
- * stale-on-error, empty-cache outage). Runs against the in-process mock GMA
- * (mock-gma.ts) wired through GMA_BASE_URL — no real keys, no network.
+ * failure), the chronicle cache (TTL window, GM-only refresh flag,
+ * stale-on-error, empty-cache outage), and the « PNJ repérés » entities rail
+ * (cache + import/link/pull/unlink, append-on-link, visibility). Runs against
+ * the in-process mock GMA (mock-gma.ts) wired through GMA_BASE_URL — no real
+ * keys, no network.
  */
 import {
   api,
@@ -191,6 +193,348 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   eq(r.status, 502, 'no cache + outage → 502');
   ok(String(r.data.message).includes('injoignable'), 'network error translated');
   mock.failMode = 'off';
+
+  // ---------- entities (« PNJ repérés ») ----------
+  // Own party + own campaign: the NPCs created here must stay out of P —
+  // the later npcs module asserts P's registry from scratch.
+  const CAMPAIGN_ENTITIES = '33333333-3333-3333-3333-333333333333';
+  const now = new Date().toISOString();
+  const party4 = await createParty(base, fx.gm.token, 'Compagnie des Repérés');
+  await api(base, 'POST', '/api/parties/join', {
+    token: fx.player.token,
+    body: { inviteCode: party4.inviteCode },
+  });
+  mock.campaigns.set(CAMPAIGN_ENTITIES, {
+    id: CAMPAIGN_ENTITIES,
+    title: 'Campagne Repérés',
+    created_at: now,
+    updated_at: now,
+  });
+  mock.sessions.set(CAMPAIGN_ENTITIES, [
+    { id: 'sess-e1', title: 'L’arrivée', played_at: '2026-07-01', order: 0 },
+    { id: 'sess-e2', title: 'Le marché', played_at: null, order: 1 },
+  ]);
+  mock.entities.set(CAMPAIGN_ENTITIES, [
+    {
+      id: 'ent-rahadinE',
+      name: 'Rahadin',
+      description: 'Chambellan spectral. Ne quitte jamais son clavecin.',
+      type: 'npc',
+      session_ids: ['sess-e1', 'sess-e2'],
+      order: 0,
+    },
+    {
+      id: 'ent-wakangaE',
+      name: 'Wakanga O’tamu',
+      description: 'Mage guide de Port Nyanzaru.',
+      type: 'npc',
+      session_ids: ['sess-e1'],
+      order: 1,
+    },
+    {
+      id: 'ent-muetE',
+      name: 'Silence d’outre-tombe',
+      description: null,
+      type: 'npc',
+      session_ids: [],
+      order: 2,
+    },
+    // A place the assistant also catalogued — filtered out of the rail.
+    {
+      id: 'ent-portE',
+      name: 'Port de Baldur',
+      description: 'Le port himself.',
+      type: 'location',
+      session_ids: ['sess-e1'],
+      order: 3,
+    },
+  ]);
+
+  r = await api(base, 'GET', `/api/parties/${party4.id}/gma/entities`, {
+    token: fx.player.token,
+  });
+  eq(r.status, 404, 'entities 404 before the party is linked');
+
+  r = await api(base, 'POST', `/api/parties/${party4.id}/gma/link`, {
+    token: fx.gm.token,
+    body: { campaignId: CAMPAIGN_ENTITIES },
+  });
+  eq(r.status, 201, 'party4 linked for entities tests');
+
+  r = await api(base, 'GET', `/api/parties/${party4.id}/gma/entities`, {
+    token: fx.outsider.token,
+  });
+  eq(r.status, 403, 'outsider entities 403');
+
+  // Import (player gesture) against a COLD cache — the route warms it once
+  // (same robustness as the recap route), then shared NPC + link + copy.
+  r = await api(base, 'POST', `/api/parties/${party4.id}/gma/entities/ent-rahadinE/import`, {
+    token: fx.player.token,
+  });
+  eq(r.status, 201, 'player imports an entity (cold cache warmed)');
+  eq(r.data.npc.name, 'Rahadin', 'npc created under the entity name');
+  eq(r.data.npc.isShared, true, 'imported npc is shared');
+  eq(r.data.npc.disposition, 'unknown', 'imported npc is met, not judged');
+  eq(
+    r.data.npc.description,
+    'Chambellan spectral. Ne quitte jamais son clavecin.',
+    'description copied',
+  );
+  const importedNpcId = r.data.npc.id;
+  const importLink = srv.query(
+    'SELECT * FROM gma_npc_links WHERE gma_entity_id = ?',
+    'ent-rahadinE',
+  );
+  ok(!!importLink, 'link row recorded');
+  ok(!!importLink.description_hash, 'import counts as a pull (hash recorded)');
+  eq(importLink.npc_id, importedNpcId, 'link targets the new npc');
+
+  r = await api(base, 'POST', `/api/parties/${party4.id}/gma/entities/ent-rahadinE/import`, {
+    token: fx.gm.token,
+  });
+  eq(r.status, 409, 'double import 409');
+
+  r = await api(base, 'POST', `/api/parties/${party4.id}/gma/entities/ent-inconnu/import`, {
+    token: fx.player.token,
+  });
+  eq(r.status, 404, 'unknown entity 404');
+
+  r = await api(base, 'GET', `/api/parties/${party4.id}/gma/entities`, {
+    token: fx.player.token,
+  });
+  eq(r.status, 200, 'member reads the entities rail');
+  eq(r.data.stale, false, 'fresh after first fetch');
+  eq(r.data.campaignTitle, 'Campagne Repérés', 'campaign title served');
+  eq(r.data.entities.length, 3, 'location-typed entity filtered, NPCs served');
+  const railRahadin = r.data.entities.find((e: any) => e.id === 'ent-rahadinE');
+  ok(!!railRahadin, 'Rahadin on the rail');
+  eq(railRahadin.linkedNpc?.id, importedNpcId, 'already linked by the import above');
+  eq(railRahadin.linkedNpc?.linkedByName, 'BOB', 'linker display name served');
+  eq(railRahadin.sessions.length, 2, 'both appearances served');
+  eq(railRahadin.sessions[0].ordinal, 1, 'first session ordinal');
+  eq(railRahadin.sessions[1].ordinal, 2, 'appearances in chronicle order');
+  eq(railRahadin.sessions[0].title, 'L’arrivée', 'session title served');
+
+  r = await api(base, 'GET', `/api/parties/${party4.id}/gma/entities`, {
+    token: fx.gm.token,
+  });
+  eq(
+    r.data.entities.find((e: any) => e.id === 'ent-rahadinE').linkedNpc?.id,
+    importedNpcId,
+    'link state served to the GM',
+  );
+
+  // Link: content untouched unless append is asked for…
+  r = await api(base, 'POST', `/api/parties/${party4.id}/npcs`, {
+    token: fx.gm.token,
+    body: { name: 'Zantanivyr', description: 'Marchand taciturne.' },
+  });
+  const zantaId = r.data.npc.id;
+  r = await api(base, 'POST', `/api/parties/${party4.id}/gma/entities/ent-wakangaE/link`, {
+    token: fx.gm.token,
+    body: { npcId: zantaId, appendDescription: true },
+  });
+  eq(r.status, 201, 'link with append');
+  eq(r.data.appended, true, 'append reported');
+  eq(
+    r.data.npc.description,
+    'Marchand taciturne.\n\nMage guide de Port Nyanzaru.',
+    'GMA text appended after the player’s own words',
+  );
+
+  // …and append needs content-edit rights on the NPC (link alone stays legal).
+  // ent-charterE (with a description) joins the rail first — an entity
+  // WITHOUT one never triggers the append question.
+  mock.entities.get(CAMPAIGN_ENTITIES)!.push({
+    id: 'ent-charterE',
+    name: 'Charte du port',
+    description: 'Scellée de cire verte.',
+    type: 'npc',
+    session_ids: ['sess-e2'],
+    order: 4,
+  });
+  r = await api(base, 'GET', `/api/parties/${party4.id}/gma/entities?refresh=1`, {
+    token: fx.gm.token,
+  });
+  eq(r.data.entities.length, 4, 'GM refresh refetches entities');
+  r = await api(base, 'POST', `/api/parties/${party4.id}/npcs`, {
+    token: fx.player.token,
+    body: { name: 'Potion rouge', description: 'Base.' },
+  });
+  const potionId = r.data.npc.id;
+  r = await api(base, 'POST', `/api/parties/${party4.id}/gma/entities/ent-charterE/link`, {
+    token: fx.player.token,
+    body: { npcId: zantaId, appendDescription: true },
+  });
+  eq(r.status, 403, 'append on someone else’s npc 403');
+  r = await api(base, 'POST', `/api/parties/${party4.id}/gma/entities/ent-muetE/link`, {
+    token: fx.player.token,
+    body: { npcId: potionId },
+  });
+  eq(r.status, 201, 'link without append stays legal for any member');
+  eq(r.data.appended, false, 'no append reported');
+  ok(
+    !srv.query('SELECT description_hash FROM gma_npc_links WHERE gma_entity_id = ?', 'ent-muetE')
+      .description_hash,
+    'link-only records no pull',
+  );
+
+  // Link target must be VISIBLE to the actor (404, never a leak).
+  r = await api(base, 'POST', `/api/parties/${party4.id}/npcs`, {
+    token: fx.gm.token,
+    body: { name: 'Cale secrète', isShared: false },
+  });
+  const caleId = r.data.npc.id;
+  r = await api(base, 'POST', `/api/parties/${party4.id}/gma/entities/ent-inconnu/link`, {
+    token: fx.player.token,
+    body: { npcId: caleId },
+  });
+  eq(r.status, 404, 'unknown entity 404 (link)');
+  r = await api(base, 'POST', `/api/parties/${party4.id}/gma/entities/ent-charterE/link`, {
+    token: fx.player.token,
+    body: { npcId: caleId },
+  });
+  eq(r.status, 404, 'link to an invisible npc 404 (no leak)');
+
+  // Pull: replace after a GMA-side edit, append on a link-only row.
+  mock.entities.get(CAMPAIGN_ENTITIES)!.find((e: any) => e.id === 'ent-wakangaE')!.description =
+    'Mage guide, gravement inquiet.';
+  r = await api(base, 'GET', `/api/parties/${party4.id}/gma/entities?refresh=1`, {
+    token: fx.gm.token,
+  });
+  const wakangaNow = r.data.entities.find((e: any) => e.id === 'ent-wakangaE');
+  eq(wakangaNow.linkedNpc.descriptionUpdated, true, 'GMA-side edit flagged');
+  r = await api(base, 'POST', `/api/parties/${party4.id}/gma/entities/ent-wakangaE/pull`, {
+    token: fx.gm.token,
+    body: { npcId: zantaId },
+  });
+  eq(r.status, 200, 'pull replace');
+  eq(
+    r.data.npc.description,
+    'Mage guide, gravement inquiet.',
+    'replace overwrites the GMA text only',
+  );
+  r = await api(base, 'GET', `/api/parties/${party4.id}/gma/entities`, {
+    token: fx.gm.token,
+  });
+  eq(
+    r.data.entities.find((e: any) => e.id === 'ent-wakangaE').linkedNpc.descriptionUpdated,
+    false,
+    'flag cleared after the pull',
+  );
+
+  r = await api(base, 'POST', `/api/parties/${party4.id}/gma/entities/ent-charterE/link`, {
+    token: fx.gm.token,
+    body: { npcId: caleId },
+  });
+  eq(r.status, 201, 'GM links their private npc (link-only)');
+  // The private link is invisible to the player: the entity leaves their rail.
+  r = await api(base, 'GET', `/api/parties/${party4.id}/gma/entities`, {
+    token: fx.player.token,
+  });
+  ok(
+    !r.data.entities.some((e: any) => e.id === 'ent-charterE'),
+    'privately-linked entity hidden from other members',
+  );
+  r = await api(base, 'POST', `/api/parties/${party4.id}/gma/entities/ent-charterE/pull`, {
+    token: fx.gm.token,
+    body: { npcId: caleId, append: true },
+  });
+  eq(r.status, 200, 'pull append on a link-only row');
+  eq(r.data.npc.description, 'Scellée de cire verte.', 'append onto an empty description');
+  r = await api(base, 'POST', `/api/parties/${party4.id}/gma/entities/ent-muetE/pull`, {
+    token: fx.player.token,
+    body: { npcId: potionId },
+  });
+  eq(r.status, 400, 'pull with no GMA description 400');
+
+  // Unlink: MD, npc creator, or the linker — nobody else.
+  r = await api(base, 'DELETE', `/api/parties/${party4.id}/gma/entities/ent-wakangaE/link`, {
+    token: fx.player.token,
+  });
+  eq(r.status, 403, 'unlink by an unrelated member 403');
+  r = await api(base, 'DELETE', `/api/parties/${party4.id}/gma/entities/ent-rahadinE/link`, {
+    token: fx.player.token,
+  });
+  eq(r.status, 200, 'unlink by the npc creator/linker');
+  r = await api(base, 'GET', `/api/parties/${party4.id}/gma/entities`, {
+    token: fx.player.token,
+  });
+  eq(
+    r.data.entities.find((e: any) => e.id === 'ent-rahadinE').linkedNpc,
+    null,
+    'entity back on the rail after unlink',
+  );
+  eq(
+    srv.queryAll('SELECT * FROM gma_npc_links WHERE gma_entity_id = ?', 'ent-rahadinE').length,
+    0,
+    'link row removed (npc kept)',
+  );
+  r = await api(base, 'GET', `/api/parties/${party4.id}/npcs`, { token: fx.gm.token });
+  ok(
+    r.data.npcs.some((n: any) => n.id === importedNpcId),
+    'the imported npc survives its unlink',
+  );
+
+  // Stale-on-error: the rail keeps serving the cache through an outage.
+  mock.failMode = 'down';
+  r = await api(base, 'GET', `/api/parties/${party4.id}/gma/entities?refresh=1`, {
+    token: fx.gm.token,
+  });
+  eq(r.status, 200, 'outage: entities still served');
+  eq(r.data.stale, true, 'flagged stale');
+  eq(r.data.entities.length, 4, 'old cache intact');
+  mock.failMode = 'off';
+
+  // ---------- discard (« Écarter ») ----------
+  r = await api(base, 'POST', `/api/parties/${party4.id}/gma/entities/ent-muetE/discard`, {
+    token: fx.outsider.token,
+  });
+  eq(r.status, 403, 'outsider discard 403');
+  r = await api(base, 'POST', `/api/parties/${party4.id}/gma/entities/ent-muetE/discard`, {
+    token: fx.player.token,
+  });
+  eq(r.status, 201, 'member discards an entity');
+  r = await api(base, 'POST', `/api/parties/${party4.id}/gma/entities/ent-muetE/discard`, {
+    token: fx.gm.token,
+  });
+  eq(r.status, 201, 'double discard idempotent');
+  r = await api(base, 'GET', `/api/parties/${party4.id}/gma/entities`, {
+    token: fx.player.token,
+  });
+  eq(r.data.entities.find((e: any) => e.id === 'ent-muetE').discarded, true, 'discard flag served');
+  eq(
+    r.data.entities.find((e: any) => e.id === 'ent-wakangaE').discarded,
+    false,
+    'others unaffected',
+  );
+  // The discard survives a cache refresh (own table, not a cache flag).
+  r = await api(base, 'GET', `/api/parties/${party4.id}/gma/entities?refresh=1`, {
+    token: fx.gm.token,
+  });
+  eq(
+    r.data.entities.find((e: any) => e.id === 'ent-muetE').discarded,
+    true,
+    'discard survives refresh',
+  );
+  r = await api(base, 'DELETE', `/api/parties/${party4.id}/gma/entities/ent-muetE/discard`, {
+    token: fx.player.token,
+  });
+  eq(r.status, 200, 'restore ok');
+  r = await api(base, 'GET', `/api/parties/${party4.id}/gma/entities`, {
+    token: fx.player.token,
+  });
+  eq(
+    r.data.entities.find((e: any) => e.id === 'ent-muetE').discarded,
+    false,
+    'restored entity back to normal',
+  );
+
+  // One discard in P so the unlink purge assertion below has teeth.
+  r = await api(base, 'POST', `/api/parties/${P}/gma/entities/ent-rahadin/discard`, {
+    token: fx.player.token,
+  });
+  eq(r.status, 201, 'discard in P recorded');
 
   // ---------- init (the one-time creation FROM the group) ----------
   r = await api(base, 'POST', `/api/parties/${P}/gma/init`, {
@@ -493,6 +837,26 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
     srv.queryAll('SELECT * FROM gma_moments WHERE party_id = ?', P).length,
     0,
     'moments cache dropped',
+  );
+  eq(
+    srv.queryAll('SELECT * FROM gma_entities WHERE party_id = ?', P).length,
+    0,
+    'entities cache dropped',
+  );
+  eq(
+    srv.queryAll('SELECT * FROM gma_entity_sessions WHERE party_id = ?', P).length,
+    0,
+    'entity appearances dropped',
+  );
+  eq(
+    srv.queryAll('SELECT * FROM gma_npc_links WHERE party_id = ?', P).length,
+    0,
+    'npc links dropped',
+  );
+  eq(
+    srv.queryAll('SELECT * FROM gma_entity_discards WHERE party_id = ?', P).length,
+    0,
+    'discards dropped',
   );
   r = await api(base, 'GET', `/api/parties/${P}/gma/sessions`, { token: fx.gm.token });
   eq(r.status, 404, 'sessions 404 after unlink');

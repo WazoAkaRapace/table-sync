@@ -8,9 +8,9 @@
  */
 import type { GmaLinkStatus, GmaRecapsResponse, GmaSession } from '@table-sync/shared';
 import { gmaMomentTypeLabel, gmaRecapStyleLabel } from '@table-sync/shared';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import api from '../api';
 import { Chip, EmptyState, ErrorMsg, LoadingSpinner } from '../components/ui';
 import { useHeaderOverride } from '../headerContext';
@@ -154,6 +154,21 @@ export default function ChroniclePage() {
     },
     [partyId, t],
   );
+
+  // Deep link (?seance=<id>) — the NPC registry's « Vu en séance » doors land
+  // here: open the requested session's reading view once the list is in. Once
+  // only: closing the view afterwards must not re-open it.
+  const [searchParams] = useSearchParams();
+  const deepLinked = searchParams.get('seance');
+  const deepLinkDone = useRef(false);
+  useEffect(() => {
+    if (!deepLinked || deepLinkDone.current || loading || sessions.length === 0) return;
+    const target = sessions.find((s) => s.id === deepLinked);
+    if (target) {
+      deepLinkDone.current = true;
+      openSession(target);
+    }
+  }, [deepLinked, loading, sessions, openSession]);
 
   // Live sync: the MD refreshed/resynced — reopen the current data.
   const currentPartyId = Number(partyId);

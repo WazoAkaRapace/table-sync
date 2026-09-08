@@ -1,5 +1,8 @@
 import type {
   CreateNpcPayload,
+  GmaEntitiesResponse,
+  GmaEntity,
+  GmaEntitySessionRef,
   Npc,
   NpcDisposition,
   NpcStatus,
@@ -7,13 +10,15 @@ import type {
   PatchNpcPayload,
 } from '@table-sync/shared';
 import { NPC_DISPOSITION_LABELS_FR, NPC_STATUS_LABELS_FR } from '@table-sync/shared';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../auth';
-import { EmptyState, ErrorMsg, LoadingSpinner, Modal } from '../components/ui';
+import { ConfirmButton, EmptyState, ErrorMsg, LoadingSpinner, Modal } from '../components/ui';
+import { appLocale } from '../i18n';
 import { useSyncEvent } from '../sync';
+import { parseSqliteDate, toRoman } from '../utils';
 
 // ---------- Status / disposition styling ----------
 
@@ -47,6 +52,37 @@ type ViewFilter = 'all' | 'shared' | 'mine';
 // display language ("Sans faction" / "No faction").
 const NO_FACTION = '__no_faction__';
 
+/** Name matching for the link suggestion: accents & case aside, same name. */
+function normalizeName(s: string): string {
+  return s
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function gmaDateLabel(value: string | null): string | null {
+  if (!value) return null;
+  const d = parseSqliteDate(value);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleDateString(appLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+/**
+ * Failure copy for the GMA link/import actions, attributed honestly: when our
+ * API answered, it carries the real cause (including its own GM Assistant
+ * translations — those upstream errors DO mention GM Assistant); the fallbacks
+ * are OUR side (network to Table Sync, or an API error without a message) and
+ * must not blame GM Assistant for them.
+ */
+function gmaActionErrorMessage(err: any, t: (key: string) => string): string {
+  const msg = err?.response?.data?.message;
+  if (typeof msg === 'string' && msg.trim()) return msg;
+  if (!err?.response) return t('pnj.gma.erreur.reseau');
+  return t('pnj.gma.erreur.serveur');
+}
+
 // ---------- Main component ----------
 
 export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
@@ -71,6 +107,18 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
   const [showModal, setShowModal] = useState(false);
   const [deleting, setDeleting] = useState<Npc | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
+  const [detailNpc, setDetailNpc] = useState<Npc | null>(null);
+
+  // GM Assistant (« PNJ repérés ») state
+  const [gmaRes, setGmaRes] = useState<GmaEntitiesResponse | null>(null);
+  const [railOpen, setRailOpen] = useState(false);
+  const [sheetEntity, setSheetEntity] = useState<GmaEntity | null>(null);
+  const [linkingEntity, setLinkingEntity] = useState<GmaEntity | null>(null);
+  const [linkTarget, setLinkTarget] = useState<Npc | null>(null);
+  const [picking, setPicking] = useState<GmaEntity | null>(null);
+  const [originEntity, setOriginEntity] = useState<GmaEntity | null>(null);
+  const [busyEntityId, setBusyEntityId] = useState<string | null>(null);
+  const [showDiscarded, setShowDiscarded] = useState(false);
 
   const flash = useCallback((kind: 'success' | 'error', msg: string) => {
     setFeedback({ kind, msg });
@@ -83,12 +131,24 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
       if (!silent) setLoading(true);
       setError('');
       try {
-        const [npcRes, partyRes] = await Promise.all([
+        const [npcRes, partyRes, gmaLinkRes] = await Promise.all([
           api.get<{ npcs: Npc[] }>(`/api/parties/${partyId}/npcs`),
           api.get<PartyDetail>(`/api/parties/${partyId}`),
+          // 200 for any member (linked or not) — never an error-rate-limit hit
+          api.get(`/api/parties/${partyId}/gma/link`).catch(() => null),
         ]);
         setNpcs(npcRes.data.npcs);
         setParty(partyRes.data);
+        if (gmaLinkRes?.data?.linked) {
+          try {
+            const ent = await api.get<GmaEntitiesResponse>(`/api/parties/${partyId}/gma/entities`);
+            setGmaRes(ent.data);
+          } catch {
+            setGmaRes(null); // rail absent — never blocks the registry
+          }
+        } else {
+          setGmaRes(null);
+        }
       } catch (err: any) {
         setError(err.response?.data?.error || t('pnj.impossible.de.charger.les.pnj'));
       } finally {
@@ -104,12 +164,14 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
 
   // Real-time sync — FILTRÉ : les PNJ (et le détail de groupe pour la
   // visibilité) ne bougent que sur party:change (type qu'émettent aussi les
-  // écritures PNJ côté API). Avant, CHAQUE tour de combat rechargeait les
-  // PNJ + le groupe — NpcPage est embarquée dans la fiche de chaque joueur.
+  // écritures PNJ côté API) ; le rail GM Assistant suit gma:change (liaisons
+  // des autres membres). Avant, CHAQUE tour de combat rechargeait les PNJ +
+  // le groupe — NpcPage est embarquée dans la fiche de chaque joueur.
   const currentPartyId = Number(partyId);
   useSyncEvent(
     (event) => {
-      if (event.partyId === currentPartyId && event.type === 'party:change') {
+      if (event.partyId !== currentPartyId) return;
+      if (event.type === 'party:change' || event.type === 'gma:change') {
         load(true); // silent — no spinner flash on sync updates
       }
     },
@@ -120,6 +182,165 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
     () => !!party && party.members.some((m) => m.userId === user?.id && m.role === 'gm'),
     [party, user],
   );
+
+  // ---------- GM Assistant (« PNJ repérés ») ----------
+
+  /** Unlinked, non-discarded entities = what the rail offers. */
+  const railEntities = useMemo(
+    () => (gmaRes?.entities ?? []).filter((e) => !e.linkedNpc && !e.discarded),
+    [gmaRes],
+  );
+
+  /** Discarded entities — the « plus jamais ça » list, restorable. */
+  const discardedEntities = useMemo(
+    () => (gmaRes?.entities ?? []).filter((e) => e.discarded && !e.linkedNpc),
+    [gmaRes],
+  );
+
+  /** npcId → linked entity — feeds the card badge + « Vu en séance ». */
+  const gmaByNpcId = useMemo(() => {
+    const map = new Map<number, GmaEntity>();
+    for (const e of gmaRes?.entities ?? []) {
+      if (e.linkedNpc) map.set(e.linkedNpc.id, e);
+    }
+    return map;
+  }, [gmaRes]);
+
+  const canEditNpc = useCallback(
+    (npc: Npc) => isGM || npc.createdBy === user?.id || (npc.isShared && npc.allowMemberEdit),
+    [isGM, user?.id],
+  );
+
+  /** The local NPC behind the open origin modal (if still in the registry). */
+  const originNpc = useMemo(
+    () =>
+      originEntity?.linkedNpc
+        ? (npcs.find((n) => n.id === originEntity.linkedNpc!.id) ?? null)
+        : null,
+    [originEntity, npcs],
+  );
+
+  /** Same-name suggestion: exactly one registry NPC matches the entity. */
+  const suggestionFor = useCallback(
+    (entity: GmaEntity): Npc | null => {
+      const key = normalizeName(entity.name);
+      if (!key) return null;
+      const matches = npcs.filter((n) => normalizeName(n.name) === key && !gmaByNpcId.has(n.id));
+      return matches.length === 1 ? matches[0] : null;
+    },
+    [npcs, gmaByNpcId],
+  );
+
+  const busyOrIdle = busyEntityId === null;
+
+  const importEntity = async (entity: GmaEntity): Promise<boolean> => {
+    if (!partyId || !busyOrIdle) return false;
+    setBusyEntityId(entity.id);
+    try {
+      await api.post(`/api/parties/${partyId}/gma/entities/${entity.id}/import`);
+      flash('success', t('pnj.gma.ajoute.toast', { name: entity.name }));
+      await load(true);
+      return true;
+    } catch (err: any) {
+      flash('error', gmaActionErrorMessage(err, t));
+      return false;
+    } finally {
+      setBusyEntityId(null);
+    }
+  };
+
+  const linkEntity = async (entity: GmaEntity, npc: Npc, append: boolean) => {
+    if (!partyId || !busyOrIdle) return;
+    setBusyEntityId(entity.id);
+    try {
+      await api.post(`/api/parties/${partyId}/gma/entities/${entity.id}/link`, {
+        npcId: npc.id,
+        appendDescription: append,
+      });
+      flash(
+        'success',
+        append
+          ? t('pnj.gma.lie.description.ajoutee.toast', { name: npc.name })
+          : t('pnj.gma.lie.toast', { name: npc.name }),
+      );
+      setLinkingEntity(null);
+      setLinkTarget(null);
+      await load(true);
+    } catch (err: any) {
+      flash('error', gmaActionErrorMessage(err, t));
+    } finally {
+      setBusyEntityId(null);
+    }
+  };
+
+  const pullEntity = async (entity: GmaEntity, append: boolean) => {
+    if (!partyId || !entity.linkedNpc || !busyOrIdle) return;
+    setBusyEntityId(entity.id);
+    try {
+      await api.post(`/api/parties/${partyId}/gma/entities/${entity.id}/pull`, {
+        npcId: entity.linkedNpc.id,
+        append,
+      });
+      flash(
+        'success',
+        append
+          ? t('pnj.gma.description.ajoutee.toast', { name: entity.linkedNpc.name })
+          : t('pnj.gma.description.reprise.toast', { name: entity.linkedNpc.name }),
+      );
+      await load(true);
+      // Re-open the origin modal on the refreshed entity (load replaced gmaRes)
+      setOriginEntity(null);
+    } catch (err: any) {
+      flash('error', gmaActionErrorMessage(err, t));
+    } finally {
+      setBusyEntityId(null);
+    }
+  };
+
+  const unlinkEntity = async (entity: GmaEntity) => {
+    if (!partyId || !entity.linkedNpc) return;
+    setBusyEntityId(entity.id);
+    try {
+      await api.delete(`/api/parties/${partyId}/gma/entities/${entity.id}/link`);
+      flash('success', t('pnj.gma.delie.toast', { name: entity.linkedNpc.name }));
+      setOriginEntity(null);
+      await load(true);
+    } catch (err: any) {
+      flash('error', gmaActionErrorMessage(err, t));
+    } finally {
+      setBusyEntityId(null);
+    }
+  };
+
+  /** Écarter : GMA keep reporting it — hide it from the rail, party-wide. */
+  const discardEntity = async (entity: GmaEntity) => {
+    if (!partyId || !busyOrIdle) return;
+    setBusyEntityId(entity.id);
+    try {
+      await api.post(`/api/parties/${partyId}/gma/entities/${entity.id}/discard`);
+      flash('success', t('pnj.gma.ecarte.toast', { name: entity.name }));
+      setSheetEntity(null);
+      await load(true);
+    } catch (err: any) {
+      flash('error', gmaActionErrorMessage(err, t));
+    } finally {
+      setBusyEntityId(null);
+    }
+  };
+
+  const restoreEntity = async (entity: GmaEntity) => {
+    if (!partyId || !busyOrIdle) return;
+    setBusyEntityId(entity.id);
+    try {
+      await api.delete(`/api/parties/${partyId}/gma/entities/${entity.id}/discard`);
+      flash('success', t('pnj.gma.restaure.toast', { name: entity.name }));
+      await load(true);
+    } catch (err: any) {
+      flash('error', gmaActionErrorMessage(err, t));
+    } finally {
+      setBusyEntityId(null);
+    }
+  };
 
   // ---------- Filtering & grouping ----------
 
@@ -207,6 +428,99 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
           {t('pnj.ajouter.un.pnj')}
         </button>
       </div>
+
+      {/* GM Assistant rail — « PNJ repérés » : absent when nothing to offer
+          (the discarded management door keeps it alive when all are écartés) */}
+      {(railEntities.length > 0 || discardedEntities.length > 0) && (
+        <section className="card p-3" data-tuto="pnj-gma">
+          <button
+            type="button"
+            onClick={() => setRailOpen((v) => !v)}
+            aria-expanded={railOpen}
+            className="w-full min-h-11 flex items-center justify-between gap-2 text-left"
+          >
+            <span className="flex items-center gap-2 min-w-0">
+              <span aria-hidden="true">📜</span>
+              <span className="text-sm font-semibold text-ink-800 truncate">
+                {t('pnj.gma.rail.titre')}
+              </span>
+              {railEntities.length > 0 && (
+                <span className="shrink-0 px-2 py-0.5 rounded-full bg-parchment-100 text-ink-600 text-xs font-medium tabular-nums">
+                  {t('pnj.gma.rail.compte', { count: railEntities.length })}
+                </span>
+              )}
+              {discardedEntities.length > 0 && (
+                <span className="shrink-0 px-2 py-0.5 rounded-full bg-parchment-100 text-ink-400 text-xs font-medium tabular-nums">
+                  {t('pnj.gma.ecartes.compte', { count: discardedEntities.length })}
+                </span>
+              )}
+              {gmaRes?.stale && (
+                <span className="shrink-0 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-medium">
+                  {t('chronique.possiblement.obsolete')}
+                </span>
+              )}
+            </span>
+            <span
+              className={`text-ink-400 chevron ${railOpen ? 'is-open' : 'is-closed'}`}
+              aria-hidden="true"
+            >
+              ▼
+            </span>
+          </button>
+          <div className={`expand-grid ${railOpen ? '' : 'is-collapsed'}`}>
+            <div className="expand-inner">
+              <p className="pt-1 pb-2 text-xs text-ink-400">
+                {t('pnj.gma.rail.sous.titre', { campaign: gmaRes?.campaignTitle ?? '' })}
+              </p>
+              <div>
+                {railEntities.map((entity) => (
+                  <div
+                    key={entity.id}
+                    className="py-2.5 border-t border-parchment-200 flex items-center gap-3"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-ink-900 truncate">{entity.name}</p>
+                      {entity.description && (
+                        <p className="mt-0.5 text-xs text-ink-500 line-clamp-2 whitespace-pre-line">
+                          {entity.description}
+                        </p>
+                      )}
+                      <GmaSessionOrdinals
+                        sessions={entity.sessions}
+                        partyId={partyId!}
+                        className="mt-1 text-ink-400"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSheetEntity(entity)}
+                      className="shrink-0 inline-flex items-center justify-center h-11 w-11 rounded-lg border border-parchment-300 bg-parchment-50 text-ink-800 text-xl font-medium hover:bg-parchment-100"
+                      aria-label={t('pnj.gma.actions.aria', { name: entity.name })}
+                      title={t('pnj.gma.actions.aria', { name: entity.name })}
+                    >
+                      <span aria-hidden="true">＋</span>
+                    </button>
+                  </div>
+                ))}
+                {railEntities.length === 0 && discardedEntities.length > 0 && (
+                  <p className="py-2.5 border-t border-parchment-200 text-xs text-ink-400">
+                    {t('pnj.gma.tout.ecarte')}
+                  </p>
+                )}
+                {discardedEntities.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowDiscarded(true)}
+                    className="mt-1 w-full min-h-11 text-left text-xs px-2 -mx-2 rounded-lg text-ink-500 hover:bg-parchment-100"
+                  >
+                    {t('pnj.gma.ecartes.voir', { count: discardedEntities.length })}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Filter bar */}
       <div className="card p-3 space-y-3">
@@ -297,12 +611,16 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
                   <NpcCard
                     key={npc.id}
                     npc={npc}
+                    gma={gmaByNpcId.get(npc.id) ?? null}
+                    partyId={partyId!}
                     canEdit={
                       isGM || npc.createdBy === user?.id || (npc.isShared && npc.allowMemberEdit)
                     }
                     canDelete={isGM || npc.createdBy === user?.id}
                     onEdit={() => openEdit(npc)}
                     onDelete={() => setDeleting(npc)}
+                    onGma={() => setOriginEntity(gmaByNpcId.get(npc.id) ?? null)}
+                    onDetail={() => setDetailNpc(npc)}
                   />
                 ))}
               </div>
@@ -357,6 +675,105 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
           </div>
         </Modal>
       )}
+
+      {/* GM Assistant — entity actions (bottom card on mobile, from the ＋ row) */}
+      {sheetEntity && (
+        <GmaEntitySheetModal
+          entity={sheetEntity}
+          suggestion={suggestionFor(sheetEntity)}
+          partyId={partyId!}
+          busy={busyEntityId === sheetEntity.id}
+          onImport={async () => {
+            if (await importEntity(sheetEntity)) setSheetEntity(null);
+          }}
+          onLinkSuggestion={(npc) => {
+            setLinkingEntity(sheetEntity);
+            setLinkTarget(npc);
+            setSheetEntity(null);
+          }}
+          onPickOther={() => {
+            setLinkingEntity(sheetEntity);
+            setPicking(sheetEntity);
+            setSheetEntity(null);
+          }}
+          onDiscard={() => discardEntity(sheetEntity)}
+          onClose={() => setSheetEntity(null)}
+        />
+      )}
+
+      {/* GM Assistant — discarded entities management (restore) */}
+      {showDiscarded && (
+        <GmaDiscardedModal
+          entities={discardedEntities}
+          busyEntityId={busyEntityId}
+          onRestore={restoreEntity}
+          onClose={() => setShowDiscarded(false)}
+        />
+      )}
+
+      {/* GM Assistant — link confirm (append proposal) */}
+      {linkingEntity && linkTarget && (
+        <GmaLinkConfirmModal
+          entity={linkingEntity}
+          npc={linkTarget}
+          mayAppend={!!linkingEntity.description && canEditNpc(linkTarget)}
+          busy={busyEntityId === linkingEntity.id}
+          onLink={(append) => linkEntity(linkingEntity, linkTarget, append)}
+          onClose={() => {
+            setLinkingEntity(null);
+            setLinkTarget(null);
+          }}
+        />
+      )}
+
+      {/* GM Assistant — NPC picker (« ce n'est pas lui ? ») */}
+      {picking && (
+        <GmaNpcPickerModal
+          entity={picking}
+          npcs={[...npcs]
+            .filter((n) => !gmaByNpcId.has(n.id))
+            .sort((a, b) => a.name.localeCompare(b.name, 'fr'))}
+          onPick={(npc) => {
+            setLinkTarget(npc);
+            setPicking(null);
+          }}
+          onClose={() => {
+            setPicking(null);
+            setLinkingEntity(null);
+          }}
+        />
+      )}
+
+      {/* GM Assistant — origin sheet (badge tap) */}
+      {originEntity?.linkedNpc && originNpc && (
+        <GmaOriginModal
+          entity={originEntity}
+          campaignTitle={gmaRes?.campaignTitle ?? ''}
+          npc={originNpc}
+          busy={busyEntityId === originEntity.id}
+          mayEdit={canEditNpc(originNpc)}
+          mayUnlink={
+            isGM ||
+            originEntity.linkedNpc.linkedByUserId === user?.id ||
+            originNpc.createdBy === user?.id
+          }
+          onPull={(append) => pullEntity(originEntity, append)}
+          onUnlink={() => unlinkEntity(originEntity)}
+          onClose={() => setOriginEntity(null)}
+        />
+      )}
+
+      {/* NPC detail (bottom card) — from the card's « Lire la suite ».
+          Rendered HERE, page-level: Modal isn't portaled, and a Modal born
+          inside article.card would sit in its backdrop-blur containing block. */}
+      {detailNpc && (
+        <NpcDetailModal
+          npc={detailNpc}
+          gma={gmaByNpcId.get(detailNpc.id) ?? null}
+          partyId={partyId!}
+          onClose={() => setDetailNpc(null)}
+        />
+      )}
     </div>
   );
 }
@@ -365,25 +782,52 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
 
 function NpcCard({
   npc,
+  gma,
+  partyId,
   canEdit,
   canDelete,
   onEdit,
   onDelete,
+  onGma,
+  onDetail,
 }: {
   npc: Npc;
+  /** Linked GM Assistant entity — drives the gold badge + « Vu en séance ». */
+  gma: GmaEntity | null;
+  partyId: string;
   canEdit: boolean;
   /** Supprimer reste au créateur/MD — l'édition de groupe ne l'accorde pas */
   canDelete: boolean;
   onEdit: () => void;
   onDelete: () => void;
+  onGma: () => void;
+  onDetail: () => void;
 }) {
   const { t } = useTranslation();
   const [showSecret, setShowSecret] = useState(false);
   const hasSecret = npc.secret !== null && npc.secret.trim() !== '';
   const groupEditable = npc.isShared && npc.allowMemberEdit;
 
+  // « Lire la suite » only when the clamped description actually truncates
+  // (measured — a short card never grows a dead control). ResizeObserver: the
+  // same card is ~330px on mobile, ~365px in the desktop grid.
+  const descRef = useRef<HTMLParagraphElement | null>(null);
+  const [descClamped, setDescClamped] = useState(false);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: npc.description est volontaire — le texte peut changer dans le MÊME nœud clampé sans que sa boîte ne bouge (RO muet), la dépendance force la re-mesure
+  useEffect(() => {
+    const el = descRef.current;
+    if (!el) return;
+    const check = () => setDescClamped(el.scrollHeight > el.clientHeight + 1);
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [npc.description]);
+
   return (
-    <article className="card p-4 flex flex-col gap-2 hover:shadow-md transition-shadow">
+    // min-w-0 : l'article est un item de grille — sans lui, sa largeur
+    // min-content (le titre en nowrap) fait déborder la grille ET la page
+    <article className="card p-4 min-w-0 flex flex-col gap-2 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between gap-2">
         {canEdit ? (
           <button
@@ -450,9 +894,38 @@ function NpcCard({
         </p>
       )}
 
-      {/* Description */}
+      {/* Description — clamped on the card; the detail bottom card carries all */}
       {npc.description && (
-        <p className="text-sm text-ink-700 whitespace-pre-line">{npc.description}</p>
+        <p ref={descRef} className="text-sm text-ink-700 whitespace-pre-line line-clamp-4">
+          {npc.description}
+        </p>
+      )}
+      {descClamped && (
+        <button
+          type="button"
+          onClick={onDetail}
+          className="self-start -ml-2 px-2 py-1.5 rounded-lg text-xs font-medium text-ink-500 hover:bg-parchment-100"
+          aria-label={t('pnj.voir.la.fiche.de.name', { npc_name: npc.name })}
+        >
+          {t('pnj.description.voir.plus')}
+        </button>
+      )}
+
+      {/* GM Assistant origin — glyph-only door (keeps the header clean),
+          followed by « Vu en séance » when the entity has appearances */}
+      {gma && (
+        <div className="flex items-center flex-wrap gap-1.5">
+          <button
+            type="button"
+            onClick={onGma}
+            className="inline-flex items-center justify-center h-8 w-8 rounded-md border border-gold-300 bg-gold-100 text-gold-700 hover:bg-gold-300/40"
+            title={t('pnj.gma.badge.title')}
+            aria-label={t('pnj.gma.badge.aria', { name: npc.name })}
+          >
+            <span aria-hidden="true">📜</span>
+          </button>
+          <GmaSessionOrdinals sessions={gma.sessions} partyId={partyId} />
+        </div>
       )}
 
       {/* Secret (only visible if the API returned it — GM only) */}
@@ -509,6 +982,73 @@ function NpcCard({
         )}
       </div>
     </article>
+  );
+}
+
+// ---------- NPC detail (bottom card from « Lire la suite ») ----------
+
+function NpcDetailModal({
+  npc,
+  gma,
+  partyId,
+  onClose,
+}: {
+  npc: Npc;
+  gma: GmaEntity | null;
+  partyId: string;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  const hasSecret = npc.secret !== null && npc.secret.trim() !== '';
+
+  return (
+    <Modal open={true} onClose={onClose} title={npc.name}>
+      <div className="space-y-3">
+        {/* Same meta grammar as the card */}
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          {npc.role && (
+            <span className="px-2 py-0.5 rounded-full bg-parchment-100 text-ink-600 font-medium">
+              {npc.role}
+            </span>
+          )}
+          <span className="flex items-center gap-1">
+            <span
+              className={`inline-block w-2.5 h-2.5 rounded-full ${STATUS_DOT_CLASS[npc.status]}`}
+              title={t(`pnj.status.${npc.status}`)}
+              aria-hidden="true"
+            />
+            <span className={`font-medium ${STATUS_TEXT_CLASS[npc.status]}`}>
+              {t(`pnj.status.${npc.status}`)}
+            </span>
+          </span>
+          <span className="text-ink-500">· {t(`pnj.disposition.${npc.disposition}`)}</span>
+        </div>
+
+        {npc.location && (
+          <p className="text-sm text-ink-600 flex items-center gap-1">
+            <span aria-hidden="true">📍</span>
+            <span>{npc.location}</span>
+          </p>
+        )}
+
+        {gma && <GmaSessionOrdinals sessions={gma.sessions} partyId={partyId} />}
+
+        {npc.description && (
+          <p className="text-sm text-ink-700 whitespace-pre-line">{npc.description}</p>
+        )}
+
+        {/* Secret — present only when the API served it (GM alone) */}
+        {hasSecret && (
+          <p className="text-sm text-purple-900 bg-purple-50 rounded-lg p-2.5 whitespace-pre-line">
+            {npc.secret}
+          </p>
+        )}
+
+        <p className="text-xs text-ink-400 border-t border-parchment-100 pt-2">
+          {t('pnj.par.name', { name: npc.createdByName })}
+        </p>
+      </div>
+    </Modal>
   );
 }
 
@@ -807,6 +1347,461 @@ function NpcFormModal({
           {submitting ? t('pnj.enregistrement') : isEdit ? t('common.save') : t('pnj.creer.le.pnj')}
         </button>
       </form>
+    </Modal>
+  );
+}
+
+// ---------- GM Assistant: shared bits ----------
+
+/** « Vu en séance — I · III » — the chronicle's own ordinals, doors into it. */
+function GmaSessionOrdinals({
+  sessions,
+  partyId,
+  className = '',
+}: {
+  sessions: GmaEntitySessionRef[];
+  partyId: string;
+  className?: string;
+}) {
+  const { t } = useTranslation();
+  if (sessions.length === 0) return null;
+  return (
+    <p className={`text-xs text-ink-500 flex items-center flex-wrap gap-1 ${className}`}>
+      <span>
+        {t('pnj.gma.vu.en.seance')} <span aria-hidden="true">—</span>
+      </span>
+      {sessions.map((s, i) => (
+        <span key={s.id} className="flex items-center gap-1">
+          {i > 0 && <span aria-hidden="true">·</span>}
+          <Link
+            to={`/party/${partyId}/chronique?seance=${s.id}`}
+            className="font-display text-gold-700 hover:underline"
+            title={s.title}
+          >
+            {toRoman(s.ordinal)}
+          </Link>
+        </span>
+      ))}
+    </p>
+  );
+}
+
+// ---------- GM Assistant: entity actions (bottom card from the rail's ＋) ----------
+
+function GmaEntitySheetModal({
+  entity,
+  suggestion,
+  partyId,
+  busy,
+  onImport,
+  onLinkSuggestion,
+  onPickOther,
+  onDiscard,
+  onClose,
+}: {
+  entity: GmaEntity;
+  /** Registry NPC carrying the same name — the one-tap link target. */
+  suggestion: Npc | null;
+  partyId: string;
+  busy: boolean;
+  onImport: () => void;
+  onLinkSuggestion: (npc: Npc) => void;
+  onPickOther: () => void;
+  onDiscard: () => void;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <Modal open={true} onClose={busy ? () => {} : onClose} title={entity.name}>
+      <div className="space-y-4">
+        {entity.description ? (
+          <p className="text-sm text-ink-700 whitespace-pre-line">{entity.description}</p>
+        ) : (
+          <p className="text-sm text-ink-400 italic">{t('pnj.gma.sans.description')}</p>
+        )}
+        <GmaSessionOrdinals sessions={entity.sessions} partyId={partyId} className="text-ink-400" />
+        <div className="flex flex-col gap-2 pt-1">
+          {suggestion ? (
+            <>
+              <button
+                type="button"
+                onClick={() => onLinkSuggestion(suggestion)}
+                disabled={busy}
+                className="btn-primary w-full"
+              >
+                {t('pnj.gma.lier.a', { name: suggestion.name })}
+              </button>
+              <button
+                type="button"
+                onClick={onImport}
+                disabled={busy}
+                className="btn-secondary w-full"
+              >
+                {busy ? t('pnj.gma.en.cours') : t('pnj.gma.ajouter.au.registre')}
+              </button>
+              <button
+                type="button"
+                onClick={onPickOther}
+                disabled={busy}
+                className="text-xs px-2 py-2 min-h-11 rounded-lg text-ink-500 hover:bg-parchment-100 disabled:opacity-50"
+              >
+                {t('pnj.gma.autre.pnj')}
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={onImport}
+                disabled={busy}
+                className="btn-primary w-full"
+              >
+                {busy ? t('pnj.gma.en.cours') : t('pnj.gma.ajouter.au.registre')}
+              </button>
+              <button
+                type="button"
+                onClick={onPickOther}
+                disabled={busy}
+                className="btn-secondary w-full"
+              >
+                {t('pnj.gma.lier.a.un.pnj.existant')}
+              </button>
+            </>
+          )}
+        </div>
+        {/* Écarter — a light, reversible gesture: encre, two-step, not blood */}
+        <div className="pt-2 border-t border-parchment-200">
+          {busy ? (
+            <button type="button" disabled className="btn-ghost w-full text-ink-400">
+              {t('pnj.gma.en.cours')}
+            </button>
+          ) : (
+            <ConfirmButton
+              onConfirm={onDiscard}
+              className="btn-ghost w-full text-ink-500 hover:bg-parchment-100"
+              confirmChildren={t('pnj.gma.ecarter.confirm')}
+            >
+              {t('pnj.gma.ecarter')}
+            </ConfirmButton>
+          )}
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+// ---------- GM Assistant: discarded entities (restore) ----------
+
+function GmaDiscardedModal({
+  entities,
+  busyEntityId,
+  onRestore,
+  onClose,
+}: {
+  entities: GmaEntity[];
+  busyEntityId: string | null;
+  onRestore: (entity: GmaEntity) => void;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <Modal open={true} onClose={onClose} title={t('pnj.gma.ecartes.titre')}>
+      <div className="space-y-3">
+        <p className="text-sm text-ink-500">{t('pnj.gma.ecartes.hint')}</p>
+        <ul className="divide-y divide-parchment-200 -mx-1 px-1">
+          {entities.map((e) => (
+            <li key={e.id} className="flex items-center justify-between gap-3 py-2">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-ink-800 truncate">{e.name}</p>
+                {e.description && (
+                  <p className="mt-0.5 text-xs text-ink-400 line-clamp-1 whitespace-pre-line">
+                    {e.description}
+                  </p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => onRestore(e)}
+                disabled={busyEntityId === e.id}
+                className="shrink-0 min-h-11 px-3 rounded-lg border border-parchment-300 bg-parchment-50 text-ink-800 text-sm font-medium hover:bg-parchment-100 disabled:opacity-50"
+              >
+                {busyEntityId === e.id ? t('pnj.gma.en.cours') : t('pnj.gma.restaurer')}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </Modal>
+  );
+}
+
+// ---------- GM Assistant: link confirm (append proposal) ----------
+
+function GmaLinkConfirmModal({
+  entity,
+  npc,
+  mayAppend,
+  busy,
+  onLink,
+  onClose,
+}: {
+  entity: GmaEntity;
+  npc: Npc;
+  /** Entity has a description AND the actor may edit this NPC's content. */
+  mayAppend: boolean;
+  busy: boolean;
+  onLink: (append: boolean) => void;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <Modal
+      open={true}
+      onClose={busy ? () => {} : onClose}
+      title={t('pnj.gma.lier.titre', { entity: entity.name, name: npc.name })}
+    >
+      <div className="space-y-3">
+        <p className="text-sm text-ink-600">
+          {t('pnj.gma.lier.corps', { entity: entity.name, name: npc.name })}
+        </p>
+        {mayAppend ? (
+          <>
+            <div className="rounded-lg border border-parchment-200 p-2.5 space-y-2 bg-parchment-50">
+              <div>
+                <p className="text-xs font-semibold text-ink-500">
+                  {t('pnj.gma.description.actuelle')}
+                </p>
+                <p className="mt-0.5 text-xs text-ink-600 line-clamp-3 whitespace-pre-line">
+                  {npc.description || t('pnj.gma.description.vide')}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-gold-700">
+                  {t('pnj.gma.description.gma')}
+                </p>
+                <p className="mt-0.5 text-xs text-ink-600 line-clamp-3 whitespace-pre-line">
+                  {entity.description}
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={() => onLink(true)}
+                disabled={busy}
+                className="btn-primary w-full"
+              >
+                {busy ? t('pnj.gma.en.cours') : t('pnj.gma.lier.et.ajouter')}
+              </button>
+              <button
+                type="button"
+                onClick={() => onLink(false)}
+                disabled={busy}
+                className="btn-secondary w-full"
+              >
+                {t('pnj.gma.lier.seulement')}
+              </button>
+            </div>
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onLink(false)}
+            disabled={busy}
+            className="btn-primary w-full"
+          >
+            {busy ? t('pnj.gma.en.cours') : t('pnj.gma.lier.seulement')}
+          </button>
+        )}
+      </div>
+    </Modal>
+  );
+}
+
+// ---------- GM Assistant: NPC picker ----------
+
+function GmaNpcPickerModal({
+  entity,
+  npcs,
+  onPick,
+  onClose,
+}: {
+  entity: GmaEntity;
+  npcs: Npc[];
+  onPick: (npc: Npc) => void;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <Modal open={true} onClose={onClose} title={t('pnj.gma.choisir.le.pnj')}>
+      <div className="space-y-3">
+        <p className="text-sm text-ink-600">
+          {t('pnj.gma.choisir.corps', { entity: entity.name })}
+        </p>
+        {npcs.length === 0 ? (
+          <p className="text-sm text-ink-400">{t('pnj.gma.choisir.vide')}</p>
+        ) : (
+          <ul className="max-h-72 overflow-y-auto divide-y divide-parchment-200 -mx-1 px-1">
+            {npcs.map((n) => (
+              <li key={n.id}>
+                <button
+                  type="button"
+                  onClick={() => onPick(n)}
+                  className="w-full min-h-11 flex items-center justify-between gap-2 px-1 py-2 text-left hover:bg-parchment-100 rounded-lg"
+                >
+                  <span className="flex items-center gap-2 min-w-0">
+                    <span
+                      className={`inline-block w-2.5 h-2.5 rounded-full shrink-0 ${STATUS_DOT_CLASS[n.status]}`}
+                      title={t(`pnj.status.${n.status}`)}
+                      aria-hidden="true"
+                    />
+                    <span className="text-sm font-medium text-ink-800 truncate">{n.name}</span>
+                  </span>
+                  <span className="text-xs text-ink-400 shrink-0" aria-hidden="true">
+                    {n.isShared ? '🔗' : '🔒'}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </Modal>
+  );
+}
+
+// ---------- GM Assistant: origin sheet (badge tap) ----------
+
+function GmaOriginModal({
+  entity,
+  campaignTitle,
+  npc,
+  busy,
+  mayEdit,
+  mayUnlink,
+  onPull,
+  onUnlink,
+  onClose,
+}: {
+  entity: GmaEntity;
+  campaignTitle: string;
+  npc: Npc;
+  busy: boolean;
+  mayEdit: boolean;
+  mayUnlink: boolean;
+  onPull: (append: boolean) => void;
+  onUnlink: () => void;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  const link = entity.linkedNpc!;
+  const linkedAt = gmaDateLabel(link.linkedAt);
+  const lastPullAt = gmaDateLabel(link.lastPullAt);
+
+  return (
+    <Modal open={true} onClose={onClose} title={t('pnj.gma.origine.titre')}>
+      <div className="space-y-4">
+        <p className="text-sm text-ink-600">
+          {t('pnj.gma.origine.corps', {
+            name: npc.name,
+            entity: entity.name,
+            campaign: campaignTitle,
+          })}
+        </p>
+        <p className="text-xs text-ink-400">
+          {linkedAt && t('pnj.gma.origine.lie.le', { name: link.linkedByName, date: linkedAt })}
+          {linkedAt && lastPullAt && ' · '}
+          {lastPullAt && t('pnj.gma.origine.derniere.reprise', { date: lastPullAt })}
+        </p>
+
+        {entity.sessions.length > 0 && (
+          <div>
+            <p className="label">{t('pnj.gma.vu.en.seance')}</p>
+            <ul className="mt-1 divide-y divide-parchment-200">
+              {entity.sessions.map((s) => (
+                <li key={s.id}>
+                  <Link
+                    to={`/party/${npc.partyId}/chronique?seance=${s.id}`}
+                    onClick={onClose}
+                    className="min-h-11 flex items-center gap-3 py-2 group"
+                  >
+                    <span className="w-8 text-right font-display text-gold-700" aria-hidden="true">
+                      {toRoman(s.ordinal)}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-medium text-ink-800 truncate group-hover:text-blood-600">
+                        {s.title}
+                      </span>
+                    </span>
+                    <span className="text-ink-300 group-hover:text-blood-600" aria-hidden="true">
+                      →
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* GMA-side description changed since the last pull */}
+        {link.descriptionUpdated && (
+          <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            {t('pnj.gma.description.mise.a.jour')}
+          </p>
+        )}
+
+        {entity.description && mayEdit && (
+          <div className="space-y-2">
+            {link.descriptionUpdated || link.textPulled ? (
+              <>
+                <p className="text-xs text-ink-400">{t('pnj.gma.reprendre.avertissement')}</p>
+                {busy ? (
+                  <button type="button" disabled className="btn-secondary w-full">
+                    {t('pnj.gma.en.cours')}
+                  </button>
+                ) : (
+                  <ConfirmButton
+                    onConfirm={() => onPull(false)}
+                    className="btn-secondary w-full"
+                    confirmChildren={t('pnj.gma.reprendre.confirm')}
+                  >
+                    {t('pnj.gma.reprendre.la.description')}
+                  </ConfirmButton>
+                )}
+              </>
+            ) : (
+              // Linked without ever taking the text — the offer is additive
+              <button
+                type="button"
+                onClick={() => onPull(true)}
+                disabled={busy}
+                className="btn-secondary w-full"
+              >
+                {busy ? t('pnj.gma.en.cours') : t('pnj.gma.ajouter.la.description')}
+              </button>
+            )}
+          </div>
+        )}
+
+        {mayUnlink &&
+          (busy ? (
+            <button type="button" disabled className="btn-ghost w-full text-red-600">
+              {t('pnj.gma.en.cours')}
+            </button>
+          ) : (
+            <ConfirmButton
+              onConfirm={onUnlink}
+              className="btn-ghost w-full text-red-600 hover:bg-red-50"
+              confirmChildren={t('pnj.gma.delier.confirm')}
+            >
+              {t('pnj.gma.delier')}
+            </ConfirmButton>
+          ))}
+      </div>
     </Modal>
   );
 }
