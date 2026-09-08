@@ -102,7 +102,7 @@ fraîcheur du registre des groupes.
 | Entrées préparées | `py-4`, ordinal `ink-400` `text-lg`, nom `text-lg`, méta « ⚪ Préparation · N combattants », roster inline `truncate` `text-sm` `ink-500` |
 | Entrées terminées (compactes) | `py-3`, ordinal `ink-300` `text-base`, nom `text-base`, méta « ⚫ Terminée · tour N · créée {mois année} » (`formatCreated`, jamais « depuis ») ; PAS de roster |
 | Roster | payload `EncounterSummary.roster` (API) : personnages d'abord, groupes de monstres agrégés « Nom ×N », joints par « · » |
-| Pied (MD) | action fantôme « ＋ Nouvelle rencontre » ouvrant le `Modal` standard ; page vierge (MD) : chemin de création inline sous la double règle, joueur : `EmptyState` |
+| Tête (MD) | action fantôme « ＋ Nouvelle rencontre » sous la méta, au-dessus de la double règle — visible au chargement quelle que soit la longueur du registre, l'entrée courante reste la première ligne — ouvrant le `Modal` standard ; page vierge (MD) : chemin de création inline sous la double règle, joueur : `EmptyState` |
 
 ## Le théâtre du tour — la page Combat (`CombatPage.tsx`, état rencontre)
 

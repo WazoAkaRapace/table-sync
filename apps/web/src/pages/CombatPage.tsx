@@ -605,7 +605,7 @@ export default function CombatPage() {
         onDamageRolled={handleDamageRolled}
       />
 
-      {/* New encounter modal (register foot action) */}
+      {/* New encounter modal (register head action) */}
       <Modal
         open={showNewEncounter}
         onClose={() => setShowNewEncounter(false)}
@@ -745,6 +745,15 @@ function EncounterRegister({
           {t('combat.au.registre', { count: encounters.length })}
           {live.length > 0 && ` — ${t('combat.registre.en.cours', { count: live.length })}`}
         </p>
+        {/* Creation lives in the head — a long register must never bury its
+            only door under 30 filets; the live entry stays the first row. */}
+        {isGM && (
+          <div className="mt-3 flex items-center justify-center">
+            <button type="button" className="btn-ghost min-h-11 text-ink-500" onClick={onOpenModal}>
+              {t('combat.nouvelle.rencontre')}
+            </button>
+          </div>
+        )}
       </header>
 
       <div aria-hidden="true">
@@ -857,14 +866,6 @@ function EncounterRegister({
           );
         })}
       </ol>
-
-      {isGM && (
-        <div className="flex items-center justify-center pt-6">
-          <button type="button" className="btn-ghost text-ink-500" onClick={onOpenModal}>
-            {t('combat.nouvelle.rencontre')}
-          </button>
-        </div>
-      )}
     </div>
   );
 }
