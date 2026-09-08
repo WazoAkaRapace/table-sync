@@ -1543,13 +1543,13 @@ function GmaEntitySheetModal({
         {/* Écarter — a light, reversible gesture: encre, two-step, not blood */}
         <div className="pt-2 border-t border-parchment-200">
           {busy ? (
-            <button type="button" disabled className="btn-ghost w-full text-ink-400">
+            <button type="button" disabled className="btn-ghost w-full min-h-11 text-ink-400">
               {t('pnj.gma.en.cours')}
             </button>
           ) : (
             <ConfirmButton
               onConfirm={onDiscard}
-              className="btn-ghost w-full text-ink-500 hover:bg-parchment-100"
+              className="btn-ghost w-full min-h-11 text-ink-500 hover:bg-parchment-100"
               confirmChildren={t('pnj.gma.ecarter.confirm')}
             >
               {t('pnj.gma.ecarter')}
@@ -1859,13 +1859,13 @@ function GmaOriginModal({
 
         {mayUnlink &&
           (busy ? (
-            <button type="button" disabled className="btn-ghost w-full text-red-600">
+            <button type="button" disabled className="btn-ghost w-full min-h-11 text-red-600">
               {t('pnj.gma.en.cours')}
             </button>
           ) : (
             <ConfirmButton
               onConfirm={onUnlink}
-              className="btn-ghost w-full text-red-600 hover:bg-red-50"
+              className="btn-ghost w-full min-h-11 text-red-600 hover:bg-red-50"
               confirmChildren={t('pnj.gma.delier.confirm')}
             >
               {t('pnj.gma.delier')}
