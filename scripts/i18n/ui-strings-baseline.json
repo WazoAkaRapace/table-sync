@@ -1,5 +1,5 @@
 {
-  "total": 85,
+  "total": 82,
   "perFile": {
     "App.tsx": 1,
     "auth.tsx": 3,
@@ -15,9 +15,9 @@
     "pages/CharacterFeaturesTab.tsx": 1,
     "pages/CharacterInventoryPage.tsx": 3,
     "pages/CharacterSpellsTab.tsx": 8,
-    "pages/CombatPage.tsx": 20,
-    "pages/NpcPage.tsx": 9,
-    "pages/character/SurvivalPanel.tsx": 5,
+    "pages/CombatPage.tsx": 19,
+    "pages/NpcPage.tsx": 8,
+    "pages/character/SurvivalPanel.tsx": 4,
     "sync.tsx": 2
   }
 }

@@ -45,6 +45,11 @@ for (const file of walk(ROOT)) {
     // le wiring t() — seules les chaînes d'affichage comptent.
     .replace(/'([a-z0-9]+(?:\.[a-z0-9-]+)+)'/g, "''")
     .replace(/`([a-z0-9]+(?:\.[a-z0-9-]+)+)\.\$\{/g, '`${')
+    // Intérieurs d'interpolation ${…} : des identifiants, jamais du texte
+    // affiché (le mot-listé vivrait dans la DÉFINITION de la variable,
+    // comptée là-bas). Sans ça, `pnj.disposition.${npc.disposition}`
+    // re-sanctionne le wiring selon le nom du membre interpolé.
+    .replace(/\$\{[^}]*\}/g, '${}')
     // Visite guidée : les ids d'étapes ({ id: 'portage', … }) et les cibles
     // tuto('stats-portage') / data-tuto="stats-portage" sont des identifiants
     // de logique (docs/tutorial-script.md), jamais du texte affiché.
