@@ -1021,7 +1021,6 @@ function NpcDetailModal({
               {t(`pnj.status.${npc.status}`)}
             </span>
           </span>
-          <span className="text-ink-500">· {t(`pnj.disposition.${npc.disposition}`)}</span>
         </div>
 
         {npc.location && (
