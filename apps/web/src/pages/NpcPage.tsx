@@ -378,6 +378,49 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
     });
   }, [filtered]);
 
+  // ---------- Collapsible faction sections ----------
+  // Per-party, persisted — scan the faction heads, open the one you want.
+  // Any active search/filter overrides the collapse: a result must never
+  // hide inside a folded section.
+
+  const collapsedKey = `dnd-inv-npc-factions-collapsed:${partyId ?? ''}`;
+  const [collapsedFactions, setCollapsedFactions] = useState<Set<string>>(() => {
+    try {
+      return new Set(JSON.parse(localStorage.getItem(collapsedKey) ?? '[]'));
+    } catch {
+      return new Set();
+    }
+  });
+  // Route param change reuses the component instance — reload the right set.
+  useEffect(() => {
+    if (!partyId) return;
+    try {
+      setCollapsedFactions(
+        new Set(
+          JSON.parse(localStorage.getItem(`dnd-inv-npc-factions-collapsed:${partyId}`) ?? '[]'),
+        ),
+      );
+    } catch {
+      setCollapsedFactions(new Set());
+    }
+  }, [partyId]);
+
+  const toggleFaction = (faction: string) => {
+    setCollapsedFactions((prev) => {
+      const next = new Set(prev);
+      if (next.has(faction)) next.delete(faction);
+      else next.add(faction);
+      try {
+        localStorage.setItem(collapsedKey, JSON.stringify([...next]));
+      } catch {
+        /* stockage indisponible — repli mémoire seule */
+      }
+      return next;
+    });
+  };
+
+  const filtersActive = !!search.trim() || !!dispositionFilter || !!statusFilter || view !== 'all';
+
   // ---------- Mutations ----------
 
   const openCreate = () => {
@@ -599,33 +642,60 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
         </div>
       ) : (
         <div className="space-y-6">
-          {grouped.map(([faction, group]) => (
-            <section key={faction}>
-              <h2 className="section-title mb-3 flex items-center gap-2">
-                <span className="text-blood-600">⚜</span>
-                {faction === NO_FACTION ? t('pnj.sans.faction') : faction}
-                <span className="text-ink-400 text-sm font-normal">({group.length})</span>
-              </h2>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {group.map((npc) => (
-                  <NpcCard
-                    key={npc.id}
-                    npc={npc}
-                    gma={gmaByNpcId.get(npc.id) ?? null}
-                    partyId={partyId!}
-                    canEdit={
-                      isGM || npc.createdBy === user?.id || (npc.isShared && npc.allowMemberEdit)
-                    }
-                    canDelete={isGM || npc.createdBy === user?.id}
-                    onEdit={() => openEdit(npc)}
-                    onDelete={() => setDeleting(npc)}
-                    onGma={() => setOriginEntity(gmaByNpcId.get(npc.id) ?? null)}
-                    onDetail={() => setDetailNpc(npc)}
-                  />
-                ))}
-              </div>
-            </section>
-          ))}
+          {grouped.map(([faction, group]) => {
+            const label = faction === NO_FACTION ? t('pnj.sans.faction') : faction;
+            const isCollapsed = !filtersActive && collapsedFactions.has(faction);
+            return (
+              <section key={faction}>
+                <h2 className="mb-1">
+                  <button
+                    type="button"
+                    onClick={() => toggleFaction(faction)}
+                    aria-expanded={!isCollapsed}
+                    className="w-full min-h-11 flex items-center gap-2 text-left"
+                  >
+                    <span className="text-blood-600 shrink-0" aria-hidden="true">
+                      ⚜
+                    </span>
+                    <span className="section-title truncate">{label}</span>
+                    <span className="text-ink-400 text-sm font-normal tabular-nums shrink-0">
+                      ({group.length})
+                    </span>
+                    <span
+                      className={`text-ink-400 chevron ml-auto ${isCollapsed ? 'is-closed' : 'is-open'}`}
+                      aria-hidden="true"
+                    >
+                      ▼
+                    </span>
+                  </button>
+                </h2>
+                <div className={`expand-grid ${isCollapsed ? 'is-collapsed' : ''}`}>
+                  <div className="expand-inner">
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 pb-3">
+                      {group.map((npc) => (
+                        <NpcCard
+                          key={npc.id}
+                          npc={npc}
+                          gma={gmaByNpcId.get(npc.id) ?? null}
+                          partyId={partyId!}
+                          canEdit={
+                            isGM ||
+                            npc.createdBy === user?.id ||
+                            (npc.isShared && npc.allowMemberEdit)
+                          }
+                          canDelete={isGM || npc.createdBy === user?.id}
+                          onEdit={() => openEdit(npc)}
+                          onDelete={() => setDeleting(npc)}
+                          onGma={() => setOriginEntity(gmaByNpcId.get(npc.id) ?? null)}
+                          onDetail={() => setDetailNpc(npc)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </section>
+            );
+          })}
         </div>
       )}
 
