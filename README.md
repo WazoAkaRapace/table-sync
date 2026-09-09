@@ -1,192 +1,101 @@
 <div align="center">
 
-<img src="docs/logo.png" width="180" alt="Table Sync" />
+<img src="docs/logo.png" width="140" alt="Table Sync" />
 
 # Table Sync
 
-🌐 Site de présentation : [wazoakarapace.github.io/table-sync](https://wazoakarapace.github.io/table-sync/)
+**Le compagnon de campagne partagé, pour le MD et les joueurs.**
+
+[![Validate](https://github.com/WazoAkaRapace/table-sync/actions/workflows/ci-test.yml/badge.svg)](https://github.com/WazoAkaRapace/table-sync/actions/workflows/ci-test.yml)
+[🌐 Site de présentation](https://wazoakarapace.github.io/table-sync/)
 
 </div>
 
-Le compagnon de campagne partagé, pour le MD et les joueurs. Application web **mobile-first** de gestion de fiche de personnage, d'inventaire et de **combat** pour D&D 5e — entièrement en **français**, poids en **kilogrammes**, avec un moteur de règles SRD complet et une **synchronisation en temps réel** entre le MD et les joueurs.
+Application web mobile-first de fiche de personnage, d'inventaire et de combat pour D&D 5e. Entièrement en français, poids en kilogrammes, moteur de règles SRD 5.1 complet — et une synchronisation temps réel : chaque joueur sur son écran, le MD sur le sien, tout le monde voit la même partie. Pensée pour la table (PWA installable, téléphone et tablette).
 
-Pensée pour le téléphone et la tablette pendant la partie : PWA installable, chaque joueur sur son écran, le MD sur le sien.
+La fiche de personnage — ici sur tablette, avec le dock de navigation et l'indicateur « À toi de jouer ! » :
 
-![Groupes](docs/screenshots/01-parties.png)
+![Fiche de personnage sur tablette](docs/screenshots/23-fiche-tablette.png)
 
-## ✨ Toutes les fonctionnalités
+## Fonctionnalités
 
-### 🎒 Inventaire & équipement
-- **646 objets** du SRD 5e (catalogue consultable, recherche instantanée)
-- Poids en **kilogrammes** + encombrance par paliers avec effets sur la vitesse
-- Emplacements de stockage (porté, montures, conteneurs avec poids propre)
-- Bourse (PC/PA/PE/PO/PP) — l'argent pèse ! Encaissement/dépense avec **rendu de monnaie automatique** à casse minimale (une pièce d'or cassée en dix pièces d'argent, jamais plus)
-- Transfert d'objets entre personnages en temps réel
-- **Puces de combat calculées** sur chaque arme : bonus d'attaque avec détail au clic (FOR/DEX + maîtrise + magique), dés de dégâts avec type en français, variante à deux mains, bonus magique ✨, ⚠ non qualifié — les **armes magiques** retrouvent leur arme de base depuis la description SRD
+- **Fiche de personnage** — PV, dés de vie, états avec durées, épuisement, concentration, repos court/long, ressources de classe, forme sauvage du Druide
+- **Moteur de règles SRD 5.1** — CA, armes et attaques calculées, sorts avec incantation supérieure, sorts toujours préparés, multiclassage complet, expertise — partagé par le web et l'API
+- **Inventaire** — 646 objets du SRD, encombrance en kg, conteneurs et montures, bourse avec rendu de monnaie automatique
+- **Sorts** — 490 sorts en français (SRD + Xanathar/Tasha/Fizban), traqueur d'emplacements par classe
+- **Traqueur de combat (MD)** — 964 monstres, initiative saisie par les joueurs depuis leur écran, états qui expirent en fin de tour, PV synchronisés dans les deux sens entre traqueur et fiche
+- **Correspondance secrète MD ↔ joueur** — un fil par personnage, notifications Web Push hors app
+- **PWA** — installable, mises à jour versionnées avec bandeau de rechargement
+- **Visite guidée intégrée** — chaque onglet s'explique au premier passage, rejouable à volonté
 
-| Inventaire | Arme avec stats calculées |
-|---|---|
-| ![Inventaire](docs/screenshots/02-inventaire.png) | ![Arme](docs/screenshots/03-arme-calcul.png) |
-| ![Catalogue](docs/screenshots/26-catalogue.png) | ![Bourse](docs/screenshots/27-bourse.png) |
+Chaque fonctionnalité est présentée en détail, avec captures d'écran, sur [le site de présentation](https://wazoakarapace.github.io/table-sync/).
 
-![Rendu de monnaie automatique — 1 PO cassée en 10 PA](docs/screenshots/28-bourse-monnaie.png)
+Navigateurs minimum : Safari/iPadOS 16.4, Chrome/Edge 111, Firefox 128 (imposés par la feuille de style Tailwind v4 ; un écran d'avertissement remplace l'app au-delà).
 
-### 🩸 Survie & combat du personnage
-- **Options d'attaque** : chaque arme équipée affichée avec ses jets (attaques ×2/×3/×4 pour les classes martiales, attaque furtive du Roublard, frappe sans arme avec dé d'arts martiaux du Moine)
-- **PV** avec édition directe, dés de vie (compteur dépense/récupération), sauvegardes contre la mort à 0 PV
-- **Concentration** : case à cocher ; si le joueur subit des dégâts (depuis sa fiche **ou** depuis le traqueur du MD), une notification lui demande un jet de Constitution DD 10 ou ½ dégâts ; les états incapacitants et les 0 PV rompent automatiquement la concentration
-- Épuisement 1–6, 16 états SRD avec durées, inspiration, ration/eau (survie Chult)
-- **Forme sauvage** (Druide) : formes selon DD et vol/nage par niveau, liste limitée aux **bêtes déjà vues** (👁), PV tirés aux dés, bloc de stats consultable, barre de PV de la forme intégrée au traqueur, retour auto avec dégâts excédentaires
+## Démarrage
 
-| Attaques & PV | Forme sauvage |
-|---|---|
-| ![Survie](docs/screenshots/04-survie-attaques.png) | ![Forme sauvage](docs/screenshots/09-forme-sauvage.png) |
+Prérequis : **Node.js ≥ 20** et npm. Docker pour l'auto-hébergement.
 
-### ✨ Sorts
-- **490 sorts** SRD + extensions (Xanathar/Tasha/Fizban), tout en français (AideDD)
-- Traqueur d'emplacements par classe/niveau (grimoire complet, pacte, demi-magie, artificier)
-- **Lancement de sort** : choix de l'emplacement, **incantation supérieure** (tous les niveaux disponibles avec dégâts mis à l'échelle affichés en direct), rituel sans emplacement, gestion de la concentration
-- **Sorts toujours préparés** : domaine divin du Clerc, terrain du Cercle de la Terre du Druide, serment du Paladin — fusionnés dans la liste avec le marqueur ◆, hors quota de préparation
-- Aperçu des dés au niveau choisi : dégâts ⚔ orange, **soins ✚ verts** (dés + modificateur de caractéristique pour Soins, Mot de guérison…), DD de sauvegarde et bonus d'attaque
-
-| Grimoire | Lancer (incantation supérieure) |
-|---|---|
-| ![Sorts](docs/screenshots/06-sorts.png) | ![Lancer](docs/screenshots/07-lancer-sort.png) |
-
-### 🔀 Multiclassage (SRD 5.1)
-- **Feuille guidée « ＋ Ajouter une classe »** : carte des prérequis de caractéristiques (⚠ jamais bloquant), maîtrises acquises selon la table SRD, sous-classe verrouillée jusqu'à son palier RAW
-- **Emplacements : deux pools** quand l'Occultiste s'y mêle — Incantation (table de l'incantateur multiclassé) et **magie de pacte** en or (recharge au repos court), interchangeables (SRD)
-- **Sorts à classe d'origine** : DD et bonus d'attaque par classe incantatrice, compteurs de préparation par classe (chacune comme si mono-classe)
-- **Dés de vie par type de dé** (5d10 + 3d8), dépense au repos court et budget de récupération au repos long
-- Règles au niveau de CLASSE : attaque supplémentaire non cumulative (max), attaque sournoise, dés d'arts martiaux, aura du Paladin, critique amélioré du Champion, prérequis, expertise cumulée
-
-![Multiclasse — deux pools d'emplacements](docs/screenshots/14-multiclasse.png)
-
-### ⚔️ Caractéristiques & règles de classe
-- 6 scores, classe/niveau/race/historique, **sous-classes** (cercle druidique + terrain, domaine divin, serment sacré, archétypes), style de combat par classe
-- **CA calculée** : type d'armure réel (légère/intermédiaire/lourde), boucliers, **armures magiques** résolues depuis la description, défense sans armure du Barbare (10+DEX+CON) et du Moine (10+DEX+SAG), style Défense
-- **Vitesse** avec Déplacement sans armure (Moine), Déplacement rapide (Barbare), pénalité d'armure lourde sous la FOR minimale
-- **Maîtrise d'armes** éditable (armes simples/de guerre/spécifiques par classe)
-- 18 compétences + 6 jets de sauvegarde (2 colonnes), bonus de maîtrise
-
-![Caractéristiques](docs/screenshots/08-caracteristiques.png)
-
-La même fiche **sur tablette** — les caractéristiques s'étalent sur trois colonnes, le dock reste sous le pouce :
-
-![Fiche sur tablette](docs/screenshots/23-fiche-tablette.png)
-
-En **paysage**, la barre d'onglets remplace le dock et la Survie s'étale à pleine largeur :
-
-![Survie sur tablette en paysage](docs/screenshots/25-survie-paysage.png)
-
-### 🗡️ Traqueur de combat (MD)
-- **Rencontres** : monstres du bestiaire **964 bêtes**, groupés par type avec initiative partagée, **PV tirés aux dés de vie**
-- Ajout des PJ en un clic, initiative saisie par les joueurs depuis leur écran
-- **Démarrage en un clic**, avancement des tours (groupes sautés ensemble), tours et rounds
-- Dégâts / soins / demi-dégâts / vaincu, édition directe PV/CA, couleurs de cartes
-- **16 états avec durées** qui expirent automatiquement en fin de tour (et se synchronisent avec la fiche du joueur)
-- **Blocs de stats complets** : capacités, actions avec **dés cliquables** (attaque d20, dégâts doublés sur critique), sorts des monstres consultables
-- **PV synchronisés dans les deux sens** entre le traqueur du MD et la fiche du joueur
-
-| Table du MD | Traqueur de combat | Bloc de stats |
-|---|---|---|
-| ![Table du MD](docs/screenshots/11-table-md.png) | ![Traqueur](docs/screenshots/12-traqueur.png) | ![Bloc de stats](docs/screenshots/13-bloc-stats.png) |
-
-**Sur ordinateur**, le traqueur occupe tout l'écran : rail d'initiative à gauche, scène du tour au centre, bloc de stats amarré à droite.
-
-![Traqueur sur ordinateur](docs/screenshots/24-traqueur-bureau.png)
-
-### 🔄 Temps réel & multi-appareils
-- **Synchronisation WebSocket** : tout le monde voit les mêmes PV, états, initiative, en direct — le MD blesse, la fiche du joueur suit ; le joueur se soigne, le traqueur suit
-- Notifications poussées : demande d'initiative, jet de concentration, tour du joueur (widget flottant)
-- **Notifications Web Push** hors app (écran éteint, app fermée) : abonnement par appareil depuis Mon compte, chaîne VAPID complète côté serveur ([docs](docs/push-notifications.md)) — requiert un accès HTTPS
-- PNJ partagés avec secrets réservés au MD, notes par personnage, traits avec compteurs (Rage, Divinité…)
-- **Mises à jour PWA proprement versionnées** : chaque commit produit une version (SHA) servie en `version.json` no-cache — l'app qui tourne la compare au retour au premier plan et propose la recharge d'un bandeau (version visible dans Mon compte)
-- Installable comme **PWA** sur téléphone/tablette
-
-| Widget de combat (joueur) | Formes (bêtes vues) |
-|---|---|
-| ![Widget](docs/screenshots/05-widget-combat.png) | ![Formes](docs/screenshots/10-formes.png) |
-
-La **demande d'initiative** suit le joueur partout : carte dorée déployée au-dessus du dock sur téléphone, bande dorée dans l'en-tête sur tablette en paysage — champ, OK et dé, tant que le jet est dû.
-
-| Demande d'initiative (téléphone) | Demande d'initiative (tablette, paysage) |
-|---|---|
-| ![Initiative téléphone](docs/screenshots/29-initiative-mobile.png) | ![Initiative tablette](docs/screenshots/30-initiative-tablette.png) |
-
-### 🌐 Compatibilité navigateurs
-
-Le plancher est fixé par la feuille de style générée par Tailwind v4 (`@property`, `oklch`, `color-mix`) — la cible JavaScript `es2020` du build ne rattrape pas le CSS :
-
-| Navigateur | Version minimale |
-|---|---|
-| Safari / iPadOS | **16.4** (mars 2023) — aussi le plancher des notifications push iOS |
-| Chrome / Edge / WebView Android | **111** (mars 2023) |
-| Firefox | **128** (juillet 2024) |
-
-En dessous, une garde inline dans `index.html` remplace la page par un écran statique « Navigateur trop ancien » (bilingue) au lieu d'une mise en page cassée en silence. La suite E2E rejoue les parcours de lecture sur WebKit (le moteur des iPad) en plus de Chromium.
-
-### ✉️ Correspondance secrète MD ↔ joueur
-- **Un fil par personnage** : le MD échange en privé avec chaque joueur — indices, secrets, révélations que la table ne doit pas entendre. L'historique reste sur le fil ; seul le MD peut rayer une ligne, d'un geste confirmé
-- **Visible partout** : un message qui arrive tombe en bannière où que le joueur se trouve, une pastille compte les non-lus — et devient une **notification Web Push** si l'app est fermée (le texte n'apparaît jamais sur l'écran de verrouillage)
-- **Boîte de réception MD** : chaque personnage est un volume du registre — qui attend une réponse se lit en pastille, la plus fraîche correspondance tient l'ordinal sang
-
-| Le fil (joueur) | Bannière d'arrivée | Boîte du MD |
-|---|---|---|
-| ![Fil](docs/screenshots/18-correspondance.png) | ![Bannière](docs/screenshots/19-banniere-correspondance.png) | ![Boîte MD](docs/screenshots/20-boite-md.png) |
-
-### 🎓 Visite guidée embarquée
-- **La fiche s'explique toute seule** : à la première ouverture, un spotlight accueille le joueur (bandeau d'état, onglets, bouton central) — puis chaque onglet joue sa propre visite au premier passage
-- **Rejouable à volonté** depuis « Mon compte → Réinitialiser le tutoriel » ; scripts français et anglais, bulle maison dans le monde parchemin/encre
-
-| Bienvenue | Le bouton central |
-|---|---|
-| ![Bienvenue](docs/screenshots/21-tutoriel-bienvenue.png) | ![Hub](docs/screenshots/22-tutoriel-hub.png) |
-
-### 📜 GM Assistant — chronique de campagne
-- **Liaison groupe ↔ campagne** [gmassistant.app](https://gmassistant.app) : le MD connecte sa clé API (chiffrée côté serveur, jamais dans le navigateur), relie une campagne existante ou la **crée depuis le groupe** — campagne D&D 5e + les personnages cochés avec leur « joué par » et leur fiche d'identité
-- **Resynchronisation des personnages** à la demande : créations cochables, mises à jour nom / joué par / fiche d'identité (classes, alignement, apparence, personnalité, histoire), orphelins supprimés d'un geste confirmé — lecture seule partout ailleurs
-- **Chronique** (📜 en annexes, ouverte à toute la table) : registre des séances — ordinaux romains = numéros de séance, la dernière en entrée courante — résumés multi-styles (Résumé, En bref, Héraut, Conte, Ironique, Sonnet…) et **moments mémorables enluminés par type** (⚔ épique gravé en or, 🕯 tragique en italique éteint, 🗝 intrigant à la clé…)
-- **Cache serveur** (TTL 5 min, rafraîchissement MD, event temps réel) : une panne GM Assistant n'affiche jamais d'écran d'erreur au joueur — la chronique sert son dernier cachet, honnêtement marqué
-
-| Onglet GM Assistant (MD) | Registre des séances | Moments enluminés |
-|---|---|---|
-| ![Onglet MD](docs/screenshots/15-gm-assistant.png) | ![Chronique](docs/screenshots/16-chronique.png) | ![Moments](docs/screenshots/17-moments.png) |
-
-## 🚀 Démarrage
+### Développement
 
 ```bash
-npm install                 # dépendances (workspaces)
-npm run dev                 # API :4000 + Web :5173
-docker compose up --build   # API :4010 + Web :8080
+npm install    # dépendances (workspaces npm)
+npm run dev    # API sur :4000 + Web sur :5173
 ```
 
-Le serveur auto-migre et sème la base au démarrage : 646 objets, 490 sorts, 964 monstres.
+Ouvrir [http://localhost:5173](http://localhost:5173), créer un compte, puis créer un groupe et inviter les joueurs avec le code. Le proxy Vite fait passer `/api` et `/ws` vers l'API — rien d'autre à configurer.
 
-## 🧱 Architecture
+La base SQLite (`data/db/`) est créée, migrée et semée automatiquement au premier démarrage : 646 objets, 490 sorts, 964 monstres.
 
-- `apps/api` — Fastify 5 + better-sqlite3 (WebSocket `/ws`, JWT)
-- `apps/web` — React 19 + Vite + Tailwind v4 (mobile-first, PWA)
-- `packages/shared` — **moteur de règles SRD** partagé (CA, armes, vitesse, sorts, forme sauvage) + types
-- `data/` — seeds JSON + SQLite
-- Tests : suites de règles (`npm run test-weapon-stats`, `test-armor-stats`, `test-skill-stats`, `test-class-features`, `test-creation-data`) + intégration API (`npm run test-api`) + E2E navigateur Playwright (`npm run test:e2e`, stack jetable dédiée)
+### Production (Docker)
 
-## 🧹 Lint & format (Biome)
-
-[Biome](https://biomejs.dev) gère le linter **et** le formateur du monorepo (config : `biome.jsonc` — 2 espaces, simples quotes, LF, imports triés).
+Les images sont pré-construites sur GHCR par la CI :
 
 ```bash
-npm run lint       # vérifie lint + format (CI)
-npm run lint:fix   # corrige et formate tout
-npm run format     # formate uniquement
+cp .env.example .env   # au minimum : JWT_SECRET
+docker compose -f docker-compose.prod.yml up -d
 ```
 
-Sous VS Code : l'extension `biomejs.biome` formate à la sauvegarde (réglages dans `.vscode/`, non versionnés).
+Le web (port 8080) sert le front et proxifie `/api` + `/ws` vers l'API — le port API n'est pas publié. Les volumes `db-data` (base) et `image-data` (illustrations) survivent aux mises à jour ; pour appliquer une nouvelle version : `docker compose -f docker-compose.prod.yml pull && docker compose -f docker-compose.prod.yml up -d`.
 
-## ✅ CI
+Pour construire les images localement plutôt : `docker compose up --build` (API :4010, Web :8080).
 
-À chaque PR et push sur `main`, [ci-test.yml](.github/workflows/ci-test.yml) exécute le lint Biome, le typecheck (`tsc -b`, web + shared), les 6 suites de règles, la suite d'intégration API (avec sa porte « zéro SQL brut » : aucune requête hors Drizzle) et, en job parallèle, la suite E2E Playwright (`npm run test:e2e` — API + vite jetables sur base neuve, jamais les bases dev/Docker).
+## Configuration
 
-## 📜 Licence & données
+Toutes les variables sont dans [.env.example](.env.example). En production, seule `JWT_SECRET` est obligatoire (le compose refuse de démarrer sans) ; tout le reste s'éteint proprement quand il est absent.
 
-Objets/monstres du SRD 5.1 (usage personnel, pas de revente). Traductions françaises de [5e-drs.fr](https://5e-drs.fr) et [AideDD.org](https://www.aidedd.org).
+| Variable | Rôle |
+|---|---|
+| `JWT_SECRET` | Signature des sessions — **obligatoire en production** |
+| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` | Notifications Web Push (les trois ensemble, sinon désactivées) — générer une fois avec `npm run vapid-keys`, ne jamais faire tourner |
+| `MAILJET_API_KEY` / `MAILJET_API_SECRET` / `EMAIL_FROM_ADDRESS` / `EMAIL_FROM_NAME` | E-mails transactionnels (réinitialisation de mot de passe, vérification d'adresse) — sinon désactivés |
+| `APP_URL` | Origine publique pour les liens des e-mails (défaut : en-tête `Origin`) |
+| `TRUST_PROXY` | Clés du rate limiter sur `X-Real-IP` — seulement derrière un proxy de confiance |
+
+Détails : [docs/push-notifications.md](docs/push-notifications.md), [docs/transactional-emails.md](docs/transactional-emails.md).
+
+## Architecture
+
+Monorepo npm workspaces :
+
+- `apps/api` — Fastify 5 + better-sqlite3, auth JWT, WebSocket `/ws`, migrations Drizzle appliquées au démarrage
+- `apps/web` — React 19 + Vite + Tailwind v4, PWA, mobile-first
+- `packages/shared` — **moteur de règles SRD** (CA, armes, sorts, forme sauvage, repos…) + types partagés — le web et l'API appellent les mêmes fonctions, les règles ne sont jamais dupliquées
+- `data/` — seeds JSON + base SQLite
+- `site/` — site de présentation statique (GitHub Pages)
+
+## Développement
+
+Qualité : [Biome](https://biomejs.dev) assure lint et format (`npm run lint`, `npm run lint:fix`).
+
+| Commande | Ce que ça teste |
+|---|---|
+| `npm run test-weapon-stats` / `test-armor-stats` / `test-skill-stats` / `test-class-features` / `test-multiclass-rules` / `test-coin-rules` / `test-creation-data` | Suites de règles du moteur SRD |
+| `npm run test-api` | Intégration API complète (serveur jetable + base neuve) avec porte « zéro SQL brut » |
+| `npm run test:e2e` | Parcours navigateur Playwright (stack jetable dédiée ; `npx playwright install chromium webkit` une fois par machine) |
+
+À chaque PR et push sur `main`, la CI ([ci-test.yml](.github/workflows/ci-test.yml)) enchaîne lint, typecheck, suites de règles et `test-api`, avec la suite E2E en job parallèle.
+
+## Données & crédits
+
+Objets, sorts et monstres proviennent du SRD 5.1 (usage personnel, pas de revente). Traductions françaises de [5e-drs.fr](https://5e-drs.fr) et [AideDD.org](https://www.aidedd.org).
