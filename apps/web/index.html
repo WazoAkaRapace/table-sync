@@ -2,7 +2,15 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+    <!-- interactive-widget=resizes-content : Android Chromium ≥ 108 (défaut
+         resizes-visual) ne rétrécit que le viewport VISUEL au clavier — les
+         fixed inset-0 (modal du changeur, bottom sheets) gardent leur taille
+         pleine, se font recouvrir par le clavier et n'ont rien à scroller
+         (#106). Ce drapeau rend le clavier redimensionnant comme partout
+         ailleurs : le viewport LAYOUT suit, le modal se redocke au-dessus et
+         son contenu défile. iOS ignore le drapeau (sa parade est
+         IOSViewportAnchor) ; Chromium < 108 faisait déjà ainsi. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover, interactive-widget=resizes-content" />
 
     <!-- PWA / Mobile -->
     <meta name="theme-color" content="#2a1f14" />
