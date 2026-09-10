@@ -45,11 +45,11 @@ npm run dev    # API sur :4000 + Web sur :5173
 
 Ouvrir [http://localhost:5173](http://localhost:5173), créer un compte, puis créer un groupe et inviter les joueurs avec le code. Le proxy Vite fait passer `/api` et `/ws` vers l'API — rien d'autre à configurer.
 
-La base SQLite (`data/db/`) est créée, migrée et semée automatiquement au premier démarrage : 646 objets, 490 sorts, 964 monstres.
+La base SQLite (`data/db/`) est créée, migrée et préchargée automatiquement au premier démarrage : 646 objets, 490 sorts, 964 monstres.
 
 ### Production (Docker)
 
-Les images sont pré-construites sur GHCR par la CI :
+Les images sont préconstruites sur GHCR par la CI :
 
 ```bash
 cp .env.example .env   # au minimum : JWT_SECRET
@@ -67,7 +67,7 @@ Toutes les variables sont dans [.env.example](.env.example). En production, seul
 | Variable | Rôle |
 |---|---|
 | `JWT_SECRET` | Signature des sessions — **obligatoire en production** |
-| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` | Notifications Web Push (les trois ensemble, sinon désactivées) — générer une fois avec `npm run vapid-keys`, ne jamais faire tourner |
+| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` | Notifications Web Push (les trois ensemble, sinon désactivées) — générer une fois avec `npm run vapid-keys`, ne jamais les régénérer |
 | `MAILJET_API_KEY` / `MAILJET_API_SECRET` / `EMAIL_FROM_ADDRESS` / `EMAIL_FROM_NAME` | E-mails transactionnels (réinitialisation de mot de passe, vérification d'adresse) — sinon désactivés |
 | `APP_URL` | Origine publique pour les liens des e-mails (défaut : en-tête `Origin`) |
 | `TRUST_PROXY` | Clés du rate limiter sur `X-Real-IP` — seulement derrière un proxy de confiance |
@@ -91,7 +91,7 @@ Qualité : [Biome](https://biomejs.dev) assure lint et format (`npm run lint`, `
 | Commande | Ce que ça teste |
 |---|---|
 | `npm run test-weapon-stats` / `test-armor-stats` / `test-skill-stats` / `test-class-features` / `test-multiclass-rules` / `test-coin-rules` / `test-creation-data` | Suites de règles du moteur SRD |
-| `npm run test-api` | Intégration API complète (serveur jetable + base neuve) avec porte « zéro SQL brut » |
+| `npm run test-api` | Intégration API complète (serveur jetable + base neuve) avec un garde-fou « zéro SQL brut » |
 | `npm run test:e2e` | Parcours navigateur Playwright (stack jetable dédiée ; `npx playwright install chromium webkit` une fois par machine) |
 
 À chaque PR et push sur `main`, la CI ([ci-test.yml](.github/workflows/ci-test.yml)) enchaîne lint, typecheck, suites de règles et `test-api`, avec la suite E2E en job parallèle.
