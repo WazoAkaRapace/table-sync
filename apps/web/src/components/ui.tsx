@@ -202,13 +202,15 @@ export function Fab({
 // every parsable entry commits clamped to [min, max], and a box left empty (or
 // unparsable) rolls back to its last committed value on blur — never coerced
 // to the min, never to 0. Hand-rolled `Number(value) || fallback` clamps have
-// regressed more than once; route them here.
+// regressed more than once; route them here. Delta fields where an emptied box
+// DOES mean "none" (coin transaction modal) opt into `emptyAsZero` — #107.
 export function NumberField({
   value,
   onChange,
   min,
   max,
   zeroAsEmpty = false,
+  emptyAsZero = false,
   onBlur,
   ...inputProps
 }: {
@@ -218,6 +220,9 @@ export function NumberField({
   max?: number;
   /** Show a committed 0 as an empty box (coin purse display convention). */
   zeroAsEmpty?: boolean;
+  /** Commit 0 as soon as the box is emptied instead of keeping the previous
+   * value — for per-denomination deltas, where empty means "none". */
+  emptyAsZero?: boolean;
 } & Omit<React.ComponentPropsWithoutRef<'input'>, 'value' | 'onChange' | 'min' | 'max' | 'type'>) {
   // The draft holds the raw text while the user edits (possibly ''); null when
   // the box mirrors the committed value. An empty draft never reaches onChange,
@@ -239,6 +244,7 @@ export function NumberField({
         setDraft(text);
         const n = Number(text);
         if (text !== '' && Number.isFinite(n)) onChange(clamp(n));
+        else if (emptyAsZero) onChange(0);
       }}
       onBlur={(e) => {
         setDraft(null);

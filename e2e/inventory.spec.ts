@@ -63,6 +63,19 @@ playerTest.describe('Inventaire (guerrier)', () => {
     await page.keyboard.press('Escape');
     await expect(modal).toBeHidden();
 
+    // --- Vider un champ le compte comme 0 (#107) : renoncer aux PA sans
+    // décaisser — le brouillon ne garde PAS la valeur effacée ---
+    await bourseCard.getByRole('button', { name: '− Dépenser' }).click();
+    await modal.getByLabel('Quantité de PA').fill('10');
+    await modal.getByLabel('Quantité de PO').fill('1');
+    await expect(modal.getByRole('button', { name: 'Dépenser 1 PO · 10 PA' })).toBeVisible();
+    // Le joueur efface les PA au complet — la dépense retombe à 1 PO.
+    await modal.getByLabel('Quantité de PA').fill('');
+    await expect(modal.getByRole('button', { name: 'Dépenser 1 PO', exact: true })).toBeVisible();
+    await expect(modal.getByText('31 PO · 5 PA')).toBeVisible(); // grand livre « Après »
+    await page.keyboard.press('Escape');
+    await expect(modal).toBeHidden();
+
     // --- Corriger : remet la bourse au seed (31 PO) pour les specs suivantes ---
     await bourseCard.getByRole('button', { name: '− Dépenser' }).click();
     await modal.getByRole('button', { name: /✎ Corriger/ }).click();

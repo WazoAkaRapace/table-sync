@@ -210,6 +210,7 @@ export function CoinTransactionModal({
                   className="input w-20 text-center font-mono"
                   value={amounts[unit]}
                   zeroAsEmpty
+                  emptyAsZero // an emptied denomination counts as 0 (#107)
                   inputMode="numeric"
                   onChange={(n) =>
                     setAmounts((a) => ({ ...a, [unit]: Math.max(0, Math.floor(n)) }))
