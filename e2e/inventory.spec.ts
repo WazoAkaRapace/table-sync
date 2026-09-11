@@ -86,6 +86,24 @@ playerTest.describe('Inventaire (guerrier)', () => {
     await expect(page.getByRole('button', { name: /Bourse \(31 PO/ })).toBeVisible();
   });
 
+  playerTest('les boutons ± de la bourse ajustent une pièce à la fois', async ({ page }) => {
+    // Départ : 31 PO (remis par le test précédent). Moins à gauche, plus à
+    // droite — un ajustement direct d'une pièce, sans passer par le modal.
+    const bourseCard = page.locator('[data-tuto="inv-bourse"]');
+    await bourseCard.getByRole('button', { name: /Bourse \(/ }).click();
+
+    // Poche vide : le moins de PC (0 au seed) est verrouillé.
+    await expect(bourseCard.getByRole('button', { name: 'Diminuer PC' })).toBeDisabled();
+
+    // ＋ PO : 31 → 32, le chiffre suit sans recharger.
+    await bourseCard.getByRole('button', { name: 'Augmenter PO' }).click();
+    await expect(page.getByRole('button', { name: /Bourse \(32 PO/ })).toBeVisible();
+
+    // − PO : retour à 31 pour les specs suivantes.
+    await bourseCard.getByRole('button', { name: 'Diminuer PO' }).click();
+    await expect(page.getByRole('button', { name: /Bourse \(31 PO/ })).toBeVisible();
+  });
+
   playerTest('une arme déploie ses dégâts calculés (FOR 16 → 1d8+3)', async ({ page }) => {
     await expandCategory(page, 'Arme');
     const rowButton = page.getByRole('button', { name: 'Épée longue, 1 exemplaire' });

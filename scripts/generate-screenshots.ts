@@ -174,7 +174,10 @@ function isFree(port: number): Promise<boolean> {
     const srv = net.createServer();
     srv.once('error', () => resolve(false));
     srv.once('listening', () => srv.close(() => resolve(true)));
-    srv.listen(port, '127.0.0.1');
+    // Sans host : écoute double pile, comme l'API qu'on va lancer. Une sonde
+    // épinglée à 127.0.0.1 laissait passer un serveur oublié sur « *:port » —
+    // le check de santé lui parlait LUI, et le semis 409 sur son utilisateur.
+    srv.listen(port);
   });
 }
 
@@ -186,7 +189,7 @@ async function freePort(preferred: number): Promise<number> {
       const { port } = srv.address() as net.AddressInfo;
       srv.close(() => resolve(port));
     });
-    srv.listen(0, '127.0.0.1');
+    srv.listen(0);
   });
 }
 

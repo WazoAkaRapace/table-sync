@@ -671,21 +671,45 @@ export default function CharacterInventoryPage() {
     });
   };
 
-  // Coin purse: a confirmed transaction lands as one full-purse PATCH — the
-  // change-making already ran client-side in the shared engine
-  const savePurse = useCallback(
-    async (next: CoinsState) => {
+  // Coin purse: every write lands as one full-purse PATCH — the modal's
+  // change-making already ran client-side in the shared engine, and the
+  // quick steppers are a plain ±1 on one denomination.
+  const persistCoins = useCallback(
+    async (next: CoinsState): Promise<boolean> => {
       markLocalMutation();
       try {
         await saveCoinsMutation.mutateAsync(next);
         await refreshInventory();
-        pushToast(t('inv.bourse.mise.a.jour'));
-        setCoinExchange(null);
+        return true;
       } catch (err) {
         pushToast(apiError(err, t('inv.erreur.de.sauvegarde')), 'error');
+        await refreshInventory(); // roll an optimistic figure back to server truth
+        return false;
       }
     },
     [pushToast, refreshInventory, markLocalMutation, saveCoinsMutation, t],
+  );
+
+  const savePurse = useCallback(
+    async (next: CoinsState) => {
+      if (await persistCoins(next)) {
+        pushToast(t('inv.bourse.mise.a.jour'));
+        setCoinExchange(null);
+      }
+    },
+    [persistCoins, pushToast, t],
+  );
+
+  // Quick ±1 on a denomination: the figure moves optimistically so the next
+  // tap reads the adjusted purse, then the same PATCH as the modal goes out.
+  const adjustCoin = useCallback(
+    (field: keyof CoinsState, delta: 1 | -1) => {
+      const next: CoinsState = { ...coins, [field]: Math.max(0, coins[field] + delta) };
+      if (next[field] === coins[field]) return; // minus on an empty pocket
+      setCoins(next);
+      void persistCoins(next);
+    },
+    [coins, persistCoins],
   );
 
   const dismissError = () => setDismissedError(error);
@@ -1413,7 +1437,12 @@ export default function CharacterInventoryPage() {
 
             {/* ---------- Coin purse (figures at rest, transactions via the modal) ---------- */}
             <section className="card p-4 sm:p-5">
-              <CoinPurse coins={coins} readOnly={!canEdit} onOpenExchange={setCoinExchange} />
+              <CoinPurse
+                coins={coins}
+                readOnly={!canEdit}
+                onOpenExchange={setCoinExchange}
+                onAdjust={adjustCoin}
+              />
             </section>
           </>
         )}
