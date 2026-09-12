@@ -16,8 +16,8 @@
  *
  * Plan « annotations » : ouvert depuis une ligne ÉDITABLE (editableEntryId),
  * la visionneuse gagne une barre d'outils — dessiner au doigt, poser du
- * texte, en régler l'épaisseur / la taille (3 crans chacun), poser des
- * tampons (mobiles, recadrables sur place), annuler, effacer, enregistrer.
+ * texte, en régler l'épaisseur / la taille au glisseur continu, poser des
+ * tampons (mobiles, recadrables en direct), annuler, effacer, enregistrer.
  * Les annotations vivent en SESSION en
  * coordonnées normalisées [0..1] (indépendantes du zoom), le composite base
  * + annotations part en JPEG à l'enregistrement : l'exemplaire devient un
@@ -190,28 +190,24 @@ const STROKE_WIDTHS = [
   { value: 9, i18n: 'image.trait.moyen' },
   { value: 16, i18n: 'image.trait.epais' },
 ];
-/** Tailles de note : diviseur de la largeur affichée (grand ≈ 7 caractères
-    par largeur) + corps du glyphe « T » du sélecteur. Indexées 0..2. */
-const TEXT_SIZES = [
-  { divisor: 32, glyph: 13, i18n: 'image.texte.petit' },
-  { divisor: 22, glyph: 17, i18n: 'image.texte.moyen' },
-  { divisor: 14, glyph: 22, i18n: 'image.texte.grand' },
-];
-const DEFAULT_TEXT_SIZE = 1;
-/** Tailles de tampon : fraction de la largeur de l'image + côté du glyphe
-    carré du sélecteur. Indexées 0..2. */
-const STAMP_SIZES = [
-  { value: 0.08, glyph: 10, i18n: 'image.tampon.petit' },
-  { value: 0.13, glyph: 14, i18n: 'image.tampon.moyen' },
-  { value: 0.2, glyph: 18, i18n: 'image.tampon.grand' },
-];
-const DEFAULT_STAMP_SIZE = 1;
+/** Bornes du glisseur de taille de note : fraction de la largeur affichée.
+    Petit = 4× plus petit que l'ancien cran « ÷32 » ; grand = l'ancien ÷14.
+    Le glisseur est continu (step « any ») — la fraction exacte choisie
+    voyage avec la note jusqu'au composite. */
+const TEXT_SIZE_MIN = 1 / 128;
+const TEXT_SIZE_MAX = 1 / 14;
+const DEFAULT_TEXT_SIZE = 1 / 22; // l'ancien cran moyen
+/** Tailles de tampon : côté en fraction de la largeur de l'image — mêmes
+    bornes que le glisseur (2 % = 4× l'ancien petit de 8 % ; max 20 % inchangé). */
+const STAMP_SIZE_MIN = 0.02;
+const STAMP_SIZE_MAX = 0.2;
+const DEFAULT_STAMP_SIZE = 0.13; // l'ancien cran moyen
 
-/** Taille de texte relative à l'image affichée — `size` indexe TEXT_SIZES
-    (les notes en session portent toujours leur cran ; repli = moyen). */
+/** Taille de texte relative à l'image affichée — `size` est la fraction
+    choisie au glisseur ; proportionnelle pure, sans plancher : l'aperçu et
+    le composite rendent exactement la même chose à n'importe quelle échelle. */
 function textFontSize(displayedWidth: number, size: number = DEFAULT_TEXT_SIZE): number {
-  const { divisor } = TEXT_SIZES[size] ?? TEXT_SIZES[DEFAULT_TEXT_SIZE];
-  return Math.max(10, Math.round(displayedWidth / divisor));
+  return Math.round(displayedWidth * size);
 }
 
 /**
@@ -742,22 +738,20 @@ export function ItemImageViewer({
     </button>
   );
 
-  // Cran effectif de la pilule des tailles de tampon : celui du tampon
-  // sélectionné (le recadrage sur place), sinon la taille du prochain posé.
-  const stampSizeIndex = (() => {
-    if (selectedStampId == null) return stampSize;
-    const sel = annotations.find(
-      (x): x is Extract<Annotation, { kind: 'stamp' }> =>
-        x.kind === 'stamp' && x.id === selectedStampId,
-    );
-    const idx = sel ? STAMP_SIZES.findIndex((x) => x.value === sel.size) : -1;
-    return idx === -1 ? stampSize : idx;
-  })();
+  // Taille effective du glisseur tampon : celle du tampon sélectionné (le
+  // recadrage suit le glissement en direct), sinon la taille du prochain posé.
+  const selectedStamp =
+    selectedStampId == null
+      ? undefined
+      : annotations.find(
+          (x): x is Extract<Annotation, { kind: 'stamp' }> =>
+            x.kind === 'stamp' && x.id === selectedStampId,
+        );
+  const stampSizeValue = selectedStamp?.size ?? stampSize;
 
-  const applyStampSize = (index: number) => {
-    setStampSize(index);
+  const applyStampSize = (value: number) => {
+    setStampSize(value);
     if (selectedStampId != null) {
-      const value = STAMP_SIZES[index].value;
       setAnnotations((list) =>
         list.map((x) =>
           x.kind === 'stamp' && x.id === selectedStampId ? { ...x, size: value } : x,
@@ -1025,7 +1019,7 @@ export function ItemImageViewer({
           if (movedRef.current) return; // c'était un glissé raté, pas une tape
           const p = normalizePoint(e.clientX, e.clientY);
           if (p) {
-            const half = STAMP_SIZES[stampSize].value / 2;
+            const half = stampSize / 2;
             setAnnotations((list) => [
               ...list,
               {
@@ -1034,7 +1028,7 @@ export function ItemImageViewer({
                 nx: Math.min(1 - half, Math.max(half, p[0])),
                 ny: Math.min(1 - half, Math.max(half, p[1])),
                 key: stampKey,
-                size: STAMP_SIZES[stampSize].value,
+                size: stampSize,
               },
             ]);
           }
@@ -1315,75 +1309,87 @@ export function ItemImageViewer({
                   </button>
                 ))}
               </div>
-              {/* Taille : recadre le tampon sélectionné sur place, sinon règle
-                  le prochain posé — mêmes 44px états pressés que le trait. */}
-              <div className="pointer-events-auto flex items-center gap-1 rounded-full bg-ink-900/70 p-1.5 backdrop-blur">
-                {STAMP_SIZES.map((s, i) => (
-                  <button
-                    type="button"
-                    key={s.i18n}
-                    aria-label={t(s.i18n)}
-                    aria-pressed={stampSizeIndex === i}
-                    onClick={() => applyStampSize(i)}
-                    className={`flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-white/10 ${
-                      stampSizeIndex === i ? 'bg-white/20' : ''
-                    }`}
-                  >
-                    <span
-                      aria-hidden="true"
-                      className="rounded-[3px] bg-parchment-50"
-                      style={{ width: s.glyph, height: s.glyph }}
-                    />
-                  </button>
-                ))}
+              {/* Taille : glisseur continu — recadre le tampon sélectionné en
+                  direct pendant le glissement, sinon règle le prochain posé.
+                  Bornes en ‰ de la largeur ; carrés en guise de mini/maxi. */}
+              <div className="pointer-events-auto flex h-11 w-60 items-center gap-3 rounded-full bg-ink-900/70 px-4 backdrop-blur">
+                <span
+                  aria-hidden="true"
+                  className="h-2 w-2 shrink-0 rounded-[2px] bg-parchment-50/70"
+                />
+                <input
+                  type="range"
+                  min={STAMP_SIZE_MIN}
+                  max={STAMP_SIZE_MAX}
+                  step="any"
+                  value={stampSizeValue}
+                  onChange={(e) => applyStampSize(Number(e.target.value))}
+                  aria-label={t('image.taille.tampon')}
+                  aria-valuetext={`${Math.round(stampSizeValue * 100)} %`}
+                  className="h-11 flex-1 accent-gold-300"
+                />
+                <span
+                  aria-hidden="true"
+                  className="h-4 w-4 shrink-0 rounded-[3px] bg-parchment-50"
+                />
               </div>
             </>
           )}
           {(tool === 'draw' || tool === 'text') && (
             <>
-              {/* Taille : 3 crans discrets au-dessus des couleurs — l'épaisseur
-                  du pinceau en dessin, le corps du texte en écriture. Une pilule
-                  par rôle (≤ 3 boutons de 44px) : tient dans un écran 320px. */}
-              <div className="pointer-events-auto flex items-center gap-1 rounded-full bg-ink-900/70 p-1.5 backdrop-blur">
-                {tool === 'draw'
-                  ? STROKE_WIDTHS.map((w) => (
-                      <button
-                        type="button"
-                        key={w.value}
-                        aria-label={t(w.i18n)}
-                        aria-pressed={strokeWidth === w.value}
-                        onClick={() => setStrokeWidth(w.value)}
-                        className={`flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-white/10 ${
-                          strokeWidth === w.value ? 'bg-white/20' : ''
-                        }`}
-                      >
-                        <span
-                          className="w-5 rounded-full bg-parchment-50"
-                          style={{ height: Math.max(3, w.value) }}
-                        />
-                      </button>
-                    ))
-                  : TEXT_SIZES.map((s, i) => (
-                      <button
-                        type="button"
-                        key={s.i18n}
-                        aria-label={t(s.i18n)}
-                        aria-pressed={textSize === i}
-                        onClick={() => setTextSize(i)}
-                        className={`flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-white/10 ${
-                          textSize === i ? 'bg-white/20' : ''
-                        }`}
-                      >
-                        <span
-                          aria-hidden="true"
-                          className="font-display leading-none font-bold text-parchment-50"
-                          style={{ fontSize: s.glyph }}
-                        >
-                          T
-                        </span>
-                      </button>
-                    ))}
-              </div>
+              {/* Épaisseur du pinceau : 3 crans discrets, mêmes 44px états
+                  pressés que le reste de la barre. */}
+              {tool === 'draw' && (
+                <div className="pointer-events-auto flex items-center gap-1 rounded-full bg-ink-900/70 p-1.5 backdrop-blur">
+                  {STROKE_WIDTHS.map((w) => (
+                    <button
+                      type="button"
+                      key={w.value}
+                      aria-label={t(w.i18n)}
+                      aria-pressed={strokeWidth === w.value}
+                      onClick={() => setStrokeWidth(w.value)}
+                      className={`flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-white/10 ${
+                        strokeWidth === w.value ? 'bg-white/20' : ''
+                      }`}
+                    >
+                      <span
+                        className="w-5 rounded-full bg-parchment-50"
+                        style={{ height: Math.max(3, w.value) }}
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+              {/* Taille du texte : glisseur continu — la fraction choisie
+                  voyage avec la note jusqu'au composite. T en guise de
+                  mini/maxi, or sur la piste pour rester dans le monde. */}
+              {tool === 'text' && (
+                <div className="pointer-events-auto flex h-11 w-60 items-center gap-3 rounded-full bg-ink-900/70 px-4 backdrop-blur">
+                  <span
+                    aria-hidden="true"
+                    className="font-display text-[11px] leading-none text-parchment-50/70"
+                  >
+                    T
+                  </span>
+                  <input
+                    type="range"
+                    min={TEXT_SIZE_MIN}
+                    max={TEXT_SIZE_MAX}
+                    step="any"
+                    value={textSize}
+                    onChange={(e) => setTextSize(Number(e.target.value))}
+                    aria-label={t('image.taille.texte')}
+                    aria-valuetext={`${Math.round(textSize * 100)} %`}
+                    className="h-11 flex-1 accent-gold-300"
+                  />
+                  <span
+                    aria-hidden="true"
+                    className="font-display text-xl leading-none text-parchment-50"
+                  >
+                    T
+                  </span>
+                </div>
+              )}
               <div className="pointer-events-auto flex items-center gap-1 rounded-full bg-ink-900/70 p-1.5 backdrop-blur">
                 {STROKE_COLORS.map((c) => (
                   <button

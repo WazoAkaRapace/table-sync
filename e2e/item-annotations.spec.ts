@@ -10,7 +10,7 @@
  * tourne après celle-ci (ordre alphabétique, état partagé).
  */
 
-import type { Page } from 'playwright/test';
+import type { Locator, Page } from 'playwright/test';
 import { expect } from 'playwright/test';
 import { API_BASE } from './env';
 import { gmTest, openTab, playerTest, seed, sheetUrl } from './fixtures';
@@ -121,6 +121,20 @@ async function getJson(path: string, token: string): Promise<any> {
   return res.json();
 }
 
+/**
+ * Positionne un input[type=range] contrôlé par React : passer par le SETTER
+ * DU PROTOTYPE — une affectation directe `el.value = …` passe par le descripteur
+ * d'React, met son tracker d'accord avec lui-même et l'onChange ne part jamais.
+ */
+async function setRange(slider: Locator, value: number): Promise<void> {
+  await slider.evaluate((el, v) => {
+    const input = el as HTMLInputElement;
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!;
+    setter.call(input, String(v));
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  }, value);
+}
+
 /** GET de l'octet servi d'une illustration (route token'ée). */
 async function getImageBytes(itemId: number, token: string): Promise<Buffer> {
   const res = await fetch(`${API_BASE}/api/items/${itemId}/image?token=${token}`, {
@@ -196,7 +210,7 @@ playerTest.describe('Annotations (joueuse)', () => {
   });
 
   playerTest(
-    'pinceau et taille de texte : trois crans, gardés par annotation',
+    'pinceau à crans, taille de texte au glisseur — gardées par annotation',
     async ({ page }) => {
       const dialog = await openCroquisViewer(page);
       const box = await dialog.locator('img').boundingBox();
@@ -217,30 +231,31 @@ playerTest.describe('Annotations (joueuse)', () => {
       await page.mouse.move(box!.x + box!.width * 0.8, box!.y + box!.height * 0.6, { steps: 6 });
       await page.mouse.up();
 
-      // T Taille : chaque note garde SON cran — grand ≈ largeur/14, petit ≈ /32.
-      // (Valider une note rend la main au navigateur : re-choisir Écrire pour
-      // la deuxième.)
+      // T Taille : glisseur continu — chaque note garde SA fraction
+      // (max = largeur/14, min = largeur/128). Valider une note rend la main
+      // au navigateur : re-choisir Écrire pour la deuxième.
+      const slider = dialog.getByRole('slider', { name: 'Taille du texte' });
       const fontSizeOf = async (text: string) => {
         const note = dialog.getByText(text, { exact: true });
         await expect(note).toBeVisible();
         return note.evaluate((el) => Number.parseFloat(getComputedStyle(el).fontSize));
       };
       await dialog.getByRole('button', { name: 'Écrire' }).click();
-      await dialog.getByRole('button', { name: 'Texte grand' }).click();
+      await setRange(slider, 1 / 14);
       await page.mouse.click(box!.x + box!.width * 0.5, box!.y + box!.height * 0.2);
       await dialog.getByLabel('Texte de la note').fill('Grand');
       await dialog.getByLabel('Texte de la note').press('Enter');
       const grandPx = await fontSizeOf('Grand');
-      expect(grandPx, 'texte grand ≈ largeur/14').toBeGreaterThan(box!.width / 16);
+      expect(grandPx, 'texte au max du glisseur ≈ largeur/14').toBeGreaterThan(box!.width / 16);
 
       await dialog.getByRole('button', { name: 'Écrire' }).click();
-      await dialog.getByRole('button', { name: 'Texte petit' }).click();
+      await setRange(slider, 1 / 128);
       await page.mouse.click(box!.x + box!.width * 0.5, box!.y + box!.height * 0.85);
       await dialog.getByLabel('Texte de la note').fill('petit');
       await dialog.getByLabel('Texte de la note').press('Enter');
       const petitPx = await fontSizeOf('petit');
-      expect(petitPx, 'texte petit ≈ largeur/32').toBeLessThan(box!.width / 24);
-      expect(petitPx, 'les deux crans diffèrent réellement').toBeLessThan(grandPx / 1.8);
+      expect(petitPx, 'texte au min du glisseur ≈ largeur/128').toBeLessThan(box!.width / 24);
+      expect(petitPx, 'les deux bornes diffèrent réellement').toBeLessThan(grandPx / 1.8);
     },
   );
 
@@ -265,9 +280,9 @@ playerTest.describe('Annotations (joueuse)', () => {
     await page.mouse.click(box!.x + box!.width * 0.5, box!.y + box!.height * 0.3);
     await expect(stamp).toHaveAttribute('data-selected', 'true');
 
-    // Recadrage SUR PLACE : moyen (défaut) → grand, la largeur suit les ‰.
+    // Recadrage SUR PLACE via le glisseur : moyen (défaut) → max, la largeur suit.
     const widthBefore = (await stamp.boundingBox())!.width;
-    await dialog.getByRole('button', { name: 'Tampon grand' }).click();
+    await setRange(dialog.getByRole('slider', { name: 'Taille du tampon' }), 0.2);
     await expect(stamp).toHaveAttribute('data-selected', 'true'); // le recadrage garde la sélection
     const widthAfter = (await stamp.boundingBox())!.width;
     expect(widthAfter, 'le tampon grandit sur place').toBeGreaterThan(widthBefore * 1.4);
