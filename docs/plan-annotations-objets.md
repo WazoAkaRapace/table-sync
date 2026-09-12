@@ -51,6 +51,7 @@ Toujours zéro octet dans les payloads JSON ; l'upload n'a lieu qu'au clic Enreg
 | 🖐 Naviguer | mode par défaut — pan/zoom existant (double-tape 2,5×) |
 | ✏️ Dessiner | doigt = trait ; palette 4 pastilles : `blood-600`, `ink-900`, `gold-500`, `parchment-50` (blanc pour les zones sombres) ; 3 épaisseurs (fin 4 / moyen 9 / épais 16, pour-mille de la largeur — moyen par défaut) ; retour au navigateur par re-tape |
 | **T** Écrire | tape = pose un point d'insertion → champ de saisie flottant au-dessus du clavier → Entrée valide, le texte se rend au point tapé (police italique existante — pas de police nouvelle) ; 3 tailles de note (petit ÷32 / moyen ÷22 / grand ÷14 de la largeur affichée — moyen par défaut), chaque note garde son cran |
+| 📍 Tampons | galerie défilante de symboles SVG (`public/stamps/*.svg`, 1080×1080, teintes conçues — précache SW donc hors ligne) ; tape la carte = pose centrée au point tapé et le mode reste actif ; tape un tampon = sélection (anneau or) → la pilule des tailles le recadre SUR PLACE (petit 8 % / moyen 13 % / grand 20 % de la largeur) ; glissé = déplacement (même ancrage que les notes, centre borné à l'image) ; chaque tampon garde son cran jusqu'au composite |
 | ↩︎ | annule le dernier trait/texte (pile mémoire de session) |
 | 🗑 | tout effacer — ConfirmButton, la signature maison |
 | Enregistrer | composite base + annotations → `downscaleImage` (max 1280, JPEG 0.85) → `POST …/annotation` ; état « Enregistrement… » ; toast d'erreur ciblé + l'annoté reste en session (jamais de perte silencieuse) |

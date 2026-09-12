@@ -244,6 +244,50 @@ playerTest.describe('Annotations (joueuse)', () => {
     },
   );
 
+  playerTest('tampons : pose, sélection, recadrage sur place, déplacement', async ({ page }) => {
+    const dialog = await openCroquisViewer(page);
+    const box = await dialog.locator('img').boundingBox();
+    expect(box, 'image bounding box').not.toBeNull();
+
+    // L'outil Tampons est au rendez-vous, gobelin présélectionné.
+    await dialog.getByRole('button', { name: 'Tampons' }).click();
+    await expect(dialog.getByRole('button', { name: 'Gobelin' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+
+    // Tape sur l'image : le tampon se pose, et le mode reste actif.
+    await page.mouse.click(box!.x + box!.width * 0.5, box!.y + box!.height * 0.3);
+    const stamp = dialog.locator('img[data-stamp-id]');
+    await expect(stamp).toHaveCount(1);
+
+    // Re-tape sur le tampon : sélection (anneau or, pilule des tailles active).
+    await page.mouse.click(box!.x + box!.width * 0.5, box!.y + box!.height * 0.3);
+    await expect(stamp).toHaveAttribute('data-selected', 'true');
+
+    // Recadrage SUR PLACE : moyen (défaut) → grand, la largeur suit les ‰.
+    const widthBefore = (await stamp.boundingBox())!.width;
+    await dialog.getByRole('button', { name: 'Tampon grand' }).click();
+    await expect(stamp).toHaveAttribute('data-selected', 'true'); // le recadrage garde la sélection
+    const widthAfter = (await stamp.boundingBox())!.width;
+    expect(widthAfter, 'le tampon grandit sur place').toBeGreaterThan(widthBefore * 1.4);
+
+    // Déplacement : le tampon suit le pointeur d'environ son delta (1×).
+    const nb = (await stamp.boundingBox())!;
+    await page.mouse.move(nb.x + nb.width / 2, nb.y + nb.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(nb.x + nb.width / 2 + 30, nb.y + nb.height / 2 + 24, { steps: 6 });
+    await page.mouse.up();
+    const afterBox = (await stamp.boundingBox())!;
+    expect(afterBox.x - nb.x, 'déplacement horizontal').toBeGreaterThanOrEqual(26);
+    expect(afterBox.y - nb.y, 'déplacement vertical').toBeGreaterThanOrEqual(20);
+    await expect(stamp, 'le glissé ne dé-sélectionne pas').toHaveAttribute('data-selected', 'true');
+
+    // Enregistrer : le composite part avec le tampon.
+    await dialog.getByRole('button', { name: 'Enregistrer' }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+  });
+
   playerTest('annuler et effacer vident la session, fermer protège', async ({ page }) => {
     const dialog = await openCroquisViewer(page);
     const box = await dialog.locator('img').boundingBox();

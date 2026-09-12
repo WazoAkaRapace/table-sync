@@ -16,8 +16,9 @@
  *
  * Plan « annotations » : ouvert depuis une ligne ÉDITABLE (editableEntryId),
  * la visionneuse gagne une barre d'outils — dessiner au doigt, poser du
- * texte, en régler l'épaisseur / la taille (3 crans chacun), annuler,
- * effacer, enregistrer. Les annotations vivent en SESSION en
+ * texte, en régler l'épaisseur / la taille (3 crans chacun), poser des
+ * tampons (mobiles, recadrables sur place), annuler, effacer, enregistrer.
+ * Les annotations vivent en SESSION en
  * coordonnées normalisées [0..1] (indépendantes du zoom), le composite base
  * + annotations part en JPEG à l'enregistrement : l'exemplaire devient un
  * objet dérivé côté API (voir item-images.ts). Le dashboard MD ouvre sans
@@ -29,6 +30,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import api, { itemImageUrl } from '../api';
+import { STAMPS, type StampKey, stampUrl } from './stamps';
 import { ConfirmButton } from './ui';
 
 // ---------- Vignette en châssis (panneau déplié) ----------
@@ -143,7 +145,7 @@ interface View {
 
 const VIEW_1X: View = { scale: 1, x: 0, y: 0 };
 
-type Tool = 'navigate' | 'draw' | 'text';
+type Tool = 'navigate' | 'draw' | 'text' | 'stamp';
 
 /** Annotations de session — coordonnées normalisées [0..1] sur l'image. */
 type StrokeAnnotation = {
@@ -152,8 +154,19 @@ type StrokeAnnotation = {
   color: string;
   width: number;
 };
+type StampAnnotation = {
+  kind: 'stamp';
+  id: number;
+  /** Centre du tampon (normalisé) — le rendu et le composite dessinent centré. */
+  nx: number;
+  ny: number;
+  key: StampKey;
+  /** Largeur du tampon en fraction de la largeur de l'image (carré). */
+  size: number;
+};
 type Annotation =
   | StrokeAnnotation
+  | StampAnnotation
   | {
       kind: 'text';
       id: number;
@@ -185,6 +198,14 @@ const TEXT_SIZES = [
   { divisor: 14, glyph: 22, i18n: 'image.texte.grand' },
 ];
 const DEFAULT_TEXT_SIZE = 1;
+/** Tailles de tampon : fraction de la largeur de l'image + côté du glyphe
+    carré du sélecteur. Indexées 0..2. */
+const STAMP_SIZES = [
+  { value: 0.08, glyph: 10, i18n: 'image.tampon.petit' },
+  { value: 0.13, glyph: 14, i18n: 'image.tampon.moyen' },
+  { value: 0.2, glyph: 18, i18n: 'image.tampon.grand' },
+];
+const DEFAULT_STAMP_SIZE = 1;
 
 /** Taille de texte relative à l'image affichée — `size` indexe TEXT_SIZES
     (les notes en session portent toujours leur cran ; repli = moyen). */
@@ -225,6 +246,13 @@ function noteIdFromTarget(target: EventTarget | null): number | null {
   return el ? Number(el.getAttribute('data-note-id')) : null;
 }
 
+/** Id du tampon visé (img draggable), sinon null. */
+function stampIdFromTarget(target: EventTarget | null): number | null {
+  if (!(target instanceof Element)) return null;
+  const el = target.closest('[data-stamp-id]');
+  return el ? Number(el.getAttribute('data-stamp-id')) : null;
+}
+
 export function ItemImageViewer({
   name,
   src,
@@ -251,6 +279,10 @@ export function ItemImageViewer({
   // Défaut au cran moyen : l'annotation doit se lire de l'autre bout de la table.
   const [strokeWidth, setStrokeWidth] = useState(STROKE_WIDTHS[1].value);
   const [textSize, setTextSize] = useState(DEFAULT_TEXT_SIZE);
+  const [stampKey, setStampKey] = useState<StampKey>(STAMPS[0].key);
+  const [stampSize, setStampSize] = useState(DEFAULT_STAMP_SIZE);
+  // Tampon sélectionné (tape) : la pilule des tailles le recadre sur place.
+  const [selectedStampId, setSelectedStampId] = useState<number | null>(null);
   const [pendingText, setPendingText] = useState<{
     nx: number;
     ny: number;
@@ -505,6 +537,28 @@ export function ItemImageViewer({
       ctx.drawImage(img, 0, 0);
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
+      // Tampons : décodage AVANT le tracé — un SVG demandé au vol qui ne serait
+      // pas prêt se dessinerait à vide (bande manquante, leçon du fixture PNG).
+      const stampImages = new Map<string, HTMLImageElement>();
+      for (const a of annotationsRef.current) {
+        if (a.kind === 'stamp' && !stampImages.has(a.key)) {
+          const stampImg = new Image();
+          stampImg.src = stampUrl(a.key);
+          stampImages.set(a.key, stampImg);
+        }
+      }
+      await Promise.all(
+        [...stampImages.values()].map(
+          (stampImg) =>
+            new Promise<void>((resolve) => {
+              if (stampImg.complete) resolve();
+              else {
+                stampImg.onload = () => resolve();
+                stampImg.onerror = () => resolve();
+              }
+            }),
+        ),
+      );
       for (const a of annotationsRef.current) {
         if (a.kind === 'stroke') {
           ctx.strokeStyle = a.color;
@@ -519,6 +573,17 @@ export function ItemImageViewer({
           ctx.beginPath();
           for (const [nx, ny] of a.points) ctx.lineTo(nx * W, ny * H);
           ctx.stroke();
+        } else if (a.kind === 'stamp') {
+          const stampImg = stampImages.get(a.key);
+          if (stampImg) {
+            const s = a.size * W;
+            ctx.save();
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            ctx.shadowBlur = 3;
+            ctx.shadowOffsetY = 2;
+            ctx.drawImage(stampImg, a.nx * W - s / 2, a.ny * H - s / 2, s, s);
+            ctx.restore();
+          }
         } else {
           const fontPx = textFontSize(W, a.size);
           ctx.font = `italic ${fontPx}px ui-serif, Georgia, serif`;
@@ -585,6 +650,23 @@ export function ItemImageViewer({
     noteNx: number;
     noteNy: number;
   } | null>(null);
+  // Tampon attrapé : même ancrage que la note, mais la remontée sans vrai
+  // mouvement compte comme une tape → sélection (le glissé reste un déplacement).
+  const dragStampRef = useRef<{
+    id: number;
+    pointerNx: number;
+    pointerNy: number;
+    stampNx: number;
+    stampNy: number;
+  } | null>(null);
+  // Glissé-défilement de la galerie de tampons : le touch-none de la racine
+  // désactive le pan natif, la pilule gère le sien à la main.
+  const galleryDragRef = useRef<{
+    pointerId: number;
+    startX: number;
+    startScroll: number;
+    moved: boolean;
+  } | null>(null);
 
   // ---------- Pince à deux doigts (zoom + pan natifs) ----------
   // Pointeurs suivis (hors chrome d'annotation) + ancrage du geste capturé au
@@ -650,6 +732,7 @@ export function ItemImageViewer({
         setTool(toolId);
         setPendingText(null);
         setDraft('');
+        setSelectedStampId(null);
       }}
       className={`flex h-11 w-11 items-center justify-center rounded-full text-lg text-parchment-50 transition-colors hover:bg-white/10 ${
         tool === toolId ? 'bg-white/20' : ''
@@ -658,6 +741,30 @@ export function ItemImageViewer({
       {glyph}
     </button>
   );
+
+  // Cran effectif de la pilule des tailles de tampon : celui du tampon
+  // sélectionné (le recadrage sur place), sinon la taille du prochain posé.
+  const stampSizeIndex = (() => {
+    if (selectedStampId == null) return stampSize;
+    const sel = annotations.find(
+      (x): x is Extract<Annotation, { kind: 'stamp' }> =>
+        x.kind === 'stamp' && x.id === selectedStampId,
+    );
+    const idx = sel ? STAMP_SIZES.findIndex((x) => x.value === sel.size) : -1;
+    return idx === -1 ? stampSize : idx;
+  })();
+
+  const applyStampSize = (index: number) => {
+    setStampSize(index);
+    if (selectedStampId != null) {
+      const value = STAMP_SIZES[index].value;
+      setAnnotations((list) =>
+        list.map((x) =>
+          x.kind === 'stamp' && x.id === selectedStampId ? { ...x, size: value } : x,
+        ),
+      );
+    }
+  };
 
   return createPortal(
     <div
@@ -670,11 +777,13 @@ export function ItemImageViewer({
           ? 'cursor-crosshair'
           : tool === 'text'
             ? 'cursor-text'
-            : zoomed
-              ? panning
-                ? 'cursor-grabbing'
-                : 'cursor-grab'
-              : 'cursor-zoom-in'
+            : tool === 'stamp'
+              ? 'cursor-copy'
+              : zoomed
+                ? panning
+                  ? 'cursor-grabbing'
+                  : 'cursor-grab'
+                : 'cursor-zoom-in'
       }`}
       onPointerDown={(e) => {
         if (isAnnotationUI(e.target)) return;
@@ -691,6 +800,7 @@ export function ItemImageViewer({
           }
           dragRef.current = null;
           dragNoteRef.current = null;
+          dragStampRef.current = null;
           setPanning(false);
           movedRef.current = true;
           anchorPinch();
@@ -714,6 +824,27 @@ export function ItemImageViewer({
               noteNy: note.ny,
             };
             movedRef.current = true; // la remontée ne compte jamais pour une tape
+          }
+          return;
+        }
+        // Tampon attrapé : même glissé ancré que les notes, mais la remontée
+        // SANS mouvement compte comme une tape → sélection (recadrage).
+        const stampId = stampIdFromTarget(e.target);
+        if (stampId != null) {
+          const stamp = annotationsRef.current.find(
+            (x): x is Extract<Annotation, { kind: 'stamp' }> =>
+              x.kind === 'stamp' && x.id === stampId,
+          );
+          const p = normalizePoint(e.clientX, e.clientY);
+          if (stamp && p) {
+            dragStampRef.current = {
+              id: stampId,
+              pointerNx: p[0],
+              pointerNy: p[1],
+              stampNx: stamp.nx,
+              stampNy: stamp.ny,
+            };
+            movedRef.current = false;
           }
           return;
         }
@@ -751,6 +882,34 @@ export function ItemImageViewer({
           }
           return;
         }
+        // Tampon en déplacement : même ancrage que la note, mais le geste ne
+        // devient un déplacement qu'après un vrai mouvement — sinon la remontée
+        // sera une tape de sélection. Le centre reste dans l'image (marge =
+        // demi-tampon) : l'aperçu et le composite montrent la même pose.
+        const dragStamp = dragStampRef.current;
+        if (dragStamp != null) {
+          const p = normalizePoint(e.clientX, e.clientY);
+          if (p) {
+            const dx = p[0] - dragStamp.pointerNx;
+            const dy = p[1] - dragStamp.pointerNy;
+            if (!movedRef.current && Math.hypot(dx, dy) > 0.01) movedRef.current = true;
+            if (movedRef.current) {
+              const stamp = annotationsRef.current.find(
+                (x): x is Extract<Annotation, { kind: 'stamp' }> =>
+                  x.kind === 'stamp' && x.id === dragStamp.id,
+              );
+              const half = stamp ? stamp.size / 2 : 0;
+              const nx = Math.min(1 - half, Math.max(half, dragStamp.stampNx + dx));
+              const ny = Math.min(1 - half, Math.max(half, dragStamp.stampNy + dy));
+              setAnnotations((list) =>
+                list.map((x) =>
+                  x.kind === 'stamp' && x.id === dragStamp.id ? { ...x, nx, ny } : x,
+                ),
+              );
+            }
+          }
+          return;
+        }
         const active = activeStrokeRef.current;
         if (active) {
           const p = normalizePoint(e.clientX, e.clientY);
@@ -761,7 +920,15 @@ export function ItemImageViewer({
           }
           return;
         }
-        if (tool !== 'navigate') return; // dessin/écrire : le pan est coupé
+        if (tool !== 'navigate') {
+          // Tampons : mesurer le glissé — on ne pose PAS un tampon quand la
+          // remontée termine un geste de déplacement raté (le pan est coupé).
+          if (tool === 'stamp' && dragRef.current && !movedRef.current) {
+            const d = dragRef.current;
+            if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > 6) movedRef.current = true;
+          }
+          return; // dessin/écrire/tampons : le pan est coupé
+        }
         const d = dragRef.current;
         if (!d || !zoomed) return;
         const dx = e.clientX - d.x;
@@ -776,6 +943,17 @@ export function ItemImageViewer({
       onPointerUp={(e) => {
         pointersRef.current.delete(e.pointerId);
         dragNoteRef.current = null;
+        const dragStamp = dragStampRef.current;
+        dragStampRef.current = null;
+        if (dragStamp != null) {
+          // Tape (sans vrai glissé) sur un tampon, en mode tampons : bascule
+          // de la sélection — la pilule des tailles le recadre sur place.
+          // Hors mode tampons, le geste est simplement consommé.
+          if (!movedRef.current && toolRef.current === 'stamp') {
+            setSelectedStampId((cur) => (cur === dragStamp.id ? null : dragStamp.id));
+          }
+          return; // attrapé : jamais une pose, un zoom ni une fermeture
+        }
         if (pinchRef.current) {
           if (pointersRef.current.size >= 2) {
             anchorPinch(); // un doigt surnuméraire parti : réancrer sur les restants
@@ -840,6 +1018,28 @@ export function ItemImageViewer({
           }
           return;
         }
+        if (tool === 'stamp' && loaded) {
+          // Pose : le tampon courant se centre sur le point tapé, taille
+          // courante — et le mode reste actif (on en pose plusieurs de suite).
+          if (e.target !== imgRef.current) return; // pose sur l'image uniquement
+          if (movedRef.current) return; // c'était un glissé raté, pas une tape
+          const p = normalizePoint(e.clientX, e.clientY);
+          if (p) {
+            const half = STAMP_SIZES[stampSize].value / 2;
+            setAnnotations((list) => [
+              ...list,
+              {
+                kind: 'stamp',
+                id: ++noteIdRef.current,
+                nx: Math.min(1 - half, Math.max(half, p[0])),
+                ny: Math.min(1 - half, Math.max(half, p[1])),
+                key: stampKey,
+                size: STAMP_SIZES[stampSize].value,
+              },
+            ]);
+          }
+          return;
+        }
         if (tool !== 'navigate') return; // pas de fermeture/zoom hors navigateur
         const onBackdrop = e.target === e.currentTarget;
         const now = performance.now();
@@ -861,6 +1061,7 @@ export function ItemImageViewer({
       onPointerCancel={(e) => {
         pointersRef.current.delete(e.pointerId);
         dragNoteRef.current = null;
+        dragStampRef.current = null;
         if (pinchRef.current) {
           if (pointersRef.current.size >= 2) anchorPinch();
           else pinchRef.current = null;
@@ -945,6 +1146,35 @@ export function ItemImageViewer({
       {editable &&
         baseRect &&
         annotations.map((a) => {
+          if (a.kind === 'stamp') {
+            const p = projectToScreen(a.nx, a.ny);
+            if (!p) return null;
+            const s = a.size * baseRect.width * view.scale;
+            const selected = selectedStampId === a.id;
+            return (
+              <img
+                key={`stamp-${a.id}`}
+                data-stamp-id={a.id}
+                data-selected={selected || undefined}
+                src={stampUrl(a.key)}
+                alt=""
+                draggable={false}
+                className={`pointer-events-auto absolute touch-none ${
+                  selected ? 'rounded-lg ring-2 ring-gold-300' : 'cursor-move'
+                }`}
+                style={{
+                  left: p.x - s / 2,
+                  top: p.y - s / 2,
+                  width: s,
+                  height: s,
+                  // Même traitement d'ombre que les notes (textShadow) : le
+                  // tampon se détache des cartes chargées ; le composite
+                  // applique la même ombre pour que l'aperçu reste fidèle.
+                  filter: 'drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5))',
+                }}
+              />
+            );
+          }
           if (a.kind !== 'text') return null;
           const p = projectToScreen(a.nx, a.ny);
           if (!p) return null;
@@ -1031,6 +1261,84 @@ export function ItemImageViewer({
               </button>
             </p>
           )}
+          {tool === 'stamp' && (
+            <>
+              {/* Galerie des tampons : défilante (8 boutons de 44px ne tiennent
+                  pas dans 320px), chaque SVG garde sa teinte conçue. Le
+                  touch-none de la racine tue le défilement natif → glissé
+                  géré à la main (les pointer events arrivent toujours), et un
+                  glissé avale le clic qui suit pour ne pas sélectionner. */}
+              <div
+                className="pointer-events-auto flex max-w-[calc(100vw-1rem)] items-center gap-1 overflow-x-auto rounded-full bg-ink-900/70 p-1.5 backdrop-blur [scrollbar-width:none]"
+                onPointerDown={(e) => {
+                  galleryDragRef.current = {
+                    pointerId: e.pointerId,
+                    startX: e.clientX,
+                    startScroll: e.currentTarget.scrollLeft,
+                    moved: false,
+                  };
+                }}
+                onPointerMove={(e) => {
+                  const g = galleryDragRef.current;
+                  if (!g || g.pointerId !== e.pointerId || e.buttons === 0) return;
+                  const dx = e.clientX - g.startX;
+                  if (!g.moved && Math.abs(dx) > 5) g.moved = true;
+                  if (g.moved) e.currentTarget.scrollLeft = g.startScroll - dx;
+                }}
+                onPointerUp={() => {
+                  // Le ref survit à la remontée : le clic (qui part APRÈS) est
+                  // avale dans onClickCapture si le geste a défilé.
+                }}
+                onPointerCancel={() => {
+                  galleryDragRef.current = null;
+                }}
+                onClickCapture={(e) => {
+                  if (galleryDragRef.current?.moved) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    galleryDragRef.current.moved = false;
+                  }
+                }}
+              >
+                {STAMPS.map((s) => (
+                  <button
+                    type="button"
+                    key={s.key}
+                    aria-label={t(s.i18n)}
+                    aria-pressed={stampKey === s.key}
+                    onClick={() => setStampKey(s.key)}
+                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-white/10 ${
+                      stampKey === s.key ? 'bg-white/20' : ''
+                    }`}
+                  >
+                    <img src={stampUrl(s.key)} alt="" draggable={false} className="h-7 w-7" />
+                  </button>
+                ))}
+              </div>
+              {/* Taille : recadre le tampon sélectionné sur place, sinon règle
+                  le prochain posé — mêmes 44px états pressés que le trait. */}
+              <div className="pointer-events-auto flex items-center gap-1 rounded-full bg-ink-900/70 p-1.5 backdrop-blur">
+                {STAMP_SIZES.map((s, i) => (
+                  <button
+                    type="button"
+                    key={s.i18n}
+                    aria-label={t(s.i18n)}
+                    aria-pressed={stampSizeIndex === i}
+                    onClick={() => applyStampSize(i)}
+                    className={`flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-white/10 ${
+                      stampSizeIndex === i ? 'bg-white/20' : ''
+                    }`}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="rounded-[3px] bg-parchment-50"
+                      style={{ width: s.glyph, height: s.glyph }}
+                    />
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
           {(tool === 'draw' || tool === 'text') && (
             <>
               {/* Taille : 3 crans discrets au-dessus des couleurs — l'épaisseur
@@ -1103,6 +1411,7 @@ export function ItemImageViewer({
             {toolButton('navigate', t('image.outil.naviguer'), '🖐')}
             {toolButton('draw', t('image.outil.dessiner'), '✏️')}
             {toolButton('text', t('image.outil.ecrire'), 'T')}
+            {toolButton('stamp', t('image.outil.tampons'), '📍')}
             <button
               type="button"
               aria-label={t('image.annuler.la.derniere.annotation')}
@@ -1154,6 +1463,11 @@ export function ItemImageViewer({
         {loaded && tool === 'text' && !pendingText && (
           <p className="text-[11px] text-parchment-50/70">
             {t('image.touche.l.image.pour.poser.un')}
+          </p>
+        )}
+        {loaded && tool === 'stamp' && (
+          <p className="text-[11px] text-parchment-50/70">
+            {t('image.touche.la.carte.pour.poser.un.tampon')}
           </p>
         )}
       </div>
