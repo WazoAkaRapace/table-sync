@@ -16,7 +16,8 @@
  *
  * Plan « annotations » : ouvert depuis une ligne ÉDITABLE (editableEntryId),
  * la visionneuse gagne une barre d'outils — dessiner au doigt, poser du
- * texte, annuler, effacer, enregistrer. Les annotations vivent en SESSION en
+ * texte, en régler l'épaisseur / la taille (3 crans chacun), annuler,
+ * effacer, enregistrer. Les annotations vivent en SESSION en
  * coordonnées normalisées [0..1] (indépendantes du zoom), le composite base
  * + annotations part en JPEG à l'enregistrement : l'exemplaire devient un
  * objet dérivé côté API (voir item-images.ts). Le dashboard MD ouvre sans
@@ -153,7 +154,16 @@ type StrokeAnnotation = {
 };
 type Annotation =
   | StrokeAnnotation
-  | { kind: 'text'; id: number; nx: number; ny: number; text: string; color: string };
+  | {
+      kind: 'text';
+      id: number;
+      nx: number;
+      ny: number;
+      text: string;
+      color: string;
+      /** Cran de taille dans TEXT_SIZES — chaque note garde le sien. */
+      size: number;
+    };
 
 /** Palette du plan : mêmes valeurs que les tokens @theme d'index.css. */
 const STROKE_COLORS = [
@@ -164,12 +174,23 @@ const STROKE_COLORS = [
 ];
 const STROKE_WIDTHS = [
   { value: 4, i18n: 'image.trait.fin' },
-  { value: 9, i18n: 'image.trait.epais' },
+  { value: 9, i18n: 'image.trait.moyen' },
+  { value: 16, i18n: 'image.trait.epais' },
 ];
+/** Tailles de note : diviseur de la largeur affichée (grand ≈ 7 caractères
+    par largeur) + corps du glyphe « T » du sélecteur. Indexées 0..2. */
+const TEXT_SIZES = [
+  { divisor: 32, glyph: 13, i18n: 'image.texte.petit' },
+  { divisor: 22, glyph: 17, i18n: 'image.texte.moyen' },
+  { divisor: 14, glyph: 22, i18n: 'image.texte.grand' },
+];
+const DEFAULT_TEXT_SIZE = 1;
 
-/** Taille de texte relative à l'image affichée (≈ 22 caractères par largeur). */
-function textFontSize(displayedWidth: number): number {
-  return Math.max(10, Math.round(displayedWidth / 22));
+/** Taille de texte relative à l'image affichée — `size` indexe TEXT_SIZES
+    (les notes en session portent toujours leur cran ; repli = moyen). */
+function textFontSize(displayedWidth: number, size: number = DEFAULT_TEXT_SIZE): number {
+  const { divisor } = TEXT_SIZES[size] ?? TEXT_SIZES[DEFAULT_TEXT_SIZE];
+  return Math.max(10, Math.round(displayedWidth / divisor));
 }
 
 /**
@@ -227,7 +248,9 @@ export function ItemImageViewer({
   const [tool, setTool] = useState<Tool>('navigate');
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [color, setColor] = useState(STROKE_COLORS[0].value);
-  const [strokeWidth, setStrokeWidth] = useState(STROKE_WIDTHS[0].value);
+  // Défaut au cran moyen : l'annotation doit se lire de l'autre bout de la table.
+  const [strokeWidth, setStrokeWidth] = useState(STROKE_WIDTHS[1].value);
+  const [textSize, setTextSize] = useState(DEFAULT_TEXT_SIZE);
   const [pendingText, setPendingText] = useState<{
     nx: number;
     ny: number;
@@ -497,7 +520,7 @@ export function ItemImageViewer({
           for (const [nx, ny] of a.points) ctx.lineTo(nx * W, ny * H);
           ctx.stroke();
         } else {
-          const fontPx = textFontSize(W);
+          const fontPx = textFontSize(W, a.size);
           ctx.font = `italic ${fontPx}px ui-serif, Georgia, serif`;
           ctx.textBaseline = 'alphabetic';
           const tx = a.nx * W;
@@ -803,6 +826,7 @@ export function ItemImageViewer({
                 ny: pending.ny,
                 text,
                 color,
+                size: textSize,
               },
             ]);
           }
@@ -924,7 +948,7 @@ export function ItemImageViewer({
           if (a.kind !== 'text') return null;
           const p = projectToScreen(a.nx, a.ny);
           if (!p) return null;
-          const size = textFontSize(baseRect.width * view.scale);
+          const size = textFontSize(baseRect.width * view.scale, a.size);
           return (
             <span
               key={`note-${a.id}`}
@@ -1008,45 +1032,72 @@ export function ItemImageViewer({
             </p>
           )}
           {(tool === 'draw' || tool === 'text') && (
-            <div className="pointer-events-auto flex items-center gap-1 rounded-full bg-ink-900/70 p-1.5 backdrop-blur">
-              {STROKE_COLORS.map((c) => (
-                <button
-                  type="button"
-                  key={c.value}
-                  aria-label={t('image.couleur.c.label', { c_label: t(c.i18n) })}
-                  aria-pressed={color === c.value}
-                  onClick={() => setColor(c.value)}
-                  className="flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-white/10"
-                >
-                  <span
-                    className={`h-6 w-6 rounded-full border ${
-                      color === c.value
-                        ? 'border-gold-300 ring-2 ring-gold-300/60'
-                        : 'border-white/30'
-                    }`}
-                    style={{ backgroundColor: c.value }}
-                  />
-                </button>
-              ))}
-              {tool === 'draw' &&
-                STROKE_WIDTHS.map((w) => (
+            <>
+              {/* Taille : 3 crans discrets au-dessus des couleurs — l'épaisseur
+                  du pinceau en dessin, le corps du texte en écriture. Une pilule
+                  par rôle (≤ 3 boutons de 44px) : tient dans un écran 320px. */}
+              <div className="pointer-events-auto flex items-center gap-1 rounded-full bg-ink-900/70 p-1.5 backdrop-blur">
+                {tool === 'draw'
+                  ? STROKE_WIDTHS.map((w) => (
+                      <button
+                        type="button"
+                        key={w.value}
+                        aria-label={t(w.i18n)}
+                        aria-pressed={strokeWidth === w.value}
+                        onClick={() => setStrokeWidth(w.value)}
+                        className={`flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-white/10 ${
+                          strokeWidth === w.value ? 'bg-white/20' : ''
+                        }`}
+                      >
+                        <span
+                          className="w-5 rounded-full bg-parchment-50"
+                          style={{ height: Math.max(3, w.value) }}
+                        />
+                      </button>
+                    ))
+                  : TEXT_SIZES.map((s, i) => (
+                      <button
+                        type="button"
+                        key={s.i18n}
+                        aria-label={t(s.i18n)}
+                        aria-pressed={textSize === i}
+                        onClick={() => setTextSize(i)}
+                        className={`flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-white/10 ${
+                          textSize === i ? 'bg-white/20' : ''
+                        }`}
+                      >
+                        <span
+                          aria-hidden="true"
+                          className="font-display leading-none font-bold text-parchment-50"
+                          style={{ fontSize: s.glyph }}
+                        >
+                          T
+                        </span>
+                      </button>
+                    ))}
+              </div>
+              <div className="pointer-events-auto flex items-center gap-1 rounded-full bg-ink-900/70 p-1.5 backdrop-blur">
+                {STROKE_COLORS.map((c) => (
                   <button
                     type="button"
-                    key={w.value}
-                    aria-label={t(w.i18n)}
-                    aria-pressed={strokeWidth === w.value}
-                    onClick={() => setStrokeWidth(w.value)}
-                    className={`flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-white/10 ${
-                      strokeWidth === w.value ? 'bg-white/20' : ''
-                    }`}
+                    key={c.value}
+                    aria-label={t('image.couleur.c.label', { c_label: t(c.i18n) })}
+                    aria-pressed={color === c.value}
+                    onClick={() => setColor(c.value)}
+                    className="flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-white/10"
                   >
                     <span
-                      className="w-5 rounded-full bg-parchment-50"
-                      style={{ height: Math.max(3, w.value) }}
+                      className={`h-6 w-6 rounded-full border ${
+                        color === c.value
+                          ? 'border-gold-300 ring-2 ring-gold-300/60'
+                          : 'border-white/30'
+                      }`}
+                      style={{ backgroundColor: c.value }}
                     />
                   </button>
                 ))}
-            </div>
+              </div>
+            </>
           )}
           <div className="pointer-events-auto flex items-center gap-1 rounded-full bg-ink-900/70 p-1.5 backdrop-blur">
             {toolButton('navigate', t('image.outil.naviguer'), '🖐')}
@@ -1132,7 +1183,15 @@ export function ItemImageViewer({
     if (text) {
       setAnnotations((list) => [
         ...list,
-        { kind: 'text', id: ++noteIdRef.current, nx: pending.nx, ny: pending.ny, text, color },
+        {
+          kind: 'text',
+          id: ++noteIdRef.current,
+          nx: pending.nx,
+          ny: pending.ny,
+          text,
+          color,
+          size: textSize,
+        },
       ]);
     }
     setDraft('');

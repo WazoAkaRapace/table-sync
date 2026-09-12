@@ -19,7 +19,7 @@ import { gmTest, openTab, playerTest, seed, sheetUrl } from './fixtures';
 // position (glissé de note, projection) : l'élément <img> occupe ~390px de
 // large, un déplacement du pointeur correspond au déplacement projeté à 1×.
 const REAL_PNG_400X300 = Buffer.from(
-  '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',
+  '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',
   'base64',
 );
 
@@ -194,6 +194,55 @@ playerTest.describe('Annotations (joueuse)', () => {
     const baseAfter = await getImageBytes(croquisId, seed().player.token);
     expect(baseAfter.equals(baseBefore)).toBe(true);
   });
+
+  playerTest(
+    'pinceau et taille de texte : trois crans, gardés par annotation',
+    async ({ page }) => {
+      const dialog = await openCroquisViewer(page);
+      const box = await dialog.locator('img').boundingBox();
+      expect(box, 'image bounding box').not.toBeNull();
+
+      // ✏️ Épaisseur : le cran MOYEN est présélectionné, fin/épais sont choixables.
+      await dialog.getByRole('button', { name: 'Dessiner' }).click();
+      const fin = dialog.getByRole('button', { name: 'Trait fin' });
+      const moyen = dialog.getByRole('button', { name: 'Trait moyen' });
+      const epais = dialog.getByRole('button', { name: 'Trait épais' });
+      await expect(moyen).toHaveAttribute('aria-pressed', 'true');
+      await expect(fin).toHaveAttribute('aria-pressed', 'false');
+      await epais.click();
+      await expect(epais).toHaveAttribute('aria-pressed', 'true');
+      await expect(moyen).toHaveAttribute('aria-pressed', 'false');
+      await page.mouse.move(box!.x + box!.width * 0.2, box!.y + box!.height * 0.6);
+      await page.mouse.down();
+      await page.mouse.move(box!.x + box!.width * 0.8, box!.y + box!.height * 0.6, { steps: 6 });
+      await page.mouse.up();
+
+      // T Taille : chaque note garde SON cran — grand ≈ largeur/14, petit ≈ /32.
+      // (Valider une note rend la main au navigateur : re-choisir Écrire pour
+      // la deuxième.)
+      const fontSizeOf = async (text: string) => {
+        const note = dialog.getByText(text, { exact: true });
+        await expect(note).toBeVisible();
+        return note.evaluate((el) => Number.parseFloat(getComputedStyle(el).fontSize));
+      };
+      await dialog.getByRole('button', { name: 'Écrire' }).click();
+      await dialog.getByRole('button', { name: 'Texte grand' }).click();
+      await page.mouse.click(box!.x + box!.width * 0.5, box!.y + box!.height * 0.2);
+      await dialog.getByLabel('Texte de la note').fill('Grand');
+      await dialog.getByLabel('Texte de la note').press('Enter');
+      const grandPx = await fontSizeOf('Grand');
+      expect(grandPx, 'texte grand ≈ largeur/14').toBeGreaterThan(box!.width / 16);
+
+      await dialog.getByRole('button', { name: 'Écrire' }).click();
+      await dialog.getByRole('button', { name: 'Texte petit' }).click();
+      await page.mouse.click(box!.x + box!.width * 0.5, box!.y + box!.height * 0.85);
+      await dialog.getByLabel('Texte de la note').fill('petit');
+      await dialog.getByLabel('Texte de la note').press('Enter');
+      const petitPx = await fontSizeOf('petit');
+      expect(petitPx, 'texte petit ≈ largeur/32').toBeLessThan(box!.width / 24);
+      expect(petitPx, 'les deux crans diffèrent réellement').toBeLessThan(grandPx / 1.8);
+    },
+  );
 
   playerTest('annuler et effacer vident la session, fermer protège', async ({ page }) => {
     const dialog = await openCroquisViewer(page);
