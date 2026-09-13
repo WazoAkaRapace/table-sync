@@ -583,7 +583,10 @@ export function ItemImageViewer({
         } else {
           const fontPx = textFontSize(W, a.size);
           ctx.font = `italic ${fontPx}px ui-serif, Georgia, serif`;
-          ctx.textBaseline = 'alphabetic';
+          // Ancre HAUT-GAUCHE à (nx, ny) — la même sémantique que l'aperçu
+          // (span ancré top-left) : la note enregistrée tombe pile où la
+          // note de session s'affichait, à tout zoom.
+          ctx.textBaseline = 'top';
           const tx = a.nx * W;
           const ty = a.ny * H;
           // Petit fond translucide ARRONDI (voir noteBackdrop) : la note reste
@@ -1179,8 +1182,13 @@ export function ItemImageViewer({
               data-note-id={a.id}
               className="pointer-events-auto absolute cursor-move touch-none font-body italic"
               style={{
+                // Ancre = coin HAUT-GAUCHE au point projeté, à tout zoom :
+                // `top: p.y - size` faisait flotter la note une hauteur de
+                // texte AU-DESSUS du point tapé — elle « glissait » pendant
+                // le dézoom (taille ∝ zoom) et ne se posait qu'à 1×.
                 left: p.x,
-                top: p.y - size,
+                top: p.y,
+                lineHeight: 1,
                 color: a.color,
                 fontSize: size,
                 backgroundColor: noteBackdrop(a.color),
