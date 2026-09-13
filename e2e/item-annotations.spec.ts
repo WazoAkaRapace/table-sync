@@ -303,6 +303,52 @@ playerTest.describe('Annotations (joueuse)', () => {
     await expect(page.getByRole('dialog')).toHaveCount(0);
   });
 
+  playerTest('note sélectionnable : recadrage au glisseur, comme les tampons', async ({ page }) => {
+    const dialog = await openCroquisViewer(page);
+    const box = await dialog.locator('img').boundingBox();
+    expect(box, 'image bounding box').not.toBeNull();
+
+    // Note posée au cran moyen (défaut du glisseur).
+    await dialog.getByRole('button', { name: 'Écrire' }).click();
+    await page.mouse.click(box!.x + box!.width * 0.5, box!.y + box!.height * 0.3);
+    await dialog.getByLabel('Texte de la note').fill('Recadre');
+    await dialog.getByLabel('Texte de la note').press('Enter');
+    const note = dialog.locator('span[data-note-id]');
+    await expect(note).toHaveCount(1);
+
+    // Re-choisir Écrire (valider rend la main), puis taper la note → sélection.
+    await dialog.getByRole('button', { name: 'Écrire' }).click();
+    const nb = (await note.boundingBox())!;
+    await page.mouse.click(nb.x + nb.width / 2, nb.y + nb.height / 2);
+    await expect(note).toHaveAttribute('data-selected', 'true');
+
+    // Le glisseur recadre la note EN DIRECT (moyen → max) et garde l'ancre.
+    const slider = dialog.getByRole('slider', { name: 'Taille du texte' });
+    const sizeBefore = await note.evaluate((el) =>
+      Number.parseFloat(getComputedStyle(el).fontSize),
+    );
+    await setRange(slider, 1 / 14);
+    const sizeAfter = await note.evaluate((el) => Number.parseFloat(getComputedStyle(el).fontSize));
+    expect(sizeAfter, 'la note grandit sur place').toBeGreaterThan(sizeBefore * 1.4);
+    await expect(note).toHaveAttribute('data-selected', 'true');
+
+    // Le glissé déplace la note SANS dé-sélectionner.
+    const nb2 = (await note.boundingBox())!;
+    await page.mouse.move(nb2.x + nb2.width / 2, nb2.y + nb2.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(nb2.x + nb2.width / 2 + 30, nb2.y + nb2.height / 2 + 20, { steps: 6 });
+    await page.mouse.up();
+    const nb3 = (await note.boundingBox())!;
+    expect(nb3.x - nb2.x, 'déplacement horizontal').toBeGreaterThanOrEqual(26);
+    expect(nb3.y - nb2.y, 'déplacement vertical').toBeGreaterThanOrEqual(18);
+    await expect(note).toHaveAttribute('data-selected', 'true');
+
+    // Re-tape : dé-sélection.
+    const nb4 = (await note.boundingBox())!;
+    await page.mouse.click(nb4.x + nb4.width / 2, nb4.y + nb4.height / 2);
+    await expect(dialog.locator('span[data-note-id][data-selected]')).toHaveCount(0);
+  });
+
   playerTest('annuler et effacer vident la session, fermer protège', async ({ page }) => {
     const dialog = await openCroquisViewer(page);
     const box = await dialog.locator('img').boundingBox();

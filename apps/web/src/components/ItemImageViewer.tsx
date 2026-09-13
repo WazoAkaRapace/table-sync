@@ -279,6 +279,8 @@ export function ItemImageViewer({
   const [stampSize, setStampSize] = useState(DEFAULT_STAMP_SIZE);
   // Tampon sélectionné (tape) : la pilule des tailles le recadre sur place.
   const [selectedStampId, setSelectedStampId] = useState<number | null>(null);
+  // Note sélectionnée (tape) : même recadrage en direct que les tampons.
+  const [selectedNoteId, setSelectedNoteId] = useState<number | null>(null);
   const [pendingText, setPendingText] = useState<{
     nx: number;
     ny: number;
@@ -732,6 +734,7 @@ export function ItemImageViewer({
         setPendingText(null);
         setDraft('');
         setSelectedStampId(null);
+        setSelectedNoteId(null);
       }}
       className={`flex h-11 w-11 items-center justify-center rounded-full text-lg text-parchment-50 transition-colors hover:bg-white/10 ${
         tool === toolId ? 'bg-white/20' : ''
@@ -759,6 +762,26 @@ export function ItemImageViewer({
         list.map((x) =>
           x.kind === 'stamp' && x.id === selectedStampId ? { ...x, size: value } : x,
         ),
+      );
+    }
+  };
+
+  // Même contrat pour les notes : le glisseur recadre la note sélectionnée en
+  // direct, sinon il règle la prochaine pose.
+  const selectedNote =
+    selectedNoteId == null
+      ? undefined
+      : annotations.find(
+          (x): x is Extract<Annotation, { kind: 'text' }> =>
+            x.kind === 'text' && x.id === selectedNoteId,
+        );
+  const textSizeValue = selectedNote?.size ?? textSize;
+
+  const applyTextSize = (value: number) => {
+    setTextSize(value);
+    if (selectedNoteId != null) {
+      setAnnotations((list) =>
+        list.map((x) => (x.kind === 'text' && x.id === selectedNoteId ? { ...x, size: value } : x)),
       );
     }
   };
@@ -820,7 +843,9 @@ export function ItemImageViewer({
               noteNx: note.nx,
               noteNy: note.ny,
             };
-            movedRef.current = true; // la remontée ne compte jamais pour une tape
+            // Comme les tampons : la remontée SANS mouvement compte comme une
+            // tape → sélection ; un vrai glissé reste un déplacement.
+            movedRef.current = false;
           }
           return;
         }
@@ -866,16 +891,23 @@ export function ItemImageViewer({
         }
         // Note en déplacement : delta normalisé du pointeur appliqué à l'ancre
         // de départ (borné à l'image) — insensible au zoom comme à l'échelle du
-        // rect, le composite gardera exactement la pose affichée.
+        // rect, le composite gardera exactement la pose affichée. Le geste ne
+        // devient un déplacement qu'après un vrai mouvement : sinon la remontée
+        // sera une tape de sélection (même contrat que les tampons).
         const dragNote = dragNoteRef.current;
         if (dragNote != null) {
           const p = normalizePoint(e.clientX, e.clientY);
           if (p) {
-            const nx = Math.min(1, Math.max(0, dragNote.noteNx + (p[0] - dragNote.pointerNx)));
-            const ny = Math.min(1, Math.max(0, dragNote.noteNy + (p[1] - dragNote.pointerNy)));
-            setAnnotations((list) =>
-              list.map((x) => (x.kind === 'text' && x.id === dragNote.id ? { ...x, nx, ny } : x)),
-            );
+            const dx = p[0] - dragNote.pointerNx;
+            const dy = p[1] - dragNote.pointerNy;
+            if (!movedRef.current && Math.hypot(dx, dy) > 0.01) movedRef.current = true;
+            if (movedRef.current) {
+              const nx = Math.min(1, Math.max(0, dragNote.noteNx + dx));
+              const ny = Math.min(1, Math.max(0, dragNote.noteNy + dy));
+              setAnnotations((list) =>
+                list.map((x) => (x.kind === 'text' && x.id === dragNote.id ? { ...x, nx, ny } : x)),
+              );
+            }
           }
           return;
         }
@@ -939,9 +971,19 @@ export function ItemImageViewer({
       }}
       onPointerUp={(e) => {
         pointersRef.current.delete(e.pointerId);
+        const dragNote = dragNoteRef.current;
         dragNoteRef.current = null;
         const dragStamp = dragStampRef.current;
         dragStampRef.current = null;
+        if (dragNote != null) {
+          // Tape (sans vrai glissé) sur une note, en mode écriture : bascule
+          // de la sélection — le glisseur recadre la note en direct. Hors
+          // mode écriture, le geste est simplement consommé.
+          if (!movedRef.current && toolRef.current === 'text') {
+            setSelectedNoteId((cur) => (cur === dragNote.id ? null : dragNote.id));
+          }
+          return; // attrapée : jamais une pose, un zoom ni une fermeture
+        }
         if (dragStamp != null) {
           // Tape (sans vrai glissé) sur un tampon, en mode tampons : bascule
           // de la sélection — la pilule des tailles le recadre sur place.
@@ -1176,11 +1218,15 @@ export function ItemImageViewer({
           const p = projectToScreen(a.nx, a.ny);
           if (!p) return null;
           const size = textFontSize(baseRect.width * view.scale, a.size);
+          const selected = selectedNoteId === a.id;
           return (
             <span
               key={`note-${a.id}`}
               data-note-id={a.id}
-              className="pointer-events-auto absolute cursor-move touch-none font-body italic"
+              data-selected={selected || undefined}
+              className={`pointer-events-auto absolute touch-none font-body italic ${
+                selected ? 'rounded-lg ring-2 ring-gold-300' : 'cursor-move'
+              }`}
               style={{
                 // Ancre = coin HAUT-GAUCHE au point projeté, à tout zoom :
                 // `top: p.y - size` faisait flotter la note une hauteur de
@@ -1368,9 +1414,10 @@ export function ItemImageViewer({
                   ))}
                 </div>
               )}
-              {/* Taille du texte : glisseur continu — la fraction choisie
-                  voyage avec la note jusqu'au composite. T en guise de
-                  mini/maxi, or sur la piste pour rester dans le monde. */}
+              {/* Taille du texte : glisseur continu — recadre la note
+                  sélectionnée en direct pendant le glissement, sinon règle la
+                  prochaine pose. T en guise de mini/maxi, or sur la piste pour
+                  rester dans le monde. */}
               {tool === 'text' && (
                 <div className="pointer-events-auto flex h-11 w-60 items-center gap-3 rounded-full bg-ink-900/70 px-4 backdrop-blur">
                   <span
@@ -1384,10 +1431,10 @@ export function ItemImageViewer({
                     min={TEXT_SIZE_MIN}
                     max={TEXT_SIZE_MAX}
                     step="any"
-                    value={textSize}
-                    onChange={(e) => setTextSize(Number(e.target.value))}
+                    value={textSizeValue}
+                    onChange={(e) => applyTextSize(Number(e.target.value))}
                     aria-label={t('image.taille.texte')}
-                    aria-valuetext={`${Math.round(textSize * 100)} %`}
+                    aria-valuetext={`${Math.round(textSizeValue * 100)} %`}
                     className="h-11 flex-1 accent-gold-300"
                   />
                   <span
