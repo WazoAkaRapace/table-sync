@@ -6,6 +6,7 @@ import {
   type Character,
   computeWeaponStats,
   effectiveWeaponProficiencies,
+  findMundaneByName,
   type Item,
   resolveMagicWeaponBase,
 } from '@table-sync/shared';
@@ -298,7 +299,7 @@ check('Lame solaire → épée longue exacte', s && { dmg: s.damageStr, presumed
 
 // --- Proficiency list handling ---
 check(
-  "Druide explicite: masse d'armes non qualifiée par défaut",
+  "Druide: masse d'armes qualifiée (liste SRD du druide)",
   computeWeaponStats(
     mkWeapon({
       name: 'Mace',
@@ -309,7 +310,87 @@ check(
     }),
     mkChar({ characterClass: 'Druide' }),
   )?.proficient,
+  true,
+);
+check(
+  'Druide: javeline qualifiée (liste SRD du druide)',
+  computeWeaponStats(
+    mkWeapon({
+      name: 'Javelin',
+      nameFr: 'Javeline',
+      damageDice: '1d6',
+      damageType: 'Piercing',
+      properties: ['thrown'],
+    }),
+    mkChar({ characterClass: 'Druide' }),
+  )?.proficient,
+  true,
+);
+check(
+  'Druide: dague qualifiée',
+  computeWeaponStats(
+    mkWeapon({
+      name: 'Dagger',
+      nameFr: 'Dague',
+      damageDice: '1d4',
+      damageType: 'Piercing',
+      properties: ['finesse', 'light', 'thrown'],
+    }),
+    mkChar({ characterClass: 'Druide' }),
+  )?.proficient,
+  true,
+);
+check(
+  'Druide: rapière NON qualifiée',
+  computeWeaponStats(
+    mkWeapon({
+      name: 'Rapier',
+      nameFr: 'Rapière',
+      damageDice: '1d8',
+      damageType: 'Piercing',
+      properties: ['finesse'],
+    }),
+    mkChar({ characterClass: 'Druide' }),
+  )?.proficient,
   false,
+);
+check(
+  'Clerc: dague qualifiée (armes courantes)',
+  computeWeaponStats(
+    mkWeapon({
+      name: 'Dagger',
+      nameFr: 'Dague',
+      damageDice: '1d4',
+      damageType: 'Piercing',
+      properties: ['finesse', 'light', 'thrown'],
+    }),
+    mkChar({ characterClass: 'Clerc' }),
+  )?.proficient,
+  true,
+);
+check(
+  'Payload mono-locale FR (« Dague » seul, sans clé baseWeapon) : dague qualifiée pour un Clerc',
+  computeWeaponStats(
+    mkWeapon({
+      name: 'Dague',
+      nameFr: null,
+      damageDice: '1d4',
+      damageType: 'Piercing',
+      properties: ['finesse', 'light', 'thrown'],
+    }),
+    mkChar({ characterClass: 'Clerc' }),
+  )?.proficient,
+  true,
+);
+check(
+  'Résolution bilingue : « Dague » → Dagger',
+  findMundaneByName('Dague', null)?.nameEn,
+  'Dagger',
+);
+check(
+  'Résolution bilingue : nom EN inchangé',
+  findMundaneByName('Dagger', 'Dague')?.nameEn,
+  'Dagger',
 );
 check(
   'Druide: gourdin qualifié',
