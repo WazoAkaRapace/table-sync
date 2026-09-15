@@ -1,0 +1,1 @@
+DROP INDEX `gma_npc_links_party_npc_unique`;
