@@ -62,6 +62,22 @@ function normalizeName(s: string): string {
     .trim();
 }
 
+/** Sessions across ALL entities réconciliées on one NPC — deduped (the same
+    séance may report several sightings) and in chronicle order. */
+function mergeGmaSessions(entities: GmaEntity[]): GmaEntitySessionRef[] {
+  const seen = new Set<string>();
+  const out: GmaEntitySessionRef[] = [];
+  for (const e of entities) {
+    for (const s of e.sessions) {
+      if (!seen.has(s.id)) {
+        seen.add(s.id);
+        out.push(s);
+      }
+    }
+  }
+  return out.sort((a, b) => a.ordinal - b.ordinal);
+}
+
 function gmaDateLabel(value: string | null): string | null {
   if (!value) return null;
   const d = parseSqliteDate(value);
@@ -197,11 +213,18 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
     [gmaRes],
   );
 
-  /** npcId → linked entity — feeds the card badge + « Vu en séance ». */
+  /** npcId → linked entities, oldest link first — réconciliation : un PNJ
+      peut porter une entrée GMA par séance, toutes nourrissent la même fiche. */
   const gmaByNpcId = useMemo(() => {
-    const map = new Map<number, GmaEntity>();
+    const map = new Map<number, GmaEntity[]>();
     for (const e of gmaRes?.entities ?? []) {
-      if (e.linkedNpc) map.set(e.linkedNpc.id, e);
+      if (!e.linkedNpc) continue;
+      const list = map.get(e.linkedNpc.id) ?? [];
+      list.push(e);
+      map.set(e.linkedNpc.id, list);
+    }
+    for (const list of map.values()) {
+      list.sort((a, b) => a.linkedNpc!.linkedAt.localeCompare(b.linkedNpc!.linkedAt));
     }
     return map;
   }, [gmaRes]);
@@ -220,15 +243,25 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
     [originEntity, npcs],
   );
 
-  /** Same-name suggestion: exactly one registry NPC matches the entity. */
+  /** Other entities réconciliées on the same NPC — reachable from the modal. */
+  const originSiblings = useMemo(() => {
+    if (!originEntity?.linkedNpc) return [];
+    return (gmaByNpcId.get(originEntity.linkedNpc.id) ?? []).filter(
+      (e) => e.id !== originEntity.id,
+    );
+  }, [originEntity, gmaByNpcId]);
+
+  /** Same-name suggestion: exactly one registry NPC matches the entity. An
+      already-linked match stays suggested — picking it réconcilies (GMA
+      re-catalogues the same person every session). */
   const suggestionFor = useCallback(
     (entity: GmaEntity): Npc | null => {
       const key = normalizeName(entity.name);
       if (!key) return null;
-      const matches = npcs.filter((n) => normalizeName(n.name) === key && !gmaByNpcId.has(n.id));
+      const matches = npcs.filter((n) => normalizeName(n.name) === key);
       return matches.length === 1 ? matches[0] : null;
     },
-    [npcs, gmaByNpcId],
+    [npcs],
   );
 
   const busyOrIdle = busyEntityId === null;
@@ -676,7 +709,7 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
                         <NpcCard
                           key={npc.id}
                           npc={npc}
-                          gma={gmaByNpcId.get(npc.id) ?? null}
+                          gma={gmaByNpcId.get(npc.id) ?? []}
                           partyId={partyId!}
                           canEdit={
                             isGM ||
@@ -686,7 +719,10 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
                           canDelete={isGM || npc.createdBy === user?.id}
                           onEdit={() => openEdit(npc)}
                           onDelete={() => setDeleting(npc)}
-                          onGma={() => setOriginEntity(gmaByNpcId.get(npc.id) ?? null)}
+                          onGma={() => {
+                            const list = gmaByNpcId.get(npc.id) ?? [];
+                            setOriginEntity(list[list.length - 1] ?? null);
+                          }}
                           onDetail={() => setDetailNpc(npc)}
                         />
                       ))}
@@ -787,6 +823,9 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
           entity={linkingEntity}
           npc={linkTarget}
           mayAppend={!!linkingEntity.description && canEditNpc(linkTarget)}
+          reconcileWith={(gmaByNpcId.get(linkTarget.id) ?? []).filter(
+            (e) => e.id !== linkingEntity.id,
+          )}
           busy={busyEntityId === linkingEntity.id}
           onLink={(append) => linkEntity(linkingEntity, linkTarget, append)}
           onClose={() => {
@@ -800,9 +839,8 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
       {picking && (
         <GmaNpcPickerModal
           entity={picking}
-          npcs={[...npcs]
-            .filter((n) => !gmaByNpcId.has(n.id))
-            .sort((a, b) => a.name.localeCompare(b.name, 'fr'))}
+          npcs={[...npcs].sort((a, b) => a.name.localeCompare(b.name, 'fr'))}
+          linkedBy={gmaByNpcId}
           onPick={(npc) => {
             setLinkTarget(npc);
             setPicking(null);
@@ -820,6 +858,7 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
           entity={originEntity}
           campaignTitle={gmaRes?.campaignTitle ?? ''}
           npc={originNpc}
+          siblings={originSiblings}
           busy={busyEntityId === originEntity.id}
           mayEdit={canEditNpc(originNpc)}
           mayUnlink={
@@ -829,6 +868,7 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
           }
           onPull={(append) => pullEntity(originEntity, append)}
           onUnlink={() => unlinkEntity(originEntity)}
+          onSwitchSibling={(sibling) => setOriginEntity(sibling)}
           onClose={() => setOriginEntity(null)}
         />
       )}
@@ -839,7 +879,7 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
       {detailNpc && (
         <NpcDetailModal
           npc={detailNpc}
-          gma={gmaByNpcId.get(detailNpc.id) ?? null}
+          gma={gmaByNpcId.get(detailNpc.id) ?? []}
           partyId={partyId!}
           onClose={() => setDetailNpc(null)}
         />
@@ -862,8 +902,9 @@ function NpcCard({
   onDetail,
 }: {
   npc: Npc;
-  /** Linked GM Assistant entity — drives the gold badge + « Vu en séance ». */
-  gma: GmaEntity | null;
+  /** GM Assistant entities réconciliées on this NPC — drives the gold badge
+      + « Vu en séance » (sessions merged across every sighting). */
+  gma: GmaEntity[];
   partyId: string;
   canEdit: boolean;
   /** Supprimer reste au créateur/MD — l'édition de groupe ne l'accorde pas */
@@ -983,7 +1024,7 @@ function NpcCard({
 
       {/* GM Assistant origin — glyph-only door (keeps the header clean),
           followed by « Vu en séance » when the entity has appearances */}
-      {gma && (
+      {gma.length > 0 && (
         <div className="flex items-center flex-wrap gap-1.5">
           <button
             type="button"
@@ -994,7 +1035,7 @@ function NpcCard({
           >
             <span aria-hidden="true">📜</span>
           </button>
-          <GmaSessionOrdinals sessions={gma.sessions} partyId={partyId} />
+          <GmaSessionOrdinals sessions={mergeGmaSessions(gma)} partyId={partyId} />
         </div>
       )}
 
@@ -1064,7 +1105,8 @@ function NpcDetailModal({
   onClose,
 }: {
   npc: Npc;
-  gma: GmaEntity | null;
+  /** GM Assistant entities réconciliées on this NPC (may be empty). */
+  gma: GmaEntity[];
   partyId: string;
   onClose: () => void;
 }) {
@@ -1101,7 +1143,9 @@ function NpcDetailModal({
           </p>
         )}
 
-        {gma && <GmaSessionOrdinals sessions={gma.sessions} partyId={partyId} />}
+        {gma.length > 0 && (
+          <GmaSessionOrdinals sessions={mergeGmaSessions(gma)} partyId={partyId} />
+        )}
 
         {npc.description && (
           <p className="text-sm text-ink-700 whitespace-pre-line">{npc.description}</p>
@@ -1613,6 +1657,7 @@ function GmaLinkConfirmModal({
   entity,
   npc,
   mayAppend,
+  reconcileWith,
   busy,
   onLink,
   onClose,
@@ -1621,11 +1666,14 @@ function GmaLinkConfirmModal({
   npc: Npc;
   /** Entity has a description AND the actor may edit this NPC's content. */
   mayAppend: boolean;
+  /** Other GMA entities already carried by this NPC — the link réconcilies. */
+  reconcileWith: GmaEntity[];
   busy: boolean;
   onLink: (append: boolean) => void;
   onClose: () => void;
 }) {
   const { t } = useTranslation();
+  const otherNames = reconcileWith.map((e) => `« ${e.name} »`).join(', ');
 
   return (
     <Modal
@@ -1637,6 +1685,11 @@ function GmaLinkConfirmModal({
         <p className="text-sm text-ink-600">
           {t('pnj.gma.lier.corps', { entity: entity.name, name: npc.name })}
         </p>
+        {reconcileWith.length > 0 && (
+          <p className="text-xs text-ink-600 rounded-lg border border-gold-300 bg-gold-100/60 p-2.5">
+            {t('pnj.gma.lier.reconciliation', { name: npc.name, names: otherNames })}
+          </p>
+        )}
         {mayAppend ? (
           <>
             <div className="rounded-lg border border-parchment-200 p-2.5 space-y-2 bg-parchment-50">
@@ -1696,15 +1749,22 @@ function GmaLinkConfirmModal({
 function GmaNpcPickerModal({
   entity,
   npcs,
+  linkedBy,
   onPick,
   onClose,
 }: {
   entity: GmaEntity;
   npcs: Npc[];
+  /** npcId → entities already carried by it — picking one of those
+      réconcilies (adds a sighting) rather than being refused. */
+  linkedBy: Map<number, GmaEntity[]>;
   onPick: (npc: Npc) => void;
   onClose: () => void;
 }) {
   const { t } = useTranslation();
+  const [filter, setFilter] = useState('');
+  const needle = normalizeName(filter);
+  const visible = needle ? npcs.filter((n) => normalizeName(n.name).includes(needle)) : npcs;
 
   return (
     <Modal open={true} onClose={onClose} title={t('pnj.gma.choisir.le.pnj')}>
@@ -1712,31 +1772,64 @@ function GmaNpcPickerModal({
         <p className="text-sm text-ink-600">
           {t('pnj.gma.choisir.corps', { entity: entity.name })}
         </p>
+        {npcs.length > 0 && (
+          <input
+            type="text"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            placeholder={t('pnj.rechercher.un.pnj')}
+            aria-label={t('pnj.rechercher.un.pnj')}
+            className="input w-full"
+          />
+        )}
         {npcs.length === 0 ? (
           <p className="text-sm text-ink-400">{t('pnj.gma.choisir.vide')}</p>
+        ) : visible.length === 0 ? (
+          <p className="text-sm text-ink-400">{t('pnj.aucun.resultat')}</p>
         ) : (
           <ul className="max-h-72 overflow-y-auto divide-y divide-parchment-200 -mx-1 px-1">
-            {npcs.map((n) => (
-              <li key={n.id}>
-                <button
-                  type="button"
-                  onClick={() => onPick(n)}
-                  className="w-full min-h-11 flex items-center justify-between gap-2 px-1 py-2 text-left hover:bg-parchment-100 rounded-lg"
-                >
-                  <span className="flex items-center gap-2 min-w-0">
-                    <span
-                      className={`inline-block w-2.5 h-2.5 rounded-full shrink-0 ${STATUS_DOT_CLASS[n.status]}`}
-                      title={t(`pnj.status.${n.status}`)}
-                      aria-hidden="true"
-                    />
-                    <span className="text-sm font-medium text-ink-800 truncate">{n.name}</span>
-                  </span>
-                  <span className="text-xs text-ink-400 shrink-0" aria-hidden="true">
-                    {n.isShared ? '🔗' : '🔒'}
-                  </span>
-                </button>
-              </li>
-            ))}
+            {visible.map((n) => {
+              const carriedBy = linkedBy.get(n.id) ?? [];
+              return (
+                <li key={n.id}>
+                  <button
+                    type="button"
+                    onClick={() => onPick(n)}
+                    title={
+                      carriedBy.length > 0
+                        ? t('pnj.gma.choisir.deja.lie', {
+                            names: carriedBy.map((e) => `« ${e.name} »`).join(', '),
+                          })
+                        : undefined
+                    }
+                    className="w-full min-h-11 flex items-center justify-between gap-2 px-1 py-2 text-left hover:bg-parchment-100 rounded-lg"
+                  >
+                    <span className="flex items-center gap-2 min-w-0">
+                      <span
+                        className={`inline-block w-2.5 h-2.5 rounded-full shrink-0 ${STATUS_DOT_CLASS[n.status]}`}
+                        title={t(`pnj.status.${n.status}`)}
+                        aria-hidden="true"
+                      />
+                      <span className="min-w-0">
+                        <span className="block text-sm font-medium text-ink-800 truncate">
+                          {n.name}
+                        </span>
+                        {carriedBy.length > 0 && (
+                          <span className="block text-xs text-ink-400 truncate">
+                            {t('pnj.gma.choisir.deja.lie', {
+                              names: carriedBy.map((e) => `« ${e.name} »`).join(', '),
+                            })}
+                          </span>
+                        )}
+                      </span>
+                    </span>
+                    <span className="text-xs text-ink-400 shrink-0" aria-hidden="true">
+                      {n.isShared ? '🔗' : '🔒'}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
@@ -1750,21 +1843,26 @@ function GmaOriginModal({
   entity,
   campaignTitle,
   npc,
+  siblings,
   busy,
   mayEdit,
   mayUnlink,
   onPull,
   onUnlink,
+  onSwitchSibling,
   onClose,
 }: {
   entity: GmaEntity;
   campaignTitle: string;
   npc: Npc;
+  /** Other GMA entities réconciliées on this NPC — tap to inspect one. */
+  siblings: GmaEntity[];
   busy: boolean;
   mayEdit: boolean;
   mayUnlink: boolean;
   onPull: (append: boolean) => void;
   onUnlink: () => void;
+  onSwitchSibling: (sibling: GmaEntity) => void;
   onClose: () => void;
 }) {
   const { t } = useTranslation();
@@ -1787,6 +1885,35 @@ function GmaOriginModal({
           {linkedAt && lastPullAt && ' · '}
           {lastPullAt && t('pnj.gma.origine.derniere.reprise', { date: lastPullAt })}
         </p>
+
+        {siblings.length > 0 && (
+          <div>
+            <p className="label">{t('pnj.gma.origine.aussi.liees')}</p>
+            <ul className="mt-1 divide-y divide-parchment-200">
+              {siblings.map((s) => (
+                <li key={s.id}>
+                  <button
+                    type="button"
+                    onClick={() => onSwitchSibling(s)}
+                    className="w-full min-h-11 flex items-center gap-3 py-2 text-left group"
+                  >
+                    <span className="w-8 shrink-0 text-center" aria-hidden="true">
+                      📜
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-medium text-ink-800 truncate group-hover:text-blood-600">
+                        {s.name}
+                      </span>
+                    </span>
+                    <span className="text-ink-300 group-hover:text-blood-600" aria-hidden="true">
+                      →
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {entity.sessions.length > 0 && (
           <div>

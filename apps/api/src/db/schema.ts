@@ -964,7 +964,9 @@ export const gmaPcLinks = sqliteTable(
  * Mapping local NPC ↔ GMA entity (the « PNJ repérés » link). CASCADE on the
  * NPC — we never write entities upstream, so a deleted local NPC simply
  * returns to the rail as addable again; there is no orphan to manage (unlike
- * gma_pc_links). A GMA entity links to at most one NPC, and vice versa.
+ * gma_pc_links). A GMA entity links to at most one NPC; an NPC may carry
+ * several (réconciliation — GMA re-catalogues the same person per session,
+ * every sighting joins the same registry row).
  */
 export const gmaNpcLinks = sqliteTable(
   'gma_npc_links',
@@ -988,7 +990,7 @@ export const gmaNpcLinks = sqliteTable(
     createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
   },
   (t) => [
-    unique('gma_npc_links_party_npc_unique').on(t.partyId, t.npcId),
+    // No party+npc unique: several entities reconcile onto the same NPC.
     index('idx_gma_npc_links_party').on(t.partyId),
   ],
 );

@@ -479,6 +479,40 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
     'the imported npc survives its unlink',
   );
 
+  // Réconciliation: a SECOND entity may join an npc that already carries one
+  // (GMA re-catalogues the same person every session) — one npc, n sightings.
+  r = await api(base, 'POST', `/api/parties/${party4.id}/gma/entities/ent-rahadinE/link`, {
+    token: fx.gm.token,
+    body: { npcId: zantaId },
+  });
+  eq(r.status, 201, 'reconciliation: second entity onto a carried npc 201');
+  r = await api(base, 'GET', `/api/parties/${party4.id}/gma/entities`, {
+    token: fx.gm.token,
+  });
+  eq(
+    r.data.entities.filter((e: any) => e.linkedNpc?.id === zantaId).length,
+    2,
+    'both entities reconcile onto the same npc',
+  );
+  eq(
+    srv.queryAll('SELECT * FROM gma_npc_links WHERE npc_id = ?', zantaId).length,
+    2,
+    'two link rows on one npc',
+  );
+  // Unlinking one sighting leaves the other untouched.
+  r = await api(base, 'DELETE', `/api/parties/${party4.id}/gma/entities/ent-rahadinE/link`, {
+    token: fx.gm.token,
+  });
+  eq(r.status, 200, 'unlink one reconciled sighting');
+  r = await api(base, 'GET', `/api/parties/${party4.id}/gma/entities`, {
+    token: fx.gm.token,
+  });
+  eq(
+    r.data.entities.find((e: any) => e.id === 'ent-wakangaE').linkedNpc.id,
+    zantaId,
+    'the other sighting keeps its link',
+  );
+
   // Stale-on-error: the rail keeps serving the cache through an outage.
   mock.failMode = 'down';
   r = await api(base, 'GET', `/api/parties/${party4.id}/gma/entities?refresh=1`, {
