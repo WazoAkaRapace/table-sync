@@ -60,6 +60,35 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   r = await api(base, 'GET', `/api/parties/${P}/characters`, { token: fx.outsider.token });
   eq(r.status, 403, 'list by non-member → 403');
 
+  // ---------- roster overview (tableau MD : une requête au lieu de N fiches) ----------
+  r = await api(base, 'GET', `/api/parties/${P}/roster-overview`, { token: fx.gm.token });
+  eq(r.status, 200, 'roster overview (GM)');
+  eq(r.data.overview.length, 4, 'GM overview includes hidden (Alya, Bran, Ombre, Zed)');
+  const allyaOv = r.data.overview.find((o: any) => o.characterId === fx.charAlya.id);
+  ok(allyaOv, 'overview entry per character');
+  ok(
+    typeof allyaOv.ac === 'number' && allyaOv.ac >= 1,
+    'overview carries computed AC (10 + DEX nu minimum)',
+  );
+  ok(
+    'weightPct' in allyaOv && 'foodCount' in allyaOv && 'fullWaterCount' in allyaOv,
+    'overview carries weight/food/water',
+  );
+  const overviewEtag = r.headers?.get('etag');
+  ok(!!overviewEtag, 'roster overview carries an ETag');
+  if (overviewEtag) {
+    const r304 = await api(base, 'GET', `/api/parties/${P}/roster-overview`, {
+      token: fx.gm.token,
+      headers: { 'If-None-Match': overviewEtag },
+    });
+    eq(r304.status, 304, 'roster overview revalidates to 304');
+  }
+
+  r = await api(base, 'GET', `/api/parties/${P}/roster-overview`, { token: fx.player.token });
+  eq(r.data.overview.length, 3, 'player overview hides hidden char');
+  r = await api(base, 'GET', `/api/parties/${P}/roster-overview`, { token: fx.outsider.token });
+  eq(r.status, 403, 'roster overview non-member → 403');
+
   // ---------- get single ----------
   r = await api(base, 'GET', `/api/characters/${zed.id}`, { token: fx.player.token });
   eq(r.status, 200, 'get character');

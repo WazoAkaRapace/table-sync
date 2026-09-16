@@ -54,7 +54,20 @@ export default function CastSpellSheet({
 }) {
   const { t } = useTranslation();
   const isCantrip = spell.level === 0;
-  const canUpcast = !!(spell.higherLevel || spell.higherLevel);
+  // Scalable à un niveau supérieur ? Les listes ne portent PLUS la prose
+  // (mode résumé — higherLevel null) : la réponse fait foi par les TABLES
+  // d'évolution du damage_json (dégâts/soins par emplacement), la vérité SRD
+  // structurée. La prose reste en signal secondaire (les sorts à évolution
+  // purement textuelle gardent leurs options d'upcast).
+  const scalesAtSlot = (() => {
+    try {
+      const d = spell.damageJson ? (JSON.parse(spell.damageJson) as any) : null;
+      return !!(d?.damage_at_slot_level || d?.heal_at_slot_level);
+    } catch {
+      return false;
+    }
+  })();
+  const canUpcast = !isCantrip && (scalesAtSlot || !!spell.higherLevel);
 
   // Options d'emplacement : un bouton par dépense possible — Incantation
   // (le niveau du sort + les niveaux supérieurs quand il évolue) ET, si le

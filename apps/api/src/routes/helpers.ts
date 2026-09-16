@@ -531,10 +531,8 @@ export function mapCharacterSpell(row: any, lang: AppLang = 'fr'): CharacterSpel
     duration: row.s_duration,
     concentration: row.s_concentration,
     ritual: row.s_ritual,
-    description: row.s_description,
-    description_fr: row.s_description_fr,
-    higher_level: row.s_higher_level,
-    higher_level_fr: row.s_higher_level_fr,
+    // Prose absente de la projection (mode résumé — voir LINK_WITH_SPELL) :
+    // description/higher_level restent null, le client les charge à l'ouverture.
     attack_type: row.s_attack_type,
     damage_json: row.s_damage_json,
     dc_json: row.s_dc_json,

@@ -30,6 +30,7 @@ import CastSpellSheet from '../components/CastSpellSheet';
 import { SpellProse } from '../components/SpellProse';
 import { BottomSheet, Chip, ErrorMsg } from '../components/ui';
 import { abilityShort, classNameLabel, damageType, schoolLabel } from '../i18n/labels';
+import { useResyncOnReconnect } from '../sync';
 
 interface Props {
   character: Character;
@@ -206,6 +207,9 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
   useEffect(() => {
     fetchCharSpells();
   }, [fetchCharSpells]);
+  // Rattrapage de reconnexion : onglet à état local — les sorts appris se
+  // rechargent silencieusement après un trou de connexion.
+  useResyncOnReconnect(fetchCharSpells);
 
   // Always-prepared bonus spells: cleric domain, druid circle terrain,
   // paladin oath (derived — refetched with the character)

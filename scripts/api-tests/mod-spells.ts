@@ -130,6 +130,20 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   eq(r.status, 200, 'list character spells (party member)');
   eq(r.data.spells.length, 1, 'one known spell');
   ok(r.data.spells[0].spell.name, 'joined spell payload');
+  // Régime connectivité : la liste est en RÉSUMÉ (prose à null — chargée par
+  // GET /spells/:id à l'ouverture, SpellProse) + ETag (elle redescend à CHAQUE
+  // lancé de sort via character:change — inchangée → 304).
+  eq(r.data.spells[0].spell.description, null, 'learned list serves description:null');
+  eq(r.data.spells[0].spell.higherLevel, null, 'learned list serves higherLevel:null');
+  const spellsEtag = r.headers?.get('etag');
+  ok(!!spellsEtag, 'learned spells list carries an ETag');
+  if (spellsEtag) {
+    const r304 = await api(base, 'GET', `/api/characters/${A}/spells`, {
+      token: fx.player.token,
+      headers: { 'If-None-Match': spellsEtag },
+    });
+    eq(r304.status, 304, 'learned spells list revalidates to 304');
+  }
   r = await api(base, 'GET', `/api/characters/${fx.charSecret.id}/spells`, {
     token: fx.player.token,
   });

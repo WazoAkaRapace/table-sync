@@ -1,13 +1,11 @@
 import type {
   BannedPartyUser,
-  CharacterInventory,
   CharacterSummary,
   PartyDetail,
   PartyMember,
 } from '@table-sync/shared';
 import {
   abilityModifier,
-  computeAC,
   passivePerception,
   proficiencyBonus,
   skillProficiencyLevel,
@@ -39,6 +37,18 @@ import {
 import { appLocale } from '../i18n';
 import { useResyncOnReconnect, useSyncEvent } from '../sync';
 import { activeCharactersFirst, parseSqliteDate } from '../utils';
+
+/** Vue d'ensemble du roster (GET /parties/:id/roster-overview) : par
+ *  personnage, les 4 chiffres dérivés que rend la carte du tableau MD. */
+interface RosterOverviewEntry {
+  characterId: number;
+  ac: number | null;
+  weightPct: number | null;
+  weightKg: number | null;
+  capacityKg: number | null;
+  foodCount: number;
+  fullWaterCount: number;
+}
 
 interface Transaction {
   id: number;
@@ -146,7 +156,13 @@ export default function GmDashboardPage() {
         return;
       }
       if (event.type === 'inventory:change') {
-        loadTransactions(); // chaque geste d'inventaire écrit au journal
+        // Chaque geste d'inventaire écrit au journal ET peut bouger la CA /
+        // le poids d'une carte (équipement, ration) — la vue d'ensemble est
+        // ETaguée, la re-validation inchangée repart en 304.
+        loadTransactions();
+        if (event.characterId != null) {
+          setSyncedCharacter({ id: event.characterId, n: (syncedCharacter?.n ?? 0) + 1 });
+        }
       }
     },
     [currentPartyId, syncedCharacter],
@@ -336,46 +352,45 @@ function CharactersTab({
   characters: CharacterSummary[];
   partyId: string;
   onReload: () => void;
-  /** Coup de pouce ciblé : un character:change ne rafraîche que SA fiche. */
+  /** Coup de pouce ciblé : un character:change/inventory:change ne rafraîche
+   *  que la vue d'ensemble (une petite requête ETaguée). */
   syncedCharacter: { id: number; n: number } | null;
 }) {
   const { t } = useTranslation();
   const [deleteTarget, setDeleteTarget] = useState<CharacterSummary | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [inventories, setInventories] = useState<Record<number, CharacterInventory>>({});
+  const [overview, setOverview] = useState<Record<number, RosterOverviewEntry>>({});
 
-  // Fetch all character inventories in parallel for AC, weight %, food/water counts
-  const loadInventories = useCallback(async (chars: CharacterSummary[]) => {
-    const results = await Promise.allSettled(
-      chars.map((c) => api.get<CharacterInventory>(`/api/characters/${c.id}/inventory`)),
-    );
-    const map: Record<number, CharacterInventory> = {};
-    chars.forEach((c, i) => {
-      const r = results[i];
-      if (r.status === 'fulfilled') map[c.id] = r.value.data;
-    });
-    setInventories(map);
-  }, []);
+  // UNE requête pour tout le groupe : le serveur rend par personnage les 4
+  // chiffres dérivés (CA effective, % de charge, ration, eau pleine) —
+  // l'ancienne forme téléchargeait l'inventaire ENTIER de chaque joueur.
+  const loadOverview = useCallback(async () => {
+    try {
+      const res = await api.get<{ overview: RosterOverviewEntry[] }>(
+        `/api/parties/${partyId}/roster-overview`,
+      );
+      const map: Record<number, RosterOverviewEntry> = {};
+      for (const o of res.data.overview ?? []) map[o.characterId] = o;
+      setOverview(map);
+    } catch {
+      /* silencieux — les cartes gardent leurs données */
+    }
+  }, [partyId]);
 
   // Clé = ids joints (pas l'identité du tableau) : un rechargement du groupe
-  // qui ne change PAS le roster ne redescend plus les N fiches complètes.
+  // qui ne change PAS le roster ne re-demande pas la vue d'ensemble.
   const rosterKey = characters.map((c) => c.id).join(',');
-  // biome-ignore lint/correctness/useExhaustiveDependencies: rosterKey résume `characters` — une identité de tableau neuve sans changement de roster ne doit pas redescendre les N fiches
+  // biome-ignore lint/correctness/useExhaustiveDependencies: rosterKey résume `characters` — une identité de tableau neuve sans changement de roster ne doit pas re-demander la vue
   useEffect(() => {
-    if (characters.length > 0) loadInventories(characters);
-  }, [rosterKey, loadInventories]);
+    if (characters.length > 0) void loadOverview();
+  }, [rosterKey, loadOverview]);
 
-  // Refetch ciblé d'UNE fiche (character:change du joueur concerné).
+  // Refetch ciblé (character:change / inventory:change d'un joueur) : la vue
+  // d'ensemble est ETaguée — inchangée, la requête repart en 304.
   useEffect(() => {
     if (!syncedCharacter) return;
-    const id = syncedCharacter.id;
-    api
-      .get<CharacterInventory>(`/api/characters/${id}/inventory`)
-      .then((res) => {
-        setInventories((prev) => ({ ...prev, [id]: res.data }));
-      })
-      .catch(() => {});
-  }, [syncedCharacter]);
+    void loadOverview();
+  }, [syncedCharacter, loadOverview]);
 
   async function confirmDelete() {
     if (!deleteTarget) return;
@@ -407,18 +422,17 @@ function CharactersTab({
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {ordered.map((c) => {
-        const inv = inventories[c.id];
-        const entries = inv?.entries || [];
+        const ov = overview[c.id];
         const dexMod = abilityModifier(c.dexterity ?? 10);
         const wisMod = abilityModifier(c.wisdom ?? 10);
         const level = c.level ?? 1;
         const prof = proficiencyBonus(level);
         const perceptionLevel = skillProficiencyLevel(c, 'perception');
         const pp = passivePerception(wisMod, prof, perceptionLevel);
-        const acResult = inv ? computeAC(entries, dexMod, c.fightingStyle === 'defense', c) : null;
-        const effectiveAC = c.armorClassOverride ?? acResult?.ac ?? 10 + dexMod;
-        const enc = inv?.encumbrance;
-        const weightPct = enc ? Math.min(100, Math.round(enc.pct)) : 0;
+        // CA : l'override manuel prime, puis la valeur PRÉCALCULÉE du serveur
+        // (roster-overview), puis l'approximation DEX à nu.
+        const effectiveAC = c.armorClassOverride ?? ov?.ac ?? 10 + dexMod;
+        const weightPct = ov ? Math.min(100, Math.round(ov.weightPct ?? 0)) : 0;
         const hpPct =
           c.maxHp > 0 ? Math.max(0, Math.min(100, Math.round((c.currentHp / c.maxHp) * 100))) : 0;
         const hpColor =
@@ -430,16 +444,10 @@ function CharactersTab({
                 ? 'bg-yellow-500'
                 : 'bg-green-500';
 
-        // Food/water from inventory
-        const foodCount = entries.reduce(
-          (sum, e) => sum + (e.item.survivalTags?.includes('food') ? e.quantity : 0),
-          0,
-        );
-        const fullWaterCount = entries.reduce((sum, e) => {
-          if (!e.item.survivalTags?.includes('water')) return sum;
-          if (e.notes?.includes('empty')) return sum;
-          return sum + e.quantity;
-        }, 0);
+        // Rations / eau pleine : comptées côté serveur (mêmes règles — les
+        // gourdes « empty » ne comptent pas).
+        const foodCount = ov?.foodCount ?? 0;
+        const fullWaterCount = ov?.fullWaterCount ?? 0;
 
         const exhColor =
           c.exhaustion === 0
@@ -517,12 +525,12 @@ function CharactersTab({
             </div>
 
             {/* Inventory weight bar */}
-            {enc && (
+            {ov?.weightKg != null && ov?.capacityKg != null && (
               <div className="mt-2">
                 <div className="flex items-center justify-between text-xs text-ink-500 mb-1">
                   <span>{t('md.sac')}</span>
                   <span>
-                    {enc.totalWeightKg.toFixed(1)} / {enc.maxCarryKg.toFixed(0)} kg ({weightPct}%)
+                    {ov.weightKg.toFixed(1)} / {ov.capacityKg.toFixed(0)} kg ({weightPct}%)
                   </span>
                 </div>
                 <div className="h-1.5 bg-parchment-200 rounded-full overflow-hidden">

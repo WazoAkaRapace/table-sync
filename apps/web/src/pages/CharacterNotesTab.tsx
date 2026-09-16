@@ -11,7 +11,7 @@ import { renderMarkdown } from '../components/markdown';
 import { SortableCard, SortableGrid } from '../components/SortableGrid';
 import { ConfirmButton, EmptyState, Modal } from '../components/ui';
 import { appLocale } from '../i18n';
-import { useSyncEvent } from '../sync';
+import { useResyncOnReconnect, useSyncEvent } from '../sync';
 import { parseSqliteDate } from '../utils';
 
 interface Props {
@@ -61,6 +61,10 @@ export default function CharacterNotesTab({
     },
     [charId],
   );
+
+  // Rattrapage de reconnexion : onglet à état local — recharge silencieux
+  // après un trou de connexion (les événements manqués ne sont pas rejoués).
+  useResyncOnReconnect(() => void load());
 
   const openCreate = () => {
     setEditing(null);

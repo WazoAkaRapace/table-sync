@@ -15,7 +15,7 @@ import api from '../api';
 import { Chip, EmptyState, ErrorMsg, LoadingSpinner } from '../components/ui';
 import { useHeaderOverride } from '../headerContext';
 import { appLang, appLocale } from '../i18n';
-import { useSyncEvent } from '../sync';
+import { useResyncOnReconnect, useSyncEvent } from '../sync';
 import { parseSqliteDate, toRoman } from '../utils';
 
 function playedAtLabel(playedAt: string | null, t: (key: string) => string): string {
@@ -180,6 +180,13 @@ export default function ChroniclePage() {
     },
     [currentPartyId, open, openSession, loadSessions],
   );
+
+  // Rattrapage de reconnexion : page à état local — la chronique recharge
+  // silencieusement (sessions, recaps) après un trou de connexion.
+  useResyncOnReconnect(() => {
+    void loadSessions(true);
+    if (open) void openSession(open);
+  });
 
   const onBack = useCallback(() => {
     if (open) setOpen(null);

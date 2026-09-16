@@ -25,6 +25,7 @@ import {
   mapCharacterSpell,
   requireUser,
 } from './helpers.ts';
+import { sendCachedJson } from './httpCache.ts';
 import { type AppLang, langFromReq } from './lang.ts';
 import { apiMsg } from './messages.ts';
 import { withSpellEnMeta } from './spells.ts';
@@ -75,10 +76,12 @@ const LINK_WITH_SPELL = {
   s_duration: spells.duration,
   s_concentration: spells.concentration,
   s_ritual: spells.ritual,
-  s_description: spells.description,
-  s_description_fr: spells.descriptionFr,
-  s_higher_level: spells.higherLevel,
-  s_higher_level_fr: spells.higherLevelFr,
+  // Pas de prose (description/description_fr/higher_level×2) : mapCharacterSpell
+  // mappe en RÉSUMÉ (mapSpell summary=true) et le client charge la prose à
+  // l'ouverture (SpellProse → fetchSpellDetail, cache de session) — lire les
+  // 4 colonnes TEXT par sort connu était du I/O jeté, et la liste redescend
+  // à CHAQUE lancé de sort (l'incantation écrit spell_slots_used →
+  // character:change → refetch).
   s_attack_type: spells.attackType,
   s_damage_json: spells.damageJson,
   s_dc_json: spells.dcJson,
@@ -147,7 +150,9 @@ export async function characterSpellRoutes(app: FastifyInstance) {
         .all();
 
       const lang = langFromReq(req);
-      return reply.send({
+      // ETag : la liste redescend à chaque character:change du personnage —
+      // y compris CHAQUE lancé de sort (spell_slots_used) ; inchangée → 304.
+      return sendCachedJson(req, reply, {
         spells: rows.map((r: any) => localizeCharacterSpell(mapCharacterSpell(r, lang), lang)),
       });
     },

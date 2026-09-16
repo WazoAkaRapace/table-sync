@@ -31,7 +31,7 @@ import { SortableCard, SortableGrid } from '../components/SortableGrid';
 import { ConfirmButton, EmptyState, Modal } from '../components/ui';
 import { appLang } from '../i18n';
 import { classNameLabel, featureCategoryLabel } from '../i18n/labels';
-import { useSyncEvent } from '../sync';
+import { useResyncOnReconnect, useSyncEvent } from '../sync';
 
 // TEMPLATE_VARIABLES (partagé) reste la source des syntaxes ; la description
 // affichée passe par i18next — FR = copies verbatim du catalogue partagé.
@@ -160,6 +160,10 @@ export default function CharacterFeaturesTab({
     },
     [charId, currentPartyId],
   );
+
+  // Rattrapage de reconnexion : onglet à état local — recharge silencieux
+  // après un trou de connexion (les événements manqués ne sont pas rejoués).
+  useResyncOnReconnect(() => void load());
 
   const openCreate = () => {
     setEditing(null);

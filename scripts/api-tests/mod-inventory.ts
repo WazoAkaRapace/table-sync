@@ -423,6 +423,17 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   r = await api(base, 'GET', `/api/parties/${fx.partyId}/transactions`, { token: fx.gm.token });
   eq(r.status, 200, 'transactions list');
   ok(r.data.transactions.length > 0, 'transactions recorded');
+  // ETag : le tableau MD rafraîchit le journal à chaque inventory:change du
+  // groupe — inchangé entre deux gestes → 304 sans corps.
+  const txEtag = r.headers?.get('etag');
+  ok(!!txEtag, 'transactions list carries an ETag');
+  if (txEtag) {
+    const r304 = await api(base, 'GET', `/api/parties/${fx.partyId}/transactions`, {
+      token: fx.gm.token,
+      headers: { 'If-None-Match': txEtag },
+    });
+    eq(r304.status, 304, 'transactions list revalidates to 304');
+  }
 
   // ---------- delete entry ----------
   r = await api(base, 'DELETE', `/api/inventory/999999`, { token: fx.gm.token });

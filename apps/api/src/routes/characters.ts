@@ -26,6 +26,7 @@ import {
   encounters,
   inventory,
   items,
+  parties as partiesTable,
   users,
 } from '../db/schema.ts';
 import { bus } from '../sync/bus.ts';
@@ -41,6 +42,9 @@ import {
   requireUser,
   validateClassEntries,
 } from './helpers.ts';
+import { sendCachedJson } from './httpCache.ts';
+import { loadInventoryView } from './inventory.ts';
+import { langFromReq } from './lang.ts';
 import { apiMsg } from './messages.ts';
 
 /** characters.* + the owner's display_name (JOIN users) — the mappers' shape. */
@@ -210,6 +214,71 @@ export async function characterRoutes(app: FastifyInstance) {
       const visible = rows.filter((row) => !row.hidden || row.owner_id === userId || callerIsGM);
       attachCharacterClasses(visible);
       return reply.send({ characters: visible.map(mapCharacterSummary) });
+    },
+  );
+
+  // ---------- Roster overview (tableau MD : UNE requête au lieu de N fiches) ----------
+  // Le tableau du MD ne rend par personnage que 4 chiffres dérivés de la
+  // fiche complète (CA effective, % de charge, ration, eau pleine) — il
+  // téléchargeait l'inventaire ENTIER de chaque joueur (N × fiches complètes,
+  // entrées + objets inclus). Mêmes règles de visibilité que le détail de
+  // groupe (personnages cachés : propriétaire + MD). ETag : le tableau
+  // rafraîchit à chaque geste d'inventaire du groupe — inchangé → 304.
+  app.get(
+    '/parties/:partyId/roster-overview',
+    async (req: FastifyRequest<{ Params: { partyId: string } }>, reply: FastifyReply) => {
+      const userId = requireUser(req, reply);
+      if (userId === null) return;
+      const partyId = Number(req.params.partyId);
+      if (!isPartyMember(partyId, userId))
+        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
+
+      const drizzle = getDrizzle();
+      const chars = drizzle
+        .select({ ...cols(characters), encumbrance_mode: partiesTable.encumbranceMode })
+        .from(characters)
+        .innerJoin(partiesTable, eq(partiesTable.id, characters.partyId))
+        .where(eq(characters.partyId, partyId))
+        .orderBy(sql`${characters.name} COLLATE NOCASE ASC`)
+        .all() as any[];
+      const callerIsGM = isPartyGM(partyId, userId);
+      const visible = chars.filter((c) => !c.hidden || c.owner_id === userId || callerIsGM);
+      const lang = langFromReq(req);
+
+      const overview = await Promise.all(
+        visible.map(async (char) => {
+          const view = await loadInventoryView(drizzle, char, lang);
+          const character = view.character as any;
+          const dexMod = abilityModifier(character.dexterity ?? 10);
+          const ac = computeAC(
+            view.entries,
+            dexMod,
+            character.fightingStyle === 'defense',
+            character,
+          );
+          // Rations / eau : mêmes règles que la carte du tableau (les gourdes
+          // VIDES portent « empty » en note et ne comptent pas).
+          let foodCount = 0;
+          let fullWaterCount = 0;
+          for (const e of view.entries as any[]) {
+            const tags = e.item?.survivalTags ?? [];
+            if (tags.includes('food')) foodCount += e.quantity;
+            if (tags.includes('water') && !e.notes?.includes('empty')) fullWaterCount += e.quantity;
+          }
+          return {
+            characterId: character.id,
+            ac: ac?.ac ?? null,
+            weightPct: view.encumbrance?.pct ?? null,
+            // Kg bruts pour l'étiquette de la barre de charge (« x / y kg »).
+            carriedKg: view.encumbrance?.totalWeightKg ?? null,
+            capacityKg: view.encumbrance?.maxCarryKg ?? null,
+            foodCount,
+            fullWaterCount,
+          };
+        }),
+      );
+
+      return sendCachedJson(req, reply, { overview });
     },
   );
 
