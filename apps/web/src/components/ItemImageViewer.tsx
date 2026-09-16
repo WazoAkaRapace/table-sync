@@ -342,15 +342,6 @@ export function ItemImageViewer({
     viewRef.current = view;
   }, [view]);
 
-  // Rect de l'image SANS transform (capturé à 1×) — ancre le placement des
-  // textes, projetés par la formule translate/scale à chaque rendu.
-  const [baseRect, setBaseRect] = useState<{
-    left: number;
-    top: number;
-    width: number;
-    height: number;
-  } | null>(null);
-
   const clampPan = (v: View): View => {
     const { w, h } = containRef.current;
     const maxX = Math.max(0, (w * v.scale - window.innerWidth) / 2);
@@ -427,10 +418,10 @@ export function ItemImageViewer({
 
   const activeStrokeRef = useRef<StrokeAnnotation | null>(null);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: repaint piloté par les états qui bougent le rendu (annotations, vue, chargement, ancre 1×) ; paintStrokes se recrée à chaque rendu et lit les refs — l'ajouter relancerait l'effet en boucle.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: repaint piloté par les états qui bougent le rendu (annotations, vue, chargement, outil) ; paintStrokes se recrée à chaque rendu et lit les refs — l'ajouter relancerait l'effet en boucle.
   useEffect(() => {
     paintStrokes();
-  }, [annotations, view, loaded, baseRect, tool]);
+  }, [annotations, view, loaded, tool]);
 
   /** Point normalisé [0..1] du pointeur sur l'image affichée (rect zoomé). */
   const normalizePoint = (clientX: number, clientY: number): [number, number] | null => {
@@ -439,15 +430,27 @@ export function ItemImageViewer({
     return [(clientX - rect.left) / rect.width, (clientY - rect.top) / rect.height];
   };
 
-  /** Écran ← image normalisée, via le rect 1× et la transformation courante. */
+  /**
+   * Rect AFFICHÉ de l'image, relu au moment de l'appel — l'ancre unique de
+   * tout le placement (traits sur le canvas, conteneur clippant, projection
+   * des notes et tampons). Le rect VIVENT inclut déjà pan/zoom : une note à
+   * (nx, ny) se projette à left + nx × width, sans répliquer la formule de
+   * transform. Relire à chaque rendu (et jamais « une fois pour toutes »)
+   * est le contrat : une ancre capturée pendant l'animation d'entrée — ou
+   * entre deux changements de vue — projetait tout le chrome d'annotation
+   * avec quelques pour-cent de décalage (leçon CI : traits et notes
+   * vieillissaient différemment du rect réel).
+   */
+  const liveImageRect = (): DOMRect | null => {
+    const rect = imgRef.current?.getBoundingClientRect();
+    return rect && rect.width > 0 ? rect : null;
+  };
+
+  /** Écran ← image normalisée, via le rect affiché relu à l'appel. */
   const projectToScreen = (nx: number, ny: number): { x: number; y: number } | null => {
-    if (!baseRect) return null;
-    const ox = baseRect.left + baseRect.width / 2;
-    const oy = baseRect.top + baseRect.height / 2;
-    return {
-      x: ox + (baseRect.left + nx * baseRect.width - ox) * view.scale + view.x,
-      y: oy + (baseRect.top + ny * baseRect.height - oy) * view.scale + view.y,
-    };
+    const rect = liveImageRect();
+    if (!rect) return null;
+    return { x: rect.left + nx * rect.width, y: rect.top + ny * rect.height };
   };
 
   // Focus + scroll lock + Échap + piège Tab (chrome annotation focusable).
@@ -517,28 +520,6 @@ export function ItemImageViewer({
     root.addEventListener('wheel', onWheel, { passive: false });
     return () => root.removeEventListener('wheel', onWheel);
   }, []);
-
-  // Rect 1× à recadrer quand on REVIENT au repos (layout stable sinon) ou au
-  // redimensionnement de la fenêtre — les textes dépendent de cette ancre.
-  // + à la fin de l'animation d'entrée (scale 0.96→1) : une capture prise
-  // PENDANT l'animation épinglerait un rect ~4 % trop petit, et les notes
-  // s'afficheraient décalées par rapport au composite enregistré.
-  useEffect(() => {
-    const capture = () => {
-      const el = imgRef.current;
-      if (!el) return;
-      const r = el.getBoundingClientRect();
-      if (r.width > 0) setBaseRect({ left: r.left, top: r.top, width: r.width, height: r.height });
-    };
-    if (loaded && view.scale === 1 && view.x === 0 && view.y === 0) capture();
-    window.addEventListener('resize', capture);
-    const area = imageAreaRef.current;
-    area?.addEventListener('animationend', capture, { once: true });
-    return () => {
-      window.removeEventListener('resize', capture);
-      area?.removeEventListener('animationend', capture);
-    };
-  }, [loaded, view]);
 
   // ---------- Enregistrement : composite base + annotations → JPEG ----------
 
@@ -825,10 +806,10 @@ export function ItemImageViewer({
     }
   };
 
-  // Rect affiché de l'image (projeté) : origine + côté du conteneur qui clippe
-  // les notes — l'aperçu de session ne montre que ce qui tient sur l'image,
-  // exactement comme le composite enregistrera.
-  const imageOrigin = baseRect ? projectToScreen(0, 0) : null;
+  // Rect affiché de l'image, relu À CHAQUE RENDU : origine du conteneur
+  // clippant, base des projections et des tailles — jamais d'ancre périmée
+  // (une capture figée vieillissait avec l'animation d'entrée et le zoom).
+  const renderRect = editable ? liveImageRect() : null;
 
   return createPortal(
     <div
@@ -1217,10 +1198,6 @@ export function ItemImageViewer({
               w = h * ratio;
             }
             containRef.current = { w, h };
-            const r = img.getBoundingClientRect();
-            if (r.width > 0) {
-              setBaseRect({ left: r.left, top: r.top, width: r.width, height: r.height });
-            }
             setLoaded(true);
           }}
           className="max-h-full max-w-full object-contain"
@@ -1233,14 +1210,15 @@ export function ItemImageViewer({
           repaint, les coordonnées normalisées restent stables). */}
       {editable && <canvas ref={canvasRef} className="pointer-events-none absolute inset-0" />}
 
-      {/* Tampons posés : imgs ancrés par projection du rect 1× (suivent pan/zoom). */}
+      {/* Tampons posés : imgs ancrés sur le rect affiché relu à chaque rendu
+          (suivent pan/zoom et l'animation d'entrée sans ancre périmée). */}
       {editable &&
-        baseRect &&
+        renderRect &&
         annotations.map((a) => {
           if (a.kind !== 'stamp') return null;
           const p = projectToScreen(a.nx, a.ny);
           if (!p) return null;
-          const s = a.size * baseRect.width * view.scale;
+          const s = a.size * renderRect.width;
           const selected = selectedStampId === a.id;
           return (
             <img
@@ -1271,22 +1249,22 @@ export function ItemImageViewer({
           les traits sur le canvas. L'ancre passe par noteDrawAnchor (la même
           borne que le composite) : une note posée sur le bord, ou un peu hors
           cadre, s'affiche tronquée à l'aperçu — ce qui tombera dans le JPEG. */}
-      {editable && baseRect && imageOrigin && (
+      {editable && renderRect && (
         <div
           className="pointer-events-none absolute overflow-hidden"
           style={{
-            left: imageOrigin.x,
-            top: imageOrigin.y,
-            width: baseRect.width * view.scale,
-            height: baseRect.height * view.scale,
+            left: renderRect.left,
+            top: renderRect.top,
+            width: renderRect.width,
+            height: renderRect.height,
           }}
         >
           {annotations.map((a) => {
             if (a.kind !== 'text') return null;
-            const anchor = noteDrawAnchor(a.nx, a.ny, a.size, baseRect.width / baseRect.height);
+            const anchor = noteDrawAnchor(a.nx, a.ny, a.size, renderRect.width / renderRect.height);
             const p = projectToScreen(anchor.nx, anchor.ny);
             if (!p) return null;
-            const size = textFontSize(baseRect.width * view.scale, a.size);
+            const size = textFontSize(renderRect.width, a.size);
             const selected = selectedNoteId === a.id;
             return (
               <span
@@ -1302,8 +1280,8 @@ export function ItemImageViewer({
                   // texte AU-DESSUS du point tapé — elle « glissait » pendant
                   // le dézoom (taille ∝ zoom) et ne se posait qu'à 1×.
                   // Coordonnées relatives au conteneur clippant.
-                  left: p.x - imageOrigin.x,
-                  top: p.y - imageOrigin.y,
+                  left: p.x - renderRect.left,
+                  top: p.y - renderRect.top,
                   // Une seule ligne, coupée au bord par le conteneur : le
                   // composite ne replie jamais (fillText trace une ligne),
                   // l'aperçu ne doit pas replier davantage.
