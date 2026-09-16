@@ -1407,6 +1407,7 @@ function DamageChipDock({
           }`}
           aria-pressed={chip.half}
           title={t('combat.demi.degats.resistance.sauvegarde.reussie')}
+          aria-label={t('combat.demi.degats.resistance.sauvegarde.reussie')}
         >
           ½
         </button>

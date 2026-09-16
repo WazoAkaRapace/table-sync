@@ -810,3 +810,31 @@ input[type="number"] {
     animation: none;
   }
 }
+
+/* ---------- prefers-reduced-motion : rattrapage des oublis ----------
+
+   Audit a11y 2026-09 : cinq classes animées et deux transitions avaient
+   échappé aux garde réduites (entrées de toasts/FAB/tiroir, flash de
+   ligne, pulsation d'alarme du ConfirmButton, accordéon expand-grid,
+   chevron). Sous reduced-motion : les ENTRÉES sautent à leur état final
+   (forwards → l'élément reste visible), les boucles et le flash
+   s'arrêtent net, les transitions de hauteur/rotation deviennent
+   instantanées — l'état (armé du ConfirmButton, ligne modifiée, panneau
+   déplié) reste lisible sans mouvement. */
+@media (prefers-reduced-motion: reduce) {
+  .row-flash,
+  .toast-enter,
+  .fab-enter,
+  .drawer-enter {
+    animation: none;
+  }
+  .pulse-warn {
+    animation: none;
+  }
+  .expand-grid {
+    transition: none;
+  }
+  .chevron {
+    transition: none;
+  }
+}

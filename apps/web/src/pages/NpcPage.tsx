@@ -1077,7 +1077,7 @@ function NpcCard({
           <button
             type="button"
             onClick={onGma}
-            className="inline-flex items-center justify-center h-8 w-8 rounded-md border border-gold-300 bg-gold-100 text-gold-700 hover:bg-gold-300/40"
+            className="inline-flex items-center justify-center h-11 w-11 rounded-md border border-gold-300 bg-gold-100 text-gold-700 hover:bg-gold-300/40"
             title={t('pnj.gma.badge.title')}
             aria-label={t('pnj.gma.badge.aria', { name: npc.name })}
           >
