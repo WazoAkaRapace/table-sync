@@ -12,7 +12,7 @@ import {
   proficiencyBonus,
   skillProficiencyLevel,
 } from '@table-sync/shared';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import api, { itemImageUrl } from '../api';
@@ -163,7 +163,7 @@ export default function GmDashboardPage() {
 
       {tab === 'transactions' && <TransactionsTab transactions={transactions} />}
 
-      {tab === 'custom' && <CustomItemsTab partyId={partyId!} />}
+      {tab === 'custom' && <CustomItemsTab partyId={partyId!} party={party} />}
 
       {tab === 'members' && (
         <MembersTab
@@ -863,14 +863,29 @@ function TransactionsTab({ transactions }: { transactions: Transaction[] }) {
   );
 }
 
-function CustomItemsTab({ partyId }: { partyId: string }) {
+function CustomItemsTab({
+  partyId,
+  party,
+}: {
+  partyId: string;
+  /** Le détail du groupe VIENT DU PARENT (déjà chargé + rafraîchi par
+   *  party:change) — l'onglet ne re-télécharge plus le roster entier pour
+   *  deux booléens et une carte de noms. */
+  party: PartyDetail | null;
+}) {
   const { t } = useTranslation();
   const [customItems, setCustomItems] = useState<any[]>([]);
   const [loadingItems, setLoadingItems] = useState(true);
-  // Party setting: may players create items themselves? + member names to
-  // attribute each item to its author.
-  const [playersCreate, setPlayersCreate] = useState<boolean | null>(null);
-  const [memberNames, setMemberNames] = useState<Map<number, string>>(new Map());
+  // Bascule « les joueurs peuvent créer » : la valeur FAIT FOI via la prop
+  // (le PATCH émet party:change → le parent recharge → la prop rattrape) ;
+  // l'override local garde l'état optimiste entre le PATCH et ce rattrapage.
+  const [playersCreateOverride, setPlayersCreateOverride] = useState<boolean | null>(null);
+  const playersCreate = playersCreateOverride ?? party?.party.playersCreateItems ?? null;
+  // Carte userId → nom affiché, pour attribuer chaque objet à son auteur.
+  const memberNames = useMemo(
+    () => new Map((party?.members ?? []).map((m) => [m.userId, m.displayName])),
+    [party],
+  );
   const [togglingPlayersCreate, setTogglingPlayersCreate] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
@@ -917,29 +932,13 @@ function CustomItemsTab({ partyId }: { partyId: string }) {
     loadCustomItems();
   }, [loadCustomItems]);
 
-  // Party setting + member display names (to attribute items to authors).
-  useEffect(() => {
-    let cancelled = false;
-    api
-      .get(`/api/parties/${partyId}`)
-      .then((res: any) => {
-        if (cancelled) return;
-        setPlayersCreate(!!res.data.party.playersCreateItems);
-        setMemberNames(new Map(res.data.members.map((m: any) => [m.userId, m.displayName])));
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [partyId]);
-
   const togglePlayersCreate = async () => {
     if (playersCreate === null || togglingPlayersCreate) return;
     const next = !playersCreate;
     setTogglingPlayersCreate(true);
     try {
       await api.patch(`/api/parties/${partyId}`, { playersCreateItems: next });
-      setPlayersCreate(next);
+      setPlayersCreateOverride(next);
     } catch (err: any) {
       setError(err.response?.data?.error || t('md.erreur'));
     } finally {
