@@ -268,7 +268,10 @@ pour le reste, chaque verbe à taille de combat (≥ 44 px). Composants dans
 **Squelettes de chargement** — le comportement normal de l'app face à un
 chargement de SURFACE pleine (page, registre, panneau, onglet) : ce qui est
 statique (filtres, têtes, barres d'onglets) se pose immédiatement, des blocs
-`parchment-200` gardent la place du contenu. Trois règles du système :
+`parchment-200` gardent la place du contenu — mais seulement si l'attente
+SE VOIT : les blocs attendent 500 ms avant d'apparaître, un chargement
+rapide ne montre jamais de fantôme (anti-scintillement ; le statut a11y,
+lui, existe dès le montage). Trois règles du système :
 (1) **un seul pouls par région** — `SkeletonRegion` porte `role="status"`
 + libellé français (lu une fois) et l'animation ; ses enfants ne pulsent pas
 chacun (une couche animée, pas trente — vieille tablette), et `.skeleton`

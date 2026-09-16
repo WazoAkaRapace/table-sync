@@ -465,6 +465,9 @@ export function EmptyState({ icon, title, hint }: { icon: string; title: string;
 // Le dialecte fantôme de l'app : ce qui est statique (filtres, têtes, onglets)
 // se pose immédiatement, des blocs parchment-200 gardent la place du contenu.
 // Règles du système :
+//   · anti-scintillement : les blocs attendent SKELETON_DELAY_MS — un
+//     chargement rapide ne montre JAMAIS de fantôme (le statut a11y, lui,
+//     existe dès le montage) ;
 //   · le pouls vit sur la RÉGION (une seule couche animée pour tout le
 //     squelette, pas une par bloc — vieille tablette) ;
 //   · `.skeleton` (index.css) coupe le pouls sous prefers-reduced-motion —
@@ -481,8 +484,16 @@ export function SkeletonBlock({ className = '' }: { className?: string }) {
   return <span aria-hidden="true" className={`block rounded bg-parchment-200 ${className}`} />;
 }
 
+/** Anti-scintillement : sous ce délai de chargement, la région reste
+ *  silencieuse — un squelette qui ne vit qu'un éclair est un clignotement.
+ *  Au-delà, les fantômes prennent la place : le chargement se voit assez
+ *  long pour que l'attente se lise. */
+const SKELETON_DELAY_MS = 500;
+
 /** Région squelette : annonce le chargement (role=status + libellé français,
- *  lu une fois) et porte L'UNIQUE pouls — ses enfants ne pulsent pas chacun. */
+ *  lu une fois dès le montage — le lecteur d'écran n'attend pas le délai) et
+ *  porte L'UNIQUE pouls — ses enfants ne pulsent pas chacun. Les blocs
+ *  n'apparaissent qu'après SKELETON_DELAY_MS (voir ci-dessus). */
 export function SkeletonRegion({
   label,
   className = '',
@@ -492,9 +503,14 @@ export function SkeletonRegion({
   className?: string;
   children: React.ReactNode;
 }) {
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    const id = window.setTimeout(() => setShown(true), SKELETON_DELAY_MS);
+    return () => window.clearTimeout(id);
+  }, []);
   return (
     <div role="status" aria-label={label} className={`skeleton animate-pulse ${className}`}>
-      {children}
+      {shown ? children : null}
     </div>
   );
 }
