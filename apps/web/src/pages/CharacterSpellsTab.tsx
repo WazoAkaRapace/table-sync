@@ -80,12 +80,10 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [catalogLevel, setCatalogLevel] = useState<string>('');
   const [catalogSchool, setCatalogSchool] = useState<string>('');
-  const [catalogClass, setCatalogClass] = useState<string>(
-    // Multiclassage : UNION des listes de sorts des classes de la fiche.
-    classesOf(character)
-      .map((c) => c.classKey)
-      .join(','),
-  );
+  // « Toutes les classes » par défaut : chercher par nom ne doit pas dépendre
+  // des classes de la fiche (sinon un sort de Magicien cherché depuis la
+  // fiche du Druide donne « aucun sort trouvé » sans explication).
+  const [catalogClass, setCatalogClass] = useState<string>('');
   const [catalogSpells, setCatalogSpells] = useState<Spell[]>([]);
   const [catalogTotal, setCatalogTotal] = useState(0);
   const [catalogLoading, setCatalogLoading] = useState(false);
