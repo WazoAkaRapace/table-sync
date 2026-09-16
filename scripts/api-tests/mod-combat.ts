@@ -120,6 +120,24 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   eq(r.status, 200, 'GM encounter list');
   ok(r.data.encounters[0].roster.length > 0, 'roster aggregated');
   eq(r.data.encounters[0].combatantCount, 5, 'all combatants counted');
+  // Le CombatWidget polle cette liste toutes les 30 s : ETag → 304 quand le
+  // corps est stable. Le hash couvre le corps SERVI : deux lecteurs ne PARTAGENT
+  // un ETag que si leurs corps sont octets pour octets identiques (aucune fuite
+  // possible — si le corps diffère, l'ETag diffère et le 304 ne vient pas).
+  // GOTCHA fixture : quand le joueur appartient à TOUTES les rencontres, sa
+  // liste est byte-identique à celle du MD → même ETag → son GET conditionnel
+  // répond 304 légitimement. Ne JAMAIS assert 200 cross-appelant ici (cet
+  // assert a avorté le module au milieu du flux membership → 409 en cascade
+  // dans correspondance + websocket sync).
+  const listEtag = r.headers?.get('etag');
+  ok(!!listEtag, 'encounter list carries an ETag');
+  if (listEtag) {
+    const r304 = await api(base, 'GET', `/api/parties/${P}/encounters`, {
+      token: fx.gm.token,
+      headers: { 'If-None-Match': listEtag },
+    });
+    eq(r304.status, 304, 'encounter list revalidates to 304');
+  }
 
   r = await api(base, 'GET', `/api/parties/${P}/encounters`, { token: fx.player.token });
   ok(
@@ -143,6 +161,16 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
     r.data.encounter.combatants.every((c: any) => c.hitPoints !== null),
     'GM sees all HP',
   );
+  // Détail pollé par la fiche (SA rencontre active) : même négociation ETag.
+  const detailEtag = r.headers?.get('etag');
+  ok(!!detailEtag, 'encounter detail carries an ETag');
+  if (detailEtag) {
+    const r304 = await api(base, 'GET', `/api/encounters/${enc.id}`, {
+      token: fx.gm.token,
+      headers: { 'If-None-Match': detailEtag },
+    });
+    eq(r304.status, 304, 'encounter detail revalidates to 304');
+  }
 
   r = await api(base, 'GET', `/api/encounters/${enc.id}`, { token: fx.player.token });
   eq(r.status, 200, 'player detail (in encounter)');

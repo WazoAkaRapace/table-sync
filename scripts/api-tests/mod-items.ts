@@ -168,6 +168,10 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
     srv.query('SELECT COUNT(*) AS c FROM items WHERE party_id = ? AND source = ?', P, 'custom').c,
     'party + source=custom → own customs only (dashboard tab)',
   );
+  // L'onglet custom du MD garde la PROSE (rendu + édition) — seule la
+  // recherche résumé descend le drapeau d'existence.
+  const fiole = r.data.items.find((i: any) => i.name === 'Fiole du joueur');
+  ok(fiole?.description, 'source=custom list keeps the prose');
   r = await api(base, 'GET', `/api/items?partyId=${P}`, { token: fx.outsider.token });
   eq(r.status, 403, 'party filter non-member → 403');
 

@@ -8,6 +8,17 @@ import { api, createCharacter, eq, type Fixtures, ok, type ServerHandle } from '
 export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promise<void> {
   const GM = fx.gm.token;
 
+  // Index redondants retirés (0029) : les uniques (character_id, class_key) /
+  // (character_id, spell_id) couvrent le préfixe gauche — la migration a dû
+  // les déposer au boot, et les lignes de classe se lisent quand même.
+  eq(
+    srv.query(
+      "SELECT COUNT(*) AS c FROM sqlite_master WHERE type = 'index' AND name IN ('idx_character_classes_character', 'idx_character_spells_char')",
+    ).c,
+    0,
+    'redundant prefix indexes dropped by migration',
+  );
+
   // ---------- Création multiclassée + dénormalisés ----------
   const siofra = await createCharacter(base, GM, fx.partyId, {
     name: 'Siofra',

@@ -249,8 +249,9 @@ export const characterClasses = sqliteTable(
     position: integer('position').notNull().default(0),
   },
   (t) => [
+    // Pas d'index séparé sur character_id : l'unique (character_id, class_key)
+    // couvre déjà le préfixe gauche (idx redondant retiré 2026-09).
     unique('character_classes_character_class_unique').on(t.characterId, t.classKey),
-    index('idx_character_classes_character').on(t.characterId),
     check('character_classes_level_check', sql`level >= 1 AND level <= 20`),
   ],
 );
@@ -460,8 +461,9 @@ export const characterSpells = sqliteTable(
     addedAt: text('added_at').notNull().default(sql`(datetime('now'))`),
   },
   (t) => [
+    // Pas d'index séparé sur character_id : l'unique (character_id, spell_id)
+    // couvre déjà le préfixe gauche (idx redondant retiré 2026-09).
     unique('character_spells_character_spell_unique').on(t.characterId, t.spellId),
-    index('idx_character_spells_char').on(t.characterId),
     index('idx_character_spells_spell').on(t.spellId),
   ],
 );

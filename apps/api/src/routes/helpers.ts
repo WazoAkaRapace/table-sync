@@ -257,6 +257,10 @@ export function replaceCharacterClasses(characterId: number, entries: CharacterC
  */
 export function mapItem(row: any, lang: AppLang = 'fr', summary = false): Item {
   const description = pickLocalized(lang, row.description_en, row.description);
+  // Projections résumé : la prose n'est PAS sélectionnée (I/O jeté — la fiche
+  // re-descend à chaque vague d'invalidation) ; l'existence arrive en drapeau
+  // `has_description` (0/1) et pilote le même contrat client (lazyDetails).
+  const hasDescription = row.has_description !== undefined ? !!row.has_description : !!description;
   return {
     id: row.id,
     source: row.source,
@@ -269,7 +273,7 @@ export function mapItem(row: any, lang: AppLang = 'fr', summary = false): Item {
     costQty: row.cost_qty,
     costUnit: row.cost_unit as CostUnit | null,
     description: summary ? null : description,
-    hasDescription: !!description,
+    hasDescription,
     baseWeapon: row.base_weapon ?? null,
     baseArmor: row.base_armor ?? null,
     armorFamily: row.armor_family ?? null,
@@ -440,7 +444,7 @@ export function mapInventoryEntry(row: any, lang: AppLang = 'fr'): InventoryEntr
         weight_kg: row.i_weight_kg,
         cost_qty: row.i_cost_qty,
         cost_unit: row.i_cost_unit,
-        description: row.i_description,
+        has_description: row.i_has_description,
         damage_dice: row.i_damage_dice,
         damage_type: row.i_damage_type,
         ac_base: row.i_ac_base,

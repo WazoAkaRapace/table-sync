@@ -64,8 +64,11 @@ export const INVENTORY_WITH_ITEM = {
   i_weight_kg: items.weightKg,
   i_cost_qty: items.costQty,
   i_cost_unit: items.costUnit,
-  i_description: items.description,
-  i_description_en: items.descriptionEn,
+  // Existence seule : le résumé embarqué ne transporte jamais la prose
+  // (mapItem(summary)), lire les colonnes TEXT était du I/O jeté à chaque
+  // descente de fiche. Le drapeau pilote le même contrat client (lazyDetails
+  // ouvre la ligne → GET /items/:id).
+  i_has_description: sql<boolean>`(COALESCE(${items.description}, '') != '')`,
   i_base_weapon: items.baseWeapon,
   i_base_armor: items.baseArmor,
   i_armor_family: items.armorFamily,

@@ -54,6 +54,7 @@ import {
   mirrorConditionsToCharacter,
   requireUser,
 } from './helpers.ts';
+import { sendCachedJson } from './httpCache.ts';
 import { apiMsg } from './messages.ts';
 
 // ---------- Row mappers ----------
@@ -352,7 +353,11 @@ export async function combatRoutes(app: FastifyInstance) {
         rows.map((r) => r.id),
         gm,
       );
-      return reply.send({
+      // ETag : le CombatWidget de CHAQUE joueur sonde cette liste toutes les
+      // 30 s — hors combat, le corps est stable et la sonde repart en 304.
+      // Le hash couvre le corps SERVI (GM vs joueur diffèrent : masquage de
+      // noms, PV redressés) — un 304 ne peut jamais fuiter entre lecteurs.
+      return sendCachedJson(req, reply, {
         encounters: rows.map((r) => mapEncounterSummary(r, rosters.get(r.id) ?? [])),
       });
     },
@@ -467,7 +472,10 @@ export async function combatRoutes(app: FastifyInstance) {
       }
 
       const detail: EncounterDetail = { ...mapEncounter(enc), combatants };
-      return reply.send({ encounter: detail });
+      // ETag : la fiche polle le détail de SA rencontre active ; hors tour et
+      // hors coup, le corps est stable → 304. Même garantie anti-fuite
+      // inter-lecteurs que la liste (le hash couvre le corps servi).
+      return sendCachedJson(req, reply, { encounter: detail });
     },
   );
 

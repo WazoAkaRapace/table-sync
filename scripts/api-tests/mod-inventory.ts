@@ -86,6 +86,16 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   r = await api(base, 'GET', `/api/characters/${A}/inventory`, { token: fx.gm.token });
   const daggerEntry = r.data.entries.find((e: any) => e.item.baseWeapon === 'Dagger');
   ok(daggerEntry, 'GET inventory entry carries baseWeapon');
+  // Régime connectivité : la fiche embarque des objets en RÉSUMÉ — prose à
+  // null + drapeau d'existence (lazyDetails ouvre la ligne → GET /items/:id).
+  ok(
+    r.data.entries.every((e: any) => e.item.description === null),
+    'sheet entries serve description:null (summary mode)',
+  );
+  ok(
+    r.data.entries.every((e: any) => e.item.hasDescription !== undefined),
+    'sheet entries carry the hasDescription flag',
+  );
   r = await api(base, 'DELETE', `/api/inventory/${daggerEntry.id}`, { token: fx.gm.token });
   eq(r.status, 204, 'remove dagger entry');
 

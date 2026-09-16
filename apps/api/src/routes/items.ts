@@ -27,6 +27,19 @@ interface ItemQuery {
   partyId?: string;
 }
 
+// Projection résumé du catalogue : les colonnes description/description_en
+// (~750 o/article en moyenne) étaient lues PUIS jetées par mapItem(summary) —
+// la recherche n'affiche jamais la prose. On ne descend que l'existence, le
+// même drapeau que l'inventaire embarqué (contrat lazyDetails inchangé).
+// L'onglet Objets custom du MD (source=custom) rend et édite la prose : il
+// garde la ligne complète.
+const ITEM_SUMMARY_COLS: Record<string, any> = {
+  ...cols(items),
+  has_description: sql<boolean>`(COALESCE(${items.description}, '') != '' OR COALESCE(${items.descriptionEn}, '') != '')`,
+};
+delete ITEM_SUMMARY_COLS.description;
+delete ITEM_SUMMARY_COLS.description_en;
+
 export async function itemRoutes(app: FastifyInstance) {
   // ---------- Search catalog ----------
   app.get(
@@ -108,8 +121,12 @@ export async function itemRoutes(app: FastifyInstance) {
       }
 
       const filter = and(...where);
+      // Résumés SANS description : la recherche joueur du catalogue n'affiche
+      // jamais la prose. Exception : l'onglet Objets custom du MD (source=
+      // custom) rend et édite les descriptions — il les garde.
+      const summary = source !== 'custom';
       const rows = drizzle
-        .select(cols(items))
+        .select(summary ? ITEM_SUMMARY_COLS : cols(items))
         .from(items)
         .where(filter)
         .orderBy(sql`${items.name} COLLATE NOCASE ASC`)
@@ -120,10 +137,6 @@ export async function itemRoutes(app: FastifyInstance) {
         drizzle.select({ n: sql<number>`count(*)` }).from(items).where(filter).get() as any
       ).n;
 
-      // Résumés SANS description : la recherche joueur du catalogue n'affiche
-      // jamais la prose. Exception : l'onglet Objets custom du MD (source=
-      // custom) rend et édite les descriptions — il les garde.
-      const summary = source !== 'custom';
       return sendCachedJson(req, reply, {
         items: rows.map((r: any) => mapItem(r, langFromReq(req), summary)),
         total,
