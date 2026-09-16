@@ -40,7 +40,7 @@ import {
   type Toast,
   ToastStack,
 } from '../components/ui';
-import { useSync, useSyncEvent } from '../sync';
+import { useOwnEchoGuard, useSync, useSyncEvent } from '../sync';
 import { TUTORIAL_SCRIPTS } from '../tutorial/scripts';
 import { UnreadBadge, useMessagesUnread } from '../useMessagesUnread';
 import { usePartyRole } from '../usePartyRole';
@@ -281,6 +281,11 @@ export default function CharacterInventoryPage() {
   const { markLocalMutation } = useSync();
   const currentCharId = Number(charId);
   const currentPartyId = Number(partyId);
+  // Anti-double « propre écho » : voir useOwnEchoGuard (sync.tsx) —
+  // refreshInventory tamponne, le propre écho character:change ne fait pas
+  // retélécharger la fiche de l'onglet agissant (les autres écrans du MD
+  // suivent toujours).
+  const ownEcho = useOwnEchoGuard();
 
   useSyncEvent(
     (event) => {
@@ -300,9 +305,7 @@ export default function CharacterInventoryPage() {
           }
         }
       } else if (event.type === 'character:change') {
-        // The server deliberately echoes our own edits (GM-two-tabs exception)
-        // — invalidation is idempotent, so no echo guard is needed.
-        if (event.characterId === currentCharId) {
+        if (event.characterId === currentCharId && !ownEcho.isOwnEcho(event)) {
           queryClient.invalidateQueries({ queryKey: ['inventory', currentCharId] });
         }
       }
@@ -407,9 +410,11 @@ export default function CharacterInventoryPage() {
 
   // Every write path funnels here: invalidate the sheet query (active
   // observers refetch immediately) and flash the touched row when asked.
+  // Tamponne l'anti-double écho (voir le useSyncEvent ci-dessus).
   const refreshInventory = useCallback(
     async (flashId?: number) => {
       if (!charId) return;
+      ownEcho.stamp();
       if (flashId !== undefined) {
         setFlashEntryId(flashId);
         setTimeout(() => setFlashEntryId(null), 1200);

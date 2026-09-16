@@ -53,3 +53,32 @@ gmTest(
     await playerCtx.close();
   },
 );
+
+gmTest(
+  'une propre édition du MD ne descend la fiche qu’UNE fois (anti-double écho)',
+  async ({ page }) => {
+    await page.goto(sheetUrl(seed().guerrier.id));
+    const hpInput = page.getByLabel('Points de vie actuels');
+    await expect(hpInput).toBeVisible();
+    await page.getByLabel('Synchronisé').first().waitFor({ timeout: 10_000 });
+
+    // Compte les GET d'inventaire déclenchés par UNE édition locale : le
+    // rafraîchi propre (refreshInventory) doit suffire — l'écho character:change
+    // (echo-exempt côté serveur pour le multi-écrans du MD) ne doit PAS faire
+    // retélécharger la fiche de l'onglet agissant.
+    let inventoryGets = 0;
+    page.on('request', (req) => {
+      if (req.method() === 'GET' && /\/api\/characters\/\d+\/inventory$/.test(req.url())) {
+        inventoryGets++;
+      }
+    });
+    const before = Number(await hpInput.inputValue());
+    await page.getByLabel('Blesser de 1').click();
+    await expect.poll(() => hpInput.inputValue(), { timeout: 10_000 }).toBe(String(before - 1));
+    // Laisse passer la fenêtre d'écho (debounce WS 300 ms + marge) AVANT de
+    // compter — un double se manifesterait ici.
+    await page.waitForTimeout(1500);
+    // 0 impossible (la mutation s'invalide), 2 = l'écho non gardé (régression).
+    expect(inventoryGets).toBe(1);
+  },
+);

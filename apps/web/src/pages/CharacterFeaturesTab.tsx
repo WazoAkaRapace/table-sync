@@ -31,7 +31,7 @@ import { SortableCard, SortableGrid } from '../components/SortableGrid';
 import { ConfirmButton, EmptyState, Modal } from '../components/ui';
 import { appLang } from '../i18n';
 import { classNameLabel, featureCategoryLabel } from '../i18n/labels';
-import { useResyncOnReconnect, useSyncEvent } from '../sync';
+import { useOwnEchoGuard, useResyncOnReconnect, useSyncEvent } from '../sync';
 
 // TEMPLATE_VARIABLES (partagé) reste la source des syntaxes ; la description
 // affichée passe par i18next — FR = copies verbatim du catalogue partagé.
@@ -119,6 +119,9 @@ export default function CharacterFeaturesTab({
 }: Props) {
   useEnFeatureNames();
   const { t } = useTranslation();
+  // Anti-double « propre écho » : nos écritures reviennent par WS (echo-exempt)
+  // — l'onglet agissant recharge déjà localement, l'écho ne doit rien doubler.
+  const ownEcho = useOwnEchoGuard();
   const [features, setFeatures] = useState<CharacterFeature[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -154,7 +157,11 @@ export default function CharacterFeaturesTab({
   const currentPartyId = partyId ? Number(partyId) : undefined;
   useSyncEvent(
     (event) => {
-      if (event.type === 'character:change' && event.characterId === charId) {
+      if (
+        event.type === 'character:change' &&
+        event.characterId === charId &&
+        !ownEcho.isOwnEcho(event)
+      ) {
         load();
       }
     },
@@ -236,6 +243,7 @@ export default function CharacterFeaturesTab({
     setSaving(true);
     try {
       if (editing) {
+        ownEcho.stamp();
         await api.patch(`/api/character-features/${editing.id}`, {
           title: title.trim(),
           category,
@@ -244,6 +252,7 @@ export default function CharacterFeaturesTab({
           resetType,
         });
       } else {
+        ownEcho.stamp();
         await api.post(`/api/characters/${charId}/features`, {
           title: title.trim(),
           category,
@@ -268,6 +277,7 @@ export default function CharacterFeaturesTab({
     const next = Math.max(0, Math.min(max, current + delta));
     if (next === current) return;
     try {
+      ownEcho.stamp();
       await api.patch(`/api/character-features/${feature.id}`, { counterCurrent: next });
       await load();
     } catch {
@@ -277,6 +287,7 @@ export default function CharacterFeaturesTab({
 
   const remove = async (id: number) => {
     try {
+      ownEcho.stamp();
       await api.delete(`/api/character-features/${id}`);
       await load();
       await onSaved();
@@ -296,6 +307,7 @@ export default function CharacterFeaturesTab({
     const reordered = nextIds.map((id) => byId.get(id)).filter((f) => f !== undefined);
     setFeatures([...features.filter((f) => !moved.has(f.id)), ...reordered]);
     try {
+      ownEcho.stamp();
       await api.patch(`/api/characters/${charId}/features/order`, { order: nextIds });
     } catch {
       setFeatures(prev);
@@ -306,6 +318,7 @@ export default function CharacterFeaturesTab({
   // Catalogue : ajout en 1 clic — le compteur est déduit de la formule SRD côté API
   const addFromCatalog = async (def: ClassFeatureDef) => {
     try {
+      ownEcho.stamp();
       await api.post(`/api/characters/${charId}/features`, {
         title: def.name,
         category: 'class',

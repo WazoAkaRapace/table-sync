@@ -11,7 +11,7 @@ import { renderMarkdown } from '../components/markdown';
 import { SortableCard, SortableGrid } from '../components/SortableGrid';
 import { ConfirmButton, EmptyState, Modal } from '../components/ui';
 import { appLocale } from '../i18n';
-import { useResyncOnReconnect, useSyncEvent } from '../sync';
+import { useOwnEchoGuard, useResyncOnReconnect, useSyncEvent } from '../sync';
 import { parseSqliteDate } from '../utils';
 
 interface Props {
@@ -30,6 +30,9 @@ export default function CharacterNotesTab({
   onError,
 }: Props) {
   const { t } = useTranslation();
+  // Anti-double « propre écho » : nos écritures reviennent par WS (echo-exempt)
+  // — l'onglet agissant recharge déjà localement, l'écho ne doit rien doubler.
+  const ownEcho = useOwnEchoGuard();
   const [notes, setNotes] = useState<CharacterNote[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -57,7 +60,12 @@ export default function CharacterNotesTab({
 
   useSyncEvent(
     (event) => {
-      if (event.type === 'character:change' && event.characterId === charId) load();
+      if (
+        event.type === 'character:change' &&
+        event.characterId === charId &&
+        !ownEcho.isOwnEcho(event)
+      )
+        load();
     },
     [charId],
   );
@@ -90,11 +98,13 @@ export default function CharacterNotesTab({
     setSaving(true);
     try {
       if (editing) {
+        ownEcho.stamp();
         await api.patch(`/api/character-notes/${editing.id}`, {
           title: title.trim(),
           content: content.trim() || null,
         });
       } else {
+        ownEcho.stamp();
         await api.post(`/api/characters/${charId}/notes`, {
           title: title.trim(),
           content: content.trim() || undefined,
@@ -112,6 +122,7 @@ export default function CharacterNotesTab({
 
   const remove = async (id: number) => {
     try {
+      ownEcho.stamp();
       await api.delete(`/api/character-notes/${id}`);
       await load();
       await onSaved();
@@ -127,6 +138,7 @@ export default function CharacterNotesTab({
     const byId = new Map(notes.map((n) => [n.id, n]));
     setNotes(nextIds.map((id) => byId.get(id)).filter((n) => n !== undefined));
     try {
+      ownEcho.stamp();
       await api.patch(`/api/characters/${charId}/notes/order`, { order: nextIds });
     } catch {
       setNotes(prev);

@@ -10,6 +10,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useAuth } from './auth';
 
 // ---------- Types ----------
 
@@ -386,6 +387,35 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
 
 export function useSync() {
   return useContext(SyncContext);
+}
+
+/**
+ * Anti-double « propre écho ». `character:change` est ÉCHO-EXEMPT côté serveur
+ * (le MD roule sur plusieurs écrans : l'événement DOIT atteindre ses autres
+ * onglets), donc chaque mutation locale nous REVIENT par WS — et l'onglet
+ * agissant, qui vient déjà de se rafraîchir, re-téléchargeait ses données
+ * une seconde fois (l'écho passe le debounce de 300 ms APRÈS la fin du
+ * premier refetch, jamais fusionné).
+ *
+ * `stamp()` s'appelle au moment de la mutation locale ; `isOwnEcho(event)`
+ * distingue NOTRE écho (mutation < 2 s) de celui des autres écrans du même
+ * utilisateur — eux n'ont pas tamponné et suivent toujours (contrat
+ * multi-écrans). Un écho hors fenêtre (liaison très lente) re-valide :
+ * idempotent, jamais perdu.
+ */
+export function useOwnEchoGuard() {
+  const { user } = useAuth();
+  const lastAt = useRef(0);
+  return useMemo(
+    () => ({
+      stamp: () => {
+        lastAt.current = Date.now();
+      },
+      isOwnEcho: (event: { actorUserId?: number }) =>
+        !!user && event.actorUserId === user.id && Date.now() - lastAt.current < 2000,
+    }),
+    [user],
+  );
 }
 
 /**
