@@ -42,6 +42,26 @@ declare global {
   }
 }
 
+// Splash inline (index.html) : la gravure a droit à son temps. Le plancher
+// se compte depuis le DÉBUT de la navigation (performance.now()), pas depuis
+// le boot React — sur connexion rapide, le bundle peut être prêt avant la
+// fin du dessin. Au-delà (vieille tablette), on ne retient personne.
+// (Rafraîchissement en session : html.ts-calm masque le splash en amont,
+// l'élément n'existe pas — dismissSplash rend directement.)
+const SPLASH_MIN_MS = 1_750;
+
+function dismissSplash() {
+  const el = document.getElementById('ts-splash');
+  if (!el) return; // absent (rafraîchissement) ou déjà retiré (garde, noscript)
+  const wait = Math.max(0, SPLASH_MIN_MS - performance.now());
+  window.setTimeout(() => {
+    el.classList.add('ts-splash--out'); // fondu + flou vers l'app rendue dessous
+    // Filet : sous transitionend manqué (onglet en arrière-plan), le nœud
+    // part quand même — le splash est pointer-events:none, jamais bloquant.
+    window.setTimeout(() => el.remove(), 650);
+  }, wait);
+}
+
 function boot() {
   // Service worker (push + cache de coquille) : pas critique, échec silencieux.
   void registerServiceWorker();
@@ -62,6 +82,9 @@ function boot() {
         </ErrorBoundary>
       </React.StrictMode>,
     );
+    // Après le premier rendu : le splash s'efface par-dessus l'app déjà
+    // peinte (les transitions CSS font le travail, pas un remplacement sec).
+    dismissSplash();
   });
 }
 

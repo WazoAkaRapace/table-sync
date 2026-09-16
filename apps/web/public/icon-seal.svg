@@ -40,7 +40,7 @@
     </filter>
   </defs>
 
-  <rect width="512" height="512" fill="#ffffff"/><g clip-path="url(#seal)"><g transform="translate(256 256) scale(0.95) translate(-256 -256)">
+  <circle cx="256" cy="256" r="256" fill="#ffffff"/><g clip-path="url(#seal)"><g transform="translate(256 256) scale(0.95) translate(-256 -256)">
 
   <!-- Ember ring -->
   <circle cx="256" cy="268" r="198" fill="none" stroke="url(#ember)" stroke-width="10" opacity=".55"/>

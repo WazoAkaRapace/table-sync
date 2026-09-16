@@ -233,9 +233,18 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
   const { user, loading } = useAuth();
   if (loading) {
+    // Suite directe du splash de démarrage : même sceau, même wordmark —
+    // la vérification de session se lit comme la dernière page du splash,
+    // pas comme un nouvel écran (sceau = celui de la page de connexion).
     return (
-      <div className="min-h-dvh flex items-center justify-center">
-        <div className="text-ink-400 animate-pulse">{t('app.chargement')}</div>
+      <div className="min-h-dvh flex flex-col items-center justify-center gap-3">
+        <img src="/icon-seal.svg" alt="" aria-hidden="true" className="w-14 h-14" />
+        <p className="font-display text-sm font-semibold tracking-[0.34em] pl-[0.34em] text-ink-500">
+          TABLE SYNC
+        </p>
+        <span className="text-ink-400 animate-pulse" role="status" aria-live="polite">
+          {t('app.chargement')}
+        </span>
       </div>
     );
   }
@@ -328,7 +337,8 @@ function PartyOpenTracker() {
 function RouteFallback() {
   const { t } = useTranslation();
   return (
-    <div className="card max-w-xs mx-auto mt-16 p-6 text-center" role="status" aria-live="polite">
+    <div className="flex flex-col items-center gap-3 pt-24" role="status" aria-live="polite">
+      <img src="/icon-seal.svg" alt="" aria-hidden="true" className="w-9 h-9" />
       <span className="text-ink-400 animate-pulse">{t('app.chargement')}</span>
     </div>
   );

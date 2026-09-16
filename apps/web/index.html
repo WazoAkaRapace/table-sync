@@ -28,6 +28,325 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Table Sync" />
 
+    <style>
+      /* ─── Splash « encre vivante » ───────────────────────────────────────
+         Autonome par construction : zéro dépendance au bundle (Tailwind,
+         Cinzel chargé par index.css) — ce style peint AVANT le télécharge-
+         ment du module. Convention d'états : chaque propriété vit à sa
+         valeur FINALE par défaut et les keyframes ne font qu'entrer DEPUIS
+         l'invisible ; prefers-reduced-motion (ou un moteur sans animation)
+         pose donc la page gravée, immobile, sans cas spécifique.
+         Seules des propriétés compositor (transform/opacity) bougent —
+         vieille tablette oblige. main.tsx retire le nœud (fondu ts-splash--
+         --out) après le premier rendu React ; la garde navigateur et le
+         noscript le retirent sur leurs chemins propres. */
+      @property --ts-ink-x {
+        syntax: '<percentage>';
+        inherits: false;
+        initial-value: 105%;
+      }
+      #ts-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 70;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        pointer-events: none;
+        background-color: #fdfaf3;
+        /* Mêmes halos que body (index.css) : la main passe sans à-coup. */
+        background-image:
+          radial-gradient(at 20% 0%, rgba(184, 151, 90, 0.06) 0px, transparent 50%),
+          radial-gradient(at 80% 100%, rgba(122, 31, 31, 0.04) 0px, transparent 50%);
+      }
+      #ts-splash.ts-splash--out {
+        opacity: 0;
+        filter: blur(2px);
+        transform: scale(1.012);
+      }
+      /* Rafraîchissement en session : PAS de splash du tout. La classe est
+         posée en <head> avant la première peinture — l'app peint
+         directement, les états de chargement prennent le relais. */
+      html.ts-calm #ts-splash {
+        display: none;
+      }
+      .ts-stage {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        max-width: 26rem;
+        padding: 0 1.5rem 8vh; /* décalage optique : le bloc respire au-dessus du centre */
+      }
+      .ts-mark {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .ts-glow {
+        position: absolute;
+        width: min(72vw, 320px);
+        aspect-ratio: 1;
+        border-radius: 50%;
+        background: radial-gradient(closest-side, rgba(212, 175, 55, 0.22), rgba(212, 175, 55, 0) 72%);
+      }
+      /* Le sceau officiel (jumeau inline d'icon-seal.svg — même dessin,
+         identifiants préfixés ts- pour éviter toute collision). Animé par
+         ses VRAIES couches : le tampon se pose, l'anneau de braise se
+         trace, une comète l'orbite (LE signal de chargement), un éclat
+         balaie le d20, les runes scintillent. */
+      .ts-seal {
+        position: relative;
+        width: clamp(88px, 23vw, 118px);
+        height: auto;
+      }
+      .ts-comet {
+        opacity: 0.9;
+        transform-box: fill-box;
+        transform-origin: center;
+      }
+      .ts-glintrect {
+        opacity: 0; /* éclat one-shot : absent hors mouvement */
+      }
+      .ts-word {
+        margin: 1.35rem 0 0;
+        font-family: Cinzel, Georgia, serif;
+        font-weight: 700;
+        font-size: clamp(1.1rem, 5.6vw, 1.6rem);
+        letter-spacing: 0.34em;
+        /* compense la chasse du tracking pour un vrai centrage optique */
+        padding-left: 0.34em;
+        color: #2a1f14;
+        --ts-ink-x: 105%;
+        -webkit-mask-image: linear-gradient(
+          90deg,
+          #000 0%,
+          #000 var(--ts-ink-x),
+          transparent calc(var(--ts-ink-x) + 24%)
+        );
+        mask-image: linear-gradient(
+          90deg,
+          #000 0%,
+          #000 var(--ts-ink-x),
+          transparent calc(var(--ts-ink-x) + 24%)
+        );
+      }
+      .ts-rule {
+        margin-top: 1.05rem;
+        width: min(62vw, 300px);
+      }
+      /* Sélecteurs mono-classe partout : pas de composés frère/enfant, la
+         cascade reste plate et lisible dans l'ordre du document. */
+      .rline {
+        display: block;
+        height: 2px;
+        background: #c9b074;
+        transform-origin: 50% 50%;
+      }
+      .rline2 {
+        height: 1px;
+        margin-top: 3px;
+        background: #ddcb9e;
+      }
+      .ts-motes {
+        position: absolute;
+        inset: 0;
+      }
+      .tmote {
+        position: absolute;
+        border-radius: 50%;
+        background: #d4af37;
+        opacity: 0; /* déco ambiante : invisible hors mouvement */
+      }
+      .ts-curtain {
+        position: absolute;
+        inset: 0;
+        /* lavage de papier mouillé qui se lève — le seul recouvrement */
+        background: linear-gradient(180deg, #e9dcb8 0%, #ddcb9e 55%, #d2bc88 100%);
+        transform: translateY(-102%);
+      }
+      .ts-sr {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        /* La transition de sortie vit ICI : sous prefers-reduced-motion,
+           ts-splash--out reste un retrait sec (opacity 0), sans course. */
+        #ts-splash {
+          transition:
+            opacity 0.38s cubic-bezier(0.4, 0, 0.2, 1),
+            filter 0.38s cubic-bezier(0.4, 0, 0.2, 1),
+            transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes ts-curtain {
+          from {
+            transform: translateY(0);
+          }
+        }
+        .ts-curtain {
+          animation: ts-curtain 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.04s both;
+        }
+        @keyframes ts-draw {
+          from {
+            stroke-dashoffset: 1;
+          }
+        }
+        /* Le tampon se pose sur la page */
+        @keyframes ts-stamp {
+          from {
+            opacity: 0;
+            transform: scale(0.88);
+          }
+        }
+        .ts-seal {
+          animation: ts-stamp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.18s both;
+        }
+        /* L'anneau de braise se trace (pathLength="1" : dash 1 = tout le tour) */
+        .ts-ring {
+          stroke-dasharray: 1;
+          animation: ts-draw 0.7s cubic-bezier(0.33, 1, 0.68, 1) 0.45s both;
+        }
+        @keyframes ts-ring2 {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 0.28;
+          }
+        }
+        .ts-ring2 {
+          animation: ts-ring2 0.5s ease-out 0.85s both;
+        }
+        /* La comète de braise entre, puis orbite sans fin */
+        @keyframes ts-appear {
+          from {
+            opacity: 0;
+          }
+        }
+        @keyframes ts-orbit {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+        .ts-comet {
+          animation:
+            ts-appear 0.5s ease-out 1.4s both,
+            ts-orbit 3.2s linear 1.4s infinite;
+        }
+        /* Éclat unique qui balaie la face du d20 */
+        @keyframes ts-glint {
+          from {
+            transform: translateX(-50px) skewX(-12deg);
+            opacity: 1;
+          }
+          to {
+            transform: translateX(150px) skewX(-12deg);
+            opacity: 1;
+          }
+        }
+        .ts-glintrect {
+          animation: ts-glint 0.85s cubic-bezier(0.33, 1, 0.68, 1) 0.95s both;
+        }
+        /* Runes : scintillement lent, décalé */
+        @keyframes ts-rune {
+          0%,
+          100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.3;
+          }
+        }
+        .ts-rune1 {
+          animation: ts-rune 3.6s ease-in-out 1.2s infinite;
+        }
+        .ts-rune2 {
+          animation: ts-rune 4.2s ease-in-out 1.6s infinite;
+        }
+        .ts-rune3 {
+          animation: ts-rune 3.9s ease-in-out 2s infinite;
+        }
+        .ts-rune4 {
+          animation: ts-rune 4.5s ease-in-out 1.4s infinite;
+        }
+        @keyframes ts-glow {
+          from {
+            opacity: 0;
+            transform: scale(0.82);
+          }
+        }
+        .ts-glow {
+          animation: ts-glow 1.3s cubic-bezier(0.22, 1, 0.36, 1) 0.7s both;
+        }
+        @keyframes ts-ink {
+          from {
+            --ts-ink-x: -25%;
+          }
+        }
+        .ts-word {
+          animation: ts-ink 0.8s cubic-bezier(0.33, 1, 0.68, 1) 0.5s both;
+        }
+        @keyframes ts-rule {
+          from {
+            transform: scaleX(0);
+          }
+        }
+        .rline {
+          animation: ts-rule 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.95s both;
+        }
+        .rline2 {
+          animation-delay: 1.05s;
+        }
+        .tmote {
+          animation: ts-mote var(--ts-d, 8s) linear var(--ts-dl, 2s) infinite;
+        }
+        @keyframes ts-mote {
+          0% {
+            transform: translate3d(0, 10px, 0);
+            opacity: 0;
+          }
+          15% {
+            opacity: var(--ts-mo, 0.4);
+          }
+          85% {
+            opacity: var(--ts-mo, 0.4);
+          }
+          100% {
+            transform: translate3d(var(--ts-dx, 8px), -34px, 0);
+            opacity: 0;
+          }
+        }
+      }
+    </style>
+
+    <!-- La chorégraphie ne joue qu'au PREMIER lancement d'une session : un
+         rafraîchissement (F5, pull-to-refresh) SAUTE le splash entièrement
+         (display:none posé avant la première peinture) — l'app peint
+         directement, les états de chargement prennent le relais.
+         sessionStorage = par onglet ; une PWA relancée ouvre une nouvelle
+         session → la gravure rejoue. -->
+    <script>
+      // biome-ignore lint/complexity/useArrowFunction: IIFE cohérente avec la garde de fin de body.
+      (function () {
+        try {
+          if (sessionStorage.getItem('ts-splash-played')) {
+            document.documentElement.classList.add('ts-calm');
+          } else {
+            sessionStorage.setItem('ts-splash-played', '1');
+          }
+        } catch {
+          /* stockage indisponible (privé strict) : la gravure joue */
+        }
+      })();
+    </script>
+
     <!-- Title -->
     <title>Table Sync</title>
 
@@ -37,14 +356,157 @@
   <body>
     <div id="root"></div>
 
+    <!-- Splash de démarrage : frère de #root (React ne touche que #root —
+         createRoot remplace le contenu de son conteneur). Peint dès le HTML
+         parsé, retiré par main.tsx après le premier rendu. -->
+    <div id="ts-splash">
+      <div class="ts-stage" aria-hidden="true">
+        <div class="ts-mark">
+          <div class="ts-glow"></div>
+          <!-- Le sceau officiel, jumeau inline d'icon-seal.svg (identifiants
+               préfixés ts-) — voir les commentaires du bloc <style> ci-dessus -->
+          <svg class="ts-seal" viewBox="0 0 512 512" aria-hidden="true">
+            <defs>
+              <clipPath id="ts-sealclip"><circle cx="256" cy="256" r="256"/></clipPath>
+              <clipPath id="ts-d20clip"><path d="M328 256 L382 288 L360 366 L296 366 L274 288 Z"/></clipPath>
+              <linearGradient id="ts-ember" x1="80" y1="420" x2="430" y2="80" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#ff7a2a"/><stop offset=".5" stop-color="#e11d2e"/><stop offset="1" stop-color="#7a0d2a"/>
+              </linearGradient>
+              <linearGradient id="ts-gold" x1="120" y1="70" x2="400" y2="430" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#ffe7a3"/><stop offset=".45" stop-color="#e0b04a"/><stop offset="1" stop-color="#8a5a16"/>
+              </linearGradient>
+              <linearGradient id="ts-blade" x1="70" y1="40" x2="250" y2="360" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#ffffff"/><stop offset=".35" stop-color="#d7e4ef"/><stop offset="1" stop-color="#6d7d8d"/>
+              </linearGradient>
+              <linearGradient id="ts-scroll" x1="150" y1="150" x2="340" y2="390" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#f7e4b6"/><stop offset="1" stop-color="#b8884a"/>
+              </linearGradient>
+              <radialGradient id="ts-glowgrad" cx="68%" cy="42%" r="28%">
+                <stop offset="0" stop-color="#ffcf6b" stop-opacity=".95"/><stop offset="1" stop-color="#ffcf6b" stop-opacity="0"/>
+              </radialGradient>
+              <linearGradient id="ts-glintgrad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".85"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+              </linearGradient>
+              <filter id="ts-bloom" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+              <filter id="ts-cast" x="-25%" y="-25%" width="150%" height="150%">
+                <feDropShadow dx="0" dy="14" stdDeviation="12" flood-color="#000" flood-opacity=".55"/>
+              </filter>
+            </defs>
+            <!-- disque blanc du sceau (pas de carré : sur le parchemin, les
+                 coins d'un rect 512 ressortiraient — cf. icon-seal.svg) -->
+            <circle cx="256" cy="256" r="256" fill="#ffffff"/>
+            <g clip-path="url(#ts-sealclip)">
+              <g transform="translate(256 256) scale(0.95) translate(-256 -256)">
+                <!-- Anneau de braise — se trace à l'entrée -->
+                <circle class="ts-ring" pathLength="1" cx="256" cy="268" r="198" fill="none" stroke="url(#ts-ember)" stroke-width="10" opacity=".55"/>
+                <circle class="ts-ring2" cx="256" cy="268" r="176" fill="none" stroke="#f3c56a" stroke-width="2" opacity=".28"/>
+                <!-- Comète de braise : LE signal de chargement -->
+                <circle class="ts-comet" pathLength="1" cx="256" cy="268" r="198" fill="none" stroke="#ff9a4a" stroke-width="10" stroke-linecap="round" stroke-dasharray="0.12 0.88"/>
+                <!-- Runes -->
+                <g fill="#f3c56a" opacity=".55" font-family="Georgia, serif" font-size="22">
+                  <text class="ts-rune1" x="118" y="118">ᚠ</text>
+                  <text class="ts-rune2" x="372" y="126">ᚱ</text>
+                  <text class="ts-rune3" x="92" y="392">ᚦ</text>
+                  <text class="ts-rune4" x="392" y="404">ᚨ</text>
+                </g>
+                <!-- Ailes de dragon -->
+                <g fill="#2a0d16" stroke="url(#ts-gold)" stroke-width="5" filter="url(#ts-cast)">
+                  <path d="M256 168 C168 148 92 176 58 248 C126 214 168 232 206 268 C228 220 240 190 256 168Z"/>
+                  <path d="M256 168 C344 148 420 176 454 248 C386 214 344 232 306 268 C284 220 272 190 256 168Z"/>
+                  <path d="M92 236 L64 206 L88 214" fill="#e0b04a" stroke="none"/>
+                  <path d="M420 236 L448 206 L424 214" fill="#e0b04a" stroke="none"/>
+                </g>
+                <!-- Tome -->
+                <g filter="url(#ts-cast)">
+                  <path d="M168 176 H344 C356 176 364 186 364 198 V372 C364 390 348 404 330 404 H182 C164 404 148 390 148 372 V198 C148 186 156 176 168 176Z" fill="url(#ts-scroll)"/>
+                  <path d="M256 184 V396" stroke="#6b3a24" stroke-width="6" opacity=".35"/>
+                  <rect x="176" y="214" width="62" height="12" rx="6" fill="#6b3a24" opacity=".7"/>
+                  <rect x="176" y="238" width="62" height="7" rx="3" fill="#8a5a32" opacity=".35"/>
+                  <rect x="176" y="254" width="54" height="7" rx="3" fill="#8a5a32" opacity=".28"/>
+                  <rect x="274" y="214" width="62" height="12" rx="6" fill="#7a2b2b" opacity=".8"/>
+                  <rect x="274" y="238" width="62" height="7" rx="3" fill="#8a5a32" opacity=".35"/>
+                  <rect x="176" y="292" width="160" height="8" rx="4" fill="#8a5a32" opacity=".28"/>
+                  <rect x="176" y="314" width="132" height="8" rx="4" fill="#8a5a32" opacity=".22"/>
+                  <rect x="188" y="348" width="136" height="22" rx="8" fill="#2b3d66" opacity=".85"/>
+                </g>
+                <!-- Lames jumelles -->
+                <g filter="url(#ts-cast)">
+                  <g transform="rotate(-32 168 210)">
+                    <polygon points="168,48 184,250 152,250" fill="url(#ts-blade)"/>
+                    <rect x="138" y="246" width="60" height="16" rx="4" fill="url(#ts-gold)"/>
+                    <rect x="160" y="262" width="16" height="46" rx="4" fill="#5a2a16"/>
+                  </g>
+                  <g transform="rotate(32 344 210)">
+                    <polygon points="344,48 360,250 328,250" fill="url(#ts-blade)"/>
+                    <rect x="314" y="246" width="60" height="16" rx="4" fill="url(#ts-gold)"/>
+                    <rect x="336" y="262" width="16" height="46" rx="4" fill="#5a2a16"/>
+                  </g>
+                </g>
+                <!-- Couronne -->
+                <g filter="url(#ts-cast)" transform="translate(0 -6)">
+                  <path d="M186 156 L206 104 L256 138 L306 104 L326 156 Z" fill="url(#ts-gold)"/>
+                  <circle cx="206" cy="100" r="8" fill="#ffefc2"/>
+                  <circle cx="256" cy="132" r="7" fill="#e11d2e"/>
+                  <circle cx="306" cy="100" r="8" fill="#ffefc2"/>
+                </g>
+                <!-- d20 central + éclat -->
+                <circle cx="336" cy="318" r="78" fill="url(#ts-glowgrad)"/>
+                <g filter="url(#ts-bloom)" transform="translate(8 18)">
+                  <polygon points="328,236 412,284 378,392 278,392 244,284" fill="url(#ts-ember)"/>
+                  <polygon points="328,236 412,284 328,308 244,284" fill="#ff8a4a" opacity=".7"/>
+                  <polygon points="328,308 412,284 378,392" fill="#9b1224" opacity=".65"/>
+                  <polygon points="328,308 244,284 278,392" fill="#5a0814" opacity=".5"/>
+                  <g clip-path="url(#ts-d20clip)">
+                    <rect class="ts-glintrect" x="240" y="230" width="46" height="200" fill="url(#ts-glintgrad)"/>
+                  </g>
+                  <path d="M328 256 L382 288 L360 366 L296 366 L274 288 Z" fill="none" stroke="#ffe7a3" stroke-width="6" stroke-linejoin="round"/>
+                  <text x="328" y="332" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="58" font-weight="700" fill="#fff4d2">20</text>
+                </g>
+              </g>
+            </g>
+            <circle cx="256" cy="256" r="250" fill="none" stroke="url(#ts-gold)" stroke-width="9"/>
+          </svg>
+        </div>
+        <div class="ts-word">TABLE SYNC</div>
+        <div class="ts-rule" aria-hidden="true"><i class="rline"></i><i class="rline rline2"></i></div>
+      </div>
+      <div class="ts-motes" aria-hidden="true">
+        <i class="tmote" style="top: 18%; left: 22%; width: 4px; height: 4px; --ts-mo: 0.4; --ts-d: 8.5s; --ts-dl: 1s; --ts-dx: 10px"></i>
+        <i class="tmote" style="top: 30%; left: 74%; width: 3px; height: 3px; --ts-mo: 0.32; --ts-d: 10s; --ts-dl: 1.35s; --ts-dx: -12px"></i>
+        <i class="tmote" style="top: 46%; left: 14%; width: 3px; height: 3px; --ts-mo: 0.26; --ts-d: 9s; --ts-dl: 1.7s; --ts-dx: 8px"></i>
+        <i class="tmote" style="top: 12%; left: 55%; width: 5px; height: 5px; --ts-mo: 0.3; --ts-d: 11s; --ts-dl: 1.15s; --ts-dx: -9px"></i>
+        <i class="tmote" style="top: 40%; left: 86%; width: 4px; height: 4px; --ts-mo: 0.24; --ts-d: 8s; --ts-dl: 2.2s; --ts-dx: -7px"></i>
+        <i class="tmote" style="top: 58%; left: 64%; width: 3px; height: 3px; --ts-mo: 0.34; --ts-d: 9.5s; --ts-dl: 1.5s; --ts-dx: 11px"></i>
+      </div>
+      <div class="ts-curtain" aria-hidden="true"></div>
+      <p class="ts-sr" role="status">Chargement de Table Sync…</p>
+    </div>
+    <noscript>
+      <!-- Sans JS, le splash n'a pas de sens : on le cache pour montrer le
+           message d'erreur ci-dessous. -->
+      <style>
+        #ts-splash {
+          display: none;
+        }
+      </style>
+      <div style="max-width:34rem;margin:0 auto;padding:3rem 1.25rem;font-family:Georgia,serif;color:#2a1f14">
+        <p>Table Sync exige JavaScript — activez-le, puis rechargez la page.</p>
+        <p>Table Sync requires JavaScript — enable JavaScript, then reload the page.</p>
+      </div>
+    </noscript>
+
     <!-- Garde navigateur : le CSS produit par Tailwind v4 exige @property,
          oklch et color-mix — plancher effectif Safari 16.4 / Chromium 111 /
          Firefox 128 (le target JS « es2020 » de Vite ne rattrape pas le CSS).
          En dessous, la page s'afficherait cassée en silence : transformations
          qui fuient, couleurs tombées. Ce script inline s'exécute avant le
          bundle (les scripts module sont différés) ; si le navigateur manque
-         un pilier, on pose un écran statique bilingue et on pose le drapeau
-         __TS_UNSUPPORTED__ que main.tsx lit pour ne pas booter React. -->
+         un pilier, on pose un écran statique bilingue, on RETIRE le splash
+         (rien ne viendrait plus le lacer — il recouvrirait l'écran à jamais)
+         et on pose le drapeau __TS_UNSUPPORTED__ que main.tsx lit pour ne
+         pas booter React. -->
     <script>
       // biome-ignore lint/complexity/useArrowFunction: cette garde doit rester en ES5 (var, function) — elle s'exécute précisément sur des navigateurs trop anciens pour parse un bundle es2020.
       (function () {
@@ -55,6 +517,8 @@
           CSS.supports('color', 'color-mix(in oklab, red, blue)');
         if (ok) return;
         window.__TS_UNSUPPORTED__ = true;
+        var splash = document.getElementById('ts-splash');
+        if (splash) splash.parentNode.removeChild(splash);
         var root = document.getElementById('root');
         if (root) {
           root.innerHTML =
@@ -67,13 +531,6 @@
         }
       })();
     </script>
-
-    <noscript>
-      <div style="max-width:34rem;margin:0 auto;padding:3rem 1.25rem;font-family:Georgia,serif;color:#2a1f14">
-        <p>Table Sync exige JavaScript — activez-le, puis rechargez la page.</p>
-        <p>Table Sync requires JavaScript — enable it, then reload the page.</p>
-      </div>
-    </noscript>
 
     <script type="module" src="/src/main.tsx"></script>
   </body>
