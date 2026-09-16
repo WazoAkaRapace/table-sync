@@ -195,6 +195,11 @@ comme un instrument.
 - **Body** (Iowan 400, 1rem/1.5): le texte ; méta et hints en
   `text-sm text-ink-400/500`.
 - **Label** (medium, `text-sm` — `.label`): libellés de champs.
+- **Micro-étiquette** (`text-[10px]`/`text-[11px]`, souvent semibold
+  `uppercase tracking-wide`, encre 300–500): surets, overlines et
+  métadonnées serrées — crochets de sorts, « À terre », horodatages de
+  chronique, queues de registres. Plus petit que le texte jamais lu en
+  continu ; ~75 usages, volontairement hors classes utilitaires nommées.
 - **Mono** (`font-mono`): PV, CA, initiative, durées, codes d'invitation,
   `J−N` — la mesure, jamais la déco.
 
@@ -284,6 +289,13 @@ pour le reste, chaque verbe à taille de combat (≥ 44 px). Composants dans
 | `RarityBadge` `CategoryBadge` `WeightBadge` `CostBadge` | métadonnées d'objet | rareté teintée (`rarity-*`), jamais grise |
 | `EmptyState` `LoadingSpinner` `ErrorMsg` | états de page | libellés français (« Ouverture du registre… ») |
 | `SkeletonRegion` `SkeletonRegister` `SkeletonCard` `SkeletonRow` `SkeletonBlock` | squelettes de chargement | le dialecte fantôme — voir « Squelettes de chargement » ci-dessous |
+| `RegisterHead` | tête réglée des registres et pages-outil | titre display centré + méta + double règle de tête ; `rise` (défaut — la page vierge porte déjà `register-rise`), `tight` (vue lecture), `announce` (méta en région vivante), `overline` (« Séance N »), `metaClassName` (variante flex à pastilles), `children` (porte de création) |
+| `Panel` | carte de travail des onglets de la fiche | `card p-4 sm:p-5 space-y-3` canonique ; `title` rend le `section-title`, `tuto` = ancre `data-tuto` |
+| `StepButton` | compteur −/+ parchemin (quantités, dés de vie, ressources) | 44 px mobile / 36 px desktop (idiome bourse), `label` a11y obligatoire, `title` optionnel |
+| `VitalButton` | carré PV blesser/soigner (fiche, forme animale, bandeau) | `verb` harm/heal, `temp` (PV temporaires, bleu), `fold` hide/swap — repli ±5/±1 sous 380 px |
+| `AuthCard` | carte-sceau des 5 portes (login, inscription, vérification, oubli, réinitialisation) | sceau + titre display sang + sous-titre ; wrapper `min-h-dvh` unifié |
+| `AccentLink` | lien sang dans le texte | le verbe d'accent des phrases grises |
+| `StatTile` | tuile parchemin des stats | `bg-parchment-100 rounded-xl p-3` + étiquette xs ; `tuto` = ancre |
 
 **Squelettes de chargement** — le comportement normal de l'app face à un
 chargement de SURFACE pleine (page, registre, panneau, onglet) : ce qui est
