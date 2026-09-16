@@ -263,6 +263,26 @@ pour le reste, chaque verbe à taille de combat (≥ 44 px). Composants dans
 | `ToastStack` / `Toast` | retours d'action | bas d'écran, `aria-live` |
 | `RarityBadge` `CategoryBadge` `WeightBadge` `CostBadge` | métadonnées d'objet | rareté teintée (`rarity-*`), jamais grise |
 | `EmptyState` `LoadingSpinner` `ErrorMsg` | états de page | libellés français (« Ouverture du registre… ») |
+| `SkeletonRegion` `SkeletonRegister` `SkeletonCard` `SkeletonRow` `SkeletonBlock` | squelettes de chargement | le dialecte fantôme — voir « Squelettes de chargement » ci-dessous |
+
+**Squelettes de chargement** — le comportement normal de l'app face à un
+chargement de SURFACE pleine (page, registre, panneau, onglet) : ce qui est
+statique (filtres, têtes, barres d'onglets) se pose immédiatement, des blocs
+`parchment-200` gardent la place du contenu. Trois règles du système :
+(1) **un seul pouls par région** — `SkeletonRegion` porte `role="status"`
++ libellé français (lu une fois) et l'animation ; ses enfants ne pulsent pas
+chacun (une couche animée, pas trente — vieille tablette), et `.skeleton`
+(index.css) coupe le pouls sous `prefers-reduced-motion` : la structure porte
+l'information, les blocs restent lisibles ; (2) **le fantôme parle le
+dialecte de sa surface** — `SkeletonRegister` (tête + double règle + une
+entrée courante + compactes) pour les pages réglées, `SkeletonCard` (`lines`
+suivant le corps réel) pour les grilles de cartes, `SkeletonRow`
+(`lg`/`md`/`sm`, calibrées sur les cycles de vie des registres) pour les
+entrées et listes, `SkeletonBlock` la brique ; (3) **micro-chargements
+exceptés** — les chargements inline dans un conteneur déjà occupé (recherche
+du catalogue, transfert en modal, sondes de rôle) gardent le texte
+`animate-pulse` : un squelette n'ouvre pas une page, il tient une surface.
+`LoadingSpinner` reste pour ces cas-là.
 
 **Échelle de confirmation** — toute suppression se confirme au point de
 tap, jamais ailleurs dans la carte : `ConfirmButton` arme le contrôle

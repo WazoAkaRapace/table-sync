@@ -19,7 +19,14 @@ import api from '../api';
 import { useAuth } from '../auth';
 import { useSyncEvent } from '../sync';
 import { formatMessageTime } from '../utils';
-import { ConfirmButton, EmptyState, ErrorMsg, LoadingSpinner } from './ui';
+import {
+  ConfirmButton,
+  EmptyState,
+  ErrorMsg,
+  SkeletonBlock,
+  SkeletonRegion,
+  SkeletonRow,
+} from './ui';
 
 const MAX_LENGTH = 2000;
 
@@ -196,7 +203,20 @@ export default function MessageThread({
     justSent.current = false;
   }, [messages]);
 
-  if (query.isPending) return <LoadingSpinner label={t('msgs.chargement')} />;
+  if (query.isPending)
+    return (
+      // Fantôme de la carte de fil : tête (titre + statut) puis les lignes
+      // de messages réglées — même carte, même filet, le temps du chargement.
+      <SkeletonRegion label={t('msgs.chargement')} className="card p-4 sm:p-5">
+        <div className="flex items-baseline justify-between gap-3 pb-3">
+          <SkeletonBlock className="h-5 w-44" />
+          <SkeletonBlock className="h-3 w-20" />
+        </div>
+        <SkeletonRow size="sm" />
+        <SkeletonRow size="sm" />
+        <SkeletonRow size="sm" />
+      </SkeletonRegion>
+    );
   if (query.error)
     return <ErrorMsg message={t('msgs.impossible.charger')} onRetry={() => void query.refetch()} />;
 

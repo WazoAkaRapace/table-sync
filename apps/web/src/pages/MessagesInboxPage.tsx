@@ -13,7 +13,13 @@ import { useTranslation } from 'react-i18next';
 import { Navigate, useParams } from 'react-router-dom';
 import api from '../api';
 import MessageThread from '../components/MessageThread';
-import { EmptyState, ErrorMsg, LoadingSpinner } from '../components/ui';
+import {
+  EmptyState,
+  ErrorMsg,
+  SkeletonRegion,
+  SkeletonRegister,
+  SkeletonRow,
+} from '../components/ui';
 import { useSyncEvent } from '../sync';
 import { usePartyRole } from '../usePartyRole';
 import { formatMessageTime, toRoman } from '../utils';
@@ -72,7 +78,7 @@ export default function MessagesInboxPage() {
   // prend pas la place des volumes de la table.
   const [hiddenOpen, setHiddenOpen] = useState(false);
 
-  if (roleQuery.isPending) return <LoadingSpinner label={t('app.chargement')} />;
+  if (roleQuery.isPending) return <SkeletonRegister label={t('app.chargement')} />;
   // Un échec de chargement n'est pas un « tu n'es pas le MD » : la connexion
   // se dit, le bouton retente — jamais de renvoi muet au groupe.
   if (roleQuery.isError) {
@@ -190,9 +196,11 @@ export default function MessagesInboxPage() {
       </div>
 
       {threadsQuery.isPending ? (
-        <p className="py-8 text-center text-sm text-ink-400 animate-pulse">
-          {t('msgs.chargement')}
-        </p>
+        <SkeletonRegion label={t('msgs.chargement')}>
+          <SkeletonRow />
+          <SkeletonRow />
+          <SkeletonRow />
+        </SkeletonRegion>
       ) : threads.length === 0 ? (
         <div className="card mx-auto mt-6 max-w-md p-8">
           <EmptyState icon="✉️" title={t('msgs.correspondance')} hint={t('msgs.aucun.message.md')} />

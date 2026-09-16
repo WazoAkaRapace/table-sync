@@ -42,8 +42,8 @@ import {
   EmptyState,
   ErrorMsg,
   HpBar,
-  LoadingSpinner,
   Modal,
+  SkeletonRegister,
   type Toast,
   ToastStack,
 } from '../components/ui';
@@ -583,7 +583,7 @@ export default function CombatPage() {
     [isDesktop],
   );
 
-  if (loading) return <LoadingSpinner label={t('combat.ouverture.du.registre')} />;
+  if (loading) return <SkeletonRegister label={t('combat.ouverture.du.registre')} />;
   if (error && !party) return <ErrorMsg message={error} />;
   if (!party) return <ErrorMsg message={t('combat.groupe.introuvable')} />;
 

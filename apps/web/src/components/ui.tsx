@@ -461,6 +461,125 @@ export function EmptyState({ icon, title, hint }: { icon: string; title: string;
   );
 }
 
+// ---------- Squelettes de chargement ----------
+// Le dialecte fantôme de l'app : ce qui est statique (filtres, têtes, onglets)
+// se pose immédiatement, des blocs parchment-200 gardent la place du contenu.
+// Règles du système :
+//   · le pouls vit sur la RÉGION (une seule couche animée pour tout le
+//     squelette, pas une par bloc — vieille tablette) ;
+//   · `.skeleton` (index.css) coupe le pouls sous prefers-reduced-motion —
+//     la structure porte l'information, les blocs restent lisibles ;
+//   · squelette = chargement d'une SURFACE pleine (page, registre, panneau) ;
+//     les micro-chargements inline (recherche, transfert en modal) gardent
+//     le texte `animate-pulse`.
+// Compose : SkeletonRegister (pages-registres) · SkeletonCard (grilles de
+// cartes) · SkeletonRow (entrées réglées / listes) · SkeletonBlock (brique).
+
+/** Brique fantôme — taille et forme par className (h-4 w-24, rounded-full,
+ *  rounded-lg…). Arrondi doux par défaut, fond parchment-200. */
+export function SkeletonBlock({ className = '' }: { className?: string }) {
+  return <span aria-hidden="true" className={`block rounded bg-parchment-200 ${className}`} />;
+}
+
+/** Région squelette : annonce le chargement (role=status + libellé français,
+ *  lu une fois) et porte L'UNIQUE pouls — ses enfants ne pulsent pas chacun. */
+export function SkeletonRegion({
+  label,
+  className = '',
+  children,
+}: {
+  label: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div role="status" aria-label={label} className={`skeleton animate-pulse ${className}`}>
+      {children}
+    </div>
+  );
+}
+
+/** Fantôme de carte de grille — l'anatomie commune des cartes de l'app
+ *  (titre + glyphe, pastilles, lieu, N lignes de corps, pied sous filet).
+ *  `lines` suit le corps réel (PNJ : 4 lignes, bourse : 2…). */
+export function SkeletonCard({
+  lines = 4,
+  className = '',
+}: {
+  lines?: number;
+  className?: string;
+}) {
+  return (
+    <article className={`card p-4 min-w-0 flex flex-col gap-2 ${className}`}>
+      <div className="flex items-start justify-between gap-2">
+        <SkeletonBlock className="h-5 w-2/3" />
+        <SkeletonBlock className="h-4 w-4 rounded-full shrink-0" />
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <SkeletonBlock className="h-4 w-16 rounded-full" />
+        <SkeletonBlock className="h-2.5 w-2.5 rounded-full bg-parchment-300" />
+        <SkeletonBlock className="h-3 w-14" />
+      </div>
+      <SkeletonBlock className="h-3.5 w-1/2" />
+      <div className="space-y-1.5">
+        {[...Array(Math.max(1, lines)).keys()].map((n) => (
+          <SkeletonBlock key={n} className={`h-4 ${n === lines - 1 ? 'w-3/5' : 'w-full'}`} />
+        ))}
+      </div>
+      <div className="mt-auto pt-2 border-t border-parchment-100 flex items-center justify-between">
+        <SkeletonBlock className="h-3 w-24" />
+        <SkeletonBlock className="h-3 w-10" />
+      </div>
+    </article>
+  );
+}
+
+/** Fantôme d'entrée réglée — le dialecte des registres et des listes : marque
+ *  de tête, nom, méta, refermé par un filet. `lg` = l'entrée courante
+ *  (dépliée, roster sous filet interne), `md` l'entrée normale, `sm` la
+ *  compacte. */
+export function SkeletonRow({ size = 'md' }: { size?: 'lg' | 'md' | 'sm' }) {
+  const pad = size === 'lg' ? 'py-6' : size === 'sm' ? 'py-3' : 'py-4';
+  const mark = size === 'lg' ? 'h-7 w-7' : size === 'sm' ? 'h-4 w-4' : 'h-5 w-5';
+  const name = size === 'lg' ? 'h-6 w-2/3' : size === 'sm' ? 'h-4 w-2/5' : 'h-4 w-1/2';
+  const meta = size === 'lg' ? 'h-3 w-3/5' : 'h-3 w-2/5';
+  return (
+    <div className={`${pad} border-b border-parchment-200 flex items-start gap-4`}>
+      <SkeletonBlock className={`${mark} rounded-lg shrink-0`} />
+      <div className="flex-1 min-w-0 space-y-2">
+        <SkeletonBlock className={name} />
+        <SkeletonBlock className={meta} />
+        {size === 'lg' && (
+          <div className="mt-1 border-t border-parchment-200 pt-2">
+            <SkeletonBlock className="h-3 w-1/2" />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Registre s'ouvrant — tête (titre + double règle) puis une entrée courante
+ *  et des compactes. Le squelette des pages-registres : groupes, table des
+ *  matières, rencontres, chronique, courrier. */
+export function SkeletonRegister({ label, className = '' }: { label: string; className?: string }) {
+  return (
+    <SkeletonRegion label={label} className={`mx-auto w-full max-w-3xl ${className}`}>
+      <div className="pt-2 pb-6 text-center">
+        <SkeletonBlock className="mx-auto h-7 w-48" />
+      </div>
+      <div aria-hidden="true">
+        <div className="border-t-2 border-parchment-400" />
+        <div className="mt-[3px] border-t border-parchment-300" />
+      </div>
+      <SkeletonRow size="lg" />
+      <SkeletonRow />
+      <SkeletonRow />
+      <SkeletonRow size="sm" />
+    </SkeletonRegion>
+  );
+}
+
 // ---------- In-page tab bar ----------
 // The app's tab row for tool pages (Table du MD, Carnet): underline blood on
 // the active tab, ink at rest. Scrolls horizontally on narrow viewports

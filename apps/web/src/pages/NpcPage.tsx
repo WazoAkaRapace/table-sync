@@ -14,7 +14,14 @@ import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../auth';
-import { ConfirmButton, EmptyState, ErrorMsg, LoadingSpinner, Modal } from '../components/ui';
+import {
+  ConfirmButton,
+  EmptyState,
+  ErrorMsg,
+  Modal,
+  SkeletonCard,
+  SkeletonRegion,
+} from '../components/ui';
 import { appLocale } from '../i18n';
 import { useResyncOnReconnect, useSyncEvent } from '../sync';
 import { usePartyRole } from '../usePartyRole';
@@ -443,9 +450,13 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
       return new Set();
     }
   });
-  // Route param change reuses the component instance — reload the right set.
+  // Route param change reuses the component instance — drop the previous
+  // party's data (le squelette couvre l'échange : le registre d'un autre
+  // groupe ne se rend jamais en décalé) puis reload the right set.
   useEffect(() => {
     if (!partyId) return;
+    setNpcs([]);
+    setGmaRes(null);
     try {
       setCollapsedFactions(
         new Set(
@@ -508,7 +519,12 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
 
   // ---------- Render guards ----------
 
-  if (loading) return <LoadingSpinner label={t('pnj.chargement.des.pnj')} />;
+  // Squelette SEULEMENT au premier chargement (aucune donnée) : l'en-tête et
+  // les filtres — état 100 % local — se posent immédiatement, les cartes
+  // fantômes gardent la place du registre. Un rechargement (silencieux via
+  // WS/reconnexion, ou après une écriture) ne fait jamais clignoter la page :
+  // les données rendues restent en place.
+  const initialLoading = loading && npcs.length === 0;
   // (chargement initial raté — non-membre, groupe inconnu : l'erreur porte le
   // message ; une revalidation silencieuse ratée garde les données rendues)
   if (error && npcs.length === 0) return <ErrorMsg message={error} />;
@@ -682,8 +698,20 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
         </div>
       )}
 
-      {/* NPC grid grouped by faction */}
-      {filtered.length === 0 ? (
+      {/* NPC grid grouped by faction — ghost cards while the registry opens,
+          then one register-rise for the whole grid (the container mounts once
+          per skeleton→registre swap : taper dans les filtres ne rejoue jamais
+          l'entrée, les sections restent montées) */}
+      {initialLoading ? (
+        <SkeletonRegion
+          label={t('pnj.chargement.des.pnj')}
+          className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+        >
+          {[0, 1, 2, 3, 4, 5].map((n) => (
+            <SkeletonCard key={n} />
+          ))}
+        </SkeletonRegion>
+      ) : filtered.length === 0 ? (
         <div className="card p-4">
           <EmptyState
             icon="🎭"
@@ -694,7 +722,7 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
           />
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-6 register-rise">
           {grouped.map(([faction, group]) => {
             const label = faction === NO_FACTION ? t('pnj.sans.faction') : faction;
             const isCollapsed = !filtersActive && collapsedFactions.has(faction);

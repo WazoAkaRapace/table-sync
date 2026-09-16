@@ -669,6 +669,17 @@ input[type="number"] {
   }
 }
 
+/* ---------- Squelettes de chargement (ui.tsx) ---------- */
+
+/* Le pouls est porté par la RÉGION (SkeletonRegion — une seule couche animée,
+   pas une par bloc). Coupé sous prefers-reduced-motion : la structure porte
+   l'information, les blocs statiques restent lisibles. */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}
+
 /* ---------- Combat stage (CombatPage) ---------- */
 
 /* Stage swap — the théâtre's one signed moment: on each turn change the new

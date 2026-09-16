@@ -20,7 +20,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../auth';
-import { ErrorMsg, LoadingSpinner, Modal } from '../components/ui';
+import { ErrorMsg, Modal, SkeletonRegister } from '../components/ui';
 import { copyText, formatSince, toRoman } from '../utils';
 
 // ---------- Small helpers ----------
@@ -211,7 +211,7 @@ export default function PartiesPage() {
     });
   }
 
-  if (loading) return <LoadingSpinner label={t('parties.ouverture.du.registre')} />;
+  if (loading) return <SkeletonRegister label={t('parties.ouverture.du.registre')} />;
   if (loadError) {
     return (
       <div className="mx-auto w-full max-w-xl space-y-3">

@@ -12,7 +12,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import api from '../api';
-import { Chip, EmptyState, ErrorMsg, LoadingSpinner } from '../components/ui';
+import { Chip, EmptyState, ErrorMsg, SkeletonRegister } from '../components/ui';
 import { useHeaderOverride } from '../headerContext';
 import { appLang, appLocale } from '../i18n';
 import { useResyncOnReconnect, useSyncEvent } from '../sync';
@@ -195,7 +195,7 @@ export default function ChroniclePage() {
 
   useHeaderOverride(t('chronique.titre'), onBack);
 
-  if (loading) return <LoadingSpinner label={t('chronique.ouverture')} />;
+  if (loading) return <SkeletonRegister label={t('chronique.ouverture')} />;
   if (!link?.linked) {
     return (
       <div className="mx-auto w-full max-w-xl">

@@ -28,7 +28,7 @@ import { useTranslation } from 'react-i18next';
 import api from '../api';
 import CastSpellSheet from '../components/CastSpellSheet';
 import { SpellProse } from '../components/SpellProse';
-import { BottomSheet, Chip, ErrorMsg } from '../components/ui';
+import { BottomSheet, Chip, ErrorMsg, SkeletonBlock, SkeletonRegion } from '../components/ui';
 import { abilityShort, classNameLabel, damageType, schoolLabel } from '../i18n/labels';
 import { useResyncOnReconnect } from '../sync';
 
@@ -668,11 +668,11 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
               </button>
             </div>
           ) : loadingSpells ? (
-            <div role="status" aria-label={t('sorts.chargement.des.sorts')} className="space-y-1.5">
+            <SkeletonRegion label={t('sorts.chargement.des.sorts')} className="space-y-1.5">
               {[0, 1, 2].map((i) => (
                 <SpellRowSkeleton key={i} />
               ))}
-            </div>
+            </SkeletonRegion>
           ) : spellsByLevel.length === 0 ? (
             <p className="text-sm text-ink-400 italic">
               {listFilter === 'prepared' ? (
@@ -1067,13 +1067,13 @@ function SlotRail({
 
 function SpellRowSkeleton() {
   return (
-    <div className="bg-parchment-50 border border-parchment-200 rounded-lg p-3 flex items-center gap-3 animate-pulse">
-      <span className="h-2.5 w-2.5 rounded-full bg-parchment-300 shrink-0" />
-      <span className="flex-1 space-y-1.5 min-w-0">
-        <span className="block h-3 w-1/2 rounded bg-parchment-200" />
-        <span className="block h-2 w-1/3 rounded bg-parchment-200" />
-      </span>
-      <span className="h-8 w-8 rounded-lg bg-parchment-200 shrink-0" />
+    <div className="bg-parchment-50 border border-parchment-200 rounded-lg p-3 flex items-center gap-3">
+      <SkeletonBlock className="h-2.5 w-2.5 rounded-full bg-parchment-300 shrink-0" />
+      <div className="flex-1 space-y-1.5 min-w-0">
+        <SkeletonBlock className="h-3 w-1/2" />
+        <SkeletonBlock className="h-2 w-1/3" />
+      </div>
+      <SkeletonBlock className="h-8 w-8 rounded-lg shrink-0" />
     </div>
   );
 }
@@ -1350,11 +1350,11 @@ function SpellCatalog({
           </button>
         </div>
       ) : loading ? (
-        <div role="status" aria-label={t('sorts.chargement.du.grimoire')} className="space-y-1.5">
+        <SkeletonRegion label={t('sorts.chargement.du.grimoire')} className="space-y-1.5">
           {[0, 1, 2].map((i) => (
             <SpellRowSkeleton key={i} />
           ))}
-        </div>
+        </SkeletonRegion>
       ) : spells.length === 0 ? (
         search.trim() || level !== '' || school ? (
           <p className="text-sm text-ink-400 italic text-center py-4">

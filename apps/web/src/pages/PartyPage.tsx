@@ -22,7 +22,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../auth';
-import { ErrorMsg, LoadingSpinner } from '../components/ui';
+import { ErrorMsg, SkeletonRegister } from '../components/ui';
 import { useResyncOnReconnect, useSyncEvent } from '../sync';
 import { useMessagesUnread } from '../useMessagesUnread';
 import { activeCharactersFirst, copyText } from '../utils';
@@ -414,7 +414,7 @@ export default function PartyPage() {
     });
   }
 
-  if (loading) return <LoadingSpinner label={t('party.ouverture')} />;
+  if (loading) return <SkeletonRegister label={t('party.ouverture')} />;
   if (disbanded) {
     return (
       <div className="mx-auto w-full max-w-xl space-y-4 pt-10 text-center">

@@ -35,8 +35,10 @@ import {
   EmptyState,
   ErrorMsg,
   Fab,
-  LoadingSpinner,
   Modal,
+  SkeletonCard,
+  SkeletonRegion,
+  SkeletonRow,
   type Toast,
   ToastStack,
 } from '../components/ui';
@@ -809,7 +811,20 @@ export default function CharacterInventoryPage() {
   const grouped = useMemo(() => groupByCategory(entries), [entries]);
 
   // ---------- Render guards ----------
-  if (loading) return <LoadingSpinner label={t('inv.chargement.du.sac.a.dos')} />;
+  if (loading)
+    return (
+      // Fantôme du sac à dos : la carte bourse puis les rangées d'objets —
+      // le squelette reste sous la garde de rendu, les hooks vivent au-dessus.
+      <SkeletonRegion label={t('inv.chargement.du.sac.a.dos')} className="space-y-4">
+        <SkeletonCard lines={2} />
+        <div>
+          <SkeletonRow />
+          <SkeletonRow />
+          <SkeletonRow />
+          <SkeletonRow />
+        </div>
+      </SkeletonRegion>
+    );
   if (error && !data) return <ErrorMsg message={error} />;
   if (!data) return <ErrorMsg message={t('inv.personnage.introuvable')} />;
 

@@ -40,8 +40,9 @@ import {
   ConfirmButton,
   EmptyState,
   ErrorMsg,
-  LoadingSpinner,
   Modal,
+  SkeletonCard,
+  SkeletonRegion,
   TabButton,
 } from '../components/ui';
 import { appLocale } from '../i18n';
@@ -169,7 +170,15 @@ export default function DmNotebookPage() {
     setSearchParams(next === 'notes' ? {} : { tab: next }, { replace: true });
   }
 
-  if (loading) return <LoadingSpinner label={t('carnet.chargement')} />;
+  if (loading)
+    return (
+      // Fantôme de l'onglet Notes (défaut) : la grille de cartes triables.
+      <SkeletonRegion label={t('carnet.chargement')} className="grid gap-3 sm:grid-cols-2">
+        {[0, 1].map((n) => (
+          <SkeletonCard key={n} />
+        ))}
+      </SkeletonRegion>
+    );
   if (forbidden) {
     return (
       <div className="mx-auto w-full max-w-xl space-y-4 pt-10 text-center">

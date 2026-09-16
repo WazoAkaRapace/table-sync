@@ -28,8 +28,9 @@ import {
   EmptyState,
   ErrorMsg,
   Fab,
-  LoadingSpinner,
   Modal,
+  SkeletonCard,
+  SkeletonRegion,
   TabButton,
   type Toast,
   ToastStack,
@@ -168,7 +169,18 @@ export default function GmDashboardPage() {
     [currentPartyId, syncedCharacter],
   );
 
-  if (loading) return <LoadingSpinner />;
+  if (loading)
+    return (
+      // Fantôme de l'onglet Personnages (défaut) : la grille de cartes.
+      <SkeletonRegion
+        label={t('md.chargement')}
+        className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
+      >
+        {[0, 1, 2].map((n) => (
+          <SkeletonCard key={n} lines={3} />
+        ))}
+      </SkeletonRegion>
+    );
   if (error) return <ErrorMsg message={error} onRetry={() => void load()} />;
   if (!party) return <ErrorMsg message={t('md.groupe.introuvable')} />;
 
