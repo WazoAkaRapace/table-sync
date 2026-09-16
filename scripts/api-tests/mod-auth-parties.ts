@@ -260,6 +260,44 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   r = await api(base, 'GET', '/api/parties/999999', { token: fx.gm.token });
   eq(r.status, 403, 'party detail unknown party → 403 (member check first)');
 
+  // Sonde de rôle légère (usePartyRole) : deux booléens, pas le roster.
+  r = await api(base, 'GET', `/api/parties/${fx.partyId}/me`, { token: fx.gm.token });
+  eq(r.status, 200, 'role probe (GM)');
+  eq(r.data.isGM, true, 'role probe GM → isGM true');
+  eq(typeof r.data.playersCreateItems, 'boolean', 'role probe carries playersCreateItems');
+  ok(r.data.characters === undefined, 'role probe does NOT carry the roster');
+
+  r = await api(base, 'GET', `/api/parties/${fx.partyId}/me`, { token: fx.player.token });
+  eq(r.status, 200, 'role probe (player)');
+  eq(r.data.isGM, false, 'role probe player → isGM false');
+
+  r = await api(base, 'GET', `/api/parties/${fx.partyId}/me`, { token: fx.outsider.token });
+  eq(r.status, 403, 'role probe non-member → 403');
+
+  r = await api(base, 'GET', '/api/parties/999999/me', { token: fx.gm.token });
+  eq(r.status, 403, 'role probe unknown party → 403 (member check first)');
+
+  // ETag sur le détail de groupe : inchangé → 304 sans corps.
+  r = await api(base, 'GET', `/api/parties/${fx.partyId}`, { token: fx.gm.token });
+  const partyEtag = r.headers?.get('etag');
+  ok(partyEtag, 'party detail carries an ETag');
+  const r304 = await api(base, 'GET', `/api/parties/${fx.partyId}`, {
+    token: fx.gm.token,
+    headers: { 'If-None-Match': partyEtag! },
+  });
+  eq(r304.status, 304, 'party detail revalidation → 304');
+  // Un autre appelant (GM vs joueur : le corps diffère — personnage caché)
+  // ne doit PAS hériter du 304.
+  const rPlayer = await api(base, 'GET', `/api/parties/${fx.partyId}`, {
+    token: fx.player.token,
+    headers: { 'If-None-Match': partyEtag! },
+  });
+  eq(rPlayer.status, 200, 'player with GM etag → 200 (bodies differ, hidden char)');
+  ok(
+    rPlayer.data.characters.every((c: any) => c.name !== 'Ombre'),
+    'player body still hides Ombre',
+  );
+
   // ---------- join ----------
   r = await api(base, 'POST', '/api/parties/join', {
     token: fx.player.token,

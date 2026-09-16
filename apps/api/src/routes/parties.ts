@@ -23,6 +23,7 @@ import {
   mapCharacterSummary,
   requireUser,
 } from './helpers.ts';
+import { sendCachedJson } from './httpCache.ts';
 import { apiMsg } from './messages.ts';
 
 export async function partyRoutes(app: FastifyInstance) {
@@ -192,7 +193,10 @@ export async function partyRoutes(app: FastifyInstance) {
       );
 
       attachCharacterClasses(visibleCharacters);
-      return reply.send({
+      // ETag + 304 : le détail de groupe est le gros morceau (résumé de tous
+      // les personnages) et les clients le refetchent à chaque vague
+      // d'invalidation — inchangé, il ne doit repartir qu'en 304.
+      return sendCachedJson(req, reply, {
         party: {
           id: party.id,
           name: party.name,
@@ -216,6 +220,35 @@ export async function partyRoutes(app: FastifyInstance) {
           bannedAt: b.banned_at,
         })),
         characters: visibleCharacters.map(mapCharacterSummary),
+      });
+    },
+  );
+
+  // ---------- Who am I in this party (sonde de rôle LÉGÈRE) ----------
+  // La fiche et la boîte de réception MD n'ont besoin que de DEUX booléens —
+  // leur faire télécharger GET /parties/:id entier (résumé de TOUS les
+  // personnages, ~150 Ko compressés) à chaque montage d'onglet et à chaque
+  // vague d'invalidation (party:change, resync de reconnexion) coûtait une
+  // fortune en bande passante, surtout sur la liaison faible d'une tablette.
+  app.get(
+    '/parties/:id/me',
+    async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+      const userId = requireUser(req, reply);
+      if (userId === null) return;
+      const partyId = Number(req.params.id);
+      // Même ordre que le détail : la non-appartenance répond AVANT l'inconnue
+      // (une partie qui n'existe pas ne doit pas se distinguer d'une privée).
+      if (!isPartyMember(partyId, userId))
+        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
+      const party = getDrizzle()
+        .select({ playersCreateItems: parties.playersCreateItems })
+        .from(parties)
+        .where(eq(parties.id, partyId))
+        .get() as any;
+      if (!party) return reply.code(404).send({ error: apiMsg(req, 'party not found') });
+      return reply.send({
+        isGM: isPartyGM(partyId, userId),
+        playersCreateItems: !!party.playersCreateItems,
       });
     },
   );
