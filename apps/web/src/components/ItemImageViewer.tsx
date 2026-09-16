@@ -230,6 +230,30 @@ function noteBackdrop(color: string): string {
   return lum >= 0.18 ? 'rgba(42,31,20,0.55)' : 'rgba(253,250,243,0.82)';
 }
 
+/**
+ * Ancre de DESSIN d'une note (son coin haut-gauche) : le texte coule vers la
+ * droite et le bas, donc une ancre posée sur le bord droit/bas — ou un peu
+ * au-delà (tape dans la marge noire, glissé calé au bord) — engloutirait la
+ * note tout entière du composite. On ramène l'ancre à un demi-glyphe DANS
+ * l'image : la note s'écrit tronquée au bord, jamais disparue. Utilisée À
+ * L'IDENTIQUE par l'aperçu de session et le composite enregistré — l'aperçu
+ * reste fidèle à l'enregistré. `aspect` = largeur / hauteur de l'image
+ * (identique en rect affiché et en pixels naturels : object-contain).
+ */
+function noteDrawAnchor(
+  nx: number,
+  ny: number,
+  size: number,
+  aspect: number,
+): { nx: number; ny: number } {
+  // size est une fraction de la LARGEUR ; en fraction de HAUTEUR, un glyphe
+  // vaut size × aspect.
+  return {
+    nx: Math.min(nx, 1 - size * 0.5),
+    ny: Math.min(ny, 1 - size * aspect * 0.5),
+  };
+}
+
 /** L'élément tapé appartient-il au chrome annotation (barre, palette, saisie) ? */
 function isAnnotationUI(target: EventTarget | null): boolean {
   return target instanceof Element && !!target.closest('[data-annotation-ui]');
@@ -318,15 +342,6 @@ export function ItemImageViewer({
     viewRef.current = view;
   }, [view]);
 
-  // Rect de l'image SANS transform (capturé à 1×) — ancre le placement des
-  // textes, projetés par la formule translate/scale à chaque rendu.
-  const [baseRect, setBaseRect] = useState<{
-    left: number;
-    top: number;
-    width: number;
-    height: number;
-  } | null>(null);
-
   const clampPan = (v: View): View => {
     const { w, h } = containRef.current;
     const maxX = Math.max(0, (w * v.scale - window.innerWidth) / 2);
@@ -403,10 +418,10 @@ export function ItemImageViewer({
 
   const activeStrokeRef = useRef<StrokeAnnotation | null>(null);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: repaint piloté par les états qui bougent le rendu (annotations, vue, chargement, ancre 1×) ; paintStrokes se recrée à chaque rendu et lit les refs — l'ajouter relancerait l'effet en boucle.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: repaint piloté par les états qui bougent le rendu (annotations, vue, chargement, outil) ; paintStrokes se recrée à chaque rendu et lit les refs — l'ajouter relancerait l'effet en boucle.
   useEffect(() => {
     paintStrokes();
-  }, [annotations, view, loaded, baseRect, tool]);
+  }, [annotations, view, loaded, tool]);
 
   /** Point normalisé [0..1] du pointeur sur l'image affichée (rect zoomé). */
   const normalizePoint = (clientX: number, clientY: number): [number, number] | null => {
@@ -415,15 +430,27 @@ export function ItemImageViewer({
     return [(clientX - rect.left) / rect.width, (clientY - rect.top) / rect.height];
   };
 
-  /** Écran ← image normalisée, via le rect 1× et la transformation courante. */
+  /**
+   * Rect AFFICHÉ de l'image, relu au moment de l'appel — l'ancre unique de
+   * tout le placement (traits sur le canvas, conteneur clippant, projection
+   * des notes et tampons). Le rect VIVENT inclut déjà pan/zoom : une note à
+   * (nx, ny) se projette à left + nx × width, sans répliquer la formule de
+   * transform. Relire à chaque rendu (et jamais « une fois pour toutes »)
+   * est le contrat : une ancre capturée pendant l'animation d'entrée — ou
+   * entre deux changements de vue — projetait tout le chrome d'annotation
+   * avec quelques pour-cent de décalage (leçon CI : traits et notes
+   * vieillissaient différemment du rect réel).
+   */
+  const liveImageRect = (): DOMRect | null => {
+    const rect = imgRef.current?.getBoundingClientRect();
+    return rect && rect.width > 0 ? rect : null;
+  };
+
+  /** Écran ← image normalisée, via le rect affiché relu à l'appel. */
   const projectToScreen = (nx: number, ny: number): { x: number; y: number } | null => {
-    if (!baseRect) return null;
-    const ox = baseRect.left + baseRect.width / 2;
-    const oy = baseRect.top + baseRect.height / 2;
-    return {
-      x: ox + (baseRect.left + nx * baseRect.width - ox) * view.scale + view.x,
-      y: oy + (baseRect.top + ny * baseRect.height - oy) * view.scale + view.y,
-    };
+    const rect = liveImageRect();
+    if (!rect) return null;
+    return { x: rect.left + nx * rect.width, y: rect.top + ny * rect.height };
   };
 
   // Focus + scroll lock + Échap + piège Tab (chrome annotation focusable).
@@ -494,28 +521,6 @@ export function ItemImageViewer({
     return () => root.removeEventListener('wheel', onWheel);
   }, []);
 
-  // Rect 1× à recadrer quand on REVIENT au repos (layout stable sinon) ou au
-  // redimensionnement de la fenêtre — les textes dépendent de cette ancre.
-  // + à la fin de l'animation d'entrée (scale 0.96→1) : une capture prise
-  // PENDANT l'animation épinglerait un rect ~4 % trop petit, et les notes
-  // s'afficheraient décalées par rapport au composite enregistré.
-  useEffect(() => {
-    const capture = () => {
-      const el = imgRef.current;
-      if (!el) return;
-      const r = el.getBoundingClientRect();
-      if (r.width > 0) setBaseRect({ left: r.left, top: r.top, width: r.width, height: r.height });
-    };
-    if (loaded && view.scale === 1 && view.x === 0 && view.y === 0) capture();
-    window.addEventListener('resize', capture);
-    const area = imageAreaRef.current;
-    area?.addEventListener('animationend', capture, { once: true });
-    return () => {
-      window.removeEventListener('resize', capture);
-      area?.removeEventListener('animationend', capture);
-    };
-  }, [loaded, view]);
-
   // ---------- Enregistrement : composite base + annotations → JPEG ----------
 
   const save = async () => {
@@ -557,6 +562,13 @@ export function ItemImageViewer({
             }),
         ),
       );
+      // La pile de --font-body (celle que les spans d'aperçu rendent
+      // réellement) : les métriques du composite doivent être celles de
+      // l'aperçu — une autre police changerait la largeur du texte, donc la
+      // boîte, la troncature au bord et la position de chaque glyphe.
+      const bodyFamily =
+        getComputedStyle(document.documentElement).getPropertyValue('--font-body').trim() ||
+        'ui-serif, Georgia, serif';
       for (const a of annotationsRef.current) {
         if (a.kind === 'stroke') {
           ctx.strokeStyle = a.color;
@@ -584,32 +596,40 @@ export function ItemImageViewer({
           }
         } else {
           const fontPx = textFontSize(W, a.size);
-          ctx.font = `italic ${fontPx}px ui-serif, Georgia, serif`;
+          ctx.font = `italic ${fontPx}px ${bodyFamily}`;
           // Ancre HAUT-GAUCHE à (nx, ny) — la même sémantique que l'aperçu
-          // (span ancré top-left) : la note enregistrée tombe pile où la
-          // note de session s'affichait, à tout zoom.
+          // (span ancré top-left, fond DEPUIS l'ancre, texte décalé des
+          // mêmes paddings) : la note enregistrée tombe pile où la note de
+          // session s'affichait, à tout zoom. Borne noteDrawAnchor : posée
+          // un peu hors cadre, la note s'écrit tronquée au bord.
           ctx.textBaseline = 'top';
-          const tx = a.nx * W;
-          const ty = a.ny * H;
-          // Petit fond translucide ARRONDI (voir noteBackdrop) : la note reste
-          // lisible sur n'importe quelle image — l'aperçu de session matche.
+          const anchor = noteDrawAnchor(a.nx, a.ny, a.size, W / H);
+          const tx = anchor.nx * W;
+          const ty = anchor.ny * H;
           const m = ctx.measureText(a.text);
+          // Boîte du span d'aperçu, à l'identique : padding 0.3em/0.05em,
+          // hauteur lineHeight 1 + 2 × padY, rayon 0.25em, ombre portée
+          // (approximée — canvas ne porte qu'une ombre, l'aperçu deux).
           const padX = fontPx * 0.3;
-          const padY = fontPx * 0.12;
-          const bx = tx - padX;
-          const by = ty - m.actualBoundingBoxAscent - padY;
-          const bw = m.width + padX * 2;
-          const bh = m.actualBoundingBoxAscent + m.actualBoundingBoxDescent + padY * 2;
+          const padY = fontPx * 0.05;
+          ctx.save();
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
+          ctx.shadowBlur = 2;
+          ctx.shadowOffsetY = 1;
           ctx.fillStyle = noteBackdrop(a.color);
           ctx.beginPath();
           const rc = ctx as CanvasRenderingContext2D & {
             roundRect?: (x: number, y: number, w: number, h: number, r: number) => void;
           };
-          if (typeof rc.roundRect === 'function') rc.roundRect(bx, by, bw, bh, fontPx * 0.2);
-          else ctx.rect(bx, by, bw, bh);
+          if (typeof rc.roundRect === 'function') {
+            rc.roundRect(tx, ty, m.width + padX * 2, fontPx + padY * 2, fontPx * 0.25);
+          } else {
+            ctx.rect(tx, ty, m.width + padX * 2, fontPx + padY * 2);
+          }
           ctx.fill();
           ctx.fillStyle = a.color;
-          ctx.fillText(a.text, tx, ty);
+          ctx.fillText(a.text, tx + padX, ty + padY);
+          ctx.restore();
         }
       }
       const blob = await new Promise<Blob | null>((resolve) =>
@@ -785,6 +805,11 @@ export function ItemImageViewer({
       );
     }
   };
+
+  // Rect affiché de l'image, relu À CHAQUE RENDU : origine du conteneur
+  // clippant, base des projections et des tailles — jamais d'ancre périmée
+  // (une capture figée vieillissait avec l'animation d'entrée et le zoom).
+  const renderRect = editable ? liveImageRect() : null;
 
   return createPortal(
     <div
@@ -1051,7 +1076,15 @@ export function ItemImageViewer({
           if (p) {
             // Le ref est mis à jour immédiatement : les événements souris de
             // compat de CETTE tape arrivent juste après (voir onMouseDown).
-            pendingTextRef.current = { nx: p[0], ny: p[1], sx: e.clientX, sy: e.clientY };
+            // Tape bornée à l'image (même contrat que le glissé) : une tape
+            // dans la marge noire pose la note AU BORD, et noteDrawAnchor
+            // l'écrit tronquée au lieu de la laisser disparaître.
+            pendingTextRef.current = {
+              nx: Math.min(1, Math.max(0, p[0])),
+              ny: Math.min(1, Math.max(0, p[1])),
+              sx: e.clientX,
+              sy: e.clientY,
+            };
             setPendingText(pendingTextRef.current);
             setDraft('');
           }
@@ -1165,10 +1198,6 @@ export function ItemImageViewer({
               w = h * ratio;
             }
             containRef.current = { w, h };
-            const r = img.getBoundingClientRect();
-            if (r.width > 0) {
-              setBaseRect({ left: r.left, top: r.top, width: r.width, height: r.height });
-            }
             setLoaded(true);
           }}
           className="max-h-full max-w-full object-contain"
@@ -1181,72 +1210,97 @@ export function ItemImageViewer({
           repaint, les coordonnées normalisées restent stables). */}
       {editable && <canvas ref={canvasRef} className="pointer-events-none absolute inset-0" />}
 
-      {/* Textes posés : spans ancrés par projection du rect 1× (suivent pan/zoom). */}
+      {/* Tampons posés : imgs ancrés sur le rect affiché relu à chaque rendu
+          (suivent pan/zoom et l'animation d'entrée sans ancre périmée). */}
       {editable &&
-        baseRect &&
+        renderRect &&
         annotations.map((a) => {
-          if (a.kind === 'stamp') {
-            const p = projectToScreen(a.nx, a.ny);
-            if (!p) return null;
-            const s = a.size * baseRect.width * view.scale;
-            const selected = selectedStampId === a.id;
-            return (
-              <img
-                key={`stamp-${a.id}`}
-                data-stamp-id={a.id}
-                data-selected={selected || undefined}
-                src={stampUrl(a.key)}
-                alt=""
-                draggable={false}
-                className={`pointer-events-auto absolute touch-none ${
-                  selected ? 'rounded-lg ring-2 ring-gold-300' : 'cursor-move'
-                }`}
-                style={{
-                  left: p.x - s / 2,
-                  top: p.y - s / 2,
-                  width: s,
-                  height: s,
-                  // Même traitement d'ombre que les notes (textShadow) : le
-                  // tampon se détache des cartes chargées ; le composite
-                  // applique la même ombre pour que l'aperçu reste fidèle.
-                  filter: 'drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5))',
-                }}
-              />
-            );
-          }
-          if (a.kind !== 'text') return null;
+          if (a.kind !== 'stamp') return null;
           const p = projectToScreen(a.nx, a.ny);
           if (!p) return null;
-          const size = textFontSize(baseRect.width * view.scale, a.size);
-          const selected = selectedNoteId === a.id;
+          const s = a.size * renderRect.width;
+          const selected = selectedStampId === a.id;
           return (
-            <span
-              key={`note-${a.id}`}
-              data-note-id={a.id}
+            <img
+              key={`stamp-${a.id}`}
+              data-stamp-id={a.id}
               data-selected={selected || undefined}
-              className={`pointer-events-auto absolute touch-none font-body italic ${
+              src={stampUrl(a.key)}
+              alt=""
+              draggable={false}
+              className={`pointer-events-auto absolute touch-none ${
                 selected ? 'rounded-lg ring-2 ring-gold-300' : 'cursor-move'
               }`}
               style={{
-                // Ancre = coin HAUT-GAUCHE au point projeté, à tout zoom :
-                // `top: p.y - size` faisait flotter la note une hauteur de
-                // texte AU-DESSUS du point tapé — elle « glissait » pendant
-                // le dézoom (taille ∝ zoom) et ne se posait qu'à 1×.
-                left: p.x,
-                top: p.y,
-                lineHeight: 1,
-                color: a.color,
-                fontSize: size,
-                backgroundColor: noteBackdrop(a.color),
-                borderRadius: '0.25em',
-                padding: '0.05em 0.3em',
-                textShadow: '0 1px 2px rgba(0,0,0,0.55), 0 0 3px rgba(0,0,0,0.35)',
+                left: p.x - s / 2,
+                top: p.y - s / 2,
+                width: s,
+                height: s,
+                // Même traitement d'ombre que les notes (textShadow) : le
+                // tampon se détache des cartes chargées ; le composite
+                // applique la même ombre pour que l'aperçu reste fidèle.
+                filter: 'drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5))',
               }}
-            >
-              {a.text}
-            </span>
+            />
           );
         })}
+
+      {/* Notes posées : clippées au rect affiché de l'image — même idiome que
+          les traits sur le canvas. L'ancre passe par noteDrawAnchor (la même
+          borne que le composite) : une note posée sur le bord, ou un peu hors
+          cadre, s'affiche tronquée à l'aperçu — ce qui tombera dans le JPEG. */}
+      {editable && renderRect && (
+        <div
+          className="pointer-events-none absolute overflow-hidden"
+          style={{
+            left: renderRect.left,
+            top: renderRect.top,
+            width: renderRect.width,
+            height: renderRect.height,
+          }}
+        >
+          {annotations.map((a) => {
+            if (a.kind !== 'text') return null;
+            const anchor = noteDrawAnchor(a.nx, a.ny, a.size, renderRect.width / renderRect.height);
+            const p = projectToScreen(anchor.nx, anchor.ny);
+            if (!p) return null;
+            const size = textFontSize(renderRect.width, a.size);
+            const selected = selectedNoteId === a.id;
+            return (
+              <span
+                key={`note-${a.id}`}
+                data-note-id={a.id}
+                data-selected={selected || undefined}
+                className={`pointer-events-auto absolute touch-none font-body italic ${
+                  selected ? 'rounded-lg ring-2 ring-gold-300' : 'cursor-move'
+                }`}
+                style={{
+                  // Ancre = coin HAUT-GAUCHE au point projeté, à tout zoom :
+                  // `top: p.y - size` faisait flotter la note une hauteur de
+                  // texte AU-DESSUS du point tapé — elle « glissait » pendant
+                  // le dézoom (taille ∝ zoom) et ne se posait qu'à 1×.
+                  // Coordonnées relatives au conteneur clippant.
+                  left: p.x - renderRect.left,
+                  top: p.y - renderRect.top,
+                  // Une seule ligne, coupée au bord par le conteneur : le
+                  // composite ne replie jamais (fillText trace une ligne),
+                  // l'aperçu ne doit pas replier davantage.
+                  whiteSpace: 'nowrap',
+                  lineHeight: 1,
+                  color: a.color,
+                  fontSize: size,
+                  backgroundColor: noteBackdrop(a.color),
+                  borderRadius: '0.25em',
+                  padding: '0.05em 0.3em',
+                  textShadow: '0 1px 2px rgba(0,0,0,0.55), 0 0 3px rgba(0,0,0,0.35)',
+                }}
+              >
+                {a.text}
+              </span>
+            );
+          })}
+        </div>
+      )}
 
       {/* Saisie flottante au point tapé (au-dessus du clavier mobile) */}
       {pendingText && (

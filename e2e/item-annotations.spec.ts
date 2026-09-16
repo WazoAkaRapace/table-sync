@@ -463,6 +463,116 @@ playerTest.describe('Annotations (joueuse)', () => {
   });
 
   playerTest(
+    'note posée hors cadre : écrite tronquée au bord, jamais disparue',
+    async ({ page }) => {
+      const dialog = await openCroquisViewer(page);
+      const box = await dialog.locator('img').boundingBox();
+      expect(box, 'image bounding box').not.toBeNull();
+
+      // Tape SOUS le bord bas de l'image, dans la marge noire : l'ancre brute
+      // sort du [0..1] — avant le recadrage, la note disparaissait TOUT ENTIÈRE
+      // du composite (fillText qui démarre hors canevas ne peint rien).
+      await dialog.getByRole('button', { name: 'Écrire' }).click();
+      await page.mouse.click(box!.x + box!.width * 0.5, box!.y + box!.height + 12);
+      const input = dialog.getByLabel('Texte de la note');
+      await expect(input).toBeFocused();
+      await input.fill('Hors cadre');
+      await input.press('Enter');
+      const note = dialog.getByText('Hors cadre');
+      await expect(note).toBeVisible();
+
+      // L'ancre est revenue SUR l'image (ramenée à un demi-glyphe du bord bas),
+      // pas restée dans la marge : ce que l'aperçu montre est enregistrable.
+      const nb = (await note.boundingBox())!;
+      expect(nb.y, "l'ancre est revenue au-dessus du bord bas").toBeLessThan(box!.y + box!.height);
+      expect(nb.y, 'et reste collée à ce bord').toBeGreaterThan(box!.y + box!.height * 0.85);
+
+      // Note LONGUE près du bord droit : jamais de repli à la ligne — le
+      // composite trace une seule ligne (fillText), l'aperçu doit faire de
+      // même (une ligne tronquée par le conteneur clippant, pas un paragraphe).
+      await dialog.getByRole('button', { name: 'Écrire' }).click();
+      await page.mouse.click(box!.x + box!.width * 0.6, box!.y + box!.height * 0.55);
+      await dialog
+        .getByLabel('Texte de la note')
+        .fill('Une longue note qui déborde très largement du bord droit de la carte');
+      await dialog.getByLabel('Texte de la note').press('Enter');
+      const longue = dialog.getByText(/Une longue note/);
+      await expect(longue).toBeVisible();
+      const ligne = await longue.evaluate((el) => {
+        const cs = getComputedStyle(el);
+        return {
+          whiteSpace: cs.whiteSpace,
+          height: el.getBoundingClientRect().height,
+          fontSize: Number.parseFloat(cs.fontSize),
+        };
+      });
+      expect(ligne.whiteSpace, 'pas de repli à la ligne').toBe('nowrap');
+      expect(ligne.height, 'une seule ligne (hauteur ≈ police)').toBeLessThan(ligne.fontSize * 1.5);
+
+      // Enregistrement : preuve par les octets — la zone de l'ancre du dérivé
+      // diffère de la base (la note y est peinte, tronquée au bord).
+      await dialog.getByRole('button', { name: 'Enregistrer' }).click();
+      await expect(page.getByRole('dialog')).toHaveCount(0);
+
+      const inv = await getJson(`/api/characters/${rookId}/inventory`, seed().player.token);
+      const derived = inv.entries.find(
+        (e: { item: { derivedFromItemId: number | null } }) =>
+          e.item.derivedFromItemId === croquisId,
+      );
+      expect(derived, 'ligne dérivée').toBeTruthy();
+      const baseB64 = (await getImageBytes(croquisId, seed().player.token)).toString('base64');
+      const derivedB64 = (await getImageBytes(derived.itemId, seed().player.token)).toString(
+        'base64',
+      );
+
+      const changedPixels = await page.evaluate(
+        async ([b, d]) => {
+          const load = (mime: string, b64: string) =>
+            new Promise<HTMLImageElement>((resolve, reject) => {
+              const img = new Image();
+              img.onload = () => resolve(img);
+              img.onerror = () => reject(new Error('image'));
+              img.src = `data:${mime};base64,${b64}`;
+            });
+          const [base, derivedImg] = await Promise.all([
+            load('image/png', b),
+            load('image/jpeg', d),
+          ]);
+          // Zone de l'ancre : nx 0,5 → x≈200 ; ny ramené à ~0,97 → le haut des
+          // glyphes + le fond translucide vivent dans y ∈ [265 ; 300].
+          const sample = (img: HTMLImageElement) => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) throw new Error('canvas');
+            ctx.drawImage(img, 0, 0);
+            return ctx.getImageData(150, 265, 100, 35).data;
+          };
+          const pa = sample(base);
+          const pb = sample(derivedImg);
+          let n = 0;
+          for (let i = 0; i < pa.length; i += 4) {
+            if (
+              Math.abs(pa[i] - pb[i]) > 60 ||
+              Math.abs(pa[i + 1] - pb[i + 1]) > 60 ||
+              Math.abs(pa[i + 2] - pb[i + 2]) > 60
+            ) {
+              n++;
+            }
+          }
+          return n;
+        },
+        [baseB64, derivedB64],
+      );
+      expect(
+        changedPixels,
+        'la note hors cadre est peinte (tronquée) dans le composite',
+      ).toBeGreaterThan(40);
+    },
+  );
+
+  playerTest(
     'pince à deux doigts : zoom et dézoom continus, puis retour au repos',
     async ({ page }) => {
       // Geste natif : deux doigts qui s'écartent zooment (ancré au milieu),
