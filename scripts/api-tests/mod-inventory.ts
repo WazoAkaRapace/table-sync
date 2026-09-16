@@ -70,6 +70,25 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
     'add transactions logged',
   );
 
+  // ---------- clés de base dans le payload inventaire (bug #? dague non qualifiée) ----------
+  // L'entrée d'inventaire JOIN items avec alias i_ : mapInventoryEntry doit
+  // transporter base_weapon, sinon la fiche retombe sur le nom localisé FR
+  // (« Dague ») et rate findMundaneByName → arme prise pour de guerre,
+  // bonus de maîtrise perdu pour les classes « armes courantes ».
+  const dagger = srv.query("SELECT id FROM items WHERE srd_index = 'dagger'");
+  r = await api(base, 'POST', `/api/characters/${A}/inventory`, {
+    token: fx.gm.token,
+    body: { itemId: dagger.id },
+  });
+  eq(r.status, 201, 'add dagger');
+  eq(r.data.entry.item.baseWeapon, 'Dagger', 'POST entry carries baseWeapon');
+  eq(r.data.entry.item.name, 'Dague', 'entry serves localized name');
+  r = await api(base, 'GET', `/api/characters/${A}/inventory`, { token: fx.gm.token });
+  const daggerEntry = r.data.entries.find((e: any) => e.item.baseWeapon === 'Dagger');
+  ok(daggerEntry, 'GET inventory entry carries baseWeapon');
+  r = await api(base, 'DELETE', `/api/inventory/${daggerEntry.id}`, { token: fx.gm.token });
+  eq(r.status, 204, 'remove dagger entry');
+
   // ---------- patch entry ----------
   r = await api(base, 'PATCH', `/api/inventory/${entry.id}`, { token: fx.gm.token, body: {} });
   eq(r.status, 400, 'patch entry no fields → 400');

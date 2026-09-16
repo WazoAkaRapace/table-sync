@@ -2731,7 +2731,20 @@ export const CLASS_WEAPON_PROFICIENCIES: Record<string, WeaponProficiencySet> = 
   Druide: {
     simple: false,
     martial: false,
-    specific: ['Club', 'Dagger', 'Dart', 'Quarterstaff', 'Scimitar', 'Sickle', 'Sling', 'Spear'],
+    // SRD : clubs, dagues, dards, javelines, masses d'armes, bâtons,
+    // cimeterres, serpes, frondes, lances
+    specific: [
+      'Club',
+      'Dagger',
+      'Dart',
+      'Javelin',
+      'Mace',
+      'Quarterstaff',
+      'Scimitar',
+      'Sickle',
+      'Sling',
+      'Spear',
+    ],
   },
   Ensorceleur: {
     simple: false,
@@ -2963,18 +2976,23 @@ export function isProficientWithArmor(
   return prof.heavy;
 }
 
-/** Find a mundane weapon by exact English or French name. */
+/**
+ * Find a mundane weapon by exact name, English or French — either argument may
+ * carry either language. Runtime payloads are mono-locale (`name` localisé,
+ * cf. computeWeaponStats) : une « Dague » sans clé baseWeapon doit retrouver
+ * la Dagger, sans quoi elle est prise pour une arme de guerre.
+ */
 export function findMundaneByName(
   nameEn: string | null | undefined,
   nameFr: string | null | undefined,
 ): MundaneWeapon | null {
-  if (nameEn) {
-    const byEn = MUNDANE_WEAPONS.find((m) => m.nameEn.toLowerCase() === nameEn.toLowerCase());
-    if (byEn) return byEn;
-  }
-  if (nameFr) {
-    const byFr = MUNDANE_WEAPONS.find((m) => m.nameFr.toLowerCase() === nameFr.toLowerCase());
-    if (byFr) return byFr;
+  for (const candidate of [nameEn, nameFr]) {
+    if (!candidate) continue;
+    const needle = candidate.toLowerCase();
+    const hit = MUNDANE_WEAPONS.find(
+      (m) => m.nameEn.toLowerCase() === needle || m.nameFr.toLowerCase() === needle,
+    );
+    if (hit) return hit;
   }
   return null;
 }
