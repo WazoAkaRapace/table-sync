@@ -58,7 +58,7 @@ gmTest(
     await gmPage.getByRole('button', { name: 'Envoyer' }).click();
 
     // — La bannière tombe sur la fiche, où que la joueuse se tienne —
-    const banner = playerPage.getByRole('status').filter({ hasText: 'Le MD vous a écrit' });
+    const banner = playerPage.getByRole('status').filter({ hasText: 'Le MD t’a écrit' });
     await expect(banner).toBeVisible({ timeout: 10_000 });
     await expect(banner).toContainText(seed().guerrier.name);
     await banner.getByRole('button', { name: 'Ouvrir' }).click();

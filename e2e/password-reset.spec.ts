@@ -44,7 +44,7 @@ test.describe('mot de passe oublié', () => {
     await page.getByLabel('Adresse e-mail').fill('lyra@example.com');
     await page.getByRole('button', { name: 'Envoyer le lien' }).click();
 
-    await expect(page.getByText(/un e-mail de réinitialisation vient d'être envoyé/)).toBeVisible();
+    await expect(page.getByText(/un e-mail de réinitialisation vient d’être envoyé/)).toBeVisible();
     await expect(page.getByText(/Renvoyer possible dans/)).toBeVisible();
     // Bouton désactivé pendant le décompte de renvoi (60 s côté client).
     await expect(page.getByRole('button', { name: 'Envoyer le lien' })).toBeDisabled();
