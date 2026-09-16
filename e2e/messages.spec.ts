@@ -124,12 +124,13 @@ gmTest(
     // Régression : la fiche et la boîte peuplaient la MÊME entrée de cache
     // ['party-role'] avec deux formes différentes (objet vs booléen) — la boîte
     // lisait l'objet de la fiche, n'y trouvait pas son `true` et renvoyait au
-    // groupe sans un mot. On chauffe le cache côté fiche, puis on entre dans la
-    // boîte par navigation SPA (pas de rechargement : le cache doit survivre).
+    // groupe sans un mot. On chauffe le cache côté fiche (sonde de rôle
+    // GET /parties/:id/me), puis on entre dans la boîte par navigation SPA
+    // (pas de rechargement : le cache doit survivre).
     const roleLoaded = page.waitForResponse(
       (r) =>
         r.request().method() === 'GET' &&
-        new URL(r.url()).pathname === `/api/parties/${seed().partyId}`,
+        new URL(r.url()).pathname === `/api/parties/${seed().partyId}/me`,
     );
     await page.goto(sheetUrl(seed().guerrier.id));
     await roleLoaded;
