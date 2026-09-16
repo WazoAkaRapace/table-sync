@@ -230,24 +230,12 @@ function Nav() {
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { t } = useTranslation();
   const { user, loading } = useAuth();
-  if (loading) {
-    // Suite directe du splash de démarrage : même sceau, même wordmark —
-    // la vérification de session se lit comme la dernière page du splash,
-    // pas comme un nouvel écran (sceau = celui de la page de connexion).
-    return (
-      <div className="min-h-dvh flex flex-col items-center justify-center gap-3">
-        <img src="/icon-seal.svg" alt="" aria-hidden="true" className="w-14 h-14" />
-        <p className="font-display text-sm font-semibold tracking-[0.34em] pl-[0.34em] text-ink-500">
-          TABLE SYNC
-        </p>
-        <span className="text-ink-400 animate-pulse" role="status" aria-live="polite">
-          {t('app.chargement')}
-        </span>
-      </div>
-    );
-  }
+  // Rien pendant la vérification de session : un état de chargement ici
+  // clignotait entre le splash (ou la page précédente) et le contenu —
+  // chaque page porte sa propre entrée (register-rise & co), c'est elle qui
+  // fait la transition depuis le parchemin vide.
+  if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
   return <>{children}</>;
 }
@@ -333,15 +321,10 @@ function PartyOpenTracker() {
   return null;
 }
 
-/** Suspense fallback shown while a lazy route chunk downloads. */
+/** Suspense fallback : rien — un état intermédiaire clignotait entre deux
+ * pages ; le chunk arrive vite et la page entrante porte sa propre animation. */
 function RouteFallback() {
-  const { t } = useTranslation();
-  return (
-    <div className="flex flex-col items-center gap-3 pt-24" role="status" aria-live="polite">
-      <img src="/icon-seal.svg" alt="" aria-hidden="true" className="w-9 h-9" />
-      <span className="text-ink-400 animate-pulse">{t('app.chargement')}</span>
-    </div>
-  );
+  return null;
 }
 
 export default function App() {
