@@ -22,7 +22,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../auth';
-import { ErrorMsg, SkeletonRegister } from '../components/ui';
+import { ErrorMsg, RegisterHead, SkeletonRegister } from '../components/ui';
 import { useResyncOnReconnect, useSyncEvent } from '../sync';
 import { useMessagesUnread } from '../useMessagesUnread';
 import { activeCharactersFirst, copyText } from '../utils';
@@ -472,22 +472,21 @@ export default function PartyPage() {
   return (
     <div className="mx-auto w-full max-w-3xl">
       {/* Volume title over the head rule */}
-      <header className="register-rise pb-6 pt-2 text-center">
-        <h1 className="font-display text-2xl font-bold sm:text-3xl">{party.party.name}</h1>
-        <p className="mt-1.5 text-sm text-ink-400">
-          {t('party.compteurs.joueur', { count: party.members.length })} ·{' '}
-          {t('party.compteurs.personnage', { count: party.characters.length })} ·{' '}
-          {{
-            variant: t('party.mode.variante'),
-            standard: t('party.mode.standard'),
-            slots: t('party.mode.slots'),
-          }[party.party.encumbranceMode] ?? party.party.encumbranceMode}
-        </p>
-      </header>
-      <div aria-hidden="true">
-        <div className="border-t-2 border-parchment-400" />
-        <div className="mt-[3px] border-t border-parchment-300" />
-      </div>
+      <RegisterHead
+        title={party.party.name}
+        meta={
+          <>
+            {t('party.compteurs.joueur', { count: party.members.length })} ·{' '}
+            {t('party.compteurs.personnage', { count: party.characters.length })} ·{' '}
+            {{
+              variant: t('party.mode.variante'),
+              standard: t('party.mode.standard'),
+              slots: t('party.mode.slots'),
+            }[party.party.encumbranceMode] ?? party.party.encumbranceMode}
+          </>
+        }
+        metaClassName="mt-1.5 text-sm text-ink-400"
+      />
 
       {/* I — Ton personnage : la seule porte en sang de la page */}
       <section className="register-rise pt-6" style={{ animationDelay: '60ms' }}>

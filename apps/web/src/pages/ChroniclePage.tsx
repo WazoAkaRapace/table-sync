@@ -12,7 +12,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import api from '../api';
-import { Chip, EmptyState, ErrorMsg, SkeletonRegister } from '../components/ui';
+import { Chip, EmptyState, ErrorMsg, RegisterHead, SkeletonRegister } from '../components/ui';
 import { useHeaderOverride } from '../headerContext';
 import { appLang, appLocale } from '../i18n';
 import { useResyncOnReconnect, useSyncEvent } from '../sync';
@@ -226,22 +226,22 @@ export default function ChroniclePage() {
     const active = recaps.find((r) => r.style === activeStyle) ?? recaps[0];
     return (
       <article className="mx-auto w-full max-w-3xl">
-        <header className="register-rise pb-5 pt-2 text-center">
-          <p className="text-xs uppercase tracking-[0.2em] text-ink-300">{t('chronique.seance')}</p>
-          <h1 className="mt-1 font-display text-2xl font-bold sm:text-3xl">{open.title}</h1>
-          <p className="mt-1.5 flex flex-wrap items-center justify-center gap-2 text-sm text-ink-400">
-            <span>{playedAtLabel(open.playedAt, t)}</span>
-            {recapsRes?.stale && (
-              <Chip tone="amber" soft>
-                {t('chronique.possiblement.obsolete')}
-              </Chip>
-            )}
-          </p>
-        </header>
-        <div aria-hidden="true">
-          <div className="border-t-2 border-parchment-400" />
-          <div className="mt-[3px] border-t border-parchment-300" />
-        </div>
+        <RegisterHead
+          tight
+          overline={t('chronique.seance')}
+          title={<span className="mt-1 block">{open.title}</span>}
+          metaClassName="mt-1.5 flex flex-wrap items-center justify-center gap-2 text-sm text-ink-400"
+          meta={
+            <>
+              <span>{playedAtLabel(open.playedAt, t)}</span>
+              {recapsRes?.stale && (
+                <Chip tone="amber" soft>
+                  {t('chronique.possiblement.obsolete')}
+                </Chip>
+              )}
+            </>
+          }
+        />
 
         {recaps.length > 1 && (
           <nav
@@ -356,23 +356,22 @@ export default function ChroniclePage() {
 
   return (
     <div className="mx-auto w-full max-w-3xl">
-      <header className="register-rise pb-6 pt-2 text-center">
-        <h1 className="font-display text-2xl font-bold sm:text-3xl">{t('chronique.titre')}</h1>
-        <p className="mt-1.5 flex flex-wrap items-center justify-center gap-2 text-sm text-ink-400">
-          <span>{link.campaign?.title}</span>
-          <span aria-hidden="true">·</span>
-          <span>{t('chronique.seances', { count: ordered.length })}</span>
-          {stale && (
-            <Chip tone="amber" soft>
-              {t('chronique.possiblement.obsolete')}
-            </Chip>
-          )}
-        </p>
-      </header>
-      <div aria-hidden="true">
-        <div className="border-t-2 border-parchment-400" />
-        <div className="mt-[3px] border-t border-parchment-300" />
-      </div>
+      <RegisterHead
+        title={t('chronique.titre')}
+        metaClassName="mt-1.5 flex flex-wrap items-center justify-center gap-2 text-sm text-ink-400"
+        meta={
+          <>
+            <span>{link.campaign?.title}</span>
+            <span aria-hidden="true">·</span>
+            <span>{t('chronique.seances', { count: ordered.length })}</span>
+            {stale && (
+              <Chip tone="amber" soft>
+                {t('chronique.possiblement.obsolete')}
+              </Chip>
+            )}
+          </>
+        }
+      />
 
       {ordered.length === 0 ? (
         <div className="pt-8">
