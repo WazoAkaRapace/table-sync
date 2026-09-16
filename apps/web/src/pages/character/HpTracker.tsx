@@ -2,7 +2,7 @@ import type { Character, ConcentrationCheck } from '@table-sync/shared';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../../api';
-import { HpBar, NumberField } from '../../components/ui';
+import { HpBar, NumberField, VitalButton } from '../../components/ui';
 import type { SheetActionProps } from './types';
 
 interface HpTrackerProps extends SheetActionProps {
@@ -192,23 +192,22 @@ export function HpTracker({
         statement (filet between); on mobile it wraps to its own row below. */}
       <div className="flex flex-wrap items-center justify-center gap-y-3 lg:flex-nowrap lg:gap-x-6">
         <div className="flex items-center justify-center gap-1">
-          <button
-            type="button"
+          <VitalButton
             onClick={() => damage(5)}
-            className="w-11 h-11 max-[379px]:hidden rounded-lg bg-red-100 hover:bg-red-200 text-red-700 font-semibold flex items-center justify-center transition-colors"
-            aria-label={t('hp.blesser.de.5')}
+            verb="harm"
+            fold="hide"
+            label={t('hp.blesser.de.5')}
           >
             −5
-          </button>
-          <button
-            type="button"
+          </VitalButton>
+          <VitalButton
             onClick={() => damage(1)}
-            className="w-11 h-11 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 font-semibold flex items-center justify-center transition-colors"
-            aria-label={t('hp.blesser.de.1')}
+            verb="harm"
+            fold="swap"
+            label={t('hp.blesser.de.1')}
           >
-            <span className="max-[379px]:hidden">−1</span>
-            <span className="hidden max-[379px]:inline">−</span>
-          </button>
+            −1
+          </VitalButton>
           <NumberField
             className={`w-16 text-center text-lg font-bold font-mono bg-white border border-parchment-300 rounded-lg py-1 focus:outline-none focus:border-blood-500 ${hpColor}`}
             value={currentHp}
@@ -226,23 +225,12 @@ export function HpTracker({
             onBlur={() => commit('maxHp', maxHp, setMaxHp)}
             aria-label={t('hp.points.de.vie.maximum')}
           />
-          <button
-            type="button"
-            onClick={() => heal(1)}
-            className="w-11 h-11 rounded-lg bg-green-100 hover:bg-green-200 text-green-700 font-semibold flex items-center justify-center transition-colors"
-            aria-label={t('hp.soigner.de.1')}
-          >
-            <span className="max-[379px]:hidden">+1</span>
-            <span className="hidden max-[379px]:inline">+</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => heal(5)}
-            className="w-11 h-11 max-[379px]:hidden rounded-lg bg-green-100 hover:bg-green-200 text-green-700 font-semibold flex items-center justify-center transition-colors"
-            aria-label={t('hp.soigner.de.5')}
-          >
+          <VitalButton onClick={() => heal(1)} verb="heal" fold="swap" label={t('hp.soigner.de.1')}>
+            +1
+          </VitalButton>
+          <VitalButton onClick={() => heal(5)} verb="heal" fold="hide" label={t('hp.soigner.de.5')}>
             +5
-          </button>
+          </VitalButton>
         </div>
 
         {/* Filet between the statement and the temp group — desktop only */}
@@ -260,14 +248,14 @@ export function HpTracker({
             onBlur={() => commit('tempHp', tempHp, setTempHp)}
             aria-label={t('hp.points.de.vie.temporaires')}
           />
-          <button
-            type="button"
+          <VitalButton
+            temp
             onClick={() => stepTemp(1)}
-            className="w-10 h-10 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm font-medium flex items-center justify-center transition-colors"
-            aria-label={t('hp.ajouter.1.pv.temp')}
+            verb="heal"
+            label={t('hp.ajouter.1.pv.temp')}
           >
             +
-          </button>
+          </VitalButton>
         </div>
       </div>
 

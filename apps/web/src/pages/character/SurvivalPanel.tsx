@@ -33,7 +33,7 @@ import { useTranslation } from 'react-i18next';
 import api from '../../api';
 import { CONDITION_ICONS } from '../../components/ConditionsEditor';
 import MonsterStatBlock from '../../components/MonsterStatBlock';
-import { BottomSheet, Chip, HpBar, Panel, StepButton } from '../../components/ui';
+import { BottomSheet, Chip, HpBar, Panel, StepButton, VitalButton } from '../../components/ui';
 import {
   abilityShort,
   conditionHintKey,
@@ -402,23 +402,22 @@ export function SurvivalPanel({
                   · {wildShapeDurationHours(character.level ?? 2)} h max
                 </p>
                 <div className="flex items-center justify-center gap-1 flex-wrap">
-                  <button
-                    type="button"
+                  <VitalButton
                     onClick={() => stepShapeHp(-5)}
-                    className="w-11 h-11 max-[379px]:hidden rounded-lg bg-red-100 hover:bg-red-200 text-red-700 font-semibold flex items-center justify-center transition-colors"
-                    aria-label={t('survie.blesser.la.forme.de.5')}
+                    verb="harm"
+                    fold="hide"
+                    label={t('survie.blesser.la.forme.de.5')}
                   >
                     −5
-                  </button>
-                  <button
-                    type="button"
+                  </VitalButton>
+                  <VitalButton
                     onClick={() => stepShapeHp(-1)}
-                    className="w-11 h-11 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 font-semibold flex items-center justify-center transition-colors"
-                    aria-label={t('survie.blesser.la.forme.de.1')}
+                    verb="harm"
+                    fold="swap"
+                    label={t('survie.blesser.la.forme.de.1')}
                   >
-                    <span className="max-[379px]:hidden">−1</span>
-                    <span className="hidden max-[379px]:inline">−</span>
-                  </button>
+                    −1
+                  </VitalButton>
                   <input
                     type="number"
                     className="w-16 text-center text-lg font-bold font-mono bg-white border border-green-200 rounded-lg py-1 focus:outline-none focus:border-green-500 text-green-900"
@@ -430,23 +429,22 @@ export function SurvivalPanel({
                     }}
                     aria-label={t('survie.points.de.vie.de.la.forme')}
                   />
-                  <button
-                    type="button"
+                  <VitalButton
                     onClick={() => stepShapeHp(1)}
-                    className="w-11 h-11 rounded-lg bg-green-100 hover:bg-green-200 text-green-700 font-semibold flex items-center justify-center transition-colors"
-                    aria-label={t('survie.soigner.la.forme.de.1')}
+                    verb="heal"
+                    fold="swap"
+                    label={t('survie.soigner.la.forme.de.1')}
                   >
-                    <span className="max-[379px]:hidden">+1</span>
-                    <span className="hidden max-[379px]:inline">+</span>
-                  </button>
-                  <button
-                    type="button"
+                    +1
+                  </VitalButton>
+                  <VitalButton
                     onClick={() => stepShapeHp(5)}
-                    className="w-11 h-11 max-[379px]:hidden rounded-lg bg-green-100 hover:bg-green-200 text-green-700 font-semibold flex items-center justify-center transition-colors"
-                    aria-label={t('survie.soigner.la.forme.de.5')}
+                    verb="heal"
+                    fold="hide"
+                    label={t('survie.soigner.la.forme.de.5')}
                   >
                     +5
-                  </button>
+                  </VitalButton>
                   <span className="text-sm font-semibold font-mono text-green-700">
                     / {shapeMax}
                   </span>

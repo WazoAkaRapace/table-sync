@@ -35,7 +35,7 @@ import { Link } from 'react-router-dom';
 import api from '../api';
 import { appLang } from '../i18n';
 import { classNameLabel, conditionLabel } from '../i18n/labels';
-import { Chip, EncumbranceBar, HpBar } from './ui';
+import { Chip, EncumbranceBar, HpBar, VitalButton } from './ui';
 
 /** Combat snapshot relevant to the band (subset of the page's hubCombat). */
 export interface StateBandCombat {
@@ -566,22 +566,20 @@ export default function CharacterStateBand({
                   <label htmlFor={hpInputId} className="text-xs font-medium text-ink-600 shrink-0">
                     {shaped ? t('band.pv.forme') : t('band.pv')}
                   </label>
-                  <button
-                    type="button"
+                  <VitalButton
                     onClick={() => damageHp(5)}
-                    className="w-11 h-11 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 font-semibold flex items-center justify-center transition-colors"
-                    aria-label={t('band.blesser.de.5')}
+                    verb="harm"
+                    label={t('band.blesser.de.5')}
                   >
                     −5
-                  </button>
-                  <button
-                    type="button"
+                  </VitalButton>
+                  <VitalButton
                     onClick={() => damageHp(1)}
-                    className="w-11 h-11 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 font-semibold flex items-center justify-center transition-colors"
-                    aria-label={t('band.blesser.de.1')}
+                    verb="harm"
+                    label={t('band.blesser.de.1')}
                   >
                     −1
-                  </button>
+                  </VitalButton>
                   <input
                     id={hpInputId}
                     type="number"
@@ -596,22 +594,20 @@ export default function CharacterStateBand({
                       if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
                     }}
                   />
-                  <button
-                    type="button"
+                  <VitalButton
                     onClick={() => queueHp(displayHp + 1)}
-                    className="w-11 h-11 rounded-lg bg-green-100 hover:bg-green-200 text-green-700 font-semibold flex items-center justify-center transition-colors"
-                    aria-label={t('band.soigner.de.1')}
+                    verb="heal"
+                    label={t('band.soigner.de.1')}
                   >
                     +1
-                  </button>
-                  <button
-                    type="button"
+                  </VitalButton>
+                  <VitalButton
                     onClick={() => queueHp(displayHp + 5)}
-                    className="w-11 h-11 rounded-lg bg-green-100 hover:bg-green-200 text-green-700 font-semibold flex items-center justify-center transition-colors"
-                    aria-label={t('band.soigner.de.5')}
+                    verb="heal"
+                    label={t('band.soigner.de.5')}
                   >
                     +5
-                  </button>
+                  </VitalButton>
                 </div>
               )}
             </div>
