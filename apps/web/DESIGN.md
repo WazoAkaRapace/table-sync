@@ -6,23 +6,38 @@ colors:
   parchment-raised: "#f7f0e1"
   parchment-line: "#ece0c4"
   parchment-deep: "#ddcb9e"
+  parchment-400: "#c9b074"
   ink: "#2a1f14"
   ink-strong: "#3a2b1c"
+  ink-700: "#4a3825"
   ink-mid: "#5b4733"
   ink-soft: "#6b5640"
   ink-muted: "#7d6850"
   ink-faint: "#a8926f"
+  ink-100: "#e9e1d4"
   blood: "#7a1f1f"
   blood-hover: "#651515"
   blood-mark: "#8b1a1a"
   blood-ring: "#c05151"
+  blood-50: "#faf0f0"
+  blood-100: "#f0d4d4"
+  blood-200: "#dda3a3"
+  blood-400: "#a92424"
+  blood-800: "#541212"
+  blood-900: "#470d0d"
   gold: "#d4af37"
   gold-soft: "#e3c766"
+  gold-100: "#f6ecd2"
+  gold-500: "#b8975a"
+  gold-600: "#9a7c48"
+  gold-700: "#7e6439"
   rule-good: "#22c55e"
   rule-mid: "#eab308"
   rule-low: "#ef4444"
   rule-critical: "#b91c1c"
 typography:
+  sans:
+    fontFamily: "Inter, system-ui, sans-serif"
   display:
     fontFamily: "Cinzel, Georgia, serif"
     fontWeight: 700
@@ -128,9 +143,14 @@ classe inconnue, l'erreur serait silencieuse.
   cartes et de badges.
 - **Filet profond** (#ddcb9e `parchment-300`): bordures actives, règle de
   tête secondaire.
+- **Or pâle** (#c9b074 `parchment-400`): le trait fort de la double règle
+  de tête et du liseré du splash.
 - **Encre** (#2a1f14 `ink-900`, #3a2b1c `ink-800`): texte courant et
-  fort ; #5b4733 `ink-600`, #6b5640 `ink-500`, #7d6850 `ink-400`,
-  #a8926f `ink-300` déclinent en méta, hint, imprimé discret.
+  fort ; #4a3825 `ink-700` (libellés `.label`, idiomme « Joueur »),
+  #5b4733 `ink-600`, #6b5640 `ink-500`, #7d6850 `ink-400`,
+  #a8926f `ink-300` déclinent en méta, hint, imprimé discret ; le lavis
+  clair #e9e1d4 `ink-100` porte les pastilles « Caché / Masqué » et les
+  chips armées (l'encre, quand le sang est pris).
 
 ### Rule Colors (hors `@theme`, palette Tailwind standard)
 
@@ -252,9 +272,9 @@ pour le reste, chaque verbe à taille de combat (≥ 44 px). Composants dans
 |---|---|---|
 | `Modal` | dialogues centrés (desktop) | focus trap, Échap, restore le focus |
 | `BottomSheet` | feuilles mobiles portaled | `size` (md/lg), `mobileOnly`, `footer`, `bodyClassName` ; Échap + scroll lock |
-| `Fab` | bouton d'action flottant `+` | `mobileOnly`, `raised` (au-dessus du dock) |
+| `Fab` | bouton d'action flottant `+` | `mobileOnly`, `raised` (au-dessus du dock), `dataTuto` (cible de la visite guidée) |
 | `HpBar` | barre de PV partout (fiche, combat, forme animale) | paliers unifiés : ≤0 `red-700`, ≤25 % `red-500`, ≤50 % `yellow-500`, sinon `green-500` ; `temp` = PV temporaires en segment `blue-500` au-delà du remplissage + aria « +N temporaires » ; `size` xs/sm/md, `showText`, `trackClassName` ; `role="progressbar"` |
-| `Chip` | pastille de stat (attaque 🎯, dégâts ⚔, DD 🛡, ×N, +magique ✨) | `tone` (orange/red/blood/blue/amber/gold/indigo), `soft`, `title` = info-bulle de décomposition |
+| `Chip` | pastille de stat (attaque 🎯, dégâts ⚔, DD 🛡, ×N, +magique ✨) | `tone` (orange/red/blood/green/blue/amber/gold/indigo), `soft`, `title` = info-bulle de décomposition |
 | `EncumbranceBar` | portage et paliers | affiche conséquences de règle au moment où elles s'appliquent ; `compact` = variante une-ligne du bandeau |
 | `CharacterStateBand` | bandeau d'état de la fiche joueur | rail réglé épinglé + jumeau fixe compact au défilement (`band-drop`) ; le flux ne change jamais de hauteur |
 | `CombatWidget` | bande de combat d'en-tête (lg+, fiche du joueur uniquement) | pilule portaled dans `#header-combat-slot` ; `.combat-strip` scope les tailles compactes (les `.btn-*` hors couches écrasent les utilitaires) |
@@ -278,14 +298,19 @@ chacun (une couche animée, pas trente — vieille tablette), et `.skeleton`
 (index.css) coupe le pouls sous `prefers-reduced-motion` : la structure porte
 l'information, les blocs restent lisibles ; (2) **le fantôme parle le
 dialecte de sa surface** — `SkeletonRegister` (tête + double règle + une
-entrée courante + compactes) pour les pages réglées, `SkeletonCard` (`lines`
-suivant le corps réel) pour les grilles de cartes, `SkeletonRow`
+entrée courante + compactes ; groupes, table des matières, rencontres,
+chronique, courrier) pour les pages réglées, `SkeletonCard` (`lines`
+suivant le corps réel — PNJ : 4 lignes, tableau MD : 3, bourse : 2) pour
+les grilles de cartes, `SkeletonRow`
 (`lg`/`md`/`sm`, calibrées sur les cycles de vie des registres) pour les
 entrées et listes, `SkeletonBlock` la brique ; (3) **micro-chargements
 exceptés** — les chargements inline dans un conteneur déjà occupé (recherche
 du catalogue, transfert en modal, sondes de rôle) gardent le texte
 `animate-pulse` : un squelette n'ouvre pas une page, il tient une surface.
-`LoadingSpinner` reste pour ces cas-là.
+`LoadingSpinner` reste pour ces cas-là. Corollaire : les états de
+chargement intermédiaires (`ProtectedRoute` pendant `/me`, `RouteFallback`
+pour les chunks lazy) rendent RIEN — chaque page porte sa propre animation
+d'entrée, c'est elle qui fait la transition depuis le parchemin vide.
 
 **Échelle de confirmation** — toute suppression se confirme au point de
 tap, jamais ailleurs dans la carte : `ConfirmButton` arme le contrôle
@@ -464,6 +489,48 @@ la chaîne décimale).
 | Le CTA | `btn-primary` portant le verbe ET le montant (« Dépenser 5 PA », montant mono dans le libellé) ; « Corriger » édite la bourse telle quelle (draft pré-rempli, l'ancienne édition inline) et **reste verrouillé tant que le draft ne diffère pas de la bourse** — une correction identique n'est pas une opération |
 | Persistance | un seul PATCH plein-purse (`action: 'coins'` en WS), toast « Bourse mise à jour » ; l'API clampe les 5 pièces en entiers ≥ 0 (400 sur non-numérique) |
 
+## Deux pages réglées de plus — la chronique et le courrier
+
+Le registre des groupes, la table des matières et le registre des
+rencontres ne sont plus seuls : la **chronique** (`ChroniclePage.tsx`) et
+la **boîte de réception** (`MessagesInboxPage.tsx`) parlent la même
+grammaire — tête centrée + double règle (`SkeletonRegister` à
+l'ouverture, `register-rise` à l'arrivée), entrées `border-b
+parchment-200` refermées par filet.
+
+- **Chronique** : liste des séances (grille de cartes par style de
+  résumé), vue de lecture pleine largeur `max-w-3xl` (sur-titre
+  « Séance » en capitales `ink-300` + titre Cinzel), chip ambre «
+  possiblement obsolète » (`soft`) quand la source l'est.
+- **Courrier** : une entrée par correspondance — pastille de non-lus
+  (source unique `useMessagesUnread`), dernier message en méta, « sans
+  objet » en italique `ink-400` ; le fil (`MessageThread`) charge en
+  `SkeletonRegion` + `SkeletonRow sm` — le dialecte fantôme d'une carte
+  de fil.
+
+## Le splash « encre vivante » (`index.html`, premier lancement)
+
+La première peinture de l'app est un document, pas un écran de
+chargement : parchemin + halos de body, sceau officiel (jumeau inline
+d'`icon-seal.svg`), wordmark « TABLE SYNC » en Cinzel révélé par balayage
+d'encre, double règle, poussières d'or. Le splash vit entièrement dans
+`index.html` — zéro dépendance au bundle (styles inline, peints avant le
+téléchargement du module) ; `main.tsx` le retire après le premier rendu
+React (fondu `ts-splash--out`, plancher 1 750 ms).
+
+Ses règles, à réutiliser pour toute animation hors React :
+
+- **Convention d'états** : chaque propriété vit à sa valeur FINALE par
+  défaut et les keyframes n'entrent DEPUIS l'invisible que sous
+  `prefers-reduced-motion: no-preference` — reduced (ou un moteur sans
+  animation) pose la page gravée, immobile, sans cas spécifique.
+- **Compositor seul** : seules des propriétés transform/opacity bougent
+  (vieille tablette oblige).
+- **Une seule chorégraphie par session** : un script inline pose
+  `html.ts-calm` quand `sessionStorage['ts-splash-played']` existe — un
+  rafraîchissement saute le splash ENTIEREMENT, l'app peint directement
+  (une PWA relancée ouvre une nouvelle session → la gravure rejoue).
+
 ## Motion
 
 Une seule courbe de sortie : `cubic-bezier(0.16, 1, 0.3, 1)`. Entrées courtes
@@ -484,6 +551,11 @@ Sur la fiche, la ligne Agir (ou l'appel
 d'initiative) monte par `.band-rise` (6 px + fondu, 0.2 s) à l'instant où le
 tour devient tien ; le jumeau épinglé descend par `.band-drop` (−8 px, 0.2 s,
 transform seul — jamais de changement de hauteur dans le flux au défilement).
+La visionneuse d'illustrations (`ItemImageViewer`) a son unique moment :
+fondu du fond + l'image qui se pose de 0.96 à 1 (`.viewer-enter` /
+`.viewer-image-enter`) — le zoom, lui, n'anime JAMAIS (outil de lecture).
+Le PNJ et les grilles de cartes arrivent par UN `register-rise` sur le
+conteneur (le montage ne joue qu'une fois), pas un par carte.
 Tout est coupé sous
 `prefers-reduced-motion: reduce`, avec un état statique lisible quand le
 mouvement porte l'information (anneau « à toi de jouer » sans animation).
