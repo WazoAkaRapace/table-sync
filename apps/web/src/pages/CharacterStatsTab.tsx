@@ -29,7 +29,7 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../api';
-import { BottomSheet, Panel } from '../components/ui';
+import { BottomSheet, Panel, StatTile } from '../components/ui';
 import { appLang } from '../i18n';
 import { abilityLabel, abilityShort, classNameLabel } from '../i18n/labels';
 
@@ -222,8 +222,7 @@ export default function CharacterStatsTab({
             const mod = abilityModifier(score);
             const draftVal = abilityDrafts[ability] ?? String(score);
             return (
-              <div key={ability} className="bg-parchment-100 rounded-xl p-3 text-center">
-                <div className="text-xs font-medium text-ink-500 mb-1">{abilityLabel(ability)}</div>
+              <StatTile key={ability} label={abilityLabel(ability)}>
                 <div className="text-2xl font-bold tabular-nums text-ink-800 mb-1">
                   {formatModifier(mod)}
                 </div>
@@ -242,7 +241,7 @@ export default function CharacterStatsTab({
                     abilityLabel: abilityLabel(ability),
                   })}
                 />
-              </div>
+              </StatTile>
             );
           })}
         </div>
@@ -252,10 +251,7 @@ export default function CharacterStatsTab({
       <Panel title={t('stats.statistiques.derivees')} tuto="stats-derivees">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {/* Armor Class — computed or overridden */}
-          <div className="bg-parchment-100 rounded-xl p-3 text-center" data-tuto="stats-ca">
-            <div className="text-xs font-medium text-ink-500 mb-1">
-              {t('stats.classe.d.armure')}
-            </div>
+          <StatTile tuto="stats-ca" label={t('stats.classe.d.armure')}>
             {editingAC ? (
               <input
                 type="number"
@@ -305,7 +301,7 @@ export default function CharacterStatsTab({
                 acResult.source
               )}
             </div>
-          </div>
+          </StatTile>
           <DerivedStat label={t('stats.initiative')} value={formatModifier(dexMod)} />
           {castingLines.map((l) => (
             <DerivedStat
@@ -350,8 +346,7 @@ export default function CharacterStatsTab({
           )}
           <DerivedStat label={t('stats.bonus.de.maitrise')} value={formatModifier(profBonus)} />
           {/* Portage max — FOR × 7,5 kg × multiplicateur (feuille dédiée) */}
-          <div className="bg-parchment-100 rounded-xl p-3 text-center" data-tuto="stats-portage">
-            <div className="text-xs font-medium text-ink-500 mb-1">{t('stats.portage.max')}</div>
+          <StatTile tuto="stats-portage" label={t('stats.portage.max')}>
             <button
               type="button"
               onClick={openPortage}
@@ -366,7 +361,7 @@ export default function CharacterStatsTab({
             <div className="text-[11px] text-ink-500 mt-0.5">
               {t('stats.portage.details', { strength: character.strength ?? 10 })}
             </div>
-          </div>
+          </StatTile>
         </div>
         {classInfo && (
           <p className="text-xs text-ink-500">
@@ -497,8 +492,7 @@ function DerivedStat({
   hint?: string;
 }) {
   return (
-    <div className="bg-parchment-100 rounded-xl p-3 text-center">
-      <div className="text-xs font-medium text-ink-500 mb-1">{label}</div>
+    <StatTile label={label}>
       {editable ? (
         <input
           type="number"
@@ -517,6 +511,6 @@ function DerivedStat({
       {hint && (
         <div className="text-[11px] text-ink-500 font-medium leading-tight mt-0.5">{hint}</div>
       )}
-    </div>
+    </StatTile>
   );
 }
