@@ -1781,6 +1781,9 @@ export async function gmaRoutes(app: FastifyInstance) {
         });
       }
       const drizzle = getDrizzle();
+      // Entity-side 1:1 only — several entities may reconcile onto the same
+      // NPC (GMA re-catalogues the same person per session), so an existing
+      // link on the TARGET npc is fine and adds a second row.
       if (
         drizzle
           .select({ id: gmaNpcLinks.id })
@@ -1791,18 +1794,6 @@ export async function gmaRoutes(app: FastifyInstance) {
         return reply.code(409).send({
           error: apiMsg(req, 'entity_already_linked'),
           message: apiMsg(req, 'Cette entrée GM Assistant est déjà liée au registre.'),
-        });
-      }
-      if (
-        drizzle
-          .select({ id: gmaNpcLinks.id })
-          .from(gmaNpcLinks)
-          .where(and(eq(gmaNpcLinks.partyId, partyId), eq(gmaNpcLinks.npcId, npc.id)))
-          .get()
-      ) {
-        return reply.code(409).send({
-          error: apiMsg(req, 'npc_already_linked'),
-          message: apiMsg(req, 'Ce PNJ du registre est déjà lié à une autre entrée GM Assistant.'),
         });
       }
 
