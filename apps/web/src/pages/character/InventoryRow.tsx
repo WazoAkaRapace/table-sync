@@ -9,7 +9,7 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ItemVignette } from '../../components/ItemImageViewer';
-import { Chip, RarityBadge, WeightBadge } from '../../components/ui';
+import { Chip, RarityBadge, StepButton, WeightBadge } from '../../components/ui';
 import {
   abilityShort,
   damageType,
@@ -272,15 +272,13 @@ export function InventoryRow({
               </div>
               {canEdit ? (
                 <div className="flex items-center gap-0.5 shrink-0">
-                  <button
-                    type="button"
+                  <StepButton
                     onClick={() => onStep(-1)}
                     disabled={busy}
-                    className="w-7 h-7 rounded-lg bg-parchment-200 hover:bg-parchment-300 disabled:opacity-50 text-sm font-medium flex items-center justify-center transition-colors"
-                    aria-label={t('rangee.diminuer.itemname', { itemName: itemName })}
+                    label={t('rangee.diminuer.itemname', { itemName: itemName })}
                   >
                     −
-                  </button>
+                  </StepButton>
                   <input
                     type="number"
                     min={1}
@@ -294,15 +292,13 @@ export function InventoryRow({
                     }}
                     aria-label={t('rangee.quantite.de.itemname', { itemName: itemName })}
                   />
-                  <button
-                    type="button"
+                  <StepButton
                     onClick={() => onStep(1)}
                     disabled={busy}
-                    className="w-7 h-7 rounded-lg bg-parchment-200 hover:bg-parchment-300 disabled:opacity-50 text-sm font-medium flex items-center justify-center transition-colors"
-                    aria-label={t('rangee.augmenter.itemname', { itemName: itemName })}
+                    label={t('rangee.augmenter.itemname', { itemName: itemName })}
                   >
                     +
-                  </button>
+                  </StepButton>
                 </div>
               ) : (
                 <span className="text-sm text-ink-500 shrink-0">× {quantity}</span>

@@ -33,7 +33,7 @@ import { useTranslation } from 'react-i18next';
 import api from '../../api';
 import { CONDITION_ICONS } from '../../components/ConditionsEditor';
 import MonsterStatBlock from '../../components/MonsterStatBlock';
-import { BottomSheet, Chip, HpBar, Panel } from '../../components/ui';
+import { BottomSheet, Chip, HpBar, Panel, StepButton } from '../../components/ui';
 import {
   abilityShort,
   conditionHintKey,
@@ -652,17 +652,15 @@ export function SurvivalPanel({
                     {isPool ? '❤️' : '⚡'} {feature.title}
                   </span>
                   <span className="flex items-center gap-1 shrink-0">
-                    <button
-                      type="button"
+                    <StepButton
                       onClick={() => stepResource(feature, current - 1)}
                       disabled={current <= 0}
-                      className="w-7 h-7 rounded-lg bg-parchment-200 hover:bg-parchment-300 disabled:opacity-30 text-sm font-medium flex items-center justify-center"
-                      aria-label={t('survie.depenser.feature.title', {
+                      label={t('survie.depenser.feature.title', {
                         feature_title: feature.title,
                       })}
                     >
                       −
-                    </button>
+                    </StepButton>
                     <span className="text-sm font-bold tabular-nums text-ink-800 min-w-10 text-center">
                       {current}
                       <span className="text-ink-400 font-normal">
@@ -671,18 +669,16 @@ export function SurvivalPanel({
                         {isPool ? t('survie.pv.unite') : ''}
                       </span>
                     </span>
-                    <button
-                      type="button"
+                    <StepButton
                       onClick={() => stepResource(feature, current + 1)}
                       disabled={current >= max}
-                      className="w-7 h-7 rounded-lg bg-parchment-200 hover:bg-parchment-300 disabled:opacity-30 text-sm font-medium flex items-center justify-center"
-                      aria-label={t('survie.recuperer.feature.title', {
+                      label={t('survie.recuperer.feature.title', {
                         feature_title: feature.title,
                       })}
                       title={resetTitle}
                     >
                       +
-                    </button>
+                    </StepButton>
                   </span>
                 </div>
               );
@@ -727,32 +723,28 @@ export function SurvivalPanel({
                 )}
               </span>
               <span className="flex items-center gap-1">
-                <button
-                  type="button"
+                <StepButton
                   onClick={() => step(1)}
                   disabled={remaining <= 0}
-                  className="w-7 h-7 rounded-lg bg-parchment-200 hover:bg-parchment-300 disabled:opacity-30 text-sm font-medium flex items-center justify-center"
-                  aria-label={t('survie.depenser.un.de.de.vie')}
+                  label={t('survie.depenser.un.de.de.vie')}
                   title={t('survie.depenser.un.de.de.vie.repos')}
                 >
                   −
-                </button>
+                </StepButton>
                 <span
                   className={`text-sm font-bold tabular-nums ${remaining === 0 ? 'text-red-500' : 'text-ink-800'}`}
                 >
                   {remaining}
                 </span>
                 <span className="text-xs text-ink-400">/ {total}</span>
-                <button
-                  type="button"
+                <StepButton
                   onClick={() => step(-1)}
                   disabled={used <= 0}
-                  className="w-7 h-7 rounded-lg bg-parchment-200 hover:bg-parchment-300 disabled:opacity-30 text-sm font-medium flex items-center justify-center"
-                  aria-label={t('survie.recuperer.un.de.de.vie')}
+                  label={t('survie.recuperer.un.de.de.vie')}
                   title={t('survie.recuperer.un.de.repos.long.niveau')}
                 >
                   +
-                </button>
+                </StepButton>
               </span>
             </div>
           );
@@ -1213,28 +1205,24 @@ export function SurvivalPanel({
                     })}
                   </span>
                   <span className="flex items-center gap-1">
-                    <button
-                      type="button"
+                    <StepButton
                       onClick={() => setRestHitDice((n) => Math.max(0, n - 1))}
                       disabled={restHitDice <= 0}
-                      className="w-7 h-7 rounded-lg bg-parchment-200 hover:bg-parchment-300 disabled:opacity-30 font-medium"
-                      aria-label={t('survie.un.de.de.vie.de.moins')}
+                      label={t('survie.un.de.de.vie.de.moins')}
                     >
                       −
-                    </button>
+                    </StepButton>
                     <span className="font-bold tabular-nums w-10 text-center">
                       {restHitDice}
                       <span className="text-ink-400 font-normal"> / {remaining}</span>
                     </span>
-                    <button
-                      type="button"
+                    <StepButton
                       onClick={() => setRestHitDice((n) => Math.min(remaining, n + 1))}
                       disabled={restHitDice >= remaining}
-                      className="w-7 h-7 rounded-lg bg-parchment-200 hover:bg-parchment-300 disabled:opacity-30 font-medium"
-                      aria-label={t('survie.un.de.de.vie.de.plus')}
+                      label={t('survie.un.de.de.vie.de.plus')}
                     >
                       +
-                    </button>
+                    </StepButton>
                   </span>
                 </div>
                 {restHitDice > 0 && (
