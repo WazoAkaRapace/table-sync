@@ -23,7 +23,7 @@ import { Link, useParams } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../auth';
 import { ErrorMsg, LoadingSpinner } from '../components/ui';
-import { useSyncEvent } from '../sync';
+import { useResyncOnReconnect, useSyncEvent } from '../sync';
 import { useMessagesUnread } from '../useMessagesUnread';
 import { activeCharactersFirst, copyText } from '../utils';
 
@@ -337,6 +337,13 @@ export default function PartyPage() {
 
   // Real-time sync: refresh when party membership or characters change
   const currentPartyId = Number(partyId);
+  // Rattrapage de reconnexion : page à état local — les événements du trou ne
+  // seront JAMAIS rejoués, on recharge silencieusement ce que la page rend.
+  useResyncOnReconnect(() => {
+    load(true);
+    loadGmaLink();
+    loadCarnetClock();
+  });
   // Pastille de l'annexe « Correspondance » (MD) — non-lus côté MD du groupe
   const messagesUnreadQuery = useMessagesUnread(
     Number.isFinite(currentPartyId) ? currentPartyId : null,
@@ -360,7 +367,37 @@ export default function PartyPage() {
         loadCarnetClock();
         return;
       }
-      load(true); // silent — no spinner flash on sync updates
+      // Roster CHIRURGICAL (vocabulaire v2) : cette page ne rend que le
+      // registre (membres + résumés de fiches). Avant, le fall-through
+      // rechargeait GET /parties/:id ENTIER sur TOUT événement — chaque tour
+      // de combat (combat:change fuse en continu), chaque objet ajouté, chaque
+      // message. Ne restent que ce qui bouge le registre :
+      //  - party:change des actions membres/réglages/fiches ('stats' couvre
+      //    réglages + création/suppression de fiche) — 'custom-item'/'npcs'
+      //    n'écrivent rien de rendu ici ;
+      //  - character:change des champs VISIBLES du résumé (stats/hp/condition/
+      //    rest) — 'sheet' (notes/sorts/traits, privés) est ignoré.
+      if (event.type === 'party:change') {
+        if (
+          event.action === 'stats' ||
+          event.action === 'join' ||
+          event.action === 'remove' ||
+          event.action === 'ban' ||
+          event.action === 'unban'
+        ) {
+          load(true); // silent — no spinner flash on sync updates
+        }
+        return;
+      }
+      if (
+        event.type === 'character:change' &&
+        (event.action === 'stats' ||
+          event.action === 'hp' ||
+          event.action === 'condition' ||
+          event.action === 'rest')
+      ) {
+        load(true);
+      }
     },
     [currentPartyId],
   );

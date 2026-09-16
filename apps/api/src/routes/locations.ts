@@ -140,6 +140,10 @@ export async function locationRoutes(app: FastifyInstance) {
         partyId: char.party_id,
         characterId: char.id,
         action: 'adjust',
+        // actorUserId sinon absent : la suppression d'echo du serveur ne
+        // reconnaissait pas l'acteur et l'événement repartait aussi à SA
+        // propre connexion (double rafraîchi de la fiche agissante).
+        actorUserId: userId,
       });
 
       return reply.code(201).send({ location: mapLocation(row) });
@@ -231,6 +235,7 @@ export async function locationRoutes(app: FastifyInstance) {
         partyId: char.party_id,
         characterId: char.id,
         action: 'adjust',
+        actorUserId: userId,
       });
 
       return reply.code(204).send();

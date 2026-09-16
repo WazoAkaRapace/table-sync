@@ -182,7 +182,7 @@ export async function characterFeatureRoutes(app: FastifyInstance) {
         type: 'character:change',
         partyId: char.party_id,
         characterId: char.id,
-        action: 'stats',
+        action: 'sheet',
         actorUserId: userId,
       });
       return reply.code(201).send({ feature: mapFeature(row) });
@@ -252,7 +252,7 @@ export async function characterFeatureRoutes(app: FastifyInstance) {
         type: 'character:change',
         partyId: char.party_id,
         characterId: char.id,
-        action: 'stats',
+        action: 'sheet',
         actorUserId: userId,
       });
       return reply.send({ feature: mapFeature(row) });
@@ -323,7 +323,7 @@ export async function characterFeatureRoutes(app: FastifyInstance) {
         type: 'character:change',
         partyId: char.party_id,
         characterId: char.id,
-        action: 'stats',
+        action: 'sheet',
         actorUserId: userId,
       });
       return reply.send({ ok: true });
@@ -354,7 +354,7 @@ export async function characterFeatureRoutes(app: FastifyInstance) {
         type: 'character:change',
         partyId: char.party_id,
         characterId: char.id,
-        action: 'stats',
+        action: 'sheet',
         actorUserId: userId,
       });
       return reply.code(204).send();

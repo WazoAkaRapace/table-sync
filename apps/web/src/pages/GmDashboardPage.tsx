@@ -37,7 +37,7 @@ import {
   ToastStack,
 } from '../components/ui';
 import { appLocale } from '../i18n';
-import { useSyncEvent } from '../sync';
+import { useResyncOnReconnect, useSyncEvent } from '../sync';
 import { activeCharactersFirst, parseSqliteDate } from '../utils';
 
 interface Transaction {
@@ -85,16 +85,33 @@ export default function GmDashboardPage() {
     [partyId, t],
   );
 
+  // Journal SEUL : les écritures d'inventaire (ajustement, don, bourse)
+  // écrivent des transactions mais ne bougent NI le roster NI les réglages —
+  // ne re-téléchargeons pas le détail de groupe (~150 Ko) pour ça.
+  const loadTransactions = useCallback(async () => {
+    if (!partyId) return;
+    try {
+      const txRes = await api.get(`/api/parties/${partyId}/transactions`);
+      setTransactions(txRes.data.transactions);
+    } catch {
+      /* silencieux — le journal garde ses données */
+    }
+  }, [partyId]);
+
   useEffect(() => {
     load();
   }, [load]);
 
-  // Real-time sync — FILTRÉ par type : ce dashboard ne vit que de
-  // personnages/inventaire/journal. Écouter TOUT déclenchait un rechargement
-  // complet (et N refetch d'inventaires) à CHAQUE tour de combat, campagne
-  // ou message du groupe. Sur character:change ciblé, seule la fiche du
-  // personnage changé est rafraîchie (bump → CharactersTab).
+  // Real-time sync — CHIRURGICAL (vocabulaire v2) : ce dashboard ne vit que
+  // de personnages/inventaire/journal. character:change 'sheet' (notes/sorts/
+  // traits, privés) ne touche ni le roster ni le journal → ignoré ; les
+  // écritures d'inventaire ne rafraîchissent que le JOURNAL ; 'coins' écrit
+  // des transactions sans bouger le résumé. Sur character:change ciblé, seule
+  // la fiche du personnage changé est aussi rafraîchie (bump → CharactersTab).
   const currentPartyId = Number(partyId);
+  // Rattrapage de reconnexion : page à état local, les événements du trou ne
+  // seront jamais rejoués — rechargement silencieux de ce que la page rend.
+  useResyncOnReconnect(() => void load(true));
   const [syncedCharacter, setSyncedCharacter] = useState<{ id: number; n: number } | null>(null);
   useSyncEvent(
     (event) => {
@@ -104,12 +121,32 @@ export default function GmDashboardPage() {
         event.characterId != null &&
         !event.action?.includes('delete')
       ) {
-        load(true); // silent — roster stats (HP, niveaux)
+        if (event.action === 'sheet') return; // données privées de fiche
+        if (event.action === 'coins') {
+          loadTransactions();
+          return;
+        }
+        load(true); // silent — roster stats (HP, niveaux, repos)
         setSyncedCharacter({ id: event.characterId, n: (syncedCharacter?.n ?? 0) + 1 });
         return;
       }
-      if (event.type === 'party:change' || event.type === 'inventory:change') {
-        load(true); // roster/objets custom/journal des transactions
+      if (event.type === 'party:change') {
+        // Seuls les événements qui bougent le ROSTER ou les RÉGLAGES : les
+        // actions 'custom-item'/'npcs' n'écrivent ni transactions ni membres
+        // (l'onglet Objets custom a son propre écouteur sur 'custom-item').
+        if (
+          event.action === 'stats' ||
+          event.action === 'join' ||
+          event.action === 'remove' ||
+          event.action === 'ban' ||
+          event.action === 'unban'
+        ) {
+          load(true);
+        }
+        return;
+      }
+      if (event.type === 'inventory:change') {
+        loadTransactions(); // chaque geste d'inventaire écrit au journal
       }
     },
     [currentPartyId, syncedCharacter],

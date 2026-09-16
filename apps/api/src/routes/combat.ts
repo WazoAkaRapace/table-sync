@@ -388,7 +388,13 @@ export async function combatRoutes(app: FastifyInstance) {
         .get();
       const row = getEncounter(drizzle, id);
 
-      bus.emitChange({ type: 'combat:change', partyId, action: 'turn', actorUserId: userId });
+      bus.emitChange({
+        type: 'combat:change',
+        partyId,
+        encounterId: id,
+        action: 'turn',
+        actorUserId: userId,
+      });
       return reply.code(201).send({ encounter: mapEncounter(row) });
     },
   );
@@ -510,6 +516,7 @@ export async function combatRoutes(app: FastifyInstance) {
       bus.emitChange({
         type: 'combat:change',
         partyId: enc.party_id,
+        encounterId: enc.id,
         action: 'turn',
         actorUserId: userId,
       });
@@ -533,6 +540,7 @@ export async function combatRoutes(app: FastifyInstance) {
       bus.emitChange({
         type: 'combat:change',
         partyId: enc.party_id,
+        encounterId: enc.id,
         action: 'turn',
         actorUserId: userId,
       });
@@ -672,6 +680,7 @@ export async function combatRoutes(app: FastifyInstance) {
       bus.emitChange({
         type: 'combat:change',
         partyId: enc.party_id,
+        encounterId: enc.id,
         action: 'add',
         actorUserId: userId,
       });
@@ -778,6 +787,7 @@ export async function combatRoutes(app: FastifyInstance) {
       bus.emitChange({
         type: 'combat:change',
         partyId: enc.party_id,
+        encounterId: enc.id,
         action: 'add',
         actorUserId: userId,
       });
@@ -875,6 +885,7 @@ export async function combatRoutes(app: FastifyInstance) {
       bus.emitChange({
         type: 'combat:change',
         partyId: enc.party_id,
+        encounterId: enc.id,
         action: 'initiative',
         actorUserId: userId,
       });
@@ -1149,6 +1160,7 @@ export async function combatRoutes(app: FastifyInstance) {
       bus.emitChange({
         type: 'combat:change',
         partyId: enc.party_id,
+        encounterId: enc.id,
         action: 'hp',
         actorUserId: userId,
         ...(concentration ? { concentration } : {}),
@@ -1195,6 +1207,7 @@ export async function combatRoutes(app: FastifyInstance) {
       bus.emitChange({
         type: 'combat:change',
         partyId: enc.party_id,
+        encounterId: enc.id,
         action: 'remove',
         actorUserId: userId,
       });
@@ -1252,6 +1265,7 @@ export async function combatRoutes(app: FastifyInstance) {
         bus.emitChange({
           type: 'combat:change',
           partyId: enc.partyId,
+          encounterId: enc.id,
           action: 'turn',
           actorUserId: userId,
         });
@@ -1271,6 +1285,7 @@ export async function combatRoutes(app: FastifyInstance) {
       bus.emitChange({
         type: 'combat:change',
         partyId: enc.partyId,
+        encounterId: enc.id,
         action: 'turn',
         actorUserId: userId,
       });
@@ -1351,6 +1366,7 @@ export async function combatRoutes(app: FastifyInstance) {
       bus.emitChange({
         type: 'combat:change',
         partyId: enc.partyId,
+        encounterId: enc.id,
         action: 'turn',
         actorUserId: userId,
       });

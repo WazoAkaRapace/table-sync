@@ -23,6 +23,12 @@ export interface SyncEvent {
   partyId: number;
   characterId?: number;
   toCharacterId?: number; // for transfers
+  /**
+   * Rencontré concerné — les combats PARALLÈLES ne doivent pas rafraîchir le
+   * détail d'une autre rencontre. Absent (miroirs sheet→tracker) = changement
+   * de combat à l'échelle du groupe, comportement d'avant.
+   */
+  encounterId?: number;
   action?:
     | 'add'
     | 'remove'
@@ -30,6 +36,12 @@ export interface SyncEvent {
     | 'adjust'
     | 'coins'
     | 'stats'
+    // Données PRIVÉES de la fiche (notes/sorts/traits) : invisibles du roster
+    // — les pages qui ne rendent que le résumé peuvent ignorer.
+    | 'sheet'
+    // Registre PNJ (distinction d'avec 'custom-item' : l'onglet Objets custom
+    // du MD ne se recharge plus sur une écriture PNJ, et réciproquement)
+    | 'npcs'
     | 'custom-item'
     | 'join'
     | 'remove'
@@ -44,6 +56,9 @@ export interface SyncEvent {
     | 'unlink'
     | 'init'
     | 'sync'
+    | 'rest'
+    | 'new'
+    | 'read'
     // PNJ repérés — a GMA entity was imported/linked/pulled/unlinked
     | 'entity'
     // Carnet du MD — 'clock' couvre jour/saison/météo (avance et correction)

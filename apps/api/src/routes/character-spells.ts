@@ -246,7 +246,7 @@ export async function characterSpellRoutes(app: FastifyInstance) {
         type: 'character:change',
         partyId: char.party_id,
         characterId: char.id,
-        action: 'stats',
+        action: 'sheet',
         actorUserId: userId,
       });
       const lang = langFromReq(req);
@@ -300,7 +300,7 @@ export async function characterSpellRoutes(app: FastifyInstance) {
         type: 'character:change',
         partyId: char.party_id,
         characterId: char.id,
-        action: 'stats',
+        action: 'sheet',
         actorUserId: userId,
       });
       const lang = langFromReq(req);
@@ -333,7 +333,7 @@ export async function characterSpellRoutes(app: FastifyInstance) {
         type: 'character:change',
         partyId: char.party_id,
         characterId: char.id,
-        action: 'stats',
+        action: 'sheet',
         actorUserId: userId,
       });
       return reply.code(204).send();

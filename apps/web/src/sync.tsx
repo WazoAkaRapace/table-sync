@@ -25,6 +25,10 @@ export interface SyncEvent {
   partyId: number;
   characterId?: number;
   toCharacterId?: number;
+  /** Rencontré concerné (combat:change) — absent = changement à l'échelle du
+   *  groupe (miroirs sheet→tracker). Permet aux combats parallèles de ne pas
+   *  rafraîchir le détail d'une autre rencontre. */
+  encounterId?: number;
   action?: string;
   itemName?: string;
   actorUserId?: number;
@@ -382,6 +386,30 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
 
 export function useSync() {
   return useContext(SyncContext);
+}
+
+/**
+ * Rattrapage de reconnexion pour les pages à état LOCAL (useState + load) :
+ * l'invalidation globale de SyncProvider ne réveille que react-query — ces
+ * pages (groupe, tableau MD, tracker, PNJ, carnet) n'entendent AUCUN événement
+ * de rattrapage et restaient figées sur les données d'avant le trou jusqu'au
+ * prochain événement du groupe. Ce crochet déclenche le callback sur la MÊME
+ * transition disconnected → connected (pas au montage initial : le chargement
+ * de la page s'en charge déjà, on ne double-chargerait que pour rien).
+ */
+export function useResyncOnReconnect(resync: () => void) {
+  const { status } = useSync();
+  const resyncRef = useRef(resync);
+  resyncRef.current = resync;
+  const prev = useRef<ConnectionStatus | null>(null);
+  useEffect(() => {
+    if (prev.current === null) {
+      prev.current = status; // première observation : jamais de rattrapage
+      return;
+    }
+    if (prev.current !== 'connected' && status === 'connected') resyncRef.current();
+    prev.current = status;
+  }, [status]);
 }
 
 /** Convenience hook: subscribe to sync events filtered by partyId/characterId. */

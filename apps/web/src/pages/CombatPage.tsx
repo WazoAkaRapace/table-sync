@@ -48,7 +48,7 @@ import {
   ToastStack,
 } from '../components/ui';
 import { useHeaderOverride } from '../headerContext';
-import { useSyncEvent } from '../sync';
+import { useResyncOnReconnect, useSyncEvent } from '../sync';
 import { formatCreated, toRoman } from '../utils';
 
 // ---------- Small combat helpers ----------
@@ -253,6 +253,29 @@ export default function CombatPage() {
     [partyId, t],
   );
 
+  // Rencontres SEULES : un tour de combat, une initiative ou des PV ne
+  // bougent NI le roster ni les membres — le détail de groupe (~150 Ko) ne
+  // doit pas redescendre à CHAQUE combat:change du tracker.
+  const loadEncounters = useCallback(
+    async (silent = false) => {
+      if (!partyId) return;
+      const seq = ++loadSeq.current;
+      if (!silent) setLoading(true);
+      try {
+        const encRes = await api.get(`/api/parties/${partyId}/encounters`);
+        if (seq !== loadSeq.current) return;
+        setEncounters(encRes.data.encounters || []);
+        setError('');
+      } catch (err: any) {
+        if (seq !== loadSeq.current) return;
+        setError(err.response?.data?.error || t('combat.erreur'));
+      } finally {
+        if (seq === loadSeq.current) setLoading(false);
+      }
+    },
+    [partyId, t],
+  );
+
   useEffect(() => {
     load();
   }, [load]);
@@ -260,11 +283,43 @@ export default function CombatPage() {
   // Real-time sync — combat:change is exempt from echo suppression on purpose
   // (one user can be GM in a tab and player in another), so own changes also
   // arrive here; a silent reload reconciles with what we already applied.
+  // CHIRURGICAL (vocabulaire v2) : l'événement porte la RENCONTRE — en combat
+  // parallèle, le détail de la rencontre ouverte ne se re-télécharge que si
+  // c'est ELLE qui a bougé ; la liste se rafraîchit toujours (ajouts, fins de
+  // combat, initiative), le détail de groupe jamais (il suit character:change
+  // via le rechargement complet au pire). Miroirs sheet→tracker sans
+  // rencontre : liste + détail ouvert (comportement d'avant).
+  // Rattrapage de reconnexion : page à état local — rechargement complet
+  // silencieux (roster + rencontres + détail ouvert via load).
+  useResyncOnReconnect(() => {
+    void load(true);
+    if (activeEncounter) void loadEncounter(activeEncounter.id, true);
+  });
+
   useSyncEvent(
     (event) => {
-      if (event.partyId === currentPartyId && event.type === 'combat:change') {
+      if (event.partyId !== currentPartyId) return;
+      if (event.type === 'combat:change') {
+        loadEncounters(true);
+        if (
+          activeEncounter &&
+          (event.encounterId === undefined || event.encounterId === activeEncounter.id)
+        ) {
+          loadEncounter(activeEncounter.id, true);
+        }
+        return;
+      }
+      // Roster vivant (liste « ajouter des PJ ») : fiches créées/supprimées,
+      // membres — les autres actions n'écrivent rien de rendu par le tracker.
+      if (
+        event.type === 'party:change' &&
+        (event.action === 'stats' ||
+          event.action === 'join' ||
+          event.action === 'remove' ||
+          event.action === 'ban' ||
+          event.action === 'unban')
+      ) {
         load(true);
-        if (activeEncounter) loadEncounter(activeEncounter.id, true);
       }
     },
     [currentPartyId, activeEncounter?.id],

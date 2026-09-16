@@ -83,22 +83,17 @@ export async function run(base: string, fx: Fixtures, _srv: ServerHandle): Promi
     eq(alice.messages.at(-1).partyId, fx.partyId, 'event carries party id');
 
     // echo suppression: party:change from bob does NOT come back to bob…
+    // (vocabulaire v2 : l'écriture PNJ porte action 'npcs' — distincte de
+    // 'custom-item' pour que l'onglet Objets custom du MD et la page PNJ ne
+    // se réveillent plus l'un l'autre)
     await api(base, 'POST', `/api/parties/${fx.partyId}/npcs`, {
       token: fx.player.token,
       body: { name: 'Ping' },
     });
-    await waitMsg(
-      alice.messages,
-      (m) => m.type === 'party:change' && m.action === 'custom-item',
-      5000,
-    );
-    await silence(
-      bob.messages,
-      (m) => m.type === 'party:change' && m.action === 'custom-item',
-      700,
-    );
+    await waitMsg(alice.messages, (m) => m.type === 'party:change' && m.action === 'npcs', 5000);
+    await silence(bob.messages, (m) => m.type === 'party:change' && m.action === 'npcs', 700);
     ok(
-      !bob.messages.some((m) => m.type === 'party:change' && m.action === 'custom-item'),
+      !bob.messages.some((m) => m.type === 'party:change' && m.action === 'npcs'),
       'actor does not receive their own party:change (echo suppressed)',
     );
 
@@ -133,6 +128,55 @@ export async function run(base: string, fx: Fixtures, _srv: ServerHandle): Promi
     await waitMsg(alice.messages, (m) => m.type === 'party:change' && m.action === 'join', 5000);
     // targeted delivery to carol herself
     // (carol has no socket here — the targetUserId loop just no-ops.)
+
+    // ---------- vocabulaire v2 : granularité des rafraîchis ----------
+    // Notes de fiche = données PRIVÉES : action 'sheet', PAS 'stats' — les
+    // pages qui ne rendent que le résumé du roster peuvent les ignorer.
+    await api(base, 'POST', `/api/characters/${fx.charBran.id}/notes`, {
+      token: fx.player.token,
+      body: { title: 'journal', content: 'secrète' },
+    });
+    const sheetEv = await waitMsg(
+      alice.messages,
+      (m) => m.type === 'character:change' && m.action === 'sheet',
+      5000,
+    );
+    eq(sheetEv.characterId, fx.charBran.id, 'sheet event carries the character id');
+
+    // combat:change porte la RENCONTRE : les combats parallèles ne doivent
+    // pas rafraîchir le détail d'une autre rencontre.
+    const enc = await api(base, 'POST', `/api/parties/${fx.partyId}/encounters`, {
+      token: fx.gm.token,
+      body: { name: 'WS granularité' },
+    });
+    const turnEv = await waitMsg(
+      alice.messages,
+      (m) => m.type === 'combat:change' && m.partyId === fx.partyId,
+      5000,
+    );
+    ok(turnEv.encounterId === enc.data.encounter.id, 'combat:change carries encounterId');
+
+    // Écriture de localisation : l'acteur doit être identifié (suppression
+    // d'echo) — l'événement ne repart plus à SA propre connexion.
+    await api(base, 'POST', `/api/characters/${fx.charBran.id}/locations`, {
+      token: fx.player.token,
+      body: { name: 'Besace', type: 'container' },
+    });
+    const locEv = await waitMsg(
+      alice.messages,
+      (m) => m.type === 'inventory:change' && m.action === 'adjust',
+      5000,
+    );
+    eq(locEv.actorUserId, fx.player.userId, 'locations emit identifies the actor');
+    await silence(
+      bob.messages,
+      (m) => m.type === 'inventory:change' && m.characterId === fx.charBran.id,
+      700,
+    );
+    ok(
+      !bob.messages.some((m) => m.type === 'inventory:change' && m.characterId === fx.charBran.id),
+      'locations emit is echo-suppressed for the actor',
+    );
 
     // disband: the DB cascade empties party_members BEFORE fan-out, so ws.ts
     // delivers on the PRE-refresh membership snapshot. bob (member, connected

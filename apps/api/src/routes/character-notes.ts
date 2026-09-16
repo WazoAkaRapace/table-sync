@@ -124,7 +124,7 @@ export async function characterNoteRoutes(app: FastifyInstance) {
       type: 'character:change',
       partyId: char.party_id,
       characterId: charId,
-      action: 'stats',
+      action: 'sheet',
       actorUserId: userId,
     });
     return reply.code(201).send({ note });
@@ -164,7 +164,7 @@ export async function characterNoteRoutes(app: FastifyInstance) {
       type: 'character:change',
       partyId: char.party_id,
       characterId: note.character_id,
-      action: 'stats',
+      action: 'sheet',
       actorUserId: userId,
     });
     return { note: updated };
@@ -224,7 +224,7 @@ export async function characterNoteRoutes(app: FastifyInstance) {
       type: 'character:change',
       partyId: char.party_id,
       characterId: charId,
-      action: 'stats',
+      action: 'sheet',
       actorUserId: userId,
     });
     return { ok: true };
@@ -247,7 +247,7 @@ export async function characterNoteRoutes(app: FastifyInstance) {
       type: 'character:change',
       partyId: char.party_id,
       characterId: note.character_id,
-      action: 'stats',
+      action: 'sheet',
       actorUserId: userId,
     });
     return reply.code(204).send();

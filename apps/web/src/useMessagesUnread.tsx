@@ -24,11 +24,17 @@ export function useMessagesUnread(partyId: number | null) {
     },
   });
 
-  useSyncEvent((event) => {
-    if (event.type === 'message:new') {
-      queryClient.invalidateQueries({ queryKey: ['messages-unread'] });
-    }
-  }, []);
+  useSyncEvent(
+    (event) => {
+      // Portée par groupe : un message du groupe B n'entame pas les compteurs
+      // du groupe A (l'entrée de cache est préfixée ['messages-unread'] pour
+      // toutes les pastilles de CE groupe).
+      if (event.type === 'message:new' && event.partyId === partyId) {
+        queryClient.invalidateQueries({ queryKey: ['messages-unread'] });
+      }
+    },
+    [partyId],
+  );
 
   return query;
 }

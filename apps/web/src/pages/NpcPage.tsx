@@ -16,7 +16,7 @@ import api from '../api';
 import { useAuth } from '../auth';
 import { ConfirmButton, EmptyState, ErrorMsg, LoadingSpinner, Modal } from '../components/ui';
 import { appLocale } from '../i18n';
-import { useSyncEvent } from '../sync';
+import { useResyncOnReconnect, useSyncEvent } from '../sync';
 import { usePartyRole } from '../usePartyRole';
 import { parseSqliteDate, toRoman } from '../utils';
 
@@ -179,16 +179,24 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
     load();
   }, [load]);
 
-  // Real-time sync — FILTRÉ : les PNJ (et le détail de groupe pour la
-  // visibilité) ne bougent que sur party:change (type qu'émettent aussi les
-  // écritures PNJ côté API) ; le rail GM Assistant suit gma:change (liaisons
-  // des autres membres). Avant, CHAQUE tour de combat rechargeait les PNJ +
-  // le groupe — NpcPage est embarquée dans la fiche de chaque joueur.
+  // Real-time sync — CHIRURGICAL : le registre ne se réveille que pour SES
+  // écritures (action 'npcs' — distincte de 'custom-item' depuis le
+  // vocabulaire v2) et le rail GM Assistant (gma:change). Avant, TOUT
+  // party:change rechargeait la page : chaque création d'objet custom du
+  // groupe re-téléchargeait le registre PNJ entier — page embarquée dans la
+  // fiche de chaque joueur. (Vieux clients PWA : le serveur garde le type
+  // party:change, eux écoutent large — comportement d'avant.)
   const currentPartyId = Number(partyId);
+  // Rattrapage de reconnexion : page à état local — les événements du trou ne
+  // seront jamais rejoués, rechargement silencieux du registre + du rail.
+  useResyncOnReconnect(() => void load(true));
   useSyncEvent(
     (event) => {
       if (event.partyId !== currentPartyId) return;
-      if (event.type === 'party:change' || event.type === 'gma:change') {
+      if (
+        event.type === 'gma:change' ||
+        (event.type === 'party:change' && event.action === 'npcs')
+      ) {
         load(true); // silent — no spinner flash on sync updates
       }
     },

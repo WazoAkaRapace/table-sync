@@ -45,7 +45,7 @@ import {
   TabButton,
 } from '../components/ui';
 import { appLocale } from '../i18n';
-import { useSyncEvent } from '../sync';
+import { useResyncOnReconnect, useSyncEvent } from '../sync';
 import { parseSqliteDate, toRoman } from '../utils';
 import NpcPage from './NpcPage';
 
@@ -148,6 +148,10 @@ export default function DmNotebookPage() {
   // Multi-appareils MD : l'autre écran du MD refait silence sur chaque écriture.
   // Les joueurs reçoivent l'événement mais n'ont ni porte ni écouteur.
   const currentPartyId = Number(partyId);
+  // Rattrapage de reconnexion : page à état local — le carnet recharge
+  // silencieusement (horloge, notes, quêtes) après un trou de connexion.
+  useResyncOnReconnect(() => void load(true));
+
   useSyncEvent(
     (event) => {
       if (event.type === 'campaign:change' && event.partyId === currentPartyId) {

@@ -163,7 +163,7 @@ export async function npcRoutes(app: FastifyInstance) {
 
       const row = getNpcWithCreator(drizzle, id);
 
-      bus.emitChange({ type: 'party:change', partyId, action: 'custom-item', actorUserId: userId });
+      bus.emitChange({ type: 'party:change', partyId, action: 'npcs', actorUserId: userId });
 
       return reply.code(201).send({ npc: mapNpc(row, gm) });
     },
@@ -237,7 +237,7 @@ export async function npcRoutes(app: FastifyInstance) {
       bus.emitChange({
         type: 'party:change',
         partyId: npc.party_id,
-        action: 'custom-item',
+        action: 'npcs',
         actorUserId: userId,
       });
 
@@ -268,7 +268,7 @@ export async function npcRoutes(app: FastifyInstance) {
       bus.emitChange({
         type: 'party:change',
         partyId: npc.party_id,
-        action: 'custom-item',
+        action: 'npcs',
         actorUserId: userId,
       });
 
