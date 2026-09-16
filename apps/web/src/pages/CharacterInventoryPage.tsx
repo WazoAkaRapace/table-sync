@@ -421,7 +421,7 @@ export default function CharacterInventoryPage() {
       }
       await queryClient.invalidateQueries({ queryKey: ['inventory', Number(charId)] });
     },
-    [charId, queryClient],
+    [charId, queryClient, ownEcho.stamp],
   );
 
   // Mutation locale SANS re-téléchargement : l'API renvoie l'entrée mutée
