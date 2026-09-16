@@ -21,6 +21,11 @@ services:
     environment:
       - PORT=4000
       - DATABASE_PATH=/app/data/db/inventory.sqlite
+      # Rate-limit par VRAI client : le nginx interne réécrit $remote_addr
+      # depuis le X-Real-IP du proxy externe (bloc realip de nginx.conf) puis
+      # pose son propre X-Real-IP — l'API ne l'honore que si TRUST_PROXY=true.
+      # Sans ça, toute la table partage le bucket 40 erreurs/min du proxy.
+      - TRUST_PROXY=true
       # JWT_SECRET must be set — read from .env or shell environment
       - JWT_SECRET=${JWT_SECRET:?Set JWT_SECRET in .env or environment}
       # Web Push (VAPID) — all three together or push stays cleanly disabled.
