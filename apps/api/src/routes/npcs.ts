@@ -17,6 +17,7 @@ import { cols } from '../db/projections.ts';
 import { npcs, users } from '../db/schema.ts';
 import { bus } from '../sync/bus.ts';
 import { isPartyGM, isPartyMember, requireUser } from './helpers.ts';
+import { sendCachedJson } from './httpCache.ts';
 import { apiMsg } from './messages.ts';
 
 export interface NpcRow {
@@ -99,7 +100,14 @@ export async function npcRoutes(app: FastifyInstance) {
 
       const npcsOut = rows.map((r: any) => mapNpc(r, gm));
 
-      return reply.send({ npcs: npcsOut });
+      // ETag : la page PNJ (embarquée dans CHAQUE fiche + le carnet) se
+      // revalide en silence sur tout party:change/gma:change — les écritures
+      // PNJ émettent party:change, mais aussi toute création d'objet custom :
+      // sans 304, chaque geste du groupe re-téléchargeait le registre entier
+      // (descriptions + secrets côté MD). Le hash couvre le corps SERVI : MD
+      // (secrets) et joueur ne partagent un ETag que si leurs corps sont
+      // octets pour octets identiques.
+      return sendCachedJson(req, reply, { npcs: npcsOut });
     },
   );
 

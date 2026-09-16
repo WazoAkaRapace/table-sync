@@ -67,6 +67,20 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   );
   eq(r.data.npcs[0].secret, null, 'secret field present (null) for players');
 
+  // ETag : la page PNJ se revalide en silence sur tout party:change —
+  // revalidation à l'identique → 304 sans corps. (Cross-appelant : MD et
+  // joueur ne partagent un ETag QUE si leurs corps sont identiques octets
+  // pour octets — ne pas assert 200 cross-token ici, voir mod-combat.)
+  const npcEtag = r.headers?.get('etag');
+  ok(!!npcEtag, 'npc list carries an ETag');
+  if (npcEtag) {
+    const r304 = await api(base, 'GET', `/api/parties/${P}/npcs`, {
+      token: fx.player.token,
+      headers: { 'If-None-Match': npcEtag },
+    });
+    eq(r304.status, 304, 'npc list revalidates to 304 (same viewer, unchanged)');
+  }
+
   // A player PATCH carrying a secret is ignored on that field, others apply
   r = await api(base, 'PATCH', `/api/npcs/${sharedNpc.id}`, {
     token: fx.player.token,

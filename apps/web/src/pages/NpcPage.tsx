@@ -6,7 +6,6 @@ import type {
   Npc,
   NpcDisposition,
   NpcStatus,
-  PartyDetail,
   PatchNpcPayload,
 } from '@table-sync/shared';
 import { NPC_DISPOSITION_LABELS_FR, NPC_STATUS_LABELS_FR } from '@table-sync/shared';
@@ -18,6 +17,7 @@ import { useAuth } from '../auth';
 import { ConfirmButton, EmptyState, ErrorMsg, LoadingSpinner, Modal } from '../components/ui';
 import { appLocale } from '../i18n';
 import { useSyncEvent } from '../sync';
+import { usePartyRole } from '../usePartyRole';
 import { parseSqliteDate, toRoman } from '../utils';
 
 // ---------- Status / disposition styling ----------
@@ -107,7 +107,6 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
   const { user } = useAuth();
 
   const [npcs, setNpcs] = useState<Npc[]>([]);
-  const [party, setParty] = useState<PartyDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [feedback, setFeedback] = useState<{ kind: 'success' | 'error'; msg: string } | null>(null);
@@ -147,14 +146,16 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
       if (!silent) setLoading(true);
       setError('');
       try {
-        const [npcRes, partyRes, gmaLinkRes] = await Promise.all([
+        // Rôle du MD par la SONDE LÉGÈRE (usePartyRole → /parties/:id/me) :
+        // l'ancien `GET /parties/:id` téléchargeait le roster ENTIER (~150 Ko
+        // compressés) pour en tirer un booléen isGM — sur chaque montage et
+        // chaque party:change/gma:change, page embarquée dans CHAQUE fiche.
+        const [npcRes, gmaLinkRes] = await Promise.all([
           api.get<{ npcs: Npc[] }>(`/api/parties/${partyId}/npcs`),
-          api.get<PartyDetail>(`/api/parties/${partyId}`),
           // 200 for any member (linked or not) — never an error-rate-limit hit
           api.get(`/api/parties/${partyId}/gma/link`).catch(() => null),
         ]);
         setNpcs(npcRes.data.npcs);
-        setParty(partyRes.data);
         if (gmaLinkRes?.data?.linked) {
           try {
             const ent = await api.get<GmaEntitiesResponse>(`/api/parties/${partyId}/gma/entities`);
@@ -194,10 +195,10 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
     [currentPartyId],
   );
 
-  const isGM = useMemo(
-    () => !!party && party.members.some((m) => m.userId === user?.id && m.role === 'gm'),
-    [party, user],
-  );
+  // Rôle MD : la sonde partagée ['party-role'] (une seule forme de cache pour
+  // la fiche, la boîte MD et cette page).
+  const roleQuery = usePartyRole(partyId ? Number(partyId) : null);
+  const isGM = roleQuery.data?.isGM ?? false;
 
   // ---------- GM Assistant (« PNJ repérés ») ----------
 
@@ -377,6 +378,20 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
 
   // ---------- Filtering & grouping ----------
 
+  // Botte de foin de recherche PRÉCALCULÉE par PNJ : taper ne doit refaire que
+  // le filtre, pas reconstruire une chaîne minuscule par PNJ et par frappe
+  // (la description peut être longue).
+  const haystackById = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const n of npcs) {
+      map.set(
+        n.id,
+        `${n.name} ${n.role ?? ''} ${n.location ?? ''} ${n.faction ?? ''} ${n.description ?? ''}`.toLowerCase(),
+      );
+    }
+    return map;
+  }, [npcs]);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return npcs
@@ -385,15 +400,11 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
         if (view === 'mine' && n.createdBy !== user?.id) return false;
         if (dispositionFilter && n.disposition !== dispositionFilter) return false;
         if (statusFilter && n.status !== statusFilter) return false;
-        if (q) {
-          const hay =
-            `${n.name} ${n.role ?? ''} ${n.location ?? ''} ${n.faction ?? ''} ${n.description ?? ''}`.toLowerCase();
-          if (!hay.includes(q)) return false;
-        }
+        if (q && !(haystackById.get(n.id) ?? '').includes(q)) return false;
         return true;
       })
       .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
-  }, [npcs, search, dispositionFilter, statusFilter, view, user?.id]);
+  }, [npcs, haystackById, search, dispositionFilter, statusFilter, view, user?.id]);
 
   // Group by faction (or the "Sans faction" bucket)
   const grouped = useMemo(() => {
@@ -490,8 +501,9 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
   // ---------- Render guards ----------
 
   if (loading) return <LoadingSpinner label={t('pnj.chargement.des.pnj')} />;
+  // (chargement initial raté — non-membre, groupe inconnu : l'erreur porte le
+  // message ; une revalidation silencieuse ratée garde les données rendues)
   if (error && npcs.length === 0) return <ErrorMsg message={error} />;
-  if (!party) return <ErrorMsg message={t('pnj.groupe.introuvable')} />;
 
   return (
     <div className="space-y-5">
