@@ -737,22 +737,26 @@ function WeaponMasteryCard({
           )}
         </>
       )}
-      <p className="text-xs text-ink-400">
-        {isCustom
-          ? t('skills.maitrises.personnalisees')
-          : t('skills.selon.la.classe.liste', {
-              classLabel: classNameLabel(character.characterClass ?? '—'),
-              liste:
-                [
-                  classDefault.simple && t('skills.footer.armes.simples'),
-                  classDefault.martial && t('skills.footer.armes.de.guerre'),
-                  classDefault.specific.length > 0 &&
-                    t('skills.footer.n.armes.specific.n', { count: classDefault.specific.length }),
-                ]
-                  .filter(Boolean)
-                  .join(' + ') || t('skills.footer.aucune.maitrise'),
-            })}
-      </p>
+      {(isCustom || character.characterClass) && (
+        <p className="text-xs text-ink-400">
+          {isCustom
+            ? t('skills.maitrises.personnalisees')
+            : t('skills.selon.la.classe.liste', {
+                classLabel: classNameLabel(character.characterClass!),
+                liste:
+                  [
+                    classDefault.simple && t('skills.footer.armes.simples'),
+                    classDefault.martial && t('skills.footer.armes.de.guerre'),
+                    classDefault.specific.length > 0 &&
+                      t('skills.footer.n.armes.specific.n', {
+                        count: classDefault.specific.length,
+                      }),
+                  ]
+                    .filter(Boolean)
+                    .join(' + ') || t('skills.footer.aucune.maitrise'),
+              })}
+        </p>
+      )}
     </Panel>
   );
 }
@@ -854,22 +858,24 @@ function ArmorMasteryCard({
       ) : (
         <p className="text-sm text-ink-500">{t('skills.aucune.maitrise.d.armure.modifier.pour')}</p>
       )}
-      <p className="text-xs text-ink-400">
-        {isCustom
-          ? t('skills.maitrises.personnalisees')
-          : t('skills.selon.la.classe.liste', {
-              classLabel: classNameLabel(character.characterClass ?? '—'),
-              liste:
-                [
-                  classDefault.light && t('skills.footer.armures.legeres'),
-                  classDefault.medium && t('skills.footer.armures.intermediaires'),
-                  classDefault.heavy && t('skills.footer.armures.lourdes'),
-                  classDefault.shields && t('skills.footer.boucliers'),
-                ]
-                  .filter(Boolean)
-                  .join(' + ') || t('skills.footer.aucune.maitrise'),
-            })}
-      </p>
+      {(isCustom || character.characterClass) && (
+        <p className="text-xs text-ink-400">
+          {isCustom
+            ? t('skills.maitrises.personnalisees')
+            : t('skills.selon.la.classe.liste', {
+                classLabel: classNameLabel(character.characterClass!),
+                liste:
+                  [
+                    classDefault.light && t('skills.footer.armures.legeres'),
+                    classDefault.medium && t('skills.footer.armures.intermediaires'),
+                    classDefault.heavy && t('skills.footer.armures.lourdes'),
+                    classDefault.shields && t('skills.footer.boucliers'),
+                  ]
+                    .filter(Boolean)
+                    .join(' + ') || t('skills.footer.aucune.maitrise'),
+              })}
+        </p>
+      )}
     </Panel>
   );
 }

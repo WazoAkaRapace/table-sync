@@ -360,9 +360,11 @@ export default function CharacterStateBand({
                       ? `${classesOf(character)
                           .map((c) => `${classNameLabel(c.classKey)} ${c.level}`)
                           .join(' / ')}`
-                      : `${classNameLabel(character.characterClass ?? '—')} ${t('band.niv.level', {
-                          level,
-                        })}`}
+                      : character.characterClass
+                        ? `${classNameLabel(character.characterClass)} ${t('band.niv.level', {
+                            level,
+                          })}`
+                        : t('band.classe.a.definir')}
                     {character.race ? ` · ${character.race}` : ''}
                   </span>
                   {character.concentrating && (
