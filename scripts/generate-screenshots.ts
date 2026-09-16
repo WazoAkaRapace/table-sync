@@ -971,6 +971,7 @@ interface ShotCtx {
    *  remodèlent le monde : clore l'embuscade, dresser celle qui réclame
    *  l'initiative. */
   mdApi: Api;
+  auApi: Api;
 }
 
 // Celles-ci se prennent après avoir avancé jusqu'au tour des gobelins.
@@ -1447,7 +1448,7 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
       );
       await page
         .getByRole('status')
-        .filter({ hasText: S('Le MD vous a écrit', 'Your GM sent you a message') })
+        .filter({ hasText: S('Le MD t’a écrit', 'Your GM sent you a message') })
         .waitFor({ timeout: 10_000 });
       await page.waitForTimeout(350); // band-rise pose le sceau
       await shoot(page, '19-banniere-correspondance.png');
@@ -1481,6 +1482,11 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
     async run(c) {
       // Session sans clés de tutoriel : la visite d'accueil part d'elle-même
       // (~800 ms après le chargement de la fiche).
+      // NB : le suivi de la visite vit AU COMPTE (serverSync.ts) — la session
+      // « aurore » normale a déjà posé le drapeau côté serveur. On réarme le
+      // compte avant d'ouvrir la session vierge, sinon la convergence
+      // AuthProvider éteint la visite et la capture attend indéfiniment.
+      await c.auApi('PATCH', '/api/auth/me', { tutorialSeenAt: null });
       const page = await openSheet(c.auroreFresh, c.webPort, c.refs.partyId, c.refs.chars.lyra);
       await page
         .getByText(S('Bienvenue sur ta fiche !', 'Welcome to your sheet!'))
@@ -1714,6 +1720,7 @@ async function main() {
         });
       },
       mdApi: makeApi(stack.apiPort, mdS.token),
+      auApi: makeApi(stack.apiPort, auS.token),
     };
 
     const selected = SHOTS.filter(
