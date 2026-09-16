@@ -33,7 +33,7 @@ import { useTranslation } from 'react-i18next';
 import api from '../../api';
 import { CONDITION_ICONS } from '../../components/ConditionsEditor';
 import MonsterStatBlock from '../../components/MonsterStatBlock';
-import { BottomSheet, Chip, HpBar } from '../../components/ui';
+import { BottomSheet, Chip, HpBar, Panel } from '../../components/ui';
 import {
   abilityShort,
   conditionHintKey,
@@ -356,8 +356,7 @@ export function SurvivalPanel({
   return (
     <>
       {/* ---------- 1. Vitalité — PV, mort, inspiration/concentration ---------- */}
-      <section className="card p-4 sm:p-5 space-y-3" data-tuto="survie-vitalite">
-        <h2 className="section-title">{t('survie.vitalite')}</h2>
+      <Panel title={t('survie.vitalite')} tuto="survie-vitalite">
         {/* While shaped, the hero tracks the beast's HP (routed server-side to wild_shape_hp) */}
         {character.wildShapeSlug ? (
           (() => {
@@ -537,7 +536,7 @@ export function SurvivalPanel({
             {t('survie.concentration')}
           </button>
         </div>
-      </section>
+      </Panel>
 
       {/* ---------- 2. États — conditions + épuisement ---------- */}
       <section className="card p-4 sm:p-5 space-y-4" data-tuto="survie-etats">
@@ -621,8 +620,7 @@ export function SurvivalPanel({
 
       {/* ---------- 3. Ressources de classe — traits du catalogue avec compteur ---------- */}
       {resourceFeatures.length > 0 && (
-        <section className="card p-4 sm:p-5 space-y-3" data-tuto="survie-ressources">
-          <h2 className="section-title">{t('survie.ressources.de.classe')}</h2>
+        <Panel title={t('survie.ressources.de.classe')} tuto="survie-ressources">
           <div className="space-y-1.5">
             {resourceFeatures.map((feature) => {
               const def = findClassFeature(feature.catalogId ?? '');
@@ -690,12 +688,11 @@ export function SurvivalPanel({
               );
             })}
           </div>
-        </section>
+        </Panel>
       )}
 
       {/* ---------- 4. Repos — dés de vie et boutons réunis (l'économie de récupération) ---------- */}
-      <section className="card p-4 sm:p-5 space-y-3" data-tuto="survie-repos">
-        <h2 className="section-title">{t('survie.repos')}</h2>
+      <Panel title={t('survie.repos')} tuto="survie-repos">
         {(() => {
           // Dés de vie PAR LIGNE DE CLASSE (multiclassage SRD : le pool garde
           // ses types de dés). Le compteur dénormalisé suit la somme.
@@ -784,7 +781,7 @@ export function SurvivalPanel({
             </button>
           </div>
         )}
-      </section>
+      </Panel>
 
       {/* ---------- 5. Forme sauvage (Druide ≥ 2) ---------- */}
       {findClass(character.characterClass)?.name === 'Druide' &&
@@ -909,8 +906,7 @@ export function SurvivalPanel({
         })()}
 
       {/* ---------- 6. Attaques — options équipées, furtive, sans arme ---------- */}
-      <section className="card p-4 sm:p-5 space-y-3" data-tuto="survie-attaques">
-        <h2 className="section-title">{t('survie.attaques')}</h2>
+      <Panel title={t('survie.attaques')} tuto="survie-attaques">
         {(() => {
           if (equippedStats.length === 0) return null;
           return (
@@ -1119,11 +1115,10 @@ export function SurvivalPanel({
             </div>
           );
         })()}
-      </section>
+      </Panel>
 
       {/* ---------- 7. Nourriture & eau ---------- */}
-      <section className="card p-4 sm:p-5 space-y-3">
-        <h2 className="section-title">{t('survie.nourriture.et.eau')}</h2>
+      <Panel title={t('survie.nourriture.et.eau')}>
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1">
             <DeprivationBox
@@ -1169,7 +1164,7 @@ export function SurvivalPanel({
             )}
           </div>
         </div>
-      </section>
+      </Panel>
 
       {/* --- Sheet repos court : dépense de dés de vie + résumé --- */}
       <BottomSheet

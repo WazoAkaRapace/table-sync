@@ -44,6 +44,7 @@ import type { TFunction } from 'i18next';
 import { type FormEvent, Fragment, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../api';
+import { Panel } from '../components/ui';
 import {
   abilityLabel,
   abilityShort,
@@ -282,7 +283,7 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
       <div className="grid gap-4 lg:grid-cols-[3fr_2fr] lg:items-start">
         <div className="space-y-4">
           {/* Saving throws — the tab's hero: the most-rolled numbers */}
-          <section className="card p-4 sm:p-5 space-y-3" data-tuto="skills-sauvegardes">
+          <Panel tuto="skills-sauvegardes">
             <div className="flex items-center justify-between">
               <h2 className="section-title">{t('skills.jets.de.sauvegarde')}</h2>
               <span className="text-xs text-ink-400">
@@ -337,11 +338,10 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
                 );
               })}
             </div>
-          </section>
+          </Panel>
 
           {/* Skills grouped by ability — full-width rows, breakdown on tap */}
-          <section className="card p-4 sm:p-5 space-y-3" data-tuto="skills-competences">
-            <h2 className="section-title">{t('skills.competences')}</h2>
+          <Panel title={t('skills.competences')} tuto="skills-competences">
             {skillsByAbility.map((group) => (
               <div key={group.ability}>
                 <div className="text-xs font-semibold text-ink-500 uppercase tracking-wide mb-1.5">
@@ -439,7 +439,7 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
                 </div>
               </div>
             ))}
-          </section>
+          </Panel>
         </div>
 
         <div className="space-y-4">
@@ -450,8 +450,7 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
           <ArmorMasteryCard character={character} editMode={editMode} patch={patchSheet} />
 
           {/* Tools — read mode shows only what is mastered */}
-          <section className="card p-4 sm:p-5 space-y-3" data-tuto="skills-outils">
-            <h2 className="section-title">{t('skills.outils')}</h2>
+          <Panel title={t('skills.outils')} tuto="skills-outils">
             {hasAutomaticToolExpertise(character) && (
               <p className="text-xs text-ink-500 flex items-center gap-2">
                 <span className="text-sm leading-none">⭐</span>
@@ -521,11 +520,10 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
                 {t('skills.aucune.maitrise.d.outil.modifier.pour')}
               </p>
             )}
-          </section>
+          </Panel>
 
           {/* Languages — read mode shows known tongues only */}
-          <section className="card p-4 sm:p-5 space-y-3">
-            <h2 className="section-title">{t('skills.langues')}</h2>
+          <Panel title={t('skills.langues')}>
             {editMode ? (
               <>
                 <div className="flex flex-wrap gap-1.5">
@@ -586,7 +584,7 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
                 {t('skills.aucune.langue.modifier.pour.en.ajouter')}
               </p>
             )}
-          </section>
+          </Panel>
         </div>
       </div>
     </div>
@@ -638,7 +636,7 @@ function WeaponMasteryCard({
     }`;
 
   return (
-    <section className="card p-4 sm:p-5 space-y-3" data-tuto="skills-maitrises">
+    <Panel tuto="skills-maitrises">
       <div className="flex items-center justify-between">
         <h2 className="section-title">{t('skills.maitrise.d.armes')}</h2>
         {editMode && isCustom && (
@@ -755,7 +753,7 @@ function WeaponMasteryCard({
                   .join(' + ') || t('skills.footer.aucune.maitrise'),
             })}
       </p>
-    </section>
+    </Panel>
   );
 }
 
@@ -804,7 +802,7 @@ function ArmorMasteryCard({
     }`;
 
   return (
-    <section className="card p-4 sm:p-5 space-y-3">
+    <Panel>
       <div className="flex items-center justify-between">
         <h2 className="section-title">{t('skills.maitrise.d.armures')}</h2>
         {editMode && isCustom && (
@@ -872,6 +870,6 @@ function ArmorMasteryCard({
                   .join(' + ') || t('skills.footer.aucune.maitrise'),
             })}
       </p>
-    </section>
+    </Panel>
   );
 }

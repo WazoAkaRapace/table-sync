@@ -29,7 +29,7 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../api';
-import { BottomSheet } from '../components/ui';
+import { BottomSheet, Panel } from '../components/ui';
 import { appLang } from '../i18n';
 import { abilityLabel, abilityShort, classNameLabel } from '../i18n/labels';
 
@@ -215,8 +215,7 @@ export default function CharacterStatsTab({
   return (
     <div className="space-y-4">
       {/* Ability scores */}
-      <section className="card p-4 sm:p-5 space-y-3" data-tuto="stats-caracts">
-        <h2 className="section-title">{t('stats.caracteristiques')}</h2>
+      <Panel title={t('stats.caracteristiques')} tuto="stats-caracts">
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {ABILITY_FIELDS.map(({ key, ability }) => {
             const score = (character[key as keyof Character] as number) ?? 10;
@@ -247,11 +246,10 @@ export default function CharacterStatsTab({
             );
           })}
         </div>
-      </section>
+      </Panel>
 
       {/* Derived stats */}
-      <section className="card p-4 sm:p-5 space-y-3" data-tuto="stats-derivees">
-        <h2 className="section-title">{t('stats.statistiques.derivees')}</h2>
+      <Panel title={t('stats.statistiques.derivees')} tuto="stats-derivees">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {/* Armor Class — computed or overridden */}
           <div className="bg-parchment-100 rounded-xl p-3 text-center" data-tuto="stats-ca">
@@ -415,7 +413,7 @@ export default function CharacterStatsTab({
             </span>
           </div>
         )}
-      </section>
+      </Panel>
 
       {/* Portage sheet — multiplier editor + metric rule help */}
       <BottomSheet

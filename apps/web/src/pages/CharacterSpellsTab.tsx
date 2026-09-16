@@ -28,7 +28,14 @@ import { useTranslation } from 'react-i18next';
 import api from '../api';
 import CastSpellSheet from '../components/CastSpellSheet';
 import { SpellProse } from '../components/SpellProse';
-import { BottomSheet, Chip, ErrorMsg, SkeletonBlock, SkeletonRegion } from '../components/ui';
+import {
+  BottomSheet,
+  Chip,
+  ErrorMsg,
+  Panel,
+  SkeletonBlock,
+  SkeletonRegion,
+} from '../components/ui';
 import { abilityShort, classNameLabel, damageType, schoolLabel } from '../i18n/labels';
 import { useResyncOnReconnect } from '../sync';
 
@@ -595,7 +602,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
       {/* Two-column layout on desktop: known spells (left) + catalog (right) */}
       <div className="grid lg:grid-cols-[3fr_2fr] gap-4 items-start min-w-0">
         {/* Known spells */}
-        <section className="card p-4 sm:p-5 space-y-3 min-w-0" data-tuto="sorts-connus">
+        <Panel className="min-w-0" tuto="sorts-connus">
           <div className="flex items-center justify-between">
             <h2 className="section-title flex items-center gap-2">
               {t('sorts.sorts.connus')}{' '}
@@ -876,7 +883,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
               })}
             </div>
           )}
-        </section>
+        </Panel>
 
         {/* Desktop: catalog panel always visible on the right */}
         <section className="hidden lg:block space-y-3">
