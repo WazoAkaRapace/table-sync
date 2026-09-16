@@ -581,6 +581,13 @@ export function ItemImageViewer({
             }),
         ),
       );
+      // La pile de --font-body (celle que les spans d'aperçu rendent
+      // réellement) : les métriques du composite doivent être celles de
+      // l'aperçu — une autre police changerait la largeur du texte, donc la
+      // boîte, la troncature au bord et la position de chaque glyphe.
+      const bodyFamily =
+        getComputedStyle(document.documentElement).getPropertyValue('--font-body').trim() ||
+        'ui-serif, Georgia, serif';
       for (const a of annotationsRef.current) {
         if (a.kind === 'stroke') {
           ctx.strokeStyle = a.color;
@@ -608,34 +615,40 @@ export function ItemImageViewer({
           }
         } else {
           const fontPx = textFontSize(W, a.size);
-          ctx.font = `italic ${fontPx}px ui-serif, Georgia, serif`;
+          ctx.font = `italic ${fontPx}px ${bodyFamily}`;
           // Ancre HAUT-GAUCHE à (nx, ny) — la même sémantique que l'aperçu
-          // (span ancré top-left) : la note enregistrée tombe pile où la
-          // note de session s'affichait, à tout zoom. Borne noteDrawAnchor :
-          // posée un peu hors cadre, la note s'écrit tronquée au bord.
+          // (span ancré top-left, fond DEPUIS l'ancre, texte décalé des
+          // mêmes paddings) : la note enregistrée tombe pile où la note de
+          // session s'affichait, à tout zoom. Borne noteDrawAnchor : posée
+          // un peu hors cadre, la note s'écrit tronquée au bord.
           ctx.textBaseline = 'top';
           const anchor = noteDrawAnchor(a.nx, a.ny, a.size, W / H);
           const tx = anchor.nx * W;
           const ty = anchor.ny * H;
-          // Petit fond translucide ARRONDI (voir noteBackdrop) : la note reste
-          // lisible sur n'importe quelle image — l'aperçu de session matche.
           const m = ctx.measureText(a.text);
+          // Boîte du span d'aperçu, à l'identique : padding 0.3em/0.05em,
+          // hauteur lineHeight 1 + 2 × padY, rayon 0.25em, ombre portée
+          // (approximée — canvas ne porte qu'une ombre, l'aperçu deux).
           const padX = fontPx * 0.3;
-          const padY = fontPx * 0.12;
-          const bx = tx - padX;
-          const by = ty - m.actualBoundingBoxAscent - padY;
-          const bw = m.width + padX * 2;
-          const bh = m.actualBoundingBoxAscent + m.actualBoundingBoxDescent + padY * 2;
+          const padY = fontPx * 0.05;
+          ctx.save();
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
+          ctx.shadowBlur = 2;
+          ctx.shadowOffsetY = 1;
           ctx.fillStyle = noteBackdrop(a.color);
           ctx.beginPath();
           const rc = ctx as CanvasRenderingContext2D & {
             roundRect?: (x: number, y: number, w: number, h: number, r: number) => void;
           };
-          if (typeof rc.roundRect === 'function') rc.roundRect(bx, by, bw, bh, fontPx * 0.2);
-          else ctx.rect(bx, by, bw, bh);
+          if (typeof rc.roundRect === 'function') {
+            rc.roundRect(tx, ty, m.width + padX * 2, fontPx + padY * 2, fontPx * 0.25);
+          } else {
+            ctx.rect(tx, ty, m.width + padX * 2, fontPx + padY * 2);
+          }
           ctx.fill();
           ctx.fillStyle = a.color;
-          ctx.fillText(a.text, tx, ty);
+          ctx.fillText(a.text, tx + padX, ty + padY);
+          ctx.restore();
         }
       }
       const blob = await new Promise<Blob | null>((resolve) =>
@@ -1291,6 +1304,10 @@ export function ItemImageViewer({
                   // Coordonnées relatives au conteneur clippant.
                   left: p.x - imageOrigin.x,
                   top: p.y - imageOrigin.y,
+                  // Une seule ligne, coupée au bord par le conteneur : le
+                  // composite ne replie jamais (fillText trace une ligne),
+                  // l'aperçu ne doit pas replier davantage.
+                  whiteSpace: 'nowrap',
                   lineHeight: 1,
                   color: a.color,
                   fontSize: size,

@@ -487,6 +487,28 @@ playerTest.describe('Annotations (joueuse)', () => {
       expect(nb.y, "l'ancre est revenue au-dessus du bord bas").toBeLessThan(box!.y + box!.height);
       expect(nb.y, 'et reste collée à ce bord').toBeGreaterThan(box!.y + box!.height * 0.85);
 
+      // Note LONGUE près du bord droit : jamais de repli à la ligne — le
+      // composite trace une seule ligne (fillText), l'aperçu doit faire de
+      // même (une ligne tronquée par le conteneur clippant, pas un paragraphe).
+      await dialog.getByRole('button', { name: 'Écrire' }).click();
+      await page.mouse.click(box!.x + box!.width * 0.6, box!.y + box!.height * 0.55);
+      await dialog
+        .getByLabel('Texte de la note')
+        .fill('Une longue note qui déborde très largement du bord droit de la carte');
+      await dialog.getByLabel('Texte de la note').press('Enter');
+      const longue = dialog.getByText(/Une longue note/);
+      await expect(longue).toBeVisible();
+      const ligne = await longue.evaluate((el) => {
+        const cs = getComputedStyle(el);
+        return {
+          whiteSpace: cs.whiteSpace,
+          height: el.getBoundingClientRect().height,
+          fontSize: Number.parseFloat(cs.fontSize),
+        };
+      });
+      expect(ligne.whiteSpace, 'pas de repli à la ligne').toBe('nowrap');
+      expect(ligne.height, 'une seule ligne (hauteur ≈ police)').toBeLessThan(ligne.fontSize * 1.5);
+
       // Enregistrement : preuve par les octets — la zone de l'ancre du dérivé
       // diffère de la base (la note y est peinte, tronquée au bord).
       await dialog.getByRole('button', { name: 'Enregistrer' }).click();
