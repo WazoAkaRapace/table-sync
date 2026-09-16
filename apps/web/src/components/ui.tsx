@@ -3,6 +3,7 @@ import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import i18next from '../i18n';
 import { categoryLabel, coinLabel, encumbranceLabel, rarityLabel } from '../i18n/labels';
 
@@ -215,6 +216,16 @@ export function AuthCard({
         {children}
       </div>
     </div>
+  );
+}
+
+/** In-copy blood link of the door pages — the accent verb inside a gray
+ *  sentence. Keep the hit area comfortable: it sits in running text. */
+export function AccentLink({ to, children }: { to: string; children: React.ReactNode }) {
+  return (
+    <Link to={to} className="text-blood-600 font-medium hover:underline">
+      {children}
+    </Link>
   );
 }
 
