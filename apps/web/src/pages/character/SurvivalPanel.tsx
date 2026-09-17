@@ -597,7 +597,7 @@ export function SurvivalPanel({
                   onClick={() => setExhaustionLevel(level)}
                   className={`text-2xl leading-none transition-colors ${exhaustionColor(level)} ${
                     active ? 'opacity-100' : 'opacity-30 hover:opacity-60'
-                  } inline-flex items-center justify-center w-11 h-11 shrink-0 -my-2.5`}
+                  } inline-flex items-center justify-center w-11 h-11 shrink-0`}
                   aria-pressed={level === exhaustion}
                   aria-label={t('survie.niveau.d.epuisement.level', { level: level })}
                   title={t('survie.niveau.level.effet', {

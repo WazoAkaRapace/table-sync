@@ -992,7 +992,7 @@ function NpcCard({
           <button
             type="button"
             onClick={onEdit}
-            className="min-w-0 flex-1 text-left"
+            className="min-w-0 flex-1 text-left min-h-11 self-stretch flex items-center"
             aria-label={t('pnj.modifier.npc.name', { npc_name: npc.name })}
           >
             <h3 className="section-title leading-tight truncate">{npc.name}</h3>
@@ -1122,7 +1122,7 @@ function NpcCard({
             <button
               type="button"
               onClick={onEdit}
-              className="text-xs px-2 py-1 rounded-lg text-ink-600 hover:bg-parchment-100"
+              className="text-xs px-2 min-h-11 inline-flex items-center rounded-lg text-ink-600 hover:bg-parchment-100"
               aria-label={t('pnj.modifier.npc.name', { npc_name: npc.name })}
             >
               {t('pnj.modifier')}
@@ -1131,7 +1131,7 @@ function NpcCard({
               <button
                 type="button"
                 onClick={onDelete}
-                className="text-xs px-2 py-1 rounded-lg text-red-600 hover:bg-red-50"
+                className="text-xs inline-flex items-center justify-center min-w-11 min-h-11 rounded-lg text-red-600 hover:bg-red-50"
                 aria-label={t('pnj.supprimer.npc.name', { npc_name: npc.name })}
               >
                 🗑
