@@ -1469,7 +1469,7 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
         .getByRole('button', {
           name: S(
             'Ouvrir la correspondance de Kael Aubemarteau',
-            'Open Kael Aubemarteau’s correspondence',
+            "Open Kael Aubemarteau's correspondence",
           ),
         })
         .waitFor({ timeout: 10_000 });
