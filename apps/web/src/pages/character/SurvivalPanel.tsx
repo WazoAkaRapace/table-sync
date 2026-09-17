@@ -47,11 +47,22 @@ import { HpTracker } from './HpTracker';
 
 // ---------- Survival panel (exhaustion, conditions, deprivation) ----------
 
-function exhaustionColor(level: number): string {
-  if (level <= 1) return 'text-green-600';
-  if (level <= 3) return 'text-yellow-600';
-  if (level <= 5) return 'text-orange-600';
-  return 'text-red-600';
+// Paliers unifiés (2026-09) : 0 vide · 1–2 jaune · 3–4 orange · 5 rouge vif ·
+// 6 rouge sombre — la cartographie du tableau MD, la divergence d'avant disparaît.
+function exhaustionTierFill(level: number): string {
+  if (level <= 0) return '';
+  if (level <= 2) return 'bg-yellow-500';
+  if (level <= 4) return 'bg-orange-500';
+  if (level <= 5) return 'bg-red-500';
+  return 'bg-red-700';
+}
+
+function exhaustionTierText(level: number): string {
+  if (level <= 0) return 'text-ink-400';
+  if (level <= 2) return 'text-yellow-700';
+  if (level <= 4) return 'text-orange-700';
+  if (level <= 5) return 'text-red-600';
+  return 'text-red-700';
 }
 
 interface SurvivalPanelProps {
@@ -92,6 +103,8 @@ export function SurvivalPanel({
 
   const { t } = useTranslation();
   const [exhaustion, setExhaustion] = useState(character.exhaustion);
+  // L'échelle des effets dépliée sous la jauge (UI locale, fermée au repos)
+  const [ladderOpen, setLadderOpen] = useState(false);
   const [conditions, setConditions] = useState<string[]>(character.conditions);
   const [conditionPickerOpen, setConditionPickerOpen] = useState(false);
   const [foodDays, setFoodDays] = useState(character.foodDays);
@@ -578,40 +591,102 @@ export function SurvivalPanel({
         <div>
           <div className="flex items-baseline justify-between mb-1.5">
             <span className="text-sm font-medium text-ink-700">{t('survie.epuisement')}</span>
-            <span className={`text-xs font-semibold ${exhaustionColor(exhaustion)}`}>
+            <span className={`text-xs font-semibold ${exhaustionTierText(exhaustion)}`}>
               {t('survie.niveau.exhaustion.sur.6', { exhaustion })}
             </span>
           </div>
-          {/* biome-ignore lint/a11y/useSemanticElements: fieldset would add its own border/margin styling and break the compact pips row. */}
-          <div
-            className="flex flex-wrap items-center gap-0.5"
-            role="group"
-            aria-label={t('survie.niveau.d.epuisement')}
-          >
-            {[0, 1, 2, 3, 4, 5, 6].map((level) => {
-              const active = level <= exhaustion && level > 0;
-              return (
+          <div className="relative">
+            {/* Le rail gradué — 7 zones (0–6), remplissage cumulatif qui
+                démarre après la première zone vide, † gravé dans la dernière
+                (6 = mort, il passe en clair sur le rouge sombre). */}
+            <div className="relative h-3 bg-parchment-200 rounded-full" aria-hidden="true">
+              <div
+                className={`absolute inset-y-0 left-[14.2857%] rounded-r-full transition-all duration-300 ${exhaustionTierFill(exhaustion)}`}
+                style={{ width: `${(exhaustion / 7) * 100}%` }}
+              />
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div
+                  key={i}
+                  className="absolute inset-y-0 w-px bg-parchment-300/70"
+                  style={{ left: `${(i / 7) * 100}%` }}
+                />
+              ))}
+              <span
+                className={`absolute top-1/2 -translate-x-1/2 -translate-y-1/2 text-[11px] leading-none font-semibold ${
+                  exhaustion === 6 ? 'text-parchment-50' : 'text-ink-400'
+                }`}
+                style={{ left: '92.857%' }}
+              >
+                †
+              </span>
+            </div>
+            {/* biome-ignore lint/a11y/useSemanticElements: fieldset would add its own border/margin styling and break the compact tap zones row. */}
+            <div
+              className="absolute inset-x-0 -top-4 -bottom-4 flex"
+              role="group"
+              aria-label={t('survie.niveau.d.epuisement')}
+            >
+              {[0, 1, 2, 3, 4, 5, 6].map((level) => (
                 <button
                   key={level}
                   type="button"
                   onClick={() => setExhaustionLevel(level)}
-                  className={`text-2xl leading-none transition-colors ${exhaustionColor(level)} ${
-                    active ? 'opacity-100' : 'opacity-30 hover:opacity-60'
-                  } inline-flex items-center justify-center w-11 h-11 shrink-0`}
                   aria-pressed={level === exhaustion}
                   aria-label={t('survie.niveau.d.epuisement.level', { level: level })}
                   title={t('survie.niveau.level.effet', {
                     level: level,
                     effect: t(`survie.etats.fatigue.${level}`),
                   })}
-                >
-                  {active ? '◆' : '◇'}
-                </button>
-              );
-            })}
+                  className="flex-1 min-h-11 min-w-0 hover:bg-parchment-300/50 active:bg-parchment-400/50 transition-colors"
+                />
+              ))}
+            </div>
           </div>
-          {exhaustion > 0 && (
-            <p className="text-xs text-ink-500 mt-1">{t(`survie.etats.fatigue.${exhaustion}`)}</p>
+          <p
+            className={`text-xs mt-1.5 ${exhaustion > 0 ? 'text-ink-500' : 'text-ink-400 italic'}`}
+          >
+            {t(`survie.etats.fatigue.${exhaustion}`)}
+          </p>
+          <button
+            type="button"
+            onClick={() => setLadderOpen((v) => !v)}
+            aria-expanded={ladderOpen}
+            aria-controls="exhaustion-ladder"
+            className="mt-1 -ml-2 px-2 min-h-11 rounded-lg text-ink-500 hover:text-ink-800 hover:bg-parchment-100 transition-colors inline-flex items-center gap-1.5"
+          >
+            <span className="text-xs font-medium">{t('survie.l.echelle.des.effets')}</span>
+            <span className="text-[10px] text-ink-400" aria-hidden="true">
+              {ladderOpen ? '▾' : '▸'}
+            </span>
+          </button>
+          {ladderOpen && (
+            <ol
+              id="exhaustion-ladder"
+              className="mt-1 border-t border-parchment-200 pt-2 space-y-1"
+            >
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <li key={i} className="flex items-baseline gap-2 text-xs">
+                  <span className="font-mono w-3 shrink-0 text-right text-ink-400">{i}</span>
+                  <span className="w-3 shrink-0 text-center" aria-hidden="true">
+                    {i < exhaustion ? <span className="text-ink-400">✓</span> : null}
+                    {i === exhaustion ? (
+                      <span className={exhaustionTierText(exhaustion)}>●</span>
+                    ) : null}
+                  </span>
+                  <span
+                    className={
+                      i < exhaustion
+                        ? 'text-ink-600'
+                        : i === exhaustion
+                          ? 'text-ink-900 font-semibold'
+                          : 'text-ink-400'
+                    }
+                  >
+                    {t(`survie.etats.fatigue.${i}`)}
+                  </span>
+                </li>
+              ))}
+            </ol>
           )}
         </div>
       </section>
