@@ -259,8 +259,14 @@ playerTest.describe('Multiclassage', () => {
     playerTest('dés de vie : deux types de dés (Occultiste d8 / Magicien d6)', async ({ page }) => {
       await page.goto(sheetUrl(morriganId));
       await openTab(page, 'Survie');
-      // Le pool garde ses types de dés — SRD multiclassage
-      await expect(page.getByText('d8 + d6').first()).toBeVisible();
+      // Le pool garde ses types de dés — SRD multiclassage : une rangée par
+      // type dans le panneau Repos, chaque stepper porte classe + dé.
+      await expect(
+        page.getByRole('button', { name: 'Dépenser un dé de vie d8 — Occultiste' }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole('button', { name: 'Dépenser un dé de vie d6 — Magicien' }),
+      ).toBeVisible();
     });
   });
 });
