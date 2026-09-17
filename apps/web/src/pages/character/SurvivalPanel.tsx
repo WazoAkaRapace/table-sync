@@ -511,608 +511,7 @@ export function SurvivalPanel({
         )}
       </Panel>
 
-      {/* ---------- 2. États — conditions + épuisement + drapeaux ---------- */}
-      <section className="card p-4 sm:p-5 space-y-4" data-tuto="survie-etats">
-        <h2 className="section-title">{t('survie.etats')}</h2>
-        <div>
-          <span className="text-sm font-medium text-ink-700 block mb-1.5">
-            {t('survie.conditions')}
-          </span>
-          <div className="flex flex-wrap items-center gap-2">
-            {conditions.length === 0 && (
-              <span className="text-xs text-ink-400 italic">{t('survie.aucun.etat.actif')}</span>
-            )}
-            {conditions.map((cond) => (
-              <span
-                key={cond}
-                className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blood-50 text-blood-800 text-xs font-medium border border-blood-200"
-              >
-                {conditionLabel(cond)}
-                <button
-                  type="button"
-                  onClick={() => removeCondition(cond)}
-                  className="text-blood-500 hover:text-blood-700 font-semibold -my-2 -mr-1.5 inline-flex items-center justify-center min-w-11 min-h-11 rounded-full hover:bg-blood-100"
-                  aria-label={t('survie.retirer.l.etat.conditionlabel.cond', {
-                    conditionLabel: conditionLabel(cond),
-                  })}
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-            <button
-              type="button"
-              onClick={() => setConditionPickerOpen(true)}
-              className="inline-flex items-center gap-1 px-2.5 min-h-11 rounded-full text-xs font-medium border border-parchment-300 bg-parchment-100 text-ink-500 hover:border-blood-300 hover:text-blood-700 transition-colors"
-              aria-haspopup="dialog"
-            >
-              {t('survie.ajouter.un.etat')}
-            </button>
-          </div>
-        </div>
-        {/* Les drapeaux d'état vivent avec la gestion d'états — Vitalité ne
-            garde que la mesure (PV, mort). La règle concentration/dégâts
-            s'enseigne au niveau page (ConcentrationAlert). Glyphe à chasse
-            fixe : la bascule (✧→✨, ◌→🌀) ne décale jamais la mise en page. */}
-        <div className="flex items-center gap-2 max-[379px]:gap-1 flex-wrap">
-          <button
-            type="button"
-            onClick={async () => {
-              markLocalMutation();
-              try {
-                await api.patch(`/api/characters/${charId}`, {
-                  inspiration: !character.inspiration,
-                });
-                await onSaved();
-              } catch {
-                onError(t('survie.erreur'));
-              }
-            }}
-            className={`inline-flex items-center gap-1.5 px-3 min-h-11 max-[379px]:px-1 max-[379px]:gap-1 rounded-lg text-sm max-[379px]:text-xs font-medium transition-colors border ${
-              character.inspiration
-                ? 'bg-gold-400/20 text-gold-700 border-gold-400'
-                : 'bg-parchment-100 text-ink-400 border-parchment-300 hover:border-gold-400'
-            }`}
-            aria-pressed={character.inspiration}
-            title={t('survie.l.inspiration.permet.de.relancer.un')}
-          >
-            <span className="inline-block w-5 text-center shrink-0 text-base max-[379px]:text-sm">
-              {character.inspiration ? '✨' : '✧'}
-            </span>
-            {t('survie.inspiration')}
-          </button>
-          <button
-            type="button"
-            onClick={() =>
-              patchCharacter(
-                { concentrating: !character.concentrating },
-                t('survie.erreur.de.mise.a.jour'),
-              )
-            }
-            className={`inline-flex items-center gap-1.5 px-3 min-h-11 max-[379px]:px-1 max-[379px]:gap-1 rounded-lg text-sm max-[379px]:text-xs font-medium transition-colors border ${
-              character.concentrating
-                ? 'bg-indigo-100 text-indigo-700 border-indigo-400'
-                : 'bg-parchment-100 text-ink-400 border-parchment-300 hover:border-indigo-400'
-            }`}
-            aria-pressed={character.concentrating}
-            title={t('survie.tu.concentres.un.sort.si.tu')}
-          >
-            <span className="inline-block w-5 text-center shrink-0 text-base max-[379px]:text-sm">
-              {character.concentrating ? '🌀' : '◌'}
-            </span>
-            {t('survie.concentration')}
-          </button>
-        </div>
-        <div>
-          <div className="flex items-baseline justify-between mb-1.5">
-            <span className="text-sm font-medium text-ink-700">{t('survie.epuisement')}</span>
-            <span className={`text-xs font-semibold ${exhaustionTierText(exhaustion)}`}>
-              {t('survie.niveau.exhaustion.sur.6', { exhaustion })}
-            </span>
-          </div>
-          <div className="relative">
-            {/* Le rail gradué — 7 zones (0–6), remplissage cumulatif qui
-                démarre après la première zone vide, † gravé dans la dernière
-                (6 = mort, il passe en clair sur le rouge sombre). */}
-            <div className="relative h-3 bg-parchment-200 rounded-full" aria-hidden="true">
-              <div
-                className={`absolute inset-y-0 left-[14.2857%] rounded-r-full transition-all duration-300 ${exhaustionTierFill(exhaustion)}`}
-                style={{ width: `${(exhaustion / 7) * 100}%` }}
-              />
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div
-                  key={i}
-                  className="absolute inset-y-0 w-px bg-parchment-300/70"
-                  style={{ left: `${(i / 7) * 100}%` }}
-                />
-              ))}
-              <span
-                className={`absolute top-1/2 -translate-x-1/2 -translate-y-1/2 text-[11px] leading-none font-semibold ${
-                  exhaustion === 6 ? 'text-parchment-50' : 'text-ink-400'
-                }`}
-                style={{ left: '92.857%' }}
-              >
-                †
-              </span>
-            </div>
-            {/* biome-ignore lint/a11y/useSemanticElements: fieldset would add its own border/margin styling and break the compact tap zones row. */}
-            <div
-              className="absolute inset-x-0 -top-4 -bottom-4 flex"
-              role="group"
-              aria-label={t('survie.niveau.d.epuisement')}
-            >
-              {[0, 1, 2, 3, 4, 5, 6].map((level) => (
-                <button
-                  key={level}
-                  type="button"
-                  onClick={() => setExhaustionLevel(level)}
-                  aria-pressed={level === exhaustion}
-                  aria-label={t('survie.niveau.d.epuisement.level', { level: level })}
-                  title={t('survie.niveau.level.effet', {
-                    level: level,
-                    effect: t(`survie.etats.fatigue.${level}`),
-                  })}
-                  className="flex-1 min-h-11 min-w-0 hover:bg-parchment-300/50 active:bg-parchment-400/50 transition-colors"
-                />
-              ))}
-            </div>
-          </div>
-          <p
-            className={`text-xs mt-1.5 ${exhaustion > 0 ? 'text-ink-500' : 'text-ink-400 italic'}`}
-          >
-            {t(`survie.etats.fatigue.${exhaustion}`)}
-          </p>
-          <button
-            type="button"
-            onClick={() => setLadderOpen((v) => !v)}
-            aria-expanded={ladderOpen}
-            aria-controls="exhaustion-ladder"
-            className="mt-1 -ml-2 px-2 min-h-11 rounded-lg text-ink-500 hover:text-ink-800 hover:bg-parchment-100 transition-colors inline-flex items-center gap-1.5"
-          >
-            <span className="text-xs font-medium">{t('survie.l.echelle.des.effets')}</span>
-            <span className="text-[10px] text-ink-400" aria-hidden="true">
-              {ladderOpen ? '▾' : '▸'}
-            </span>
-          </button>
-          {ladderOpen && (
-            <ol
-              id="exhaustion-ladder"
-              className="mt-1 border-t border-parchment-200 pt-2 space-y-1"
-            >
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <li key={i} className="flex items-baseline gap-2 text-xs">
-                  <span className="font-mono w-3 shrink-0 text-right text-ink-400">{i}</span>
-                  <span className="w-3 shrink-0 text-center" aria-hidden="true">
-                    {i < exhaustion ? <span className="text-ink-400">✓</span> : null}
-                    {i === exhaustion ? (
-                      <span className={exhaustionTierText(exhaustion)}>●</span>
-                    ) : null}
-                  </span>
-                  <span
-                    className={
-                      i < exhaustion
-                        ? 'text-ink-600'
-                        : i === exhaustion
-                          ? 'text-ink-900 font-semibold'
-                          : 'text-ink-400'
-                    }
-                  >
-                    {t(`survie.etats.fatigue.${i}`)}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          )}
-        </div>
-      </section>
-
-      {/* ---------- 3. Ressources de classe — traits du catalogue avec compteur ---------- */}
-      {resourceFeatures.length > 0 && (
-        <Panel title={t('survie.ressources.de.classe')} tuto="survie-ressources">
-          <div className="space-y-1.5">
-            {resourceFeatures.map((feature) => {
-              const def = findClassFeature(feature.catalogId ?? '');
-              const max = feature.counterMax ?? 0;
-              const current = feature.counterCurrent ?? max;
-              const isPool = def?.resource?.unit === 'PV';
-              // Recharge effective : choix du joueur, sinon règle SRD du catalogue
-              // SRD multiclassage : la bascule court/long se juge au niveau de
-              // la classe qui accorde la capacité, pas au niveau total.
-              const owner = feature.catalogId ? findClassFeatureClass(feature.catalogId) : null;
-              const ownerLevel = owner
-                ? (classesOf(character).find((c) => c.classKey === owner)?.level ??
-                  character.level ??
-                  1)
-                : (character.level ?? 1);
-              const eff = effectiveFeatureReset(feature, ownerLevel);
-              const resetTitle =
-                eff === 'short'
-                  ? t('survie.rechargement.repos.court.ou.long')
-                  : eff === 'long'
-                    ? t('survie.rechargement.repos.long')
-                    : t('survie.rechargement.manuel');
-              return (
-                <div
-                  key={feature.id}
-                  className="flex items-center justify-between gap-2 bg-parchment-50 rounded-lg px-3 py-2 border border-parchment-200"
-                >
-                  <span className="text-sm font-medium text-ink-800 truncate flex items-center gap-1.5">
-                    {isPool ? '❤️' : '⚡'} {feature.title}
-                  </span>
-                  <span className="flex items-center gap-1 shrink-0">
-                    <StepButton
-                      onClick={() => stepResource(feature, current - 1)}
-                      disabled={current <= 0}
-                      label={t('survie.depenser.feature.title', {
-                        feature_title: feature.title,
-                      })}
-                    >
-                      −
-                    </StepButton>
-                    <span className="text-sm font-bold tabular-nums text-ink-800 min-w-10 text-center">
-                      {current}
-                      <span className="text-ink-400 font-normal">
-                        {' '}
-                        / {max}
-                        {isPool ? t('survie.pv.unite') : ''}
-                      </span>
-                    </span>
-                    <StepButton
-                      onClick={() => stepResource(feature, current + 1)}
-                      disabled={current >= max}
-                      label={t('survie.recuperer.feature.title', {
-                        feature_title: feature.title,
-                      })}
-                      title={resetTitle}
-                    >
-                      +
-                    </StepButton>
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </Panel>
-      )}
-
-      {/* ---------- 4. Repos — dés de vie et boutons réunis (l'économie de récupération) ---------- */}
-      <Panel title={t('survie.repos')} tuto="survie-repos">
-        {(() => {
-          // Dés de vie PAR LIGNE DE CLASSE (multiclassage SRD : le pool garde
-          // ses types de dés). Pool mixte : une ligne par type de dé — le
-          // joueur choisit LE dé qu'il dépense, chaque +/− vise SA ligne de
-          // classe (PATCH classes[] ; le compteur dénormalisé suit la somme).
-          const dice = hitDiceByClassOf(character).filter((d) => d.max > 0);
-          const total = dice.reduce((sum, d) => sum + d.max, 0);
-          const used = dice.reduce((sum, d) => sum + d.used, 0);
-          const remaining = Math.max(0, total - used);
-          const multi = dice.length > 1;
-          const step = async (delta: number) => {
-            markLocalMutation();
-            try {
-              await api.patch(`/api/characters/${charId}`, {
-                hitDiceUsed: Math.min(total, Math.max(0, used + delta)),
-              });
-              await onSaved();
-            } catch {
-              onError(t('survie.erreur.de.mise.a.jour'));
-            }
-          };
-          // Pool mixte : les lignes repartent telles quelles, SEULE la ligne
-          // tapée bouge — le validateur API resynchronise le compteur plat.
-          const stepLine = async (classKey: string, delta: number) => {
-            markLocalMutation();
-            try {
-              const lines = (character.classes ?? []).map((c) => ({
-                classKey: c.classKey,
-                level: c.level,
-                subclassKey: c.subclassKey,
-                fightingStyle: c.fightingStyle,
-                hitDiceUsed:
-                  c.classKey === classKey
-                    ? Math.min(c.level, Math.max(0, (c.hitDiceUsed ?? 0) + delta))
-                    : (c.hitDiceUsed ?? 0),
-              }));
-              await api.patch(`/api/characters/${charId}`, { classes: lines });
-              await onSaved();
-            } catch {
-              onError(t('survie.erreur.de.mise.a.jour'));
-            }
-          };
-          if (multi) {
-            return (
-              <div className="space-y-1.5" data-tuto="survie-des-vie">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm font-medium text-ink-700 flex items-center gap-1.5">
-                    {t('survie.des.de.vie')}
-                  </span>
-                  <span
-                    className={`text-sm font-bold tabular-nums ${
-                      remaining === 0 ? 'text-red-500' : 'text-ink-800'
-                    }`}
-                    title={t('survie.total.des.de.vie', { remaining, total })}
-                  >
-                    {remaining}
-                    <span className="text-xs font-normal text-ink-400"> / {total}</span>
-                  </span>
-                </div>
-                {dice.map((d) => {
-                  const lineRemaining = Math.max(0, d.max - d.used);
-                  const die = `d${d.die}`;
-                  return (
-                    <div
-                      key={d.classKey}
-                      className="flex items-center justify-between gap-2 bg-parchment-50 rounded-lg px-3 py-2 border border-parchment-200"
-                    >
-                      <span className="text-sm font-medium text-ink-800 truncate flex items-center gap-1.5">
-                        {d.classKey}
-                        <span className="font-mono text-xs text-ink-400">{die}</span>
-                      </span>
-                      <span className="flex items-center gap-1 shrink-0">
-                        <StepButton
-                          onClick={() => stepLine(d.classKey, 1)}
-                          disabled={lineRemaining <= 0}
-                          label={t('survie.depenser.un.de.par.ligne', { die, cls: d.classKey })}
-                          title={t('survie.depenser.un.de.de.vie.repos')}
-                        >
-                          −
-                        </StepButton>
-                        <span
-                          className={`text-sm font-bold tabular-nums min-w-10 text-center ${
-                            lineRemaining === 0 ? 'text-red-500' : 'text-ink-800'
-                          }`}
-                        >
-                          {lineRemaining}
-                          <span className="text-ink-400 font-normal"> / {d.max}</span>
-                        </span>
-                        <StepButton
-                          onClick={() => stepLine(d.classKey, -1)}
-                          disabled={d.used <= 0}
-                          label={t('survie.recuperer.un.de.par.ligne', { die, cls: d.classKey })}
-                          title={t('survie.recuperer.un.de.repos.long.niveau')}
-                        >
-                          +
-                        </StepButton>
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          }
-          return (
-            <div
-              className="flex items-center justify-between gap-2 flex-wrap"
-              data-tuto="survie-des-vie"
-            >
-              <span className="text-sm font-medium text-ink-700 flex items-center gap-1.5">
-                {t('survie.des.de.vie')}
-                <span className="text-xs font-normal text-ink-400">d{dice[0]?.die ?? 8}</span>
-              </span>
-              <span className="flex items-center gap-1">
-                <StepButton
-                  onClick={() => step(1)}
-                  disabled={remaining <= 0}
-                  label={t('survie.depenser.un.de.de.vie')}
-                  title={t('survie.depenser.un.de.de.vie.repos')}
-                >
-                  −
-                </StepButton>
-                <span
-                  className={`text-sm font-bold tabular-nums ${remaining === 0 ? 'text-red-500' : 'text-ink-800'}`}
-                >
-                  {remaining}
-                </span>
-                <span className="text-xs text-ink-400">/ {total}</span>
-                <StepButton
-                  onClick={() => step(-1)}
-                  disabled={used <= 0}
-                  label={t('survie.recuperer.un.de.de.vie')}
-                  title={t('survie.recuperer.un.de.repos.long.niveau')}
-                >
-                  +
-                </StepButton>
-              </span>
-            </div>
-          );
-        })()}
-        {canEdit && (
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setRestDice({});
-                setRestHealed('');
-                setRestSheet('short');
-              }}
-              className="btn-rest-short"
-              title={t('survie.emplacements.de.pacte.forme.sauvage.ressources')}
-            >
-              {t('survie.repos.court')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setRestSheet('long')}
-              className="btn-rest-long"
-              title={t('survie.pv.au.maximum.tous.les.emplacements')}
-            >
-              {t('survie.repos.long')}
-            </button>
-          </div>
-        )}
-      </Panel>
-
-      {/* ---------- 5. Forme sauvage (Druide ≥ 2) ---------- */}
-      {findClass(character.characterClass)?.name === 'Druide' &&
-        (character.level ?? 1) >= 2 &&
-        (() => {
-          const shaped = !!character.wildShapeSlug;
-          return (
-            <section className="card p-4 sm:p-5 space-y-2" data-tuto="survie-forme">
-              <div className="flex items-center justify-between gap-2">
-                <h2 className="section-title">{t('survie.forme.sauvage')}</h2>
-                {/* biome-ignore lint/a11y/useSemanticElements: fieldset would add its own border/margin styling and break the compact pips row. */}
-                <span
-                  className="flex items-center gap-0.5"
-                  role="group"
-                  aria-label={t('survie.utilisations.de.forme.sauvage')}
-                >
-                  {[1, 2].map((n) => (
-                    <button
-                      type="button"
-                      key={n}
-                      onClick={async () => {
-                        if ((character.wildShapeUses ?? 2) === n) return;
-                        markLocalMutation();
-                        try {
-                          await api.patch(`/api/characters/${charId}`, { wildShapeUses: n });
-                          await onSaved();
-                        } catch {
-                          onError(t('survie.erreur.de.mise.a.jour'));
-                        }
-                      }}
-                      className={`text-base leading-none px-0.5 transition-opacity ${(character.wildShapeUses ?? 2) >= n ? 'opacity-100' : 'opacity-25 hover:opacity-60'}`}
-                      aria-pressed={(character.wildShapeUses ?? 2) >= n}
-                      aria-label={t('survie.n.utilisation.n.1.s.de', {
-                        n: n,
-                        s: n > 1 ? 's' : '',
-                      })}
-                      title={t('survie.regler.a.n.utilisation.n.1', {
-                        n: n,
-                        s: n > 1 ? 's' : '',
-                      })}
-                    >
-                      🐾
-                    </button>
-                  ))}
-                </span>
-              </div>
-              {shaped ? (
-                <>
-                  <div className="text-xs text-ink-600 flex items-center gap-1.5 flex-wrap">
-                    <span>
-                      {t('survie.forme.actuelle')}{' '}
-                      <strong className="text-ink-900">
-                        {shapeForms.find((f) => f.slug === character.wildShapeSlug)?.name ??
-                          character.wildShapeSlug}
-                      </strong>{' '}
-                      · {wildShapeDurationHours(character.level ?? 2)} h max
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setShapeStatBlock(character.wildShapeSlug)}
-                      className="w-7 h-7 rounded-lg bg-parchment-100 hover:bg-gold-100 text-ink-500 hover:text-gold-600 border border-parchment-200 text-sm flex items-center justify-center transition-colors"
-                      aria-label={t('survie.voir.le.bloc.de.stats.de', {
-                        f_name:
-                          shapeForms.find((f) => f.slug === character.wildShapeSlug)?.name ??
-                          character.wildShapeSlug,
-                      })}
-                      title={t('survie.bloc.de.stats.de.la.forme')}
-                    >
-                      📜
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={revertShape}
-                    className="btn-secondary text-xs w-full py-1.5"
-                  >
-                    {t('survie.revenir.a.la.forme.normale.action')}
-                  </button>
-                </>
-              ) : (
-                <>
-                  <p className="text-xs text-ink-600">
-                    {t('survie.betes.jusqu.a.dd.cr', {
-                      cr: (() => {
-                        const cr = wildShapeMaxCR(character.level ?? 2, character.druidCircle);
-                        return cr === 0.25 ? '1/4' : cr === 0.5 ? '1/2' : cr;
-                      })(),
-                    })}
-                    {character.druidCircle !== 'lune' &&
-                      (character.level ?? 2) < 4 &&
-                      t('survie.pas.de.nage')}
-                    {character.druidCircle !== 'lune' &&
-                      (character.level ?? 2) < 8 &&
-                      t('survie.pas.de.vol')}
-                    {(character.level ?? 2) >= 4 &&
-                      character.druidCircle !== 'lune' &&
-                      t('survie.nage.seule')}
-                    {(character.level ?? 2) >= 8 &&
-                      character.druidCircle !== 'lune' &&
-                      t('survie.vol.seul')}
-                    {t('survie.pv.tires.aux.des.de.la.forme')}
-                  </p>
-                  {character.druidCircle === 'lune' && (
-                    <p className="text-[10px] text-ink-500">
-                      {t('survie.lune.note')}
-                      {(character.level ?? 2) >= 10 && t('survie.lune.formes.elementaires')}
-                      {(character.level ?? 2) >= 6 && t('survie.lune.attaques.magiques')}.
-                    </p>
-                  )}
-                  <button
-                    type="button"
-                    onClick={openShapePicker}
-                    disabled={(character.wildShapeUses ?? 2) <= 0}
-                    className="btn-primary text-xs w-full py-1.5 disabled:opacity-40"
-                  >
-                    {t('survie.prendre.une.forme')}
-                  </button>
-                </>
-              )}
-            </section>
-          );
-        })()}
-
-      {/* ---------- 6. Nourriture & eau ---------- */}
-      <Panel title={t('survie.nourriture.et.eau')}>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="flex flex-col gap-1">
-            <DeprivationBox
-              label={t('survie.sans.nourriture')}
-              days={foodDays}
-              icon="🍖"
-              onStep={(d) => stepDays('foodDays', d)}
-            />
-            {foodCount > 0 && canEdit && (
-              <button
-                type="button"
-                onClick={() => consume('food')}
-                className="text-xs px-2 py-1 rounded-lg bg-green-100 text-green-800 hover:bg-green-200 transition-colors"
-              >
-                {t('survie.manger.rations', { count: foodCount })}
-              </button>
-            )}
-          </div>
-          <div className="flex flex-col gap-1">
-            <DeprivationBox
-              label={t('survie.sans.eau')}
-              days={waterDays}
-              icon="💧"
-              onStep={(d) => stepDays('waterDays', d)}
-            />
-            {fullWaterCount > 0 && canEdit && (
-              <button
-                type="button"
-                onClick={() => consume('water')}
-                className="text-xs px-2 py-1 rounded-lg bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors"
-              >
-                {t('survie.boire.pleines', { count: fullWaterCount })}
-              </button>
-            )}
-            {emptyWaterCount > 0 && canEdit && (
-              <button
-                type="button"
-                onClick={refillWater}
-                className="text-xs px-2 py-1 rounded-lg bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition-colors"
-              >
-                {t('survie.remplir.vides', { count: emptyWaterCount })}
-              </button>
-            )}
-          </div>
-        </div>
-      </Panel>
-      {/* ---------- 7. Attaques — référence de fin d’onglet : options équipées, furtive, sans arme ---------- */}
+      {/* ---------- 2. Attaques — la réponse de Vitalité : options équipées, furtive, sans arme ---------- */}
       <Panel title={t('survie.attaques')} tuto="survie-attaques">
         {(() => {
           if (equippedStats.length === 0) return null;
@@ -1322,6 +721,608 @@ export function SurvivalPanel({
             </div>
           );
         })()}
+      </Panel>
+
+      {/* ---------- 3. États — conditions + épuisement + drapeaux ---------- */}
+      <section className="card p-4 sm:p-5 space-y-4" data-tuto="survie-etats">
+        <h2 className="section-title">{t('survie.etats')}</h2>
+        <div>
+          <span className="text-sm font-medium text-ink-700 block mb-1.5">
+            {t('survie.conditions')}
+          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            {conditions.length === 0 && (
+              <span className="text-xs text-ink-400 italic">{t('survie.aucun.etat.actif')}</span>
+            )}
+            {conditions.map((cond) => (
+              <span
+                key={cond}
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blood-50 text-blood-800 text-xs font-medium border border-blood-200"
+              >
+                {conditionLabel(cond)}
+                <button
+                  type="button"
+                  onClick={() => removeCondition(cond)}
+                  className="text-blood-500 hover:text-blood-700 font-semibold -my-2 -mr-1.5 inline-flex items-center justify-center min-w-11 min-h-11 rounded-full hover:bg-blood-100"
+                  aria-label={t('survie.retirer.l.etat.conditionlabel.cond', {
+                    conditionLabel: conditionLabel(cond),
+                  })}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+            <button
+              type="button"
+              onClick={() => setConditionPickerOpen(true)}
+              className="inline-flex items-center gap-1 px-2.5 min-h-11 rounded-full text-xs font-medium border border-parchment-300 bg-parchment-100 text-ink-500 hover:border-blood-300 hover:text-blood-700 transition-colors"
+              aria-haspopup="dialog"
+            >
+              {t('survie.ajouter.un.etat')}
+            </button>
+          </div>
+        </div>
+        {/* Les drapeaux d'état vivent avec la gestion d'états — Vitalité ne
+            garde que la mesure (PV, mort). La règle concentration/dégâts
+            s'enseigne au niveau page (ConcentrationAlert). Glyphe à chasse
+            fixe : la bascule (✧→✨, ◌→🌀) ne décale jamais la mise en page. */}
+        <div className="flex items-center gap-2 max-[379px]:gap-1 flex-wrap">
+          <button
+            type="button"
+            onClick={async () => {
+              markLocalMutation();
+              try {
+                await api.patch(`/api/characters/${charId}`, {
+                  inspiration: !character.inspiration,
+                });
+                await onSaved();
+              } catch {
+                onError(t('survie.erreur'));
+              }
+            }}
+            className={`inline-flex items-center gap-1.5 px-3 min-h-11 max-[379px]:px-1 max-[379px]:gap-1 rounded-lg text-sm max-[379px]:text-xs font-medium transition-colors border ${
+              character.inspiration
+                ? 'bg-gold-400/20 text-gold-700 border-gold-400'
+                : 'bg-parchment-100 text-ink-400 border-parchment-300 hover:border-gold-400'
+            }`}
+            aria-pressed={character.inspiration}
+            title={t('survie.l.inspiration.permet.de.relancer.un')}
+          >
+            <span className="inline-block w-5 text-center shrink-0 text-base max-[379px]:text-sm">
+              {character.inspiration ? '✨' : '✧'}
+            </span>
+            {t('survie.inspiration')}
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              patchCharacter(
+                { concentrating: !character.concentrating },
+                t('survie.erreur.de.mise.a.jour'),
+              )
+            }
+            className={`inline-flex items-center gap-1.5 px-3 min-h-11 max-[379px]:px-1 max-[379px]:gap-1 rounded-lg text-sm max-[379px]:text-xs font-medium transition-colors border ${
+              character.concentrating
+                ? 'bg-indigo-100 text-indigo-700 border-indigo-400'
+                : 'bg-parchment-100 text-ink-400 border-parchment-300 hover:border-indigo-400'
+            }`}
+            aria-pressed={character.concentrating}
+            title={t('survie.tu.concentres.un.sort.si.tu')}
+          >
+            <span className="inline-block w-5 text-center shrink-0 text-base max-[379px]:text-sm">
+              {character.concentrating ? '🌀' : '◌'}
+            </span>
+            {t('survie.concentration')}
+          </button>
+        </div>
+        <div>
+          <div className="flex items-baseline justify-between mb-1.5">
+            <span className="text-sm font-medium text-ink-700">{t('survie.epuisement')}</span>
+            <span className={`text-xs font-semibold ${exhaustionTierText(exhaustion)}`}>
+              {t('survie.niveau.exhaustion.sur.6', { exhaustion })}
+            </span>
+          </div>
+          <div className="relative">
+            {/* Le rail gradué — 7 zones (0–6), remplissage cumulatif qui
+                démarre après la première zone vide, † gravé dans la dernière
+                (6 = mort, il passe en clair sur le rouge sombre). */}
+            <div className="relative h-3 bg-parchment-200 rounded-full" aria-hidden="true">
+              <div
+                className={`absolute inset-y-0 left-[14.2857%] rounded-r-full transition-all duration-300 ${exhaustionTierFill(exhaustion)}`}
+                style={{ width: `${(exhaustion / 7) * 100}%` }}
+              />
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div
+                  key={i}
+                  className="absolute inset-y-0 w-px bg-parchment-300/70"
+                  style={{ left: `${(i / 7) * 100}%` }}
+                />
+              ))}
+              <span
+                className={`absolute top-1/2 -translate-x-1/2 -translate-y-1/2 text-[11px] leading-none font-semibold ${
+                  exhaustion === 6 ? 'text-parchment-50' : 'text-ink-400'
+                }`}
+                style={{ left: '92.857%' }}
+              >
+                †
+              </span>
+            </div>
+            {/* biome-ignore lint/a11y/useSemanticElements: fieldset would add its own border/margin styling and break the compact tap zones row. */}
+            <div
+              className="absolute inset-x-0 -top-4 -bottom-4 flex"
+              role="group"
+              aria-label={t('survie.niveau.d.epuisement')}
+            >
+              {[0, 1, 2, 3, 4, 5, 6].map((level) => (
+                <button
+                  key={level}
+                  type="button"
+                  onClick={() => setExhaustionLevel(level)}
+                  aria-pressed={level === exhaustion}
+                  aria-label={t('survie.niveau.d.epuisement.level', { level: level })}
+                  title={t('survie.niveau.level.effet', {
+                    level: level,
+                    effect: t(`survie.etats.fatigue.${level}`),
+                  })}
+                  className="flex-1 min-h-11 min-w-0 hover:bg-parchment-300/50 active:bg-parchment-400/50 transition-colors"
+                />
+              ))}
+            </div>
+          </div>
+          <p
+            className={`text-xs mt-1.5 ${exhaustion > 0 ? 'text-ink-500' : 'text-ink-400 italic'}`}
+          >
+            {t(`survie.etats.fatigue.${exhaustion}`)}
+          </p>
+          <button
+            type="button"
+            onClick={() => setLadderOpen((v) => !v)}
+            aria-expanded={ladderOpen}
+            aria-controls="exhaustion-ladder"
+            className="mt-1 -ml-2 px-2 min-h-11 rounded-lg text-ink-500 hover:text-ink-800 hover:bg-parchment-100 transition-colors inline-flex items-center gap-1.5"
+          >
+            <span className="text-xs font-medium">{t('survie.l.echelle.des.effets')}</span>
+            <span className="text-[10px] text-ink-400" aria-hidden="true">
+              {ladderOpen ? '▾' : '▸'}
+            </span>
+          </button>
+          {ladderOpen && (
+            <ol
+              id="exhaustion-ladder"
+              className="mt-1 border-t border-parchment-200 pt-2 space-y-1"
+            >
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <li key={i} className="flex items-baseline gap-2 text-xs">
+                  <span className="font-mono w-3 shrink-0 text-right text-ink-400">{i}</span>
+                  <span className="w-3 shrink-0 text-center" aria-hidden="true">
+                    {i < exhaustion ? <span className="text-ink-400">✓</span> : null}
+                    {i === exhaustion ? (
+                      <span className={exhaustionTierText(exhaustion)}>●</span>
+                    ) : null}
+                  </span>
+                  <span
+                    className={
+                      i < exhaustion
+                        ? 'text-ink-600'
+                        : i === exhaustion
+                          ? 'text-ink-900 font-semibold'
+                          : 'text-ink-400'
+                    }
+                  >
+                    {t(`survie.etats.fatigue.${i}`)}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+      </section>
+
+      {/* ---------- 4. Ressources de classe — traits du catalogue avec compteur ---------- */}
+      {resourceFeatures.length > 0 && (
+        <Panel title={t('survie.ressources.de.classe')} tuto="survie-ressources">
+          <div className="space-y-1.5">
+            {resourceFeatures.map((feature) => {
+              const def = findClassFeature(feature.catalogId ?? '');
+              const max = feature.counterMax ?? 0;
+              const current = feature.counterCurrent ?? max;
+              const isPool = def?.resource?.unit === 'PV';
+              // Recharge effective : choix du joueur, sinon règle SRD du catalogue
+              // SRD multiclassage : la bascule court/long se juge au niveau de
+              // la classe qui accorde la capacité, pas au niveau total.
+              const owner = feature.catalogId ? findClassFeatureClass(feature.catalogId) : null;
+              const ownerLevel = owner
+                ? (classesOf(character).find((c) => c.classKey === owner)?.level ??
+                  character.level ??
+                  1)
+                : (character.level ?? 1);
+              const eff = effectiveFeatureReset(feature, ownerLevel);
+              const resetTitle =
+                eff === 'short'
+                  ? t('survie.rechargement.repos.court.ou.long')
+                  : eff === 'long'
+                    ? t('survie.rechargement.repos.long')
+                    : t('survie.rechargement.manuel');
+              return (
+                <div
+                  key={feature.id}
+                  className="flex items-center justify-between gap-2 bg-parchment-50 rounded-lg px-3 py-2 border border-parchment-200"
+                >
+                  <span className="text-sm font-medium text-ink-800 truncate flex items-center gap-1.5">
+                    {isPool ? '❤️' : '⚡'} {feature.title}
+                  </span>
+                  <span className="flex items-center gap-1 shrink-0">
+                    <StepButton
+                      onClick={() => stepResource(feature, current - 1)}
+                      disabled={current <= 0}
+                      label={t('survie.depenser.feature.title', {
+                        feature_title: feature.title,
+                      })}
+                    >
+                      −
+                    </StepButton>
+                    <span className="text-sm font-bold tabular-nums text-ink-800 min-w-10 text-center">
+                      {current}
+                      <span className="text-ink-400 font-normal">
+                        {' '}
+                        / {max}
+                        {isPool ? t('survie.pv.unite') : ''}
+                      </span>
+                    </span>
+                    <StepButton
+                      onClick={() => stepResource(feature, current + 1)}
+                      disabled={current >= max}
+                      label={t('survie.recuperer.feature.title', {
+                        feature_title: feature.title,
+                      })}
+                      title={resetTitle}
+                    >
+                      +
+                    </StepButton>
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </Panel>
+      )}
+
+      {/* ---------- 5. Repos — dés de vie et boutons réunis (l'économie de récupération) ---------- */}
+      <Panel title={t('survie.repos')} tuto="survie-repos">
+        {(() => {
+          // Dés de vie PAR LIGNE DE CLASSE (multiclassage SRD : le pool garde
+          // ses types de dés). Pool mixte : une ligne par type de dé — le
+          // joueur choisit LE dé qu'il dépense, chaque +/− vise SA ligne de
+          // classe (PATCH classes[] ; le compteur dénormalisé suit la somme).
+          const dice = hitDiceByClassOf(character).filter((d) => d.max > 0);
+          const total = dice.reduce((sum, d) => sum + d.max, 0);
+          const used = dice.reduce((sum, d) => sum + d.used, 0);
+          const remaining = Math.max(0, total - used);
+          const multi = dice.length > 1;
+          const step = async (delta: number) => {
+            markLocalMutation();
+            try {
+              await api.patch(`/api/characters/${charId}`, {
+                hitDiceUsed: Math.min(total, Math.max(0, used + delta)),
+              });
+              await onSaved();
+            } catch {
+              onError(t('survie.erreur.de.mise.a.jour'));
+            }
+          };
+          // Pool mixte : les lignes repartent telles quelles, SEULE la ligne
+          // tapée bouge — le validateur API resynchronise le compteur plat.
+          const stepLine = async (classKey: string, delta: number) => {
+            markLocalMutation();
+            try {
+              const lines = (character.classes ?? []).map((c) => ({
+                classKey: c.classKey,
+                level: c.level,
+                subclassKey: c.subclassKey,
+                fightingStyle: c.fightingStyle,
+                hitDiceUsed:
+                  c.classKey === classKey
+                    ? Math.min(c.level, Math.max(0, (c.hitDiceUsed ?? 0) + delta))
+                    : (c.hitDiceUsed ?? 0),
+              }));
+              await api.patch(`/api/characters/${charId}`, { classes: lines });
+              await onSaved();
+            } catch {
+              onError(t('survie.erreur.de.mise.a.jour'));
+            }
+          };
+          if (multi) {
+            return (
+              <div className="space-y-1.5" data-tuto="survie-des-vie">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-medium text-ink-700 flex items-center gap-1.5">
+                    {t('survie.des.de.vie')}
+                  </span>
+                  <span
+                    className={`text-sm font-bold tabular-nums ${
+                      remaining === 0 ? 'text-red-500' : 'text-ink-800'
+                    }`}
+                    title={t('survie.total.des.de.vie', { remaining, total })}
+                  >
+                    {remaining}
+                    <span className="text-xs font-normal text-ink-400"> / {total}</span>
+                  </span>
+                </div>
+                {dice.map((d) => {
+                  const lineRemaining = Math.max(0, d.max - d.used);
+                  const die = `d${d.die}`;
+                  return (
+                    <div
+                      key={d.classKey}
+                      className="flex items-center justify-between gap-2 bg-parchment-50 rounded-lg px-3 py-2 border border-parchment-200"
+                    >
+                      <span className="text-sm font-medium text-ink-800 truncate flex items-center gap-1.5">
+                        {d.classKey}
+                        <span className="font-mono text-xs text-ink-400">{die}</span>
+                      </span>
+                      <span className="flex items-center gap-1 shrink-0">
+                        <StepButton
+                          onClick={() => stepLine(d.classKey, 1)}
+                          disabled={lineRemaining <= 0}
+                          label={t('survie.depenser.un.de.par.ligne', { die, cls: d.classKey })}
+                          title={t('survie.depenser.un.de.de.vie.repos')}
+                        >
+                          −
+                        </StepButton>
+                        <span
+                          className={`text-sm font-bold tabular-nums min-w-10 text-center ${
+                            lineRemaining === 0 ? 'text-red-500' : 'text-ink-800'
+                          }`}
+                        >
+                          {lineRemaining}
+                          <span className="text-ink-400 font-normal"> / {d.max}</span>
+                        </span>
+                        <StepButton
+                          onClick={() => stepLine(d.classKey, -1)}
+                          disabled={d.used <= 0}
+                          label={t('survie.recuperer.un.de.par.ligne', { die, cls: d.classKey })}
+                          title={t('survie.recuperer.un.de.repos.long.niveau')}
+                        >
+                          +
+                        </StepButton>
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          }
+          return (
+            <div
+              className="flex items-center justify-between gap-2 flex-wrap"
+              data-tuto="survie-des-vie"
+            >
+              <span className="text-sm font-medium text-ink-700 flex items-center gap-1.5">
+                {t('survie.des.de.vie')}
+                <span className="text-xs font-normal text-ink-400">d{dice[0]?.die ?? 8}</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <StepButton
+                  onClick={() => step(1)}
+                  disabled={remaining <= 0}
+                  label={t('survie.depenser.un.de.de.vie')}
+                  title={t('survie.depenser.un.de.de.vie.repos')}
+                >
+                  −
+                </StepButton>
+                <span
+                  className={`text-sm font-bold tabular-nums ${remaining === 0 ? 'text-red-500' : 'text-ink-800'}`}
+                >
+                  {remaining}
+                </span>
+                <span className="text-xs text-ink-400">/ {total}</span>
+                <StepButton
+                  onClick={() => step(-1)}
+                  disabled={used <= 0}
+                  label={t('survie.recuperer.un.de.de.vie')}
+                  title={t('survie.recuperer.un.de.repos.long.niveau')}
+                >
+                  +
+                </StepButton>
+              </span>
+            </div>
+          );
+        })()}
+        {canEdit && (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setRestDice({});
+                setRestHealed('');
+                setRestSheet('short');
+              }}
+              className="btn-rest-short"
+              title={t('survie.emplacements.de.pacte.forme.sauvage.ressources')}
+            >
+              {t('survie.repos.court')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setRestSheet('long')}
+              className="btn-rest-long"
+              title={t('survie.pv.au.maximum.tous.les.emplacements')}
+            >
+              {t('survie.repos.long')}
+            </button>
+          </div>
+        )}
+      </Panel>
+
+      {/* ---------- 6. Forme sauvage (Druide ≥ 2) ---------- */}
+      {findClass(character.characterClass)?.name === 'Druide' &&
+        (character.level ?? 1) >= 2 &&
+        (() => {
+          const shaped = !!character.wildShapeSlug;
+          return (
+            <section className="card p-4 sm:p-5 space-y-2" data-tuto="survie-forme">
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="section-title">{t('survie.forme.sauvage')}</h2>
+                {/* biome-ignore lint/a11y/useSemanticElements: fieldset would add its own border/margin styling and break the compact pips row. */}
+                <span
+                  className="flex items-center gap-0.5"
+                  role="group"
+                  aria-label={t('survie.utilisations.de.forme.sauvage')}
+                >
+                  {[1, 2].map((n) => (
+                    <button
+                      type="button"
+                      key={n}
+                      onClick={async () => {
+                        if ((character.wildShapeUses ?? 2) === n) return;
+                        markLocalMutation();
+                        try {
+                          await api.patch(`/api/characters/${charId}`, { wildShapeUses: n });
+                          await onSaved();
+                        } catch {
+                          onError(t('survie.erreur.de.mise.a.jour'));
+                        }
+                      }}
+                      className={`text-base leading-none px-0.5 transition-opacity ${(character.wildShapeUses ?? 2) >= n ? 'opacity-100' : 'opacity-25 hover:opacity-60'}`}
+                      aria-pressed={(character.wildShapeUses ?? 2) >= n}
+                      aria-label={t('survie.n.utilisation.n.1.s.de', {
+                        n: n,
+                        s: n > 1 ? 's' : '',
+                      })}
+                      title={t('survie.regler.a.n.utilisation.n.1', {
+                        n: n,
+                        s: n > 1 ? 's' : '',
+                      })}
+                    >
+                      🐾
+                    </button>
+                  ))}
+                </span>
+              </div>
+              {shaped ? (
+                <>
+                  <div className="text-xs text-ink-600 flex items-center gap-1.5 flex-wrap">
+                    <span>
+                      {t('survie.forme.actuelle')}{' '}
+                      <strong className="text-ink-900">
+                        {shapeForms.find((f) => f.slug === character.wildShapeSlug)?.name ??
+                          character.wildShapeSlug}
+                      </strong>{' '}
+                      · {wildShapeDurationHours(character.level ?? 2)} h max
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setShapeStatBlock(character.wildShapeSlug)}
+                      className="w-7 h-7 rounded-lg bg-parchment-100 hover:bg-gold-100 text-ink-500 hover:text-gold-600 border border-parchment-200 text-sm flex items-center justify-center transition-colors"
+                      aria-label={t('survie.voir.le.bloc.de.stats.de', {
+                        f_name:
+                          shapeForms.find((f) => f.slug === character.wildShapeSlug)?.name ??
+                          character.wildShapeSlug,
+                      })}
+                      title={t('survie.bloc.de.stats.de.la.forme')}
+                    >
+                      📜
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={revertShape}
+                    className="btn-secondary text-xs w-full py-1.5"
+                  >
+                    {t('survie.revenir.a.la.forme.normale.action')}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="text-xs text-ink-600">
+                    {t('survie.betes.jusqu.a.dd.cr', {
+                      cr: (() => {
+                        const cr = wildShapeMaxCR(character.level ?? 2, character.druidCircle);
+                        return cr === 0.25 ? '1/4' : cr === 0.5 ? '1/2' : cr;
+                      })(),
+                    })}
+                    {character.druidCircle !== 'lune' &&
+                      (character.level ?? 2) < 4 &&
+                      t('survie.pas.de.nage')}
+                    {character.druidCircle !== 'lune' &&
+                      (character.level ?? 2) < 8 &&
+                      t('survie.pas.de.vol')}
+                    {(character.level ?? 2) >= 4 &&
+                      character.druidCircle !== 'lune' &&
+                      t('survie.nage.seule')}
+                    {(character.level ?? 2) >= 8 &&
+                      character.druidCircle !== 'lune' &&
+                      t('survie.vol.seul')}
+                    {t('survie.pv.tires.aux.des.de.la.forme')}
+                  </p>
+                  {character.druidCircle === 'lune' && (
+                    <p className="text-[10px] text-ink-500">
+                      {t('survie.lune.note')}
+                      {(character.level ?? 2) >= 10 && t('survie.lune.formes.elementaires')}
+                      {(character.level ?? 2) >= 6 && t('survie.lune.attaques.magiques')}.
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={openShapePicker}
+                    disabled={(character.wildShapeUses ?? 2) <= 0}
+                    className="btn-primary text-xs w-full py-1.5 disabled:opacity-40"
+                  >
+                    {t('survie.prendre.une.forme')}
+                  </button>
+                </>
+              )}
+            </section>
+          );
+        })()}
+
+      {/* ---------- 7. Nourriture & eau ---------- */}
+      <Panel title={t('survie.nourriture.et.eau')}>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col gap-1">
+            <DeprivationBox
+              label={t('survie.sans.nourriture')}
+              days={foodDays}
+              icon="🍖"
+              onStep={(d) => stepDays('foodDays', d)}
+            />
+            {foodCount > 0 && canEdit && (
+              <button
+                type="button"
+                onClick={() => consume('food')}
+                className="text-xs px-2 py-1 rounded-lg bg-green-100 text-green-800 hover:bg-green-200 transition-colors"
+              >
+                {t('survie.manger.rations', { count: foodCount })}
+              </button>
+            )}
+          </div>
+          <div className="flex flex-col gap-1">
+            <DeprivationBox
+              label={t('survie.sans.eau')}
+              days={waterDays}
+              icon="💧"
+              onStep={(d) => stepDays('waterDays', d)}
+            />
+            {fullWaterCount > 0 && canEdit && (
+              <button
+                type="button"
+                onClick={() => consume('water')}
+                className="text-xs px-2 py-1 rounded-lg bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors"
+              >
+                {t('survie.boire.pleines', { count: fullWaterCount })}
+              </button>
+            )}
+            {emptyWaterCount > 0 && canEdit && (
+              <button
+                type="button"
+                onClick={refillWater}
+                className="text-xs px-2 py-1 rounded-lg bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition-colors"
+              >
+                {t('survie.remplir.vides', { count: emptyWaterCount })}
+              </button>
+            )}
+          </div>
+        </div>
       </Panel>
 
       {/* --- Sheet repos court : dépense de dés de vie + résumé --- */}
