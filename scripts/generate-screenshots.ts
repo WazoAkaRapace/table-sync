@@ -27,7 +27,7 @@
  *              pour le traqueur du MD (24) — les captures de vue élargie
  *              créent leur propre contexte Playwright via newSession().
  *
- * Bilingue : `--lang en` produit les mêmes 30 captures en anglais vers
+ * Bilingue : `--lang en` produit les mêmes 31 captures en anglais vers
  * docs/screenshots-en/ — l'API reçoit ?lang=en sur chaque appel du seed
  * (payloads mono-locale : `name` devient anglais), Chromium démarre en
  * locale en-US avec localStorage dnd-inv-lang=en, et tous les sélecteurs /
@@ -37,7 +37,7 @@
  * captures 11–13 peuvent différer entre deux runs d'une même langue).
  *
  * Usage :
- *   npm run screenshots                    # régénère les 30 captures (FR)
+ *   npm run screenshots                    # régénère les 31 captures (FR)
  *   npm run screenshots -- --only 03,07    # seulement certaines (numéros ou noms)
  *   npm run screenshots -- --lang en       # version anglaise → docs/screenshots-en/
  *   npm run screenshots -- --keep          # laisser les serveurs tourner (debug)
@@ -948,7 +948,7 @@ async function shoot(page: Page, file: string, opts: { animations?: 'allow' | 'd
 }
 
 // ---------------------------------------------------------------------------
-// Les 30 captures du README
+// Les 31 captures du README
 // ---------------------------------------------------------------------------
 
 interface ShotCtx {
@@ -980,6 +980,7 @@ const GM_SHOTS = new Set([
   '12-traqueur.png',
   '13-bloc-stats.png',
   '24-traqueur-bureau.png',
+  '31-groupe-pupitre.png',
 ]);
 
 // Captures tardives : elles clorent l'embuscade et dressent « Embuscade
@@ -1600,6 +1601,52 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
         await page.getByRole('heading', { name: /^Ogre/ }).last().waitFor({ timeout: 10_000 });
         await page.waitForTimeout(600);
         await shoot(page, '24-traqueur-bureau.png');
+        await page.close();
+      } finally {
+        await ctx.close();
+      }
+    },
+  },
+  {
+    file: '31-groupe-pupitre.png',
+    async run(c) {
+      // La table des matières du groupe sur l'écran du MD (1440×900) : le
+      // volume s'ouvre en sections réglées (I la porte sang, II le roster),
+      // puis la section III devient le PUPITRE — panneau .card à quatre
+      // instruments à filets internes, Combat portant l'état vif
+      // « N rencontres · M en cours » (le sang ne porte que le vivant — la
+      // capture se prend en plein combat gobelin), annexes réglées et code
+      // d'invitation en pied de registre. Cadre : la section centrée, la
+      // queue du roster de II visible au-dessus.
+      const ctx = await newSession(c.browser, c.sessions.md, {
+        viewport: { width: 1440, height: 900 },
+        desktop: true,
+      });
+      try {
+        const page = await ctx.newPage();
+        await page.goto(webUrl(c.webPort, `/party/${c.refs.partyId}`), {
+          waitUntil: 'networkidle',
+          timeout: 90_000,
+        });
+        await settle(page, 600);
+        await page
+          .getByText(S('Outils & annexes', 'Tools & extras'))
+          .first()
+          .waitFor({ timeout: 10_000 });
+        // L'état vif du combat doit être servi (la sonde /encounters est
+        // tombée) avant d'ancrer — sinon la tuile Combat dit « Aucune ».
+        await page
+          .getByText(S(/·\s*1\s*en\s*cours/, /·\s*1\s*underway/))
+          .first()
+          .waitFor({ timeout: 10_000 });
+        await page.evaluate(() => {
+          document
+            .getElementById('toc-tools')
+            ?.closest('section')
+            ?.scrollIntoView({ block: 'center' });
+        });
+        await page.waitForTimeout(400);
+        await shoot(page, '31-groupe-pupitre.png');
         await page.close();
       } finally {
         await ctx.close();
