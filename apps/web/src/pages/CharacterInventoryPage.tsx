@@ -29,7 +29,7 @@ import {
   ItemImageField,
   type ItemImageValue,
 } from '../components/ItemImageField';
-import TurnSlash, { combatVibrate, useTurnSlash } from '../components/TurnSlash';
+import { combatVibrate, useTurnSlash } from '../components/TurnSlash';
 import {
   BottomSheet,
   EmptyState,
@@ -760,8 +760,9 @@ export default function CharacterInventoryPage() {
     return null;
   }, [hubEncountersQuery.data, data?.character, charId]);
 
-  // "Your turn" sword-cut on the mobile combat indicator (dock card + hub)
-  const turnSlash = useTurnSlash(!!hubCombat?.isMyTurn);
+  // "Your turn" screen-wide blood-cut (document-level singleton — fires once
+  // whoever detects the transition: dock card, hub or desktop strip)
+  useTurnSlash(!!hubCombat?.isMyTurn);
 
   // Haptic cue the moment the initiative prompt appears
   const needsInitNow = !!hubCombat?.needsInitiative;
@@ -1005,22 +1006,23 @@ export default function CharacterInventoryPage() {
           // Your turn: the announce card becomes the action card — the card
           // that opens the turn closes it (header + body grammar mirrors the
           // initiative card above). One tap ends the turn; the link keeps the
-          // path to the full tracker. band-rise: the same 0.2 s sentence the
-          // Agir line speaks at the instant the turn becomes yours.
-          <div className="band-rise relative mb-[-1px] mx-auto w-fit max-w-full rounded-t-xl rounded-b-md shadow-md border border-b-0 bg-blood-600 border-blood-700 combat-turn-glow overflow-hidden">
-            <div className="relative px-3 py-1.5 text-xs font-bold text-parchment-50 text-center">
+          // path to the full tracker. combat-turn-banner : l'étendard — la
+          // carte se déroule depuis le dock, le titre se tamponne, puis le
+          // corps bat en rythme cardiaque (synchrone du halo).
+          <div className="combat-turn-banner relative mb-[-1px] mx-auto w-fit max-w-full rounded-t-xl rounded-b-md shadow-md border border-b-0 bg-blood-600 border-blood-700 combat-turn-glow">
+            <div className="combat-turn-stamp relative px-3 py-1.5 text-xs font-bold text-parchment-50 text-center">
               {t('inv.a.toi.de.jouer')}
-              <TurnSlash active={turnSlash} />
             </div>
             <div className="flex items-center gap-2 px-2 py-1.5 bg-parchment-50 border-t border-blood-300">
               <button
                 type="button"
                 onClick={endMyTurn}
                 disabled={endingTurn}
-                className="btn-primary min-h-[44px] flex-1 px-4 text-sm whitespace-nowrap"
+                className="btn-primary relative overflow-hidden min-h-[44px] flex-1 px-4 text-sm whitespace-nowrap"
                 aria-label={t('inv.terminer.mon.tour.passer.au.combattant')}
               >
                 {t('inv.j.ai.fini.mon.tour')}
+                <span className="btn-sheen" aria-hidden="true" />
               </button>
               <Link
                 to={`/party/${hubCombat.partyId}/combat?enc=${hubCombat.encounterId}`}
@@ -1040,7 +1042,6 @@ export default function CharacterInventoryPage() {
               {hubCombat.currentCombatantName
                 ? `⚔ ${hubCombat.currentCombatantName}`
                 : t('inv.combat.en.preparation')}
-              <TurnSlash active={turnSlash} />
             </Link>
           )
         )}
@@ -1137,8 +1138,6 @@ export default function CharacterInventoryPage() {
                 )}
               </button>
               {right.map(slot)}
-              {/* Sword-cut sweeps the full dock bar on the your-turn edge */}
-              <TurnSlash active={turnSlash && !moreOpen} />
             </div>
           );
         })()}

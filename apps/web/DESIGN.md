@@ -248,8 +248,9 @@ backdrop-filter capturaient le scroll sur vieille tablette) — les overlays
   0 14px 32px rgba(42,31,20,0.14)` + `scale(1.01)` — le lift EST le
   moment ; rien d'autre ne bouge.
 - **Halo du tour** (`.combat-turn-glow`): anneau intérieur + halo
-  extérieur sang pulsé 1,8 s — le seul halo coloré du système, réservé à
-  « c'est ton tour ».
+  extérieur sang au battement d'un cœur (lub-dub, 1,5 s — l'OPACITÉ seule
+  s'anime, le box-shadow est statique) — le seul halo coloré du système,
+  réservé à « c'est ton tour ».
 
 ### Named Rules
 
@@ -548,8 +549,24 @@ Ses règles, à réutiliser pour toute animation hors React :
 ## Motion
 
 Une seule courbe de sortie : `cubic-bezier(0.16, 1, 0.3, 1)`. Entrées courtes
-(0.2–0.45 s), un moment signé par surface (dock, sword-cut de tour,
-sheet-up, sheet-rise, register-rise, stage-swap). Le registre arrive par `.register-rise` :
+(0.2–0.45 s), un moment signé par surface (dock, étendard de tour,
+sheet-up, sheet-rise, register-rise, stage-swap). L'état « À toi de jouer »
+parle en deux temps : L'ÉTENDARD — la carte sang se déroule en montant
+depuis le dock (`.combat-turn-banner`, clip-path ancré au bord inférieur,
+0,45 s), le titre se tamponne derrière (`.combat-turn-stamp`, échelle
+1,35→0,97→1) comme un sceau qui frappe la bannière ; LA BANDE desktop,
+persistante, prend une pose de frappe (`turn-strike`) — puis LE BATTEMENT :
+le porteur vivant (carte mobile, bande desktop) porte LE GLOW DU HUB EN
+PERMANENCE (valeurs exactes du bouton central du dock, anneau statique) et
+chaque temps du cœur EMBRASE cette même empreinte (pseudo-élément dédié,
+même géométrie, plus dense — jamais plus grand que le hub), lub-dub 1,5 s.
+Le bouton « J'ai fini mon tour » reçoit de temps en temps un balayage de
+lumière parchemin (`.btn-sheen`, cycle 7,5 s). Le dock ne bat pas (boutons
+sous le pouce) — halo pulsé classique seul. Vibration cardiaque
+`[70, 100, 160]` à l'instant du changement de tour. Tout est
+transform/opacity (le clip-path du déroulé est un one-shot court sur un
+petit élément), tout est coupé sous prefers-reduced-motion. Le
+registre arrive par `.register-rise` :
 montée de 12 px + fondu, 0.35 s, remplissage `backwards`, stagger inline plafonné
 (≤ 5 blocs × 60 ms) — les entrées se posent sous la règle de tête l'une après
 l'autre, puis plus rien ne bouge. Le théâtre du tour change de combattant par

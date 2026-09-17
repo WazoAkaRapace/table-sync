@@ -530,14 +530,13 @@ input[type="number"] {
   animation: drawer-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* ---------- Combat widget: "your turn" sword-cut ---------- */
+/* ---------- « À toi de jouer » : halo cardiaque + étendard ---------- */
 
-/* Persistent full-perimeter glow while it's your turn: state feedback,
-   calm heartbeat (not decoration) — reuses the hub-button glow hue.
-   Le box-shadow est STATIQUE sur un pseudo-élément ; seule l'OPACITÉ
-   s'anime (propriété compositable) : animer box-shadow directement
-   imposait un repaint complet à chaque frame — jusqu'à 3 éléments
-   simultanés pendant tout le tour du joueur. */
+/* Halo du tour : un battement de cœur (bim-boum), pas une sinusoïde — le
+   sang marque l'instant qui se joue maintenant. Le box-shadow est STATIQUE
+   sur un pseudo-élément ; seule l'OPACITÉ s'anime (compositable) : animer
+   box-shadow directement imposerait un repaint complet à chaque frame —
+   jusqu'à 3 éléments simultanés pendant tout le tour du joueur. */
 .combat-turn-glow {
   position: relative;
 }
@@ -554,80 +553,182 @@ input[type="number"] {
     inset 0 0 0 1px rgba(185, 28, 28, 0.5),
     0 0 0 3px rgba(185, 28, 28, 0.55),
     0 4px 18px 4px rgba(185, 28, 28, 0.45);
-  animation: combat-turn-glow 1.8s ease-in-out infinite;
+  animation: combat-turn-glow 1.5s linear infinite;
 }
 @keyframes combat-turn-glow {
   0%,
   100% {
-    opacity: 0.55;
+    opacity: 0.58;
   }
-  50% {
+  5% {
     opacity: 1;
+  }
+  11% {
+    opacity: 0.7;
+  }
+  17% {
+    opacity: 0.92;
+  }
+  30% {
+    opacity: 0.58;
   }
 }
 
-/* The cut: a blade with a white-hot parchment core and blood edges sweeps
-   diagonally across the whole bar, clipped to its rounded shape. One play
-   is a double cut — forehand out (left→right), then backhand back
-   (right→left) — crossing like parried sword cuts. */
-.combat-slash-overlay {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-  border-radius: inherit;
+/* L'étendard + le battement — l'état « À toi de jouer » du widget de combat.
+   À l'instant où le tour devient tien, la carte se DÉROULE en montant depuis
+   le dock (clip-path : révélation ancrée au bord inférieur — one-shot court
+   sur un petit élément, pas de repaint soutenu), le titre se tamponne (grand,
+   frappe, tasse). Ensuite le porteur vivant porte LE GLOW DU HUB EN
+   PERMANENCE — mêmes valeurs exactes que le bouton central du dock, anneau
+   statique — et chaque battement du cœur EMBRASE cette même empreinte
+   (pseudo-élément dédié, même géométrie, plus dense). La bande desktop
+   (persistante) prend d'abord une pose de frappe. Le dock, lui, ne bat pas :
+   boutons sous le pouce. */
+
+/* La carte étendard (mobile) : déroulé, puis battement du halo. */
+.combat-turn-banner {
+  animation: turn-unfurl 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
-.combat-slash-blade {
-  position: absolute;
-  top: -30%;
-  left: 0;
-  width: 42%;
-  height: 160%;
-  transform: rotate(16deg) translateX(-160%);
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(139, 26, 26, 0.35) 30%,
-    rgba(255, 243, 224, 0.95) 50%,
-    rgba(139, 26, 26, 0.35) 70%,
-    transparent 100%
-  );
-  animation: combat-slash-double 1.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+/* Le titre se tamponne à la fin du déroulé — deux temps nets : l'étendard
+   se déploie, PUIS le sceau frappe. */
+.combat-turn-stamp {
+  animation: turn-stamp 0.32s cubic-bezier(0.34, 1.4, 0.64, 1) 0.3s both;
 }
-/* Trailing echo of the same double cut, fainter and late */
-.combat-slash-blade::after {
+/* La bande desktop : pose de frappe (déjà montée). */
+.combat-turn-beat {
+  animation: turn-strike 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+/* LE GLOW DU HUB, exactement — le bouton central du dock porte
+   `0 0 0 2px rgba(185,28,28,.3), 0 0 12px rgba(185,28,28,.25)` ; les
+   porteurs vivants (carte mobile, bande desktop) reprennent ces valeurs À
+   L'IDENTIQUE sur leur anneau `combat-turn-glow`, EN PERMANENCE : au repos,
+   la carte a exactement le glow du hub — statique, ni plus grand ni plus
+   faible. Le battement est une EMBRASURE de la même empreinte : un
+   pseudo-élément dédié, même géométrie (12 px) mais plus dense, s'allume
+   brièvement à chaque temps du cœur par-dessus l'anneau immobile. */
+.combat-turn-banner.combat-turn-glow::after,
+.combat-turn-beat.combat-turn-glow::after {
+  animation: none;
+  opacity: 1;
+  box-shadow:
+    0 0 0 2px rgba(185, 28, 28, 0.3),
+    0 0 12px rgba(185, 28, 28, 0.25);
+}
+.combat-turn-banner::before,
+.combat-turn-beat::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: inherit;
-  opacity: 0.35;
-  animation: combat-slash-double 1.15s cubic-bezier(0.16, 1, 0.3, 1) 110ms forwards;
+  border-radius: inherit;
+  pointer-events: none;
+  /* L'embrasure : même empreinte que le hub, plus dense — jamais plus grande */
+  box-shadow:
+    0 0 0 2px rgba(185, 28, 28, 0.55),
+    0 0 12px 2px rgba(185, 28, 28, 0.5);
+  opacity: 0;
+  animation: combat-turn-beat 1.5s linear 0.45s infinite;
 }
-@keyframes combat-slash-double {
+/* Chronologie cardiaque (lub à 5 %, dub à 17 %) : au repos seul le glow du
+   hub reste — l'embrasure s'éteint complètement entre deux battements. */
+@keyframes combat-turn-beat {
+  0%,
+  30%,
+  100% {
+    opacity: 0;
+  }
+  5% {
+    opacity: 1;
+  }
+  11% {
+    opacity: 0.2;
+  }
+  17% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes turn-unfurl {
+  from {
+    clip-path: inset(100% -28px 0 -28px);
+    transform: translateY(4px);
+  }
+  /* L'inset final est NÉGATIF : le clip du déroulé persiste (fill both) et
+     doit laisser respirer le halo du battement AU-DELÀ de la boîte — un
+     inset(0) carré le rognerait pour toujours. */
+  to {
+    clip-path: inset(-36px -28px -16px -28px);
+    transform: translateY(0);
+  }
+}
+@keyframes turn-stamp {
   0% {
-    transform: rotate(16deg) translateX(-160%);
+    transform: scale(1.35);
+    opacity: 0;
   }
-  38% {
-    transform: rotate(16deg) translateX(360%);
-  }
-  /* mirror while fully outside the bar, then cut back */
-  62% {
-    transform: rotate(-16deg) translateX(360%);
+  55% {
+    transform: scale(0.97);
+    opacity: 1;
   }
   100% {
-    transform: rotate(-16deg) translateX(-160%);
+    transform: scale(1);
+  }
+}
+@keyframes turn-strike {
+  0% {
+    transform: translateY(1px) scale(1);
+  }
+  35% {
+    transform: translateY(-1px) scale(1.02);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Le rappel : un balayage de lumière parchemin glisse sur le bouton « J'ai
+   fini mon tour » de temps en temps — cycle de 7,5 s dont seuls les
+   premiers 8 % (~0,6 s) traversent, la bande reste ensuite garée hors du
+   bouton. L'hôte (le bouton) porte `relative overflow-hidden` : le balayage
+   suit les coins arrondis. */
+.btn-sheen {
+  position: absolute;
+  top: -60%;
+  bottom: -60%;
+  left: 0;
+  width: 45%;
+  transform: translateX(-180%) rotate(14deg);
+  background: linear-gradient(90deg, transparent, rgba(255, 243, 224, 0.35), transparent);
+  pointer-events: none;
+  animation: btn-sheen 7.5s linear 2s infinite;
+}
+@keyframes btn-sheen {
+  0% {
+    transform: translateX(-180%) rotate(14deg);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+  }
+  /* traversée sur ~0,9 s (12 % du cycle) : ~0,3 s réellement visibles */
+  12%,
+  100% {
+    transform: translateX(340%) rotate(14deg);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .combat-turn-glow {
+  .combat-turn-glow::after {
     animation: none;
-    /* Keep a static state ring so "your turn" stays legible without motion */
-    box-shadow:
-      0 0 0 3px rgba(185, 28, 28, 0.55),
-      0 4px 18px 4px rgba(185, 28, 28, 0.45);
+    /* Anneau statique : « ton tour » reste annoncé sans mouvement */
+    opacity: 0.85;
   }
-  .combat-slash-overlay {
+  .combat-turn-banner,
+  .combat-turn-beat,
+  .combat-turn-stamp {
+    animation: none;
+  }
+  .combat-turn-banner::before,
+  .combat-turn-beat::before {
+    display: none;
+  }
+  .btn-sheen {
     display: none;
   }
 }

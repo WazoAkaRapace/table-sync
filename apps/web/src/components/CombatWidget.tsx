@@ -22,7 +22,7 @@ import api from '../api';
 import { useAuth } from '../auth';
 import { invalidateCombat, useActiveEncounters } from '../combatLive';
 import { useSyncEvent } from '../sync';
-import TurnSlash, { combatVibrate, useTurnSlash } from './TurnSlash';
+import { combatVibrate, useTurnSlash } from './TurnSlash';
 
 interface ActiveCombat {
   encounter: EncounterDetail;
@@ -176,8 +176,9 @@ export default function CombatWidget() {
     if (rising) combatVibrate([80, 40, 80]);
   }, [needsInitAnywhere]);
 
-  // Sword-cut on the any-state → "your turn" transition (shared hook)
-  const slashActive = useTurnSlash(isMyTurn);
+  // Screen-wide blood-cut on the any-state → "your turn" transition (shared
+  // hook — the cut itself is a document-level singleton, fired once)
+  useTurnSlash(isMyTurn);
 
   if (!user || !isCharacterSheet || !isMyCharacter || combats.length === 0) return null;
   if (!headerSlot) return null;
@@ -188,7 +189,7 @@ export default function CombatWidget() {
 
   // One quiet instrument on the dark ink header: encounter (→ tracker) on the
   // left, live turn status, then the state's single action. Blood = your turn
-  // (glow + sword-cut, same signature as the dock), gold = initiative owed.
+  // (glow + heartbeat beat, same signature as the dock), gold = initiative owed.
   const statusText = needsInitiative
     ? t('widget.lance.ton.initiative')
     : isMyTurn
@@ -213,14 +214,12 @@ export default function CombatWidget() {
     <div
       className={`combat-strip relative flex items-center gap-2 h-10 max-w-full pl-2.5 pr-1.5 rounded-lg border shadow-sm ${
         isMyTurn
-          ? 'border-blood-500 bg-blood-900/40 combat-turn-glow'
+          ? 'border-blood-500 bg-blood-900/40 combat-turn-glow combat-turn-beat'
           : needsInitiative
             ? 'border-yellow-500 bg-ink-800'
             : 'border-ink-600 bg-ink-800'
       }`}
     >
-      <TurnSlash active={slashActive} />
-
       {/* Encounter — the door to the tracker (deep link opens it directly) */}
       <Link
         to={`/party/${combat.partyId}/combat?enc=${combat.encounter.id}`}
@@ -321,10 +320,11 @@ export default function CombatWidget() {
           type="button"
           onClick={() => endMyTurn(combat.encounter.id)}
           disabled={endingTurn}
-          className="btn-primary whitespace-nowrap shrink-0"
+          className="btn-primary relative overflow-hidden whitespace-nowrap shrink-0"
           aria-label={t('widget.terminer.mon.tour.passer.au.combattant')}
         >
           {t('widget.j.ai.fini.mon.tour')}
+          <span className="btn-sheen" aria-hidden="true" />
         </button>
       )}
     </div>,
