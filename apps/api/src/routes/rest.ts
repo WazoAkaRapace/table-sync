@@ -6,7 +6,9 @@
  * catalog feature counters — max recomputed at the current level), then
  * mirrors HP changes to active combatants like a sheet PATCH would.
  *
- * Body: { type: 'short' | 'long', hitDiceSpent?: number }
+ * Body: { type: 'short' | 'long', hitDiceSpent?: number,
+ *          hitDiceSpentByClass?: Array<{ classKey: string; count: number }>,
+ *          healedHp?: number }
  * Permission: character owner or party GM (same as PATCH /characters/:id).
  */
 
@@ -39,7 +41,12 @@ export async function restRoutes(app: FastifyInstance) {
     async (
       req: FastifyRequest<{
         Params: { id: string };
-        Body: { type?: string; hitDiceSpent?: number };
+        Body: {
+          type?: string;
+          hitDiceSpent?: number;
+          hitDiceSpentByClass?: Array<{ classKey?: unknown; count?: unknown }>;
+          healedHp?: number;
+        };
       }>,
       reply: FastifyReply,
     ) => {
@@ -66,6 +73,33 @@ export async function restRoutes(app: FastifyInstance) {
       }
       if (body.hitDiceSpent !== undefined && !Number.isInteger(body.hitDiceSpent)) {
         return reply.code(400).send({ error: apiMsg(req, 'hitDiceSpent doit être un entier') });
+      }
+      // Dépense par ligne de classe (fiche multiclassée : le joueur choisit
+      // ses types de dés). Validation tolérante : entrées inconnues ou hors
+      // pool simplement ignorées côté applyRest (clamp par ligne).
+      let hitDiceSpentByClass: Array<{ classKey: string; count: number }> | undefined;
+      if (body.hitDiceSpentByClass !== undefined) {
+        if (!Array.isArray(body.hitDiceSpentByClass)) {
+          return reply
+            .code(400)
+            .send({ error: apiMsg(req, 'hitDiceSpentByClass doit être un tableau') });
+        }
+        const entries: Array<{ classKey: string; count: number }> = [];
+        for (const item of body.hitDiceSpentByClass) {
+          if (
+            !item ||
+            typeof item.classKey !== 'string' ||
+            typeof item.count !== 'number' ||
+            !Number.isFinite(item.count) ||
+            item.count < 0
+          ) {
+            return reply.code(400).send({
+              error: apiMsg(req, 'hitDiceSpentByClass doit être { classKey, count ≥ 0 }'),
+            });
+          }
+          entries.push({ classKey: item.classKey, count: Math.floor(item.count) });
+        }
+        hitDiceSpentByClass = entries;
       }
       if (
         body.healedHp !== undefined &&
@@ -100,6 +134,7 @@ export async function restRoutes(app: FastifyInstance) {
       const result = applyRest(mapCharacter(char), features, {
         type: body.type,
         hitDiceSpent: body.hitDiceSpent,
+        hitDiceSpentByClass,
         healedHp: body.healedHp,
       });
 

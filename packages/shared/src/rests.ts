@@ -42,22 +42,31 @@ export interface RestResult {
  *
  * Short rest: pact-magic slots restored (Occultiste), wild shape uses reset,
  * short-rest catalog counters reset, optional hit-dice spending. The dice are
- * rolled BY THE PLAYER at the table — we only count them (hitDiceSpent) and
- * apply the healing they announce (healedHp), capped at max HP; any HP regained
- * clears death saves.
+ * rolled BY THE PLAYER at the table — we only count them (a plain
+ * `hitDiceSpent` count is allocated FIFO across class lines, the legacy
+ * contract; `hitDiceSpentByClass` spends the named lines exactly — the
+ * multiclass sheet picks its die types) and apply the healing they announce
+ * (healedHp), capped at max HP; any HP regained clears death saves.
  *
  * Long rest: HP to max, temp HP to 0, all slots restored, half the level (min 1)
- * hit dice regained, exhaustion −1, death saves cleared, concentration dropped,
- * wild shape uses reset, every catalog counter reset (max recomputed from the
- * formula at the current level). Conditions and food/water are untouched
- * (conditions persist through rests per SRD; survival flow is separate).
+ * hit dice regained — BIGGEST dice first, then class-line order (the app's
+ * documented default; the SRD leaves the choice to the player) —, exhaustion
+ * −1, death saves cleared, concentration dropped, wild shape uses reset,
+ * every catalog counter reset (max recomputed from the formula at the current
+ * level). Conditions and food/water are untouched (conditions persist through
+ * rests per SRD; survival flow is separate).
  */
 export function applyRest(
   character: Character,
   features: Array<
     Pick<CharacterFeature, 'id' | 'catalogId' | 'resetType' | 'counterMax' | 'counterCurrent'>
   >,
-  options: { type: 'short' | 'long'; hitDiceSpent?: number; healedHp?: number },
+  options: {
+    type: 'short' | 'long';
+    hitDiceSpent?: number;
+    hitDiceSpentByClass?: Array<{ classKey: string; count: number }>;
+    healedHp?: number;
+  },
 ): RestResult {
   const level = character.level ?? 1;
   const classes = classesOf(character);
@@ -91,21 +100,34 @@ export function applyRest(
   }
 
   // Hit-dice spending on a short rest: the player rolls their own dice at the
-  // table — we only COUNT them (FIFO across class lines when they spend a
-  // plain count) and apply the healing they announce (capped).
+  // table — we only COUNT them and apply the healing they announce (capped).
+  // Allocation: `hitDiceSpentByClass` (the multiclass sheet names its die
+  // types, each clamped to the line's remaining dice) wins over the plain
+  // `hitDiceSpent` count, allocated FIFO across class lines (legacy contract).
   let diceSpent = 0;
   let healed = 0;
   if (options.type === 'short') {
     const available = dice.reduce((sum, d) => sum + Math.max(0, d.max - d.used), 0);
-    diceSpent = Math.max(0, Math.min(options.hitDiceSpent ?? 0, available));
+    const askedByClass = options.hitDiceSpentByClass;
+    const spend: number[] = dice.map((d) => {
+      if (askedByClass) {
+        const asked = askedByClass.find((c) => c.classKey === d.classKey)?.count ?? 0;
+        return Math.max(0, Math.min(Math.floor(asked), Math.max(0, d.max - d.used)));
+      }
+      return -1; // FIFO fill below
+    });
+    if (!askedByClass) {
+      let left = Math.max(0, Math.min(options.hitDiceSpent ?? 0, available));
+      for (const [i, d] of dice.entries()) {
+        const take = Math.min(Math.max(0, d.max - d.used), left);
+        spend[i] = take;
+        left -= take;
+      }
+    }
+    diceSpent = spend.reduce((sum, n) => sum + n, 0);
     const announced = Math.max(0, Math.floor(options.healedHp ?? 0));
     if (diceSpent > 0) {
-      let left = diceSpent;
-      classHitDice = dice.map((d) => {
-        const take = Math.min(Math.max(0, d.max - d.used), left);
-        left -= take;
-        return { classKey: d.classKey, hitDiceUsed: d.used + take };
-      });
+      classHitDice = dice.map((d, i) => ({ classKey: d.classKey, hitDiceUsed: d.used + spend[i] }));
       patch.hitDiceUsed = (character.hitDiceUsed ?? 0) + diceSpent;
     }
     if (announced > 0) {
@@ -135,16 +157,19 @@ export function applyRest(
     patch.spellSlotsUsed = [0, 0, 0, 0, 0, 0, 0, 0, 0];
     patch.pactSlotsUsed = [0, 0, 0, 0, 0, 0, 0, 0, 0];
     // Long rest: regain up to half the TOTAL dice pool, minimum 1 (SRD);
-    // restored front-loaded by class-line order (the SRD leaves the choice
-    // of which dice to the player — FIFO is the documented default).
+    // the app's documented default restores the BIGGEST dice first, then
+    // class-line order on a tie (the SRD leaves the choice to the player).
     const totalDice = dice.reduce((sum, d) => sum + d.max, 0);
     const budget = Math.max(1, Math.floor(totalDice / 2));
     let left = budget;
-    classHitDice = dice.map((d) => {
-      const regain = Math.min(d.used, left);
+    const regains = dice.map(() => 0);
+    const byBiggestDie = dice.map((_, i) => i).sort((a, b) => dice[b].die - dice[a].die);
+    for (const i of byBiggestDie) {
+      const regain = Math.min(dice[i].used, left);
+      regains[i] = regain;
       left -= regain;
-      return { classKey: d.classKey, hitDiceUsed: d.used - regain };
-    });
+    }
+    classHitDice = dice.map((d, i) => ({ classKey: d.classKey, hitDiceUsed: d.used - regains[i] }));
     patch.hitDiceUsed = classHitDice.reduce((sum, p) => sum + p.hitDiceUsed, 0);
     patch.exhaustion = Math.max(0, character.exhaustion - 1);
     patch.deathSaveSuccesses = 0;

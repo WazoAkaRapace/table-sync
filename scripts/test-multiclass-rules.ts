@@ -430,6 +430,83 @@ check(
   0,
 );
 
+// ---------- Dépense PAR TYPE DE DÉ (SRD : le joueur choisit ses dés) ----------
+const spendChar = {
+  classes: [entry('Occultiste', 4, { hitDiceUsed: 1 }), entry('Magicien', 4, { hitDiceUsed: 2 })],
+  level: 8,
+  hitDiceUsed: 3,
+  maxHp: 60,
+  currentHp: 30,
+  spellSlotsUsed: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+  pactSlotsUsed: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+  characterClass: 'Occultiste',
+} as never;
+const byClass = applyRest(spendChar, [], {
+  type: 'short',
+  hitDiceSpentByClass: [{ classKey: 'Magicien', count: 2 }],
+  healedHp: 9,
+});
+check('dépense par ligne : seule la ligne choisie bouge', byClass.classHitDice, [
+  { classKey: 'Occultiste', hitDiceUsed: 1 },
+  { classKey: 'Magicien', hitDiceUsed: 4 },
+]);
+check(
+  'dépense par ligne : compteur plat = somme + dépense',
+  (byClass.characterPatch as { hitDiceUsed?: number }).hitDiceUsed,
+  5,
+);
+const byClassClamped = applyRest(spendChar, [], {
+  type: 'short',
+  hitDiceSpentByClass: [
+    { classKey: 'Occultiste', count: 99 },
+    { classKey: 'Inconnu', count: 3 },
+  ],
+});
+check(
+  'dépense par ligne : clamp aux dés restants, lignes inconnues ignorées',
+  {
+    lines: byClassClamped.classHitDice,
+    spent: byClassClamped.diceSpent,
+    flat: (byClassClamped.characterPatch as { hitDiceUsed?: number }).hitDiceUsed,
+  },
+  {
+    lines: [
+      { classKey: 'Occultiste', hitDiceUsed: 4 },
+      { classKey: 'Magicien', hitDiceUsed: 2 },
+    ],
+    spent: 3,
+    flat: 6,
+  },
+);
+
+// ---------- Repos long : les PLUS GROS dés d'abord (convention 2026-09) ----------
+// Magicien d6 en PREMIÈRE position, Occultiste d8 en seconde — l'ancien FIFO
+// par position rendait les d6 d'abord ; les d8 doivent maintenant partir avant.
+const regainChar = {
+  classes: [entry('Magicien', 4, { hitDiceUsed: 4 }), entry('Occultiste', 4, { hitDiceUsed: 4 })],
+  level: 8,
+  hitDiceUsed: 8,
+  maxHp: 60,
+  currentHp: 30,
+  spellSlotsUsed: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+  pactSlotsUsed: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+  characterClass: 'Magicien',
+} as never;
+const bigFirst = applyRest(regainChar, [], { type: 'long' });
+check(
+  'repos long : budget ⌊8/2⌋ = 4 — les d8 (2e ligne) regagnés AVANT les d6',
+  bigFirst.classHitDice,
+  [
+    { classKey: 'Magicien', hitDiceUsed: 4 },
+    { classKey: 'Occultiste', hitDiceUsed: 0 },
+  ],
+);
+check(
+  "repos long gros dés d'abord : total = 4",
+  (bigFirst.characterPatch as { hitDiceUsed?: number }).hitDiceUsed,
+  4,
+);
+
 const restLock = {
   classes: [entry('Occultiste', 3), entry('Barbare', 2)],
   level: 5,

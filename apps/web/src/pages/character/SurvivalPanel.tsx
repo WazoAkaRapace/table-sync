@@ -118,7 +118,9 @@ export function SurvivalPanel({
   // Ressources de classe (traits du catalogue avec compteur) + repos
   const [resourceFeatures, setResourceFeatures] = useState<CharacterFeature[]>([]);
   const [restSheet, setRestSheet] = useState<'short' | 'long' | null>(null);
-  const [restHitDice, setRestHitDice] = useState(0);
+  // Dés à dépenser au repos court, PAR LIGNE DE CLASSE (pool mixte : le
+  // joueur choisit ses types de dés — SRD). Mono-classe : une seule clé.
+  const [restDice, setRestDice] = useState<Record<string, number>>({});
   // Soin annoncé par le joueur après avoir lancé ses dés de vie (repos court)
   const [restHealed, setRestHealed] = useState('');
   const [restBusy, setRestBusy] = useState(false);
@@ -291,9 +293,20 @@ export function SurvivalPanel({
     markLocalMutation();
     try {
       const announced = restSheet === 'short' ? Number(restHealed) : NaN;
+      // Pool mixte : la dépense par type de dé (le joueur a choisi ses dés) ;
+      // mono-classe : le compte simple d'avant (contrat inchangé).
+      const diceLines = hitDiceByClassOf(character).filter((d) => d.max > 0);
+      const multi = diceLines.length > 1;
+      const spendTotal = diceLines.reduce((sum, d) => sum + (restDice[d.classKey] ?? 0), 0);
       const res = await api.post(`/api/characters/${charId}/rest`, {
         type: restSheet,
-        hitDiceSpent: restSheet === 'short' ? restHitDice : undefined,
+        hitDiceSpent: restSheet === 'short' && !multi ? spendTotal : undefined,
+        hitDiceSpentByClass:
+          restSheet === 'short' && multi
+            ? diceLines
+                .filter((d) => (restDice[d.classKey] ?? 0) > 0)
+                .map((d) => ({ classKey: d.classKey, count: restDice[d.classKey] ?? 0 }))
+            : undefined,
         healedHp: restSheet === 'short' && Number.isFinite(announced) ? announced : undefined,
       });
       const healed = res.data?.healed ?? 0;
@@ -310,7 +323,7 @@ export function SurvivalPanel({
         }`,
       );
       setRestSheet(null);
-      setRestHitDice(0);
+      setRestDice({});
       setRestHealed('');
       await onSaved();
     } catch (err: any) {
@@ -368,7 +381,7 @@ export function SurvivalPanel({
 
   return (
     <>
-      {/* ---------- 1. Vitalité — PV, mort, inspiration/concentration ---------- */}
+      {/* ---------- 1. Vitalité — PV et mort (la mesure) ---------- */}
       <Panel title={t('survie.vitalite')} tuto="survie-vitalite">
         {/* While shaped, the hero tracks the beast's HP (routed server-side to wild_shape_hp) */}
         {character.wildShapeSlug ? (
@@ -496,8 +509,51 @@ export function SurvivalPanel({
             onError={onError}
           />
         )}
-        {/* Concentration breaks on damage — its toggle sits one row from the HP steppers.
-            Glyph slot has a fixed width so toggling (✧→✨, ◌→🌀) never shifts the layout. */}
+      </Panel>
+
+      {/* ---------- 2. États — conditions + épuisement + drapeaux ---------- */}
+      <section className="card p-4 sm:p-5 space-y-4" data-tuto="survie-etats">
+        <h2 className="section-title">{t('survie.etats')}</h2>
+        <div>
+          <span className="text-sm font-medium text-ink-700 block mb-1.5">
+            {t('survie.conditions')}
+          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            {conditions.length === 0 && (
+              <span className="text-xs text-ink-400 italic">{t('survie.aucun.etat.actif')}</span>
+            )}
+            {conditions.map((cond) => (
+              <span
+                key={cond}
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blood-50 text-blood-800 text-xs font-medium border border-blood-200"
+              >
+                {conditionLabel(cond)}
+                <button
+                  type="button"
+                  onClick={() => removeCondition(cond)}
+                  className="text-blood-500 hover:text-blood-700 font-semibold -my-2 -mr-1.5 inline-flex items-center justify-center min-w-11 min-h-11 rounded-full hover:bg-blood-100"
+                  aria-label={t('survie.retirer.l.etat.conditionlabel.cond', {
+                    conditionLabel: conditionLabel(cond),
+                  })}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+            <button
+              type="button"
+              onClick={() => setConditionPickerOpen(true)}
+              className="inline-flex items-center gap-1 px-2.5 min-h-11 rounded-full text-xs font-medium border border-parchment-300 bg-parchment-100 text-ink-500 hover:border-blood-300 hover:text-blood-700 transition-colors"
+              aria-haspopup="dialog"
+            >
+              {t('survie.ajouter.un.etat')}
+            </button>
+          </div>
+        </div>
+        {/* Les drapeaux d'état vivent avec la gestion d'états — Vitalité ne
+            garde que la mesure (PV, mort). La règle concentration/dégâts
+            s'enseigne au niveau page (ConcentrationAlert). Glyphe à chasse
+            fixe : la bascule (✧→✨, ◌→🌀) ne décale jamais la mise en page. */}
         <div className="flex items-center gap-2 max-[379px]:gap-1 flex-wrap">
           <button
             type="button"
@@ -546,47 +602,6 @@ export function SurvivalPanel({
             </span>
             {t('survie.concentration')}
           </button>
-        </div>
-      </Panel>
-
-      {/* ---------- 2. États — conditions + épuisement ---------- */}
-      <section className="card p-4 sm:p-5 space-y-4" data-tuto="survie-etats">
-        <h2 className="section-title">{t('survie.etats')}</h2>
-        <div>
-          <span className="text-sm font-medium text-ink-700 block mb-1.5">
-            {t('survie.conditions')}
-          </span>
-          <div className="flex flex-wrap items-center gap-2">
-            {conditions.length === 0 && (
-              <span className="text-xs text-ink-400 italic">{t('survie.aucun.etat.actif')}</span>
-            )}
-            {conditions.map((cond) => (
-              <span
-                key={cond}
-                className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blood-50 text-blood-800 text-xs font-medium border border-blood-200"
-              >
-                {conditionLabel(cond)}
-                <button
-                  type="button"
-                  onClick={() => removeCondition(cond)}
-                  className="text-blood-500 hover:text-blood-700 font-semibold -my-2 -mr-1.5 inline-flex items-center justify-center min-w-11 min-h-11 rounded-full hover:bg-blood-100"
-                  aria-label={t('survie.retirer.l.etat.conditionlabel.cond', {
-                    conditionLabel: conditionLabel(cond),
-                  })}
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-            <button
-              type="button"
-              onClick={() => setConditionPickerOpen(true)}
-              className="inline-flex items-center gap-1 px-2.5 min-h-11 rounded-full text-xs font-medium border border-parchment-300 bg-parchment-100 text-ink-500 hover:border-blood-300 hover:text-blood-700 transition-colors"
-              aria-haspopup="dialog"
-            >
-              {t('survie.ajouter.un.etat')}
-            </button>
-          </div>
         </div>
         <div>
           <div className="flex items-baseline justify-between mb-1.5">
@@ -764,11 +779,14 @@ export function SurvivalPanel({
       <Panel title={t('survie.repos')} tuto="survie-repos">
         {(() => {
           // Dés de vie PAR LIGNE DE CLASSE (multiclassage SRD : le pool garde
-          // ses types de dés). Le compteur dénormalisé suit la somme.
+          // ses types de dés). Pool mixte : une ligne par type de dé — le
+          // joueur choisit LE dé qu'il dépense, chaque +/− vise SA ligne de
+          // classe (PATCH classes[] ; le compteur dénormalisé suit la somme).
           const dice = hitDiceByClassOf(character).filter((d) => d.max > 0);
           const total = dice.reduce((sum, d) => sum + d.max, 0);
           const used = dice.reduce((sum, d) => sum + d.used, 0);
           const remaining = Math.max(0, total - used);
+          const multi = dice.length > 1;
           const step = async (delta: number) => {
             markLocalMutation();
             try {
@@ -780,6 +798,88 @@ export function SurvivalPanel({
               onError(t('survie.erreur.de.mise.a.jour'));
             }
           };
+          // Pool mixte : les lignes repartent telles quelles, SEULE la ligne
+          // tapée bouge — le validateur API resynchronise le compteur plat.
+          const stepLine = async (classKey: string, delta: number) => {
+            markLocalMutation();
+            try {
+              const lines = (character.classes ?? []).map((c) => ({
+                classKey: c.classKey,
+                level: c.level,
+                subclassKey: c.subclassKey,
+                fightingStyle: c.fightingStyle,
+                hitDiceUsed:
+                  c.classKey === classKey
+                    ? Math.min(c.level, Math.max(0, (c.hitDiceUsed ?? 0) + delta))
+                    : (c.hitDiceUsed ?? 0),
+              }));
+              await api.patch(`/api/characters/${charId}`, { classes: lines });
+              await onSaved();
+            } catch {
+              onError(t('survie.erreur.de.mise.a.jour'));
+            }
+          };
+          if (multi) {
+            return (
+              <div className="space-y-1.5" data-tuto="survie-des-vie">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-medium text-ink-700 flex items-center gap-1.5">
+                    {t('survie.des.de.vie')}
+                  </span>
+                  <span
+                    className={`text-sm font-bold tabular-nums ${
+                      remaining === 0 ? 'text-red-500' : 'text-ink-800'
+                    }`}
+                    title={t('survie.total.des.de.vie', { remaining, total })}
+                  >
+                    {remaining}
+                    <span className="text-xs font-normal text-ink-400"> / {total}</span>
+                  </span>
+                </div>
+                {dice.map((d) => {
+                  const lineRemaining = Math.max(0, d.max - d.used);
+                  const die = `d${d.die}`;
+                  return (
+                    <div
+                      key={d.classKey}
+                      className="flex items-center justify-between gap-2 bg-parchment-50 rounded-lg px-3 py-2 border border-parchment-200"
+                    >
+                      <span className="text-sm font-medium text-ink-800 truncate flex items-center gap-1.5">
+                        {d.classKey}
+                        <span className="font-mono text-xs text-ink-400">{die}</span>
+                      </span>
+                      <span className="flex items-center gap-1 shrink-0">
+                        <StepButton
+                          onClick={() => stepLine(d.classKey, 1)}
+                          disabled={lineRemaining <= 0}
+                          label={t('survie.depenser.un.de.par.ligne', { die, cls: d.classKey })}
+                          title={t('survie.depenser.un.de.de.vie.repos')}
+                        >
+                          −
+                        </StepButton>
+                        <span
+                          className={`text-sm font-bold tabular-nums min-w-10 text-center ${
+                            lineRemaining === 0 ? 'text-red-500' : 'text-ink-800'
+                          }`}
+                        >
+                          {lineRemaining}
+                          <span className="text-ink-400 font-normal"> / {d.max}</span>
+                        </span>
+                        <StepButton
+                          onClick={() => stepLine(d.classKey, -1)}
+                          disabled={d.used <= 0}
+                          label={t('survie.recuperer.un.de.par.ligne', { die, cls: d.classKey })}
+                          title={t('survie.recuperer.un.de.repos.long.niveau')}
+                        >
+                          +
+                        </StepButton>
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          }
           return (
             <div
               className="flex items-center justify-between gap-2 flex-wrap"
@@ -787,13 +887,7 @@ export function SurvivalPanel({
             >
               <span className="text-sm font-medium text-ink-700 flex items-center gap-1.5">
                 {t('survie.des.de.vie')}
-                {dice.length === 1 ? (
-                  <span className="text-xs font-normal text-ink-400">d{dice[0].die}</span>
-                ) : (
-                  <span className="text-xs font-normal text-ink-400">
-                    {dice.map((d) => `d${d.die}`).join(' + ')}
-                  </span>
-                )}
+                <span className="text-xs font-normal text-ink-400">d{dice[0]?.die ?? 8}</span>
               </span>
               <span className="flex items-center gap-1">
                 <StepButton
@@ -827,7 +921,7 @@ export function SurvivalPanel({
             <button
               type="button"
               onClick={() => {
-                setRestHitDice(0);
+                setRestDice({});
                 setRestHealed('');
                 setRestSheet('short');
               }}
@@ -970,7 +1064,55 @@ export function SurvivalPanel({
           );
         })()}
 
-      {/* ---------- 6. Attaques — options équipées, furtive, sans arme ---------- */}
+      {/* ---------- 6. Nourriture & eau ---------- */}
+      <Panel title={t('survie.nourriture.et.eau')}>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col gap-1">
+            <DeprivationBox
+              label={t('survie.sans.nourriture')}
+              days={foodDays}
+              icon="🍖"
+              onStep={(d) => stepDays('foodDays', d)}
+            />
+            {foodCount > 0 && canEdit && (
+              <button
+                type="button"
+                onClick={() => consume('food')}
+                className="text-xs px-2 py-1 rounded-lg bg-green-100 text-green-800 hover:bg-green-200 transition-colors"
+              >
+                {t('survie.manger.rations', { count: foodCount })}
+              </button>
+            )}
+          </div>
+          <div className="flex flex-col gap-1">
+            <DeprivationBox
+              label={t('survie.sans.eau')}
+              days={waterDays}
+              icon="💧"
+              onStep={(d) => stepDays('waterDays', d)}
+            />
+            {fullWaterCount > 0 && canEdit && (
+              <button
+                type="button"
+                onClick={() => consume('water')}
+                className="text-xs px-2 py-1 rounded-lg bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors"
+              >
+                {t('survie.boire.pleines', { count: fullWaterCount })}
+              </button>
+            )}
+            {emptyWaterCount > 0 && canEdit && (
+              <button
+                type="button"
+                onClick={refillWater}
+                className="text-xs px-2 py-1 rounded-lg bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition-colors"
+              >
+                {t('survie.remplir.vides', { count: emptyWaterCount })}
+              </button>
+            )}
+          </div>
+        </div>
+      </Panel>
+      {/* ---------- 7. Attaques — référence de fin d’onglet : options équipées, furtive, sans arme ---------- */}
       <Panel title={t('survie.attaques')} tuto="survie-attaques">
         {(() => {
           if (equippedStats.length === 0) return null;
@@ -1182,55 +1324,6 @@ export function SurvivalPanel({
         })()}
       </Panel>
 
-      {/* ---------- 7. Nourriture & eau ---------- */}
-      <Panel title={t('survie.nourriture.et.eau')}>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="flex flex-col gap-1">
-            <DeprivationBox
-              label={t('survie.sans.nourriture')}
-              days={foodDays}
-              icon="🍖"
-              onStep={(d) => stepDays('foodDays', d)}
-            />
-            {foodCount > 0 && canEdit && (
-              <button
-                type="button"
-                onClick={() => consume('food')}
-                className="text-xs px-2 py-1 rounded-lg bg-green-100 text-green-800 hover:bg-green-200 transition-colors"
-              >
-                {t('survie.manger.rations', { count: foodCount })}
-              </button>
-            )}
-          </div>
-          <div className="flex flex-col gap-1">
-            <DeprivationBox
-              label={t('survie.sans.eau')}
-              days={waterDays}
-              icon="💧"
-              onStep={(d) => stepDays('waterDays', d)}
-            />
-            {fullWaterCount > 0 && canEdit && (
-              <button
-                type="button"
-                onClick={() => consume('water')}
-                className="text-xs px-2 py-1 rounded-lg bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors"
-              >
-                {t('survie.boire.pleines', { count: fullWaterCount })}
-              </button>
-            )}
-            {emptyWaterCount > 0 && canEdit && (
-              <button
-                type="button"
-                onClick={refillWater}
-                className="text-xs px-2 py-1 rounded-lg bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition-colors"
-              >
-                {t('survie.remplir.vides', { count: emptyWaterCount })}
-              </button>
-            )}
-          </div>
-        </div>
-      </Panel>
-
       {/* --- Sheet repos court : dépense de dés de vie + résumé --- */}
       <BottomSheet
         open={restSheet === 'short'}
@@ -1262,50 +1355,124 @@ export function SurvivalPanel({
           <p>{t('survie.recupere.apres.un.repos.court.emplacements')}</p>
           {(() => {
             const dice = hitDiceByClassOf(character).filter((d) => d.max > 0);
-            const die = dice.length === 1 ? dice[0].die : 8;
+            const multi = dice.length > 1;
             const total = dice.reduce((sum, d) => sum + d.max, 0);
             const remaining = Math.max(0, total - dice.reduce((sum, d) => sum + d.used, 0));
             const conMod = Math.floor(((character.constitution ?? 10) - 10) / 2);
+            const spendTotal = dice.reduce((sum, d) => sum + (restDice[d.classKey] ?? 0), 0);
+            // Types du pool + mod. de CON une fois (l'étiquette du compteur)
+            const dieTypes = `${dice.map((d) => `d${d.die}`).join('+')}${
+              conMod !== 0 ? ` ${conMod > 0 ? '+' : ''}${conMod}` : ''
+            }`;
+            // La vraie formule à lancer, mixte comprise (ex. « 2d10 + 1d8 + 3 »)
+            const rollStr = dice
+              .map((d) => ({ die: d.die, n: restDice[d.classKey] ?? 0 }))
+              .filter((x) => x.n > 0)
+              .map((x) => `${x.n}d${x.die}`)
+              .join(' + ');
+            const rollFormula =
+              rollStr !== '' && conMod !== 0
+                ? `${rollStr} ${conMod > 0 ? '+' : '−'} ${Math.abs(conMod * spendTotal)}`
+                : rollStr;
+            // Mono-classe : le stepper simple d'avant, sur la clé unique
+            const singleKey = dice[0]?.classKey ?? '';
+            const singleCount = restDice[singleKey] ?? 0;
             return (
               <div className="bg-parchment-100 rounded-lg p-3 space-y-2">
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-medium">
                     {t('survie.des.de.vie')}
-                    {t('survie.des.de.vie.depenses', {
-                      diceStr: `d${
-                        dice.length === 1 ? die : dice.map((d) => `d${d.die}`).join('+')
-                      }${conMod !== 0 ? ` ${conMod > 0 ? '+' : ''}${conMod}` : ''}`,
-                    })}
+                    {t('survie.des.de.vie.depenses', { diceStr: dieTypes })}
                   </span>
-                  <span className="flex items-center gap-1">
-                    <StepButton
-                      onClick={() => setRestHitDice((n) => Math.max(0, n - 1))}
-                      disabled={restHitDice <= 0}
-                      label={t('survie.un.de.de.vie.de.moins')}
-                    >
-                      −
-                    </StepButton>
-                    <span className="font-bold tabular-nums w-10 text-center">
-                      {restHitDice}
+                  {multi ? (
+                    <span className="font-bold tabular-nums">
+                      {spendTotal}
                       <span className="text-ink-400 font-normal"> / {remaining}</span>
                     </span>
-                    <StepButton
-                      onClick={() => setRestHitDice((n) => Math.min(remaining, n + 1))}
-                      disabled={restHitDice >= remaining}
-                      label={t('survie.un.de.de.vie.de.plus')}
-                    >
-                      +
-                    </StepButton>
-                  </span>
+                  ) : (
+                    <span className="flex items-center gap-1">
+                      <StepButton
+                        onClick={() =>
+                          setRestDice((m) => ({ ...m, [singleKey]: Math.max(0, singleCount - 1) }))
+                        }
+                        disabled={singleCount <= 0}
+                        label={t('survie.un.de.de.vie.de.moins')}
+                      >
+                        −
+                      </StepButton>
+                      <span className="font-bold tabular-nums w-10 text-center">
+                        {singleCount}
+                        <span className="text-ink-400 font-normal"> / {remaining}</span>
+                      </span>
+                      <StepButton
+                        onClick={() =>
+                          setRestDice((m) => ({
+                            ...m,
+                            [singleKey]: Math.min(remaining, singleCount + 1),
+                          }))
+                        }
+                        disabled={singleCount >= remaining}
+                        label={t('survie.un.de.de.vie.de.plus')}
+                      >
+                        +
+                      </StepButton>
+                    </span>
+                  )}
                 </div>
-                {restHitDice > 0 && (
+                {multi &&
+                  dice.map((d) => {
+                    const n = restDice[d.classKey] ?? 0;
+                    const lineRemaining = Math.max(0, d.max - d.used);
+                    const die = `d${d.die}`;
+                    return (
+                      <div
+                        key={d.classKey}
+                        className="flex items-center justify-between gap-2 bg-parchment-50 rounded-lg px-3 py-2 border border-parchment-200"
+                      >
+                        <span className="text-sm font-medium text-ink-800 truncate flex items-center gap-1.5">
+                          {d.classKey}
+                          <span className="font-mono text-xs text-ink-400">{die}</span>
+                        </span>
+                        <span className="flex items-center gap-1 shrink-0">
+                          <StepButton
+                            onClick={() =>
+                              setRestDice((m) => ({ ...m, [d.classKey]: Math.max(0, n - 1) }))
+                            }
+                            disabled={n <= 0}
+                            label={t('survie.un.de.de.vie.de.moins.ligne', {
+                              die,
+                              cls: d.classKey,
+                            })}
+                          >
+                            −
+                          </StepButton>
+                          <span className="font-bold tabular-nums min-w-10 text-center">
+                            {n}
+                            <span className="text-ink-400 font-normal"> / {lineRemaining}</span>
+                          </span>
+                          <StepButton
+                            onClick={() =>
+                              setRestDice((m) => ({
+                                ...m,
+                                [d.classKey]: Math.min(lineRemaining, n + 1),
+                              }))
+                            }
+                            disabled={n >= lineRemaining}
+                            label={t('survie.un.de.de.vie.de.plus.ligne', {
+                              die,
+                              cls: d.classKey,
+                            })}
+                          >
+                            +
+                          </StepButton>
+                        </span>
+                      </div>
+                    );
+                  })}
+                {spendTotal > 0 && (
                   <label className="block">
                     <span className="text-xs font-medium text-ink-500">
-                      {t('survie.lance.tes.des.puis.indique', {
-                        dice: `${restHitDice}d${die}${
-                          conMod !== 0 ? `${conMod > 0 ? '+' : ''}${conMod * restHitDice}` : ''
-                        }`,
-                      })}
+                      {t('survie.lance.tes.des.puis.indique', { dice: rollFormula })}
                     </span>
                     <input
                       type="number"
@@ -1360,9 +1527,12 @@ export function SurvivalPanel({
             <li>{t('survie.tous.tes.pv.les.pv.temporaires')}</li>
             <li>{t('survie.tous.tes.emplacements.de.sort')}</li>
             <li>
-              {t('survie.des.de.vie.la.moitie.du.niveau', {
-                count: Math.max(1, Math.floor((character.level ?? 1) / 2)),
-              })}
+              {t(
+                hitDiceByClassOf(character).length > 1
+                  ? 'survie.des.de.vie.gros.des.dabord'
+                  : 'survie.des.de.vie.la.moitie.du.niveau',
+                { count: Math.max(1, Math.floor((character.level ?? 1) / 2)) },
+              )}
             </li>
             {character.exhaustion > 0 && <li>{t('survie.1.niveau.d.epuisement.en.moins')}</li>}
             <li>{t('survie.forme.sauvage.et.toutes.les.ressources')}</li>
