@@ -337,7 +337,7 @@ export default function App() {
       <IOSViewportAnchor />
       <Nav />
       <OfflineBanner />
-      <main className="max-w-6xl mx-auto px-4 py-6 pb-[calc(6rem+env(safe-area-inset-bottom))]">
+      <main className="max-w-6xl mx-auto px-4 py-3 sm:py-6 pb-[calc(6rem+env(safe-area-inset-bottom))]">
         <RouteBoundary>
           <Suspense fallback={<RouteFallback />}>
             <Routes>
