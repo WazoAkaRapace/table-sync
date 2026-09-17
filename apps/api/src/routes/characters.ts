@@ -738,6 +738,7 @@ export async function characterRoutes(app: FastifyInstance) {
         'druidCircle',
         'sacredOath',
         'fightingStyle',
+        'hitDiceUsed',
       ] as const;
       const changedLegacy = legacyClassFields.filter((f) => (body as any)[f] !== undefined);
       const classRows = getDrizzle()
@@ -803,6 +804,35 @@ export async function characterRoutes(app: FastifyInstance) {
           }
         }
         if (body.fightingStyle !== undefined) first.fightingStyle = body.fightingStyle;
+        if (body.hitDiceUsed !== undefined && Number.isFinite(body.hitDiceUsed)) {
+          // `hitDiceUsed` plat = TOTAL dépensé : le delta se répartit en FIFO
+          // sur les lignes (mêmes conventions qu'applyRest — on dépense dans
+          // l'ordre des lignes, on récupère front-loaded). Sans cette
+          // répercussion, la fiche (qui lit les lignes via hitDiceByClassOf)
+          // ignorait le compteur plat : les +/− de Survie semblaient inertes,
+          // et le prochain replaceCharacterClasses écrasait la colonne
+          // dénormalisée avec la somme des lignes restées figées.
+          const currentTotal = entries.reduce((sum, e) => sum + (e.hitDiceUsed ?? 0), 0);
+          const maxTotal = entries.reduce((sum, e) => sum + e.level, 0);
+          let delta =
+            Math.max(0, Math.min(Math.trunc(body.hitDiceUsed as number), maxTotal)) - currentTotal;
+          for (const e of entries) {
+            if (delta === 0) break;
+            if (delta > 0) {
+              const take = Math.min(e.level - (e.hitDiceUsed ?? 0), delta);
+              if (take > 0) {
+                e.hitDiceUsed = (e.hitDiceUsed ?? 0) + take;
+                delta -= take;
+              }
+            } else {
+              const regain = Math.min(e.hitDiceUsed ?? 0, -delta);
+              if (regain > 0) {
+                e.hitDiceUsed = (e.hitDiceUsed ?? 0) - regain;
+                delta += regain;
+              }
+            }
+          }
+        }
         const validated = validateClassEntries(entries);
         // Une fiche héritée peut dévier du catalogue (sous-classe hors palier) :
         // on synchronise seulement l'état valide, sans rejeter l'écriture.
