@@ -66,7 +66,10 @@ export default function LoginPage() {
           {loading ? t('auth.connexion.points') : t('auth.se.connecter')}
         </button>
         <p className="text-center text-sm">
-          <Link to="/mot-de-passe-oublie" className="text-ink-400 hover:underline">
+          <Link
+            to="/mot-de-passe-oublie"
+            className="text-ink-400 hover:underline inline-flex min-h-11 items-center"
+          >
             {t('login.mot.de.passe.oublie')}
           </Link>
         </p>

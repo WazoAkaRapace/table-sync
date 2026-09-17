@@ -538,7 +538,10 @@ export default function PartyPage() {
         )}
         {myCharacters.length > 0 && (
           <div className="pt-3">
-            <Link to={`/party/${partyId}/create`} className="btn-ghost inline-block text-ink-500">
+            <Link
+              to={`/party/${partyId}/create`}
+              className="btn-ghost inline-block text-ink-500 min-h-11"
+            >
               {t('party.nouveau.personnage')}
             </Link>
           </div>
@@ -625,7 +628,7 @@ export default function PartyPage() {
               </code>
               <button
                 type="button"
-                className={`ml-3 shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors ${
+                className={`ml-3 shrink-0 inline-flex min-h-11 items-center rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors ${
                   inviteCopied
                     ? 'border-blood-600 text-blood-600'
                     : 'border-parchment-300 text-ink-700 hover:border-blood-600 hover:text-blood-600'

@@ -231,7 +231,10 @@ export function AuthCard({
  *  sentence. Keep the hit area comfortable: it sits in running text. */
 export function AccentLink({ to, children }: { to: string; children: React.ReactNode }) {
   return (
-    <Link to={to} className="text-blood-600 font-medium hover:underline">
+    <Link
+      to={to}
+      className="text-blood-600 font-medium hover:underline inline-flex min-h-11 items-center"
+    >
       {children}
     </Link>
   );

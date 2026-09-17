@@ -313,7 +313,7 @@ export default function PartiesPage() {
               </code>
               <button
                 type="button"
-                className="text-blood-600 hover:underline"
+                className="text-blood-600 hover:underline inline-flex min-h-11 min-w-11 justify-center items-center"
                 onClick={() => copyCode(current.id, current.inviteCode)}
                 aria-label={t('parties.copier.le.code.d.invitation.current', {
                   current_inviteCode: current.inviteCode,
@@ -376,7 +376,7 @@ export default function PartiesPage() {
       <div className="flex flex-wrap items-center justify-center gap-3 pt-6">
         <button
           type="button"
-          className="btn-ghost text-ink-500"
+          className="btn-ghost text-ink-500 min-h-11"
           onClick={() => setShowCreate(true)}
         >
           {t('parties.nouveau.groupe')}
@@ -384,7 +384,11 @@ export default function PartiesPage() {
         <span aria-hidden="true" className="text-parchment-400">
           ·
         </span>
-        <button type="button" className="btn-ghost text-ink-500" onClick={() => setShowJoin(true)}>
+        <button
+          type="button"
+          className="btn-ghost text-ink-500 min-h-11"
+          onClick={() => setShowJoin(true)}
+        >
           {t('parties.rejoindre.par.code')}
         </button>
       </div>

@@ -122,7 +122,7 @@ function Nav() {
                 <button
                   type="button"
                   onClick={headerBack.onClick}
-                  className="btn-ghost text-parchment-50 hover:bg-ink-700 text-sm shrink-0"
+                  className="btn-ghost text-parchment-50 hover:bg-ink-700 text-sm shrink-0 min-h-11 min-w-11 justify-center"
                   aria-label={i18next.t('nav.retour')}
                 >
                   {headerBack.label}
@@ -130,7 +130,7 @@ function Nav() {
               ) : (
                 <Link
                   to={headerBack.to!}
-                  className="btn-ghost text-parchment-50 hover:bg-ink-700 text-sm shrink-0"
+                  className="btn-ghost text-parchment-50 hover:bg-ink-700 text-sm shrink-0 min-h-11 min-w-11 justify-center"
                   aria-label={i18next.t('nav.retour')}
                 >
                   {headerBack.label}
@@ -141,7 +141,7 @@ function Nav() {
           ) : (
             <Link
               to="/parties"
-              className="font-display text-lg font-semibold flex items-center"
+              className="font-display text-lg font-semibold flex items-center justify-center min-h-11 min-w-11"
               aria-label={t('app.home')}
             >
               <img src="/icon.svg" alt="" aria-hidden="true" className="w-8 h-8" />
@@ -156,14 +156,17 @@ function Nav() {
           {override?.action && (
             <Link
               to={override.action.to}
-              className="btn-ghost text-parchment-50 hover:bg-ink-700 text-sm"
+              className="btn-ghost text-parchment-50 hover:bg-ink-700 text-sm min-h-11"
             >
               <span className="hidden sm:inline">{override.action.label}</span>
               <span className="sm:hidden">{override.action.short}</span>
             </Link>
           )}
           {loc.pathname.startsWith('/party/') && !routeTitle?.backTo && (
-            <Link to="/parties" className="btn-ghost text-parchment-50 hover:bg-ink-700 text-sm">
+            <Link
+              to="/parties"
+              className="btn-ghost text-parchment-50 hover:bg-ink-700 text-sm min-h-11"
+            >
               <span className="hidden sm:inline">{t('app.mes.groupes')}</span>
               <span className="sm:hidden">🏠</span>
             </Link>
@@ -172,7 +175,7 @@ function Nav() {
               icône prend le relais pour le mobile, où le nom est masqué. */}
           <Link
             to="/compte"
-            className="text-sm text-parchment-200 hidden sm:inline hover:text-parchment-50 hover:underline underline-offset-4"
+            className="text-sm text-parchment-200 hidden sm:inline-flex items-center min-h-11 hover:text-parchment-50 hover:underline underline-offset-4"
             title={t('app.mon.compte')}
           >
             {user.displayName}

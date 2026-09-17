@@ -425,7 +425,10 @@ export default function CharacterCreatePage() {
                 onChange={setLevel}
               />
             </div>
-            <div className="flex items-start gap-2.5 rounded-xl border border-parchment-200 p-3">
+            <label
+              htmlFor="create-hidden"
+              className="flex items-start gap-2.5 rounded-xl border border-parchment-200 p-3 cursor-pointer select-none"
+            >
               <input
                 id="create-hidden"
                 type="checkbox"
@@ -433,13 +436,13 @@ export default function CharacterCreatePage() {
                 checked={secret}
                 onChange={(e) => setSecret(e.target.checked)}
               />
-              <label htmlFor="create-hidden" className="text-sm font-medium text-ink-700">
+              <span className="text-sm font-medium text-ink-700">
                 {t('create.personnage.secret')}
                 <span className="mt-0.5 block text-xs font-normal text-ink-400">
                   {t('create.prepare.le.a.l.abri.des')}
                 </span>
-              </label>
-            </div>
+              </span>
+            </label>
           </div>
         )}
 
