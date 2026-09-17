@@ -35,7 +35,7 @@ import { Link } from 'react-router-dom';
 import api from '../api';
 import { appLang } from '../i18n';
 import { classNameLabel, conditionLabel } from '../i18n/labels';
-import { Chip, EncumbranceBar, HpBar } from './ui';
+import { Chip, EncumbranceBar, HpBar, VitalButton } from './ui';
 
 /** Combat snapshot relevant to the band (subset of the page's hubCombat). */
 export interface StateBandCombat {
@@ -345,7 +345,7 @@ export default function CharacterStateBand({
                         setNameDraft(character.name);
                         setEditingName(true);
                       }}
-                      className="hover:text-blood-600 transition-colors truncate"
+                      className="hover:text-blood-600 transition-colors truncate inline-flex items-center min-h-11"
                       title={t('band.cliquer.pour.renommer')}
                     >
                       {character.name}
@@ -360,9 +360,11 @@ export default function CharacterStateBand({
                       ? `${classesOf(character)
                           .map((c) => `${classNameLabel(c.classKey)} ${c.level}`)
                           .join(' / ')}`
-                      : `${classNameLabel(character.characterClass ?? '—')} ${t('band.niv.level', {
-                          level,
-                        })}`}
+                      : character.characterClass
+                        ? `${classNameLabel(character.characterClass)} ${t('band.niv.level', {
+                            level,
+                          })}`
+                        : t('band.classe.a.definir')}
                     {character.race ? ` · ${character.race}` : ''}
                   </span>
                   {character.concentrating && (
@@ -432,7 +434,7 @@ export default function CharacterStateBand({
                 <button
                   type="button"
                   onClick={() => onNavigate('stats')}
-                  className="font-mono text-sm font-semibold text-ink-800 bg-parchment-100 border border-parchment-200 rounded-md px-2 py-1 hover:border-blood-400 transition-colors"
+                  className="font-mono text-sm font-semibold text-ink-800 bg-parchment-100 border border-parchment-200 rounded-md px-2 py-1 hover:border-blood-400 transition-colors inline-flex items-center min-h-11"
                   title={character.armorClassOverride ? t('band.ca.manuelle') : acResult.source}
                   aria-label={t('band.classe.d.armure.effectiveac.ouvrir.les', {
                     effectiveAC,
@@ -452,7 +454,7 @@ export default function CharacterStateBand({
                 <button
                   type="button"
                   onClick={() => onNavigate('spells')}
-                  className="font-mono text-sm font-semibold text-gold-700 bg-gold-100/70 border border-gold-300 rounded-md px-2 py-1 hover:border-gold-500 transition-colors"
+                  className="font-mono text-sm font-semibold text-gold-700 bg-gold-100/70 border border-gold-300 rounded-md px-2 py-1 hover:border-gold-500 transition-colors inline-flex items-center min-h-11"
                   title={t('band.slotsleft.emplacements.de.sort.disponibles.sur', {
                     slotsLeft: slotsLeft,
                     slotsTotal: slotsTotal,
@@ -471,7 +473,7 @@ export default function CharacterStateBand({
               <button
                 type="button"
                 onClick={() => setExpanded((e) => !e)}
-                className="shrink-0 w-8 h-8 rounded-lg text-ink-500 hover:bg-parchment-100 transition-colors flex items-center justify-center"
+                className="shrink-0 w-11 h-11 rounded-lg text-ink-500 hover:bg-parchment-100 transition-colors flex items-center justify-center"
                 aria-expanded={expanded}
                 aria-label={t('band.details.de.l.etat.du.personnage')}
               >
@@ -566,22 +568,20 @@ export default function CharacterStateBand({
                   <label htmlFor={hpInputId} className="text-xs font-medium text-ink-600 shrink-0">
                     {shaped ? t('band.pv.forme') : t('band.pv')}
                   </label>
-                  <button
-                    type="button"
+                  <VitalButton
                     onClick={() => damageHp(5)}
-                    className="w-11 h-11 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 font-semibold flex items-center justify-center transition-colors"
-                    aria-label={t('band.blesser.de.5')}
+                    verb="harm"
+                    label={t('band.blesser.de.5')}
                   >
                     −5
-                  </button>
-                  <button
-                    type="button"
+                  </VitalButton>
+                  <VitalButton
                     onClick={() => damageHp(1)}
-                    className="w-11 h-11 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 font-semibold flex items-center justify-center transition-colors"
-                    aria-label={t('band.blesser.de.1')}
+                    verb="harm"
+                    label={t('band.blesser.de.1')}
                   >
                     −1
-                  </button>
+                  </VitalButton>
                   <input
                     id={hpInputId}
                     type="number"
@@ -596,22 +596,20 @@ export default function CharacterStateBand({
                       if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
                     }}
                   />
-                  <button
-                    type="button"
+                  <VitalButton
                     onClick={() => queueHp(displayHp + 1)}
-                    className="w-11 h-11 rounded-lg bg-green-100 hover:bg-green-200 text-green-700 font-semibold flex items-center justify-center transition-colors"
-                    aria-label={t('band.soigner.de.1')}
+                    verb="heal"
+                    label={t('band.soigner.de.1')}
                   >
                     +1
-                  </button>
-                  <button
-                    type="button"
+                  </VitalButton>
+                  <VitalButton
                     onClick={() => queueHp(displayHp + 5)}
-                    className="w-11 h-11 rounded-lg bg-green-100 hover:bg-green-200 text-green-700 font-semibold flex items-center justify-center transition-colors"
-                    aria-label={t('band.soigner.de.5')}
+                    verb="heal"
+                    label={t('band.soigner.de.5')}
                   >
                     +5
-                  </button>
+                  </VitalButton>
                 </div>
               )}
             </div>
@@ -719,12 +717,15 @@ function CombatLine({
           <button
             type="button"
             onClick={onOpenInitiative}
-            className="btn-primary w-full py-2 lg:hidden"
+            className="btn-primary w-full min-h-11 py-2 lg:hidden"
           >
             {t('band.lance.ton.initiative')}
           </button>
           {combatHref && (
-            <Link to={combatHref} className="btn-primary hidden lg:flex justify-center flex-1 py-2">
+            <Link
+              to={combatHref}
+              className="btn-primary hidden lg:flex justify-center flex-1 min-h-11 py-2"
+            >
               {t('band.initiative.ouvrir.le.combat')}
             </Link>
           )}
@@ -740,7 +741,7 @@ function CombatLine({
           <button
             type="button"
             onClick={() => onNavigate('survival')}
-            className="btn-secondary py-2"
+            className="btn-secondary min-h-11 py-2"
             aria-label={t('band.attaquer.ouvrir.les.attaques')}
           >
             {t('band.attaquer')}
@@ -749,7 +750,7 @@ function CombatLine({
             <button
               type="button"
               onClick={() => onNavigate('spells')}
-              className="btn-secondary py-2"
+              className="btn-secondary min-h-11 py-2"
               aria-label={t('band.lancer.un.sort.ouvrir.les.sorts')}
             >
               {t('band.lancer.un.sort')}

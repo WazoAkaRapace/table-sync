@@ -57,6 +57,9 @@ for (const file of walk(ROOT)) {
     .replace(/\bid: '[a-z0-9-]+'/g, "id: ''")
     .replace(/\btuto\('[a-z0-9-]+'\)/g, "tuto('')")
     .replace(/data-tuto="[^"]*"/g, 'data-tuto=""')
+    // tuto="stats-portage" : prop JSX du composant Panel/StatTile (même rôle
+    // que data-tuto — le composant la pose en attribut data-tuto).
+    .replace(/\btuto="[^"]*"/g, 'tuto=""')
     .replace(/dataTuto="[^"]*"/g, 'dataTuto=""');
   const n = [...src.matchAll(ACC)].length + [...src.matchAll(FR_UI)].length;
   if (n > 0) perFile[file.replace(`${ROOT}/`, '')] = n;

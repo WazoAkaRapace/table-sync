@@ -20,7 +20,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../auth';
-import { ErrorMsg, Modal, SkeletonRegister } from '../components/ui';
+import { ErrorMsg, Modal, RegisterHead, SkeletonRegister } from '../components/ui';
 import { copyText, formatSince, toRoman } from '../utils';
 
 // ---------- Small helpers ----------
@@ -229,20 +229,12 @@ export default function PartiesPage() {
   if (parties.length === 0) {
     return (
       <div className="register-rise mx-auto w-full max-w-3xl">
-        <header className="pb-6 pt-2 text-center">
-          <h1 className="font-display text-2xl font-bold sm:text-3xl">
-            {t('parties.mes.groupes')}
-          </h1>
-          <p className="mt-1.5 text-ink-500">
-            {t('parties.bienvenue', { name: user ? `, ${user.displayName}` : '' })}
-          </p>
-        </header>
-
-        {/* Ledger double head rule — the same rule the register opens with */}
-        <div aria-hidden="true">
-          <div className="border-t-2 border-parchment-400" />
-          <div className="mt-[3px] border-t border-parchment-300" />
-        </div>
+        <RegisterHead
+          rise={false}
+          title={t('parties.mes.groupes')}
+          meta={t('parties.bienvenue', { name: user ? `, ${user.displayName}` : '' })}
+          metaClassName="mt-1.5 text-ink-500"
+        />
 
         {/* Two ruled entry paths — flat on the parchment, split by a rule, no cards */}
         <div className="grid divide-y divide-parchment-300 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
@@ -271,18 +263,10 @@ export default function PartiesPage() {
 
   return (
     <div className="mx-auto w-full max-w-3xl">
-      <header className="register-rise pb-6 pt-2 text-center">
-        <h1 className="font-display text-2xl font-bold sm:text-3xl">{t('parties.mes.groupes')}</h1>
-        <p className="mt-1.5 text-sm text-ink-400">
-          {t('parties.au.registre', { count: parties.length })}
-        </p>
-      </header>
-
-      {/* Ledger double head rule */}
-      <div aria-hidden="true">
-        <div className="border-t-2 border-parchment-400" />
-        <div className="mt-[3px] border-t border-parchment-300" />
-      </div>
+      <RegisterHead
+        title={t('parties.mes.groupes')}
+        meta={t('parties.au.registre', { count: parties.length })}
+      />
 
       <ol className="list-none">
         {/* Entry I — the current (most recent) group, expanded */}
@@ -329,7 +313,7 @@ export default function PartiesPage() {
               </code>
               <button
                 type="button"
-                className="text-blood-600 hover:underline"
+                className="text-blood-600 hover:underline inline-flex min-h-11 min-w-11 justify-center items-center"
                 onClick={() => copyCode(current.id, current.inviteCode)}
                 aria-label={t('parties.copier.le.code.d.invitation.current', {
                   current_inviteCode: current.inviteCode,
@@ -392,7 +376,7 @@ export default function PartiesPage() {
       <div className="flex flex-wrap items-center justify-center gap-3 pt-6">
         <button
           type="button"
-          className="btn-ghost text-ink-500"
+          className="btn-ghost text-ink-500 min-h-11"
           onClick={() => setShowCreate(true)}
         >
           {t('parties.nouveau.groupe')}
@@ -400,7 +384,11 @@ export default function PartiesPage() {
         <span aria-hidden="true" className="text-parchment-400">
           ·
         </span>
-        <button type="button" className="btn-ghost text-ink-500" onClick={() => setShowJoin(true)}>
+        <button
+          type="button"
+          className="btn-ghost text-ink-500 min-h-11"
+          onClick={() => setShowJoin(true)}
+        >
           {t('parties.rejoindre.par.code')}
         </button>
       </div>

@@ -778,7 +778,7 @@ function CatalogCard({
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
-          className="flex items-center gap-2 text-sm font-semibold text-ink-700 hover:text-blood-700 transition-colors"
+          className="flex items-center gap-2 text-sm font-semibold text-ink-700 hover:text-blood-700 transition-colors inline-flex min-h-11 py-1"
           aria-expanded={open}
         >
           <span aria-hidden="true">📚</span>

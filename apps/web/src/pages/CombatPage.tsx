@@ -43,6 +43,7 @@ import {
   ErrorMsg,
   HpBar,
   Modal,
+  RegisterHead,
   SkeletonRegister,
   type Toast,
   ToastStack,
@@ -762,15 +763,12 @@ function EncounterRegister({
   if (encounters.length === 0) {
     return (
       <div className="register-rise">
-        <header className="pb-6 pt-2 text-center">
-          <h1 className="font-display text-2xl font-bold sm:text-3xl">{t('combat.rencontres')}</h1>
-          <p className="mt-1.5 text-ink-500">{t('combat.le.registre.des.combats.du.groupe')}</p>
-        </header>
-
-        <div aria-hidden="true">
-          <div className="border-t-2 border-parchment-400" />
-          <div className="mt-[3px] border-t border-parchment-300" />
-        </div>
+        <RegisterHead
+          rise={false}
+          title={t('combat.rencontres')}
+          meta={t('combat.le.registre.des.combats.du.groupe')}
+          metaClassName="mt-1.5 text-ink-500"
+        />
 
         {isGM ? (
           <section className="mx-auto max-w-md py-8">
@@ -794,12 +792,15 @@ function EncounterRegister({
   // ---------- The register with entries ----------
   return (
     <div>
-      <header className="register-rise pb-6 pt-2 text-center">
-        <h1 className="font-display text-2xl font-bold sm:text-3xl">{t('combat.rencontres')}</h1>
-        <p className="mt-1.5 text-sm text-ink-400">
-          {t('combat.au.registre', { count: encounters.length })}
-          {live.length > 0 && ` — ${t('combat.registre.en.cours', { count: live.length })}`}
-        </p>
+      <RegisterHead
+        title={t('combat.rencontres')}
+        meta={
+          <>
+            {t('combat.au.registre', { count: encounters.length })}
+            {` — ${t('combat.registre.en.cours', { count: live.length })}`}
+          </>
+        }
+      >
         {/* Creation lives in the head — a long register must never bury its
             only door under 30 filets; the live entry stays the first row. */}
         {isGM && (
@@ -809,12 +810,7 @@ function EncounterRegister({
             </button>
           </div>
         )}
-      </header>
-
-      <div aria-hidden="true">
-        <div className="border-t-2 border-parchment-400" />
-        <div className="mt-[3px] border-t border-parchment-300" />
-      </div>
+      </RegisterHead>
 
       <ol className="list-none">
         {ordered.map((enc, i) => {
@@ -907,7 +903,7 @@ function EncounterRegister({
                 <div className={`pl-14 ${isLive ? 'pb-5' : isDone ? 'pb-2' : 'pb-3'}`}>
                   <ConfirmButton
                     onConfirm={() => onDelete(enc.id)}
-                    className="text-xs text-ink-400 hover:text-red-600"
+                    className="text-xs text-ink-400 hover:text-red-600 inline-flex items-center min-h-11 px-1"
                     armedClassName="font-semibold text-red-700"
                     title={t('combat.supprimer.la.rencontre')}
                     ariaLabel={t('combat.supprimer.la.rencontre.enc.name', { enc_name: enc.name })}
@@ -1411,6 +1407,7 @@ function DamageChipDock({
           }`}
           aria-pressed={chip.half}
           title={t('combat.demi.degats.resistance.sauvegarde.reussie')}
+          aria-label={t('combat.demi.degats.resistance.sauvegarde.reussie')}
         >
           ½
         </button>

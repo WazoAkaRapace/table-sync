@@ -27,7 +27,7 @@ import { useTranslation } from 'react-i18next';
 import api from '../api';
 import { useAuth } from '../auth';
 import AddClassSheet from '../components/AddClassSheet';
-import { BottomSheet, ConfirmButton } from '../components/ui';
+import { BottomSheet, ConfirmButton, Panel } from '../components/ui';
 import { classNameLabel, fightingStyleLabel } from '../i18n/labels';
 
 interface Props {
@@ -253,7 +253,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
   return (
     <div className="space-y-4">
       {/* Identity & class — summary card, full editor in bottom sheet */}
-      <section className="card p-4 sm:p-5 space-y-3" data-tuto="desc-identite">
+      <Panel tuto="desc-identite">
         <div className="flex items-center justify-between gap-3">
           <h2 className="section-title">{t('desc.identite.classe')}</h2>
           <button
@@ -281,7 +281,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
               t('desc.race.et.historique.non.definies')}
           </p>
         </div>
-      </section>
+      </Panel>
 
       {/* Identity editor sheet */}
       <BottomSheet
@@ -488,9 +488,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
       />
 
       {/* Portrait + physical attributes */}
-      <section className="card p-4 sm:p-5 space-y-3" data-tuto="desc-apparence">
-        <h2 className="section-title">{t('desc.apparence')}</h2>
-
+      <Panel title={t('desc.apparence')} tuto="desc-apparence">
         {/* Portrait */}
         <div className="flex items-center gap-4">
           <div className="shrink-0">
@@ -564,11 +562,10 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
             onBlur={() => commitField('appearance')}
           />
         </label>
-      </section>
+      </Panel>
 
       {/* Personality */}
-      <section className="card p-4 sm:p-5 space-y-3">
-        <h2 className="section-title">{t('desc.personnalite')}</h2>
+      <Panel title={t('desc.personnalite')}>
         <div className="space-y-3">
           {PERSONALITY_FIELDS.map((f) => (
             <label key={f.key} className="block">
@@ -583,11 +580,10 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
             </label>
           ))}
         </div>
-      </section>
+      </Panel>
 
       {/* Backstory (distinct de l'« Historique » de l'identité — le stat 5e « Sage ») */}
-      <section className="card p-4 sm:p-5 space-y-3">
-        <h2 className="section-title">{t('desc.historique')}</h2>
+      <Panel title={t('desc.historique')}>
         <label className="block">
           <span className="label">{t('desc.histoire.du.personnage')}</span>
           <textarea
@@ -598,11 +594,10 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
             onBlur={() => commitField('backstory')}
           />
         </label>
-      </section>
+      </Panel>
 
       {/* Allies & organizations */}
-      <section className="card p-4 sm:p-5 space-y-3">
-        <h2 className="section-title">{t('desc.allies.et.organisations')}</h2>
+      <Panel title={t('desc.allies.et.organisations')}>
         <label className="block">
           <span className="label">{t('desc.allies.mentors.guildes.et.factions')}</span>
           <textarea
@@ -613,12 +608,11 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
             onBlur={() => commitField('alliesOrganizations')}
           />
         </label>
-      </section>
+      </Panel>
 
       {/* Visibility — the owner's call alone (secret prep) */}
       {isOwner && (
-        <section className="card p-4 sm:p-5 space-y-3">
-          <h2 className="section-title">{t('desc.visibilite')}</h2>
+        <Panel title={t('desc.visibilite')}>
           <p className="text-sm text-ink-500">
             {character.hidden ? (
               <>
@@ -649,7 +643,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
                 : t('desc.cacher.des.autres.joueurs')}
             </button>
           </div>
-        </section>
+        </Panel>
       )}
     </div>
   );

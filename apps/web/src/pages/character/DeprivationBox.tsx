@@ -29,7 +29,7 @@ export function DeprivationBox({ label, days, icon, onStep }: DeprivationBoxProp
         <button
           type="button"
           onClick={() => onStep(-1)}
-          className="w-7 h-7 rounded-lg bg-white/70 hover:bg-white text-sm font-medium flex items-center justify-center"
+          className="w-11 h-11 rounded-lg bg-white/70 hover:bg-white text-sm font-medium flex items-center justify-center"
           aria-label={t('deprivation.diminuer', { label: label.toLowerCase() })}
         >
           −
@@ -37,7 +37,7 @@ export function DeprivationBox({ label, days, icon, onStep }: DeprivationBoxProp
         <button
           type="button"
           onClick={() => onStep(1)}
-          className="w-7 h-7 rounded-lg bg-white/70 hover:bg-white text-sm font-medium flex items-center justify-center"
+          className="w-11 h-11 rounded-lg bg-white/70 hover:bg-white text-sm font-medium flex items-center justify-center"
           aria-label={t('deprivation.augmenter', { label: label.toLowerCase() })}
         >
           +

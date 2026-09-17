@@ -16,6 +16,7 @@ import MessageThread from '../components/MessageThread';
 import {
   EmptyState,
   ErrorMsg,
+  RegisterHead,
   SkeletonRegion,
   SkeletonRegister,
   SkeletonRow,
@@ -182,18 +183,10 @@ export default function MessagesInboxPage() {
 
   return (
     <div className="mx-auto w-full max-w-3xl">
-      <header className="register-rise pb-6 pt-2 text-center">
-        <h1 className="font-display text-2xl font-bold sm:text-3xl">{t('nav.correspondance')}</h1>
-        <p className="mt-1.5 text-sm text-ink-400">
-          {t('msgs.boite.meta', { n: threads.length, m: totalUnread })}
-        </p>
-      </header>
-
-      {/* Ledger double head rule */}
-      <div aria-hidden="true">
-        <div className="border-t-2 border-parchment-400" />
-        <div className="mt-[3px] border-t border-parchment-300" />
-      </div>
+      <RegisterHead
+        title={t('nav.correspondance')}
+        meta={t('msgs.boite.meta', { n: threads.length, m: totalUnread })}
+      />
 
       {threadsQuery.isPending ? (
         <SkeletonRegion label={t('msgs.chargement')}>

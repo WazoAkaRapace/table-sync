@@ -646,7 +646,7 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
         />
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           <select
-            className="input"
+            className="input min-h-11"
             value={dispositionFilter}
             onChange={(e) => setDispositionFilter(e.target.value as '' | NpcDisposition)}
             aria-label={t('pnj.filtrer.par.disposition')}
@@ -659,7 +659,7 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
             ))}
           </select>
           <select
-            className="input"
+            className="input min-h-11"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as '' | NpcStatus)}
             aria-label={t('pnj.filtrer.par.statut')}
@@ -672,7 +672,7 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
             ))}
           </select>
           <select
-            className="input col-span-2 sm:col-span-1"
+            className="input min-h-11 col-span-2 sm:col-span-1"
             value={view}
             onChange={(e) => setView(e.target.value as ViewFilter)}
             aria-label={t('pnj.filtrer.par.visibilite')}
@@ -992,7 +992,7 @@ function NpcCard({
           <button
             type="button"
             onClick={onEdit}
-            className="min-w-0 flex-1 text-left"
+            className="min-w-0 flex-1 text-left min-h-11 self-stretch flex items-center"
             aria-label={t('pnj.modifier.npc.name', { npc_name: npc.name })}
           >
             <h3 className="section-title leading-tight truncate">{npc.name}</h3>
@@ -1077,7 +1077,7 @@ function NpcCard({
           <button
             type="button"
             onClick={onGma}
-            className="inline-flex items-center justify-center h-8 w-8 rounded-md border border-gold-300 bg-gold-100 text-gold-700 hover:bg-gold-300/40"
+            className="inline-flex items-center justify-center h-11 w-11 rounded-md border border-gold-300 bg-gold-100 text-gold-700 hover:bg-gold-300/40"
             title={t('pnj.gma.badge.title')}
             aria-label={t('pnj.gma.badge.aria', { name: npc.name })}
           >
@@ -1122,7 +1122,7 @@ function NpcCard({
             <button
               type="button"
               onClick={onEdit}
-              className="text-xs px-2 py-1 rounded-lg text-ink-600 hover:bg-parchment-100"
+              className="text-xs px-2 min-h-11 inline-flex items-center rounded-lg text-ink-600 hover:bg-parchment-100"
               aria-label={t('pnj.modifier.npc.name', { npc_name: npc.name })}
             >
               {t('pnj.modifier')}
@@ -1131,7 +1131,7 @@ function NpcCard({
               <button
                 type="button"
                 onClick={onDelete}
-                className="text-xs px-2 py-1 rounded-lg text-red-600 hover:bg-red-50"
+                className="text-xs inline-flex items-center justify-center min-w-11 min-h-11 rounded-lg text-red-600 hover:bg-red-50"
                 aria-label={t('pnj.supprimer.npc.name', { npc_name: npc.name })}
               >
                 🗑

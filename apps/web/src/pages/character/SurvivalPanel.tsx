@@ -33,7 +33,7 @@ import { useTranslation } from 'react-i18next';
 import api from '../../api';
 import { CONDITION_ICONS } from '../../components/ConditionsEditor';
 import MonsterStatBlock from '../../components/MonsterStatBlock';
-import { BottomSheet, Chip, HpBar } from '../../components/ui';
+import { BottomSheet, Chip, HpBar, Panel, StepButton, VitalButton } from '../../components/ui';
 import {
   abilityShort,
   conditionHintKey,
@@ -356,8 +356,7 @@ export function SurvivalPanel({
   return (
     <>
       {/* ---------- 1. Vitalité — PV, mort, inspiration/concentration ---------- */}
-      <section className="card p-4 sm:p-5 space-y-3" data-tuto="survie-vitalite">
-        <h2 className="section-title">{t('survie.vitalite')}</h2>
+      <Panel title={t('survie.vitalite')} tuto="survie-vitalite">
         {/* While shaped, the hero tracks the beast's HP (routed server-side to wild_shape_hp) */}
         {character.wildShapeSlug ? (
           (() => {
@@ -403,23 +402,22 @@ export function SurvivalPanel({
                   · {wildShapeDurationHours(character.level ?? 2)} h max
                 </p>
                 <div className="flex items-center justify-center gap-1 flex-wrap">
-                  <button
-                    type="button"
+                  <VitalButton
                     onClick={() => stepShapeHp(-5)}
-                    className="w-11 h-11 max-[379px]:hidden rounded-lg bg-red-100 hover:bg-red-200 text-red-700 font-semibold flex items-center justify-center transition-colors"
-                    aria-label={t('survie.blesser.la.forme.de.5')}
+                    verb="harm"
+                    fold="hide"
+                    label={t('survie.blesser.la.forme.de.5')}
                   >
                     −5
-                  </button>
-                  <button
-                    type="button"
+                  </VitalButton>
+                  <VitalButton
                     onClick={() => stepShapeHp(-1)}
-                    className="w-11 h-11 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 font-semibold flex items-center justify-center transition-colors"
-                    aria-label={t('survie.blesser.la.forme.de.1')}
+                    verb="harm"
+                    fold="swap"
+                    label={t('survie.blesser.la.forme.de.1')}
                   >
-                    <span className="max-[379px]:hidden">−1</span>
-                    <span className="hidden max-[379px]:inline">−</span>
-                  </button>
+                    −1
+                  </VitalButton>
                   <input
                     type="number"
                     className="w-16 text-center text-lg font-bold font-mono bg-white border border-green-200 rounded-lg py-1 focus:outline-none focus:border-green-500 text-green-900"
@@ -431,23 +429,22 @@ export function SurvivalPanel({
                     }}
                     aria-label={t('survie.points.de.vie.de.la.forme')}
                   />
-                  <button
-                    type="button"
+                  <VitalButton
                     onClick={() => stepShapeHp(1)}
-                    className="w-11 h-11 rounded-lg bg-green-100 hover:bg-green-200 text-green-700 font-semibold flex items-center justify-center transition-colors"
-                    aria-label={t('survie.soigner.la.forme.de.1')}
+                    verb="heal"
+                    fold="swap"
+                    label={t('survie.soigner.la.forme.de.1')}
                   >
-                    <span className="max-[379px]:hidden">+1</span>
-                    <span className="hidden max-[379px]:inline">+</span>
-                  </button>
-                  <button
-                    type="button"
+                    +1
+                  </VitalButton>
+                  <VitalButton
                     onClick={() => stepShapeHp(5)}
-                    className="w-11 h-11 max-[379px]:hidden rounded-lg bg-green-100 hover:bg-green-200 text-green-700 font-semibold flex items-center justify-center transition-colors"
-                    aria-label={t('survie.soigner.la.forme.de.5')}
+                    verb="heal"
+                    fold="hide"
+                    label={t('survie.soigner.la.forme.de.5')}
                   >
                     +5
-                  </button>
+                  </VitalButton>
                   <span className="text-sm font-semibold font-mono text-green-700">
                     / {shapeMax}
                   </span>
@@ -502,7 +499,7 @@ export function SurvivalPanel({
                 onError(t('survie.erreur'));
               }
             }}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 max-[379px]:px-1 max-[379px]:gap-1 rounded-lg text-sm max-[379px]:text-xs font-medium transition-colors border ${
+            className={`inline-flex items-center gap-1.5 px-3 min-h-11 max-[379px]:px-1 max-[379px]:gap-1 rounded-lg text-sm max-[379px]:text-xs font-medium transition-colors border ${
               character.inspiration
                 ? 'bg-gold-400/20 text-gold-700 border-gold-400'
                 : 'bg-parchment-100 text-ink-400 border-parchment-300 hover:border-gold-400'
@@ -523,7 +520,7 @@ export function SurvivalPanel({
                 t('survie.erreur.de.mise.a.jour'),
               )
             }
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 max-[379px]:px-1 max-[379px]:gap-1 rounded-lg text-sm max-[379px]:text-xs font-medium transition-colors border ${
+            className={`inline-flex items-center gap-1.5 px-3 min-h-11 max-[379px]:px-1 max-[379px]:gap-1 rounded-lg text-sm max-[379px]:text-xs font-medium transition-colors border ${
               character.concentrating
                 ? 'bg-indigo-100 text-indigo-700 border-indigo-400'
                 : 'bg-parchment-100 text-ink-400 border-parchment-300 hover:border-indigo-400'
@@ -537,7 +534,7 @@ export function SurvivalPanel({
             {t('survie.concentration')}
           </button>
         </div>
-      </section>
+      </Panel>
 
       {/* ---------- 2. États — conditions + épuisement ---------- */}
       <section className="card p-4 sm:p-5 space-y-4" data-tuto="survie-etats">
@@ -559,7 +556,7 @@ export function SurvivalPanel({
                 <button
                   type="button"
                   onClick={() => removeCondition(cond)}
-                  className="text-blood-500 hover:text-blood-700 font-semibold"
+                  className="text-blood-500 hover:text-blood-700 font-semibold -my-2 -mr-1.5 inline-flex items-center justify-center min-w-11 min-h-11 rounded-full hover:bg-blood-100"
                   aria-label={t('survie.retirer.l.etat.conditionlabel.cond', {
                     conditionLabel: conditionLabel(cond),
                   })}
@@ -571,7 +568,7 @@ export function SurvivalPanel({
             <button
               type="button"
               onClick={() => setConditionPickerOpen(true)}
-              className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border border-parchment-300 bg-parchment-100 text-ink-500 hover:border-blood-300 hover:text-blood-700 transition-colors"
+              className="inline-flex items-center gap-1 px-2.5 min-h-11 rounded-full text-xs font-medium border border-parchment-300 bg-parchment-100 text-ink-500 hover:border-blood-300 hover:text-blood-700 transition-colors"
               aria-haspopup="dialog"
             >
               {t('survie.ajouter.un.etat')}
@@ -587,7 +584,7 @@ export function SurvivalPanel({
           </div>
           {/* biome-ignore lint/a11y/useSemanticElements: fieldset would add its own border/margin styling and break the compact pips row. */}
           <div
-            className="flex items-center gap-1"
+            className="flex flex-wrap items-center gap-0.5"
             role="group"
             aria-label={t('survie.niveau.d.epuisement')}
           >
@@ -600,7 +597,7 @@ export function SurvivalPanel({
                   onClick={() => setExhaustionLevel(level)}
                   className={`text-2xl leading-none transition-colors ${exhaustionColor(level)} ${
                     active ? 'opacity-100' : 'opacity-30 hover:opacity-60'
-                  }`}
+                  } inline-flex items-center justify-center w-11 h-11 shrink-0`}
                   aria-pressed={level === exhaustion}
                   aria-label={t('survie.niveau.d.epuisement.level', { level: level })}
                   title={t('survie.niveau.level.effet', {
@@ -621,8 +618,7 @@ export function SurvivalPanel({
 
       {/* ---------- 3. Ressources de classe — traits du catalogue avec compteur ---------- */}
       {resourceFeatures.length > 0 && (
-        <section className="card p-4 sm:p-5 space-y-3" data-tuto="survie-ressources">
-          <h2 className="section-title">{t('survie.ressources.de.classe')}</h2>
+        <Panel title={t('survie.ressources.de.classe')} tuto="survie-ressources">
           <div className="space-y-1.5">
             {resourceFeatures.map((feature) => {
               const def = findClassFeature(feature.catalogId ?? '');
@@ -654,17 +650,15 @@ export function SurvivalPanel({
                     {isPool ? '❤️' : '⚡'} {feature.title}
                   </span>
                   <span className="flex items-center gap-1 shrink-0">
-                    <button
-                      type="button"
+                    <StepButton
                       onClick={() => stepResource(feature, current - 1)}
                       disabled={current <= 0}
-                      className="w-7 h-7 rounded-lg bg-parchment-200 hover:bg-parchment-300 disabled:opacity-30 text-sm font-medium flex items-center justify-center"
-                      aria-label={t('survie.depenser.feature.title', {
+                      label={t('survie.depenser.feature.title', {
                         feature_title: feature.title,
                       })}
                     >
                       −
-                    </button>
+                    </StepButton>
                     <span className="text-sm font-bold tabular-nums text-ink-800 min-w-10 text-center">
                       {current}
                       <span className="text-ink-400 font-normal">
@@ -673,29 +667,26 @@ export function SurvivalPanel({
                         {isPool ? t('survie.pv.unite') : ''}
                       </span>
                     </span>
-                    <button
-                      type="button"
+                    <StepButton
                       onClick={() => stepResource(feature, current + 1)}
                       disabled={current >= max}
-                      className="w-7 h-7 rounded-lg bg-parchment-200 hover:bg-parchment-300 disabled:opacity-30 text-sm font-medium flex items-center justify-center"
-                      aria-label={t('survie.recuperer.feature.title', {
+                      label={t('survie.recuperer.feature.title', {
                         feature_title: feature.title,
                       })}
                       title={resetTitle}
                     >
                       +
-                    </button>
+                    </StepButton>
                   </span>
                 </div>
               );
             })}
           </div>
-        </section>
+        </Panel>
       )}
 
       {/* ---------- 4. Repos — dés de vie et boutons réunis (l'économie de récupération) ---------- */}
-      <section className="card p-4 sm:p-5 space-y-3" data-tuto="survie-repos">
-        <h2 className="section-title">{t('survie.repos')}</h2>
+      <Panel title={t('survie.repos')} tuto="survie-repos">
         {(() => {
           // Dés de vie PAR LIGNE DE CLASSE (multiclassage SRD : le pool garde
           // ses types de dés). Le compteur dénormalisé suit la somme.
@@ -730,32 +721,28 @@ export function SurvivalPanel({
                 )}
               </span>
               <span className="flex items-center gap-1">
-                <button
-                  type="button"
+                <StepButton
                   onClick={() => step(1)}
                   disabled={remaining <= 0}
-                  className="w-7 h-7 rounded-lg bg-parchment-200 hover:bg-parchment-300 disabled:opacity-30 text-sm font-medium flex items-center justify-center"
-                  aria-label={t('survie.depenser.un.de.de.vie')}
+                  label={t('survie.depenser.un.de.de.vie')}
                   title={t('survie.depenser.un.de.de.vie.repos')}
                 >
                   −
-                </button>
+                </StepButton>
                 <span
                   className={`text-sm font-bold tabular-nums ${remaining === 0 ? 'text-red-500' : 'text-ink-800'}`}
                 >
                   {remaining}
                 </span>
                 <span className="text-xs text-ink-400">/ {total}</span>
-                <button
-                  type="button"
+                <StepButton
                   onClick={() => step(-1)}
                   disabled={used <= 0}
-                  className="w-7 h-7 rounded-lg bg-parchment-200 hover:bg-parchment-300 disabled:opacity-30 text-sm font-medium flex items-center justify-center"
-                  aria-label={t('survie.recuperer.un.de.de.vie')}
+                  label={t('survie.recuperer.un.de.de.vie')}
                   title={t('survie.recuperer.un.de.repos.long.niveau')}
                 >
                   +
-                </button>
+                </StepButton>
               </span>
             </div>
           );
@@ -784,7 +771,7 @@ export function SurvivalPanel({
             </button>
           </div>
         )}
-      </section>
+      </Panel>
 
       {/* ---------- 5. Forme sauvage (Druide ≥ 2) ---------- */}
       {findClass(character.characterClass)?.name === 'Druide' &&
@@ -909,8 +896,7 @@ export function SurvivalPanel({
         })()}
 
       {/* ---------- 6. Attaques — options équipées, furtive, sans arme ---------- */}
-      <section className="card p-4 sm:p-5 space-y-3" data-tuto="survie-attaques">
-        <h2 className="section-title">{t('survie.attaques')}</h2>
+      <Panel title={t('survie.attaques')} tuto="survie-attaques">
         {(() => {
           if (equippedStats.length === 0) return null;
           return (
@@ -1119,11 +1105,10 @@ export function SurvivalPanel({
             </div>
           );
         })()}
-      </section>
+      </Panel>
 
       {/* ---------- 7. Nourriture & eau ---------- */}
-      <section className="card p-4 sm:p-5 space-y-3">
-        <h2 className="section-title">{t('survie.nourriture.et.eau')}</h2>
+      <Panel title={t('survie.nourriture.et.eau')}>
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1">
             <DeprivationBox
@@ -1169,7 +1154,7 @@ export function SurvivalPanel({
             )}
           </div>
         </div>
-      </section>
+      </Panel>
 
       {/* --- Sheet repos court : dépense de dés de vie + résumé --- */}
       <BottomSheet
@@ -1218,28 +1203,24 @@ export function SurvivalPanel({
                     })}
                   </span>
                   <span className="flex items-center gap-1">
-                    <button
-                      type="button"
+                    <StepButton
                       onClick={() => setRestHitDice((n) => Math.max(0, n - 1))}
                       disabled={restHitDice <= 0}
-                      className="w-7 h-7 rounded-lg bg-parchment-200 hover:bg-parchment-300 disabled:opacity-30 font-medium"
-                      aria-label={t('survie.un.de.de.vie.de.moins')}
+                      label={t('survie.un.de.de.vie.de.moins')}
                     >
                       −
-                    </button>
+                    </StepButton>
                     <span className="font-bold tabular-nums w-10 text-center">
                       {restHitDice}
                       <span className="text-ink-400 font-normal"> / {remaining}</span>
                     </span>
-                    <button
-                      type="button"
+                    <StepButton
                       onClick={() => setRestHitDice((n) => Math.min(remaining, n + 1))}
                       disabled={restHitDice >= remaining}
-                      className="w-7 h-7 rounded-lg bg-parchment-200 hover:bg-parchment-300 disabled:opacity-30 font-medium"
-                      aria-label={t('survie.un.de.de.vie.de.plus')}
+                      label={t('survie.un.de.de.vie.de.plus')}
                     >
                       +
-                    </button>
+                    </StepButton>
                   </span>
                 </div>
                 {restHitDice > 0 && (

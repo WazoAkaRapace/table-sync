@@ -39,7 +39,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../api';
-import { NumberField } from '../components/ui';
+import { NumberField, RegisterHead } from '../components/ui';
 import {
   abilityLabel,
   abilityShort,
@@ -341,18 +341,10 @@ export default function CharacterCreatePage() {
   return (
     <div className="mx-auto w-full max-w-3xl pb-8">
       {/* Volume title over the head rule */}
-      <header className="register-rise pb-6 pt-2 text-center">
-        <h1 className="font-display text-2xl font-bold sm:text-3xl">
-          {t('create.nouveau.personnage')}
-        </h1>
-        <p className="mt-1.5 text-sm text-ink-400">
-          {t('create.six.entrees.au.registre.la.fiche')}
-        </p>
-      </header>
-      <div aria-hidden="true">
-        <div className="border-t-2 border-parchment-400" />
-        <div className="mt-[3px] border-t border-parchment-300" />
-      </div>
+      <RegisterHead
+        title={t('create.nouveau.personnage')}
+        meta={t('create.six.entrees.au.registre.la.fiche')}
+      />
 
       {/* Numeral strip — the ink rises as entries are answered */}
       <nav
@@ -433,7 +425,10 @@ export default function CharacterCreatePage() {
                 onChange={setLevel}
               />
             </div>
-            <div className="flex items-start gap-2.5 rounded-xl border border-parchment-200 p-3">
+            <label
+              htmlFor="create-hidden"
+              className="flex items-start gap-2.5 rounded-xl border border-parchment-200 p-3 cursor-pointer select-none"
+            >
               <input
                 id="create-hidden"
                 type="checkbox"
@@ -441,13 +436,13 @@ export default function CharacterCreatePage() {
                 checked={secret}
                 onChange={(e) => setSecret(e.target.checked)}
               />
-              <label htmlFor="create-hidden" className="text-sm font-medium text-ink-700">
+              <span className="text-sm font-medium text-ink-700">
                 {t('create.personnage.secret')}
                 <span className="mt-0.5 block text-xs font-normal text-ink-400">
                   {t('create.prepare.le.a.l.abri.des')}
                 </span>
-              </label>
-            </div>
+              </span>
+            </label>
           </div>
         )}
 

@@ -930,7 +930,7 @@ export default function CharacterInventoryPage() {
             <button
               type="button"
               onClick={() => setHubInitOpen((o) => !o)}
-              className="block w-full px-3 py-1.5 text-xs font-semibold text-ink-900"
+              className="block w-full px-3 min-h-11 py-2 text-xs font-semibold text-ink-900"
               aria-expanded={hubInitOpen}
             >
               {t('inv.lance.ton.initiative')}
@@ -974,7 +974,7 @@ export default function CharacterInventoryPage() {
                         setHubInitError(true);
                       }
                     }}
-                    className="btn-primary text-xs px-3 py-1"
+                    className="btn-primary text-xs px-3 min-h-11 py-2"
                   >
                     OK
                   </button>
@@ -985,7 +985,7 @@ export default function CharacterInventoryPage() {
                       setHubInitInput(String(roll + hubCombat.initiativeBonus));
                       if (hubInitError) setHubInitError(false);
                     }}
-                    className="btn-secondary text-xs px-2 py-1"
+                    className="btn-secondary text-xs px-2 min-h-11 min-w-11 py-2"
                     title={t('inv.d20.hubcombat.initiativebonu.dex', {
                       initiativeBonus: hubCombat.initiativeBonus,
                     })}
@@ -1065,7 +1065,7 @@ export default function CharacterInventoryPage() {
                 type="button"
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`relative z-10 flex flex-col items-center gap-0.5 w-14 py-1 rounded-full transition-[color,transform] duration-200 active:scale-95 whitespace-nowrap ${
+                className={`relative z-10 flex flex-col items-center justify-center gap-0.5 w-14 h-11 rounded-full transition-[color,transform] duration-200 active:scale-95 whitespace-nowrap ${
                   active ? 'text-white' : 'text-ink-400 hover:text-ink-700'
                 }`}
                 aria-pressed={active}
@@ -1074,7 +1074,7 @@ export default function CharacterInventoryPage() {
                 <span className="text-lg leading-none" aria-hidden="true">
                   {tab.icon}
                 </span>
-                <span className="text-[9px] font-medium leading-none">
+                <span className="text-[10px] font-medium leading-none">
                   {tab.short ? t(tab.short) : t(tab.label)}
                 </span>
               </button>

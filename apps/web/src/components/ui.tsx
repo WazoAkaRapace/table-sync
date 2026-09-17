@@ -3,6 +3,7 @@ import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import i18next from '../i18n';
 import { categoryLabel, coinLabel, encumbranceLabel, rarityLabel } from '../i18n/labels';
 
@@ -23,10 +24,244 @@ export function CategoryBadge({ category }: { category: ItemCategory }) {
   );
 }
 
+// Weight display convention (DESIGN.md « Poids ») : 1 décimale comme partout
+// dans l'app, mais les poids < 0,1 kg gardent 2 décimales — une gemme de
+// 0,01 kg ne doit pas s'arrondir à « 0,0 kg ».
+function formatWeightKg(kg: number): string {
+  if (kg < 0.1) return kg.toFixed(2);
+  return kg.toFixed(1);
+}
+
 export function WeightBadge({ weightKg }: { weightKg: number | null }) {
   const { t } = useTranslation();
   if (weightKg === null) return <span className="text-xs text-ink-400">{t('ui.poids')}</span>;
-  return <span className="text-xs text-ink-500">{weightKg} kg</span>;
+  return <span className="text-xs text-ink-500">{formatWeightKg(weightKg)} kg</span>;
+}
+
+// ---------- Register head ----------
+// The ruled page's head: centered volume title (font-display), meta line,
+// then the ledger's double head rule. This is the grammar every register,
+// tool page and reading view opens with (see DESIGN.md « La surface réglée »).
+// `rise={false}` when an ancestor already carries `register-rise` (virgin
+// pages rise as one block); `tight` shrinks the bottom pad of the reading
+// view; `announce` promotes the meta to a live region (Carnet's day counter).
+
+export function RegisterHead({
+  title,
+  meta,
+  overline,
+  children,
+  rise = true,
+  tight = false,
+  announce = false,
+  metaClassName = 'mt-1.5 text-sm text-ink-400',
+}: {
+  title: React.ReactNode;
+  /** Meta line under the title — plain text, or chips (flex variant via metaClassName). */
+  meta?: React.ReactNode;
+  /** Small uppercase eyebrow above the title (Chronicle's « Séance N »). */
+  overline?: React.ReactNode;
+  /** Extra header content after the meta (Combat's creation door). */
+  children?: React.ReactNode;
+  rise?: boolean;
+  tight?: boolean;
+  announce?: boolean;
+  metaClassName?: string;
+}) {
+  return (
+    <>
+      <header
+        className={`${rise ? 'register-rise ' : ''}text-center ${tight ? 'pb-5' : 'pb-6'} pt-2`}
+      >
+        {overline && <p className="text-xs uppercase tracking-[0.2em] text-ink-300">{overline}</p>}
+        <h1 className="font-display text-2xl font-bold sm:text-3xl">{title}</h1>
+        {meta && (
+          <p className={metaClassName} role={announce ? 'status' : undefined}>
+            {meta}
+          </p>
+        )}
+        {children}
+      </header>
+      {/* Ledger double head rule — thick parchment-400, thin parchment-300 */}
+      <div aria-hidden="true">
+        <div className="border-t-2 border-parchment-400" />
+        <div className="mt-[3px] border-t border-parchment-300" />
+      </div>
+    </>
+  );
+}
+
+// ---------- Working panel ----------
+// The sheet's standard work surface: a `.card` with the app's canonical
+// padding and rhythm. Every stats/skills/spells/survival/description section
+// is one; `title` renders the section-title heading, `tuto` targets the
+// guided tour (data-tuto).
+
+export function Panel({
+  title,
+  tuto,
+  className = '',
+  children,
+}: {
+  title?: React.ReactNode;
+  /** Guided-tour anchor (data-tuto). */
+  tuto?: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className={`card p-4 sm:p-5 space-y-3 ${className}`} data-tuto={tuto}>
+      {title && <h2 className="section-title">{title}</h2>}
+      {children}
+    </section>
+  );
+}
+
+// ---------- Steppers ----------
+// The two steppers of the sheet. Sizes follow PRODUCT.md's ≥44px mobile
+// touch target and the coin purse idiom (44px under the thumb, 36px where
+// a mouse drives).
+
+/** Small −/+ stepper on parchment (quantity, hit dice, class resources). */
+export function StepButton({
+  onClick,
+  disabled,
+  label,
+  title,
+  className = '',
+  children,
+}: {
+  onClick: () => void;
+  disabled?: boolean;
+  /** Accessible name — what the step does (« Dépenser 1 dé de vie »). */
+  label: string;
+  title?: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`w-11 h-11 md:w-9 md:h-9 rounded-lg bg-parchment-200 hover:bg-parchment-300 disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium flex items-center justify-center transition-colors ${className}`}
+      aria-label={label}
+      title={title}
+    >
+      {children}
+    </button>
+  );
+}
+
+/** HP stepper square — `harm` (rouge) or `heal` (vert). `temp` is the blue
+ *  temp-HP add. 44px; `fold="hide"` folds the ±5 away under 380px,
+ *  `fold="swap"` narrows −1/+1 to −/+ (HpTracker's one-line rule). */
+export function VitalButton({
+  onClick,
+  label,
+  verb,
+  temp = false,
+  fold = 'none',
+  className = '',
+  children,
+}: {
+  onClick: () => void;
+  label: string;
+  verb: 'harm' | 'heal';
+  /** Blue temp-HP variant (blue rule colors). */
+  temp?: boolean;
+  fold?: 'none' | 'hide' | 'swap';
+  className?: string;
+  children: React.ReactNode;
+}) {
+  const tone = temp
+    ? 'bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm font-medium'
+    : verb === 'harm'
+      ? 'bg-red-100 hover:bg-red-200 text-red-700 font-semibold'
+      : 'bg-green-100 hover:bg-green-200 text-green-700 font-semibold';
+  const foldCls =
+    fold === 'hide' ? 'max-[379px]:hidden' : fold === 'swap' ? 'max-[379px]:hidden' : '';
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`w-11 h-11 ${foldCls} rounded-lg ${tone} flex items-center justify-center transition-colors ${className}`}
+      aria-label={label}
+    >
+      {fold === 'swap' ? (
+        <>
+          <span className="max-[379px]:hidden">{children}</span>
+          <span className="hidden max-[379px]:inline">{verb === 'harm' ? '−' : '+'}</span>
+        </>
+      ) : (
+        children
+      )}
+    </button>
+  );
+}
+
+// ---------- Auth card & accent link ----------
+// The five door pages (login, register, verify, forgot, reset) share one
+// centered seal card; `AccentLink` is their in-copy blood link.
+
+export function AuthCard({
+  title,
+  subtitle,
+  children,
+}: {
+  title: React.ReactNode;
+  subtitle?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="min-h-dvh flex items-center justify-center px-4">
+      <div className="card w-full max-w-sm p-6 sm:p-8">
+        <div className="text-center mb-6">
+          <img src="/icon-seal.svg" alt="" aria-hidden="true" className="w-20 h-20 mx-auto mb-3" />
+          <h1 className="font-display text-2xl font-bold text-blood-700">{title}</h1>
+          {subtitle && <p className="text-ink-400 text-sm mt-1">{subtitle}</p>}
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/** In-copy blood link of the door pages — the accent verb inside a gray
+ *  sentence. Keep the hit area comfortable: it sits in running text. */
+export function AccentLink({ to, children }: { to: string; children: React.ReactNode }) {
+  return (
+    <Link
+      to={to}
+      className="text-blood-600 font-medium hover:underline inline-flex min-h-11 items-center"
+    >
+      {children}
+    </Link>
+  );
+}
+
+// ---------- Stat tile ----------
+// The tinted square of the stats tab: parchment-100 box, xs label over the
+// figure. `onClick` makes the figure a door (Portage max → its sheet).
+
+export function StatTile({
+  label,
+  tuto,
+  className = '',
+  children,
+}: {
+  label: React.ReactNode;
+  /** Guided-tour anchor (data-tuto). */
+  tuto?: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className={`bg-parchment-100 rounded-xl p-3 text-center ${className}`} data-tuto={tuto}>
+      <div className="text-xs font-medium text-ink-500 mb-1">{label}</div>
+      {children}
+    </div>
+  );
 }
 
 // ---------- Hit-points bar ----------
@@ -432,6 +667,7 @@ export function LoadingSpinner({ label }: { label?: string }) {
 }
 
 export function ErrorMsg({ message, onRetry }: { message: string; onRetry?: () => void }) {
+  const { t } = useTranslation();
   return (
     <div
       className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm flex items-center justify-between gap-3"
@@ -441,7 +677,12 @@ export function ErrorMsg({ message, onRetry }: { message: string; onRetry?: () =
       {/* Sur liaison capricieuse, une bannière passive force la navigation pour
           rejouer la requête — le bouton la rejoue sur place. */}
       {onRetry && (
-        <button type="button" className="btn-secondary shrink-0 text-sm" onClick={onRetry}>
+        <button
+          type="button"
+          className="btn-secondary shrink-0 text-sm"
+          onClick={onRetry}
+          aria-label={t('common.retry')}
+        >
           ↻
         </button>
       )}

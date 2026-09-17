@@ -41,6 +41,7 @@ import {
   EmptyState,
   ErrorMsg,
   Modal,
+  RegisterHead,
   SkeletonCard,
   SkeletonRegion,
   TabButton,
@@ -212,20 +213,15 @@ export default function DmNotebookPage() {
     <div className="mx-auto w-full max-w-4xl">
       {/* Tête réglée — la grammaire des pages-outil. La méta est une région
        *  vivante : « +1 jour » et les changements de statut s'y annoncent. */}
-      <header className="register-rise pb-6 pt-2 text-center">
-        <h1 className="font-display text-2xl font-bold sm:text-3xl">{t('carnet.titre')}</h1>
-        <p className="mt-1.5 text-sm text-ink-400" role="status">
-          {t('carnet.meta', {
-            day: campaign.state.day,
-            season: t(`carnet.cal.saison.${campaign.state.season}`),
-            count: activeQuests,
-          })}
-        </p>
-      </header>
-      <div aria-hidden="true">
-        <div className="border-t-2 border-parchment-400" />
-        <div className="mt-[3px] border-t border-parchment-300" />
-      </div>
+      <RegisterHead
+        title={t('carnet.titre')}
+        announce
+        meta={t('carnet.meta', {
+          day: campaign.state.day,
+          season: t(`carnet.cal.saison.${campaign.state.season}`),
+          count: activeQuests,
+        })}
+      />
 
       {/* Onglets internes */}
       <nav

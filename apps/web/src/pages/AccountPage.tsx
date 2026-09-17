@@ -289,7 +289,7 @@ export default function AccountPage() {
                 <p className="text-xs text-ink-400 mt-1">{t('account.email.annuler.aide')}</p>
                 <button
                   type="button"
-                  className="text-xs font-medium text-blood-600 hover:underline mt-1"
+                  className="text-xs font-medium text-blood-600 hover:underline mt-1 inline-flex min-h-11 items-center -mb-2 disabled:opacity-50"
                   onClick={resendVerification}
                   disabled={resendingVerify}
                 >
@@ -303,7 +303,7 @@ export default function AccountPage() {
                 <p className="text-xs text-ink-400">{t('account.email.non.verifiee')}</p>
                 <button
                   type="button"
-                  className="text-xs font-medium text-blood-600 hover:underline shrink-0"
+                  className="text-xs font-medium text-blood-600 hover:underline shrink-0 inline-flex min-h-11 items-center disabled:opacity-50"
                   onClick={resendVerification}
                   disabled={resendingVerify}
                 >
@@ -346,7 +346,7 @@ export default function AccountPage() {
               type="button"
               onClick={() => setAppLang(l.code)}
               aria-pressed={(i18n.resolvedLanguage ?? 'fr') === l.code}
-              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              className={`px-4 min-h-11 rounded-md text-sm font-medium transition-colors ${
                 (i18n.resolvedLanguage ?? 'fr') === l.code
                   ? 'bg-ink-800 text-parchment-50 shadow-sm'
                   : 'text-ink-600 hover:text-ink-900'
