@@ -499,7 +499,7 @@ export function SurvivalPanel({
                 onError(t('survie.erreur'));
               }
             }}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 max-[379px]:px-1 max-[379px]:gap-1 rounded-lg text-sm max-[379px]:text-xs font-medium transition-colors border ${
+            className={`inline-flex items-center gap-1.5 px-3 min-h-11 max-[379px]:px-1 max-[379px]:gap-1 rounded-lg text-sm max-[379px]:text-xs font-medium transition-colors border ${
               character.inspiration
                 ? 'bg-gold-400/20 text-gold-700 border-gold-400'
                 : 'bg-parchment-100 text-ink-400 border-parchment-300 hover:border-gold-400'
@@ -520,7 +520,7 @@ export function SurvivalPanel({
                 t('survie.erreur.de.mise.a.jour'),
               )
             }
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 max-[379px]:px-1 max-[379px]:gap-1 rounded-lg text-sm max-[379px]:text-xs font-medium transition-colors border ${
+            className={`inline-flex items-center gap-1.5 px-3 min-h-11 max-[379px]:px-1 max-[379px]:gap-1 rounded-lg text-sm max-[379px]:text-xs font-medium transition-colors border ${
               character.concentrating
                 ? 'bg-indigo-100 text-indigo-700 border-indigo-400'
                 : 'bg-parchment-100 text-ink-400 border-parchment-300 hover:border-indigo-400'
@@ -556,7 +556,7 @@ export function SurvivalPanel({
                 <button
                   type="button"
                   onClick={() => removeCondition(cond)}
-                  className="text-blood-500 hover:text-blood-700 font-semibold"
+                  className="text-blood-500 hover:text-blood-700 font-semibold -my-2 -mr-1.5 inline-flex items-center justify-center min-w-11 min-h-11 rounded-full hover:bg-blood-100"
                   aria-label={t('survie.retirer.l.etat.conditionlabel.cond', {
                     conditionLabel: conditionLabel(cond),
                   })}
@@ -568,7 +568,7 @@ export function SurvivalPanel({
             <button
               type="button"
               onClick={() => setConditionPickerOpen(true)}
-              className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border border-parchment-300 bg-parchment-100 text-ink-500 hover:border-blood-300 hover:text-blood-700 transition-colors"
+              className="inline-flex items-center gap-1 px-2.5 min-h-11 rounded-full text-xs font-medium border border-parchment-300 bg-parchment-100 text-ink-500 hover:border-blood-300 hover:text-blood-700 transition-colors"
               aria-haspopup="dialog"
             >
               {t('survie.ajouter.un.etat')}
@@ -584,7 +584,7 @@ export function SurvivalPanel({
           </div>
           {/* biome-ignore lint/a11y/useSemanticElements: fieldset would add its own border/margin styling and break the compact pips row. */}
           <div
-            className="flex items-center gap-1"
+            className="flex flex-wrap items-center gap-0.5"
             role="group"
             aria-label={t('survie.niveau.d.epuisement')}
           >
@@ -597,7 +597,7 @@ export function SurvivalPanel({
                   onClick={() => setExhaustionLevel(level)}
                   className={`text-2xl leading-none transition-colors ${exhaustionColor(level)} ${
                     active ? 'opacity-100' : 'opacity-30 hover:opacity-60'
-                  }`}
+                  } inline-flex items-center justify-center w-11 h-11 shrink-0 -my-2.5`}
                   aria-pressed={level === exhaustion}
                   aria-label={t('survie.niveau.d.epuisement.level', { level: level })}
                   title={t('survie.niveau.level.effet', {

@@ -646,7 +646,7 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
         />
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           <select
-            className="input"
+            className="input min-h-11"
             value={dispositionFilter}
             onChange={(e) => setDispositionFilter(e.target.value as '' | NpcDisposition)}
             aria-label={t('pnj.filtrer.par.disposition')}
@@ -659,7 +659,7 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
             ))}
           </select>
           <select
-            className="input"
+            className="input min-h-11"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as '' | NpcStatus)}
             aria-label={t('pnj.filtrer.par.statut')}
@@ -672,7 +672,7 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
             ))}
           </select>
           <select
-            className="input col-span-2 sm:col-span-1"
+            className="input min-h-11 col-span-2 sm:col-span-1"
             value={view}
             onChange={(e) => setView(e.target.value as ViewFilter)}
             aria-label={t('pnj.filtrer.par.visibilite')}

@@ -476,7 +476,7 @@ function CharactersTab({
             <div className="flex items-start justify-between gap-2">
               <Link
                 to={`/party/${partyId}/character/${c.id}`}
-                className="min-w-0 flex-1 flex items-center gap-2"
+                className="min-w-0 flex-1 flex items-center gap-2 min-h-11"
               >
                 {c.portraitUrl ? (
                   <img
@@ -511,7 +511,7 @@ function CharactersTab({
               <button
                 type="button"
                 onClick={() => setDeleteTarget(c)}
-                className="text-ink-400 hover:text-red-600 text-sm shrink-0 p-1"
+                className="text-ink-400 hover:text-red-600 text-sm shrink-0 inline-flex items-center justify-center min-w-11 min-h-11 rounded-lg hover:bg-red-50"
                 aria-label={t('md.supprimer.c.name', { c_name: c.name })}
                 title={t('md.supprimer.le.personnage')}
               >

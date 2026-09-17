@@ -903,7 +903,7 @@ function EncounterRegister({
                 <div className={`pl-14 ${isLive ? 'pb-5' : isDone ? 'pb-2' : 'pb-3'}`}>
                   <ConfirmButton
                     onConfirm={() => onDelete(enc.id)}
-                    className="text-xs text-ink-400 hover:text-red-600"
+                    className="text-xs text-ink-400 hover:text-red-600 inline-flex items-center min-h-11 px-1"
                     armedClassName="font-semibold text-red-700"
                     title={t('combat.supprimer.la.rencontre')}
                     ariaLabel={t('combat.supprimer.la.rencontre.enc.name', { enc_name: enc.name })}

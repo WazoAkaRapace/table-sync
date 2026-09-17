@@ -168,7 +168,7 @@ export function VitalButton({
   onClick: () => void;
   label: string;
   verb: 'harm' | 'heal';
-  /** Blue temp-HP variant (slightly smaller, blue rule colors). */
+  /** Blue temp-HP variant (blue rule colors). */
   temp?: boolean;
   fold?: 'none' | 'hide' | 'swap';
   className?: string;
@@ -185,7 +185,7 @@ export function VitalButton({
     <button
       type="button"
       onClick={onClick}
-      className={`${temp ? 'w-10 h-10' : 'w-11 h-11'} ${foldCls} rounded-lg ${tone} flex items-center justify-center transition-colors ${className}`}
+      className={`w-11 h-11 ${foldCls} rounded-lg ${tone} flex items-center justify-center transition-colors ${className}`}
       aria-label={label}
     >
       {fold === 'swap' ? (

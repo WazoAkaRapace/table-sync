@@ -345,7 +345,7 @@ export default function CharacterStateBand({
                         setNameDraft(character.name);
                         setEditingName(true);
                       }}
-                      className="hover:text-blood-600 transition-colors truncate"
+                      className="hover:text-blood-600 transition-colors truncate inline-flex items-center min-h-11"
                       title={t('band.cliquer.pour.renommer')}
                     >
                       {character.name}
@@ -434,7 +434,7 @@ export default function CharacterStateBand({
                 <button
                   type="button"
                   onClick={() => onNavigate('stats')}
-                  className="font-mono text-sm font-semibold text-ink-800 bg-parchment-100 border border-parchment-200 rounded-md px-2 py-1 hover:border-blood-400 transition-colors"
+                  className="font-mono text-sm font-semibold text-ink-800 bg-parchment-100 border border-parchment-200 rounded-md px-2 py-1 hover:border-blood-400 transition-colors inline-flex items-center min-h-11"
                   title={character.armorClassOverride ? t('band.ca.manuelle') : acResult.source}
                   aria-label={t('band.classe.d.armure.effectiveac.ouvrir.les', {
                     effectiveAC,
@@ -454,7 +454,7 @@ export default function CharacterStateBand({
                 <button
                   type="button"
                   onClick={() => onNavigate('spells')}
-                  className="font-mono text-sm font-semibold text-gold-700 bg-gold-100/70 border border-gold-300 rounded-md px-2 py-1 hover:border-gold-500 transition-colors"
+                  className="font-mono text-sm font-semibold text-gold-700 bg-gold-100/70 border border-gold-300 rounded-md px-2 py-1 hover:border-gold-500 transition-colors inline-flex items-center min-h-11"
                   title={t('band.slotsleft.emplacements.de.sort.disponibles.sur', {
                     slotsLeft: slotsLeft,
                     slotsTotal: slotsTotal,
@@ -473,7 +473,7 @@ export default function CharacterStateBand({
               <button
                 type="button"
                 onClick={() => setExpanded((e) => !e)}
-                className="shrink-0 w-8 h-8 rounded-lg text-ink-500 hover:bg-parchment-100 transition-colors flex items-center justify-center"
+                className="shrink-0 w-11 h-11 rounded-lg text-ink-500 hover:bg-parchment-100 transition-colors flex items-center justify-center"
                 aria-expanded={expanded}
                 aria-label={t('band.details.de.l.etat.du.personnage')}
               >
@@ -717,12 +717,15 @@ function CombatLine({
           <button
             type="button"
             onClick={onOpenInitiative}
-            className="btn-primary w-full py-2 lg:hidden"
+            className="btn-primary w-full min-h-11 py-2 lg:hidden"
           >
             {t('band.lance.ton.initiative')}
           </button>
           {combatHref && (
-            <Link to={combatHref} className="btn-primary hidden lg:flex justify-center flex-1 py-2">
+            <Link
+              to={combatHref}
+              className="btn-primary hidden lg:flex justify-center flex-1 min-h-11 py-2"
+            >
               {t('band.initiative.ouvrir.le.combat')}
             </Link>
           )}
@@ -738,7 +741,7 @@ function CombatLine({
           <button
             type="button"
             onClick={() => onNavigate('survival')}
-            className="btn-secondary py-2"
+            className="btn-secondary min-h-11 py-2"
             aria-label={t('band.attaquer.ouvrir.les.attaques')}
           >
             {t('band.attaquer')}
@@ -747,7 +750,7 @@ function CombatLine({
             <button
               type="button"
               onClick={() => onNavigate('spells')}
-              className="btn-secondary py-2"
+              className="btn-secondary min-h-11 py-2"
               aria-label={t('band.lancer.un.sort.ouvrir.les.sorts')}
             >
               {t('band.lancer.un.sort')}
