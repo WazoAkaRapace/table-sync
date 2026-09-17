@@ -6,8 +6,9 @@
  * OWN-WORLD: volume title over the double head rule, Cinzel roman section
  * numerals, ruled dot-leader rows, one blood-inked door per visitor.
  * STORY: A player lands, reads entry I, and is inside their sheet in one tap;
- * the MD reads the same contents where every row is a door and the annexes
- * carry the code.
+ * the MD reads the same contents where every row is a door, then WORKS at
+ * section III — a pupitre panel of instruments (Combat carrying live state),
+ * the code closing the register as a quiet footnote.
  * FIRST VIEWPORT: centered volume title + meta under the head rule, section I
  * with the visitor's character as the expanded entry carrying « Ouvrir → »,
  * sections II–III ruled beneath with staggered register-rise.
@@ -17,7 +18,7 @@
  */
 
 import type { CharacterSummary, PartyDetail, PartyRole } from '@table-sync/shared';
-import { useCallback, useEffect, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import api from '../api';
@@ -170,6 +171,45 @@ function TocLink({
 }
 
 /**
+ * Un instrument du pupitre du MD — la section III cesse d'être une liste pour
+ * le MD : un panneau de travail `.card` (comme la scène de combat — le monde
+ * légitime la carte quand on y TRAVAILLE), quatre instruments séparés par des
+ * filets internes, pas des boîtes. Le tuile entière est la porte ; la ligne de
+ * valeur (`value`) s'aligne en pied d'instrument (mt-auto), portions vives en
+ * sang portées par l'appelant.
+ */
+function Instrument({
+  to,
+  glyph,
+  name,
+  value,
+  className,
+}: {
+  to: string;
+  glyph: string;
+  name: string;
+  value?: ReactNode;
+  className?: string;
+}) {
+  return (
+    <li className={className}>
+      <Link
+        to={to}
+        className="group flex h-full flex-col gap-1.5 p-4 transition-colors hover:bg-parchment-100/70"
+      >
+        <span aria-hidden="true" className="text-2xl leading-none">
+          {glyph}
+        </span>
+        <span className="font-display text-base font-semibold leading-tight text-ink-900 sm:text-lg">
+          {name}
+        </span>
+        {value && <span className="mt-auto pt-1 text-xs leading-snug text-ink-400">{value}</span>}
+      </Link>
+    </li>
+  );
+}
+
+/**
  * Section II rows: another member's characters. The MD can open any sheet
  * (quiet ink doors); a player sees them listed but locked — the API allows
  * member view, but by design only your own fiche is a door from this page.
@@ -272,6 +312,10 @@ export default function PartyPage() {
   const [carnetClock, setCarnetClock] = useState<{ day: number; activeQuests: number } | null>(
     null,
   );
+  // Combat door state — « N rencontres · M en cours » so the MD (and players
+  // in a fight) read where the action is without entering the tracker. Same
+  // ETag-cached list the CombatWidget polls every 30 s; null = not loaded yet.
+  const [combatQueue, setCombatQueue] = useState<{ total: number; active: number } | null>(null);
   const isGmMember = !!party && party.members.some((m) => m.userId === user?.id && m.role === 'gm');
 
   const loadCarnetClock = useCallback(async () => {
@@ -293,6 +337,24 @@ export default function PartyPage() {
   useEffect(() => {
     if (isGmMember) loadCarnetClock();
   }, [isGmMember, loadCarnetClock]);
+
+  const loadCombatQueue = useCallback(async () => {
+    if (!partyId) return;
+    try {
+      const res = await api.get(`/api/parties/${partyId}/encounters`);
+      const list = (res.data?.encounters ?? []) as Array<{ status: string }>;
+      setCombatQueue({
+        total: list.length,
+        active: list.filter((e) => e.status === 'active').length,
+      });
+    } catch {
+      setCombatQueue(null);
+    }
+  }, [partyId]);
+
+  useEffect(() => {
+    loadCombatQueue();
+  }, [loadCombatQueue]);
 
   const loadGmaLink = useCallback(async () => {
     if (!partyId) return;
@@ -343,6 +405,7 @@ export default function PartyPage() {
     load(true);
     loadGmaLink();
     loadCarnetClock();
+    loadCombatQueue();
   });
   // Pastille de l'annexe « Correspondance » (MD) — non-lus côté MD du groupe
   const messagesUnreadQuery = useMessagesUnread(
@@ -365,6 +428,13 @@ export default function PartyPage() {
       if (event.type === 'campaign:change') {
         // The MD moved the clock or edited the carnet — refresh the door's queue.
         loadCarnetClock();
+        return;
+      }
+      if (event.type === 'combat:change') {
+        // Seul l'ÉTAT de la porte (« N en cours ») vit ici — pas le détail des
+        // rencontres. La liste est ETag-cachée (sonde à 304 quand rien ne
+        // bouge) et le debounce client coalesse les salves de dégâts.
+        loadCombatQueue();
         return;
       }
       // Roster CHIRURGICAL (vocabulaire v2) : cette page ne rend que le
@@ -456,6 +526,29 @@ export default function PartyPage() {
   if (!party) return <ErrorMsg message={t('party.groupe.introuvable')} />;
 
   const isGM = isGmMember;
+  // Combat door state. The GM reads the full register meta (« 3 rencontres ·
+  // 1 en cours » — le sang ne porte que le vivant) ; a player in a fight
+  // reads the compact queue. Not loaded yet → no meta, the door stays quiet.
+  const combatActive = combatQueue?.active ?? 0;
+  let combatLeadMeta: ReactNode;
+  if (combatQueue === null) {
+    combatLeadMeta = undefined;
+  } else if (combatQueue.total === 0) {
+    combatLeadMeta = t('party.combat.aucune');
+  } else {
+    combatLeadMeta = (
+      <>
+        {t('party.combat.queue', { count: combatQueue.total })}
+        {combatActive > 0 && (
+          <span className="font-medium text-blood-600">
+            {` · ${t('party.combat.en.cours', { count: combatActive })}`}
+          </span>
+        )}
+      </>
+    );
+  }
+  const combatPlayerQueue =
+    combatActive > 0 ? t('party.combat.en.cours', { count: combatActive }) : undefined;
   // Active sheets read first — hidden (secret prep) entries sink below their
   // « Caché » marker, in section I as in the MD's section II rows.
   const characters = activeCharactersFirst(party.characters);
@@ -579,74 +672,120 @@ export default function PartyPage() {
         )}
       </section>
 
-      {/* III — Outils & annexes */}
+      {/* III — Outils & annexes : le MD Y TRAVAILLE, il ne la lit pas. La
+          section cesse d'être une liste : un pupitre `.card` (le monde
+          légitime la carte au travail — la scène de combat en est une) porte
+          les quatre instruments à filets internes, valeurs vives en direct ;
+          Correspondance et le code restent des lignes réglées calmes en dessous.
+          Le joueur n'y travaille pas — sa fiche est l'entrée I, ses outils
+          restent des annexes compactes. */}
       <section className="register-rise pt-8" style={{ animationDelay: '180ms' }}>
         <TocHeader numeral="III" title={t('party.outils.annexes')} id="toc-tools" />
-        <ul className="list-none">
-          {isGM && <TocLink to={`/party/${partyId}/gm`} label={t('party.toc.md')} glyph="🛡" />}
-          {isGM && (
+        {isGM ? (
+          <>
+            <ul className="card grid list-none grid-cols-2 overflow-hidden">
+              <Instrument
+                to={`/party/${partyId}/gm`}
+                glyph="🛡"
+                name={t('party.toc.md')}
+                value={t('party.toc.md.meta')}
+                className="border-r border-b border-parchment-200"
+              />
+              <Instrument
+                to={`/party/${partyId}/combat`}
+                glyph="⚔"
+                name={t('party.toc.combat')}
+                value={combatLeadMeta}
+                className="border-b border-parchment-200"
+              />
+              <Instrument
+                to={`/party/${partyId}/carnet`}
+                glyph="📓"
+                name={t('party.toc.carnet')}
+                value={
+                  carnetClock
+                    ? t('party.carnet.queue', {
+                        day: carnetClock.day,
+                        count: carnetClock.activeQuests,
+                      })
+                    : undefined
+                }
+                className="border-r border-parchment-200"
+              />
+              <Instrument
+                to={`/party/${partyId}/npcs`}
+                glyph="🎭"
+                name={t('party.toc.pnj')}
+                value={t('party.toc.pnj.meta')}
+              />
+            </ul>
+            <ul className="mt-3 list-none">
+              {gmaLinked && (
+                <TocLink
+                  to={`/party/${partyId}/chronique`}
+                  label={t('party.toc.chronique')}
+                  glyph="📜"
+                />
+              )}
+              <TocLink
+                to={`/party/${partyId}/messages`}
+                label={t('party.toc.correspondance')}
+                glyph="✉️"
+                badge={messagesUnread}
+                badgeLabel={t('msgs.non.lus', { n: messagesUnread })}
+              />
+              {/* Le code n'est ni un outil ni une annexe : ligne de pied du
+                  registre — lisible à voix haute à l'arrivée d'un joueur, sans
+                  peser sur les instruments à chaque visite. */}
+              <li className="border-b border-parchment-200 pt-4 pb-1.5">
+                <div className="flex items-center gap-3 pl-3 pr-3">
+                  <span className="shrink-0 text-xs font-medium text-ink-400">
+                    {t('party.code.d.invitation')}
+                  </span>
+                  <DotLeader />
+                  <code className="shrink-0 font-mono text-sm tracking-[0.2em] text-ink-800">
+                    {party.party.inviteCode}
+                  </code>
+                  <button
+                    type="button"
+                    className={`ml-3 shrink-0 inline-flex min-h-11 items-center rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors ${
+                      inviteCopied
+                        ? 'border-blood-600 text-blood-600'
+                        : 'border-parchment-300 text-ink-700 hover:border-blood-600 hover:text-blood-600'
+                    }`}
+                    onClick={copyInvite}
+                    aria-label={t('party.copier.le.code.d.invitation.party', {
+                      party_party_inviteCode: party.party.inviteCode,
+                    })}
+                  >
+                    {inviteCopied
+                      ? t('commun.copie.ok')
+                      : inviteCopyFailed
+                        ? t('commun.copie.impossible')
+                        : t('commun.copier')}
+                  </button>
+                </div>
+              </li>
+            </ul>
+          </>
+        ) : (
+          <ul className="list-none">
             <TocLink
-              to={`/party/${partyId}/messages`}
-              label={t('party.toc.correspondance')}
-              glyph="✉️"
-              badge={messagesUnread}
-              badgeLabel={t('msgs.non.lus', { n: messagesUnread })}
+              to={`/party/${partyId}/combat`}
+              label={t('party.toc.combat')}
+              glyph="⚔"
+              queue={combatPlayerQueue}
             />
-          )}
-          {isGM && (
-            <TocLink
-              to={`/party/${partyId}/carnet`}
-              label={t('party.toc.carnet')}
-              glyph="📓"
-              queue={
-                carnetClock
-                  ? t('party.carnet.queue', {
-                      day: carnetClock.day,
-                      count: carnetClock.activeQuests,
-                    })
-                  : undefined
-              }
-            />
-          )}
-          <TocLink to={`/party/${partyId}/combat`} label={t('party.toc.combat')} glyph="⚔" />
-          {gmaLinked && (
-            <TocLink
-              to={`/party/${partyId}/chronique`}
-              label={t('party.toc.chronique')}
-              glyph="📜"
-            />
-          )}
-          <TocLink to={`/party/${partyId}/npcs`} label={t('party.toc.pnj')} glyph="🎭" />
-          {isGM && (
-            <li className="flex items-center border-b border-parchment-200 py-3.5 pl-3 pr-3">
-              <span className="text-sm font-medium text-ink-800">
-                {t('party.code.d.invitation')}
-              </span>
-              <DotLeader />
-              <code className="shrink-0 font-mono text-sm font-semibold tracking-[0.2em] text-ink-800">
-                {party.party.inviteCode}
-              </code>
-              <button
-                type="button"
-                className={`ml-3 shrink-0 inline-flex min-h-11 items-center rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors ${
-                  inviteCopied
-                    ? 'border-blood-600 text-blood-600'
-                    : 'border-parchment-300 text-ink-700 hover:border-blood-600 hover:text-blood-600'
-                }`}
-                onClick={copyInvite}
-                aria-label={t('party.copier.le.code.d.invitation.party', {
-                  party_party_inviteCode: party.party.inviteCode,
-                })}
-              >
-                {inviteCopied
-                  ? t('commun.copie.ok')
-                  : inviteCopyFailed
-                    ? t('commun.copie.impossible')
-                    : t('commun.copier')}
-              </button>
-            </li>
-          )}
-        </ul>
+            {gmaLinked && (
+              <TocLink
+                to={`/party/${partyId}/chronique`}
+                label={t('party.toc.chronique')}
+                glyph="📜"
+              />
+            )}
+            <TocLink to={`/party/${partyId}/npcs`} label={t('party.toc.pnj')} glyph="🎭" />
+          </ul>
+        )}
       </section>
     </div>
   );
