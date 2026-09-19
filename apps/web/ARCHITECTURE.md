@@ -125,7 +125,7 @@ ET au frontmatter de DESIGN.md. Cinzel est auto-hébergé
 | Règles (shared) | `npm run test-weapon-stats` (+ armor/class/multiclass/coin) | moteur D&D 5e, pur TS |
 | API | `npm run test-api` | intégration + gate zéro-SQL-brut (serveur jetable) |
 | E2E | `npm run test:e2e` | Playwright : stack jetable (API 4740 + vite 5175, `e2e.sqlite` frais), chromium complet + webkit `@smoke` |
-| Lint | `npm run lint` | Biome 2.5 (gate CI) — 2 espaces, quotes simples, imports triés |
+| Lint | `npm run lint` | oxlint + oxfmt (gate CI) — 2 espaces, quotes simples |
 | Screenshots | `npm run screenshots` | régénère `docs/screenshots/*.png` du README |
 
 ## Recette — ajouter une page (ou un onglet)

@@ -206,7 +206,6 @@ export default function CombatPage() {
   // "Ma fiche" targets the ACTIVE sheet: hidden (secret prep) characters are
   // skipped — the shortcut always returns to a character the table can see.
   const myCharacter = party?.characters.find((c) => c.ownerId === user?.id && !c.hidden) ?? null;
-  // biome-ignore lint/correctness/useExhaustiveDependencies: dep narrowed to myCharacter?.id so the memoized action object keeps a stable identity across party refreshes; t rides along for language switches.
   const sheetAction = useMemo(
     () =>
       myCharacter && partyId
@@ -216,6 +215,7 @@ export default function CombatPage() {
             to: `/party/${partyId}/character/${myCharacter.id}`,
           }
         : null,
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- dep narrowed to myCharacter?.id so the memoized action object keeps a stable identity across party refreshes; t rides along for language switches.
     [myCharacter?.id, partyId, t],
   );
   useHeaderOverride(
@@ -355,7 +355,6 @@ export default function CombatPage() {
   // Deep link: /combat?enc=ID opens the encounter directly
   const [searchParams, setSearchParams] = useSearchParams();
   const deepLinked = useRef(false);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: selectEncounter is omitted on purpose — it is recreated every render and the deepLinked ref guards against double loads.
   useEffect(() => {
     if (deepLinked.current || loading || encounters.length === 0) return;
     const encParam = searchParams.get('enc');
@@ -368,6 +367,7 @@ export default function CombatPage() {
         setSearchParams(searchParams, { replace: true });
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- selectEncounter is omitted on purpose — it is recreated every render and the deepLinked ref guards against double loads.
   }, [searchParams, setSearchParams, loading, encounters]);
 
   const createEncounter = async (name: string) => {

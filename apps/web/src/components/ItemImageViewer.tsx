@@ -418,10 +418,10 @@ export function ItemImageViewer({
 
   const activeStrokeRef = useRef<StrokeAnnotation | null>(null);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: repaint piloté par les états qui bougent le rendu (annotations, vue, chargement, outil) ; paintStrokes se recrée à chaque rendu et lit les refs — l'ajouter relancerait l'effet en boucle.
   useEffect(() => {
     paintStrokes();
   }, [annotations, view, loaded, tool]);
+  // Note de dépendances (ex-suppression Biome) : repaint piloté par les états qui bougent le rendu (annotations, vue, chargement, outil) ; paintStrokes se recrée à chaque rendu et lit les refs — l'ajouter relancerait l'effet en boucle.
 
   /** Point normalisé [0..1] du pointeur sur l'image affichée (rect zoomé). */
   const normalizePoint = (clientX: number, clientY: number): [number, number] | null => {

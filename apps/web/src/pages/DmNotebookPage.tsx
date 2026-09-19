@@ -989,7 +989,7 @@ function QuestsTab({ campaign, partyId, reload, onError }: TabProps) {
                       {quest.body && quest.body.trim() !== '' ? (
                         <div
                           className="prose-sm max-w-none text-sm text-ink-600"
-                          // biome-ignore lint/security/noDangerouslySetInnerHtml: renderMarkdown escapes <, > and & before injecting its own trusted tags — no user HTML reaches the DOM.
+                          // Note de dépendances (ex-suppression Biome) : renderMarkdown escapes <, > and & before injecting its own trusted tags — no user HTML reaches the DOM.
                           dangerouslySetInnerHTML={{ __html: renderMarkdown(quest.body) }}
                         />
                       ) : (
@@ -1341,7 +1341,7 @@ function NotesTab({ campaign, partyId, reload, onError, setCampaign }: TabProps)
                   {note.content && (
                     <div
                       className="prose-sm max-w-none text-sm text-ink-600"
-                      // biome-ignore lint/security/noDangerouslySetInnerHtml: renderMarkdown escapes <, > and & before injecting its own trusted tags — no user HTML reaches the DOM.
+                      // Note de dépendances (ex-suppression Biome) : renderMarkdown escapes <, > and & before injecting its own trusted tags — no user HTML reaches the DOM.
                       dangerouslySetInnerHTML={{ __html: renderMarkdown(note.content) }}
                     />
                   )}
@@ -1398,7 +1398,7 @@ function NotesTab({ campaign, partyId, reload, onError, setCampaign }: TabProps)
             {previewMode ? (
               <div className="input min-h-[180px] overflow-y-auto">
                 {content.trim() ? (
-                  // biome-ignore lint/security/noDangerouslySetInnerHtml: renderMarkdown escapes <, > and & before injecting its own trusted tags — no user HTML reaches the DOM.
+                  // Note de dépendances (ex-suppression Biome) : renderMarkdown escapes <, > and & before injecting its own trusted tags — no user HTML reaches the DOM.
                   <div dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }} />
                 ) : (
                   <span className="italic text-ink-400">{t('notes.rien.a.previsualiser')}</span>

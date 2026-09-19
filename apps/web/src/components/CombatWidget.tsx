@@ -47,6 +47,7 @@ export default function CombatWidget() {
   // null while user is null), so probe after every render until it appears;
   // the setHeaderSlot(null) misses are React bail-out no-ops.
   const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- sonde à chaque rendu volontaire (voir le commentaire ci-dessus) : le point de montage n'existe qu'après résolution de session, les setHeaderSlot(null) manquants sont des no-ops de bail-out React.
   useEffect(() => {
     const el = document.getElementById('header-combat-slot');
     if (el) setHeaderSlot(el);

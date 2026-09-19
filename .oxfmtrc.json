@@ -1,0 +1,32 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "useTabs": false,
+  "tabWidth": 2,
+  "printWidth": 100,
+  "singleQuote": true,
+  "jsxSingleQuote": false,
+  "quoteProps": "as-needed",
+  "trailingComma": "all",
+  "semi": true,
+  "arrowParens": "always",
+  "bracketSameLine": false,
+  "bracketSpacing": true,
+  "ignorePatterns": [
+    "**/.git",
+    "**/dist",
+    "data",
+    "package-lock.json",
+    "gui-test-screenshots",
+    "apps/api/drizzle",
+    "**/.mimosa",
+    "**/*.md",
+    "**/*.mdx",
+    "**/*.yml",
+    "**/*.yaml",
+    "**/*.html",
+    "**/*.htm",
+    "**/*.css"
+  ],
+  "objectWrap": "preserve",
+  "sortPackageJson": false
+}

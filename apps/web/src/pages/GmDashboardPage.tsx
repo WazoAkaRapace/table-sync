@@ -392,9 +392,9 @@ function CharactersTab({
   // Clé = ids joints (pas l'identité du tableau) : un rechargement du groupe
   // qui ne change PAS le roster ne re-demande pas la vue d'ensemble.
   const rosterKey = characters.map((c) => c.id).join(',');
-  // biome-ignore lint/correctness/useExhaustiveDependencies: rosterKey résume `characters` — une identité de tableau neuve sans changement de roster ne doit pas re-demander la vue
   useEffect(() => {
     if (characters.length > 0) void loadOverview();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- rosterKey résume `characters` — une identité de tableau neuve sans changement de roster ne doit pas re-demander la vue
   }, [rosterKey, loadOverview]);
 
   // Refetch ciblé (character:change / inventory:change d'un joueur) : la vue

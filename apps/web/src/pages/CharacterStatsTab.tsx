@@ -194,10 +194,10 @@ export default function CharacterStatsTab({
     patchCharacter({ capacityMultiplier: newMult }, t('stats.erreur.de.mise.a.jour'));
   };
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: armorClassOverride is a deliberate dep — collapse the inline AC editor when the override changes (e.g. synced from another device).
   useEffect(() => {
     setEditingAC(false);
   }, [character.armorClassOverride]);
+  // Note de dépendances (ex-suppression Biome) : armorClassOverride is a deliberate dep — collapse the inline AC editor when the override changes (e.g. synced from another device).
 
   const commitAC = () => {
     const val = acDraft.trim();

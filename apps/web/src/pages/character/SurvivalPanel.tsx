@@ -129,7 +129,6 @@ export function SurvivalPanel({
   const [smiteBusy, setSmiteBusy] = useState(false);
 
   // Traits du catalogue avec compteur → pips « Ressources de classe »
-  // biome-ignore lint/correctness/useExhaustiveDependencies: refetch délibéré après un repos (compteurs rechargés côté API) ou un changement de niveau — pas seulement au montage.
   useEffect(() => {
     let cancelled = false;
     api
@@ -144,6 +143,7 @@ export function SurvivalPanel({
       cancelled = true;
     };
   }, [charId, character.hitDiceUsed, character.currentHp, character.level]);
+  // Note de dépendances (ex-suppression Biome) : refetch délibéré après un repos (compteurs rechargés côté API) ou un changement de niveau — pas seulement au montage.
 
   // Count available food/water from tagged inventory items
   // Water: skip items marked 'empty' in notes
@@ -847,7 +847,7 @@ export function SurvivalPanel({
                 †
               </span>
             </div>
-            {/* biome-ignore lint/a11y/useSemanticElements: fieldset would add its own border/margin styling and break the compact tap zones row. */}
+            {/* NOTE (ex-Biome useSemanticElements): fieldset would add its own border/margin styling and break the compact tap zones row. */}
             <div
               className="absolute inset-x-0 -top-4 -bottom-4 flex"
               role="group"
@@ -1163,7 +1163,7 @@ export function SurvivalPanel({
             <section className="card p-4 sm:p-5 space-y-2" data-tuto="survie-forme">
               <div className="flex items-center justify-between gap-2">
                 <h2 className="section-title">{t('survie.forme.sauvage')}</h2>
-                {/* biome-ignore lint/a11y/useSemanticElements: fieldset would add its own border/margin styling and break the compact pips row. */}
+                {/* NOTE (ex-Biome useSemanticElements): fieldset would add its own border/margin styling and break the compact pips row. */}
                 <span
                   className="flex items-center gap-0.5"
                   role="group"

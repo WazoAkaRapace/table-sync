@@ -196,7 +196,11 @@ export default function MessagesInboxPage() {
         </SkeletonRegion>
       ) : threads.length === 0 ? (
         <div className="card mx-auto mt-6 max-w-md p-8">
-          <EmptyState icon="✉️" title={t('msgs.correspondance')} hint={t('msgs.aucun.message.md')} />
+          <EmptyState
+            icon="✉️"
+            title={t('msgs.correspondance')}
+            hint={t('msgs.aucun.message.md')}
+          />
         </div>
       ) : (
         // Deux volets — sur desktop ils descendent SOUS la double règle :

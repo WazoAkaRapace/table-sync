@@ -224,7 +224,6 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
     if (c.classKey === 'Paladin') return !!c.subclassKey;
     return false;
   });
-  // biome-ignore lint/correctness/useExhaustiveDependencies: character.level is a deliberate extra dep — domain spells are refetched on level-up.
   useEffect(() => {
     if (!hasBonusSource) {
       setDomainSpells([]);
@@ -242,6 +241,7 @@ export default function CharacterSpellsTab({ character, charId, onSaved, onError
     return () => {
       alive = false;
     };
+    // Note de dépendances (ex-suppression Biome) : character.level is a deliberate extra dep — domain spells are refetched on level-up.
   }, [hasBonusSource, charId, character.level]);
 
   // Debounce search input (same pattern as items catalog)
