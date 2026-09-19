@@ -208,7 +208,7 @@ export default function CharacterNotesTab({
                   {note.content && (
                     <div
                       className="text-sm text-ink-600 prose-sm max-w-none"
-                      // biome-ignore lint/security/noDangerouslySetInnerHtml: renderMarkdown escapes <, > and & in inline() before injecting its own trusted tags — no user HTML reaches the DOM.
+                      // Note de dépendances (ex-suppression Biome) : renderMarkdown escapes <, > and & in inline() before injecting its own trusted tags — no user HTML reaches the DOM.
                       dangerouslySetInnerHTML={{ __html: renderMarkdown(note.content) }}
                     />
                   )}
@@ -265,7 +265,7 @@ export default function CharacterNotesTab({
             {previewMode ? (
               <div className="input min-h-[180px] overflow-y-auto">
                 {content.trim() ? (
-                  // biome-ignore lint/security/noDangerouslySetInnerHtml: renderMarkdown escapes <, > and & in inline() before injecting its own trusted tags — no user HTML reaches the DOM.
+                  // Note de dépendances (ex-suppression Biome) : renderMarkdown escapes <, > and & in inline() before injecting its own trusted tags — no user HTML reaches the DOM.
                   <div dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }} />
                 ) : (
                   <span className="text-ink-400 italic">{t('notes.rien.a.previsualiser')}</span>

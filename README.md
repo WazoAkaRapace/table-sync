@@ -86,7 +86,7 @@ Monorepo npm workspaces :
 
 ## Développement
 
-Qualité : [Biome](https://biomejs.dev) assure lint et format (`npm run lint`, `npm run lint:fix`).
+Qualité : [oxlint](https://oxc.rs) + [oxfmt](https://oxc.rs) assurent lint et format (`npm run lint`, `npm run lint:fix`).
 
 | Commande | Ce que ça teste |
 |---|---|

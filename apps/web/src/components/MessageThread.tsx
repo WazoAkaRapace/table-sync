@@ -201,6 +201,7 @@ export default function MessageThread({
       bottomRef.current?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'end' });
     }
     justSent.current = false;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `messages` vient de react-query (structural sharing) : le fil doit défiler à CHAQUE entrée nouvelle, pas seulement quand l'identité du tableau change.
   }, [messages]);
 
   if (query.isPending)

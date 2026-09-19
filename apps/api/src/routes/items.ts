@@ -134,7 +134,11 @@ export async function itemRoutes(app: FastifyInstance) {
         .offset(off)
         .all() as any[];
       const total = (
-        drizzle.select({ n: sql<number>`count(*)` }).from(items).where(filter).get() as any
+        drizzle
+          .select({ n: sql<number>`count(*)` })
+          .from(items)
+          .where(filter)
+          .get() as any
       ).n;
 
       return sendCachedJson(req, reply, {

@@ -90,11 +90,11 @@ export function CoinTransactionModal({
   // Fresh draft each time the sheet opens — the purse snapshot is taken
   // exactly when the door opens; a live-sync refresh mid-edit must not
   // clobber the draft.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: `coins` is a deliberate snapshot-at-open, listing it would reset the draft on every WS-driven refetch
   useEffect(() => {
     if (!open) return;
     setMode(initialMode);
     setAmounts(initialMode === 'set' ? amountsOf(coins) : { ...EMPTY_COINS });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `coins` is a deliberate snapshot-at-open, listing it would reset the draft on every WS-driven refetch
   }, [open, initialMode]);
 
   const switchMode = (nextMode: CoinMode) => {

@@ -161,7 +161,11 @@ export async function spellRoutes(app: FastifyInstance) {
         .all() as any[];
 
       const total = (
-        drizzle.select({ n: sql<number>`count(*)` }).from(spells).where(filter).get() as any
+        drizzle
+          .select({ n: sql<number>`count(*)` })
+          .from(spells)
+          .where(filter)
+          .get() as any
       ).n;
 
       const lang = langFromReq(req);

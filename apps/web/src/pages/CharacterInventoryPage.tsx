@@ -423,6 +423,7 @@ export default function CharacterInventoryPage() {
       }
       await queryClient.invalidateQueries({ queryKey: ['inventory', Number(charId)] });
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- ownEcho is a stable ref object (useOwnEchoGuard); `.stamp` is listed by name, the object identity must not re-create the callback every render.
     [charId, queryClient, ownEcho.stamp],
   );
 
@@ -525,7 +526,7 @@ export default function CharacterInventoryPage() {
         await deleteEntryMutation.mutateAsync(entry.id);
         if (expandedId === entry.id) setExpandedId(null);
         applyEntryChange({ removedId: entry.id });
-        pushToast(t('inv.retire.du.sac.a.dos', { name: entry.item.name || entry.item.name }));
+        pushToast(t('inv.retire.du.sac.a.dos', { name: entry.item.name }));
       } catch (err) {
         pushToast(apiError(err, t('inv.erreur.de.suppression')), 'error');
       }
@@ -668,7 +669,7 @@ export default function CharacterInventoryPage() {
         const target = data?.locations.find((l) => l.id === locationId);
         pushToast(
           t('inv.deplace.vers', {
-            name: entry.item.name || entry.item.name,
+            name: entry.item.name,
             target: target?.name ?? t('inv.l.emplacement'),
           }),
         );
@@ -1625,8 +1626,8 @@ function groupByCategory(entries: InventoryEntry[]): CategoryGroupData[] {
   for (const [category, items] of map) {
     items.sort((a, b) => {
       if (a.equipped !== b.equipped) return a.equipped ? -1 : 1;
-      const na = (a.item.name || a.item.name).toLowerCase();
-      const nb = (b.item.name || b.item.name).toLowerCase();
+      const na = a.item.name.toLowerCase();
+      const nb = b.item.name.toLowerCase();
       return na.localeCompare(nb);
     });
     result.push({ category, entries: items });

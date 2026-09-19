@@ -49,7 +49,7 @@ for (const file of walk(ROOT)) {
     // affiché (le mot-listé vivrait dans la DÉFINITION de la variable,
     // comptée là-bas). Sans ça, le wiring t() serait sanctionné selon le nom
     // du membre interpolé.
-    // biome-ignore lint/suspicious/noTemplateCurlyInString: la chaîne de remplacement vise littéralement "${}"
+    // Note de dépendances (ex-suppression Biome) : la chaîne de remplacement vise littéralement "${}"
     .replace(/\$\{[^}]*\}/g, '${}')
     // Visite guidée : les ids d'étapes ({ id: 'portage', … }) et les cibles
     // tuto('stats-portage') / data-tuto="stats-portage" sont des identifiants

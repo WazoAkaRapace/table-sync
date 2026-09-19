@@ -36,7 +36,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint (Biome)
+      - name: Lint (oxlint)
         run: npm run lint
 
       # ---- Ratchet i18n : le FR hors catalogue ne peut que descendre ----

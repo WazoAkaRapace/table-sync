@@ -972,7 +972,6 @@ function NpcCard({
   // same card is ~330px on mobile, ~365px in the desktop grid.
   const descRef = useRef<HTMLParagraphElement | null>(null);
   const [descClamped, setDescClamped] = useState(false);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: npc.description est volontaire — le texte peut changer dans le MÊME nœud clampé sans que sa boîte ne bouge (RO muet), la dépendance force la re-mesure
   useEffect(() => {
     const el = descRef.current;
     if (!el) return;
@@ -981,6 +980,7 @@ function NpcCard({
     const ro = new ResizeObserver(check);
     ro.observe(el);
     return () => ro.disconnect();
+    // Note de dépendances (ex-suppression Biome) : npc.description est volontaire — le texte peut changer dans le MÊME nœud clampé sans que sa boîte ne bouge (RO muet), la dépendance force la re-mesure
   }, [npc.description]);
 
   return (

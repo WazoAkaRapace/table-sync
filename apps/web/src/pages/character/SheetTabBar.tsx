@@ -120,9 +120,9 @@ export function SheetTabBar({
 
   // Mesure avant peinture : la rangée ne déborde jamais, même un frame.
   // Les libellés (langue) et la pastille changent la largeur des sondes.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: langue et pastille re-rendent les sondes avec de nouvelles largeurs — re-mesure synchrone avant paint, l'ResizeObserver seul arriverait un frame trop tard
   useLayoutEffect(() => {
     measure();
+    // Note de dépendances (ex-suppression Biome) : langue et pastille re-rendent les sondes avec de nouvelles largeurs — re-mesure synchrone avant paint, l'ResizeObserver seul arriverait un frame trop tard
   }, [measure, i18n.language, messagesUnread]);
 
   // Largeur du couloir ou des libellés → re-mesure (la bande invisible change

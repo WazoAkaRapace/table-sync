@@ -56,7 +56,9 @@ export const users = sqliteTable('users', {
   // Onglets dont la visite propre a déjà été jouée — JSON array d'ids
   // (['survival', 'stats', …]). NULL = aucun (nouveau compte ou reset).
   tutorialTabsDone: text('tutorial_tabs_done'),
-  createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+  createdAt: text('created_at')
+    .notNull()
+    .default(sql`(datetime('now'))`),
 });
 
 export const parties = sqliteTable(
@@ -71,7 +73,9 @@ export const parties = sqliteTable(
     encumbranceMode: text('encumbrance_mode').notNull().default('variant'),
     // Players may create custom items themselves (GM keeps the kill switch).
     playersCreateItems: integer('players_create_items').notNull().default(1),
-    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
   },
   (_t) => [
     check(
@@ -91,7 +95,9 @@ export const partyMembers = sqliteTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     role: text('role').notNull().default('player'),
-    joinedAt: text('joined_at').notNull().default(sql`(datetime('now'))`),
+    joinedAt: text('joined_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
     // Per-member "last opened" — drives the register's ordering (most
     // recently opened party first). NULL = never opened (falls back to
     // the party's created_at when sorting).
@@ -113,7 +119,9 @@ export const partyBans = sqliteTable(
     userId: integer('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    bannedAt: text('banned_at').notNull().default(sql`(datetime('now'))`),
+    bannedAt: text('banned_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
   },
   (t) => [
     primaryKey({ columns: [t.partyId, t.userId] }),
@@ -188,7 +196,9 @@ export const characters = sqliteTable(
     electrum: integer('electrum').notNull().default(0),
     gold: integer('gold').notNull().default(0),
     platinum: integer('platinum').notNull().default(0),
-    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
     // --- Columns historically added via COLUMN_MIGRATIONS (ALTER TABLE) ---
     concentrating: integer('concentrating').notNull().default(0),
     weaponProficiencies: text('weapon_proficiencies'),
@@ -320,7 +330,9 @@ export const storageLocations = sqliteTable(
     ownWeightKg: real('own_weight_kg').notNull().default(0),
     itemId: integer('item_id').references(() => items.id, { onDelete: 'set null' }),
     sortOrder: integer('sort_order').notNull().default(0),
-    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
   },
   (t) => [
     index('idx_storage_locations_character').on(t.characterId),
@@ -344,7 +356,9 @@ export const inventory = sqliteTable(
     storageLocationId: integer('storage_location_id').references(() => storageLocations.id, {
       onDelete: 'set null',
     }),
-    addedAt: text('added_at').notNull().default(sql`(datetime('now'))`),
+    addedAt: text('added_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
   },
   (t) => [
     unique('inventory_character_item_location_unique').on(
@@ -371,7 +385,9 @@ export const transactions = sqliteTable(
     deltaQty: integer('delta_qty').notNull(),
     reason: text('reason').notNull().default('adjust'),
     actorUserId: integer('actor_user_id').references(() => users.id, { onDelete: 'set null' }),
-    at: text('at').notNull().default(sql`(datetime('now'))`),
+    at: text('at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
   },
   (t) => [index('idx_transactions_party').on(t.partyId)],
 );
@@ -399,7 +415,9 @@ export const npcs = sqliteTable(
     // supprimer, jamais les drapeaux de partage — ils restent au créateur/MD)
     allowMemberEdit: integer('allow_member_edit').notNull().default(0),
     sortOrder: integer('sort_order').notNull().default(0),
-    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
   },
   (t) => [
     index('idx_npcs_party').on(t.partyId),
@@ -458,7 +476,9 @@ export const characterSpells = sqliteTable(
     /** Which class's list this spell was taken from (multiclassing SRD). */
     classSource: text('class_source'),
     sortOrder: integer('sort_order').notNull().default(0),
-    addedAt: text('added_at').notNull().default(sql`(datetime('now'))`),
+    addedAt: text('added_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
   },
   (t) => [
     // Pas d'index séparé sur character_id : l'unique (character_id, spell_id)
@@ -483,7 +503,9 @@ export const characterFeatures = sqliteTable(
     counterMax: integer('counter_max'), // null/0 = no counter; positive = max charges
     counterCurrent: integer('counter_current'),
     sortOrder: integer('sort_order').notNull().default(0),
-    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
     // Link to the SRD feature catalog (classFeatures.ts) — powers rest resets
     catalogId: text('catalog_id'),
     // Manual rest recharge for non-catalog traits: 'short' | 'long' | NULL
@@ -504,8 +526,12 @@ export const characterNotes = sqliteTable(
     title: text('title').notNull(),
     content: text('content'), // Markdown-like plain text
     sortOrder: integer('sort_order').notNull().default(0),
-    updatedAt: text('updated_at').notNull().default(sql`(datetime('now'))`),
-    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+    updatedAt: text('updated_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
   },
   (t) => [index('idx_character_notes_char').on(t.characterId)],
 );
@@ -526,7 +552,9 @@ export const characterMessages = sqliteTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     body: text('body').notNull(),
-    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
     // Lu par le destinataire (le propriétaire pour un message du MD, un MD
     // pour un message du joueur) — null = non lu. Pas d'édition ni de
     // suppression : le fil est un journal.
@@ -593,7 +621,9 @@ export const encounters = sqliteTable(
     round: integer('round').notNull().default(0), // 0 = setup, >=1 = in combat
     turnIndex: integer('turn_index').notNull().default(0),
     status: text('status').notNull().default('setup'),
-    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
   },
   (t) => [
     index('idx_encounters_party').on(t.partyId),
@@ -625,7 +655,9 @@ export const combatants = sqliteTable(
     cardColor: text('card_color'), // hex color for card background, NULL = default
     // GM mask: 1 = players see the placeholder name instead of the real one
     nameHidden: integer('name_hidden').notNull().default(0),
-    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
   },
   (t) => [
     index('idx_combatants_encounter').on(t.encounterId),
@@ -649,7 +681,9 @@ export const campaignState = sqliteTable(
     season: text('season').notNull().default('spring'),
     weather: text('weather'),
     note: text('note'),
-    updatedAt: text('updated_at').notNull().default(sql`(datetime('now'))`),
+    updatedAt: text('updated_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
   },
   (_t) => [
     check('campaign_state_season_check', sql`season IN ('spring','summer','autumn','winter')`),
@@ -668,7 +702,9 @@ export const campaignDays = sqliteTable(
     day: integer('day').notNull(),
     weather: text('weather'),
     note: text('note'),
-    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
   },
   (t) => [unique('campaign_days_party_day_unique').on(t.partyId, t.day)],
 );
@@ -683,7 +719,9 @@ export const campaignCountdowns = sqliteTable(
       .references(() => parties.id, { onDelete: 'cascade' }),
     label: text('label').notNull(),
     targetDay: integer('target_day').notNull(),
-    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
   },
   (t) => [index('idx_campaign_countdowns_party').on(t.partyId)],
 );
@@ -699,8 +737,12 @@ export const dmNotes = sqliteTable(
     title: text('title').notNull(),
     content: text('content'),
     sortOrder: integer('sort_order').notNull().default(0),
-    updatedAt: text('updated_at').notNull().default(sql`(datetime('now'))`),
-    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+    updatedAt: text('updated_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
   },
   (t) => [index('idx_dm_notes_party').on(t.partyId)],
 );
@@ -717,8 +759,12 @@ export const dmQuests = sqliteTable(
     body: text('body'),
     status: text('status').notNull().default('preparation'),
     sortOrder: integer('sort_order').notNull().default(0),
-    updatedAt: text('updated_at').notNull().default(sql`(datetime('now'))`),
-    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+    updatedAt: text('updated_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
   },
   (t) => [
     index('idx_dm_quests_party').on(t.partyId),
@@ -744,7 +790,9 @@ export const userGmaLinks = sqliteTable('user_gma_links', {
   gmaEmail: text('gma_email'), // masked when served — never the raw key
   // 'read' | 'full_access' | NULL = unknown until the first write attempt
   scope: text('scope'),
-  validatedAt: text('validated_at').notNull().default(sql`(datetime('now'))`),
+  validatedAt: text('validated_at')
+    .notNull()
+    .default(sql`(datetime('now'))`),
 });
 
 /** 1:1 link between a party and a GM Assistant campaign. */
@@ -764,8 +812,12 @@ export const partyGmaLinks = sqliteTable(
     sessionsFetchedAt: text('sessions_fetched_at'),
     // Same idea for the entities cache (« PNJ repérés »).
     entitiesFetchedAt: text('entities_fetched_at'),
-    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
-    updatedAt: text('updated_at').notNull().default(sql`(datetime('now'))`),
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    updatedAt: text('updated_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
   },
   (t) => [index('idx_party_gma_links_campaign').on(t.gmaCampaignId)],
 );
@@ -882,7 +934,9 @@ export const pushSubscriptions = sqliteTable(
     p256dh: text('p256dh').notNull(),
     auth: text('auth').notNull(),
     locale: text('locale').notNull().default('fr'),
-    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
     // NULL = never sent to; diagnostic marker only.
     lastUsedAt: text('last_used_at'),
   },
@@ -910,7 +964,9 @@ export const passwordResetTokens = sqliteTable(
     expiresAt: text('expires_at').notNull(),
     // NULL = en attente ; renseigné à la consommation (usage unique).
     usedAt: text('used_at'),
-    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
   },
   (t) => [index('idx_password_reset_tokens_user').on(t.userId)],
 );
@@ -933,7 +989,9 @@ export const emailVerificationTokens = sqliteTable(
     locale: text('locale').notNull().default('fr'),
     expiresAt: text('expires_at').notNull(),
     usedAt: text('used_at'),
-    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
   },
   (t) => [index('idx_email_verification_tokens_user').on(t.userId)],
 );
@@ -953,8 +1011,12 @@ export const gmaPcLinks = sqliteTable(
     }),
     gmaPcId: text('gma_pc_id').notNull().unique('gma_pc_links_pc_unique'),
     nameAtSync: text('name_at_sync').notNull(), // display name for orphan rows
-    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
-    updatedAt: text('updated_at').notNull().default(sql`(datetime('now'))`),
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    updatedAt: text('updated_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
   },
   (t) => [
     unique('gma_pc_links_party_character_unique').on(t.partyId, t.characterId),
@@ -989,7 +1051,9 @@ export const gmaNpcLinks = sqliteTable(
     // description » hint. NULL = linked without ever taking the text.
     descriptionHash: text('description_hash'),
     lastPullAt: text('last_pull_at'),
-    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
   },
   (t) => [
     // No party+npc unique: several entities reconcile onto the same NPC.
@@ -1013,7 +1077,9 @@ export const gmaEntityDiscards = sqliteTable(
     discardedByUserId: integer('discarded_by_user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
   },
   (t) => [primaryKey({ columns: [t.partyId, t.entityId] })],
 );
