@@ -1,8 +1,11 @@
 // Site marketing — Table Sync
 // 0) la langue du site (FR par défaut · EN au choix)
 // 1) la démo temps réel (le MD frappe, la fiche répond)
-// 2) les entrées du registre se posent une fois (register-rise)
-// 3) copier les commandes d'auto-hébergement
+// 2) les entrées du registre se posent une fois (register-rise), les
+//    ordinaux et les preuves se tamponnent
+// 3) la marge du registre : le fil de lecture descend au fil du scroll
+//    (styles.css porte en parallèle la couche scrubbée scroll-driven)
+// 4) copier les commandes d'auto-hébergement
 //
 // ----- Langue : mécanisme retenu -----
 // Le HTML porte des PAIRES d'éléments [lang="fr"]/[lang="en"] ; styles.css
@@ -38,6 +41,7 @@
       copyIdle: 'Copier',
       copyOk: 'Copié ✓',
       copyFail: 'Copie impossible',
+      tocLabel: 'Le registre',
     },
     en: {
       title: 'Table Sync — the shared campaign companion, for the GM and the players',
@@ -49,6 +53,7 @@
       copyIdle: 'Copy',
       copyOk: 'Copied ✓',
       copyFail: 'Copy failed',
+      tocLabel: 'The register',
     },
   };
 
@@ -134,6 +139,10 @@
       ?.setAttribute('content', STRINGS[lang].description);
   };
 
+  // La marge du registre (bâtie plus bas) se localise comme le reste :
+  // aria-label du fil + infobulles des ordinaux
+  let marginTocNav = null;
+
   function applyLang(next, { persist = false } = {}) {
     lang = next === 'en' ? 'en' : 'fr';
     document.documentElement.lang = lang;
@@ -153,6 +162,20 @@
       copyBtn.textContent = STRINGS[lang].copyIdle;
     }
     localizeDemo();
+    if (marginTocNav) {
+      marginTocNav.setAttribute('aria-label', STRINGS[lang].tocLabel);
+      marginTocNav.querySelectorAll('.toc-entry').forEach((link) => {
+        const fr = link.dataset.tocTitleFr ?? '';
+        const en = link.dataset.tocTitleEn ?? fr;
+        const label = link.querySelector('.toc-label')?.textContent ?? '';
+        const title = lang === 'en' ? en : fr;
+        // la chip survolée et le nom accessible suivent la langue active
+        if (title) {
+          link.dataset.tocTitle = title;
+          link.setAttribute('aria-label', `${label} — ${title}`);
+        }
+      });
+    }
   }
 
   /* ---------- Démo temps réel ---------- */
@@ -258,6 +281,63 @@
     } else {
       armDemo();
     }
+  }
+
+  /* ---------- Le tampon des ordinaux ---------- */
+
+  // Cadence des travaux liés au scroll : un rAF par défilement, AVEC filet
+  // de secours. Dans un panneau intégré sans focus (navigateur embarqué,
+  // onglet en arrière-plan), le rAF peut être étranglé — et un verrou
+  // booléen « en attente » gèlerait le dispositif POUR DE BON si une seule
+  // trame était perdue : le minuteur reprend alors la main.
+  const frameGuarded = (work) => {
+    let raf = 0;
+    return () => {
+      if (raf) return;
+      raf = window.requestAnimationFrame(() => {
+        raf = 0;
+        work();
+      });
+      window.setTimeout(() => {
+        if (raf) {
+          window.cancelAnimationFrame(raf);
+          raf = 0;
+          work();
+        }
+      }, 160);
+    };
+  };
+
+  // L'ordinal tamponne quand il franchit la ligne des 42 % du viewport —
+  // APRÈS l'encre du titre (achevée vers 45 %) : la plume écrit la ligne,
+  // puis le sceau frappe. Un simple observateur manquerait les sauts
+  // (ancre, fil de lecture, molette vive) et laisserait l'ordinal invisible ;
+  // la ligne, elle, rattrape tout ce qui la dépasse. Déclenché une fois :
+  // l'encre sèche, remonter ne l'efface pas.
+  // (La couche scrubbée de styles.css s'occupe du filet et de l'encre du
+  // titre ; le tampon, lui, reste un impact déclenché.)
+  const ordinals = [...document.querySelectorAll('.entry-ordinal')];
+  const stampPassedOrdinals = () => {
+    const line = window.scrollY + window.innerHeight * 0.42;
+    for (const ordinal of ordinals) {
+      if (!ordinal.classList.contains('is-stamped')) {
+        if (ordinal.getBoundingClientRect().top + window.scrollY <= line) {
+          ordinal.classList.add('is-stamped');
+        }
+      }
+    }
+  };
+
+  if (reduceMotion) {
+    ordinals.forEach((ordinal) => {
+      ordinal.classList.add('is-stamped');
+    });
+  } else {
+    window.addEventListener('scroll', frameGuarded(stampPassedOrdinals), {
+      passive: true,
+    });
+    window.addEventListener('resize', stampPassedOrdinals);
+    stampPassedOrdinals();
   }
 
   /* ---------- register-rise ---------- */
@@ -447,6 +527,118 @@
       footerIo.observe(footer);
     }
   }
+
+  /* ---------- La marge du registre (fil de lecture ≥1280px) ---------- */
+
+  // Une règle d'encre descend la marge au fil du scroll, la plume en
+  // pointe ; chaque entrée du registre y porte son ordinal, cliquable.
+  // Bâtie ici (rien sans JS), masquée sous 1280px par styles.css. Elle ne
+  // s'anime jamais d'elle-même : chaque état ne fait que suivre le doigt.
+  const buildMarginToc = () => {
+    const main = document.querySelector('main');
+    const entries = [...document.querySelectorAll('main .entry[id]')];
+    if (!main || entries.length === 0) return;
+
+    const nav = document.createElement('nav');
+    nav.className = 'margin-toc';
+    nav.setAttribute('aria-label', STRINGS[lang].tocLabel);
+
+    const line = document.createElement('div');
+    line.className = 'toc-line';
+    const fill = document.createElement('div');
+    fill.className = 'toc-fill';
+    line.append(fill);
+
+    const nib = document.createElement('div');
+    nib.className = 'toc-nib';
+    nav.append(line, nib);
+
+    const items = entries.map((entry) => {
+      const head = entry.querySelector('.entry-head') ?? entry;
+      const label = head.querySelector('.entry-ordinal')?.textContent ?? '';
+      const link = document.createElement('a');
+      link.className = 'toc-entry' + (entry.classList.contains('is-lead') ? ' is-lead' : '');
+      link.href = `#${entry.id}`;
+      const frTitle = head.querySelector('.entry-title [lang="fr"]')?.textContent ?? '';
+      const enTitle = head.querySelector('.entry-title [lang="en"]')?.textContent ?? '';
+      if (frTitle) {
+        // data-toc-title porte la langue ACTIVE (la chip du survol le lit,
+        // attr(data-toc-title) dans styles.css) ; les originaux fr/en
+        // restent à part pour la bascule
+        link.dataset.tocTitleFr = frTitle;
+        if (enTitle) {
+          link.dataset.tocTitleEn = enTitle;
+        }
+        link.dataset.tocTitle = frTitle;
+        link.setAttribute('aria-label', `${label} — ${frTitle}`);
+      }
+      const text = document.createElement('span');
+      text.className = 'toc-label';
+      text.textContent = label;
+      const tick = document.createElement('i');
+      tick.className = 'toc-tick';
+      link.append(text, tick);
+      nav.append(link);
+      return { head, link, y: 0 };
+    });
+
+    main.append(nav);
+    marginTocNav = nav;
+
+    let spanTop = 0;
+    let spanHeight = 1;
+    let currentIdx = -2;
+    let mainTop = 0;
+
+    const update = () => {
+      // la ligne de lecture vit au milieu du viewport — ramenée dans le
+      // repère de main (les tops du fil et des ordinaux y sont absolus,
+      // et le hero précède main : sans ce retrait, le fil court une
+      // entrée devant la lecture)
+      const reading = window.scrollY + window.innerHeight * 0.5 - mainTop;
+      const progress = Math.min(1, Math.max(0, (reading - spanTop) / spanHeight));
+      fill.style.transform = `scaleY(${progress})`;
+      nib.style.top = `${spanTop + progress * spanHeight}px`;
+
+      let idx = -1;
+      for (let i = 0; i < items.length; i++) {
+        // grâce de 2 px : une tête posée PILE sur la ligne de lecture compte
+        // comme courante (scrollY est entier, les tops ne le sont pas)
+        if (reading + 2 >= items[i].y) idx = i;
+      }
+      if (idx !== currentIdx) {
+        currentIdx = idx;
+        items.forEach((item, i) => {
+          const passed = i <= idx;
+          const current = i === idx;
+          item.link.classList.toggle('is-passed', passed);
+          item.link.classList.toggle('is-current', current);
+        });
+      }
+    };
+
+    const measure = () => {
+      mainTop = main.getBoundingClientRect().top + window.scrollY;
+      for (const item of items) {
+        item.y = item.head.getBoundingClientRect().top + window.scrollY - mainTop;
+        // sans ce top, les ancres absolues s'empilent toutes à l'origine de
+        // la nav (le sommet de main) — neuf ordinaux superposés, illisibles
+        item.link.style.top = `${Math.round(item.y)}px`;
+      }
+      spanTop = items[0].y;
+      spanHeight = Math.max(1, items[items.length - 1].y - spanTop);
+      line.style.top = `${spanTop}px`;
+      line.style.height = `${spanHeight}px`;
+      update();
+    };
+
+    window.addEventListener('scroll', frameGuarded(update), { passive: true });
+    window.addEventListener('resize', measure);
+    document.fonts?.ready.then(measure);
+    measure();
+  };
+
+  buildMarginToc();
 
   /* ---------- Copier les commandes ---------- */
 

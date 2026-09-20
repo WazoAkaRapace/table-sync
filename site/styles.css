@@ -1270,6 +1270,164 @@ html[lang="en"] .wire::after {
   border: 1px solid var(--parchment-300);
 }
 
+/* ---------- La marge du registre (fil de lecture, ≥1360px) ----------
+   Une règle d'encre descend la marge gauche au fil du défilement — la
+   plume (losange or) en pointe — et chaque entrée du registre y porte son
+   ordinal, cliquable : passée en encre, courante en or, l'entrée courante
+   du registre (I) en sang. Bâtie par main.js (rien sans JS), invisible
+   sous 1360px : la marge n'existe qu'au bureau, et les ordinaux y sont
+   LISIBLES (retour utilisateur : à 0.66rem ils se lisaient en tache).
+   Elle ne s'anime pas d'elle-même, elle ne fait que suivre le défilement. */
+
+main {
+  position: relative;
+}
+
+.margin-toc {
+  position: absolute;
+  top: 0;
+  left: calc(50% - 36.4rem);
+  width: 0;
+  pointer-events: none;
+  display: none;
+}
+
+@media (min-width: 1360px) {
+  .js .margin-toc {
+    display: block;
+  }
+}
+
+/* La règle : piste or-parchemin LISIBLE (une piste trop pâle se lit en
+   rayure), remplissage encre — la hauteur suit la ligne de lecture
+   (milieu du viewport), posée par main.js */
+.toc-line {
+  position: absolute;
+  left: -1px;
+  width: 2px;
+  background: var(--parchment-500);
+}
+
+.toc-fill {
+  position: absolute;
+  inset: 0;
+  transform: scaleY(var(--toc-progress, 0));
+  transform-origin: top center;
+  background: var(--ink-600);
+}
+
+/* La plume : un losange or qui chevauche la pointe du remplissage */
+.toc-nib {
+  position: absolute;
+  left: -4px;
+  width: 8px;
+  height: 8px;
+  margin-top: -4px;
+  rotate: 45deg;
+  background: var(--gold-400);
+  box-shadow: var(--shadow-card);
+}
+
+/* Chaque entrée : l'ordinal à gauche de la règle, le losange SUR la règle.
+   La cible tactile est l'ancre entière (~44px), pas le seul chiffre.
+   Taille de LECTURE, pas de marge délicate : 0.95rem Cinzel 700 — retour
+   utilisateur deux fois « illisible » à 0.66 puis 0.82rem */
+.toc-entry {
+  position: absolute;
+  left: 0;
+  transform: translate(-100%, -50%);
+  padding: 0.9rem;
+  color: var(--ink-500);
+  text-decoration: none;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  pointer-events: auto;
+  transition: color 0.25s var(--ease);
+}
+
+.toc-entry:hover,
+.toc-entry:focus-visible {
+  color: var(--ink-900);
+}
+
+.toc-entry.is-passed {
+  color: var(--ink-700);
+}
+
+.toc-entry.is-lead.is-passed {
+  color: var(--blood-500);
+}
+
+/* L'entrée courante grossit d'un cran : elle se trouve sans la lire */
+.toc-entry.is-current {
+  color: var(--ink-900);
+  font-size: 1.1rem;
+}
+
+/* Le titre au survol : un ordinal seul est une énigme — le nom complet
+   de l'entrée se dévoile en chip parchemin DROITE de la règle (au-dessus
+   du bord de colonne, c'est un survol), corps lisible pas Cinzel */
+.toc-entry::after {
+  content: attr(data-toc-title);
+  position: absolute;
+  left: calc(100% + 0.85rem);
+  top: 50%;
+  translate: -4px -50%;
+  padding: 0.38rem 0.7rem;
+  border: 1px solid var(--parchment-300);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: var(--shadow-card);
+  color: var(--ink-800);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.18s var(--ease),
+    translate 0.18s var(--ease);
+}
+
+.toc-entry:hover::after,
+.toc-entry:focus-visible::after {
+  opacity: 1;
+  translate: 0 -50%;
+}
+
+.toc-tick {
+  position: absolute;
+  right: -4px;
+  top: 50%;
+  translate: 0 -50%;
+  width: 8px;
+  height: 8px;
+  rotate: 45deg;
+  background: var(--parchment-500);
+  transition:
+    background-color 0.25s var(--ease),
+    scale 0.25s var(--ease);
+}
+
+.toc-entry.is-passed .toc-tick {
+  background: var(--ink-600);
+}
+
+.toc-entry.is-lead.is-passed .toc-tick {
+  background: var(--blood-400);
+}
+
+/* .margin-toc porte le sélecteur au-dessus du cas lead-passé (0,4,0) :
+   l'entrée courante garde sa losange or MÊME sur l'entrée I en sang */
+.margin-toc .toc-entry.is-current .toc-tick {
+  background: var(--gold-400);
+  scale: 1.3;
+}
+
 /* ---------- Motion : la plume inscrit la page ----------
    La page s'écrit en défilant : le filet de tête se trace de gauche à
    droite, les entrées réglées se posent l'une après l'autre sous la règle,
@@ -1315,6 +1473,149 @@ html[lang="en"] .wire::after {
   animation: rule-draw 0.45s var(--ease) 0.05s both;
 }
 
+/* Les ordinaux se TAMPONNENT : le chiffre frappe la page et s'y pose,
+   l'encre affleurant — déclenché une fois par entrée (l'encre sèche :
+   remonter ne l'efface pas) */
+.js .entry-ordinal {
+  opacity: 0;
+  transform-origin: right center;
+}
+
+.js .entry-ordinal.is-stamped {
+  animation: ordinal-stamp 0.38s var(--ease) both;
+}
+
+/* Les preuves tamponnent, littéralement : la frappe pose le tampon au
+   lieu de le faire monter — un seul geste pour tout le bloc */
+.js .proof.reveal.is-risen {
+  animation: proof-stamp 0.3s var(--ease) both;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+
+/* Le balayage d'encre du wordmark du splash de l'app, porté sur les
+   titres du registre : un masque glisse, la lettre apparaît mouillée */
+@property --ink-x {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 130%;
+}
+
+/* ----- Le registre s'écrit sous la main (scroll-driven) -----
+   Là où animation-timeline vit (Chromium, Safari 18.2+), la plume devient
+   scrubbée : le filet se trace et le titre s'encre AU FIL du défilement —
+   remonter la page les efface, descendre les réécrit. La tête ne se lève
+   plus, elle s'écrit (règle + encre + tampon) ; les entrées réglées
+   continuent de se poser une fois sous la règle, et la paire de
+   téléphones du hero glisse en profondeur quand on tourne la page.
+   Firefox et les moteurs plus anciens gardent le déclenchement une fois
+   par entrée défini plus haut. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .js .entry-head.reveal,
+    .js .entry-head.reveal.is-risen {
+      opacity: 1;
+      animation: none;
+    }
+
+    .js .entry-head::after,
+    .js .entry-head.is-risen::after {
+      animation: rule-scrub linear both;
+      animation-timeline: view();
+      /* en pourcentage de la traversée ENTIÈRE (le range nommé « entry » ne
+         couvre qu'une hauteur d'élément — la plume n'y vivrait pas) : le
+         filet commence à entrer et s'achève vers la ligne de lecture */
+      animation-range: 6% 50%;
+    }
+
+    .js .entry-title {
+      --ink-x: 130%;
+      mask-image: linear-gradient(to right, #000 calc(var(--ink-x) - 6%), transparent var(--ink-x));
+      animation: title-ink linear both;
+      animation-timeline: view();
+      animation-range: 5% 48%;
+    }
+
+    /* La paire se pose en tournant la page : le téléphone du MD glisse
+       plus loin que celui du joueur — la profondeur de la table */
+    .portrait-back {
+      animation:
+        pair-back-in 0.55s var(--ease) 0.08s backwards,
+        pair-back-settle linear both;
+      animation-timeline: auto, view();
+      animation-range:
+        normal,
+        exit 0% exit 90%;
+    }
+
+    .portrait-front {
+      animation:
+        pair-front-in 0.5s var(--ease) 0.18s backwards,
+        pair-front-settle linear both;
+      animation-timeline: auto, view();
+      animation-range:
+        normal,
+        exit 0% exit 90%;
+    }
+  }
+}
+
+@keyframes ordinal-stamp {
+  from {
+    opacity: 0;
+    transform: scale(1.7);
+    filter: blur(3px);
+  }
+  60% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes proof-stamp {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes rule-scrub {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes title-ink {
+  from {
+    --ink-x: -8%;
+  }
+  to {
+    --ink-x: 130%;
+  }
+}
+
+@keyframes pair-back-settle {
+  to {
+    translate: 0.9rem -2.4rem;
+  }
+}
+
+@keyframes pair-front-settle {
+  to {
+    translate: 0 -1.2rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -1322,7 +1623,8 @@ html[lang="en"] .wire::after {
 
   .js .reveal {
     opacity: 1;
-    /* biome-ignore lint/complexity/noImportantStyles: coupe toute animation sous prefers-reduced-motion, y compris les classes ajoutées après coup. */
+    /* coupe toute animation sous prefers-reduced-motion, y compris les
+       classes ajoutées après coup */
     animation: none !important;
   }
 
@@ -1350,6 +1652,18 @@ html[lang="en"] .wire::after {
   .portrait-back,
   .portrait-front {
     animation: none;
+  }
+
+  /* Le tampon ne frappe pas : l'ordinal est posé, sec */
+  .js .entry-ordinal {
+    opacity: 1;
+    animation: none;
+  }
+
+  /* La marge du registre suit le doigt sans jamais transitionner */
+  .toc-entry,
+  .toc-tick {
+    transition: none;
   }
 }
 

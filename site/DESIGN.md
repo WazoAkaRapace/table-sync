@@ -202,9 +202,36 @@ après l'autre ») étendu au scroll.
 
 Délais portés par `--reveal-delay` (inline), `animation: both`. Une fois
 par entrée (IntersectionObserver seuil 0.12, `rootMargin -6%`, unobserve).
-Transform et opacité uniquement — aucune propriété de layout, aucun
-scroll-linked rAF. `prefers-reduced-motion: reduce` : tout visible, aucune
-animation (`none !important`), filets tracés d'office, défilement `auto`.
+Transform et opacité uniquement — aucune propriété de layout. `prefers-
+reduced-motion: reduce` : tout visible, aucune animation (`none
+!important`), filets tracés d'office, défilement `auto`.
+
+### Le registre s'écrit sous la main (scroll-driven, 2026-09)
+
+Là où `animation-timeline` vit (Chromium, Safari 18.2+ ; Firefox derrière
+drapeau), la plume devient **scrubbée** : règle et encre progressent AU FIL
+du défilement — remonter la page les efface, descendre les réécrit. Le
+déclenchement une-fois-par-entrée ci-dessus reste le repli complet de
+Firefox et des moteurs plus anciens (le bloc vit dans `@supports
+(animation-timeline: view())` sous `no-preference` ; les GOTCHA de range :
+le range nommé `entry` ne couvre qu'UNE HAUTEUR D'ÉLÉMENT de défilement —
+les scrubs larges s'écrivent en pourcentages de la traversée entière).
+
+| Dispositif | Recette |
+|---|---|
+| Le filet scrubbé | `.entry-head::after` : `rule-scrub` (scaleX 0→1) sur `view()`, range `6%→50%` — la règle se trace sur ~450 px de défilement, réversible |
+| Le titre s'encre | `.entry-title` : `title-ink` anime `--ink-x` (`@property` en pourcentage) à travers un `mask-image` en dégradé — le balayage d'encre du wordmark du splash de l'app, porté sur le registre ; range `5%→48%`, la lettre est sèche avant la ligne de lecture |
+| La tête ne se lève plus | dans la couche scrubbée, `.entry-head` garde `opacity: 1` sans `register-rise` : elle S'ÉCRIT (règle + encre + tampon) au lieu de se poser |
+| Le tampon des ordinaux | `.entry-ordinal` : `ordinal-stamp` 0.38s (scale 1.7→1, flou 3px→0) quand l'ordinal franchit la ligne des 42 % du viewport — APRÈS l'encre achevée. Déclenché une fois, l'encre sèche : remonter ne l'efface pas. La ligne (pas un IntersectionObserver) rattrape les sauts — ancre, fil de lecture, molette vive |
+| Les preuves tamponnent | `.proof` : `proof-stamp` 0.3s (scale 0.92→1, montée 3px) au lieu de `register-rise` — « les preuves tamponnent », littéralement |
+| La paire s'enfuit | `.portrait-back/.portrait-front` : `pair-back-settle`/`pair-front-settle` animent `translate` (composé avec le `transform: rotate` statique) sur `view()` range `exit 0%→90%` — en tournant la page, le téléphone du MD glisse plus loin que celui du joueur, la profondeur de la table |
+| La marge du registre | `nav.margin-toc` bâtie par `main.js` (rien sans JS), ≥1360px seulement : une règle d'encre 2px (piste `--parchment-500`, remplissage `--ink-600`) descend la marge gauche au fil du scroll (`scaleY` sur rAF gardé par filet minuté — un rAF étranglé gèle le dispositif, cf. `frameGuarded` ; la ligne de lecture est ramenée dans le repère de main, le hero précède), la plume (losange `--gold-400` 8px, `.toc-nib`) chevauche la pointe ; chaque entrée y porte son ordinal `I–IX` cliquable — Cinzel **0.95rem/700** (deux retours « illisible » : 0.66 puis 0.82rem se lisaient en tache ; la marge délicate est un anti-pattern ici), courante 1.1rem + losange or 8px, à venir `--ink-500`, passée `--ink-700`, l'entrée I en sang. **L'ordinal seul est une énigme : le survol/focus dévoile le titre complet en chip parchemin** (`.toc-entry::after`, `attr(data-toc-title)`, corps 0.85rem, chevauche le bord de colonne c'est un survol), bilingue par `data-toc-title-fr/-en` réécrits à la bascule + `aria-label` « IX — Repos long… ». Cible tactile ~44px par ancre. Elle ne s'anime jamais d'elle-même : chaque état ne fait que suivre le doigt ; transitions coupées en mouvement réduit |
+
+L'ordre d'écriture d'une tête, en descendant : l'encre du titre mène
+(achevée ~45 %), le filet suit (achevé ~50 %), le sceau tamponne (42 % de
+ligne franchie après les deux). En remontant : l'écriture s'efface, le
+tampon reste. En mouvement réduit : tout posé, sec, la marge suit sans
+transitionner.
 
 ## Accessibilité
 
@@ -233,7 +260,8 @@ français décrivant le contenu réel. `lang="fr"`, `scroll-behavior` réduit.
    la copie est manuelle, c'est le seul endroit où le monde peut diverger.
 2. Nouvelle entrée du registre → ordinal romain suivant en Cinzel
    `aria-hidden`, tête sur filet, sous-entrées réglées ; une seule entrée
-   peut être `.is-lead` (sang).
+   peut être `.is-lead` (sang). Si elle porte un `id`, la marge du registre
+   (voir Motion) l'accueille toute seule — rien à câbler.
 3. Nouvelle preuve → tampon mono `.proof li`, quel que soit son contenu
    italique jointe par «·» sinon ; jamais l'inverse.
 4. Nouvelle section interactive → contenu visible sans JS, animations
