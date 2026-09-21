@@ -539,6 +539,10 @@
     const entries = [...document.querySelectorAll('main .entry[id]')];
     if (!main || entries.length === 0) return;
 
+    // la série de dés du registre : chaque entrée porte son type, la plume
+    // voyageuse prend la forme du DERNIER DÉ franchi
+    const DIE_TYPES = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20'];
+
     const nav = document.createElement('nav');
     nav.className = 'margin-toc';
     nav.setAttribute('aria-label', STRINGS[lang].tocLabel);
@@ -553,9 +557,12 @@
     nib.className = 'toc-nib';
     nav.append(line, nib);
 
-    const items = entries.map((entry) => {
+    const items = entries.map((entry, i) => {
       const head = entry.querySelector('.entry-head') ?? entry;
       const label = head.querySelector('.entry-ordinal')?.textContent ?? '';
+      // la série polyédrique monte le long du registre (d4→d20), puis
+      // recommence comme une seconde série de dés — un TYPE PAR ENTRÉE
+      const die = DIE_TYPES[i % DIE_TYPES.length];
       const link = document.createElement('a');
       link.className = 'toc-entry' + (entry.classList.contains('is-lead') ? ' is-lead' : '');
       link.href = `#${entry.id}`;
@@ -576,10 +583,10 @@
       text.className = 'toc-label';
       text.textContent = label;
       const tick = document.createElement('i');
-      tick.className = 'toc-tick';
+      tick.className = `toc-tick is-${die}`;
       link.append(text, tick);
       nav.append(link);
-      return { head, link, y: 0 };
+      return { head, link, die, y: 0 };
     });
 
     main.append(nav);
@@ -614,6 +621,9 @@
           item.link.classList.toggle('is-passed', passed);
           item.link.classList.toggle('is-current', current);
         });
+        // la plume devient le dernier dé franchi : nue au-dessus de
+        // l'entrée I, d4 après elle, d6 après II… le registre se joue
+        nib.className = 'toc-nib' + (idx >= 0 ? ` is-die is-${items[idx].die}` : '');
       }
     };
 

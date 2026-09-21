@@ -1316,16 +1316,64 @@ main {
   background: var(--ink-600);
 }
 
-/* La plume : un losange or qui chevauche la pointe du remplissage */
+/* La plume voyageuse : or, elle chevauche la pointe du remplissage. Nue,
+   c'est la plume (losange) ; dès qu'une entrée est passée elle PREND LA
+   FORME DU DERNIER DÉ franchi (main.js pose .is-die + le type) — la plume
+   écrit, puis devient le jeu */
 .toc-nib {
   position: absolute;
-  left: -4px;
-  width: 8px;
-  height: 8px;
-  margin-top: -4px;
+  left: -7.5px;
+  width: 15px;
+  height: 15px;
+  margin-top: -7.5px;
   rotate: 45deg;
   background: var(--gold-400);
   box-shadow: var(--shadow-card);
+}
+
+.toc-nib.is-die {
+  rotate: 0deg;
+  box-shadow: none;
+  background-image: radial-gradient(
+    circle at var(--pip-x, 50%) var(--pip-y, 50%),
+    var(--ink-800) 2.4px,
+    transparent 2.5px
+  );
+  /* l'ombre suit la silhouette découpée (box-shadow serait rogné) */
+  filter: drop-shadow(0 1px 2px rgba(42, 31, 20, 0.3));
+}
+
+.toc-nib.is-d4,
+.toc-tick.is-d4 {
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  --pip-y: 64%;
+}
+
+.toc-nib.is-d6,
+.toc-tick.is-d6 {
+  clip-path: none;
+}
+
+.toc-nib.is-d8,
+.toc-tick.is-d8 {
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+
+.toc-nib.is-d10,
+.toc-tick.is-d10 {
+  clip-path: polygon(50% 0, 100% 36%, 50% 100%, 0 36%);
+  --pip-y: 54%;
+}
+
+.toc-nib.is-d12,
+.toc-tick.is-d12 {
+  clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+  --pip-y: 56%;
+}
+
+.toc-nib.is-d20,
+.toc-tick.is-d20 {
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
 }
 
 /* Chaque entrée : l'ordinal à gauche de la règle, le losange SUR la règle.
@@ -1399,33 +1447,70 @@ main {
   translate: 0 -50%;
 }
 
+/* Les jalons sont des DÉS, UN TYPE PAR ENTRÉE (main.js pose .is-d4…is-d20,
+   cycle ascendant de la série polyédrique) : face découpée au clip-path,
+   point central par radial-gradient positionné au centre de gravité de la
+   forme. Le jalon ROULE au fil du défilement (ci-dessous, scroll-driven),
+   sa couleur dit son état. La plume, elle, devient le dernier dé passé */
 .toc-tick {
   position: absolute;
-  right: -4px;
+  right: -6.5px;
   top: 50%;
   translate: 0 -50%;
-  width: 8px;
-  height: 8px;
-  rotate: 45deg;
-  background: var(--parchment-500);
+  width: 13px;
+  height: 13px;
+  border-radius: 3px;
+  background-color: var(--parchment-500);
+  background-image: radial-gradient(
+    circle at var(--pip-x, 50%) var(--pip-y, 50%),
+    var(--tick-pip, var(--ink-700)) 2.1px,
+    transparent 2.2px
+  );
   transition:
     background-color 0.25s var(--ease),
     scale 0.25s var(--ease);
 }
 
 .toc-entry.is-passed .toc-tick {
-  background: var(--ink-600);
+  background-color: var(--ink-600);
+  --tick-pip: var(--parchment-100);
 }
 
 .toc-entry.is-lead.is-passed .toc-tick {
-  background: var(--blood-400);
+  background-color: var(--blood-400);
+  --tick-pip: var(--blood-50);
 }
 
 /* .margin-toc porte le sélecteur au-dessus du cas lead-passé (0,4,0) :
-   l'entrée courante garde sa losange or MÊME sur l'entrée I en sang */
+   l'entrée courante garde son dé or MÊME sur l'entrée I en sang */
 .margin-toc .toc-entry.is-current .toc-tick {
-  background: var(--gold-400);
+  background-color: var(--gold-400);
+  --tick-pip: var(--ink-800);
+  /* l'ombre suit la face découpée (box-shadow serait rognée par le clip) */
+  filter: drop-shadow(0 1px 2px rgba(42, 31, 20, 0.3));
   scale: 1.3;
+}
+
+/* Le dé ROULE au défilement : rotation solidaire du scroll racine, huit
+   tours sur la page — un coup de molette tourne le dé d'un quart de tour,
+   descendre le fait rouler, remonter le rembobine. Scrub purement CSS
+   (scroll-driven) ; Firefox et mouvement réduit gardent la face posée */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: scroll()) {
+    .js .toc-tick {
+      animation: tick-roll linear both;
+      animation-timeline: scroll(root block);
+    }
+  }
+}
+
+@keyframes tick-roll {
+  from {
+    rotate: 0deg;
+  }
+  to {
+    rotate: 2880deg;
+  }
 }
 
 /* ---------- Motion : la plume inscrit la page ----------
