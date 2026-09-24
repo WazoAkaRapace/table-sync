@@ -7,7 +7,7 @@
  * rebuild de la table users (qui perdrait le NOCASE de `username`).
  */
 
-import { createHash, randomBytes } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 import type {
   ChangePasswordPayload,
   ForgotPasswordPayload,
@@ -19,6 +19,13 @@ import type {
 import bcrypt from 'bcryptjs';
 import { and, eq, gt, isNull, sql } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import {
+  issueRefreshToken,
+  purgeStaleRefreshTokens,
+  revokeRefreshToken,
+  rotateRefreshToken,
+} from '../auth/refresh.ts';
+import { sha256Hex } from '../auth/tokens.ts';
 import { getDrizzle } from '../db/drizzle.ts';
 import { getDb } from '../db/index.ts';
 import { cols } from '../db/projections.ts';
@@ -40,10 +47,6 @@ const RESET_COOLDOWN_SECONDS = 60;
 /** Un lien de vérification vit plus longtemps : l'enjeu est moindre qu'un reset. */
 const VERIFY_TTL_HOURS = 24;
 const VERIFY_COOLDOWN_SECONDS = 60;
-
-function sha256Hex(raw: string): string {
-  return createHash('sha256').update(raw).digest('hex');
-}
 
 interface AuthBody {
   username: string;
@@ -183,7 +186,8 @@ export async function authRoutes(app: FastifyInstance) {
     );
     const user = sanitizeUser(row);
     const token = app.jwt.sign({ sub: user.id, username: user.username });
-    return reply.code(201).send({ token, user });
+    const refreshToken = issueRefreshToken(drizzle, user.id, req);
+    return reply.code(201).send({ token, refreshToken, user });
   });
 
   // ---------- Login ----------
@@ -208,7 +212,8 @@ export async function authRoutes(app: FastifyInstance) {
 
     const user = sanitizeUser(row);
     const token = app.jwt.sign({ sub: user.id, username: user.username });
-    return reply.send({ token, user });
+    const refreshToken = issueRefreshToken(drizzle, user.id, req);
+    return reply.send({ token, refreshToken, user });
   });
 
   // ---------- Me (current user) ----------
@@ -573,7 +578,8 @@ export async function authRoutes(app: FastifyInstance) {
 
       const user = sanitizeUser(userRow);
       const jwtToken = app.jwt.sign({ sub: user.id, username: user.username });
-      return reply.send({ token: jwtToken, user });
+      const refreshToken = issueRefreshToken(drizzle, user.id, req);
+      return reply.send({ token: jwtToken, refreshToken, user });
     },
   );
 
@@ -741,9 +747,55 @@ export async function authRoutes(app: FastifyInstance) {
     },
   );
 
+  // ---------- Refresh (public : le refresh token EST la preuve) ----------
+  // Rotation intégrale : le jeton présenté est consommé, un neuf part avec un
+  // JWT frais et un utilisateur complet (même forme que login). Une
+  // réutilisation de jeton consommé tue la famille côté helper (rotateRefreshToken)
+  // — le client purgera sur le 401.
+  app.post(
+    '/refresh',
+    async (req: FastifyRequest<{ Body: { refreshToken?: string } }>, reply: FastifyReply) => {
+      const raw = req.body?.refreshToken;
+      if (!raw) {
+        return reply.code(400).send({ error: apiMsg(req, 'jeton de rafraîchissement requis') });
+      }
+
+      const result = rotateRefreshToken(getDrizzle(), String(raw));
+      if (!result) {
+        // Inconnu/expiré/révoqué (et famille déjà tuée dans ce dernier cas).
+        return reply
+          .code(401)
+          .send({ error: apiMsg(req, 'jeton de rafraîchissement invalide ou expiré') });
+      }
+
+      // Hygiène best-effort : purge des lignes mortes depuis plus d'un cycle.
+      const drizzle = getDrizzle();
+      purgeStaleRefreshTokens(drizzle);
+
+      const row = drizzle
+        .select(cols(users))
+        .from(users)
+        .where(eq(users.id, result.userId))
+        .get() as any;
+      if (!row) {
+        return reply.code(401).send({ error: apiMsg(req, 'utilisateur introuvable') });
+      }
+      const user = sanitizeUser(row);
+      const token = app.jwt.sign({ sub: user.id, username: user.username });
+      return reply.send({ token, refreshToken: result.raw, user });
+    },
+  );
+
   // ---------- Logout ----------
-  app.post('/logout', async (_req, reply) => {
-    // Stateless JWT: client just discards the token. Return 204.
+  app.post('/logout', async (req, reply) => {
+    // Le JWT reste stateless (le client le jette) ; le refresh token présenté
+    // dans l'en-tête est révoqué — l'appareil ne pourra plus se rafraîchir.
+    // Header plutôt que corps : la route reste publique/sans JWT (simple
+    // révocation), et le client part en fire-and-forget sans corps à sérialiser.
+    const raw = req.headers['x-refresh-token'];
+    if (typeof raw === 'string' && raw) {
+      revokeRefreshToken(getDrizzle(), raw);
+    }
     return reply.code(204).send();
   });
 }

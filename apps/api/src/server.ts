@@ -119,6 +119,7 @@ async function buildServer() {
       url === '/api/auth/login' ||
       url === '/api/auth/register' ||
       url === '/api/auth/logout' ||
+      url === '/api/auth/refresh' ||
       url === '/api/auth/forgot-password' ||
       url === '/api/auth/reset-password' ||
       url === '/api/auth/verify-email' ||
