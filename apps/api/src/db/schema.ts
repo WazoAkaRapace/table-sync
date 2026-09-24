@@ -996,6 +996,37 @@ export const emailVerificationTokens = sqliteTable(
   (t) => [index('idx_email_verification_tokens_user').on(t.userId)],
 );
 
+/**
+ * Jetons de rafraîchissement — un par appareil/session, SHA-256 uniquement
+ * (le jeton brut ne vit que chez le client). Durée de vie 30 jours, glissante :
+ * chaque /refresh consomme le jeton et en émet un neuf (rotation), repoussant
+ * la fenêtre de 30 jours — un appareil actif ne se déconnecte jamais seul.
+ * revokedAt = déconnexion explicite (logout) ou rotation ; réutiliser un
+ * jeton révoqué tue toute la famille (DELETE des lignes de l'utilisateur).
+ */
+export const refreshTokens = sqliteTable(
+  'refresh_tokens',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    tokenHash: text('token_hash').notNull().unique('refresh_tokens_hash_unique'),
+    expiresAt: text('expires_at').notNull(),
+    // NULL = actif ; renseigné à la consommation (rotation) ou à la révocation.
+    revokedAt: text('revoked_at'),
+    // Tracing de la chaîne de rotation (famille de jetons) — détection de
+    // réutilisation : la ligne d'origine d'un /refresh réussi.
+    rotatedFromId: integer('rotated_from_id'),
+    userAgent: text('user_agent'),
+    ipAddress: text('ip_address'),
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (t) => [index('idx_refresh_tokens_user').on(t.userId)],
+);
+
 /** Mapping local character ↔ GMA player character (written by init + resync). */
 export const gmaPcLinks = sqliteTable(
   'gma_pc_links',

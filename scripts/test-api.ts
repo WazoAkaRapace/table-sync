@@ -17,6 +17,7 @@ import {
   startServer,
 } from './api-tests/harness.ts';
 import { run as authParties } from './api-tests/mod-auth-parties.ts';
+import { run as authRefresh } from './api-tests/mod-auth-refresh.ts';
 import { run as campaign } from './api-tests/mod-carnet.ts';
 import { run as characters } from './api-tests/mod-characters.ts';
 import { run as combat } from './api-tests/mod-combat.ts';
@@ -42,6 +43,7 @@ const MODULES: Array<{
   run: (base: string, fx: Fixtures, srv: ServerHandle) => Promise<void>;
 }> = [
   { name: 'auth + parties', run: authParties },
+  { name: 'jetons de rafraîchissement', run: authRefresh },
   { name: 'characters', run: characters },
   { name: 'items', run: items },
   { name: 'inventory + locations', run: inventory },

@@ -1,7 +1,7 @@
 import type { User } from '@table-sync/shared';
 import type React from 'react';
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import api from './api';
+import api, { purgeSession } from './api';
 import { syncTutorialWithServer } from './tutorial/serverSync';
 
 interface AuthState {
@@ -20,7 +20,8 @@ interface AuthState {
   refreshUser: () => Promise<User>;
   /**
    * Adopte une session déjà authentifiée (réinitialisation de mot de passe :
-   * l'API renvoie {token, user} comme login). Publique ici pour que la page
+   * l'API renvoie {token, user} comme login — le refresh token, lui, arrive
+   * en cookie HttpOnly posé par le serveur). Publique ici pour que la page
    * de reset branche le contexte sans dupliquer les clés localStorage.
    */
   adoptSession: (token: string, user: User) => void;
@@ -47,8 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           'Session locale illisible (« dnd-inv-user ») — clé supprimée, reconnexion nécessaire.',
           err instanceof Error ? err.message : err,
         );
-        localStorage.removeItem('dnd-inv-user');
-        localStorage.removeItem('dnd-inv-token');
+        purgeSession();
         setToken(null);
         setUser(null);
         setLoading(false);
@@ -56,7 +56,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       setToken(savedToken);
       setUser(savedUserParsed);
-      // Verify token is still valid
+      // Verify token is still valid. JWT expiré mais refresh token valide :
+      // l'intercepteur 401 de api.ts rafraîchit ET rejoue /me — la promesse
+      // résolue ici est déjà celle de la requête sauvée.
       api
         .get('/api/auth/me')
         .then((res) => {
@@ -68,14 +70,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           syncTutorialWithServer(res.data.user);
         })
         .catch((err: any) => {
-          // Ne purger la session QUE sur un 401 réel (jeton expiré) : ouvrir
-          // la PWA dans un trou réseau doit garder la session cachée, pas
-          // déconnecter le joueur (leçon tablette : ERR_NETWORK ≠ session
-          // invalide). L'utilisateur localStorage est conservé — /me sera
-          // rejoué au prochain lancement.
+          // Ne purger la session QUE sur un 401 réel (jeton expiré, refresh
+          // impossible — l'intercepteur a déjà essayé) : ouvrir la PWA dans
+          // un trou réseau doit garder la session cachée, pas déconnecter le
+          // joueur (leçon tablette : ERR_NETWORK ≠ session invalide).
+          // L'utilisateur localStorage est conservé — /me sera rejoué au
+          // prochain lancement.
           if (err?.response?.status === 401) {
-            localStorage.removeItem('dnd-inv-token');
-            localStorage.removeItem('dnd-inv-user');
+            purgeSession();
             setToken(null);
             setUser(null);
           } else {
@@ -92,6 +94,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (username: string, password: string) => {
     const res = await api.post('/api/auth/login', { username, password });
     const { token: t, user: u } = res.data;
+    // Le refresh token ne vit plus ici : le serveur le pose en cookie
+    // HttpOnly `ts_refresh` (champ JSON conservé pour les vieux bundles —
+    // un éventuel héritage localStorage part à la purge).
     localStorage.setItem('dnd-inv-token', t);
     localStorage.setItem('dnd-inv-user', JSON.stringify(u));
     setToken(t);
@@ -124,14 +129,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem('dnd-inv-token');
-    localStorage.removeItem('dnd-inv-user');
+    // Révocation serveur fire-and-forget : le refresh token de CET appareil
+    // meurt. Le navigateur porte la preuve en cookie `ts_refresh` (posé
+    // tout seul sur /api/auth) ; l'en-tête ne couvre que l'héritage
+    // localStorage d'un bundle pré-cookie — clé absente = POST nu, le
+    // serveur révoque le cookie et l'efface. Un échec réseau ne doit pas
+    // empêcher la déconnexion locale : la ligne restera active jusqu'à
+    // expiration (30 j), sans rotation elle est morte de facto côté client.
+    const legacy = localStorage.getItem('dnd-inv-refresh');
+    void api
+      .post('/api/auth/logout', {}, legacy ? { headers: { 'x-refresh-token': legacy } } : {})
+      .catch(() => {});
+    purgeSession();
     setToken(null);
     setUser(null);
   }, []);
 
   const adoptSession = useCallback((t: string, u: User) => {
     localStorage.setItem('dnd-inv-token', t);
+    // Plus de refresh token stocké (cookie serveur) : un héritage localStorage
+    // d'une session précédente n'a plus lieu d'être.
+    localStorage.removeItem('dnd-inv-refresh');
     localStorage.setItem('dnd-inv-user', JSON.stringify(u));
     setToken(t);
     setUser(u);

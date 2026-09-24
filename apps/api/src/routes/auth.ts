@@ -7,7 +7,7 @@
  * rebuild de la table users (qui perdrait le NOCASE de `username`).
  */
 
-import { createHash, randomBytes } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 import type {
   ChangePasswordPayload,
   ForgotPasswordPayload,
@@ -19,6 +19,16 @@ import type {
 import bcrypt from 'bcryptjs';
 import { and, eq, gt, isNull, sql } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import {
+  issueRefreshToken,
+  purgeStaleRefreshTokens,
+  REFRESH_COOKIE_NAME,
+  refreshCookieOptions,
+  revokeAllRefreshTokens,
+  revokeRefreshToken,
+  rotateRefreshToken,
+} from '../auth/refresh.ts';
+import { sha256Hex } from '../auth/tokens.ts';
 import { getDrizzle } from '../db/drizzle.ts';
 import { getDb } from '../db/index.ts';
 import { cols } from '../db/projections.ts';
@@ -40,10 +50,6 @@ const RESET_COOLDOWN_SECONDS = 60;
 /** Un lien de vérification vit plus longtemps : l'enjeu est moindre qu'un reset. */
 const VERIFY_TTL_HOURS = 24;
 const VERIFY_COOLDOWN_SECONDS = 60;
-
-function sha256Hex(raw: string): string {
-  return createHash('sha256').update(raw).digest('hex');
-}
 
 interface AuthBody {
   username: string;
@@ -183,7 +189,11 @@ export async function authRoutes(app: FastifyInstance) {
     );
     const user = sanitizeUser(row);
     const token = app.jwt.sign({ sub: user.id, username: user.username });
-    return reply.code(201).send({ token, user });
+    const refreshToken = issueRefreshToken(drizzle, user.id, req);
+    // Cookie HttpOnly (le navigateur y mettra la preuve de refresh tout seul)
+    // + champ JSON gardé en transition pour les clients d'avant le cookie.
+    reply.setCookie(REFRESH_COOKIE_NAME, refreshToken, refreshCookieOptions(req));
+    return reply.code(201).send({ token, refreshToken, user });
   });
 
   // ---------- Login ----------
@@ -208,7 +218,9 @@ export async function authRoutes(app: FastifyInstance) {
 
     const user = sanitizeUser(row);
     const token = app.jwt.sign({ sub: user.id, username: user.username });
-    return reply.send({ token, user });
+    const refreshToken = issueRefreshToken(drizzle, user.id, req);
+    reply.setCookie(REFRESH_COOKIE_NAME, refreshToken, refreshCookieOptions(req));
+    return reply.send({ token, refreshToken, user });
   });
 
   // ---------- Me (current user) ----------
@@ -421,8 +433,11 @@ export async function authRoutes(app: FastifyInstance) {
       const hash = bcrypt.hashSync(newPassword, BCRYPT_ROUNDS);
       drizzle.update(users).set({ passwordHash: hash }).where(eq(users.id, userId)).run();
       // Mot de passe changé depuis la session : toute demande de reset en
-      // attente est obsolète.
+      // attente est obsolète, et TOUTES les sessions (refresh tokens de tous
+      // les appareils) meurent — le JWT en cours reste valable jusqu'à
+      // expiration (stateless), mais rien ne pourra plus le renouveler.
       drizzle.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, userId)).run();
+      revokeAllRefreshTokens(drizzle, userId);
       return reply.send({ user: sanitizeUser(row) });
     },
   );
@@ -573,7 +588,9 @@ export async function authRoutes(app: FastifyInstance) {
 
       const user = sanitizeUser(userRow);
       const jwtToken = app.jwt.sign({ sub: user.id, username: user.username });
-      return reply.send({ token: jwtToken, user });
+      const refreshToken = issueRefreshToken(drizzle, user.id, req);
+      reply.setCookie(REFRESH_COOKIE_NAME, refreshToken, refreshCookieOptions(req));
+      return reply.send({ token: jwtToken, refreshToken, user });
     },
   );
 
@@ -741,9 +758,68 @@ export async function authRoutes(app: FastifyInstance) {
     },
   );
 
+  // ---------- Refresh (public : le refresh token EST la preuve) ----------
+  // Rotation intégrale : le jeton présenté est consommé, un neuf part avec un
+  // JWT frais et un utilisateur complet (même forme que login). Une
+  // réutilisation de jeton consommé tue la famille côté helper (rotateRefreshToken)
+  // — le client purgera sur le 401. La preuve arrive par cookie HttpOnly
+  // (prioritaire), sinon x-refresh-token/corps JSON — transition pour les
+  // clients d'avant le cookie (localStorage PR #127), à retirer post-grâce.
+  app.post(
+    '/refresh',
+    async (req: FastifyRequest<{ Body: { refreshToken?: string } }>, reply: FastifyReply) => {
+      const header = req.headers['x-refresh-token'];
+      const raw =
+        req.cookies[REFRESH_COOKIE_NAME] ||
+        (typeof header === 'string' && header ? header : '') ||
+        req.body?.refreshToken ||
+        '';
+      if (!raw) {
+        return reply.code(400).send({ error: apiMsg(req, 'jeton de rafraîchissement requis') });
+      }
+
+      const result = rotateRefreshToken(getDrizzle(), String(raw));
+      if (!result) {
+        // Inconnu/expiré/révoqué (et famille déjà tuée dans ce dernier cas).
+        // La miette morte ne survit pas : le prochain login la repose.
+        reply.clearCookie(REFRESH_COOKIE_NAME, refreshCookieOptions(req));
+        return reply
+          .code(401)
+          .send({ error: apiMsg(req, 'jeton de rafraîchissement invalide ou expiré') });
+      }
+
+      // Hygiène best-effort : purge des lignes mortes depuis plus d'un cycle.
+      const drizzle = getDrizzle();
+      purgeStaleRefreshTokens(drizzle);
+
+      const row = drizzle
+        .select(cols(users))
+        .from(users)
+        .where(eq(users.id, result.userId))
+        .get() as any;
+      if (!row) {
+        return reply.code(401).send({ error: apiMsg(req, 'utilisateur introuvable') });
+      }
+      const user = sanitizeUser(row);
+      const token = app.jwt.sign({ sub: user.id, username: user.username });
+      reply.setCookie(REFRESH_COOKIE_NAME, result.raw, refreshCookieOptions(req));
+      return reply.send({ token, refreshToken: result.raw, user });
+    },
+  );
+
   // ---------- Logout ----------
-  app.post('/logout', async (_req, reply) => {
-    // Stateless JWT: client just discards the token. Return 204.
+  app.post('/logout', async (req, reply) => {
+    // Le JWT reste stateless (le client le jette) ; le refresh token présenté
+    // est révoqué — l'appareil ne pourra plus se rafraîchir. Le navigateur
+    // pose le cookie tout seul sur /api/auth ; l'en-tête couvre les clients
+    // pré-cookie (clé localStorage de transition). Les DEUX peuvent coexister
+    // et pointer des lignes distinctes — chaque valeur vivante est révoquée.
+    const drizzle = getDrizzle();
+    const cookieRaw = req.cookies[REFRESH_COOKIE_NAME];
+    if (cookieRaw) revokeRefreshToken(drizzle, cookieRaw);
+    const header = req.headers['x-refresh-token'];
+    if (typeof header === 'string' && header) revokeRefreshToken(drizzle, header);
+    reply.clearCookie(REFRESH_COOKIE_NAME, refreshCookieOptions(req));
     return reply.code(204).send();
   });
 }

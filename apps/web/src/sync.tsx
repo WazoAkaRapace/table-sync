@@ -11,6 +11,7 @@ import {
   useState,
 } from 'react';
 import { useAuth } from './auth';
+import { refreshSession } from './api';
 
 // ---------- Types ----------
 
@@ -94,6 +95,25 @@ function buildWsUrl(): string {
 
 // ---------- Provider ----------
 
+/**
+ * Expiration d'un JWT (payload `exp`, en secondes) → millisecondes, ou null
+ * si illisible. Lire l'expiration côté client est gratuit : on ne rafraîchit
+ * la session avant de (re)connecter le WS QUE si le jeton est réellement
+ * expiré — rafraîchir à chaque reconnexion ferait tourner le refresh token
+ * pour rien et ouvrirait la course multi-onglets (deux rotations simultanées
+ * du même jeton = family kill côté serveur).
+ */
+function jwtExpiresAtMs(token: string): number | null {
+  try {
+    const payload = JSON.parse(
+      atob(token.split('.')[1]?.replace(/-/g, '+').replace(/_/g, '/') ?? ''),
+    );
+    return typeof payload.exp === 'number' ? payload.exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}
+
 export function SyncProvider({ user, children }: { user: User | null; children: React.ReactNode }) {
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<ConnectionStatus>('disconnected');
@@ -123,6 +143,11 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
     statusRef.current = next;
     setStatus(next);
   }, []);
+
+  // Dernier `connectWithUsableToken` rendu — `connect` (mémoïsé) y référence
+  // le chemin de reconnexion sans cercle de dépendances (le helper dépend
+  // de `connect`, qui le référence à son tour).
+  const reconnectRef = useRef<() => void>(() => {});
 
   const dispatchToHandlers = useCallback((event: SyncEvent) => {
     for (const handler of handlersRef.current) {
@@ -214,8 +239,7 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
         }
         reconnectTimeout.current = setTimeout(
           () => {
-            const savedToken = localStorage.getItem('dnd-inv-token');
-            if (savedToken) connect(savedToken);
+            reconnectRef.current();
           },
           reconnectDelay.current * (0.5 + Math.random()),
         );
@@ -227,6 +251,25 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
     },
     [dispatchToHandlers, updateStatus],
   );
+
+  // (Re)connexion avec un jeton UTILISABLE : la poignée de main WS refuse un
+  // JWT expiré (appareil revenu après > 7 j, PWA rouverte tard) et la boucle
+  // de backoff repartirait pour rien — on rafraîchit d'abord, uniquement si
+  // l'expiration est là. Session morte (refresh impossible) : rien à connecter,
+  // l'intercepteur 401 a déjà purgé/redirecté.
+  const connectWithUsableToken = useCallback(async () => {
+    const token = localStorage.getItem('dnd-inv-token');
+    if (!token) return;
+    const exp = jwtExpiresAtMs(token);
+    if (exp !== null && exp <= Date.now() + 30_000) {
+      const fresh = await refreshSession();
+      if (!fresh) return;
+      connect(fresh);
+      return;
+    }
+    connect(token);
+  }, [connect]);
+  reconnectRef.current = () => void connectWithUsableToken();
 
   // ---------- Heartbeat : sonde + fermeture forcée ----------
   // Lien mort détecté : on détache les handlers AVANT close() — sur un chemin
@@ -253,12 +296,11 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
     reconnectDelay.current = 1000;
     reconnectTimeout.current = setTimeout(
       () => {
-        const savedToken = localStorage.getItem('dnd-inv-token');
-        if (savedToken) connect(savedToken);
+        reconnectRef.current();
       },
       1000 * (0.5 + Math.random()),
     );
-  }, [connect, updateStatus]);
+  }, [updateStatus]);
 
   const sendProbe = useCallback(() => {
     const ws = wsRef.current;
@@ -324,8 +366,7 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
           reconnectTimeout.current = null;
         }
         reconnectDelay.current = 1000;
-        const savedToken = localStorage.getItem('dnd-inv-token');
-        if (savedToken && user) connect(savedToken);
+        if (user) reconnectRef.current();
       } else if (
         serverHeartbeat.current &&
         wsRef.current?.readyState === WebSocket.OPEN &&
@@ -336,13 +377,15 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
     };
     document.addEventListener('visibilitychange', onVisible);
     return () => document.removeEventListener('visibilitychange', onVisible);
-  }, [connect, user, sendProbe]);
+  }, [user, sendProbe]);
 
-  // Connect on login, disconnect on logout
+  // Connect on login, disconnect on logout. Le montage passe aussi par le
+  // helper : une session bootée avec un JWT expiré mais un refresh token
+  // valide (PWA rouverte après > 7 j) connecte DIRECTEMENT avec le jeton
+  // rafraîchi au lieu d'un aller-retour d'échec + backoff.
   useEffect(() => {
     if (user) {
-      const token = localStorage.getItem('dnd-inv-token');
-      if (token) connect(token);
+      void connectWithUsableToken();
     } else {
       if (wsRef.current) {
         wsRef.current.onclose = null;
@@ -361,7 +404,7 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
         wsRef.current = null;
       }
     };
-  }, [user, connect, updateStatus]);
+  }, [user, connectWithUsableToken, updateStatus]);
 
   const subscribe = useCallback((handler: (event: SyncEvent) => void) => {
     handlersRef.current.add(handler);

@@ -4,6 +4,7 @@
  */
 
 import compress from '@fastify/compress';
+import cookie from '@fastify/cookie';
 import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
 import multipart from '@fastify/multipart';
@@ -81,6 +82,9 @@ async function buildServer() {
   // telles quelles. nginx ne re-comprime jamais ce qui porte déjà un
   // Content-Encoding, aucun double travail.
   await app.register(compress, { threshold: 1024 });
+  // Cookies (refresh token HttpOnly — auth/refresh.ts). Parse par défaut à
+  // onRequest : req.cookies est disponible partout, y compris routes publiques.
+  await app.register(cookie);
   await app.register(cors, CORS_ORIGINS.length > 0 ? { origin: CORS_ORIGINS } : { origin: true });
   await app.register(jwt, {
     secret: JWT_SECRET,
@@ -119,6 +123,7 @@ async function buildServer() {
       url === '/api/auth/login' ||
       url === '/api/auth/register' ||
       url === '/api/auth/logout' ||
+      url === '/api/auth/refresh' ||
       url === '/api/auth/forgot-password' ||
       url === '/api/auth/reset-password' ||
       url === '/api/auth/verify-email' ||
