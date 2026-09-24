@@ -35,11 +35,7 @@ function tokenExpiry(): ReturnType<typeof sql> {
 }
 
 /** Émet un jeton neuf pour `userId` et retourne sa forme brute (client). */
-export function issueRefreshToken(
-  drizzle: Drizzle,
-  userId: number,
-  req: FastifyRequest,
-): string {
+export function issueRefreshToken(drizzle: Drizzle, userId: number, req: FastifyRequest): string {
   const raw = newRawToken();
   drizzle
     .insert(refreshTokens)
