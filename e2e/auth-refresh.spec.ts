@@ -1,13 +1,17 @@
 /**
- * Jetons de rafraîchissement — docs/plan-refresh-tokens.md.
+ * Jetons de rafraîchissement — docs/plan-refresh-cookie.md (cookie HttpOnly)
+ * et docs/plan-refresh-tokens.md (rotation/family kill).
  *
- * Le scénario vedette : un appareil revient après plus de 7 jours, son JWT
- * est périmé mais son refresh token (30 jours) vit encore — la session se
- * rafraîchit TOUTE SEULE (intercepteur 401 → rotation → requête rejouée),
- * sans passage par /login. Le jeton consommé ne resert jamais (réutilisation
- * → 401 + family kill), la déconnexion révoque ce qu'il reste.
+ * Deux scénarios :
+ * 1. Migration : une session de l'ère localStorage (PR #127) survit à un JWT
+ *    périmé via l'en-tête x-refresh-token UNE fois, puis la clé disparaît et
+ *    le cookie ts_refresh prend le relais.
+ * 2. Régime cookie : le login par l'UI pose ts_refresh (HttpOnly,
+ *    SameSite=Strict, Path=/api/auth), un JWT périmé se rattrape par le
+ *    cookie SEUL (le JS ne le voit même pas), la déconnexion l'efface et
+ *    révoque ce qu'il reste.
  *
- * Utilisateur dédié créé au runtime : les specs partagent une seule base.
+ * Utilisateurs dédiés créés au runtime : les specs partagent une seule base.
  * Le JWT expiré est signé avec le secret connu de la stack e2e
  * (playwright.config.ts, webServer env JWT_SECRET).
  */
@@ -39,32 +43,46 @@ async function directRefresh(refreshToken: string): Promise<number> {
   return res.status;
 }
 
+async function registerUser(username: string): Promise<{
+  token: string;
+  refreshToken: string;
+  user: { id: number; username: string };
+}> {
+  const res = await fetch(`${API_BASE}/api/auth/register`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      username,
+      password: 'e2e-refresh-1',
+      displayName: 'Rafraîchie',
+      email: `${username}@e2e.table-sync`,
+    }),
+    signal: AbortSignal.timeout(10_000),
+  });
+  expect(res.ok, `inscription ${username}`).toBeTruthy();
+  return (await res.json()) as {
+    token: string;
+    refreshToken: string;
+    user: { id: number; username: string };
+  };
+}
+
+/** Le cookie ts_refresh vu par le navigateur (HttpOnly ne gêne pas Playwright). */
+async function refreshCookie(page: { context(): { cookies(): Promise<any[]> } }) {
+  return (await page.context().cookies()).find((c: any) => c.name === 'ts_refresh');
+}
+
 test.describe('jetons de rafraîchissement', () => {
   test('JWT expiré + refresh token valide : session sauvée sans /login', async ({ page }) => {
     // — Utilisateur dédié (la base est partagée entre specs, on ne touche
     //   rien de seedé) : inscription, couple complet en retour —
     const username = `rt-e2e-${Date.now()}`;
-    const reg = await fetch(`${API_BASE}/api/auth/register`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        username,
-        password: 'e2e-refresh-1',
-        displayName: 'Rafraîchie',
-        email: `${username}@e2e.table-sync`,
-      }),
-      signal: AbortSignal.timeout(10_000),
-    });
-    expect(reg.ok, `inscription ${username}`).toBeTruthy();
-    const auth = (await reg.json()) as {
-      token: string;
-      refreshToken: string;
-      user: { id: number; username: string };
-    };
+    const auth = await registerUser(username);
     expect(auth.refreshToken).toBeTruthy();
 
-    // — Session locale : un JWT PÉRIMÉ + le refresh token valide — le pire
-    //   cas d'un appareil qui revient d'une semaine d'absence. —
+    // — Session locale : un JWT PÉRIMÉ + le refresh token localStorage
+    //   (héritage PR #127) — un appareil d'avant le cookie qui revient
+    //   d'une semaine d'absence. Pas de cookie dans ce contexte. —
     await page.addInitScript(
       ({ token, user, refresh }) => {
         localStorage.setItem('dnd-inv-token', token);
@@ -89,15 +107,19 @@ test.describe('jetons de rafraîchissement', () => {
     // reconnexion rafraîchit d'abord un JWT expiré).
     await page.getByLabel('Synchronisé').first().waitFor({ timeout: 10_000 });
 
-    // — Rotation LOCALE : le triplet posé par le refresh n'est plus celui
-    //   injecté (l'ancien jeton est consommé, le neuf lui a succédé) —
+    // — Migration one-shot : la clé localStorage a servi UNE fois en
+    //   en-tête, puis elle disparaît — le cookie HttpOnly prend le relais —
     const rotated = await page.evaluate(() => ({
       token: localStorage.getItem('dnd-inv-token'),
-      refresh: localStorage.getItem('dnd-inv-refresh'),
+      legacy: localStorage.getItem('dnd-inv-refresh'),
     }));
-    expect(rotated.refresh).toBeTruthy();
-    expect(rotated.refresh).not.toBe(auth.refreshToken);
+    expect(rotated.legacy).toBeNull();
+    expect(rotated.token).toBeTruthy();
     expect(rotated.token).not.toBe(expiredJwt(auth.user.id, auth.user.username));
+    const cookie = await refreshCookie(page);
+    expect(cookie?.value, 'le refresh a posé le cookie ts_refresh').toBeTruthy();
+    expect(cookie?.httpOnly).toBe(true);
+    expect(cookie?.value).not.toBe(auth.refreshToken);
 
     // — Déconnexion depuis l'UI : purge locale + page de connexion —
     // (avant les sondes directes : une fois la famille tuée, la page ne doit
@@ -108,13 +130,67 @@ test.describe('jetons de rafraîchissement', () => {
     // — L'ANCIEN refresh token est mort : le représenter → 401 + family
     //   kill (requête directe, hors page — un attaquant qui garde une copie) —
     expect(await directRefresh(auth.refreshToken)).toBe(401);
-    // … et le dernier jeton (successeur, révoqué au logout) ne re-connecte
-    // personne non plus.
-    expect(await directRefresh(rotated.refresh as string)).toBe(401);
+    // … et le successeur (le cookie posé par le refresh, révoqué au logout)
+    // ne re-connecte personne non plus.
+    expect(await directRefresh(cookie?.value as string)).toBe(401);
 
     // Rechargement : plus rien en session, on reste sur la connexion.
     await page.reload();
     await expect(page).toHaveURL(/\/login$/);
     expect(await page.evaluate(() => localStorage.getItem('dnd-inv-token'))).toBeNull();
+  });
+
+  test('login pose ts_refresh HttpOnly ; JWT expiré → survie par cookie seul', async ({ page }) => {
+    const username = `rt-cookie-${Date.now()}`;
+    const auth = await registerUser(username);
+
+    // Pas de visite guidée : elle masquerait la page.
+    await page.addInitScript(() => {
+      localStorage.setItem('dnd-inv-tour-seen', '1');
+    });
+
+    // — Login par l'UI : le serveur pose ts_refresh en Set-Cookie —
+    await page.goto('/login');
+    await page.fill('#login-username', username);
+    await page.fill('#login-password', 'e2e-refresh-1');
+    await page.getByRole('button', { name: 'Se connecter' }).click();
+    await expect(page).toHaveURL(/\/parties$/);
+    await expect(page.getByRole('heading', { name: 'Mes groupes' })).toBeVisible();
+
+    const cookie = await refreshCookie(page);
+    expect(cookie, 'cookie ts_refresh posé au login').toBeTruthy();
+    expect(cookie?.httpOnly).toBe(true);
+    expect(cookie?.sameSite).toBe('Strict');
+    expect(cookie?.path).toBe('/api/auth');
+    // Fenêtre 30 j glissante (expires est en secondes epoch).
+    expect(cookie?.expires).toBeGreaterThan(Date.now() / 1000 + 29 * 86400);
+    // Le client ne stocke PLUS le refresh token en localStorage — le login
+    // par l'UI a posé une NOUVELLE ligne, distincte de celle du register.
+    expect(await page.evaluate(() => localStorage.getItem('dnd-inv-refresh'))).toBeNull();
+    const cookieAtLogin = cookie?.value as string;
+    expect(cookieAtLogin).not.toBe(auth.refreshToken);
+
+    // — JWT périmé + rechargement : le cookie HttpOnly sauve la session
+    //   tout seul (appel de refresh au corps VIDE — le JS ne voit pas la
+    //   preuve, le navigateur la pose sur /api/auth) —
+    await page.evaluate(
+      (expired) => localStorage.setItem('dnd-inv-token', expired),
+      expiredJwt(auth.user.id, auth.user.username),
+    );
+    await page.reload();
+    await expect(page).toHaveURL(/\/parties$/);
+    await expect(page.getByRole('heading', { name: 'Mes groupes' })).toBeVisible();
+
+    // La rotation serveur a REPLACÉ le cookie : valeur ≠ celle du login.
+    const cookieAfter = await refreshCookie(page);
+    expect(cookieAfter?.value).toBeTruthy();
+    expect(cookieAfter?.value).not.toBe(cookieAtLogin);
+
+    // — Déconnexion : le serveur efface le cookie et révoque la ligne —
+    await page.getByRole('button', { name: 'Déconnexion' }).click();
+    await expect(page).toHaveURL(/\/login$/);
+    expect(await refreshCookie(page), 'cookie effacé au logout').toBeUndefined();
+    expect(await directRefresh(cookieAfter?.value as string)).toBe(401);
+    expect(await directRefresh(cookieAtLogin)).toBe(401);
   });
 });
