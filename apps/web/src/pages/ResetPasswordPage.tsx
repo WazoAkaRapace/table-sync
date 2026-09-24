@@ -28,7 +28,7 @@ export default function ResetPasswordPage() {
     setLoading(true);
     try {
       const res = await api.post('/api/auth/reset-password', { token, newPassword });
-      adoptSession(res.data.token, res.data.user);
+      adoptSession(res.data.token, res.data.user, res.data.refreshToken);
       nav('/parties');
     } catch (err: any) {
       setError(err.response?.data?.error || t('auth.connexion.echouee'));
