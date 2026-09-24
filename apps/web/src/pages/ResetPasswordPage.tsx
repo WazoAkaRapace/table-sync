@@ -28,7 +28,9 @@ export default function ResetPasswordPage() {
     setLoading(true);
     try {
       const res = await api.post('/api/auth/reset-password', { token, newPassword });
-      adoptSession(res.data.token, res.data.user, res.data.refreshToken);
+      // Le refresh token arrive en cookie HttpOnly posé par le serveur —
+      // plus rien à stocker côté client.
+      adoptSession(res.data.token, res.data.user);
       nav('/parties');
     } catch (err: any) {
       setError(err.response?.data?.error || t('auth.connexion.echouee'));

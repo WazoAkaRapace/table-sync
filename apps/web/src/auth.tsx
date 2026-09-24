@@ -20,11 +20,11 @@ interface AuthState {
   refreshUser: () => Promise<User>;
   /**
    * Adopte une session déjà authentifiée (réinitialisation de mot de passe :
-   * l'API renvoie {token, refreshToken, user} comme login). Publique ici pour
-   * que la page de reset branche le contexte sans dupliquer les clés
-   * localStorage.
+   * l'API renvoie {token, user} comme login — le refresh token, lui, arrive
+   * en cookie HttpOnly posé par le serveur). Publique ici pour que la page
+   * de reset branche le contexte sans dupliquer les clés localStorage.
    */
-  adoptSession: (token: string, user: User, refreshToken?: string) => void;
+  adoptSession: (token: string, user: User) => void;
 }
 
 const AuthContext = createContext<AuthState>(null!);
@@ -93,12 +93,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (username: string, password: string) => {
     const res = await api.post('/api/auth/login', { username, password });
-    const { token: t, refreshToken: rt, user: u } = res.data;
+    const { token: t, user: u } = res.data;
+    // Le refresh token ne vit plus ici : le serveur le pose en cookie
+    // HttpOnly `ts_refresh` (champ JSON conservé pour les vieux bundles —
+    // un éventuel héritage localStorage part à la purge).
     localStorage.setItem('dnd-inv-token', t);
-    // Garde de déploiement : un API sans refresh tokens (version précédente)
-    // ne renvoie pas la clé — on garde la session JWT seule plutôt que de
-    // stocker « undefined ».
-    if (rt) localStorage.setItem('dnd-inv-refresh', rt);
     localStorage.setItem('dnd-inv-user', JSON.stringify(u));
     setToken(t);
     setUser(u);
@@ -112,9 +111,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         displayName,
         email,
       });
-      const { token: t, refreshToken: rt, user: u } = res.data;
+      const { token: t, user: u } = res.data;
       localStorage.setItem('dnd-inv-token', t);
-      if (rt) localStorage.setItem('dnd-inv-refresh', rt);
       localStorage.setItem('dnd-inv-user', JSON.stringify(u));
       setToken(t);
       setUser(u);
@@ -132,23 +130,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(() => {
     // Révocation serveur fire-and-forget : le refresh token de CET appareil
-    // meurt (en-tête plutôt que corps — la route est publique, sans JWT).
-    // Un échec réseau ne doit pas empêcher la déconnexion locale : la ligne
-    // restera active jusqu'à expiration (30 j), sans rotation elle est morte
-    // de facto côté client.
-    const rt = localStorage.getItem('dnd-inv-refresh');
-    if (rt) {
-      void api.post('/api/auth/logout', {}, { headers: { 'x-refresh-token': rt } }).catch(() => {});
-    }
+    // meurt. Le navigateur porte la preuve en cookie `ts_refresh` (posé
+    // tout seul sur /api/auth) ; l'en-tête ne couvre que l'héritage
+    // localStorage d'un bundle pré-cookie — clé absente = POST nu, le
+    // serveur révoque le cookie et l'efface. Un échec réseau ne doit pas
+    // empêcher la déconnexion locale : la ligne restera active jusqu'à
+    // expiration (30 j), sans rotation elle est morte de facto côté client.
+    const legacy = localStorage.getItem('dnd-inv-refresh');
+    void api
+      .post('/api/auth/logout', {}, legacy ? { headers: { 'x-refresh-token': legacy } } : {})
+      .catch(() => {});
     purgeSession();
     setToken(null);
     setUser(null);
   }, []);
 
-  const adoptSession = useCallback((t: string, u: User, rt?: string) => {
+  const adoptSession = useCallback((t: string, u: User) => {
     localStorage.setItem('dnd-inv-token', t);
-    if (rt) localStorage.setItem('dnd-inv-refresh', rt);
-    else localStorage.removeItem('dnd-inv-refresh');
+    // Plus de refresh token stocké (cookie serveur) : un héritage localStorage
+    // d'une session précédente n'a plus lieu d'être.
+    localStorage.removeItem('dnd-inv-refresh');
     localStorage.setItem('dnd-inv-user', JSON.stringify(u));
     setToken(t);
     setUser(u);
