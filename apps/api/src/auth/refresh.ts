@@ -23,6 +23,48 @@ import { sha256Hex } from './tokens.ts';
 /** Durée de vie du jeton de rafraîchissement (30 jours, glissante). */
 export const REFRESH_TOKEN_TTL_DAYS = 30;
 
+/**
+ * Cookie HttpOnly qui porte le refresh token (docs/plan-refresh-cookie.md) :
+ * le jeton devient illisible au JavaScript de la page — un XSS peut voler
+ * une session JWT en cours, plus installer une persistance de 30 jours.
+ */
+export const REFRESH_COOKIE_NAME = 'ts_refresh';
+
+/**
+ * La requête est-elle arrivée en HTTPS ? X-Forwarded-Proto d'abord (posé par
+ * nginx sur /api — `proxy_set_header X-Forwarded-Proto $scheme` — et par les
+ * proxys publics devant lui), sinon le protocole de la socket. L'accès LAN
+ * direct en http NE DOIT PAS poser Secure : le navigateur y rejetterait le
+ * cookie et le refresh serait cassé pour la table.
+ */
+function arrivedOverHttps(req: FastifyRequest): boolean {
+  const forwarded = req.headers['x-forwarded-proto'];
+  if (typeof forwarded === 'string' && forwarded.trim()) {
+    // Chaîne de proxys : « https, http » — la première entrée décrit le
+    // protocole du client d'origine.
+    return forwarded.split(',')[0].trim().toLowerCase() === 'https';
+  }
+  return req.protocol === 'https';
+}
+
+/**
+ * Options du cookie ts_refresh — DÉFINITION UNIQUE : chaque site
+ * setCookie/clearCookie passe par ici (clearCookie exige le MÊME
+ * path/sameSite, sinon le navigateur ne supprime pas la miette).
+ * Path=/api/auth : la preuve de refresh ne voyage QUE sur les routes
+ * d'auth ; SameSite=Strict : jamais envoyée inter-site, même en navigation
+ * top-level — le CSRF y est mort-né, pas de token dédié à poser.
+ */
+export function refreshCookieOptions(req: FastifyRequest) {
+  return {
+    path: '/api/auth',
+    httpOnly: true,
+    sameSite: 'strict' as const,
+    maxAge: REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60,
+    secure: arrivedOverHttps(req),
+  };
+}
+
 type Drizzle = ReturnType<typeof getDrizzle>;
 
 /** randomUUID() ×2 = 244 bits d'entropie, URL-safe sans remplacement. */
