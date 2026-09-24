@@ -22,6 +22,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import {
   issueRefreshToken,
   purgeStaleRefreshTokens,
+  revokeAllRefreshTokens,
   revokeRefreshToken,
   rotateRefreshToken,
 } from '../auth/refresh.ts';
@@ -426,8 +427,11 @@ export async function authRoutes(app: FastifyInstance) {
       const hash = bcrypt.hashSync(newPassword, BCRYPT_ROUNDS);
       drizzle.update(users).set({ passwordHash: hash }).where(eq(users.id, userId)).run();
       // Mot de passe changé depuis la session : toute demande de reset en
-      // attente est obsolète.
+      // attente est obsolète, et TOUTES les sessions (refresh tokens de tous
+      // les appareils) meurent — le JWT en cours reste valable jusqu'à
+      // expiration (stateless), mais rien ne pourra plus le renouveler.
       drizzle.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, userId)).run();
+      revokeAllRefreshTokens(drizzle, userId);
       return reply.send({ user: sanitizeUser(row) });
     },
   );
