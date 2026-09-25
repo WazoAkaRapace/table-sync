@@ -1,13 +1,17 @@
 /**
  * Fixtures d'authentification E2E : chaque test démarre déjà connecté.
  *
- * La session (localStorage « dnd-inv-token » + « dnd-inv-user », cf.
- * apps/web/src/auth.tsx) est injectée par addInitScript AVANT le chargement
- * de l'app — pas de dance de login dans l'UI pour les specs métier.
+ * La session vit dans les COOKIES du contexte (régime « plus rien en
+ * localStorage ») : le cookie ts_access (JWT, Path=/api, HttpOnly) posé par
+ * addCookies authentifie toutes les requêtes /api du navigateur, et le cache
+ * user « dnd-inv-user » (addInitScript, AVANT le chargement de l'app) dit au
+ * boot qu'une session existe à restaurer. PAS de ts_refresh : les JWT seedés
+ * valent 24 h, aucune spec métier ne rafraîchit — et une rotation par page
+ * consommerait la ligne du seed (family kill pour les specs suivantes).
  */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import type { Page } from 'playwright/test';
+import type { BrowserContext, Page } from 'playwright/test';
 import { test as base } from 'playwright/test';
 import { API_BASE, WEB_BASE } from './env';
 
@@ -61,10 +65,28 @@ export function seed(): SeedData {
 // Sessions injectées + helpers de navigation
 // ---------------------------------------------------------------------------
 
+/** Cookie ts_access sur l'origine du web (le proxy Vite sert /api) : mêmes
+ *  attributs que le serveur pose au login — Path=/api suffit au navigateur
+ *  pour le joindre à chaque requête API, HttpOnly ne gêne pas Playwright,
+ *  et un cookie ignore le port (domain nu). Pour les contextes créés à la
+ *  main par les specs (sync, messages). */
+export async function addSessionCookies(ctx: BrowserContext, session: SeedSession) {
+  await ctx.addCookies([
+    {
+      name: 'ts_access',
+      value: session.token,
+      domain: new URL(WEB_BASE).hostname,
+      path: '/api',
+      httpOnly: true,
+      sameSite: 'Strict',
+    },
+  ]);
+}
+
 async function injectSession(page: Page, session: SeedSession) {
+  await addSessionCookies(page.context(), session);
   await page.addInitScript(
-    ({ token, user }) => {
-      localStorage.setItem('dnd-inv-token', token);
+    ({ user }) => {
       localStorage.setItem('dnd-inv-user', JSON.stringify(user));
       // Pas de visite guidée au premier chargement de la fiche, ni des
       // visites propres d'onglet (tutorial.spec.ts les réarme explicitement).
@@ -85,7 +107,7 @@ async function injectSession(page: Page, session: SeedSession) {
         ]),
       );
     },
-    { token: session.token, user: session.user },
+    { user: session.user },
   );
 }
 

@@ -89,8 +89,13 @@ test.describe('réinitialisation', () => {
       });
     });
     // La page d'après (groupes) charge sa liste — stub vide pour ne pas
-    // dépendre de la fixture.
-    await page.route('**/api/parties', (route) => route.fulfill({ json: { parties: [] } }));
+    // dépendre de la fixture ; on y capture l'en-tête Authorization, preuve
+    // que le JWT adopté vit en mémoire (plus rien en localStorage).
+    let partiesAuth: string | undefined;
+    await page.route('**/api/parties', (route) => {
+      partiesAuth = route.request().headers()['authorization'];
+      return route.fulfill({ json: { parties: [] } });
+    });
 
     await page.goto(`${RESET}?token=jeton-e2e-43-caracteres-aaaaaaaaaaaaa`);
     await page.getByLabel('Mot de passe (≥ 6 caractères)').fill('nouveaumdp1');
@@ -102,8 +107,16 @@ test.describe('réinitialisation', () => {
       token: 'jeton-e2e-43-caracteres-aaaaaaaaaaaaa',
       newPassword: 'nouveaumdp1',
     });
-    // Session adoptée : le token est stocké pour les requêtes suivantes.
-    expect(await page.evaluate(() => localStorage.getItem('dnd-inv-token'))).toBe('e2e-stub-jwt');
+    // Session adoptée : AUCUN jeton sur disque, le JWT mémoire part en
+    // en-tête des requêtes suivantes, le cache user est posé.
+    expect(await page.evaluate(() => localStorage.getItem('dnd-inv-token'))).toBeNull();
+    expect(await page.evaluate(() => localStorage.getItem('dnd-inv-refresh'))).toBeNull();
+    expect(
+      await page.evaluate(() => (localStorage.getItem('dnd-inv-user') ?? '').includes('"lyra"')),
+    ).toBe(true);
+    // Poll : la requête /api/parties part au montage de la page groupes, la
+    // capture peut résoudre juste après l'assertion d'URL.
+    await expect.poll(() => partiesAuth).toBe('Bearer e2e-stub-jwt');
   });
 
   test('lien invalide : erreur serveur + redemande un lien', async ({ page }) => {

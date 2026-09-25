@@ -7,7 +7,7 @@
  */
 import { expect } from 'playwright/test';
 import { API_BASE } from './env';
-import { gmTest, seed, sheetUrl } from './fixtures';
+import { addSessionCookies, gmTest, seed, sheetUrl } from './fixtures';
 
 const TOUR_TABS = JSON.stringify([
   'survival',
@@ -30,14 +30,14 @@ gmTest(
       viewport: { width: 390, height: 844 },
       locale: 'fr-FR',
     });
+    await addSessionCookies(playerCtx, seed().player);
     await playerCtx.addInitScript(
-      ({ token, user, tourTabs }) => {
-        localStorage.setItem('dnd-inv-token', token);
+      ({ user, tourTabs }) => {
         localStorage.setItem('dnd-inv-user', JSON.stringify(user));
         localStorage.setItem('dnd-inv-tour-seen', '1');
         localStorage.setItem('dnd-inv-tour-tabs', tourTabs);
       },
-      { token: seed().player.token, user: seed().player.user, tourTabs: TOUR_TABS },
+      { user: seed().player.user, tourTabs: TOUR_TABS },
     );
     const playerPage = await playerCtx.newPage();
     await playerPage.goto(sheetUrl(seed().guerrier.id));
@@ -52,8 +52,10 @@ gmTest(
       gmPage.getByRole('heading', { name: `Correspondance — ${seed().guerrier.name}` }),
     ).toBeVisible();
 
-    // — Le MD scelle le secret —
-    const secret = 'La cassette est sous l’autel — n’en parle à personne.';
+    // — Le MD scelle le secret — (suffixe unique par tentative : un retry
+    //   rejoue le test sur la MÊME base ; un secret fixe s'accumulerait et
+    //   ferait échouer les asserts stricts en « resolved to 2 elements »)
+    const secret = `La cassette est sous l’autel — n’en parle à personne. (${Date.now()})`;
     await gmPage.getByPlaceholder(`Écrire à ${seed().guerrier.name}…`).fill(secret);
     await gmPage.getByRole('button', { name: 'Envoyer' }).click();
 
@@ -71,10 +73,11 @@ gmTest(
     await expect(banner).toHaveCount(0); // ouvrir le fil retire son sceau
 
     // — La joueuse répond ; le fil du MD la reçoit en direct —
-    await playerPage.getByPlaceholder('Écrire au MD…').fill('Je fouille l’autel dès ce soir.');
+    const reply = `Je fouille l’autel dès ce soir. (${Date.now()})`;
+    await playerPage.getByPlaceholder('Écrire au MD…').fill(reply);
     await playerPage.getByRole('button', { name: 'Envoyer' }).click();
     // (le texte vit AUSSI dans l'aperçu du registre MD — l'assert vise le fil)
-    await expect(gmPage.getByText('Je fouille l’autel dès ce soir.', { exact: true })).toBeVisible({
+    await expect(gmPage.getByText(reply, { exact: true })).toBeVisible({
       timeout: 10_000,
     });
 
@@ -91,20 +94,13 @@ gmTest(
 
     // — La rature MD : la ligne disparaît des DEUX côtés sans recharger —
     //    confirmation au point de tap (1er appui arme, 2e confirme).
-    const replyRow = gmPage
-      .locator('[data-tuto="messages-fil"] li', { hasText: 'Je fouille l’autel dès ce soir.' })
-      .first();
+    const replyRow = gmPage.locator('[data-tuto="messages-fil"] li', { hasText: reply }).first();
     const del = replyRow.getByRole('button', { name: 'Supprimer ce message' });
     await del.click();
     await del.click();
-    await expect(gmPage.getByText('Je fouille l’autel dès ce soir.', { exact: true })).toHaveCount(
-      0,
-      { timeout: 10_000 },
-    );
+    await expect(gmPage.getByText(reply, { exact: true })).toHaveCount(0, { timeout: 10_000 });
     // Chez la joueuse (Messages ouvert) : le reflow 'delete' emporte la ligne
-    await expect(
-      playerPage.getByText('Je fouille l’autel dès ce soir.', { exact: true }),
-    ).toHaveCount(0, { timeout: 10_000 });
+    await expect(playerPage.getByText(reply, { exact: true })).toHaveCount(0, { timeout: 10_000 });
 
     await playerCtx.close();
   },

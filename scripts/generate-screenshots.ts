@@ -811,9 +811,21 @@ async function newSession(
     timezoneId: 'Europe/Paris',
     colorScheme: 'light',
   });
+  // Session par cookie (régime « plus rien en localStorage ») : ts_access
+  // authentifie les requêtes /api du navigateur, le port n'existe pas pour
+  // un cookie (domain nu). Le cache user reste la seule clé posée.
+  await ctx.addCookies([
+    {
+      name: 'ts_access',
+      value: session.token,
+      domain: '127.0.0.1',
+      path: '/api',
+      httpOnly: true,
+      sameSite: 'Strict',
+    },
+  ]);
   await ctx.addInitScript(
-    ({ token, user, langCode, tours }) => {
-      localStorage.setItem('dnd-inv-token', token);
+    ({ user, langCode, tours }) => {
       localStorage.setItem('dnd-inv-user', JSON.stringify(user));
       if (tours) {
         localStorage.setItem('dnd-inv-tour-seen', '1');
@@ -840,7 +852,7 @@ async function newSession(
       // l'app en déduit l'en-tête Accept-Language des payloads mono-locale.
       if (langCode === 'en') localStorage.setItem('dnd-inv-lang', 'en');
     },
-    { token: session.token, user: session.user, langCode: lang, tours },
+    { user: session.user, langCode: lang, tours },
   );
   return ctx;
 }

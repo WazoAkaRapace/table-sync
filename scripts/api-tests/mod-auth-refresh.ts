@@ -1,17 +1,15 @@
 /**
- * Jetons de rafraîchissement (sessions 30 jours glissants) : émission à
- * l'inscription/login, rotation intégrale à chaque /refresh (le jeton
- * présenté meurt, le successeur hérite de la fenêtre), family kill à la
- * réutilisation d'un jeton consommé, expiration, révocation au logout et au
- * changement de mot de passe. /api/auth/refresh est PUBLIC (pas de JWT — le
- * refresh token EST la preuve, tous les appels ci-dessous partent sans
- * en-tête Authorization).
+ * Session par cookies — jetons de rafraîchissement (rotation 30 jours
+ * glissants, family kill à la réutilisation) + cookie d'accès `ts_access`
+ * (le JWT lui-même, 24 h, Path=/api). Plus AUCUN matériau d'auth dans le
+ * corps au-delà du JWT lisible ({token, user}).
  *
- * Cookie HttpOnly (docs/plan-refresh-cookie.md) : la preuve vit dans
- * ts_refresh (Path=/api/auth, SameSite=Strict, Max-Age 30 j, Secure
- * conditionnel sur X-Forwarded-Proto) ; l'en-tête x-refresh-token et le
- * corps JSON restent des chemins de transition pour les clients
- * pré-cookie.
+ * /api/auth/refresh est PUBLIC (allowlist du guard : le refresh token EST la
+ * preuve) et n'accepte PLUS que le cookie HttpOnly ts_refresh — l'en-tête
+ * x-refresh-token et le corps JSON de transition PR #127 n'ont jamais été
+ * déployés, le chemin est supprimé. GET /api/auth/token vit SOUS le garde
+ * global : la preuve est le cookie ts_access ou l'en-tête Authorization
+ * (scripts/tests sans cookie jar).
  */
 import {
   api,
@@ -25,20 +23,33 @@ import {
 
 interface AuthRes {
   token: string;
-  refreshToken: string;
   user: { id: number; username: string };
 }
 
-/** Le Set-Cookie ts_refresh d'une réponse : valeur brute + attributs bas de casse. */
-function cookieHeader(res: ApiResponse): { value: string; attrs: string[] } | null {
+/** Un Set-Cookie vu dans la réponse : valeur brute + attributs bas de casse. */
+interface SeenCookie {
+  value: string;
+  attrs: string[];
+}
+
+/** Tous les Set-Cookie d'une réponse, indexés par nom. */
+function setCookies(res: ApiResponse): Map<string, SeenCookie> {
   const all = ((res.headers as any).getSetCookie?.() ?? []) as string[];
-  const raw = all.find((c) => c.startsWith('ts_refresh='));
-  if (!raw) return null;
-  const [pair, ...attrs] = raw.split(';');
-  return {
-    value: pair.slice('ts_refresh='.length),
-    attrs: attrs.map((a) => a.trim().toLowerCase()),
-  };
+  const map = new Map<string, SeenCookie>();
+  for (const raw of all) {
+    const [pair, ...attrs] = raw.split(';');
+    const eqPos = pair.indexOf('=');
+    map.set(pair.slice(0, eqPos).trim(), {
+      value: pair.slice(eqPos + 1),
+      attrs: attrs.map((a) => a.trim().toLowerCase()),
+    });
+  }
+  return map;
+}
+
+/** Payload décodé d'un JWT (vérification non requise ici : on lit exp/iat). */
+function jwtPayload(token: string): any {
+  return JSON.parse(Buffer.from(token.split('.')[1] ?? '', 'base64url').toString('utf8'));
 }
 
 function registerBody(username: string) {
@@ -52,46 +63,53 @@ function registerBody(username: string) {
 
 export async function run(base: string, _fx: Fixtures, srv: ServerHandle): Promise<void> {
   const refresh = (refreshToken: string) =>
-    api(base, 'POST', '/api/auth/refresh', { body: { refreshToken } });
+    api(base, 'POST', '/api/auth/refresh', {
+      headers: { cookie: `ts_refresh=${refreshToken}` },
+    });
   const login = (username: string, password = 'password123') =>
     api(base, 'POST', '/api/auth/login', { body: { username, password } });
   const rowsFor = (userId: number) =>
     srv.queryAll('SELECT * FROM refresh_tokens WHERE user_id = ?', userId);
 
-  // ---------- Émission : register et login posent le couple ----------
+  // ---------- Émission : register et login posent le COUPLE de cookies ----------
   const reg = await api(base, 'POST', '/api/auth/register', { body: registerBody('rt-herve') });
   eq(reg.status, 201, 'register rt-herve');
   const regData = reg.data as AuthRes;
-  ok(
-    typeof regData.refreshToken === 'string' && regData.refreshToken.length >= 64,
-    'register renvoie un refreshToken (≥ 64 caractères)',
-  );
-  const regCookie = cookieHeader(reg);
-  ok(!!regCookie, 'register pose un Set-Cookie ts_refresh');
-  ok(
-    !!regCookie && regCookie.value === regData.refreshToken,
-    'le cookie du register porte le MÊME brut que le champ JSON (transition)',
-  );
+  ok(!('refreshToken' in (reg.data as object)), 'le corps ne porte PLUS de refreshToken');
+  ok(typeof regData.token === 'string' && regData.token.length > 20, 'JWT émis au corps');
+  const regCookies = setCookies(reg);
+  const regAccess = regCookies.get('ts_access');
+  const regRefresh = regCookies.get('ts_refresh');
+  ok(!!regAccess, 'register pose un Set-Cookie ts_access');
+  ok(!!regRefresh, 'register pose un Set-Cookie ts_refresh');
+  if (regAccess) {
+    eq(regAccess.value, regData.token, 'ts_access porte le MÊME JWT que le corps');
+    includes(regAccess.attrs, 'httponly', 'ts_access HttpOnly (invisible du JS de la page)');
+    includes(regAccess.attrs, 'samesite=strict', 'ts_access SameSite=Strict');
+    includes(regAccess.attrs, 'path=/api', 'ts_access Path=/api (TOUTES les routes API)');
+    includes(regAccess.attrs, 'max-age=86400', 'ts_access Max-Age 24 h (aligné sur le JWT)');
+    // TTL signé : exp − iat = 24 h pile (la fenêtre de vol du JWT).
+    const payload = jwtPayload(regData.token);
+    eq(payload.exp - payload.iat, 86_400, 'JWT signé pour 24 h exactement');
+  }
+  if (regRefresh) {
+    includes(regRefresh.attrs, 'httponly', 'ts_refresh HttpOnly');
+    includes(regRefresh.attrs, 'samesite=strict', 'ts_refresh SameSite=Strict');
+    includes(regRefresh.attrs, 'path=/api/auth', 'ts_refresh Path restreint à /api/auth');
+    includes(
+      regRefresh.attrs,
+      'max-age=2592000',
+      'ts_refresh Max-Age 30 jours (aligné sur le TTL serveur)',
+    );
+    ok(regRefresh.value.length >= 64, 'le refresh token brut fait ≥ 64 caractères');
+  }
 
   const loginRes = await login('rt-herve');
   eq(loginRes.status, 200, 'login rt-herve');
   const herveId = (loginRes.data as AuthRes).user.id;
-  const tokenA = (loginRes.data as AuthRes).refreshToken;
-  ok(!!tokenA, 'login renvoie un refreshToken');
-  // ---------- Cookie posé au login : attributs exacts ----------
-  const loginCookie = cookieHeader(loginRes);
-  ok(!!loginCookie, 'login pose un Set-Cookie ts_refresh');
-  if (loginCookie) {
-    eq(loginCookie.value, tokenA, 'le cookie porte le même jeton brut que le champ JSON');
-    includes(loginCookie.attrs, 'httponly', 'cookie HttpOnly (invisible du JS de la page)');
-    includes(loginCookie.attrs, 'samesite=strict', 'SameSite=Strict');
-    includes(loginCookie.attrs, 'path=/api/auth', 'Path restreint à /api/auth');
-    includes(loginCookie.attrs, 'max-age=2592000', 'Max-Age 30 jours (aligné sur le TTL serveur)');
-    ok(
-      !loginCookie.attrs.includes('secure'),
-      'http nu : PAS de Secure — l’accès LAN doit garder son cookie',
-    );
-  }
+  const loginJwt = (loginRes.data as AuthRes).token;
+  const tokenA = setCookies(loginRes).get('ts_refresh')?.value ?? '';
+  ok(!!tokenA, 'login pose un Set-Cookie ts_refresh');
   // Deux sessions posées (inscription + login) : une ligne par appareil.
   eq(rowsFor(herveId).length, 2, 'register puis login = 2 lignes (2 appareils)');
   ok(
@@ -99,15 +117,47 @@ export async function run(base: string, _fx: Fixtures, srv: ServerHandle): Promi
     'la base ne stocke QUE des hash SHA-256, jamais le brut',
   );
 
+  // ---------- Bascule cookie : une route métier s'authentifie par ts_access ----------
+  const meByCookie = await api(base, 'GET', '/api/auth/me', {
+    headers: { cookie: `ts_access=${loginJwt}` },
+  });
+  eq(meByCookie.status, 200, 'GET /me authentifié par le cookie ts_access SEUL');
+  // En-tête PÉRIMÉ + cookie valide : le garde bascule sur le cookie.
+  const meStaleHeader = await api(base, 'GET', '/api/auth/me', {
+    headers: { authorization: 'Bearer jeton.périmé.forgé', cookie: `ts_access=${loginJwt}` },
+  });
+  eq(meStaleHeader.status, 200, 'en-tête invalide + cookie valide → le cookie tranche');
+
+  // ---------- GET /api/auth/token : l'échange contrôlé JWT ↔ cookie ----------
+  const tokenRoute = await api(base, 'GET', '/api/auth/token', { token: loginJwt });
+  eq(tokenRoute.status, 200, 'GET /api/auth/token par en-tête Authorization');
+  eq((tokenRoute.data as any).token, loginJwt, 'écho : le MÊME jeton que la preuve');
+  const tokenByCookie = await api(base, 'GET', '/api/auth/token', {
+    headers: { cookie: `ts_access=${loginJwt}` },
+  });
+  eq(tokenByCookie.status, 200, 'GET /api/auth/token par cookie ts_access');
+  eq((tokenByCookie.data as any).token, loginJwt, 'écho du cookie');
+  eq(
+    (await api(base, 'GET', '/api/auth/token')).status,
+    401,
+    'GET /api/auth/token sans preuve → 401 (sous le garde global)',
+  );
+
   // ---------- Rotation : /refresh consomme A et émet B ----------
   const rot = await refresh(tokenA);
-  eq(rot.status, 200, 'refresh avec un jeton valide');
+  eq(rot.status, 200, 'refresh avec un cookie valide');
   const rotData = rot.data as AuthRes;
-  // NB : le JWT peut être octet-identique à l'ancien (même payload, iat à la
-  // seconde) — c'est le refresh token qui porte la rotation, pas lui.
+  ok(!('refreshToken' in (rot.data as object)), 'le refresh ne renvoie PAS de refreshToken');
   ok(typeof rotData.token === 'string' && rotData.token.length > 20, 'JWT émis');
-  ok(!!rotData.refreshToken && rotData.refreshToken !== tokenA, 'refresh token neuf ≠ ancien');
   eq(rotData.user.username, 'rt-herve', 'réponse complète avec user');
+  const rotCookies = setCookies(rot);
+  const rotAccess = rotCookies.get('ts_access');
+  const rotRefresh = rotCookies.get('ts_refresh');
+  ok(!!rotAccess && rotAccess.value === rotData.token, 'le refresh RE-POSE ts_access (JWT neuf)');
+  ok(
+    !!rotRefresh && rotRefresh.value !== tokenA && rotRefresh.value.length >= 64,
+    'le refresh RE-POSE ts_refresh (rotation intégrale)',
+  );
   // Le JWT neuf authentifie.
   const me = await api(base, 'GET', '/api/auth/me', { token: rotData.token });
   eq(me.status, 200, 'le JWT fraîchement émis passe /me');
@@ -129,22 +179,74 @@ export async function run(base: string, _fx: Fixtures, srv: ServerHandle): Promi
   ) as any;
   ok(window?.ok1 === 1 && window?.ok2 === 1, 'expires_at ~ now + 30 jours');
 
-  // ---------- Réutilisation de A : 401 + family kill ----------
-  const reuse = await refresh(tokenA);
-  eq(reuse.status, 401, 'réutilisation du jeton consommé → 401');
-  eq(rowsFor(herveId).length, 0, 'family kill : toutes les lignes de rt-herve supprimées');
-  const deadSuccessor = await refresh(rotData.refreshToken);
-  eq(deadSuccessor.status, 401, 'le successeur meurt avec la famille');
+  // ---------- Réutilisation de A : grâce de course, puis family kill ----------
+  // Réutilisation IMMÉDIATE (course multi-onglets) : le jeton consommé depuis
+  // < 60 s obtient un SUCCESSEUR — les onglets convergent au lieu de
+  // s'entretuer. Personne ne perd sa session.
+  const raceReuse = await refresh(tokenA);
+  eq(raceReuse.status, 200, 'réutilisation < 60 s (course multi-onglets) → 200, pas de kill');
+  // R1 (register, active) + R2 (login, consommée) + R3 (successeur rotation)
+  // + R4 (successeur grâce) = 4 lignes : tout le monde cohabite.
+  eq(rowsFor(herveId).length, 4, 'course : personne ne perd sa session, 4 lignes cohabitent');
+  const activeAfterRace = rowsFor(herveId).filter((r: any) => r.revoked_at === null);
+  eq(activeAfterRace.length, 3, 'trois jetons actifs après la course (register + 2 successeurs)');
+  const raceData = raceReuse.data as any;
+  eq(raceData.user.username, 'rt-herve', 'le perdant de la course récupère un JWT valide');
 
-  // ---------- Entrées invalides ----------
-  eq((await refresh('')).status, 400, 'corps sans jeton → 400');
-  eq((await refresh('jeton-inconnu')).status, 401, 'jeton inconnu → 401');
+  // Réutilisation OBSOLÈTE (vol présumé) : on force un revoked_at périmé,
+  // la grâce est dépassée → 401 + family kill intégral.
+  srv.exec(
+    `UPDATE refresh_tokens SET revoked_at = datetime('now', '-10 minutes') WHERE user_id = ?`,
+    herveId,
+  );
+  const staleReuse = await refresh(tokenA);
+  eq(staleReuse.status, 401, 'réutilisation obsolète (> grâce) → 401');
+  eq(rowsFor(herveId).length, 0, 'family kill : toutes les lignes de rt-herve supprimées');
+  const deadSuccessor = await refresh(raceData.refreshToken ?? rotRefresh?.value ?? '');
+  eq(deadSuccessor.status, 401, 'le successeur meurt avec la famille');
+  // Le 401 efface les deux miettes du navigateur.
+  const clearedReuse = setCookies(staleReuse);
+  for (const [name, path] of [
+    ['ts_refresh', '/api/auth'],
+    ['ts_access', '/api'],
+  ] as const) {
+    const crumb = clearedReuse.get(name);
+    ok(
+      !!crumb &&
+        crumb.value === '' &&
+        crumb.attrs.includes('max-age=0') &&
+        crumb.attrs.includes(`path=${path}`),
+      `le 401 efface la miette ${name} (Max-Age=0, même Path)`,
+    );
+  }
+
+  // ---------- Entrées invalides : cookie SEUL, la transition est morte ----------
+  eq((await api(base, 'POST', '/api/auth/refresh')).status, 400, 'aucune preuve → 400');
+  eq(
+    (
+      await api(base, 'POST', '/api/auth/refresh', {
+        headers: { 'x-refresh-token': tokenA },
+      })
+    ).status,
+    400,
+    'en-tête x-refresh-token seul → 400 (transition supprimée)',
+  );
+  eq(
+    (
+      await api(base, 'POST', '/api/auth/refresh', {
+        body: { refreshToken: tokenA },
+      })
+    ).status,
+    400,
+    'corps JSON refreshToken seul → 400 (transition supprimée)',
+  );
+  eq((await refresh('jeton-inconnu')).status, 401, 'cookie inconnu → 401');
 
   // ---------- Expiration : fenêtre 30 j dépassée ----------
   await api(base, 'POST', '/api/auth/register', { body: registerBody('rt-gael') });
   const gaelLogin = await login('rt-gael');
   const gaelId = (gaelLogin.data as AuthRes).user.id;
-  const tokenG = (gaelLogin.data as AuthRes).refreshToken;
+  const tokenG = setCookies(gaelLogin).get('ts_refresh')?.value ?? '';
   eq(rowsFor(gaelId).length, 2, 'rt-gael : register + login = 2 lignes');
   srv.exec(
     "UPDATE refresh_tokens SET expires_at = datetime('now', '-1 day') WHERE user_id = ?",
@@ -158,70 +260,100 @@ export async function run(base: string, _fx: Fixtures, srv: ServerHandle): Promi
     "un jeton expiré n'est pas marqué révoqué",
   );
 
-  // ---------- Logout : l'en-tête x-refresh-token révoque ----------
+  // ---------- Logout par cookie : révocation + effacement des DEUX miettes ----------
   await api(base, 'POST', '/api/auth/register', { body: registerBody('rt-ivo') });
   const ivoLogin = await login('rt-ivo');
   const ivoId = (ivoLogin.data as AuthRes).user.id;
-  const tokenI = (ivoLogin.data as AuthRes).refreshToken;
+  const tokenI = setCookies(ivoLogin).get('ts_refresh')?.value ?? '';
+  const ivoAccess = setCookies(ivoLogin).get('ts_access')?.value ?? '';
   const logout = await api(base, 'POST', '/api/auth/logout', {
-    headers: { 'x-refresh-token': tokenI },
+    headers: { cookie: `ts_refresh=${tokenI}` },
   });
-  eq(logout.status, 204, 'logout → 204');
+  eq(logout.status, 204, 'logout par cookie → 204');
+  const clearedLogout = setCookies(logout);
+  for (const [name, path] of [
+    ['ts_refresh', '/api/auth'],
+    ['ts_access', '/api'],
+  ] as const) {
+    const crumb = clearedLogout.get(name);
+    ok(
+      !!crumb &&
+        crumb.value === '' &&
+        crumb.attrs.includes('max-age=0') &&
+        crumb.attrs.includes(`path=${path}`),
+      `logout efface ${name} (Max-Age=0, même Path)`,
+    );
+  }
+  // L'accès survit au logout jusqu'à expiration (stateless, 24 h) : la
+  // miette est effacée du NAVIGATEUR, c'est le cookie qui portait la preuve.
   const ivoRows = rowsFor(ivoId);
   eq(ivoRows.length, 2, 'logout révoque (UPDATE), ne supprime pas');
-  // Seule la ligne ciblée est révoquée : l'autre appareil vit toujours.
   eq(
     ivoRows.filter((r: any) => r.revoked_at === null).length,
     1,
     "l'autre session de rt-ivo survit au logout",
   );
-  // Représenter le jeton révoqué au logout → 401 + family kill (même règle
-  // que la réutilisation post-rotation : un jeton révoqué qui revient est un
-  // signal de vol). Le client légitime purge au logout, il ne le représente
-  // jamais — c'est le multi-onglet ou l'attaquant qui frappe ici.
+  // Représenter le refresh token révoqué au logout → PAS de grâce (le
+  // logout ne laisse jamais de successeur : un jeton logout-révoqué qui
+  // revient est un vol, même dans la seconde) → 401 + family kill.
   eq((await refresh(tokenI)).status, 401, 'le refresh token révoqué au logout → 401');
   eq(rowsFor(ivoId).length, 0, 'et la famille entière meurt avec lui');
+  // Le cookie d'accès du logout reste un JWT VALIDE jusqu'à expiration
+  // (stateless) : c'est la règle documentée — la fenêtre de vol est de 24 h
+  // maximum, plus 7 jours.
+  eq(
+    (await api(base, 'GET', '/api/auth/me', { token: ivoAccess })).status,
+    200,
+    'le JWT reste stateless jusqu’à expiration (24 h max)',
+  );
 
   // ---------- Changement de mot de passe : tout meurt ----------
   await api(base, 'POST', '/api/auth/register', { body: registerBody('rt-jean') });
   const jeanLogin = await login('rt-jean');
   const jeanData = jeanLogin.data as AuthRes;
+  const jeanRefresh = setCookies(jeanLogin).get('ts_refresh')?.value ?? '';
   ok(rowsFor(jeanData.user.id).length >= 1, 'rt-jean a des sessions posées');
   const pwd = await api(base, 'POST', '/api/auth/password', {
     token: jeanData.token,
     body: { currentPassword: 'password123', newPassword: 'nouveau-mot-de-passe-1' },
   });
   eq(pwd.status, 200, 'changement de mot de passe');
-  eq((await refresh(jeanData.refreshToken)).status, 401, 'refresh après changement de mdp → 401');
+  eq((await refresh(jeanRefresh)).status, 401, 'refresh après changement de mdp → 401');
   eq(rowsFor(jeanData.user.id).length, 0, 'toutes les sessions de rt-jean sont supprimées');
 
   // ---------- Secure conditionnel : X-Forwarded-Proto puis la socket ----------
-  // Le serveur de test écoute en http nu — la détection doit y laisser le
-  // cookie SANS Secure (l'accès LAN direct en http doit vivre) et le poser
+  // Le serveur de test écoute en http nu — la détection doit y laisser les
+  // cookies SANS Secure (l'accès LAN direct en http doit vivre) et les poser
   // dès qu'un proxy amont annonce https.
   await api(base, 'POST', '/api/auth/register', { body: registerBody('rt-nour') });
   const nourLogin = await login('rt-nour');
-  const nourCookie = cookieHeader(nourLogin);
-  ok(!!nourCookie, 'login http nu → cookie posé');
+  const nourCookies = setCookies(nourLogin);
+  ok(!!nourCookies.get('ts_access') && !!nourCookies.get('ts_refresh'), 'login http nu → cookies');
   ok(
-    !!nourCookie && !nourCookie.attrs.includes('secure'),
-    'http nu : pas de Secure (LAN http garde son refresh)',
+    !!nourCookies.get('ts_access') &&
+      !nourCookies.get('ts_access')!.attrs.includes('secure') &&
+      !nourCookies.get('ts_refresh')!.attrs.includes('secure'),
+    'http nu : pas de Secure (LAN http garde sa session)',
   );
   const nourHttps = await api(base, 'POST', '/api/auth/login', {
     body: { username: 'rt-nour', password: 'password123' },
     headers: { 'x-forwarded-proto': 'https' },
   });
-  const httpsCookie = cookieHeader(nourHttps);
+  const httpsCookies = setCookies(nourHttps);
   ok(
-    !!httpsCookie && httpsCookie.attrs.includes('secure'),
-    'X-Forwarded-Proto: https → Secure posé',
+    !!httpsCookies.get('ts_access') && httpsCookies.get('ts_access')!.attrs.includes('secure'),
+    'X-Forwarded-Proto: https → Secure posé sur ts_access',
+  );
+  ok(
+    !!httpsCookies.get('ts_refresh') && httpsCookies.get('ts_refresh')!.attrs.includes('secure'),
+    'X-Forwarded-Proto: https → Secure posé sur ts_refresh',
   );
 
-  // ---------- Refresh par cookie SEUL (le chemin du navigateur) ----------
+  // ---------- Refresh par cookie SEUL, dernier tour : rotation + échos ----------
   await api(base, 'POST', '/api/auth/register', { body: registerBody('rt-marta') });
   const martaLogin = await login('rt-marta');
   const martaId = (martaLogin.data as AuthRes).user.id;
-  const cookieA = cookieHeader(martaLogin)?.value ?? '';
+  const cookieA = setCookies(martaLogin).get('ts_refresh')?.value ?? '';
   ok(!!cookieA, 'cookie de rt-marta capturé');
   // Cookie seul : ni en-tête, ni corps — exactement ce que le navigateur
   // envoie tout seul (le JS de la page ne voit même pas ce cookie).
@@ -230,73 +362,28 @@ export async function run(base: string, _fx: Fixtures, srv: ServerHandle): Promi
   });
   eq(byCookie.status, 200, 'refresh par cookie seul');
   const byCookieData = byCookie.data as AuthRes;
-  ok(!!byCookieData.refreshToken && byCookieData.refreshToken !== cookieA, 'rotation intégrale');
-  const rotatedCookie = cookieHeader(byCookie);
-  ok(
-    !!rotatedCookie && rotatedCookie.value === byCookieData.refreshToken,
-    'le refresh RE-POSE le cookie du successeur',
+  const martaRotated = setCookies(byCookie).get('ts_refresh')?.value ?? '';
+  ok(!!martaRotated && martaRotated !== cookieA, 'rotation intégrale');
+  eq(
+    setCookies(byCookie).get('ts_access')?.value ?? '',
+    byCookieData.token,
+    'le couple est RE-POSÉ ensemble (ts_access = JWT du corps)',
   );
-  // Réutilisation du cookie consommé (replay d'une capture volée) → 401 +
-  // family kill, et la miette morte est effacée du navigateur.
+  // Réutilisation du cookie consommé (replay d'une capture volée) : la
+  // rotation vient d'avoir lieu (< 60 s, successeur présent) → grâce de
+  // course, SUCCESSEUR émis ; le replay obsolète, lui, tue la famille.
+  // On simule l'obsolète en vieillissant le revoked_at de la ligne.
+  const replayGrace = await api(base, 'POST', '/api/auth/refresh', {
+    headers: { cookie: `ts_refresh=${cookieA}` },
+  });
+  eq(replayGrace.status, 200, 'replay < 60 s → grâce de course (successeur)');
+  srv.exec(
+    `UPDATE refresh_tokens SET revoked_at = datetime('now', '-10 minutes') WHERE user_id = ?`,
+    martaId,
+  );
   const replay = await api(base, 'POST', '/api/auth/refresh', {
     headers: { cookie: `ts_refresh=${cookieA}` },
   });
-  eq(replay.status, 401, 'réutilisation du cookie consommé → 401');
+  eq(replay.status, 401, 'réutilisation du cookie consommé, obsolète → 401');
   eq(rowsFor(martaId).length, 0, 'family kill déclenché depuis le cookie');
-  const clearedReplay = cookieHeader(replay);
-  ok(
-    !!clearedReplay &&
-      clearedReplay.value === '' &&
-      clearedReplay.attrs.includes('max-age=0') &&
-      clearedReplay.attrs.includes('path=/api/auth'),
-    'le 401 efface la miette (Max-Age=0, même Path)',
-  );
-
-  // ---------- Transition : l'en-tête x-refresh-token (clients pré-cookie) ----------
-  await api(base, 'POST', '/api/auth/register', { body: registerBody('rt-omar') });
-  const omarLogin = await login('rt-omar');
-  const omarToken = (omarLogin.data as AuthRes).refreshToken;
-  eq(
-    (
-      await api(base, 'POST', '/api/auth/refresh', {
-        headers: { 'x-refresh-token': omarToken },
-      })
-    ).status,
-    200,
-    'transition : refresh par en-tête x-refresh-token seul',
-  );
-
-  // ---------- Logout par cookie : révocation + effacement ----------
-  await api(base, 'POST', '/api/auth/register', { body: registerBody('rt-paolo') });
-  const paoloLogin = await login('rt-paolo');
-  const paoloId = (paoloLogin.data as AuthRes).user.id;
-  const paoloCookie = cookieHeader(paoloLogin)?.value ?? '';
-  const paoloLogout = await api(base, 'POST', '/api/auth/logout', {
-    headers: { cookie: `ts_refresh=${paoloCookie}` },
-  });
-  eq(paoloLogout.status, 204, 'logout par cookie → 204');
-  const clearedLogout = cookieHeader(paoloLogout);
-  ok(
-    !!clearedLogout &&
-      clearedLogout.value === '' &&
-      clearedLogout.attrs.includes('max-age=0') &&
-      clearedLogout.attrs.includes('path=/api/auth'),
-    'logout efface le cookie (Max-Age=0, même Path)',
-  );
-  const paoloRows = rowsFor(paoloId);
-  eq(paoloRows.length, 2, 'logout par cookie : 2 lignes en place (UPDATE, pas DELETE)');
-  eq(
-    paoloRows.filter((r: any) => r.revoked_at === null).length,
-    1,
-    "seule la ligne du cookie est révoquée — l'autre appareil survit",
-  );
-  eq(
-    (
-      await api(base, 'POST', '/api/auth/refresh', {
-        headers: { 'x-refresh-token': paoloCookie },
-      })
-    ).status,
-    401,
-    'le jeton révoqué au logout par cookie → 401',
-  );
 }

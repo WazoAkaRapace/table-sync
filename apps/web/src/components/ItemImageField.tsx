@@ -11,7 +11,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { itemImageUrl } from '../api';
+import { itemImageUrl, useAccessJwt } from '../api';
 import { appLocale } from '../i18n';
 import { downscaleImage } from '../utils';
 import { ConfirmButton } from './ui';
@@ -66,6 +66,9 @@ export function ItemImageField({
   const [fileError, setFileError] = useState('');
   const [dragOver, setDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  // L'aperçu de l'illustration existante charge le JWT en clair (?token=) :
+  // mémoire d'abord, échange contre le cookie si elle est vide.
+  const jwt = useAccessJwt();
 
   // Le champ est l'unique consommateur du previewUrl : il le révoque quand la
   // valeur change (remplacement) et au démontage (fermeture du formulaire).
@@ -151,7 +154,7 @@ export function ItemImageField({
             </>
           ) : (
             <img
-              src={itemImageUrl(existingItemId as number, existingRev ?? undefined)}
+              src={itemImageUrl(existingItemId as number, existingRev ?? undefined, jwt)}
               alt={t('champ.illustration.actuelle.de.existingname.l.objet', {
                 existingName: existingName ?? 'l’objet',
               })}

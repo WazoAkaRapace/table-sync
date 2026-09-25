@@ -29,7 +29,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import api, { itemImageUrl } from '../api';
+import api, { itemImageUrl, useAccessJwt } from '../api';
 import { STAMPS, type StampKey, stampUrl } from './stamps';
 import { ConfirmButton } from './ui';
 
@@ -59,9 +59,12 @@ export function ItemVignette({
   const [failed, setFailed] = useState(false);
   const [bust, setBust] = useState(0);
   const [viewerOpen, setViewerOpen] = useState(false);
+  // L'URL d'image porte le JWT en clair (?token=) : résolu depuis la mémoire,
+  // échangé contre le cookie si la mémoire est vide (re-rend au retour).
+  const jwt = useAccessJwt();
   // Réessayer (bust) prime sur la version servie : c'est un contournement
   // de cache, pas un contenu connu.
-  const src = itemImageUrl(itemId, bust > 0 ? bust : (imageRev ?? undefined));
+  const src = itemImageUrl(itemId, bust > 0 ? bust : (imageRev ?? undefined), jwt);
 
   const retry = () => {
     setFailed(false);

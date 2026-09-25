@@ -6,7 +6,7 @@
  * invalidation react-query → refetch → UI.
  */
 import { expect } from 'playwright/test';
-import { gmTest, seed, sheetUrl } from './fixtures';
+import { addSessionCookies, gmTest, seed, sheetUrl } from './fixtures';
 
 gmTest(
   'les PV du traqueur du MD se propagent à la fiche joueur en direct',
@@ -16,13 +16,13 @@ gmTest(
       viewport: { width: 390, height: 844 },
       locale: 'fr-FR',
     });
+    await addSessionCookies(playerCtx, seed().player);
     await playerCtx.addInitScript(
-      ({ token, user }) => {
-        localStorage.setItem('dnd-inv-token', token);
+      ({ user }) => {
         localStorage.setItem('dnd-inv-user', JSON.stringify(user));
         localStorage.setItem('dnd-inv-tour-seen', '1');
       },
-      { token: seed().player.token, user: seed().player.user },
+      { user: seed().player.user },
     );
     const playerPage = await playerCtx.newPage();
     await playerPage.goto(sheetUrl(seed().guerrier.id));
