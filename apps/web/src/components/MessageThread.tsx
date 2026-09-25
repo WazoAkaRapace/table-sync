@@ -13,6 +13,7 @@
 
 import type { SecretMessage } from '@table-sync/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../api';
@@ -53,6 +54,20 @@ function GmStamp() {
   );
 }
 
+/**
+ * Visibilité RÉELLE d'un élément — pas seulement « monté ». Un fil rendu
+ * caché (onglet Messages inactif de la fiche) n'est PAS lu ; un fil à
+ * l'écran (boîte du MD, onglet actif) l'est. Mesure à la VOLÉE au moment
+ * de décider (pas d'état caché : le rendu asynchrone des onglets et les
+ * remontées DOM rendent tout cache mensonger — leçon e2e messages.spec :
+ * visible=false pour un fil ouvert à l'écran). getClientRects vide = pas
+ * rendu (display:none n'importe où au-dessus) ; non vide = rendu.
+ */
+function threadIsVisible(ref: React.RefObject<HTMLElement | null>): boolean {
+  const el = ref.current;
+  return !!el && el.getClientRects().length > 0;
+}
+
 export default function MessageThread({
   charId,
   characterName,
@@ -91,6 +106,15 @@ export default function MessageThread({
   const isGMView = ownerName !== undefined;
 
   // ---------- Read marking: this thread IS on screen, incoming side is read ----------
+  // VRAIMENT à l'écran : l'onglet Messages de la fiche reste MONTÉ pendant
+  // que d'autres onglets sont affichés (le fil vit dans l'arbre, caché) —
+  // marquer lu depuis un fil invisible lit le message JAMAIS VU : la
+  // bannière d'arrivée retombait ~400 ms après être tombée (le fil caché
+  // marquait lu et éteignait le sceau, leçon e2e messages.spec). La pastille
+  // « non lu » de la barre d'onglets reste le rappel ; la lecture ne se
+  // consomme qu'en regardant le fil. MessageThread rendu par la boîte du MD
+  // ou l'onglet actif = toujours visible (élément dans le layout).
+  const threadRef = useRef<HTMLDivElement | null>(null);
   const [markedUnread, setMarkedUnread] = useState(0);
   useEffect(() => {
     const unread = query.data?.unread ?? 0;
@@ -99,6 +123,7 @@ export default function MessageThread({
       return;
     }
     if (markedUnread === unread) return; // already marked this batch
+    if (!threadIsVisible(threadRef)) return; // caché ≠ lu : le sceau et la pastille restent
     let cancelled = false;
     api
       .post(`/api/characters/${charId}/messages/read`)
@@ -226,7 +251,7 @@ export default function MessageThread({
     : t('msgs.ecrire.au.md');
 
   return (
-    <div className="card p-4 sm:p-5" data-tuto="messages-fil">
+    <div ref={threadRef} className="card p-4 sm:p-5" data-tuto="messages-fil" data-char-id={charId}>
       <div className="flex items-baseline justify-between gap-3 pb-3">
         <h2 className="section-title">
           {isGMView ? t('msgs.avec.name', { name: characterName }) : t('msgs.avec.le.md')}

@@ -290,6 +290,19 @@ function MessageWatcher() {
     [user?.id],
   );
 
+  // Fil DÉJÀ ouvert à l'écran : la bannière n'a rien à annoncer — le
+  // message est visible, la pastille du registre suffit. Sans ce sceau,
+  // la boîte du MD reçoit une bannière par réponse de joueur ALORS QUE le
+  // fil est ouvert sous elle (le « Vu » ne se coche que via le fil, et la
+  // bannière masque le composeur — leçon e2e messages.spec).
+  useEffect(() => {
+    if (!notice) return;
+    const open = document.querySelector(
+      `[data-tuto="messages-fil"][data-char-id="${notice.characterId}"]`,
+    );
+    if (open && (open as HTMLElement).getClientRects().length > 0) setNotice(null);
+  }, [notice]);
+
   // The thread just marked read → its banner retires without a tap
   useEffect(() => {
     const onRead = (e: Event) => {

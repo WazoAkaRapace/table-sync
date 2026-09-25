@@ -107,6 +107,20 @@ export function fetchAccessToken(force = false): Promise<string | null> {
 let refreshing: Promise<string | null> | null = null;
 
 /**
+ * Verdict du DERNIER refreshSession() : « définitif » = le serveur de
+ * refresh a répondu 401 (preuve vue et refusée — session morte pour de
+ * bon). Toute autre issue (succès, 400 sans preuve, réseau coupé) laisse
+ * la session en vie. L'intercepteur 401 consulte ce drapeau pour décider
+ * s'il purge + redirige : une requête qui échoue pour une raison
+ * transitoire ne doit JAMAIS détruire une session encore valide.
+ */
+let lastRefreshDefinitive = false;
+
+function refreshSessionWasDefinitive(): boolean {
+  return lastRefreshDefinitive;
+}
+
+/**
  * Rafraîchit la session (rotation 30 j glissants) : le cookie HttpOnly
  * `ts_refresh` voyage tout seul sur /api/auth (same-origin — le JS ne sait
  * même pas s'il existe, on laisse le serveur en décider), la réponse pose
@@ -115,6 +129,7 @@ let refreshing: Promise<string | null> | null = null;
  */
 export function refreshSession(): Promise<string | null> {
   refreshing ??= (async () => {
+    lastRefreshDefinitive = false;
     try {
       // axios NU (pas cette instance) : l'intercepteur 401 ci-dessous
       // s'enroulerait sur son propre rafraîchissement.
@@ -128,13 +143,21 @@ export function refreshSession(): Promise<string | null> {
       purgeLegacyTokenKeys();
       return accessToken;
     } catch (err: any) {
-      // 401 = jeton inconnu/expiré/révoqué (family kill inclus) ; 400 =
-      // aucune preuve présentée (pas de cookie) : la session est morte dans
-      // les deux cas, on purge. Tout autre échec (réseau coupé, timeout)
-      // n'en dit rien — ERR_NETWORK ≠ session invalide (leçon tablette) :
-      // le cache user reste en place, le prochain rafraîchissement repartira
-      // de zéro quand le réseau reviendra.
-      if (err?.response?.status === 401 || err?.response?.status === 400) purgeSession();
+      // LE point critique — trois cas, pas deux :
+      //  • 401 = le serveur a VU notre preuve et l'a refusée (révoquée,
+      //    expirée, family kill) : session morte, purge.
+      //  • 400 = aucune preuve présentée (pas de cookie ts_refresh). En
+      //    théorie « session morte »… sauf que ce cas frappe aussi des
+      //    contextes légitimes SANS refresh cookie (suite de test avec
+      //    ts_access seul, navigateur qui a perdu le cookie de subrange).
+      //    Détruire la session là-dessus est un faux positif : on garde la
+      //    session, l'utilisateur repassera par login à la vraie expiration
+      //    du JWT (24 h) — le 401 finira par arriver avec sa preuve.
+      //  • réseau/timeout : n'en dit rien (leçon tablette) — rien à faire.
+      if (err?.response?.status === 401) {
+        lastRefreshDefinitive = true;
+        purgeSession();
+      }
       return null;
     } finally {
       refreshing = null;
@@ -168,11 +191,24 @@ api.interceptors.response.use(
     const cfg: any = err?.config;
     const believedSession = accessToken !== null || !!localStorage.getItem('dnd-inv-user');
     if (status === 401 && !cfg?._retried && believedSession) {
-      const token = await refreshSession();
-      if (token) {
-        cfg._retried = true; // un seul rafraîchissement par requête, jamais de boucle
-        cfg.headers.Authorization = `Bearer ${token}`;
-        return api(cfg);
+      try {
+        const token = await refreshSession();
+        if (token) {
+          cfg._retried = true; // un seul rafraîchissement par requête, jamais de boucle
+          cfg.headers.Authorization = `Bearer ${token}`;
+          return api(cfg);
+        }
+      } catch {
+        /* refreshSession n'échoue jamais lui-même (catch interne) — ceinture
+           et bretelles si un futur refactor casse ce contrat. */
+      }
+      // Refresh REFUSÉ (401 réel du serveur de refresh) : la session est
+      // morte, purge + login. Refresh INDETERMINÉ (réseau) ou SANS preuve
+      // (400) : NE PAS détruire la session — on rejette la requête telle
+      // quelle ; l'app vit son état dégradé habituel (retry réseau, ou
+      // re-login quand un 401 authentifié finira par arriver).
+      if (!refreshSessionWasDefinitive()) {
+        return Promise.reject(err);
       }
     }
     if (status === 401) {

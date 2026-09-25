@@ -176,8 +176,23 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
       // Auth via subprotocol header keeps the JWT out of URLs and proxy logs.
       const ws = new WebSocket(url, [token]);
       wsRef.current = ws;
+      // GARDE ANTI-SOCKET-PÉRIMÉ : chaque handler vérifie qu'il est TOUJOURS
+      // le socket courant avant d'agir. StrictMode (montage/démontage/remontage)
+      // et la reconnexion backoff peuvent laisser un premier socket vivant dont
+      // les closures capturent un état périmé (handlers vidés par le cleanup) :
+      // il recevrait les événements AVANT le socket neuf et les avalerait en
+      // silence (leçon e2e messages.spec : message:new reçu, bannière jamais
+      // rendue). Toute émission d'un socket remplacé est ignorée ; le balayage
+      // serveur (heartbeat) finit de tuer l'orphelin.
+      const isCurrent = () => wsRef.current === ws;
 
       ws.onopen = () => {
+        if (!isCurrent()) {
+          try {
+            ws.close();
+          } catch {}
+          return;
+        }
         updateStatus('connected');
         reconnectDelay.current = 1000; // reset backoff
         lastInboundAt.current = Date.now();
@@ -229,6 +244,7 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
       };
 
       ws.onclose = () => {
+        if (!isCurrent()) return; // remplacé avant fermeture : sa mort ne déclenche rien
         updateStatus('disconnected');
         wsRef.current = null;
         // Auto-reconnect with exponential backoff (1s → 2s → 4s → ... → 10s max)
@@ -261,6 +277,7 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
   // Échec d'échange : réseau coupé ou session morte (l'intercepteur 401 a
   // déjà purgé/redirecté dans ce dernier cas) — l'appelant (effet `user`)
   // planifie la reprise.
+
   const connectWithUsableToken = useCallback(async (): Promise<boolean> => {
     let token = getAccessToken();
     const exp = token ? jwtExpiresAtMs(token) : null;
@@ -269,6 +286,19 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
       if (!fresh) return false;
       token = fresh;
     }
+    connect(token);
+    return true;
+  }, [connect]);
+  // Variante SYNCHRONE pour le premier montage : si le JWT mémoire est
+  // utilisABLE (login dans CET onglet), on connecte sans le moindre await —
+  // StrictMode (montage, cleanup, remontage) garde alors son invariant
+  // d'origine : le cleanup ferme le socket AVANT que le remontage n'ouvre le
+  // suivant, jamais deux sockets vivants. Seul le boot cookie (pas de JWT en
+  // mémoire) passe par l'échange async.
+  const connectSyncIfUsable = useCallback((): boolean => {
+    const token = getAccessToken();
+    const exp = token ? jwtExpiresAtMs(token) : null;
+    if (!token || (exp !== null && exp <= Date.now() + 30_000)) return false;
     connect(token);
     return true;
   }, [connect]);
@@ -390,6 +420,10 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
   // sauf session morte (cache user purgé par l'intercepteur, rien à reprendre).
   useEffect(() => {
     if (user) {
+      // Chemin synchrone d'abord (login récent dans cet onglet) ; le boot
+      // cookie seul tombe sur l'async (échange /api/auth/token).
+      const connectedNow = connectSyncIfUsable();
+      if (connectedNow) return;
       void connectWithUsableToken().then((connected) => {
         if (connected || !localStorage.getItem('dnd-inv-user')) return;
         if (reconnectDelay.current < 10000) {
@@ -420,7 +454,7 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
         wsRef.current = null;
       }
     };
-  }, [user, connectWithUsableToken, updateStatus]);
+  }, [user, connectSyncIfUsable, connectWithUsableToken, updateStatus]);
 
   const subscribe = useCallback((handler: (event: SyncEvent) => void) => {
     handlersRef.current.add(handler);

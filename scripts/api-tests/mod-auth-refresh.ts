@@ -179,14 +179,33 @@ export async function run(base: string, _fx: Fixtures, srv: ServerHandle): Promi
   ) as any;
   ok(window?.ok1 === 1 && window?.ok2 === 1, 'expires_at ~ now + 30 jours');
 
-  // ---------- Réutilisation de A : 401 + family kill ----------
-  const reuse = await refresh(tokenA);
-  eq(reuse.status, 401, 'réutilisation du cookie consommé → 401');
+  // ---------- Réutilisation de A : grâce de course, puis family kill ----------
+  // Réutilisation IMMÉDIATE (course multi-onglets) : le jeton consommé depuis
+  // < 60 s obtient un SUCCESSEUR — les onglets convergent au lieu de
+  // s'entretuer. Personne ne perd sa session.
+  const raceReuse = await refresh(tokenA);
+  eq(raceReuse.status, 200, 'réutilisation < 60 s (course multi-onglets) → 200, pas de kill');
+  // R1 (register, active) + R2 (login, consommée) + R3 (successeur rotation)
+  // + R4 (successeur grâce) = 4 lignes : tout le monde cohabite.
+  eq(rowsFor(herveId).length, 4, 'course : personne ne perd sa session, 4 lignes cohabitent');
+  const activeAfterRace = rowsFor(herveId).filter((r: any) => r.revoked_at === null);
+  eq(activeAfterRace.length, 3, 'trois jetons actifs après la course (register + 2 successeurs)');
+  const raceData = raceReuse.data as any;
+  eq(raceData.user.username, 'rt-herve', 'le perdant de la course récupère un JWT valide');
+
+  // Réutilisation OBSOLÈTE (vol présumé) : on force un revoked_at périmé,
+  // la grâce est dépassée → 401 + family kill intégral.
+  srv.exec(
+    `UPDATE refresh_tokens SET revoked_at = datetime('now', '-10 minutes') WHERE user_id = ?`,
+    herveId,
+  );
+  const staleReuse = await refresh(tokenA);
+  eq(staleReuse.status, 401, 'réutilisation obsolète (> grâce) → 401');
   eq(rowsFor(herveId).length, 0, 'family kill : toutes les lignes de rt-herve supprimées');
-  const deadSuccessor = await refresh(rotRefresh?.value ?? '');
+  const deadSuccessor = await refresh(raceData.refreshToken ?? rotRefresh?.value ?? '');
   eq(deadSuccessor.status, 401, 'le successeur meurt avec la famille');
   // Le 401 efface les deux miettes du navigateur.
-  const clearedReuse = setCookies(reuse);
+  const clearedReuse = setCookies(staleReuse);
   for (const [name, path] of [
     ['ts_refresh', '/api/auth'],
     ['ts_access', '/api'],
@@ -274,10 +293,9 @@ export async function run(base: string, _fx: Fixtures, srv: ServerHandle): Promi
     1,
     "l'autre session de rt-ivo survit au logout",
   );
-  // Représenter le refresh token révoqué au logout → 401 + family kill (même
-  // règle que la réutilisation post-rotation : un jeton révoqué qui revient
-  // est un signal de vol). Le client légitime purge au logout, il ne le
-  // représente jamais — c'est le multi-onglet ou l'attaquant qui frappe ici.
+  // Représenter le refresh token révoqué au logout → PAS de grâce (le
+  // logout ne laisse jamais de successeur : un jeton logout-révoqué qui
+  // revient est un vol, même dans la seconde) → 401 + family kill.
   eq((await refresh(tokenI)).status, 401, 'le refresh token révoqué au logout → 401');
   eq(rowsFor(ivoId).length, 0, 'et la famille entière meurt avec lui');
   // Le cookie d'accès du logout reste un JWT VALIDE jusqu'à expiration
@@ -351,11 +369,21 @@ export async function run(base: string, _fx: Fixtures, srv: ServerHandle): Promi
     byCookieData.token,
     'le couple est RE-POSÉ ensemble (ts_access = JWT du corps)',
   );
-  // Réutilisation du cookie consommé (replay d'une capture volée) → 401 +
-  // family kill, et les miettes mortes sont effacées du navigateur.
+  // Réutilisation du cookie consommé (replay d'une capture volée) : la
+  // rotation vient d'avoir lieu (< 60 s, successeur présent) → grâce de
+  // course, SUCCESSEUR émis ; le replay obsolète, lui, tue la famille.
+  // On simule l'obsolète en vieillissant le revoked_at de la ligne.
+  const replayGrace = await api(base, 'POST', '/api/auth/refresh', {
+    headers: { cookie: `ts_refresh=${cookieA}` },
+  });
+  eq(replayGrace.status, 200, 'replay < 60 s → grâce de course (successeur)');
+  srv.exec(
+    `UPDATE refresh_tokens SET revoked_at = datetime('now', '-10 minutes') WHERE user_id = ?`,
+    martaId,
+  );
   const replay = await api(base, 'POST', '/api/auth/refresh', {
     headers: { cookie: `ts_refresh=${cookieA}` },
   });
-  eq(replay.status, 401, 'réutilisation du cookie consommé → 401');
+  eq(replay.status, 401, 'réutilisation du cookie consommé, obsolète → 401');
   eq(rowsFor(martaId).length, 0, 'family kill déclenché depuis le cookie');
 }

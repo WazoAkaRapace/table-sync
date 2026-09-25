@@ -175,11 +175,19 @@ export interface RotatedRefresh {
  * ligne présentée + poser la neuve, `rotated_from_id` chaîne la famille.
  *
  * Retourne null si le jeton est inconnu ou expiré. Si le jeton est
- * RÉVOQUÉ (déjà consommé par une rotation précédente — réutilisation
- * suspecte), toutes les lignes de l'utilisateur sont supprimées avant
- * l'échec : le vrai détenteur repasse par un login, l'attaquant perd
- * l'accès.
+ * RÉVOQUÉ (déjà consommé par une rotation précédente), deux cas :
+ *  • révoqué depuis MOINS de ROTATION_GRACE_SECONDS : course légitime
+ *    (deux onglets rechargeant la même page envoient le même cookie presque
+ *    simultanément — le perdant de la course ne doit PAS perdre sa session).
+ *    On émet un successeur dans la MÊME famille : la possession d'un jeton
+ *    récemment valide vaut possession d'un jeton valide (il l'était il y a
+ *    quelques secondes) — pas de perte de sécurité matérielle.
+ *  • révoqué depuis PLUS longtemps : réutilisation suspecte (vol) — toutes
+ *    les lignes de l'utilisateur sont supprimées (pattern Auth0) : le vrai
+ *    détenteur repasse par un login, l'attaquant perd l'accès.
  */
+export const ROTATION_GRACE_SECONDS = 60;
+
 export function rotateRefreshToken(drizzle: Drizzle, rawToken: string): RotatedRefresh | null {
   const tokenHash = sha256Hex(rawToken);
   const active = drizzle
@@ -219,13 +227,45 @@ export function rotateRefreshToken(drizzle: Drizzle, rawToken: string): RotatedR
     return { raw: successor, userId: active.userId };
   }
 
-  // Échec : inconnu/expiré (rien à faire) ou RÉVOQUÉ réutilisé → family kill.
+  // Échec : inconnu/expiré (rien à faire) ou RÉVOQUÉ réutilisé.
   const revoked = drizzle
-    .select({ userId: refreshTokens.userId })
+    .select()
     .from(refreshTokens)
     .where(and(eq(refreshTokens.tokenHash, tokenHash), isNotNull(refreshTokens.revokedAt)))
     .get() as any;
   if (revoked) {
+    // Course concurrente : révoqué il y a moins d'une minute ET un
+    // SUCCESSEUR existe (rotated_from_id pointe la ligne) → c'était une
+    // ROTATION, l'autre onglet/contexte vient de tourner ce jeton.
+    // Successeur dans la même famille, PAS de family kill — les onglets
+    // convergent au lieu de s'entretuer (le perdant de la course garde sa
+    // session). NB : le révoqué du LOGOUT n'a pas de successeur → jamais de
+    // grâce pour lui (sinon un cookie volé ressusciterait une session juste
+    // après que l'utilisateur s'est déconnecté — sémantique de logout
+    // sacrifiée pour un confort de course).
+    const successorRow = drizzle
+      .select({ id: refreshTokens.id })
+      .from(refreshTokens)
+      .where(eq(refreshTokens.rotatedFromId, revoked.id))
+      .get() as any;
+    const revokedRecently =
+      new Date(revoked.revokedAt.replace(' ', 'T') + 'Z').getTime() >=
+      Date.now() - ROTATION_GRACE_SECONDS * 1000;
+    if (successorRow && revokedRecently) {
+      const successor = newRawToken();
+      drizzle
+        .insert(refreshTokens)
+        .values({
+          userId: revoked.userId,
+          tokenHash: sha256Hex(successor),
+          expiresAt: tokenExpiry(),
+          rotatedFromId: revoked.id,
+          userAgent: revoked.userAgent,
+          ipAddress: revoked.ipAddress,
+        })
+        .run();
+      return { raw: successor, userId: revoked.userId };
+    }
     drizzle.delete(refreshTokens).where(eq(refreshTokens.userId, revoked.userId)).run();
     console.warn(
       `[auth] réutilisation d'un jeton de rafraîchissement révoqué — ` +
