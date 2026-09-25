@@ -7,7 +7,7 @@
  */
 import { expect } from 'playwright/test';
 import { API_BASE } from './env';
-import { gmTest, seed, sheetUrl } from './fixtures';
+import { addSessionCookies, gmTest, seed, sheetUrl } from './fixtures';
 
 const TOUR_TABS = JSON.stringify([
   'survival',
@@ -30,14 +30,14 @@ gmTest(
       viewport: { width: 390, height: 844 },
       locale: 'fr-FR',
     });
+    await addSessionCookies(playerCtx, seed().player);
     await playerCtx.addInitScript(
-      ({ token, user, tourTabs }) => {
-        localStorage.setItem('dnd-inv-token', token);
+      ({ user, tourTabs }) => {
         localStorage.setItem('dnd-inv-user', JSON.stringify(user));
         localStorage.setItem('dnd-inv-tour-seen', '1');
         localStorage.setItem('dnd-inv-tour-tabs', tourTabs);
       },
-      { token: seed().player.token, user: seed().player.user, tourTabs: TOUR_TABS },
+      { user: seed().player.user, tourTabs: TOUR_TABS },
     );
     const playerPage = await playerCtx.newPage();
     await playerPage.goto(sheetUrl(seed().guerrier.id));

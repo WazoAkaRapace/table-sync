@@ -10,6 +10,7 @@ import jwt from '@fastify/jwt';
 import multipart from '@fastify/multipart';
 import websocket from '@fastify/websocket';
 import Fastify from 'fastify';
+import { verifyAccess } from './auth/refresh.ts';
 import { backfillItemBases, backfillMonsterSearchText } from './db/backfill.ts';
 import { runDrizzleMigrations } from './db/drizzle.ts';
 import { migrate } from './db/index.ts';
@@ -88,7 +89,9 @@ async function buildServer() {
   await app.register(cors, CORS_ORIGINS.length > 0 ? { origin: CORS_ORIGINS } : { origin: true });
   await app.register(jwt, {
     secret: JWT_SECRET,
-    sign: { expiresIn: '7d' },
+    // 24 h (était 7 j) : fenêtre de vol réduite — le refresh cookie (30 j
+    // glissants) maintient la session, le JWT ne survit qu'une journée.
+    sign: { expiresIn: '24h' },
   });
   // Error-scoped rate limiting: only failed responses consume budget, so a
   // whole table sharing one IP (or one nginx proxy IP) is never blocked by
@@ -103,11 +106,10 @@ async function buildServer() {
   // Health check (public)
   app.get('/api/health', async () => ({ status: 'ok', time: new Date().toISOString() }));
 
-  // Auth decorator
+  // Auth decorator — header Authorization d'abord (scripts/tests), sinon le
+  // cookie HttpOnly ts_access (le chemin du navigateur). Cf. verifyAccess.
   app.decorate('authenticate', async (request: any, reply: any) => {
-    try {
-      await request.jwtVerify();
-    } catch {
+    if (!(await verifyAccess(request))) {
       reply.code(401).send({ error: 'unauthorized' });
     }
   });
@@ -115,7 +117,9 @@ async function buildServer() {
   // Global auth guard: require JWT on all /api routes EXCEPT public ones.
   // /ws and the item-image GET authenticate via query param token, so they're
   // excluded here (the image GET verifies its token itself; its PUT/DELETE
-  // siblings self-authenticate via their onRequest hook).
+  // siblings self-authenticate via their onRequest hook). GET /api/auth/token
+  // n'est PAS dans l'allowlist : elle est authentifiée par le cookie
+  // ts_access (c'est l'échange contrôlé JWT ↔ cookie pour WS/images).
   app.addHook('onRequest', async (request: any, reply: any) => {
     const url = request.url.split('?')[0];
     if (
@@ -133,9 +137,7 @@ async function buildServer() {
       return; // public routes
     }
     if (!url.startsWith('/api/')) return;
-    try {
-      await request.jwtVerify();
-    } catch {
+    if (!(await verifyAccess(request))) {
       reply.code(401).send({ error: 'unauthorized' });
     }
   });

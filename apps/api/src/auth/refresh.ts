@@ -1,6 +1,6 @@
 /**
  * Jetons de rafraîchissement — sessions de 30 jours à fenêtre glissante,
- * un row par appareil/session (`refresh_tokens`).
+ * un row par appareil/session (`refresh_tokens`) — et cookies de session.
  *
  * Le jeton brut ne vit QUE chez le client : la base ne connaît que son
  * SHA-256. Chaque /refresh consomme le jeton présenté (revokedAt) et en
@@ -11,6 +11,11 @@
  * Réutiliser un jeton déjà consommé = vol présumé : toute la famille de
  * jetons de l'utilisateur est supprimée (pattern Auth0 — le légitime
  * détenteur est toujours sur le SUCCESSEUR, jamais sur un jeton révoqué).
+ *
+ * Deux cookies HttpOnly portent la session du navigateur : `ts_refresh`
+ * (preuve de renouvellement, Path=/api/auth) et `ts_access` (le JWT lui-même,
+ * Path=/api). AUCUN matériau d'auth ne vit en localStorage — le JS n'obtient
+ * un JWT lisible que via GET /api/auth/token (WS + URLs d'images).
  */
 import { randomUUID } from 'node:crypto';
 import { and, eq, gt, isNotNull, isNull, lt, sql } from 'drizzle-orm';
@@ -29,6 +34,21 @@ export const REFRESH_TOKEN_TTL_DAYS = 30;
  * une session JWT en cours, plus installer une persistance de 30 jours.
  */
 export const REFRESH_COOKIE_NAME = 'ts_refresh';
+
+/**
+ * Cookie HttpOnly qui porte le JWT d'accès (bascule « plus rien en
+ * localStorage ») : le navigateur le pose sur TOUTES les routes /api —
+ * l'Authorization header n'est plus qu'un chemin pour les scripts et les
+ * suites de test, qui n'ont pas de cookie jar.
+ */
+export const ACCESS_COOKIE_NAME = 'ts_access';
+
+/**
+ * Durée de vie du JWT d'accès (24 h, alignée sur le maxAge du cookie qui le
+ * porte). Fenêtre de vol courte : le refresh cookie (30 j glissants) tient
+ * la session, le JWT lui ne survit qu'une journée hors ligne.
+ */
+export const ACCESS_TOKEN_TTL_HOURS = 24;
 
 /**
  * La requête est-elle arrivée en HTTPS ? X-Forwarded-Proto d'abord (posé par
@@ -63,6 +83,57 @@ export function refreshCookieOptions(req: FastifyRequest) {
     maxAge: REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60,
     secure: arrivedOverHttps(req),
   };
+}
+
+/**
+ * Options du cookie ts_access — même discipline de définition unique. Path=/api
+ * (PAS seulement /api/auth) : le JWT doit partir sur TOUTES les routes API,
+ * c'est lui qui authentifie le navigateur. CSRF : SameSite=Strict bloque
+ * l'envoi inter-site par le navigateur (même en navigation top-level) — les
+ * scripts CLI (Authorization header) ne sont pas soumis au CSRF, pas de jeton
+ * dédié à poser. Max-Age aligné sur le TTL du JWT (24 h).
+ */
+export function accessCookieOptions(req: FastifyRequest) {
+  return {
+    path: '/api',
+    httpOnly: true,
+    sameSite: 'strict' as const,
+    maxAge: ACCESS_TOKEN_TTL_HOURS * 60 * 60,
+    secure: arrivedOverHttps(req),
+  };
+}
+
+/**
+ * Authentifie la requête par JWT — la bascule cookie se joue ici :
+ * l'en-tête Authorization d'abord (scripts/tests sans cookie jar), et s'il
+ * échoue ou manque, le cookie HttpOnly ts_access. Un en-tête PÉRIMÉ ne tue
+ * pas la requête si le cookie est encore bon (onglet ouvert > 24 h rafraîchi
+ * entre-temps par un autre chemin). Positionne request.user dans les deux
+ * cas + la source sur request.tsAccessSource ('header' | 'cookie') — la
+ * route GET /api/auth/token s'en sert pour renvoyer le jeton vérifié.
+ */
+export async function verifyAccess(request: FastifyRequest): Promise<boolean> {
+  const header = request.headers.authorization;
+  if (typeof header === 'string' && header) {
+    try {
+      await request.jwtVerify(); // lit l'en-tête, positionne request.user
+      (request as any).tsAccessSource = 'header';
+      return true;
+    } catch {
+      /* en-tête périmé/forgé : le cookie a peut-être mieux vieilli */
+    }
+  }
+  const cookieToken = request.cookies?.[ACCESS_COOKIE_NAME];
+  if (cookieToken) {
+    try {
+      (request as any).user = (request.server as any).jwt.verify(cookieToken);
+      (request as any).tsAccessSource = 'cookie';
+      return true;
+    } catch {
+      /* expiré/invalidé */
+    }
+  }
+  return false;
 }
 
 type Drizzle = ReturnType<typeof getDrizzle>;

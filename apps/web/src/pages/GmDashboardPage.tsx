@@ -13,7 +13,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import api, { itemImageUrl } from '../api';
+import api, { itemImageUrl, useAccessJwt } from '../api';
 import { useAuth } from '../auth';
 import { GmaAssistantTab } from '../components/GmaAssistantTab';
 import {
@@ -933,6 +933,9 @@ function CustomItemsTab({
   const { t } = useTranslation();
   const [customItems, setCustomItems] = useState<any[]>([]);
   const [loadingItems, setLoadingItems] = useState(true);
+  // Les mini-châssis et la visionneuse d'illustrations chargent le JWT en
+  // clair (?token=) : mémoire d'abord, échange contre le cookie si vide.
+  const accessJwt = useAccessJwt();
   // Bascule « les joueurs peuvent créer » : la valeur FAIT FOI via la prop
   // (le PATCH émet party:change → le parent recharge → la prop rattrape) ;
   // l'override local garde l'état optimiste entre le PATCH et ce rattrapage.
@@ -1159,7 +1162,7 @@ function CustomItemsTab({
                   })}
                 >
                   <img
-                    src={itemImageUrl(item.id, item.imageRev)}
+                    src={itemImageUrl(item.id, item.imageRev, accessJwt)}
                     alt=""
                     loading="lazy"
                     className="h-10 w-10 object-cover"
@@ -1309,7 +1312,7 @@ function CustomItemsTab({
       {viewingImage && (
         <ItemImageViewer
           name={viewingImage.name}
-          src={itemImageUrl(viewingImage.id, viewingImage.rev ?? undefined)}
+          src={itemImageUrl(viewingImage.id, viewingImage.rev ?? undefined, accessJwt)}
           onClose={() => setViewingImage(null)}
         />
       )}
