@@ -38,7 +38,7 @@ const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
 const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage'));
 
 function SyncIndicator() {
-  const { status } = useSync();
+  const { status, retryAt } = useSync();
   const { t } = useTranslation();
   const labels = {
     connected: t('app.sync.connected'),
@@ -50,6 +50,18 @@ function SyncIndicator() {
     connecting: 'bg-gold-400',
     disconnected: 'bg-red-400',
   };
+
+  // Compteur du délai restant : tick par seconde UNIQUEMENT hors ligne avec
+  // une reprise planifiée (jamais de timer en régime connecté).
+  const [now, setNow] = useState(() => Date.now());
+  const counting = status === 'disconnected' && retryAt !== null;
+  useEffect(() => {
+    if (!counting) return;
+    setNow(Date.now());
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [counting]);
+  const secondsLeft = counting ? Math.max(0, Math.ceil((retryAt - now) / 1000)) : null;
 
   // Dot for the happy path; text appears whenever the table would care
   // (connecting/disconnected) so the state is never color-only.
@@ -68,6 +80,12 @@ function SyncIndicator() {
       {status !== 'connected' && (
         <span className={status === 'disconnected' ? 'text-red-400 font-medium' : ''}>
           {labels[status]}
+          {secondsLeft !== null && (
+            <span className="text-night-100/70 font-normal">
+              {' '}
+              ({t('app.sync.retry', { seconds: secondsLeft })})
+            </span>
+          )}
         </span>
       )}
     </span>

@@ -3,7 +3,8 @@
     "sync": {
       "connected": "Synchronisé",
       "connecting": "Connexion…",
-      "disconnected": "Hors ligne"
+      "disconnected": "Hors ligne",
+      "retry": "nouvelle tentative dans {{seconds}} s"
     },
     "home": "Accueil",
     "logout": "Déconnexion",
