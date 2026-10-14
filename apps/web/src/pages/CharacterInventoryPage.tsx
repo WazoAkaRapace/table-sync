@@ -696,21 +696,32 @@ export default function CharacterInventoryPage() {
     }
   };
 
-  const moveEntryToLocation = async (entry: InventoryEntry, locationId: number) => {
+  const moveEntryToLocation = async (entry: InventoryEntry, locationId: number, qty: number) => {
     await withBusy(entry.id, async () => {
       try {
         const res = await patchEntryMutation.mutateAsync({
           id: entry.id,
-          patch: { storageLocationId: locationId },
+          patch: {
+            storageLocationId: locationId,
+            // Tout l'entrée déménage ? Le patch nu suffit (comportement
+            // historique). Partie seulement : moveQuantity dit combien part.
+            ...(qty < entry.quantity ? { moveQuantity: qty } : {}),
+          },
         });
         applyEntryChange({ entry: res.data.entry });
         flashEntry(entry.id);
         const target = data?.locations.find((l) => l.id === locationId);
         pushToast(
-          t('inv.deplace.vers', {
-            name: entry.item.name,
-            target: target?.name ?? t('inv.l.emplacement'),
-          }),
+          qty < entry.quantity
+            ? t('inv.deplace.partiel', {
+                qty,
+                name: entry.item.name,
+                target: target?.name ?? t('inv.l.emplacement'),
+              })
+            : t('inv.deplace.vers', {
+                name: entry.item.name,
+                target: target?.name ?? t('inv.l.emplacement'),
+              }),
         );
       } catch (err) {
         pushToast(apiError(err, t('inv.erreur.lors.du.deplacement')), 'error');

@@ -5029,6 +5029,10 @@ export interface PatchInventoryPayload {
   equipped?: boolean;
   notes?: string | null;
   storageLocationId?: number | null;
+  /** Quand storageLocationId change : nombre d'unités à DÉPLACER (1..quantity).
+   *  Absent = tout l'entrée déménage (comportement historique). Le reste
+   *  reste à l'emplacement d'origine — la ligne source survit si > 0. */
+  moveQuantity?: number;
 }
 
 export interface CreateStorageLocationPayload {

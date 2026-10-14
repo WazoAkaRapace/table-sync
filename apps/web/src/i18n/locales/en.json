@@ -148,7 +148,6 @@
   "band.soigner.de.1": "Heal 1",
   "band.soigner.de.5": "Heal 5",
   "conds.annuler": "Cancel",
-
   "conds.appliquer": "Apply",
   "conds.duree.en.tours.vide.jusqu.a": "Duration in rounds (empty = until dispelled)",
   "skills.ajouter": "Add",
@@ -2135,5 +2134,9 @@
   "tuto.calendar.semaine.titre": "The table's clock",
   "tuto.calendar.semaine.texte": "Seven days per page, the current day lined in gold. Expand a day: the table journal is written together, and “My note” stays private to this character.",
   "tuto.calendar.avancer.titre": "Time moves",
-  "tuto.calendar.avancer.texte": "“Next day” advances the clock for the whole table — the day ends, its journal freezes, the next one starts clear."
+  "tuto.calendar.avancer.texte": "“Next day” advances the clock for the whole table — the day ends, its journal freezes, the next one starts clear.",
+  "rangee.deplacer.quantite.max": "Quantity to move (max {{maxQty}})",
+  "rangee.deplacer.confirmer": "Move",
+  "rangee.deplacer.quantite.aria": "Quantity to move for {{itemName}}",
+  "inv.deplace.partiel": "{{qty}} × {{name}} moved to {{target}}"
 }
