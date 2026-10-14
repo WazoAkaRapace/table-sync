@@ -44,13 +44,6 @@ export const CHARACTER_TABS: {
 }[] = [
   { key: 'survival', label: 'onglet.survie', icon: '🩸', primary: true, short: 'onglet.survie' },
   {
-    key: 'calendar',
-    label: 'onglet.calendrier',
-    icon: '📅',
-    primary: true,
-    short: 'onglet.cal',
-  },
-  {
     key: 'stats',
     label: 'onglet.caracteristiques',
     icon: '⚔️',
@@ -64,6 +57,7 @@ export const CHARACTER_TABS: {
   { key: 'description', label: 'onglet.description', icon: '👤', primary: false },
   { key: 'npcs', label: 'onglet.pnj', icon: '🎭', primary: false },
   { key: 'notes', label: 'onglet.notes', icon: '📝', primary: false },
+  { key: 'calendar', label: 'onglet.calendrier', icon: '📅', primary: true, short: 'onglet.cal' },
   { key: 'messages', label: 'onglet.messages', icon: '✉️', primary: false },
 ];
 

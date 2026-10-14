@@ -71,13 +71,22 @@ const HEARTBEAT_MAX_MISSES = 2;
 
 interface SyncState {
   status: ConnectionStatus;
+  /** Horodatage (ms epoch) de la prochaine tentative de reconnexion planifiée,
+   *  null quand rien n'est planifié (connecté, en connexion, ou hors session).
+   *  L'indicateur d'en-tête affiche le délai restant pendant « Hors ligne ». */
+  retryAt: number | null;
   /** Register a handler for sync events. Returns an unsubscribe function. */
   subscribe: (handler: (event: SyncEvent) => void) => () => void;
   /** Track local mutations for same-tab dedup. Call right before/after a mutation. */
   markLocalMutation: () => void;
 }
 
-const SyncContext = createContext<SyncState>(null!);
+const SyncContext = createContext<SyncState>({
+  status: 'disconnected',
+  retryAt: null,
+  subscribe: () => () => {},
+  markLocalMutation: () => {},
+});
 
 // ---------- Helpers ----------
 
@@ -123,6 +132,19 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
   const reconnectDelay = useRef(1000);
   const handlersRef = useRef<Set<(event: SyncEvent) => void>>(new Set());
 
+  // Prochaine tentative planifiée (ms epoch) — publié aux consommateurs pour
+  // l'affichage du délai restant. L'écriture d'état est conditionnée : un
+  // timer par seconde de reconnect n'existe pas ici, seuls les TRANSFERTS
+  // (planification, reprise, connexion) re-rendent.
+  const [retryAt, setRetryAtState] = useState<number | null>(null);
+  const retryAtRef = useRef<number | null>(null);
+
+  const setRetryAt = useCallback((at: number | null) => {
+    if (retryAtRef.current === at) return;
+    retryAtRef.current = at;
+    setRetryAtState(at);
+  }, []);
+
   // Heartbeat : dernière trame entrante vue par le JS (événements, 'pong',
   // 'connected' — les pings protocole du serveur sont invisibles à la page),
   // état de la sonde en vol, et drapeau « le serveur répond aux sondes ».
@@ -130,6 +152,11 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
   const heartbeatMisses = useRef(0);
   const pongDeadline = useRef<number | null>(null);
   const serverHeartbeat = useRef(false);
+
+  // Dernier jeton mémoire REFUSÉ par le serveur WS (close 4001) : la mémoire
+  // reste en place (elle sert d'en-tête HTTP), mais la prochaine reconnexion
+  // DOIT échanger un jeton neuf au lieu de re-présenter le refusé.
+  const wsTokenRejected = useRef(false);
 
   // Debounce: coalesce rapid sync events into a bounded number of handler
   // dispatches. Events of the same kind (type + character + party) collapse
@@ -167,6 +194,8 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
       }
 
       updateStatus('connecting');
+      // Une tentative est EN COURS : plus de reprise planifiée à afficher.
+      setRetryAt(null);
       // L'accusé 'connected' de CE socket dira si le serveur répond aux
       // sondes ; d'ici là, on ne sonde pas (vieux serveur = comportement d'avant).
       serverHeartbeat.current = false;
@@ -196,6 +225,10 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
         updateStatus('connected');
         reconnectDelay.current = 1000; // reset backoff
         lastInboundAt.current = Date.now();
+        // Le jeton présenté est ACCEPTÉ : le drapeau de rejet (4001) ne
+        // s'applique plus — les reconnexions suivantes pourront reprendre
+        // la mémoire sans échange systématique.
+        wsTokenRejected.current = false;
       };
 
       ws.onmessage = (e) => {
@@ -243,8 +276,27 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
         } catch {}
       };
 
-      ws.onclose = () => {
+      ws.onclose = (event: CloseEvent) => {
         if (!isCurrent()) return; // remplacé avant fermeture : sa mort ne déclenche rien
+        // REFUS SERVEUR du jeton (poignée de main WS, ws.ts close(4001)) : le
+        // JWT mémoire a l'air vivant localement (son `exp` n'est pas passé)
+        // mais le serveur vient de le refuser — signature invalidée, secret
+        // tourné, horloge décalée. Si la boucle le re-présente tel quel,
+        // elle le re-présentera indéfiniment : « Synchronisé » ne revient
+        // jamais, même à la déconnexion/reconnexion manuelle (seul un reload
+        // vidait la mémoire — rapport tablette 2026-10). On marque le jeton
+        // REJETÉ : la reconnexion suivante force l'échange GET /api/auth/token
+        // (le jeton neuf est servi sur preuve du cookie), qui cascade dans
+        // l'intercepteur 401 → refresh → nouveaux cookies si la session a
+        // aussi vieilli, ou purge → /login si elle est morte pour de bon.
+        // NB : on NE VIDE PAS la mémoire — ce JWT sert aussi d'en-tête HTTP,
+        // où le serveur retombe seul sur le cookie s'il est périmé. Vider
+        // ferait partir les requêtes de la page sans en-tête par simple
+        // coïncidence temporelle avec le rejet WS (leçon CI : le test
+        // password-reset perds son Authorization en course avec le 4001).
+        if (event.code === 4001) {
+          wsTokenRejected.current = true;
+        }
         updateStatus('disconnected');
         wsRef.current = null;
         // Auto-reconnect with exponential backoff (1s → 2s → 4s → ... → 10s max)
@@ -253,19 +305,18 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
         if (reconnectDelay.current < 10000) {
           reconnectDelay.current = Math.min(reconnectDelay.current * 2, 10000);
         }
-        reconnectTimeout.current = setTimeout(
-          () => {
-            reconnectRef.current();
-          },
-          reconnectDelay.current * (0.5 + Math.random()),
-        );
+        const delay = reconnectDelay.current * (0.5 + Math.random());
+        setRetryAt(Date.now() + delay);
+        reconnectTimeout.current = setTimeout(() => {
+          reconnectRef.current();
+        }, delay);
       };
 
       ws.onerror = () => {
         // onclose will handle reconnect
       };
     },
-    [dispatchToHandlers, updateStatus],
+    [dispatchToHandlers, updateStatus, setRetryAt],
   );
 
   // (Re)connexion avec un jeton UTILISABLE : la poignée de main WS exige un
@@ -281,7 +332,9 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
   const connectWithUsableToken = useCallback(async (): Promise<boolean> => {
     let token = getAccessToken();
     const exp = token ? jwtExpiresAtMs(token) : null;
-    if (!token || (exp !== null && exp <= Date.now() + 30_000)) {
+    // Jeton refusé par le serveur WS (4001) : on ne le re-présente PAS —
+    // échange forcé, même si son `exp` local paraît bon (le serveur a voté).
+    if (!token || wsTokenRejected.current || (exp !== null && exp <= Date.now() + 30_000)) {
       const fresh = await fetchAccessToken(true);
       if (!fresh) return false;
       token = fresh;
@@ -327,13 +380,12 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
     }
     updateStatus('disconnected');
     reconnectDelay.current = 1000;
-    reconnectTimeout.current = setTimeout(
-      () => {
-        reconnectRef.current();
-      },
-      1000 * (0.5 + Math.random()),
-    );
-  }, [updateStatus]);
+    const delay = 1000 * (0.5 + Math.random());
+    setRetryAt(Date.now() + delay);
+    reconnectTimeout.current = setTimeout(() => {
+      reconnectRef.current();
+    }, delay);
+  }, [updateStatus, setRetryAt]);
 
   const sendProbe = useCallback(() => {
     const ws = wsRef.current;
@@ -399,6 +451,9 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
           reconnectTimeout.current = null;
         }
         reconnectDelay.current = 1000;
+        // Reprise immédiate au premier plan : la reprise planifiée s'efface
+        // (reconnectRef → connect() publiera l'état suivant).
+        setRetryAt(null);
         if (user) reconnectRef.current();
       } else if (
         serverHeartbeat.current &&
@@ -410,7 +465,7 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
     };
     document.addEventListener('visibilitychange', onVisible);
     return () => document.removeEventListener('visibilitychange', onVisible);
-  }, [user, sendProbe]);
+  }, [user, sendProbe, setRetryAt]);
 
   // Connect on login, disconnect on logout. Le montage passe aussi par le
   // helper : une session bootée avec un cookie ts_access valide échange
@@ -429,12 +484,11 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
         if (reconnectDelay.current < 10000) {
           reconnectDelay.current = Math.min(reconnectDelay.current * 2, 10000);
         }
-        reconnectTimeout.current = setTimeout(
-          () => {
-            reconnectRef.current();
-          },
-          reconnectDelay.current * (0.5 + Math.random()),
-        );
+        const delay = reconnectDelay.current * (0.5 + Math.random());
+        setRetryAt(Date.now() + delay);
+        reconnectTimeout.current = setTimeout(() => {
+          reconnectRef.current();
+        }, delay);
       });
     } else {
       if (wsRef.current) {
@@ -443,6 +497,7 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
         wsRef.current = null;
       }
       updateStatus('disconnected');
+      setRetryAt(null);
     }
 
     return () => {
@@ -453,8 +508,9 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
         wsRef.current.close();
         wsRef.current = null;
       }
+      setRetryAt(null);
     };
-  }, [user, connectSyncIfUsable, connectWithUsableToken, updateStatus]);
+  }, [user, connectSyncIfUsable, connectWithUsableToken, updateStatus, setRetryAt]);
 
   const subscribe = useCallback((handler: (event: SyncEvent) => void) => {
     handlersRef.current.add(handler);
@@ -471,8 +527,8 @@ export function SyncProvider({ user, children }: { user: User | null; children: 
   // provider — chaque flap de connexion re-renderait TOUS les consommateurs
   // (SyncopeIndicator, CombatWidget, fiche, tracker…).
   const contextValue = useMemo(
-    () => ({ status, subscribe, markLocalMutation }),
-    [status, subscribe, markLocalMutation],
+    () => ({ status, retryAt, subscribe, markLocalMutation }),
+    [status, retryAt, subscribe, markLocalMutation],
   );
 
   return <SyncContext.Provider value={contextValue}>{children}</SyncContext.Provider>;
