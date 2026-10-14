@@ -79,6 +79,29 @@ playerTest.describe('Sorts (clerc)', () => {
       ).toBeVisible();
     },
   );
+
+  playerTest(
+    'le filtre « Préparés » est sélectionné d’arrivée sur l’onglet (#187)',
+    async ({ page }) => {
+      // Combat : la liste « prête à lancer » doit s'afficher d'emblée. Mira a
+      // 3 sorts préparés → le chip Préparés est armé (aria-pressed), les non-
+      // préparés (Armure de mage) sont cachés, les tours/domaine restent.
+      const prepChip = page.getByRole('button', { name: /Préparés 3 \/ 9/ });
+      await expect(prepChip).toHaveAttribute('aria-pressed', 'true');
+      await expect(page.getByRole('button', { name: 'Tous' })).toHaveAttribute(
+        'aria-pressed',
+        'false',
+      );
+      await expect(page.getByText('Mot de guérison').first()).toBeVisible();
+      await expect(page.getByRole('button', { name: /Armure de mage/ })).toHaveCount(0);
+
+      // Retour manuel à « Tous » : respecté — les refetchs silencieux (WS,
+      // rattrapage de reconnexion) ne doivent pas réarmer le défaut.
+      await page.getByRole('button', { name: 'Tous' }).click();
+      await expect(page.getByRole('button', { name: /Armure de mage/ }).first()).toBeVisible();
+      await expect(prepChip).toHaveAttribute('aria-pressed', 'false');
+    },
+  );
 });
 
 playerTest.describe('Sorts — upcast (#171)', () => {

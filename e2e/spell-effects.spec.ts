@@ -36,6 +36,9 @@ async function patchCharacter(charId: number, body: Record<string, unknown>) {
 
 /** Ouvre la feuille d'incantation d'un sort connu et la confirme. */
 async function openCastSheet(page: import('playwright/test').Page, spellName: string) {
+  // #187 : l'onglet Sorts démarre sur « Préparés » — un sort non préparé
+  // (Armure de mage) est masqué ; rebasculer sur « Tous » pour le voir.
+  await page.getByRole('button', { name: 'Tous', exact: true }).click();
   await page.getByRole('button', { name: `Lancer ${spellName}` }).click();
   const sheet = page.getByRole('dialog', { name: `Lancer ${spellName}` });
   await expect(sheet).toBeVisible();
