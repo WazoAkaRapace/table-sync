@@ -285,12 +285,25 @@ export async function campaignRoutes(app: FastifyInstance) {
       const state = ensureCampaignState(drizzle, partyId);
       const newDay = Math.min(state.day + steps, MAX_DAY);
       // Le jour qui s'achève est figé avec sa météo et son journal ; le
-      // nouveau jour démarre clair.
+      // nouveau jour démarre clair — SAUF s'il avait été pré-écrit en avance
+      // (#191) : sa ligne au registre nourrit alors l'horloge (météo + note
+      // MD), sinon l'avance la masquait à la zone MD du jour courant puis
+      // l'upsert d'archivage l'écrasait avec une horloge vide.
       getDb().transaction(() => {
         archiveCurrentDay(drizzle, partyId, state);
+        const prewritten = drizzle
+          .select(cols(campaignDays))
+          .from(campaignDays)
+          .where(and(eq(campaignDays.partyId, partyId), eq(campaignDays.day, newDay)))
+          .get() as any;
         drizzle
           .update(campaignState)
-          .set({ day: newDay, weather: null, note: null, updatedAt: sql`datetime('now')` })
+          .set({
+            day: newDay,
+            weather: prewritten?.weather ?? null,
+            note: prewritten?.note ?? null,
+            updatedAt: sql`datetime('now')`,
+          })
           .where(eq(campaignState.partyId, partyId))
           .run();
       })();
