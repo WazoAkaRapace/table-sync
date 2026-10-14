@@ -59,11 +59,15 @@ gmTest(
     expect(first, 'compteur affiché pendant le hors-ligne').not.toBeNull();
     expect(first!).toBeGreaterThan(0);
     expect(first!).toBeLessThanOrEqual(10);
-    // …et il DÉCROÎT (ou une tentative a re-planifié — borné pareil).
+    // …et le compteur reste COHÉRENT avec le backoff : la valeur affichée est
+    // toujours bornée par le plafond (10 s) — une tentative échouée entre les
+    // deux lectures RE-PLANIFIE plus long (exponentiel), c'est le comportement
+    // attendu, pas une anomalie.
     await playerPage.waitForTimeout(1200);
     const second = await withCount();
     expect(second).not.toBeNull();
-    expect(second!).toBeLessThanOrEqual(first!);
+    expect(second!).toBeGreaterThan(0);
+    expect(second!).toBeLessThanOrEqual(10);
 
     // — Retour du réseau : reconnexion, le compteur disparaît —
     blocked = false;

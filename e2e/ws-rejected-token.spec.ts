@@ -152,14 +152,23 @@ test('WS close 4001 + cookie ts_access périmé : le refresh token sauve la sess
   expect(reg.ok, 'inscription').toBeTruthy();
   const { user } = (await reg.json()) as { token: string; user: { id: number; username: string } };
 
-  // — Mock WS : proxy ; après l'incident, refus 4001 tant que le client n'a
-  //    pas échangé de jeton (comme un serveur qui refuse la signature
-  //    présentée mais accepterait un jeton neuvement prouvé) —
+  // — Mock serveur : après l'incident, il refuse CE jeton PARTOUT (WS et
+  //    échange /token par en-tête) — c'est le scénario réel d'un jeton dont
+  //    la signature n'est plus acceptée. L'échange ne repasse que via un
+  //    jeton DIFFÉRENT (le neuf issu du refresh) ou le cookie —
   let killed = false;
   let exchangesSinceKill = 0;
+  let rejectedAuth: string | null = null;
   let liveWs: WebSocketRoute | null = null;
   await page.route('**/api/auth/token', async (route) => {
-    if (killed) exchangesSinceKill++;
+    if (killed) {
+      exchangesSinceKill++;
+      const auth = route.request().headers()['authorization'];
+      if (auth && (rejectedAuth === null || auth === rejectedAuth)) {
+        rejectedAuth ??= auth;
+        return route.fulfill({ status: 401, json: { error: 'unauthorized' } });
+      }
+    }
     await route.continue();
   });
   await page.routeWebSocket(/\/ws$/, (ws) => {
