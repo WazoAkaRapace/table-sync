@@ -23,7 +23,7 @@ interface CategoryGroupProps {
   onConfirmDelete: (entry: InventoryEntry) => void;
   onCancelDelete: (id: number) => void;
   onTransfer: (entry: InventoryEntry) => void;
-  onMoveLocation: (entry: InventoryEntry, locationId: number) => void;
+  onMoveLocation: (entry: InventoryEntry, locationId: number, qty: number) => void;
 }
 
 export function CategoryGroup({
@@ -97,7 +97,7 @@ export function CategoryGroup({
                 onConfirmDelete={() => onConfirmDelete(entry)}
                 onCancelDelete={() => onCancelDelete(entry.id)}
                 onTransfer={() => onTransfer(entry)}
-                onMoveLocation={(locId) => onMoveLocation(entry, locId)}
+                onMoveLocation={(locId, qty) => onMoveLocation(entry, locId, qty)}
               />
             ))}
           </ul>

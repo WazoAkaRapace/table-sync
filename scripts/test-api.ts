@@ -34,6 +34,7 @@ import { run as itemAnnotations } from './api-tests/mod-item-annotations.ts';
 import { run as itemImages } from './api-tests/mod-item-images.ts';
 import { run as items } from './api-tests/mod-items.ts';
 import { run as messages } from './api-tests/mod-messages.ts';
+import { run as moveMerge } from './api-tests/mod-move-merge.ts';
 import { run as multiclass } from './api-tests/mod-multiclass.ts';
 import { run as npcsMonsters } from './api-tests/mod-npcs-monsters.ts';
 import { run as push } from './api-tests/mod-push.ts';
@@ -52,6 +53,7 @@ const MODULES: Array<{
   { name: 'characters', run: characters },
   { name: 'items', run: items },
   { name: 'inventory + locations', run: inventory },
+  { name: 'déplacement + fusion (bug 2026-10)', run: moveMerge },
   { name: 'transfert de bourse (#160)', run: coinTransfer },
   { name: 'item images', run: itemImages },
   { name: 'item annotations', run: itemAnnotations },

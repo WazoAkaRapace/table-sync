@@ -400,6 +400,89 @@ export async function inventoryRoutes(app: FastifyInstance) {
           .send({ error: apiMsg(req, 'only the owner or GM can edit this inventory') });
 
       const body = req.body || {};
+
+      // — Déplacement d'emplacement : chemin DÉDIÉ (fusion à l'arrivée,
+      //    quantité déplaçable). Un PATCH storageLocationId sur un UPDATE
+      //    brut explosait la contrainte UNIQUE (character_id, item_id,
+      //    storage_location_id) quand la destination tenait déjà le même
+      //    objet — 500 en plein jeu (rapport joueurs 2026-10). Ici : la
+      //    destination SOMME ses quantités (même dialecte que l'ajout POST,
+      //    onConflictDoUpdate), la ligne source garde le reste ou disparaît.
+      if (
+        body.storageLocationId !== undefined &&
+        body.storageLocationId !== null &&
+        body.storageLocationId !== inv.storage_location_id
+      ) {
+        const targetLocId = body.storageLocationId;
+        // L'emplacement doit appartenir au MÊME personnage (ou être null
+        // interdit ici : le move explicite vise un conteneur/emplacement).
+        const targetLoc = drizzle
+          .select(cols(storageLocations))
+          .from(storageLocations)
+          .where(eq(storageLocations.id, targetLocId))
+          .get() as any;
+        if (!targetLoc || targetLoc.character_id !== inv.character_id) {
+          return reply.code(400).send({ error: apiMsg(req, 'invalid storage location') });
+        }
+        const moveQty = Math.max(1, Math.min(body.moveQuantity ?? inv.quantity, inv.quantity));
+        getDb().transaction(() => {
+          // Destination : somme (upsert, même dialecte que POST /inventory).
+          drizzle
+            .insert(inventory)
+            .values({
+              characterId: inv.character_id,
+              itemId: inv.item_id,
+              quantity: moveQty,
+              equipped: inv.equipped, // l'état équipé voyage avec les unités
+              notes: inv.notes,
+              storageLocationId: targetLocId,
+            })
+            .onConflictDoUpdate({
+              target: [inventory.characterId, inventory.itemId, inventory.storageLocationId],
+              set: {
+                quantity: sql`${inventory.quantity} + excluded.quantity`,
+                equipped: sql`${inventory.equipped} | excluded.equipped`,
+                notes: sql`coalesce(excluded.notes, ${inventory.notes})`,
+              },
+            })
+            .run();
+          // Source : garde le reste, ou disparaît si tout est parti.
+          const remaining = inv.quantity - moveQty;
+          if (remaining > 0) {
+            drizzle
+              .update(inventory)
+              .set({ quantity: remaining, equipped: 0 })
+              .where(eq(inventory.id, inv.id))
+              .run();
+          } else {
+            drizzle.delete(inventory).where(eq(inventory.id, inv.id)).run();
+          }
+        })();
+        // Un équipement qui déménage peut changer la CA effective du port
+        // (bouclier vers un sac) — le traqueur suit (no-op sinon).
+        mirrorAcToCombatants(char.id, userId);
+        bus.emitChange({
+          type: 'inventory:change',
+          partyId: char.party_id,
+          characterId: char.id,
+          action: 'adjust',
+          actorUserId: userId,
+        });
+        const movedRow = drizzle
+          .select(INVENTORY_WITH_ITEM)
+          .from(inventory)
+          .innerJoin(items, eq(items.id, inventory.itemId))
+          .where(
+            and(
+              eq(inventory.characterId, inv.character_id),
+              eq(inventory.itemId, inv.item_id),
+              eq(inventory.storageLocationId, targetLocId),
+            ),
+          )
+          .get();
+        return reply.send({ entry: mapInventoryEntry(movedRow, langFromReq(req)) });
+      }
+
       const values: Record<string, unknown> = {};
       const oldQty = inv.quantity;
       if (body.quantity !== undefined) {

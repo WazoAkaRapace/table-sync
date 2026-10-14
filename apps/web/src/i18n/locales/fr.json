@@ -148,7 +148,6 @@
   "band.soigner.de.1": "Soigner de 1",
   "band.soigner.de.5": "Soigner de 5",
   "conds.annuler": "Annuler",
-
   "conds.appliquer": "Appliquer",
   "conds.duree.en.tours.vide.jusqu.a": "Durée en tours (vide = jusqu'à dissipation)",
   "skills.ajouter": "Ajouter",
@@ -2134,5 +2133,9 @@
   "tuto.calendar.semaine.titre": "L'horloge de la table",
   "tuto.calendar.semaine.texte": "Sept jours par page, le jour courant souligné d'or. Déplie un jour : le journal de table s'écrit à plusieurs, et « Ma note » reste privée à ce personnage.",
   "tuto.calendar.avancer.titre": "Le temps avance",
-  "tuto.calendar.avancer.texte": "« Jour suivant » fait avancer l'horloge pour toute la table — le jour s'achève, son journal se fige, le suivant démarre clair."
+  "tuto.calendar.avancer.texte": "« Jour suivant » fait avancer l'horloge pour toute la table — le jour s'achève, son journal se fige, le suivant démarre clair.",
+  "rangee.deplacer.quantite.max": "Quantité à déplacer (max {{maxQty}})",
+  "rangee.deplacer.confirmer": "Déplacer",
+  "rangee.deplacer.quantite.aria": "Quantité à déplacer pour {{itemName}}",
+  "inv.deplace.partiel": "{{qty}} × {{name}} déplacé·s vers {{target}}"
 }

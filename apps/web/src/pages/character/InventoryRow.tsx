@@ -9,7 +9,7 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ItemVignette } from '../../components/ItemImageViewer';
-import { Chip, RarityBadge, StepButton, WeightBadge } from '../../components/ui';
+import { Chip, NumberField, RarityBadge, StepButton, WeightBadge } from '../../components/ui';
 import {
   abilityShort,
   damageType,
@@ -38,7 +38,7 @@ interface InventoryRowProps {
   onConfirmDelete: () => void;
   onCancelDelete: () => void;
   onTransfer: () => void;
-  onMoveLocation: (locationId: number) => void;
+  onMoveLocation: (locationId: number, quantity: number) => void;
 }
 
 export function InventoryRow({
@@ -101,6 +101,19 @@ export function InventoryRow({
   useEffect(() => {
     setDraftQty(String(quantity));
   }, [quantity]);
+
+  // Déplacement partiel : la destination choisie attend sa quantité. Quantité
+  // unique → départ direct (comportement historique, pas d'étape de plus).
+  const [pendingMove, setPendingMove] = useState<number | null>(null);
+  const [moveQty, setMoveQty] = useState(1);
+  const requestMove = (locationId: number) => {
+    if (quantity <= 1) {
+      onMoveLocation(locationId, 1);
+      return;
+    }
+    setPendingMove(locationId);
+    setMoveQty(quantity);
+  };
 
   const commitDraft = () => {
     const parsed = Number(draftQty);
@@ -473,7 +486,7 @@ export function InventoryRow({
                           disabled={busy}
                           onChange={(e) => {
                             const val = e.target.value;
-                            if (val !== '') onMoveLocation(Number(val));
+                            if (val !== '') requestMove(Number(val));
                             // Reset so the same target can be re-selected later
                             e.target.value = '';
                           }}
@@ -491,6 +504,49 @@ export function InventoryRow({
                           ))}
                         </select>
                       </label>
+                    )}
+                    {/* Quantité à déplacer : la destination est choisie, on
+                        demande COMBIEN part (défaut : tout). Une seule unité
+                        ne passe jamais ici (départ direct au select). */}
+                    {pendingMove !== null && (
+                      <div
+                        className="flex flex-wrap items-end gap-2 pt-1 rounded-lg bg-parchment-100 p-2"
+                        role="group"
+                        aria-label={t('rangee.deplacer.quantite.aria', { itemName: itemName })}
+                      >
+                        <div className="flex-1 min-w-24">
+                          <label className="label text-xs" htmlFor={`move-qty-${entry.id}`}>
+                            {t('rangee.deplacer.quantite.max', { maxQty: quantity })}
+                          </label>
+                          <NumberField
+                            id={`move-qty-${entry.id}`}
+                            min={1}
+                            max={quantity}
+                            className="input py-1 text-sm"
+                            value={moveQty}
+                            onChange={(n) => setMoveQty(n)}
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => {
+                            const target = pendingMove;
+                            setPendingMove(null);
+                            onMoveLocation(target, Math.max(1, Math.min(moveQty, quantity)));
+                          }}
+                          className="btn-primary min-h-11 px-4 text-sm"
+                        >
+                          {t('rangee.deplacer.confirmer')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPendingMove(null)}
+                          className="btn-secondary min-h-11 px-4 text-sm"
+                        >
+                          {t('common.cancel')}
+                        </button>
+                      </div>
                     )}
                     {/* Secondary action: remove (destructive, stays in expanded panel) */}
                     {canEdit && (
