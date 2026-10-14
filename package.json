@@ -53,7 +53,7 @@
     "esbuild@0.21.5": true
   },
   "dependencies": {
-    "vite": "^8.3.2"
+    "vite": "^8.3.4"
   },
   "overrides": {
     "react": "^19.2.8",
