@@ -1,6 +1,7 @@
 import type {
   CharacterInventory,
   ConcentrationCheck,
+  EncounterDetail,
   InventoryEntry,
   Item,
   ItemCategory,
@@ -22,7 +23,16 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import api from '../api';
@@ -31,6 +41,7 @@ import { invalidateCombat, useActiveEncounters } from '../combatLive';
 import { appLang } from '../i18n';
 import CharacterStateBand from '../components/CharacterStateBand';
 import ConcentrationAlert from '../components/ConcentrationAlert';
+import InitiativeStrip from '../components/InitiativeStrip';
 import {
   EMPTY_ITEM_IMAGE,
   ItemImageField,
@@ -217,6 +228,8 @@ export default function CharacterInventoryPage() {
     currentCombatantName: string | null;
     myCombatantId: number | null;
     initiativeBonus: number;
+    /** Rencontre complète — le rail d'initiative y lit l'ordre. */
+    detail: EncounterDetail;
   };
   const [hubInitOpen, setHubInitOpen] = useState(false);
   const [hubInitInput, setHubInitInput] = useState('');
@@ -810,6 +823,7 @@ export default function CharacterInventoryPage() {
         currentCombatantName: current?.name ?? null,
         myCombatantId: mine.id,
         initiativeBonus: mine.initiativeBonus ?? dexMod,
+        detail,
       };
     }
     return null;
@@ -818,6 +832,46 @@ export default function CharacterInventoryPage() {
   // "Your turn" screen-wide blood-cut (document-level singleton — fires once
   // whoever detects the transition: dock card, hub or desktop strip)
   useTurnSlash(!!hubCombat?.isMyTurn);
+
+  // Fin de combat : le rail ne s'efface pas d'un coup (retour test 2026-10 —
+  // saut de mise en page brutal). Il reste monté ~700 ms (railExit) : les
+  // dents s'envolent vers le haut (.rail-exiting) PENDANT que le fourreau
+  // referme sa hauteur — puis tout disparaît ensemble.
+  // LE VERROU VIT PENDANT LE RENDU (pattern React « ajuster l'état au
+  // rendu ») : quand hubCombat tombe, le re-rendu est immédiat et le rail
+  // ne quitte JAMAIS l'arbre — aucune peinture sans lui, pas de remontage
+  // (band-rise ne rejoue pas, les dents d'ORIGINE portent l'animation de
+  // sortie). Un effet après peinture (useEffect) laissait une frame sans
+  // rail puis remontait : vu comme une disparition sèche (retour test).
+  const [railExit, setRailExit] = useState<HubCombat | null>(null);
+  const lastHubRef = useRef<HubCombat | null>(null);
+  if (hubCombat) {
+    lastHubRef.current = hubCombat;
+    if (railExit) setRailExit(null); // un nouveau combat interrompt une sortie en cours
+  } else if (lastHubRef.current && !railExit) {
+    setRailExit(lastHubRef.current);
+    lastHubRef.current = null;
+  }
+  useEffect(() => {
+    if (!railExit) return;
+    const t = setTimeout(() => setRailExit(null), 700);
+    return () => clearTimeout(t);
+  }, [railExit]);
+  const railWrapRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (!railExit) return;
+    const el = railWrapRef.current;
+    if (!el) return;
+    el.style.height = `${el.scrollHeight}px`;
+    // Reflow FORCÉ (technique FLIP) : la hauteur de départ doit être computée
+    // avant la transition — sans elle, le rAF peut fondre les deux écritures
+    // dans le même recalcul de style et la hauteur SAUTE à 0 (constaté en
+    // test : fourreau refermé d'un coup, dents animées mais clippées).
+    void el.offsetHeight;
+    el.style.transition = 'height 620ms cubic-bezier(0.16, 1, 0.3, 1), border-color 620ms ease-out';
+    el.style.height = '0px';
+    el.style.borderBottomColor = 'transparent';
+  }, [railExit]);
 
   // CA effective SANS les effets de sort (override manuel inclus — il gagne) :
   // base de l'annonce « CA X → Y » de la feuille d'incantation. Le bandeau
@@ -973,6 +1027,32 @@ export default function CharacterInventoryPage() {
           onConcentrationCheck={setConcCheck}
         />
       </div>
+
+      {/* Rail d'initiative — l'ordre complet du combat sous le bandeau
+          d'état, sur le parchemin de la page, à la même place sur mobile et
+          desktop. La pilule d'en-tête (lg+) garde SA ligne (acteur courant) ;
+          la carte dockée garde l'acteur courant au pouce quand la page
+          défile — le rail apporte ce qu'aucune des deux ne montre : tout
+          l'ordre. Fin de combat : railExit garde le rail monté 700 ms —
+          distribution rappelée vers le haut + fourreau qui se referme. */}
+      {(() => {
+        const liveRail = hubCombat ?? railExit;
+        if (!liveRail) return null;
+        return (
+          <div
+            ref={railWrapRef}
+            className="band-rise -mx-4 px-4 sm:mx-0 sm:px-0 border-b border-parchment-200 overflow-hidden"
+          >
+            <div className="py-2 overflow-hidden">
+              <InitiativeStrip
+                encounter={liveRail.detail}
+                myCombatantId={liveRail.myCombatantId}
+                exiting={!hubCombat}
+              />
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Concentration save after damage — portaled banner, fed by the band
           (any tab) and the Survie tracker alike. */}

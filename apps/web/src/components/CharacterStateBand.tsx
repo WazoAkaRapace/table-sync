@@ -1112,7 +1112,11 @@ function CombatLine({
           )}
         </div>
       ) : (
-        <p className="text-xs text-ink-500 truncate">
+        // État calme : plus de texte à l'écran — le rail d'initiative juste
+        // sous le bandeau porte l'ordre (retour test 2026-10). La phrase
+        // reste en sr-only dans la région vivante : le passage de tour
+        // continue de s'annoncer aux lecteurs d'écran.
+        <p className="sr-only">
           {combat.status === 'active' && combat.currentCombatantName
             ? t('band.tour.de.nom.manche.round', {
                 name: combat.currentCombatantName,
