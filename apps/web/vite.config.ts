@@ -11,7 +11,13 @@ import { defineConfig, type Plugin } from 'vite';
  */
 const APP_VERSION = process.env.APP_VERSION || 'dev';
 
-type ChangelogEntry = { sha: string; date: string; title: string; items: string[] };
+type ChangelogEntry = {
+  version: string;
+  sha: string | null;
+  date: string;
+  title: string;
+  items: string[];
+};
 
 /**
  * Journal des modifications (CHANGELOG.json à la racine du repo, contract
@@ -96,8 +102,12 @@ const EMBEDDED =
   APP_VERSION === 'dev'
     ? CHANGELOG
     : (() => {
+        // Build = une entrée : calver exact (release) ou sha préfixe (main).
+        const sha = APP_VERSION.replace(/^sha-/, '');
         const idx = CHANGELOG.findIndex(
-          (e) => APP_VERSION.endsWith(e.sha) || e.sha.startsWith(APP_VERSION.replace(/^sha-/, '')),
+          (e) =>
+            e.version === APP_VERSION ||
+            (e.sha !== null && (e.sha === sha || sha.startsWith(e.sha))),
         );
         return idx === -1 ? CHANGELOG : CHANGELOG.slice(0, idx + 1);
       })();

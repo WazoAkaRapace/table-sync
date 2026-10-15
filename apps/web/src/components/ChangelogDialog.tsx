@@ -19,7 +19,7 @@ function VersionBlock({ entry }: { entry: ChangelogEntry }) {
       <h3 className="flex items-baseline gap-2 text-sm font-semibold text-ink-700">
         <span>{entry.title}</span>
         <span className="font-mono text-[10px] font-normal text-ink-400">
-          {entry.date} · {entry.sha}
+          {entry.date} · {entry.version}
         </span>
       </h3>
       <ul className="mt-1.5 space-y-1">

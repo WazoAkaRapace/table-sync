@@ -5,9 +5,19 @@
  * version courante) et /changelog.json (complet, no-cache, pour la
  * consultation « Journal »). Le popup de diff au chargement n'utilise QUE
  * l'embarqué : zéro fetch, fonctionne même hors ligne au premier rendu.
+ *
+ * Versions : le build porte soit un calver lisible (2026.10.15, release),
+ * soit sha-<court> (build de validation main). L'entrée du build est celle
+ * dont la version OU le sha correspond à __APP_VERSION__.
  */
 
-export type ChangelogEntry = { sha: string; date: string; title: string; items: string[] };
+export type ChangelogEntry = {
+  version: string;
+  sha: string | null;
+  date: string;
+  title: string;
+  items: string[];
+};
 
 /** Entrées jusqu'à la version du build incluse (injecté par vite.config.ts). */
 declare const __CHANGELOG__: ChangelogEntry[];
@@ -18,24 +28,24 @@ export const embeddedChangelog: ChangelogEntry[] = Array.isArray(__CHANGELOG__)
 /** Clé localStorage : dernière version VUE (stamp posé à la fermeture du popup). */
 export const SEEN_KEY = 'ts-changelog-seen';
 
-function sameVersion(a: string, b: string): boolean {
-  const norm = (v: string) => v.replace(/^sha-/, '');
-  return norm(a) === norm(b) || norm(a).startsWith(norm(b)) || norm(b).startsWith(norm(a));
+/** Cette entrée décrit-elle ce build ? (calver exact, ou sha préfixe) */
+function isBuildEntry(e: ChangelogEntry, buildVersion: string): boolean {
+  if (e.version === buildVersion) return true;
+  const sha = buildVersion.replace(/^sha-/, '');
+  return e.sha !== null && (e.sha === sha || sha.startsWith(e.sha));
 }
 
 /**
  * Entrées nouvelles entre la dernière version vue et la version courante
- * (incluse). Antichronologique : slice de l'index courant à l'index vu.
- * Retourne [] si rien de nouveau, si « vu » est introuvable dans le journal
- * (première utilisation ou journal plus jeune que l'app installée) — dans ce
- * dernier cas on ne montre QUE la version courante si elle diffère.
+ * (incluse). « vu » = version ou sha précédemment stampé. Retourne [] si
+ * rien de nouveau, si dev, ou si le build n'a pas d'entrée.
  */
 export function diffEntries(seen: string | null, current: string): ChangelogEntry[] {
   if (!seen || seen === 'dev' || current === 'dev') return [];
-  if (sameVersion(seen, current)) return [];
-  const curIdx = embeddedChangelog.findIndex((e) => sameVersion(e.sha, current));
+  if (seen === current) return [];
+  const curIdx = embeddedChangelog.findIndex((e) => isBuildEntry(e, current));
   if (curIdx === -1) return [];
-  const seenIdx = embeddedChangelog.findIndex((e) => sameVersion(e.sha, seen));
+  const seenIdx = embeddedChangelog.findIndex((e) => isBuildEntry(e, seen));
   if (seenIdx === -1) return [embeddedChangelog[curIdx]];
   if (seenIdx <= curIdx) return []; // « vu » plus récent que courant : rien
   return embeddedChangelog.slice(curIdx, seenIdx);

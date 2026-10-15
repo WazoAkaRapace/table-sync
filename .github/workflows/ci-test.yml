@@ -44,9 +44,11 @@ jobs:
       #      final est retamponné par le job changelog-stamp de ci.yml). ----
       - name: Changelog (format + selftest)
         run: npm run changelog:check -- --check-format --selftest
-      - name: Changelog (entrée pour ce commit)
+      - name: Changelog (entrée pour cette version)
         if: github.event_name == 'pull_request'
-        run: npm run changelog:check -- --check-sha "${{ github.event.pull_request.head.sha }}"
+        run: |
+          VERSION=$(node -p "require('./CHANGELOG.json')[0].version")
+          npm run changelog:check -- --check-version "$VERSION"
 
       # ---- Ratchet i18n : le FR hors catalogue ne peut que descendre ----
       - name: i18n ratchet

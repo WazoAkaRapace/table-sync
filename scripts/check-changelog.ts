@@ -1,11 +1,15 @@
 #!/usr/bin/env tsx
 /**
- * Gate changelog — trois modes :
- *   --check-format  : schéma, phrases, unicité des SHA, ordre antichronologique
- *   --check-sha X   : le SHA X (préfixe/suffixe) doit avoir son entrée
- *   --selftest      : fixtures internes (tourne en CI)
+ * Gate changelog — modes :
+ *   --check-format    : schéma, phrases, unicité versions/sha, ordre antichronologique
+ *   --check-version V : une entrée porte la version V (mode PR obligatoire)
+ *   --selftest        : fixtures internes (tourne en CI)
  *
  * Le contrat complet vit dans .github/skills/changelog/SKILL.md.
+ * Versionnement calver YYYY.MM.DD (suffixe -2, -3… si plusieurs versions le
+ * même jour) : la version est déclarée PAR L'AUTEUR dans son entrée — pas de
+ * course au SHA. La CI crée la release <version> au merge, le build déploie
+ * sur release: published.
  */
 import { readFileSync } from 'node:fs';
 import { execSync } from 'node:child_process';
@@ -16,16 +20,24 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '..');
 const FILE = resolve(ROOT, 'CHANGELOG.json');
 
-type Entry = { sha: string; date: string; title: string; items: string[] };
+type Entry = {
+  version: string;
+  sha: string | null;
+  date: string;
+  title: string;
+  items: string[];
+};
 
 const SHA_RE = /^[0-9a-f]{7,8}$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const VER_RE = /^\d{4}\.\d{2}\.\d{2}(-\d+)?$/;
 
 function fmtErrors(raw: unknown): string[] {
   const errs: string[] = [];
   if (!Array.isArray(raw)) return ['CHANGELOG.json doit être un tableau JSON.'];
   if (raw.length === 0) errs.push('CHANGELOG.json est vide — chaque version doit y figurer.');
-  const seen = new Set<string>();
+  const versions = new Set<string>();
+  const shas = new Set<string>();
   let prevDate = '';
   raw.forEach((e, i) => {
     const where = `entrée ${i}`;
@@ -33,18 +45,26 @@ function fmtErrors(raw: unknown): string[] {
       errs.push(`${where} : doit être un objet.`);
       return;
     }
-    const { sha, date, title, items } = e as Record<string, unknown>;
-    if (typeof sha !== 'string' || !SHA_RE.test(sha))
-      errs.push(`${where} : sha invalide (« ${String(sha)} », 7-8 hex attendus).`);
-    else if (seen.has(sha)) errs.push(`${where} : sha ${sha} déjà présent.`);
-    else seen.add(sha);
-    if (typeof date !== 'string' || !DATE_RE.test(date))
+    const { version, sha, date, title, items } = e as Record<string, unknown>;
+    if (typeof version !== 'string' || !VER_RE.test(version)) {
+      errs.push(`${where} : version invalide (« ${String(version)} », calver YYYY.MM.DD attendu).`);
+    } else if (versions.has(version)) {
+      errs.push(`${where} : version ${version} déjà présente.`);
+    } else versions.add(version);
+    if (sha !== null && (typeof sha !== 'string' || !SHA_RE.test(sha))) {
+      errs.push(`${where} : sha invalide (« ${String(sha)} », 7-8 hex ou null avant merge).`);
+    } else if (typeof sha === 'string') {
+      if (shas.has(sha)) errs.push(`${where} : sha ${sha} déjà présent.`);
+      else shas.add(sha);
+    }
+    if (typeof date !== 'string' || !DATE_RE.test(date)) {
       errs.push(`${where} : date invalide (YYYY-MM-DD attendu).`);
-    else if (prevDate && date > prevDate)
+    } else if (prevDate && date > prevDate) {
       errs.push(`${where} : ordre non antichronologique (${date} après ${prevDate}).`);
-    else prevDate = date;
-    if (typeof title !== 'string' || title.trim().length < 3)
+    } else prevDate = date;
+    if (typeof title !== 'string' || title.trim().length < 3) {
       errs.push(`${where} : title trop court (2-5 mots attendus).`);
+    }
     if (!Array.isArray(items) || items.length === 0) {
       errs.push(`${where} : items doit contenir au moins une puce.`);
     } else {
@@ -61,51 +81,44 @@ function fmtErrors(raw: unknown): string[] {
   return errs;
 }
 
-function shaMatches(entry: string, want: string): boolean {
-  const w = want.replace(/^sha-/, '').slice(0, 8);
-  return entry === w || entry.startsWith(w) || w.startsWith(entry);
-}
-
 function selftest(): number {
-  const cases: { name: string; raw: unknown; ok: boolean }[] = [
+  const mk = (version: string, sha: string | null = 'a1b2c3d', date = '2026-10-15') => ({
+    version,
+    sha,
+    date,
+    title: 'ok titre',
+    items: ['Une phrase simple.'],
+  });
+  const cases: { name: string; raw: unknown; expectErrors: boolean }[] = [
+    { name: 'valide', raw: [mk('2026.10.15')], expectErrors: false },
+    { name: 'sha null avant merge', raw: [mk('2026.10.15', null)], expectErrors: false },
     {
-      name: 'valide',
-      raw: [
-        { sha: 'a1b2c3d', date: '2026-10-15', title: 'ok titre', items: ['Une phrase simple.'] },
-      ],
-      ok: true,
+      name: 'version dupliquée',
+      raw: [mk('2026.10.15'), mk('2026.10.15', 'e4f5a6b')],
+      expectErrors: true,
     },
-    {
-      name: 'sha dupliqué',
-      raw: [
-        { sha: 'a1b2c3d', date: '2026-10-15', title: 'ok titre', items: ['Une phrase simple.'] },
-        { sha: 'a1b2c3d', date: '2026-10-14', title: 'ok titre', items: ['Une autre phrase.'] },
-      ],
-      ok: false,
-    },
+    { name: 'calver invalide', raw: [mk('v1.2.3')], expectErrors: true },
     {
       name: 'ordre remontant',
-      raw: [
-        { sha: 'a1b2c3d', date: '2026-10-14', title: 'ok titre', items: ['Une phrase simple.'] },
-        { sha: 'e4f5a6b', date: '2026-10-15', title: 'ok titre', items: ['Une autre phrase.'] },
-      ],
-      ok: false,
+      raw: [mk('2026.10.14', 'a1b2c3d', '2026-10-14'), mk('2026.10.15', 'e4f5a6b')],
+      expectErrors: true,
+    },
+    {
+      name: 'suffixe même jour',
+      raw: [mk('2026.10.15'), mk('2026.10.15-2', 'e4f5a6b')],
+      expectErrors: false,
     },
     {
       name: 'puce sans point',
-      raw: [{ sha: 'a1b2c3d', date: '2026-10-15', title: 'ok titre', items: ['Sans point final'] }],
-      ok: false,
+      raw: [{ ...mk('2026.10.15'), items: ['Sans point'] }],
+      expectErrors: true,
     },
-    {
-      name: 'items vide',
-      raw: [{ sha: 'a1b2c3d', date: '2026-10-15', title: 'ok titre', items: [] }],
-      ok: false,
-    },
+    { name: 'items vide', raw: [{ ...mk('2026.10.15'), items: [] }], expectErrors: true },
   ];
   let fail = 0;
   for (const c of cases) {
     const errs = fmtErrors(c.raw);
-    const pass = c.ok ? errs.length === 0 : errs.length > 0;
+    const pass = c.expectErrors ? errs.length > 0 : errs.length === 0;
     if (!pass) fail++;
     console.log(`${pass ? '✓' : '✗'} selftest ${c.name}${errs.length ? ` (${errs[0]})` : ''}`);
   }
@@ -130,32 +143,31 @@ function main(): number {
     }
     console.log(`✓ Format changelog (${(raw as Entry[]).length} entrée(s)).`);
   }
-  const shaIdx = args.indexOf('--check-sha');
-  if (shaIdx !== -1) {
-    let want = args[shaIdx + 1] ?? 'HEAD';
-    if (want === 'HEAD')
-      want = execSync('git rev-parse --short HEAD', { cwd: ROOT }).toString().trim();
+  const vIdx = args.indexOf('--check-version');
+  if (vIdx !== -1) {
+    const want = args[vIdx + 1];
+    if (!want) {
+      console.error('Usage : --check-version <version>');
+      return 1;
+    }
     const entries = Array.isArray(raw) ? (raw as Entry[]) : [];
-    // Exceptions : merge commits GitHub, stamp, fixups « changelog: » (ils ne
-    // touchent QUE CHANGELOG.json et existent pour satisfaire ce gate).
+    // Exemptions : le job release lui-même (stamp/release [skip ci]).
     const subjects = execSync('git log -1 --format=%s', { cwd: ROOT }).toString().trim();
-    if (
-      /^Merge (pull request|branch)|^\[?changelog-stamp\]?|^\[skip ci\]|^changelog:/i.test(subjects)
-    ) {
-      console.log(`✓ Commit « ${subjects} » exempté (merge/stamp).`);
+    if (/^\[?changelog-(stamp|release)\]?|^changelog:|^\[skip ci\]/i.test(subjects)) {
+      console.log(`✓ Commit « ${subjects} » exempté.`);
       return 0;
     }
-    const hit = entries.find((e) => typeof e.sha === 'string' && shaMatches(e.sha, want));
+    const hit = entries.find((e) => e.version === want);
     if (!hit) {
       console.error(
-        `✗ Aucune entrée changelog pour ${want} — ajoute-la dans CHANGELOG.json (voir .github/skills/changelog/SKILL.md).`,
+        `✗ Aucune entrée changelog pour la version ${want} — ajoute-la dans CHANGELOG.json (voir .github/skills/changelog/SKILL.md).`,
       );
       return 1;
     }
     console.log(`✓ Entrée changelog présente pour ${want} (« ${hit.title} »).`);
   }
-  if (!args.includes('--check-format') && shaIdx === -1) {
-    console.error('Usage : check-changelog.ts --check-format | --check-sha <sha> | --selftest');
+  if (!args.includes('--check-format') && vIdx === -1) {
+    console.error('Usage : check-changelog.ts --check-format | --check-version <v> | --selftest');
     return 1;
   }
   return 0;
