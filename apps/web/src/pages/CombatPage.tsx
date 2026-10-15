@@ -775,6 +775,14 @@ function EncounterRegister({
   const done = encounters.filter((e) => e.status === 'ended');
   const ordered = [...live, ...prepared, ...done];
 
+  // Numérotation CHRONOLOGIQUE (issue #190) : la liste API est triée par
+  // création DÉCROISSANTE — la n-ème rencontre créée porte le n, quel que
+  // soit son état ou sa rangée à l'écran. Le dernier combat reste en haut
+  // de page, simplement numéroté du plus GRAND chiffre.
+  const chronoNumber = new Map<number, number>(
+    encounters.map((e, j) => [e.id, encounters.length - j]),
+  );
+
   // ---------- Virgin register ----------
   if (encounters.length === 0) {
     return (
@@ -862,7 +870,7 @@ function EncounterRegister({
                           : 'pt-0.5 text-lg text-ink-400'
                     }`}
                   >
-                    {toRoman(i + 1)}
+                    {toRoman(chronoNumber.get(enc.id) ?? i + 1)}
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="flex items-start justify-between gap-3">
