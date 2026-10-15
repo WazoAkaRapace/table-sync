@@ -100,6 +100,28 @@ playerTest.describe('Sorts (clerc)', () => {
       await page.getByRole('button', { name: 'Tous' }).click();
       await expect(page.getByRole('button', { name: /Armure de mage/ }).first()).toBeVisible();
       await expect(prepChip).toHaveAttribute('aria-pressed', 'false');
+
+      // #187 (persist) : le choix est MÉMORISÉ — après un rechargement complet,
+      // l'onglet ré-ouvre sur « Tous » (pas de réarmement du défaut Préparés).
+      await page.reload();
+      await openTab(page, 'Sorts');
+      await expect(page.getByRole('button', { name: 'Tous' })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+      await expect(page.getByRole('button', { name: /Armure de mage/ }).first()).toBeVisible();
+      // La clé localStorage porte la préférence…
+      expect(await page.evaluate(() => localStorage.getItem('dnd-inv-spells-filter'))).toBe('all');
+
+      // …et un choix « Préparés » persiste AUSSI à travers un reload.
+      await page.getByRole('button', { name: /Préparés 3 \/ 9/ }).click();
+      await expect(prepChip).toHaveAttribute('aria-pressed', 'true');
+      await page.reload();
+      await openTab(page, 'Sorts');
+      await expect(prepChip).toHaveAttribute('aria-pressed', 'true');
+      expect(await page.evaluate(() => localStorage.getItem('dnd-inv-spells-filter'))).toMatch(
+        /^prep:/,
+      );
     },
   );
 });

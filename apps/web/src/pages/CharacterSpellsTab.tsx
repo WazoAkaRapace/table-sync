@@ -134,14 +134,32 @@ export default function CharacterSpellsTab({
   const [castingRowId, setCastingRowId] = useState<number | null>(null);
 
   // List filter for prepared-spell classes: all spells or the combat-ready set.
-  // #187 : à l'arrivée sur l'onglet, le filtre « Préparés » est sélectionné
-  // d'emblée (utile en combat) — appliqué quand la liste est chargée, cf.
-  // effet plus bas. Repli : zéro sort préparé (ou classe sans préparation,
-  // ex. Occultiste) → on reste sur « Tous ».
-  const [listFilter, setListFilter] = useState<string>('all');
-  // Le défaut ne s'applique qu'une fois : après, la liste suit les clics du
-  // joueur (retour manuel à « Tous » respecté, refetchs silencieux ignorés).
-  const defaultFilterApplied = useRef(false);
+  // #187 : le dernier choix du joueur est MÉMORISÉ (localStorage) — à
+  // l'arrivée sur l'onglet, on restaure sa préférence ; première visite
+  // seulement, le défaut est « Préparés » si la fiche en a (combat : liste
+  // prête d'emblée). Repli : zéro sort préparé, classe sans préparation
+  // (ex. Occultiste) ou préférence périmée (autre perso sans cette classe)
+  // → « Tous ».
+  const FILTER_STORAGE_KEY = 'dnd-inv-spells-filter';
+  const [listFilter, setListFilter] = useState<string>(() => {
+    try {
+      return localStorage.getItem(FILTER_STORAGE_KEY) ?? 'all';
+    } catch {
+      return 'all';
+    }
+  });
+  // Persiste le choix : chaque clic devient la nouvelle préférence.
+  const setListFilterAndPersist = useCallback((next: string) => {
+    setListFilter(next);
+    try {
+      localStorage.setItem(FILTER_STORAGE_KEY, next);
+    } catch {
+      /* quota/privacy mode : la préférence ne survit simplement pas */
+    }
+  }, []);
+  // Le défaut « Préparés » ne s'applique qu'une fois, et SEULEMENT si aucune
+  // préférence n'était stockée : après, la liste suit les clics du joueur.
+  const defaultFilterApplied = useRef(localStorage.getItem(FILTER_STORAGE_KEY) !== null);
 
   // Post-cast feedback: row flash (row-flash animation, cleared after 1.3 s)
   const [flashRowId, setFlashRowId] = useState<number | null>(null);
@@ -322,22 +340,33 @@ export default function CharacterSpellsTab({
   // rechargent silencieusement après un trou de connexion.
   useResyncOnReconnect(fetchCharSpells);
 
-  // #187 : au premier chargement de la liste, sélectionner « Préparés » si
-  // la fiche a au moins un sort préparé (combat : liste prête d'emblée).
+  // #187 : première visite seulement (aucune préférence stockée) — défaut
+  // « Préparés » si la fiche en a. Visites suivantes : la préférence
+  // restaurée peut être PÉRIMÉE (autre perso, classe absente) — l'effet
+  // la valide et rabat sur « Tous » si la classe n'existe plus ici.
   // Zéro préparé → repli « Tous » (l'astuce « Touchez une étoile… » n'a de
-  // sens que si le joueur voit les ☆). Une seule application : les clics et
-  // refetchs ultérieurs ne rebasculent jamais le filtre.
+  // sens que si le joueur voit les ☆). Multiclassage : la classe qui a des
+  // sorts préparés, sinon rien.
   useEffect(() => {
     if (loadingSpells || defaultFilterApplied.current) return;
     defaultFilterApplied.current = true;
     // Même sémantique que le compteur : un tour de magie n'est jamais
-    // « préparé » (SRD) — il ne suffit pas à armer le filtre. Multiclassage :
-    // la classe qui a des sorts préparés, sinon rien (repli « Tous »).
+    // « préparé » (SRD) — il ne suffit pas à armer le filtre.
     const preparedClasses = new Set(
       charSpells.filter((cs) => cs.prepared && cs.spell.level > 0).map((cs) => cs.classSource),
     );
     const target = limits.find((l) => preparedClasses.has(l.classKey)) ?? null;
-    if (target) setListFilter(`prep:${target.classKey}`);
+    // Préférence restaurée : ne la garde que si sa classe existe sur CE perso
+    const restoredClass = listFilter.startsWith('prep:')
+      ? listFilter.slice(5)
+      : listFilter === 'all'
+        ? 'all'
+        : null;
+    if (restoredClass !== null && restoredClass !== 'all') {
+      if (!limits.some((l) => l.classKey === restoredClass)) setListFilterAndPersist('all');
+    } else if (target) {
+      setListFilterAndPersist(`prep:${target.classKey}`);
+    }
     // limits est dérivé du personnage (props), charSpells/loadingSpells de
     // fetchCharSpells : au premier passage où la liste est prête, tout est
     // déjà résolu — les accès sont volontairement hors deps.
@@ -864,7 +893,7 @@ export default function CharacterSpellsTab({
             <div className="flex flex-wrap gap-1.5">
               <button
                 type="button"
-                onClick={() => setListFilter('all')}
+                onClick={() => setListFilterAndPersist('all')}
                 aria-pressed={listFilter === 'all'}
                 className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
                   listFilter === 'all'
@@ -882,7 +911,7 @@ export default function CharacterSpellsTab({
                   <button
                     key={l.classKey}
                     type="button"
-                    onClick={() => setListFilter(active ? 'all' : `prep:${l.classKey}`)}
+                    onClick={() => setListFilterAndPersist(active ? 'all' : `prep:${l.classKey}`)}
                     aria-pressed={active}
                     className={`px-3 py-1.5 rounded-full text-xs font-medium tabular-nums transition-colors ${
                       active
