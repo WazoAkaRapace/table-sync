@@ -592,18 +592,18 @@ export default function AccountPage() {
         </form>
       </section>
 
-      {/* Version du build — SHA du commit servi (dev en local). Le bandeau
-          de mise à jour compare cette version à /version.json. Le « Journal »
-          ouvre le journal des modifications complet. */}
-      <p className="pt-2 text-center font-mono text-[10px] text-ink-300">
-        Table Sync · {__APP_VERSION__} ·{' '}
+      {/* Version du build (calver lisible en prod, « dev » en local) — le
+          bandeau de mise à jour la compare à /version.json. La version
+          ELLE-MÊME ouvre le journal des modifications complet. */}
+      <p className="pt-2 text-center font-mono text-[10px] text-ink-400">
+        Table Sync ·{' '}
         <button
           type="button"
           onClick={() => setShowChangelog(true)}
-          className="underline underline-offset-2 hover:text-ink-500"
-          aria-label={t('changelog.ouvrir')}
+          className="text-ink-300 underline-offset-2 transition-colors hover:text-blood-500 hover:underline focus-visible:underline"
+          aria-label={t('changelog.ouvrir.version', { version: __APP_VERSION__ })}
         >
-          Journal
+          {__APP_VERSION__}
         </button>
       </p>
 

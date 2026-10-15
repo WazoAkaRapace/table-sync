@@ -2159,5 +2159,6 @@
   "changelog.continuer": "Continuer",
   "changelog.tout.voir": "Voir tout le journal",
   "changelog.vide": "Aucune nouveauté pour le moment.",
-  "changelog.ouvrir": "Journal des modifications"
+  "changelog.ouvrir": "Journal des modifications",
+  "changelog.ouvrir.version": "Journal des modifications de la version {{version}}"
 }

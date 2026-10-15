@@ -45,9 +45,11 @@ playerTest('version plus vieille vue : popup de diff, stamp à la fermeture', as
   expect(seen).not.toBe('sha-old-old-old');
 });
 
-playerTest('Mon compte : lien Journal à côté du SHA', async ({ page }) => {
+playerTest('Mon compte : la version ouvre le journal', async ({ page }) => {
   await page.addInitScript(() => localStorage.removeItem('ts-changelog-seen'));
   await page.goto('/compte');
+  // La version ELLE-MÊME est le bouton (aria-label « Journal des
+  // modifications de la version <v> ») — plus de libellé « Journal ».
   await page
     .getByRole('button', { name: /journal des modifications|changelog/i })
     .first()
