@@ -228,6 +228,63 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   });
   eq(r.status, 403, 'advance non-membre → 403');
 
+  // ---------- #191 : les pré-écritures d'un jour futur survivent à l'avance ----------
+  // Scénario du ticket : le MD note quelque chose sur un jour en AVANCE (via
+  // la zone MD du calendrier — PATCH /campaign-days/:id), puis un JOUEUR
+  // avance le jour. L'écriture doit rester lisible quand l'horloge ATTEINT le
+  // jour pré-écrit, puis survivre à l'archivage quand le jour est quitté.
+  const cal191 = `/api/parties/${P}/campaign`;
+
+  // horloge à 2000, jour futur 2002 pré-écrit par le MD (météo + note MD +
+  // journal de table déjà couverts plus haut — ici la pré-écriture MD).
+  r = await api(base, 'PATCH', cal191, { token: fx.gm.token, body: { day: 2000 } });
+  eq(r.status, 200, '#191 MD corrige le jour à 2000');
+  r = await api(base, 'PUT', `${cal191}/table-note`, {
+    token: fx.gm.token,
+    body: { day: 2002, note: ' jour pré-écrit : garnison au col ' },
+  });
+  eq(r.status, 200, '#191 journal posé sur le jour futur 2002');
+  let row2002 = srv.query('SELECT id FROM campaign_days WHERE party_id = ? AND day = 2002', P) as {
+    id: number;
+  };
+  r = await api(base, 'PATCH', `/api/campaign-days/${row2002.id}`, {
+    token: fx.gm.token,
+    body: { weather: '❄️ Blizzard', note: 'Attente des renforts.' },
+  });
+  eq(r.status, 200, '#191 MD pré-écrit météo + note sur 2002');
+
+  // un JOUEUR avance deux fois : l'horloge atteint 2001 puis 2002.
+  r = await api(base, 'POST', `${cal191}/advance`, { token: fx.player.token, body: {} });
+  eq(r.status, 200, '#191 avance 2000 → 2001');
+  r = await api(base, 'POST', `${cal191}/advance`, { token: fx.player.token, body: {} });
+  eq(r.status, 200, '#191 avance 2001 → 2002');
+  eq(r.data.state.day, 2002, '#191 le jour pré-écrit 2002 devient courant');
+
+  // l'horloge doit porter la pré-écriture (jour futur devenu courant) —
+  // c'est le contrat du MD sur la zone réglée du jour courant.
+  r = await api(base, 'GET', `${cal191}/calendar?from=2002&to=2002`, { token: fx.gm.token });
+  eq(r.data.state.weather, '❄️ Blizzard', '#191 la météo pré-écrite devient celle du jour courant');
+  r = await api(base, 'GET', cal191, { token: fx.gm.token });
+  eq(r.data.campaign.state.weather, '❄️ Blizzard', '#191 horloge MD : météo pré-écrite');
+  eq(r.data.campaign.state.note, 'Attente des renforts.', '#191 horloge MD : note pré-écrite');
+
+  // un joueur avance encore : l'archivage de 2002 DOIT conserver la
+  // pré-écriture (l'upsert d'archive écrasait weather/note avec l'horloge
+  // vide — le MD perdait son travail sans même l'avoir vu).
+  r = await api(base, 'POST', `${cal191}/advance`, { token: fx.player.token, body: {} });
+  eq(r.status, 200, '#191 avance 2002 → 2003');
+  const archived2002 = srv.query(
+    'SELECT weather, note, table_note FROM campaign_days WHERE party_id = ? AND day = 2002',
+    P,
+  );
+  eq(archived2002?.weather, '❄️ Blizzard', "#191 l'archivage garde la météo pré-écrite");
+  eq(archived2002?.note, 'Attente des renforts.', "#191 l'archivage garde la note MD pré-écrite");
+  eq(
+    archived2002?.table_note,
+    'jour pré-écrit : garnison au col',
+    '#191 le journal de table pré-écrit reste intact',
+  );
+
   // les autres molettes du carnet restent GM-only
   r = await api(base, 'PATCH', cal, {
     token: fx.player.token,
