@@ -152,6 +152,9 @@ export interface User {
   tutorialSeenAt: string | null;
   /** Ids des onglets dont la visite propre a déjà été jouée. */
   tutorialTabsDone: string[];
+  /** Visite guidée DÉSACTIVÉE pour ce compte (Mon compte) — coupe tout
+   *  déclenchement, tous appareils. Indépendant de tutorialSeenAt. */
+  tutorialDisabled: boolean;
   createdAt: string;
 }
 
@@ -183,10 +186,12 @@ export interface UpdateProfilePayload {
   /**
    * Synchronisation de la visite guidée : `tutorialSeenAt: null` réarme la
    * visite (bouton « Réinitialiser »), une valeur ISO la marque vue ;
-   * `tutorialTabsDone` remplace la liste des onglets visités.
+   * `tutorialTabsDone` remplace la liste des onglets visités ;
+   * `tutorialDisabled` coupe TOUT déclenchement de visite, tous appareils.
    */
   tutorialSeenAt?: string | null;
   tutorialTabsDone?: string[];
+  tutorialDisabled?: boolean;
 }
 
 /** POST /api/auth/password */

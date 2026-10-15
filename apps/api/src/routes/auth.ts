@@ -107,6 +107,7 @@ function sanitizeUser(row: any): User {
     pendingEmail: row.pending_email ?? null,
     tutorialSeenAt: row.tutorial_seen_at ?? null,
     tutorialTabsDone,
+    tutorialDisabled: !!row.tutorial_disabled,
     createdAt: row.created_at,
   };
 }
@@ -278,6 +279,7 @@ export async function authRoutes(app: FastifyInstance) {
         pendingEmail?: string | null;
         tutorialSeenAt?: string | null;
         tutorialTabsDone?: string;
+        tutorialDisabled?: number;
       } = {};
       // Post-traitement une fois la ligne mise à jour : adresse à vérifier
       // (changement direct ou en attente), abandon de changement en attente
@@ -351,9 +353,12 @@ export async function authRoutes(app: FastifyInstance) {
       if (body.tutorialSeenAt !== undefined) {
         if (body.tutorialSeenAt === null) {
           // Réarmement (« Réinitialiser le tutoriel ») : la visite repart de
-          // zéro sur tous les appareils, onglets inclus.
+          // zéro sur tous les appareils, onglets inclus — et la coupe totale
+          // (« Ne plus montrer les tutoriels ») se lève : réinitialiser,
+          // c'est vouloir REVOIR les visites.
           values.tutorialSeenAt = null;
           values.tutorialTabsDone = '[]';
+          values.tutorialDisabled = 0;
         } else {
           const when = new Date(body.tutorialSeenAt);
           if (Number.isNaN(when.getTime())) {
@@ -370,6 +375,12 @@ export async function authRoutes(app: FastifyInstance) {
         }
         const ids = [...new Set(body.tutorialTabsDone.filter((id) => typeof id === 'string'))];
         values.tutorialTabsDone = JSON.stringify(ids);
+      }
+      if (body.tutorialDisabled !== undefined) {
+        // Coupe/rétablit TOUT déclenchement de visite pour le compte, tous
+        // appareils. Réactiver ne rejoue rien d'elle-même (la visite ne
+        // redémarre que via « Réinitialiser »).
+        values.tutorialDisabled = body.tutorialDisabled ? 1 : 0;
       }
       if (Object.keys(values).length === 0) {
         return reply.code(400).send({ error: apiMsg(req, 'aucun champ à mettre à jour') });

@@ -2146,5 +2146,11 @@
   "rangee.deplacer.quantite.max": "Quantité à déplacer (max {{maxQty}})",
   "rangee.deplacer.confirmer": "Déplacer",
   "rangee.deplacer.quantite.aria": "Quantité à déplacer pour {{itemName}}",
-  "inv.deplace.partiel": "{{qty}} × {{name}} déplacé·s vers {{target}}"
+  "inv.deplace.partiel": "{{qty}} × {{name}} déplacé·s vers {{target}}",
+  "account.tutoriel.desactiver": "Ne plus montrer les tutoriels",
+  "account.tutoriel.reactiver": "Réactiver les tutoriels",
+  "account.tutoriel.desactive.note": "Les visites guidées sont désactivées pour ton compte, sur tous tes appareils. « Réinitialiser le tutoriel » les réactivera d'un coup.",
+  "account.tutoriel.desactiver.toast": "Tutoriels désactivés — plus aucune visite guidée",
+  "account.tutoriel.reactiver.toast": "Tutoriels réactivés",
+  "account.erreur.de.mise.a.jour": "Mise à jour impossible"
 }

@@ -2147,5 +2147,11 @@
   "rangee.deplacer.quantite.max": "Quantity to move (max {{maxQty}})",
   "rangee.deplacer.confirmer": "Move",
   "rangee.deplacer.quantite.aria": "Quantity to move for {{itemName}}",
-  "inv.deplace.partiel": "{{qty}} × {{name}} moved to {{target}}"
+  "inv.deplace.partiel": "{{qty}} × {{name}} moved to {{target}}",
+  "account.tutoriel.desactiver": "Stop showing tutorials",
+  "account.tutoriel.reactiver": "Re-enable tutorials",
+  "account.tutoriel.desactive.note": "Guided tours are disabled for your account, on all your devices. “Reset tutorial” will bring them back.",
+  "account.tutoriel.desactiver.toast": "Tutorials disabled — no more guided tours",
+  "account.tutoriel.reactiver.toast": "Tutorials re-enabled",
+  "account.erreur.de.mise.a.jour": "Update failed"
 }
