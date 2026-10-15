@@ -100,6 +100,8 @@ export default function CharacterStateBand({
 
   // HP quick-edit draft (steppers commit directly)
   const [hpDraft, setHpDraft] = useState<string | null>(null);
+  // Temp-HP quick-edit draft — same typed-commit grammar as the PV box
+  const [tempDraft, setTempDraft] = useState<string | null>(null);
   // Rapid stepper clicks coalesce into ONE patch so the concentration check
   // sees the total damage (DD = max(10, ½ dégâts totaux)), not per-click bits.
   // Damage eats temp HP first — the queued patch may carry both fields.
@@ -300,18 +302,22 @@ export default function CharacterStateBand({
 
   // While shaped the server routes currentHp to the shape's bar — one endpoint,
   // two truths. Typed values obey the max (same ceiling as the Survie tracker).
-  // `temp` rides the same request when damage spilled past the temp HP.
-  const patchHp = async (n: number, temp?: number) => {
+  // `temp` rides the same request when damage spilled past the temp HP; a null
+  // `n` is a temp-only gain (the expanded temp stepper).
+  const patchHp = async (n: number | null, temp?: number) => {
     setHpDraft(null);
-    const clamped = Math.max(0, Math.min(hpMax, Math.round(n)));
-    if (clamped === hpNow && temp === undefined) {
+    setTempDraft(null);
+    const clamped = n === null ? null : Math.max(0, Math.min(hpMax, Math.round(n)));
+    const nextTemp = temp === undefined ? undefined : Math.max(0, Math.round(temp));
+    if ((clamped === null || clamped === hpNow) && nextTemp === undefined) {
       setHpPending(null);
       setTempPending(null);
       return;
     }
     try {
-      const payload =
-        temp === undefined ? { currentHp: clamped } : { currentHp: clamped, tempHp: temp };
+      const payload: Record<string, number> = {};
+      if (clamped !== null) payload.currentHp = clamped;
+      if (nextTemp !== undefined) payload.tempHp = nextTemp;
       const res = await api.patch(`/api/characters/${character.id}`, payload);
       // Losing HP while concentrating requires a CON save — surface it immediately.
       if (res?.data?.concentrationCheck) onConcentrationCheck(res.data.concentrationCheck);
@@ -344,7 +350,7 @@ export default function CharacterStateBand({
     const temp = tempPendingRef.current;
     hpPendingRef.current = null;
     tempPendingRef.current = null;
-    if (target === null) return;
+    if (target === null && temp === null) return;
     void patchHp(target, temp ?? undefined);
   };
 
@@ -356,6 +362,20 @@ export default function CharacterStateBand({
       tempPendingRef.current = Math.max(0, Math.round(temp));
       setTempPending(tempPendingRef.current);
     }
+    if (hpTimerRef.current) clearTimeout(hpTimerRef.current);
+    hpTimerRef.current = setTimeout(() => {
+      hpTimerRef.current = null;
+      flushHp();
+    }, HP_DEBOUNCE_MS);
+  };
+
+  // Temp GAINS queue on the same debounce window: a click burst coalesces into
+  // one patch, and a damage burst arriving mid-flight absorbs from the queued
+  // temp value (damageHp reads tempPendingRef while the timer runs).
+  const queueTemp = (value: number) => {
+    const n = Math.max(0, Math.round(value));
+    tempPendingRef.current = n;
+    setTempPending(n);
     if (hpTimerRef.current) clearTimeout(hpTimerRef.current);
     hpTimerRef.current = setTimeout(() => {
       hpTimerRef.current = null;
@@ -386,6 +406,18 @@ export default function CharacterStateBand({
     }
   };
 
+  // Explicit commit (typed temp value) — same contract as the PV box: emptied
+  // rolls back instead of dropping the temp to 0.
+  const commitTempDraft = () => {
+    if (tempDraft === null) return;
+    const val = Number(tempDraft);
+    setTempDraft(null);
+    if (tempDraft.trim() !== '' && Number.isFinite(val)) {
+      queueTemp(val);
+      flushHp();
+    }
+  };
+
   // A pending edit must never be lost to navigation — flush it on unmount
   // through the latest patchHp closure.
   const patchHpRef = useRef(patchHp);
@@ -399,12 +431,13 @@ export default function CharacterStateBand({
       const temp = tempPendingRef.current;
       hpPendingRef.current = null;
       tempPendingRef.current = null;
-      if (target !== null) void patchHpRef.current(target, temp ?? undefined);
+      if (target !== null || temp !== null) void patchHpRef.current(target, temp ?? undefined);
     },
     [],
   );
 
   const hpInputId = `band-hp-${character.id}`;
+  const tempInputId = `band-temp-hp-${character.id}`;
 
   return (
     <>
@@ -738,7 +771,7 @@ export default function CharacterStateBand({
             </div>
           )}
 
-          {/* Expanded detail: states, slots, quick HP edit */}
+          {/* Expanded detail: states, slots, quick HP + temp edit */}
           {expanded && (
             <div className="border-t border-parchment-200 pt-2 space-y-2">
               <div className="flex flex-wrap items-center gap-1.5">
@@ -806,52 +839,95 @@ export default function CharacterStateBand({
                 </div>
               )}
               {canEdit && (
-                <div className="flex items-center gap-1.5">
-                  <label htmlFor={hpInputId} className="text-xs font-medium text-ink-600 shrink-0">
-                    {shaped ? t('band.pv.forme') : t('band.pv')}
-                  </label>
-                  <VitalButton
-                    onClick={() => damageHp(5)}
-                    verb="harm"
-                    label={t('band.blesser.de.5')}
-                  >
-                    −5
-                  </VitalButton>
-                  <VitalButton
-                    onClick={() => damageHp(1)}
-                    verb="harm"
-                    label={t('band.blesser.de.1')}
-                  >
-                    −1
-                  </VitalButton>
-                  <input
-                    id={hpInputId}
-                    type="number"
-                    inputMode="numeric"
-                    min={0}
-                    max={hpMax}
-                    className="input input-compact font-mono w-16 text-center"
-                    value={hpDraft ?? String(displayHp)}
-                    onChange={(e) => setHpDraft(e.target.value)}
-                    onBlur={commitHpDraft}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-                    }}
-                  />
-                  <VitalButton
-                    onClick={() => queueHp(displayHp + 1)}
-                    verb="heal"
-                    label={t('band.soigner.de.1')}
-                  >
-                    +1
-                  </VitalButton>
-                  <VitalButton
-                    onClick={() => queueHp(displayHp + 5)}
-                    verb="heal"
-                    label={t('band.soigner.de.5')}
-                  >
-                    +5
-                  </VitalButton>
+                <div className="flex flex-wrap items-center gap-y-2 lg:flex-nowrap lg:gap-x-5">
+                  <div className="flex items-center gap-1.5">
+                    <label
+                      htmlFor={hpInputId}
+                      className="text-xs font-medium text-ink-600 shrink-0"
+                    >
+                      {shaped ? t('band.pv.forme') : t('band.pv')}
+                    </label>
+                    <VitalButton
+                      onClick={() => damageHp(5)}
+                      verb="harm"
+                      label={t('band.blesser.de.5')}
+                    >
+                      −5
+                    </VitalButton>
+                    <VitalButton
+                      onClick={() => damageHp(1)}
+                      verb="harm"
+                      label={t('band.blesser.de.1')}
+                    >
+                      −1
+                    </VitalButton>
+                    <input
+                      id={hpInputId}
+                      type="number"
+                      inputMode="numeric"
+                      min={0}
+                      max={hpMax}
+                      className="input input-compact font-mono w-16 text-center"
+                      value={hpDraft ?? String(displayHp)}
+                      onChange={(e) => setHpDraft(e.target.value)}
+                      onBlur={commitHpDraft}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                      }}
+                    />
+                    <VitalButton
+                      onClick={() => queueHp(displayHp + 1)}
+                      verb="heal"
+                      label={t('band.soigner.de.1')}
+                    >
+                      +1
+                    </VitalButton>
+                    <VitalButton
+                      onClick={() => queueHp(displayHp + 5)}
+                      verb="heal"
+                      label={t('band.soigner.de.5')}
+                    >
+                      +5
+                    </VitalButton>
+                  </div>
+
+                  {/* Filet between the statement and the temp group — desktop only */}
+                  <span className="hidden lg:block w-px h-7 bg-parchment-300" aria-hidden="true" />
+
+                  {/* PV temporaires — gains only; the Blesser buttons above eat
+                      temp first (SRD), same grammar as the Survie tracker.
+                      Hidden while shaped: temp rides the real HP, not the shape. */}
+                  {!shaped && (
+                    <div className="flex items-center gap-1.5">
+                      <label
+                        htmlFor={tempInputId}
+                        className="text-xs font-medium text-ink-600 shrink-0"
+                      >
+                        {t('hp.pv.temp')}
+                      </label>
+                      <input
+                        id={tempInputId}
+                        type="number"
+                        inputMode="numeric"
+                        min={0}
+                        className="input input-compact font-mono w-14 text-center"
+                        value={tempDraft ?? String(displayTemp)}
+                        onChange={(e) => setTempDraft(e.target.value)}
+                        onBlur={commitTempDraft}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                        }}
+                      />
+                      <VitalButton
+                        temp
+                        onClick={() => queueTemp(displayTemp + 1)}
+                        verb="heal"
+                        label={t('hp.ajouter.1.pv.temp')}
+                      >
+                        +
+                      </VitalButton>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
