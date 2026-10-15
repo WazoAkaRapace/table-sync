@@ -126,6 +126,7 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   r = await api(base, 'GET', '/api/auth/me', { token: eve.token });
   eq(r.data.user.tutorialSeenAt, null, 'me: tutorialSeenAt null par défaut');
   eq(JSON.stringify(r.data.user.tutorialTabsDone), '[]', 'me: tutorialTabsDone [] par défaut');
+  eq(r.data.user.tutorialDisabled, false, 'me: tutorialDisabled false par défaut');
 
   r = await api(base, 'PATCH', '/api/auth/me', {
     token: eve.token,
@@ -152,6 +153,32 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   eq(r.status, 200, 'patch me tutorialSeenAt null (reset) → 200');
   eq(r.data.user.tutorialSeenAt, null, 'reset clears tutorialSeenAt');
   eq(JSON.stringify(r.data.user.tutorialTabsDone), '[]', 'reset clears tutorialTabsDone');
+
+  // ---------- « Ne plus montrer les tutoriels » : coupe totale, puis reset
+  //            qui relève TOUT (disabled compris) ----------
+  r = await api(base, 'PATCH', '/api/auth/me', {
+    token: eve.token,
+    body: { tutorialDisabled: true },
+  });
+  eq(r.status, 200, 'patch me tutorialDisabled true → 200');
+  eq(r.data.user.tutorialDisabled, true, 'patch me returns tutorialDisabled true');
+  // La coupe survive au marquage « vu » (fin de visite sur un autre appareil)
+  r = await api(base, 'PATCH', '/api/auth/me', {
+    token: eve.token,
+    body: { tutorialSeenAt: '2026-09-03T12:00:00.000Z' },
+  });
+  eq(r.data.user.tutorialDisabled, true, 'disabled survive à markTutorialSeen');
+  // Reset (« Réinitialiser le tutoriel ») : la coupe se lève aussi
+  r = await api(base, 'PATCH', '/api/auth/me', {
+    token: eve.token,
+    body: { tutorialSeenAt: null },
+  });
+  eq(r.data.user.tutorialDisabled, false, 'reset relève la coupe (tutorialDisabled false)');
+  r = await api(base, 'PATCH', '/api/auth/me', {
+    token: eve.token,
+    body: { tutorialDisabled: 'vrai' },
+  });
+  eq(r.status, 200, 'truthy non-bool accepté (coerce)');
 
   r = await api(base, 'PATCH', '/api/auth/me', {
     token: eve.token,

@@ -21,6 +21,7 @@ import {
 } from './scripts';
 import { markTutorialSeen, markTutorialTabDone } from './serverSync';
 import { TutorialTooltip } from './TutorialTooltip';
+import { useAuth } from '../auth';
 
 function useViewport(): 'mobile' | 'desktop' {
   const [desktop, setDesktop] = useState(
@@ -139,16 +140,22 @@ export function readDoneTabs(): string[] {
 
 export function TutorialHost({ character, canEdit, activeTab, onNavigateTab }: TutorialHostProps) {
   const viewport = useViewport();
+  const { user } = useAuth();
   const [scriptId, setScriptId] = useState<TutorialScriptId | null>(null);
   const startedRef = useRef(false);
   const prevTabRef = useRef<TutorialTab | null>(null);
   const ctx = useMemo(() => buildTutorialCtx(character, canEdit), [character, canEdit]);
 
+  // Coupe totale (#compte) : « Ne plus montrer les tutoriels » (Mon compte,
+  // suivi au compte serveur) — AUCUN déclenchement, ni accueil ni onglet,
+  // même sur un onglet jamais visité.
+  const tutorialsOff = !!user?.tutorialDisabled;
+
   // Départ : drapeau absent + fiche chargée (le character arrive avec la query).
   // Le drapeau est convergé avec le serveur par AuthProvider AVANT le premier
   // rendu de page (gate loading) — ici, localStorage reflète déjà le compte.
   useEffect(() => {
-    if (startedRef.current || !character) return;
+    if (startedRef.current || !character || tutorialsOff) return;
     let seen = true;
     try {
       seen = !!localStorage.getItem(TUTORIAL_SEEN_KEY);
@@ -166,7 +173,7 @@ export function TutorialHost({ character, canEdit, activeTab, onNavigateTab }: T
       setScriptId('shell');
     }, 800);
     return () => clearTimeout(timer);
-  }, [character]);
+  }, [character, tutorialsOff]);
 
   // Visite propre d'onglet : le premier passage sur un onglet non vu (une fois
   // la visite d'accueil passée) déclenche son script. Uniquement aux
@@ -175,7 +182,8 @@ export function TutorialHost({ character, canEdit, activeTab, onNavigateTab }: T
   useEffect(() => {
     const previous = prevTabRef.current;
     prevTabRef.current = activeTab;
-    if (!character || scriptId || previous === null || previous === activeTab) return;
+    if (!character || tutorialsOff || scriptId || previous === null || previous === activeTab)
+      return;
     let seen = false;
     try {
       seen = !!localStorage.getItem(TUTORIAL_SEEN_KEY);
@@ -185,7 +193,7 @@ export function TutorialHost({ character, canEdit, activeTab, onNavigateTab }: T
     if (!seen || readDoneTabs().includes(activeTab)) return;
     const timer = setTimeout(() => setScriptId(activeTab), 500);
     return () => clearTimeout(timer);
-  }, [character, scriptId, activeTab]);
+  }, [character, scriptId, activeTab, tutorialsOff]);
 
   const handleEnd = useCallback((ended: TutorialScriptId, completed: boolean) => {
     markTutorialSeen();

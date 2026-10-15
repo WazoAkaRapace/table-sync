@@ -88,6 +88,35 @@ export default function AccountPage() {
     );
   }, []);
 
+  // Désactivation des visites guidées (suivie au compte serveur — la valeur
+  // affichée part de l'état Auth pour converger avec /me).
+  const [tutorialsDisabled, setTutorialsDisabled] = useState(!!user?.tutorialDisabled);
+  const [tutoBusy, setTutoBusy] = useState(false);
+  useEffect(() => {
+    setTutorialsDisabled(!!user?.tutorialDisabled);
+  }, [user?.tutorialDisabled]);
+  const toggleTutorialsDisabled = useCallback(async () => {
+    setTutoBusy(true);
+    try {
+      const res = await api.patch<{ user: UpdateProfilePayload }>('/api/auth/me', {
+        tutorialDisabled: !tutorialsDisabled,
+      });
+      setTutorialsDisabled(!!res.data.user?.tutorialDisabled);
+      // Le contexte Auth porte le drapeau lu par TutorialHost — rafraîchi
+      // pour couper/rétablir les déclenchements sans recharger la page.
+      void refreshUser();
+      pushToast(
+        tutorialsDisabled
+          ? t('account.tutoriel.reactiver.toast')
+          : t('account.tutoriel.desactiver.toast'),
+      );
+    } catch (err: any) {
+      pushToast(err.response?.data?.error || t('account.erreur.de.mise.a.jour'), 'error');
+    } finally {
+      setTutoBusy(false);
+    }
+  }, [tutorialsDisabled, t, pushToast, refreshUser]);
+
   const onBack = useCallback(() => {
     nav('/parties');
   }, [nav]);
@@ -462,16 +491,33 @@ export default function AccountPage() {
           {t('account.tutoriel')}
         </h2>
         <p className="text-sm text-ink-700 mb-4">{t('account.tutoriel.aide')}</p>
-        <button
-          type="button"
-          onClick={() => {
-            resetTutorial();
-            pushToast(t('account.tutoriel.toast'));
-          }}
-          className="btn-secondary"
-        >
-          {t('account.tutoriel.bouton')}
-        </button>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              resetTutorial();
+              pushToast(t('account.tutoriel.toast'));
+            }}
+            className="btn-secondary"
+          >
+            {t('account.tutoriel.bouton')}
+          </button>
+          {/* Coupe TOUTE visite guidée pour le compte (tous appareils) —
+              distinct du rejeu : la désactivation ne retire rien, elle
+              empêche tout futur déclenchement (accueil comme onglets). */}
+          <button
+            type="button"
+            onClick={() => void toggleTutorialsDisabled()}
+            disabled={tutoBusy}
+            aria-pressed={tutorialsDisabled}
+            className="btn-secondary"
+          >
+            {tutorialsDisabled ? t('account.tutoriel.reactiver') : t('account.tutoriel.desactiver')}
+          </button>
+        </div>
+        {tutorialsDisabled && (
+          <p className="text-xs text-ink-400 mt-3">{t('account.tutoriel.desactive.note')}</p>
+        )}
       </section>
 
       {/* ---------- Mot de passe ---------- */}
