@@ -275,7 +275,7 @@ function Dent({
           {c.cardColor && (
             <span
               aria-hidden="true"
-              className="h-2 w-2 shrink-0 rounded-full border border-black/10"
+              className="h-2 w-2 shrink-0 rounded-full ring-2 ring-white/85"
               style={{ backgroundColor: cardColorDisplay(c.cardColor) }}
             />
           )}
@@ -297,7 +297,7 @@ function Dent({
           {phrase && (
             <span
               aria-hidden="true"
-              className={`h-1.5 w-1.5 shrink-0 rounded-full ${feelingDot(c)}`}
+              className={`h-1.5 w-1.5 shrink-0 rounded-full ring-1 ring-white/85 ${feelingDot(c)}`}
               title={t('combat.etat.apparent.phrase', { phrase: phrase })}
             />
           )}

@@ -50,6 +50,9 @@ const FEELING_PHRASES: string[][] = [
 ];
 const FEELING_DOTS = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-green-500'];
 
+const FEELING_DOTS_LIGHT = ['bg-red-600', 'bg-orange-600', 'bg-yellow-600', 'bg-green-600'];
+const FEELING_DOTS_DARK = FEELING_DOTS;
+
 /** Stable word choice per monster + tier — no flicker between polls. */
 export function feelingPhraseKey(c: Combatant): string | null {
   if (c.feeling == null) return null;
@@ -60,31 +63,58 @@ export function feelingPhraseKey(c: Combatant): string | null {
 
 export function feelingDot(c: Combatant): string | null {
   if (c.feeling == null) return null;
-  return FEELING_DOTS[Math.max(0, Math.min(3, Math.round(c.feeling)))];
+  const tier = Math.max(0, Math.min(3, Math.round(c.feeling)));
+  /* Clair : les -500 Tailwind bruts tombaient à 1.8–2.7:1 sur le
+     parchemin — les -600 tiennent ≥ 3.1:1. Bougie : les tokens -500 du
+     thème (≥ 3.2:1 sur le cuir). */
+  const ramp =
+    typeof document !== 'undefined' && document.documentElement.classList.contains('ts-dark')
+      ? FEELING_DOTS_DARK
+      : FEELING_DOTS_LIGHT;
+  return ramp[tier];
 }
 
 // ---------- Color marks ----------
 
 /* Les pastilles de couleur portent un IDENTIFIANT stocké (cardColor en
-   base) : les valeurs hex du sélecteur sont l'identité lumineuse. En mode
-   bougie on éclaircit la même teinte (le cuir sombre mangerait les
-   pastilles pastel — la couleur doit rester un repère lisible). */
+   base) : les valeurs hex du sélecteur sont l'identité lumineuse, mais le
+   RENDU vit ici — les pastels d'origine (L* 88–96) tombaient à 1.0–1.3:1
+   sur le parchemin et se confondaient entre eux (audit 2026-10, ΔE00
+   < 10 pour la plupart des paires). Chaque mode rend donc une version
+   SATURÉE de la même teinte, ≥ 3:1 contre les surfaces réelles (page
+   parch-50, dent focus parch-100, sélecteur sur raised) et séparée de
+   ses voisines (ΔE00 ≥ 13 ou écart de teinte franc) :
+   — clair : nuances profondes (L* 35–55), le parchemin les porte ;
+   — bougie : nuances claires (L* 70–82), le cuir les porte.
+   Le sélecteur rend les MÊMES valeurs (cardColorDisplay) : ce que le MD
+   choisit est exactement ce que la table voit. Contrat gardé par
+   scripts/test-theme-contrast.ts (paires « pastille monstre »). */
 const CARD_COLORS_DARK: Record<string, string> = {
-  '#fef3c7': '#8a6d1d',
-  '#dcfce7': '#2e6b3f',
-  '#dbeafe': '#2f5a94',
-  '#fce7f3': '#99436f',
-  '#f3e8ff': '#6f4e99',
-  '#fed7aa': '#9c5d22',
-  '#fee2e2': '#9c3030',
-  '#e0e7ff': '#4a51a3',
+  '#fef3c7': '#fbbf24',
+  '#dcfce7': '#4ade80',
+  '#dbeafe': '#bfdbfe',
+  '#fce7f3': '#fbcfe8',
+  '#f3e8ff': '#c084fc',
+  '#fed7aa': '#fdba74',
+  '#fee2e2': '#ef4444',
+  '#e0e7ff': '#818cf8',
+};
+
+/* Clair : version saturée profonde de la même teinte (le pastel d'origine
+   ne se détache pas du parchemin). */
+const CARD_COLORS_LIGHT: Record<string, string> = {
+  '#fef3c7': '#92610a',
+  '#dcfce7': '#15803d',
+  '#dbeafe': '#2563eb',
+  '#fce7f3': '#db2777',
+  '#f3e8ff': '#9333ea',
+  '#fed7aa': '#ea580c',
+  '#fee2e2': '#b91c1c',
+  '#e0e7ff': '#312e81',
 };
 
 export function cardColorDisplay(hex: string): string {
-  return (
-    (typeof document !== 'undefined' &&
-      document.documentElement.classList.contains('ts-dark') &&
-      CARD_COLORS_DARK[hex]) ||
-    hex
-  );
+  const dark =
+    typeof document !== 'undefined' && document.documentElement.classList.contains('ts-dark');
+  return (dark ? CARD_COLORS_DARK[hex] : CARD_COLORS_LIGHT[hex]) ?? hex;
 }

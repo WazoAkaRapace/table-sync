@@ -304,6 +304,71 @@ const pairs: Pair[] = [
   },
 ];
 
+// ---- Pastilles de couleur des monstres (cardColorDisplay) ----
+// Les hex RENDUS vivent dans apps/web/src/combatDisplay.ts (l'identité
+// stockée en base est un hex pastel, le rendu le sature par mode). On
+// énumère ici le contrat : chaque rendu ≥ 3:1 contre page (parch-50),
+// dent focus (parch-100) et sélecteur (raised), dans les DEUX modes ;
+// + l'anneau blanc/85 qui sépare la pastille de la carte « tour
+// courant » blood-600 (un fill ne peut jamais tenir 3:1 contre une
+// nappe de sang ET contre le parchemin à la fois — d'où l'anneau).
+const PILL_LIGHT: Record<string, string> = {
+  ambre: '#92610a',
+  vert: '#15803d',
+  bleu: '#2563eb',
+  rose: '#db2777',
+  violet: '#9333ea',
+  orange: '#ea580c',
+  rouge: '#b91c1c',
+  indigo: '#312e81',
+};
+const PILL_DARK: Record<string, string> = {
+  ambre: '#fbbf24',
+  vert: '#4ade80',
+  bleu: '#bfdbfe',
+  rose: '#fbcfe8',
+  violet: '#c084fc',
+  orange: '#fdba74',
+  rouge: '#ef4444',
+  indigo: '#818cf8',
+};
+const ringOnWhite85 = (bg: string) => blendHex('#ffffff', bg, 0.85);
+function blendHex(fg: string, bg: string, alpha: number): string {
+  const f = parseInt(fg.slice(1), 16);
+  const b = parseInt(bg.slice(1), 16);
+  const ch = (i: number) => Math.round(((f >> i) & 255) * alpha + ((b >> i) & 255) * (1 - alpha));
+  return `#${((ch(16) << 16) | (ch(8) << 8) | ch(0)).toString(16).padStart(6, '0')}`;
+}
+for (const [modeName, pills] of [
+  ['clair', PILL_LIGHT],
+  ['bougie', PILL_DARK],
+] as const) {
+  const surfaces: [string, string][] = [
+    ['page', resolve(modeName, '--color-parchment-50')],
+    ['dent focus', resolve(modeName, '--color-parchment-100')],
+    ['sélecteur (raised)', resolve(modeName, '--color-raised')],
+  ];
+  for (const [name, hex] of Object.entries(pills)) {
+    for (const [surface, surfaceHex] of surfaces) {
+      pairs.push({
+        name: `pastille monstre ${name} — ${surface}`,
+        mode: modeName,
+        fg: hex,
+        bg: surfaceHex,
+        min: 3,
+      });
+    }
+  }
+  // Anneau de la carte « tour courant » : blanc/85 sur blood-600
+  pairs.push({
+    name: 'anneau pastille — tour courant (blood-600)',
+    mode: modeName,
+    fg: ringOnWhite85(resolve(modeName, '--color-blood-600')),
+    bg: resolve(modeName, '--color-blood-600'),
+    min: 3,
+  });
+}
+
 let failures = 0;
 console.log(`Garde contraste — ${pairs.length} paires réelles (index.css)\n`);
 for (const p of pairs) {
