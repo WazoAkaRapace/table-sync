@@ -136,9 +136,12 @@ function main(): number {
     if (want === 'HEAD')
       want = execSync('git rev-parse --short HEAD', { cwd: ROOT }).toString().trim();
     const entries = Array.isArray(raw) ? (raw as Entry[]) : [];
-    // Exceptions : merge commits GitHub et stamp — pas d'entrée requise.
+    // Exceptions : merge commits GitHub, stamp, fixups « changelog: » (ils ne
+    // touchent QUE CHANGELOG.json et existent pour satisfaire ce gate).
     const subjects = execSync('git log -1 --format=%s', { cwd: ROOT }).toString().trim();
-    if (/^Merge (pull request|branch)|^\[?changelog-stamp\]?|^\[skip ci\]/i.test(subjects)) {
+    if (
+      /^Merge (pull request|branch)|^\[?changelog-stamp\]?|^\[skip ci\]|^changelog:/i.test(subjects)
+    ) {
       console.log(`✓ Commit « ${subjects} » exempté (merge/stamp).`);
       return 0;
     }

@@ -54,7 +54,8 @@ et « Journal » dans Mon compte.
 - commits de merge/squash générés par GitHub
 - `chore:` touchant SEULEMENT : `.github/`, `scripts/` hors `apps/`,
   `docs/` hors captures, `site/`, le stamp changelog lui-même
-- corrections du changelog (`CHANGELOG.json` seul dans le diff)
+- corrections du changelog (`CHANGELOG.json` seul dans le diff), et les
+  commits « `changelog:` » (pointeur de SHA — ils ne font que satisfaire ce gate)
 
 ## Commandes
 
