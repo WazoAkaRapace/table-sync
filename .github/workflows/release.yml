@@ -53,11 +53,14 @@ jobs:
           fi
           # Release sur le commit stampé s'il existe, sinon le merge.
           TARGET="${STAMP_SHA:-${{ github.sha }}}"
-          gh release create "$VERSION" --title "$VERSION" \
-            --notes-file /tmp/release-notes.md \
-            --target "$TARGET" || echo "release existe déjà"
-          # Dispatch du build d'images avec la version (la release
-          # GITHUB_TOKEN ne tire pas on: release elle-même).
+          # (re)publier les notes au passage si la release existait déjà, et
+          # TOUJOURS dispatcher le build — une release créée avec
+          # GITHUB_TOKEN ne tire pas on: release (anti-récursion GitHub).
+          if ! gh release create "$VERSION" --title "$VERSION" \
+            --notes-file /tmp/release-notes.md --target "$TARGET" 2>/dev/null; then
+            echo "release $VERSION existante — notes mises à jour"
+            gh release edit "$VERSION" --notes-file /tmp/release-notes.md || true
+          fi
           gh workflow run "Build & Push Docker Images" \
             --ref main -f version="$VERSION" \
-            || echo "dispatch refusé (workflow_dispatch pas encore actif sur main ?)"
+            || echo "dispatch refusé — relancer à la main : gh workflow run 'Build & Push Docker Images' --ref main -f version=$VERSION"

@@ -23,11 +23,7 @@ env:
   IMAGE_PREFIX: wazoakarapace/table-sync
   # Version stampée dans l'image web (version.json, Mon compte, popup) :
   # tag de la release, input du dispatch manuel, sinon sha-<court>.
-  APP_VER: ${{
-    github.event_name == 'release' && github.event.release.tag_name ||
-    (github.event.inputs.version || '') ||
-    format('sha-{0}', github.sha)
-  }}
+  APP_VER: ${{ github.event_name == 'release' && github.event.release.tag_name || github.event.inputs.version || format('sha-{0}', github.sha) }}
 
 jobs:
   # ---------- Security scan ----------
