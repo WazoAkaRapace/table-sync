@@ -41,13 +41,22 @@ la version est donc déclarée PAR TOI, une seule fois, sans course au SHA.
 - `date` : ISO `YYYY-MM-DD` (jour de l'entrée).
 - `title` : 2-5 mots, minuscules, sans verbe — une étiquette
   (« pastilles lisibles », « rail d'initiative »).
-- `items` : **une phrase simple par puce**, en français :
+- `items` : **une puce courte par fonctionnalité**, en français :
+  - UNE fonctionnalité = UNE puce — jamais plusieurs puces pour décrire le
+    même changement, et la puce reste COURTE (une ligne, ~12 mots) :
+    « L'animation de l'ordre d'initiative à la fin du tour est corrigée. »
+  - décris CE QUI A ÉTÉ FAIT, jamais COMMENT c'est fait : une correction
+    se formule « <la chose cassée> est corrigée », une nouveauté
+    « <la chose nouvelle> arrive » — pas le détail du comportement ni le
+    mécanisme (« est corrigée », pas « s'anime en trois temps qui… »).
+  - CENTRÉE JOUEUR : la chose décrite est celle que la personne à table
+    voit ou obtient (« l'ordre d'initiative », pas « le FLIP du rail »).
   - sujet + verbe + point final. « L'ordre du combat s'affiche sur la fiche. »
-  - UNE idée par puce. Deux idées = deux puces.
   - présent de l'indicatif, tutoiement implicite (pas de « vous »).
-  - **pas de jargon** : jamais « refactor », « API », « token », « state »,
-    « migration » — le lecteur est un joueur à table. Décris l'EFFET :
-    « L'application démarre plus vite. » et non « Le bundle est splité ».
+  - **sans jargon technique** : jamais « refactor », « API », « token »,
+    « state », « composant », « migration » — le lecteur est un joueur à
+    table, pas un développeur. Décris l'EFFET : « L'application démarre
+    plus vite. » et non « Le bundle est splité ».
 
 ### Exceptions (gate toléré sans entrée)
 
