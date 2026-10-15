@@ -51,6 +51,10 @@ for (const file of walk(ROOT)) {
     // du membre interpolé.
     // Note de dépendances (ex-suppression Biome) : la chaîne de remplacement vise littéralement "${}"
     .replace(/\$\{[^}]*\}/g, '${}')
+    // Accès au CHAMP combatant.initiative : une clé de donnée SRD/API (le
+    // lecteur du rail et l'échelle du MD la lisent partout), pas du texte
+    // affiché — le libellé UI « Initiative » nu, lui, continue de compter.
+    .replace(/\.initiative\b/g, '.')
     // Visite guidée : les ids d'étapes ({ id: 'portage', … }) et les cibles
     // tuto('stats-portage') / data-tuto="stats-portage" sont des identifiants
     // de logique (docs/tutorial-script.md), jamais du texte affiché.
