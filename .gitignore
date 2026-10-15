@@ -41,6 +41,7 @@ docker-data/
 .cursor/
 .agents/
 .zcode/
+.zcodeignore
 .impeccable/
 gui-test-screenshots/
 
