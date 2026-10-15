@@ -2152,5 +2152,12 @@
   "account.tutoriel.desactive.note": "Les visites guidées sont désactivées pour ton compte, sur tous tes appareils. « Réinitialiser le tutoriel » les réactivera d'un coup.",
   "account.tutoriel.desactiver.toast": "Tutoriels désactivés — plus aucune visite guidée",
   "account.tutoriel.reactiver.toast": "Tutoriels réactivés",
-  "account.erreur.de.mise.a.jour": "Mise à jour impossible"
+  "account.erreur.de.mise.a.jour": "Mise à jour impossible",
+  "changelog.nouveautes": "Nouveautés",
+  "changelog.journal": "Journal des modifications",
+  "changelog.mise.a.jour.recue": "L’application a été mise à jour depuis votre dernière visite.",
+  "changelog.continuer": "Continuer",
+  "changelog.tout.voir": "Voir tout le journal",
+  "changelog.vide": "Aucune nouveauté pour le moment.",
+  "changelog.ouvrir": "Journal des modifications"
 }

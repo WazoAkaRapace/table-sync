@@ -79,11 +79,17 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      # Version du PWA : SHA court du commit — stampée dans le bundle web et
-      # dans version.json (une version par commit, comparable côté client).
-      - name: Short SHA for the web version stamp
+      # Version du PWA : le TAG de la release si elle existe (calver lisible,
+      # ex. 2026.10.15 — déclaré dans l'entrée CHANGELOG.json), sinon le SHA
+      # court du commit (builds de validation main).
+      - name: Version stamp for the web build
         if: matrix.component == 'web'
-        run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "APP_VER=${{ github.event.release.tag_name }}" >> "$GITHUB_ENV"
+          else
+            echo "APP_VER=sha-${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+          fi
 
       - name: Build and push ${{ matrix.component }} (${{ matrix.platform }})
         id: build
@@ -98,7 +104,7 @@ jobs:
           cache-to: type=gha,scope=${{ matrix.component }}-${{ matrix.platform }},mode=max
           build-args: |
             ${{ matrix.component == 'web' && 'VITE_API_URL=' || '' }}
-            ${{ matrix.component == 'web' && format('APP_VERSION=sha-{0}', env.SHORT_SHA) || '' }}
+            ${{ matrix.component == 'web' && format('APP_VERSION={0}', env.APP_VER) || '' }}
 
       - name: Save digest to artifact
         id: save-digest
@@ -192,3 +198,48 @@ jobs:
           docker buildx imagetools inspect \
             ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${{ matrix.component }}:main \
             || echo "(inspection skipped — tag may differ on non-main pushes)"
+
+  # ---------- Changelog release : stamp sha + release GitHub ----------
+  # Au merge d'une PR : pose le SHA squash dans l'entrée de la version puis
+  # crée la release <version> (notes = puces de l'entrée). La release
+  # déclenche le build de déploiement (release: published) — les images
+  # de prod portent le tag calver lisible en APP_VERSION.
+  changelog-release:
+    if: github.event_name == 'push'
+    needs: merge
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Stamp sha + notes, créer la release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -eu
+          # L'association commit→PR relie aussi le commit squash à sa PR.
+          PR_HEAD=$(gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/pulls"             --jq '.[0].head.sha' 2>/dev/null || echo "")
+          if [ -z "$PR_HEAD" ] || [ "$PR_HEAD" = "null" ]; then
+            echo "Pas de PR associée — pas de release auto."
+            exit 0
+          fi
+          VERSION=$(node -p "require('./CHANGELOG.json')[0].version")
+          echo "Version: $VERSION"
+          npx tsx scripts/release-changelog.ts "$VERSION" "${{ github.sha }}"
+          if ! git diff --quiet CHANGELOG.json; then
+            git config user.name "table-sync-bot"
+            git config user.email "actions@github.com"
+            git add CHANGELOG.json
+            git commit -m "changelog-release: sha ${GITHUB_SHA::7} pour $VERSION [skip ci]"
+            git push
+          fi
+          # Créer la release sur le commit STAMPÉ (le checkout local est déjà à jour)
+          gh release create "$VERSION" --title "$VERSION"             --notes-file /tmp/release-notes.md             --target "${{ github.sha }}" || echo "release existe déjà"

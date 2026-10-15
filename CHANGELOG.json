@@ -1,0 +1,13 @@
+[
+  {
+    "version": "2026.10.15",
+    "sha": null,
+    "date": "2026-10-15",
+    "title": "journal des modifications",
+    "items": [
+      "L'application affiche les nouveautés après chaque mise à jour.",
+      "Le journal complet est disponible dans Mon compte, à côté du numéro de version.",
+      "Les versions portent maintenant un numéro lisible (2026.10.15) à la place du code technique."
+    ]
+  }
+]

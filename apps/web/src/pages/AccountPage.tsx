@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../auth';
+import { ChangelogDialog } from '../components/ChangelogDialog';
 import { ErrorMsg, type Toast, ToastStack } from '../components/ui';
 import { useHeaderOverride } from '../headerContext';
 import { LANGUAGES, setAppLang } from '../i18n';
@@ -40,6 +41,9 @@ export default function AccountPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [savingPassword, setSavingPassword] = useState(false);
+
+  // Journal des modifications (dialog complet, ouvert depuis la version).
+  const [showChangelog, setShowChangelog] = useState(false);
 
   // Renvoi du lien de vérification d'adresse (état ci-dessous : les hooks
   // doivent rester au-dessus du garde `if (!user)`).
@@ -589,10 +593,21 @@ export default function AccountPage() {
       </section>
 
       {/* Version du build — SHA du commit servi (dev en local). Le bandeau
-          de mise à jour compare cette version à /version.json. */}
+          de mise à jour compare cette version à /version.json. Le « Journal »
+          ouvre le journal des modifications complet. */}
       <p className="pt-2 text-center font-mono text-[10px] text-ink-300">
-        Table Sync · {__APP_VERSION__}
+        Table Sync · {__APP_VERSION__} ·{' '}
+        <button
+          type="button"
+          onClick={() => setShowChangelog(true)}
+          className="underline underline-offset-2 hover:text-ink-500"
+          aria-label={t('changelog.ouvrir')}
+        >
+          Journal
+        </button>
       </p>
+
+      <ChangelogDialog open={showChangelog} onClose={() => setShowChangelog(false)} mode="full" />
 
       <ToastStack
         toasts={toasts}

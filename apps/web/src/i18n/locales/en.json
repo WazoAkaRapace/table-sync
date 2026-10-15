@@ -2153,5 +2153,12 @@
   "account.tutoriel.desactive.note": "Guided tours are disabled for your account, on all your devices. “Reset tutorial” will bring them back.",
   "account.tutoriel.desactiver.toast": "Tutorials disabled — no more guided tours",
   "account.tutoriel.reactiver.toast": "Tutorials re-enabled",
-  "account.erreur.de.mise.a.jour": "Update failed"
+  "account.erreur.de.mise.a.jour": "Update failed",
+  "changelog.nouveautes": "What's new",
+  "changelog.journal": "Changelog",
+  "changelog.mise.a.jour.recue": "The app was updated since your last visit.",
+  "changelog.continuer": "Continue",
+  "changelog.tout.voir": "View full changelog",
+  "changelog.vide": "Nothing new yet.",
+  "changelog.ouvrir": "Changelog"
 }
