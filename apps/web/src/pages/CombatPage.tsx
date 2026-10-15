@@ -1306,7 +1306,7 @@ function InitiativeRail({
                   {c.cardColor && (
                     <span
                       aria-hidden="true"
-                      className="h-2 w-2 shrink-0 rounded-full border border-black/10"
+                      className="h-2 w-2 shrink-0 rounded-full ring-2 ring-white/85"
                       style={{ backgroundColor: cardColorDisplay(c.cardColor) }}
                     />
                   )}
@@ -1339,7 +1339,7 @@ function InitiativeRail({
                   {phrase && (
                     <span
                       aria-hidden="true"
-                      className={`h-1.5 w-1.5 shrink-0 rounded-full ${feelingDot(c)}`}
+                      className={`h-1.5 w-1.5 shrink-0 rounded-full ring-1 ring-white/85 ${feelingDot(c)}`}
                       title={t('combat.etat.apparent.phrase', { phrase: phrase })}
                     />
                   )}
@@ -1847,21 +1847,25 @@ function StagePanel({
                 }}
                 className={`h-12 rounded-lg border-2 transition-all ${
                   isSelected
-                    ? 'border-blood-500 ring-2 ring-blood-300'
-                    : 'border-parchment-200 hover:border-parchment-300'
-                } ${color === null ? 'bg-white' : ''}`}
+                    ? 'border-blood-500 ring-2 ring-blood-300 ring-offset-2 ring-offset-raised'
+                    : 'border-parchment-300 hover:border-parchment-400'
+                } ${color === null ? 'bg-parchment-100' : ''}`}
                 style={color ? { backgroundColor: cardColorDisplay(color) } : undefined}
-                title={color === null ? t('combat.par.defaut') : color}
+                title={
+                  color === null
+                    ? t('combat.par.defaut')
+                    : t(CARD_COLOR_NAMES[color] ?? 'combat.couleur.rouge')
+                }
                 aria-label={
                   color === null
                     ? t('combat.marque.par.defaut')
                     : t('combat.marque.couleur', {
-                        couleur: t(CARD_COLOR_NAMES[color] ?? 'combat.de.couleur'),
+                        couleur: t(CARD_COLOR_NAMES[color] ?? 'combat.couleur.rouge'),
                       })
                 }
               >
                 {color === null && (
-                  <span className="text-xs text-ink-400">{t('combat.defaut')}</span>
+                  <span className="text-xs text-ink-500">{t('combat.defaut')}</span>
                 )}
               </button>
             );
