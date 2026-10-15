@@ -21,6 +21,13 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_PREFIX: wazoakarapace/table-sync
+  # Version stampée dans l'image web (version.json, Mon compte, popup) :
+  # tag de la release, input du dispatch manuel, sinon sha-<court>.
+  APP_VER: ${{
+    github.event_name == 'release' && github.event.release.tag_name ||
+    (github.event.inputs.version || '') ||
+    format('sha-{0}', github.sha)
+  }}
 
 jobs:
   # ---------- Security scan ----------
@@ -90,20 +97,6 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
-
-      # Version du PWA : le TAG de la release (calver lisible, ex. 2026.10.15
-      # — déclaré dans l'entrée CHANGELOG.json), l'input du dispatch manuel,
-      # ou le SHA court en repli.
-      - name: Version stamp for the web build
-        if: matrix.component == 'web'
-        run: |
-          if [ "${{ github.event_name }}" = "release" ]; then
-            echo "APP_VER=${{ github.event.release.tag_name }}" >> "$GITHUB_ENV"
-          elif [ -n "${{ github.event.inputs.version }}" ]; then
-            echo "APP_VER=${{ github.event.inputs.version }}" >> "$GITHUB_ENV"
-          else
-            echo "APP_VER=sha-${GITHUB_SHA::7}" >> "$GITHUB_ENV"
-          fi
 
       - name: Build and push ${{ matrix.component }} (${{ matrix.platform }})
         id: build
@@ -180,7 +173,7 @@ jobs:
           tags: |
             type=raw,value=main
             type=raw,value=latest
-            type=raw,value=${{ env.APP_VER || format('sha-{0}', github.sha) }}
+            type=raw,value=${{ env.APP_VER }}
             type=sha,prefix=sha-
 
       - name: Create multi-arch manifest
