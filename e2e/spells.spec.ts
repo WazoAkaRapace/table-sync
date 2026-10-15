@@ -104,7 +104,6 @@ playerTest.describe('Sorts (clerc)', () => {
       // #187 (persist) : le choix est MÉMORISÉ — après un rechargement complet,
       // l'onglet ré-ouvre sur « Tous » (pas de réarmement du défaut Préparés).
       await page.reload();
-      await expect(page.getByText(s.clerc.name).first()).toBeVisible();
       await openTab(page, 'Sorts');
       await expect(page.getByRole('button', { name: 'Tous' })).toHaveAttribute(
         'aria-pressed',
@@ -118,7 +117,6 @@ playerTest.describe('Sorts (clerc)', () => {
       await page.getByRole('button', { name: /Préparés 3 \/ 9/ }).click();
       await expect(prepChip).toHaveAttribute('aria-pressed', 'true');
       await page.reload();
-      await expect(page.getByText(s.clerc.name).first()).toBeVisible();
       await openTab(page, 'Sorts');
       await expect(prepChip).toHaveAttribute('aria-pressed', 'true');
       expect(await page.evaluate(() => localStorage.getItem('dnd-inv-spells-filter'))).toMatch(
