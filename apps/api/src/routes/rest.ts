@@ -157,6 +157,7 @@ export async function restRoutes(app: FastifyInstance) {
         ['deathSaveSuccesses', 'deathSaveSuccesses'],
         ['deathSaveFailures', 'deathSaveFailures'],
         ['concentrating', 'concentrating'],
+        ['raging', 'raging'],
         ['wildShapeUses', 'wildShapeUses'],
         ['conditions', 'conditions'],
       ];

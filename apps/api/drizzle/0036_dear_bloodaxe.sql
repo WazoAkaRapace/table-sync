@@ -1,0 +1,1 @@
+ALTER TABLE `characters` ADD `raging` integer DEFAULT 0 NOT NULL;

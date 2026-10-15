@@ -695,6 +695,10 @@ export interface CharacterSummary {
   deathSaveFailures: number; // 0-3
   inspiration: boolean;
   concentrating: boolean; // player is concentrating on a spell
+  // Barbarian Rage is active (issue #189) — a state flag twin of
+  // concentrating: charge consumption lives in character_features, the
+  // visible on-sheet state lives here.
+  raging: boolean;
   // Wild Shape (Druide)
   wildShapeSlug: string | null;
   wildShapeHp: number | null;
@@ -832,6 +836,7 @@ export interface PatchCharacterPayload {
   deathSaveFailures?: number;
   inspiration?: boolean;
   concentrating?: boolean;
+  raging?: boolean;
   wildShapeSlug?: string | null;
   wildShapeHp?: number | null;
   wildShapeMaxHp?: number | null;
@@ -3435,6 +3440,19 @@ export function unarmoredMovementBonus(level: number): number {
   if (level >= 10) return 6;
   if (level >= 6) return 4.5;
   if (level >= 2) return 3;
+  return 0;
+}
+
+/**
+ * Rage damage bonus (PHB 2014, Barbarien — Rage) : +2 au niveau 1, +3 au
+ * niveau 9, +4 au niveau 16. Évalué au NIVEAU DE CLASSE Barbare (SRD
+ * multiclassage), pas au niveau total. S'applique aux attaques d'arme de
+ * mêlée utilisant la Force, hors armure lourde.
+ */
+export function rageDamageBonus(barbarianLevel: number): number {
+  if (barbarianLevel >= 16) return 4;
+  if (barbarianLevel >= 9) return 3;
+  if (barbarianLevel >= 1) return 2;
   return 0;
 }
 

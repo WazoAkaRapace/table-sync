@@ -201,6 +201,10 @@ export const characters = sqliteTable(
       .default(sql`(datetime('now'))`),
     // --- Columns historically added via COLUMN_MIGRATIONS (ALTER TABLE) ---
     concentrating: integer('concentrating').notNull().default(0),
+    // Issue #189 — état Rage du barbare : jumeau de concentrating. La
+    // consommation de charge vitte dans character_features (compteur ⚡ du
+    // catalogue barbare-rage), l'état visible sur la fiche vit ici.
+    raging: integer('raging').notNull().default(0),
     weaponProficiencies: text('weapon_proficiencies'),
     armorProficiencies: text('armor_proficiencies'),
     fightingStyle: text('fighting_style'),

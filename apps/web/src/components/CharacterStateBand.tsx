@@ -281,6 +281,7 @@ export default function CharacterStateBand({
   const stateCount =
     conditions.length +
     (exhaustion > 0 ? 1 : 0) +
+    (character.raging ? 1 : 0) +
     (character.foodDays > 0 ? 1 : 0) +
     (character.waterDays > 0 ? 1 : 0);
 
@@ -477,6 +478,17 @@ export default function CharacterStateBand({
                       title={t('band.concentration.en.cours')}
                     >
                       🌀
+                    </button>
+                  )}
+                  {character.raging && (
+                    <button
+                      type="button"
+                      onClick={() => onNavigate('survival')}
+                      className="shrink-0 hover:scale-110 transition-transform"
+                      aria-label={t('band.en.rage.ouvrir.la.survie')}
+                      title={t('band.rage.en.cours')}
+                    >
+                      🔥
                     </button>
                   )}
                   {character.inspiration && (
@@ -741,6 +753,11 @@ export default function CharacterStateBand({
                 {exhaustion > 0 && (
                   <Chip tone="red" title={t('band.epuisement.malus.cumules.onglet.survie')}>
                     {t('band.epuisement.level', { level: exhaustion })}
+                  </Chip>
+                )}
+                {character.raging && (
+                  <Chip tone="red" title={t('band.rage.en.cours')}>
+                    🔥 {t('band.rage')}
                   </Chip>
                 )}
                 {character.foodDays > 0 && (

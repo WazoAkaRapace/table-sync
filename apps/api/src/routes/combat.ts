@@ -968,6 +968,7 @@ export async function combatRoutes(app: FastifyInstance) {
             name: charactersTable.name,
             owner_id: charactersTable.ownerId,
             concentrating: charactersTable.concentrating,
+            raging: charactersTable.raging,
             temp_hp: charactersTable.tempHp,
             wild_shape_slug: charactersTable.wildShapeSlug,
           })
@@ -1001,6 +1002,15 @@ export async function combatRoutes(app: FastifyInstance) {
                 .set({ concentrating: 0 })
                 .where(eq(charactersTable.id, ch.id))
                 .run();
+              // Issue #189 — inconscient : la rage tombe avec la
+              // concentration (même transaction, pas d'état fantôme).
+              if (ch.raging) {
+                drizzle
+                  .update(charactersTable)
+                  .set({ raging: 0 })
+                  .where(eq(charactersTable.id, ch.id))
+                  .run();
+              }
               // v2 : la rupture se juge sur le LANCEUR — les lignes CASTÉES
               // par ce perso tombent (sur lui, sur autrui ou « Autre »), et
               // la CA de CHAQUE porteur fiche touché resynchronise (emit:
@@ -1026,6 +1036,23 @@ export async function combatRoutes(app: FastifyInstance) {
                 actorUserId: userId,
               });
             }
+          }
+        }
+        // Issue #189 — Rage : KO au traqueur → inconscient → la rage tombe,
+        // MÊME si le barbare ne concentre aucun sort (le bloc concentration
+        // ci-dessus ne couvre que les lanceurs). Juge identique : 0 PV réel
+        // (les PV temporaires restants amortissent la chute).
+        if (ch && !ch.concentrating && ch.raging) {
+          const damage = (combatant.hit_points ?? 0) - Math.max(0, body.hitPoints);
+          const tempHp = ch.wild_shape_slug ? 0 : (ch.temp_hp ?? 0);
+          const absorbed = damage > 0 ? Math.min(tempHp, damage) : 0;
+          const realHp = Math.max(0, body.hitPoints) + absorbed;
+          if (realHp <= 0) {
+            drizzle
+              .update(charactersTable)
+              .set({ raging: 0 })
+              .where(eq(charactersTable.id, ch.id))
+              .run();
           }
         }
       }
@@ -1155,26 +1182,42 @@ export async function combatRoutes(app: FastifyInstance) {
       // --- Concentration: an incapacitating condition applied by the GM
       // (Inconscient, Paralysé, …) breaks the player's concentration.
       let concentrationBroken: string | undefined;
+      // Issue #189 — la rage tombe aussi sur condition incapacitante.
+      let rageEndedByCondition: string | undefined;
       if (body.conditions && combatant.type === 'player' && combatant.character_id) {
         const breaking = body.conditions.find((c) =>
           CONCENTRATION_BREAKING_CONDITIONS_FR.includes(c.name),
         );
         if (breaking) {
           const ch = drizzle
-            .select({ id: charactersTable.id, concentrating: charactersTable.concentrating })
+            .select({
+              id: charactersTable.id,
+              concentrating: charactersTable.concentrating,
+              raging: charactersTable.raging,
+            })
             .from(charactersTable)
             .where(eq(charactersTable.id, combatant.character_id))
             .get() as any;
-          if (ch?.concentrating) {
+          if (ch?.concentrating || ch?.raging) {
             // Condition brisante → concentration rompue : les lignes d'effet
             // liées tombent dans la même écriture (pas d'effet fantôme).
+            // Issue #189 — la rage tombe aussi (incapacité).
             let droppedBearers: number[] = [];
             getDb().transaction(() => {
-              drizzle
-                .update(charactersTable)
-                .set({ concentrating: 0 })
-                .where(eq(charactersTable.id, ch.id))
-                .run();
+              if (ch?.concentrating) {
+                drizzle
+                  .update(charactersTable)
+                  .set({ concentrating: 0 })
+                  .where(eq(charactersTable.id, ch.id))
+                  .run();
+              }
+              if (ch?.raging) {
+                drizzle
+                  .update(charactersTable)
+                  .set({ raging: 0 })
+                  .where(eq(charactersTable.id, ch.id))
+                  .run();
+              }
               // v2 : la rupture se juge sur le LANCEUR — les lignes CASTÉES
               // par ce perso tombent, et la CA de CHAQUE porteur fiche
               // touché resynchronise (emit: false — la route émet déjà son
@@ -1201,6 +1244,7 @@ export async function combatRoutes(app: FastifyInstance) {
               });
             }
             concentrationBroken = breaking.name;
+            if (ch?.raging) rageEndedByCondition = breaking.name;
           }
         }
       }
@@ -1227,6 +1271,7 @@ export async function combatRoutes(app: FastifyInstance) {
       return reply.send({
         combatant: mapCombatant(row),
         ...(concentrationBroken ? { concentrationBroken } : {}),
+        ...(rageEndedByCondition ? { rageEnded: rageEndedByCondition } : {}),
       });
     },
   );
