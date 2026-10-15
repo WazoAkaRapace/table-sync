@@ -743,11 +743,44 @@ html.ts-dark .card {
   animation: icon-swap 220ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Rail d'initiative — le deal de l'ordre : le repère de manche se pose,
+   puis chaque dent glisse depuis la droite, une à une, comme l'ordre qu'on
+   distribue sur la table. Le délai est inline (plafonné côté JS — une longue
+   liste ne rallonge pas l'arrivée) ; posé sur le <li>, le FLIP de la réassise
+   transforme la dent interne — jamais le même élément. Une dent AJOUTÉE en
+   cours de combat monte avec SON deal (la carte rejoint l'ordre).
+   Retours test 2026-10 : 520 ms — assez lent pour lire chaque pose. */
+@keyframes rail-deal {
+  from {
+    transform: translateX(26px);
+    opacity: 0;
+  }
+}
+.rail-deal {
+  animation: rail-deal 520ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+/* Fin de combat — l'ordre se replie : les dents s'envolent vers le haut,
+   la distribution rappelée (les délais inline du deal sont conservés —
+   la tête part première), PENDANT que la bande referme sa hauteur (la
+   page anime la hauteur du fourreau au même moment). */
+@keyframes rail-deal-out {
+  to {
+    transform: translateY(-18px);
+    opacity: 0;
+  }
+}
+.rail-exiting .rail-deal {
+  animation: rail-deal-out 340ms cubic-bezier(0.5, 0, 0.75, 0.2) forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .dock-rise,
   .scrim-fade,
   .dial-item,
-  .icon-swap {
+  .icon-swap,
+  .rail-deal,
+  .rail-exiting .rail-deal {
     animation: none;
   }
   .dock-indicator,
