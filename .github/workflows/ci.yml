@@ -192,3 +192,50 @@ jobs:
           docker buildx imagetools inspect \
             ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${{ matrix.component }}:main \
             || echo "(inspection skipped — tag may differ on non-main pushes)"
+
+  # ---------- Changelog stamp : SHA squash réel vers main ----------
+  # Le gate PR exige une entrée portant le head-SHA de la branche ; le
+  # squash-merge crée un SHA différent. Ce job retamponne l'entrée et
+  # pousse [skip ci] — il tourne après le merge d'une PR uniquement.
+  changelog-stamp:
+    # Chaque push main porteur d'une PR squashée : l'entrée changelog créée
+    # avec le head-SHA de la branche est retamponnée vers le SHA squash réel.
+    if: github.event_name == 'push'
+    needs: merge
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Retamponner le SHA de la PR vers le SHA squash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -eu
+          # L'association commit→PR fonctionne aussi en squash (l'API relie
+          # le commit squash à sa PR d'origine).
+          PR_HEAD=$(gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/pulls"             --jq '.[0].head.sha' 2>/dev/null || echo "")
+          if [ -z "$PR_HEAD" ] || [ "$PR_HEAD" = "null" ]; then
+            echo "Pas de PR associée à ${{ github.sha }} — rien à tamponner."
+            exit 0
+          fi
+          echo "PR head: $PR_HEAD → squash: ${{ github.sha }}"
+          git config user.name "table-sync-bot"
+          git config user.email "actions@github.com"
+          npx tsx scripts/stamp-changelog-sha.ts "${{ github.sha }}" "$PR_HEAD"
+          if git diff --quiet CHANGELOG.json; then
+            echo "Aucun changement — pas de commit."
+          else
+            git pull --rebase origin main || true
+            git add CHANGELOG.json
+            git commit -m "changelog-stamp: sha squash (${GITHUB_SHA::7}) [skip ci]"
+            git push
+          fi

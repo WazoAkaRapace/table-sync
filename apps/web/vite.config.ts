@@ -1,4 +1,5 @@
 import { readdir, readFile, writeFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import react from '@vitejs/plugin-react';
 import { defineConfig, type Plugin } from 'vite';
 
@@ -9,6 +10,35 @@ import { defineConfig, type Plugin } from 'vite';
  * build plus récent que celui qu'il exécute (banner de mise à jour).
  */
 const APP_VERSION = process.env.APP_VERSION || 'dev';
+
+type ChangelogEntry = { sha: string; date: string; title: string; items: string[] };
+
+/**
+ * Journal des modifications (CHANGELOG.json à la racine du repo, contract
+ * dans .github/skills/changelog/SKILL.md) :
+ * — dist/changelog.json = copie COMPLÈTE (servie no-cache par nginx,
+ *   consultation « Journal » dans Mon compte) ;
+ * — __CHANGELOG__ = les entrées jusqu'à la version courante INCLUSE,
+ *   embarquées dans le bundle : le popup de diff au chargement ne dépend
+ *   d'aucun fetch. En dev (APP_VERSION=dev) : toutes les entrées — le
+ *   popup de diff reste éteint côté client sur « dev ».
+ */
+function readChangelog(): ChangelogEntry[] {
+  try {
+    // cwd = apps/web en build comme en dev — la racine est à ../../.
+    return JSON.parse(readFileSync('../../CHANGELOG.json', 'utf8')) as ChangelogEntry[];
+  } catch {
+    return [];
+  }
+}
+function changelogPlugin(entries: ChangelogEntry[]): Plugin {
+  return {
+    name: 'table-sync:changelog',
+    async closeBundle() {
+      await writeFile('dist/changelog.json', `${JSON.stringify(entries)}\n`);
+    },
+  };
+}
 
 /** Écrit <outDir>/version.json en fin de build (le cwd est apps/web,
  *  aussi bien en local que dans le Dockerfile). */
@@ -60,10 +90,23 @@ function precacheSw(): Plugin {
   };
 }
 
+const CHANGELOG = readChangelog();
+/** Entrées jusqu'à la version courante incluse (« dev » = tout). */
+const EMBEDDED =
+  APP_VERSION === 'dev'
+    ? CHANGELOG
+    : (() => {
+        const idx = CHANGELOG.findIndex(
+          (e) => APP_VERSION.endsWith(e.sha) || e.sha.startsWith(APP_VERSION.replace(/^sha-/, '')),
+        );
+        return idx === -1 ? CHANGELOG : CHANGELOG.slice(0, idx + 1);
+      })();
+
 export default defineConfig({
-  plugins: [react(), versionJson(), precacheSw()],
+  plugins: [react(), versionJson(), precacheSw(), changelogPlugin(CHANGELOG)],
   define: {
     __APP_VERSION__: JSON.stringify(APP_VERSION),
+    __CHANGELOG__: JSON.stringify(EMBEDDED),
   },
   server: {
     port: 5173,

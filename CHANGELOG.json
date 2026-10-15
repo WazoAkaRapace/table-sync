@@ -1,0 +1,11 @@
+[
+  {
+    "sha": "0000000",
+    "date": "2026-10-15",
+    "title": "journal des modifications",
+    "items": [
+      "L'application affiche les nouveautés après chaque mise à jour.",
+      "Le journal complet est disponible dans Mon compte, à côté du numéro de version."
+    ]
+  }
+]

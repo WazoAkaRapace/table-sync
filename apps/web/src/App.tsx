@@ -10,6 +10,7 @@ import ConcentrationAlert from './components/ConcentrationAlert';
 import IOSViewportAnchor from './components/IOSViewportAnchor';
 import MessageAlert, { type MessageAlertPayload } from './components/MessageAlert';
 import { OfflineBanner } from './components/OfflineBanner';
+import { ChangelogPopup } from './components/ChangelogPopup';
 import { RouteBoundary } from './components/RouteBoundary';
 import UpdateBanner from './components/UpdateBanner';
 import { HeaderProvider, useHeaderState } from './headerContext';
@@ -484,6 +485,7 @@ export default function App() {
       <ConcentrationWatcher />
       <MessageWatcher />
       <UpdateBanner />
+      <ChangelogPopup />
       <PartyOpenTracker />
     </HeaderProvider>
   );

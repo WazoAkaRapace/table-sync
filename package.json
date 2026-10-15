@@ -33,7 +33,8 @@
     "screenshots": "tsx scripts/generate-screenshots.ts",
     "vapid-keys": "tsx scripts/generate-vapid-keys.ts",
     "site": "node scripts/serve-site.mjs",
-    "i18n:ratchet": "tsx scripts/i18n/check-ui-strings.ts"
+    "i18n:ratchet": "tsx scripts/i18n/check-ui-strings.ts",
+    "changelog:check": "tsx scripts/check-changelog.ts"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
