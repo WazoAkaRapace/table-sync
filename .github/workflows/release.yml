@@ -1,0 +1,63 @@
+name: Release (changelog)
+
+# Au push main issu d'une PR (squash) : pose le SHA squash dans l'entrée
+# changelog de la version déclarée, crée la release GitHub <version>
+# (notes = puces de l'entrée), puis DISPATCH le build d'images — car une
+# release créée avec GITHUB_TOKEN ne déclenche PAS `on: release`
+# (protection anti-récursion de GitHub). Le dispatch porte la version.
+on:
+  push:
+    branches: [main]
+
+jobs:
+  changelog-release:
+    # Seulement les squash-merges de PR (le commit bot [skip ci] ne porte
+    # pas de PR associée — l'API commit→PR ne retourne rien, on sort).
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Stamp sha + créer la release + dispatcher le build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -eu
+          # L'association commit→PR relie aussi le commit squash à sa PR.
+          PR_HEAD=$(gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/pulls" \
+            --jq '.[0].head.sha' 2>/dev/null || echo "")
+          if [ -z "$PR_HEAD" ] || [ "$PR_HEAD" = "null" ]; then
+            echo "Pas de PR associée — pas de release auto."
+            exit 0
+          fi
+          VERSION=$(node -p "require('./CHANGELOG.json')[0].version")
+          echo "Version: $VERSION"
+          npx tsx scripts/release-changelog.ts "$VERSION" "${{ github.sha }}"
+
+          STAMP_SHA=""
+          if ! git diff --quiet CHANGELOG.json; then
+            git config user.name "table-sync-bot"
+            git config user.email "actions@github.com"
+            git add CHANGELOG.json
+            git commit -m "changelog-release: sha ${GITHUB_SHA::7} pour $VERSION [skip ci]"
+            git push
+            STAMP_SHA=$(git rev-parse HEAD)
+          fi
+          # Release sur le commit stampé s'il existe, sinon le merge.
+          TARGET="${STAMP_SHA:-${{ github.sha }}}"
+          gh release create "$VERSION" --title "$VERSION" \
+            --notes-file /tmp/release-notes.md \
+            --target "$TARGET" || echo "release existe déjà"
+          # Dispatch du build d'images avec la version (la release
+          # GITHUB_TOKEN ne tire pas on: release elle-même).
+          gh workflow run "Build & Push Docker Images" \
+            --ref main -f version="$VERSION" \
+            || echo "dispatch refusé (workflow_dispatch pas encore actif sur main ?)"

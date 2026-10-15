@@ -1,10 +1,22 @@
 name: Build & Push Docker Images
 
+# Les images ne se construisent QUE pour une version publiée :
+# — release: published (créée à la main, ou par .github/workflows/release.yml
+#   au merge d'une PR — la release créée par GITHUB_TOKEN ne déclenche PAS
+#   cet événement, protection anti-récursion de GitHub, d'où le dispatch
+#   explicite depuis release.yml) ;
+# — workflow_dispatch (re-build manuel d'une version).
+# Les push main ne construisent PLUS d'images : la validation tourne dans
+# ci-test.yml, l'image de déploiement vit avec sa version calver.
 on:
-  push:
-    branches: [main]
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version calver à stampée (ex. 2026.10.15) — vide = sha'
+        required: false
+        default: ''
 
 env:
   REGISTRY: ghcr.io
@@ -79,14 +91,16 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      # Version du PWA : le TAG de la release si elle existe (calver lisible,
-      # ex. 2026.10.15 — déclaré dans l'entrée CHANGELOG.json), sinon le SHA
-      # court du commit (builds de validation main).
+      # Version du PWA : le TAG de la release (calver lisible, ex. 2026.10.15
+      # — déclaré dans l'entrée CHANGELOG.json), l'input du dispatch manuel,
+      # ou le SHA court en repli.
       - name: Version stamp for the web build
         if: matrix.component == 'web'
         run: |
           if [ "${{ github.event_name }}" = "release" ]; then
             echo "APP_VER=${{ github.event.release.tag_name }}" >> "$GITHUB_ENV"
+          elif [ -n "${{ github.event.inputs.version }}" ]; then
+            echo "APP_VER=${{ github.event.inputs.version }}" >> "$GITHUB_ENV"
           else
             echo "APP_VER=sha-${GITHUB_SHA::7}" >> "$GITHUB_ENV"
           fi
@@ -164,10 +178,9 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${{ matrix.component }}
           tags: |
-            type=ref,event=branch
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=main
+            type=raw,value=latest
+            type=raw,value=${{ env.APP_VER || format('sha-{0}', github.sha) }}
             type=sha,prefix=sha-
 
       - name: Create multi-arch manifest
@@ -199,47 +212,3 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${{ matrix.component }}:main \
             || echo "(inspection skipped — tag may differ on non-main pushes)"
 
-  # ---------- Changelog release : stamp sha + release GitHub ----------
-  # Au merge d'une PR : pose le SHA squash dans l'entrée de la version puis
-  # crée la release <version> (notes = puces de l'entrée). La release
-  # déclenche le build de déploiement (release: published) — les images
-  # de prod portent le tag calver lisible en APP_VERSION.
-  changelog-release:
-    if: github.event_name == 'push'
-    needs: merge
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-
-      - name: Stamp sha + notes, créer la release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -eu
-          # L'association commit→PR relie aussi le commit squash à sa PR.
-          PR_HEAD=$(gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/pulls"             --jq '.[0].head.sha' 2>/dev/null || echo "")
-          if [ -z "$PR_HEAD" ] || [ "$PR_HEAD" = "null" ]; then
-            echo "Pas de PR associée — pas de release auto."
-            exit 0
-          fi
-          VERSION=$(node -p "require('./CHANGELOG.json')[0].version")
-          echo "Version: $VERSION"
-          npx tsx scripts/release-changelog.ts "$VERSION" "${{ github.sha }}"
-          if ! git diff --quiet CHANGELOG.json; then
-            git config user.name "table-sync-bot"
-            git config user.email "actions@github.com"
-            git add CHANGELOG.json
-            git commit -m "changelog-release: sha ${GITHUB_SHA::7} pour $VERSION [skip ci]"
-            git push
-          fi
-          # Créer la release sur le commit STAMPÉ (le checkout local est déjà à jour)
-          gh release create "$VERSION" --title "$VERSION"             --notes-file /tmp/release-notes.md             --target "${{ github.sha }}" || echo "release existe déjà"
