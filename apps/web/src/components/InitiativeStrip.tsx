@@ -13,17 +13,29 @@
  * STORY: le rail vit dans le flux, sous le bandeau « État du personnage », à
  *   la même place sur mobile et desktop ; la carte dockée (mobile) garde
  *   l'acteur courant au pouce quand la page défile.
- * MOTION (le moment signé du rail) : au passage de tour, l'ordre se REASSOIT
- *   autour du nouveau « maintenant » — l'ancienne dent courante voyage en
- *   fin d'ordre, la nouvelle glisse en tête et prend le sang, le filet de
- *   manche tombe à son endroit d'enroulement. FLIP en translateX (coordonnées
- *   de CONTENU — le défilement ne pollue pas la mesure), courbe maison
- *   380 ms, retour domicile du défilement ; sous prefers-reduced-motion :
+ * MOTION (le moment signé du rail) — LA RELÈVE : au passage de tour, la
+ *   dent servie QUITTE la tête — soulevée du plan du rail (ombre de vol),
+ *   elle survole la file et se pose en queue, seule au-dessus du rang —
+ *   PUIS la file cascade : chaque dent glisse d'une place vers la tête,
+ *   l'une après l'autre (la nouvelle meneuse première, le filet de manche
+ *   avec elles). WAAPI en translate, interruption propre (les vols en cours
+ *   s'annulent), retour du défilement à 0. La relève ne vit que sur un vrai
+ *   RÉORDONNANCEMENT (signature d'ordre : PV, conditions, largeurs ne
+ *   déclenchent RIEN) ; un réordonnancement structurel (arrivée/départ)
+ *   glisse tout le monde ensemble, discret. Sous prefers-reduced-motion :
  *   réassise immédiate, le sang arrive sans course (l'état reste lisible).
+ * GOTCHA (leçon 2026-10, la « re-distribution fantôme ») : le délai du deal
+ *   d'une dent est FIGÉ AU MONTAGE — le recalculer à chaque rendu depuis sa
+ *   position changeait animation-delay d'une animation FINIE, et le
+ *   navigateur la rejouait alors de zéro : chaque passage de tour
+ *   redistribuait TOUTES les dents (l'effet « cartes retirées/réajoutées »).
+ *   De même, la relève se mesure en rect du <li> relatif à l'ol (le
+ *   offsetLeft de la dent interne change de repère quand son <li> porte une
+ *   transform — deal, exit).
  * FORM: lecture seule — aucune interaction sur les dents, la description
  *   verbale vit dans un sr-only par dent (le visuel est aria-hidden).
  * FINISH: unreviewed and undocumented is unfinished; this build ends with the
- * finish review, the verdict, and DESIGN.md.
+ *   finish review, the verdict, and DESIGN.md.
  */
 
 import type { Combatant, EncounterDetail } from '@table-sync/shared';
@@ -41,11 +53,31 @@ import { HpBar } from './ui';
 
 /** La courbe de sortie de la maison (index.css la partage). */
 const EASE_OUT = 'cubic-bezier(0.16, 1, 0.3, 1)';
-/** Réassise — retours test 2026-10 : 640 ms pour LIRE le voyage. */
-const RESEAT_MS = 640;
-/** L'arc : de combien la dent se soulève à mi-course (on suit celle qui
- *  part vers le fond du rail pendant la réassise). */
-const ARC_LIFT = 10;
+/** La clé du filet de manche dans la signature d'ordre et le FLIP. */
+const FILET_KEY = '|';
+/** La relève, temps 1 : de combien la dent servie se soulève du plan. */
+const LIFT_PX = 12;
+/** Temps 1-2 — le voyage tête → queue (retours test 2026-10 : ~600 ms pour
+ *  LIRE le voyage). */
+const TRAVELER_MS = 620;
+/** La bande d'un groupe voyage décalée — la tête de bande première. */
+const GROUP_STAGGER_MS = 50;
+/** Temps 3 — la file démarre quand la voyageuse entame sa descente. */
+const CASCADE_BASE_MS = 520;
+/** Temps 3 — l'écart de la cascade : une place, l'une après l'autre. */
+const CASCADE_STAGGER_MS = 55;
+/** Un glissement de la cascade : la dent avance d'une place. */
+const SHIFT_MS = 300;
+/** Plafond de l'écart : une longue file ne rallonge pas la cascade. */
+const CASCADE_MAX_STEPS = 8;
+/** Réordonnancement structurel (arrivée/départ) : glissement groupé, discret. */
+const RESHUFFLE_MS = 420;
+/** L'ombre de la table — posée (la dent courante part du shadow-sm). */
+const SHADOW_TABLE = '0 1px 2px 0 rgb(29 26 22 / 0.08)';
+/** L'ombre de vol — la carte quitte le plan du rail. */
+const SHADOW_FLIGHT = '0 12px 22px -6px rgb(29 26 22 / 0.28)';
+/** Rentry — la carte se pose en queue, plain-pied du rang. */
+const SHADOW_LANDED = '0 0px 0px 0 rgb(29 26 22 / 0)';
 
 type RailItem = { kind: 'dent'; c: Combatant; idx: number } | { kind: 'round' };
 
@@ -76,6 +108,10 @@ function railItems(combatants: Combatant[], turnIndex: number, active: boolean):
   }
   return items;
 }
+
+/** Un item mesurable du rail : le <li> (la place, en rect relatif à l'ol)
+ *  et la carte qui vole (la dent interne ; le filet EST sa propre carte). */
+type FlipEntry = { li: HTMLElement; card: HTMLElement };
 
 export default function InitiativeStrip({
   encounter,
@@ -109,44 +145,167 @@ export default function InitiativeStrip({
         ? t('widget.preparation')
         : t('combat.terminee.tour', { round: encounter.round });
 
-  // ---------- La réassise (FLIP) ----------
-  // Les dents changent de place au passage de tour ; leur déplacement
-  // s'anime DEPUIS leur ancienne position (mesurée en offsetLeft —
-  // coordonnées de contenu, insensible au défilement). Une simple mise à
-  // jour (PV, conditions) ne bouge rien : pas de deltas, pas de course.
+  // ---------- La relève (FLIP en trois temps) ----------
+  // Le passage de tour n'est pas un réempilement : la dent servie QUITTE la
+  // tête (soulevée du plan du rail, ombre de vol, posée en queue — seule
+  // au-dessus du rang), PUIS la file cascade d'une place vers la tête,
+  // l'une après l'autre. Le filet de manche cascade avec elles : c'est un
+  // item de la file comme les autres. Une mise à jour qui ne réordonne PAS
+  // (PV, conditions, largeurs) ne déclenche RIEN — la relève ne vit que sur
+  // la SIGNATURE d'ordre, mesurée en rect de CONTENU (<li> relatif à l'ol,
+  // scroll compris — le offsetLeft de la dent interne est sans garantie dès
+  // qu'un parent porte une transform, voir le GOTCHA d'en-tête).
   const olRef = useRef<HTMLOListElement>(null);
-  const dentRefs = useRef(new Map<number, HTMLDivElement>());
-  const prevLefts = useRef(new Map<number, number>());
+  const flipEls = useRef(new Map<string, FlipEntry>());
+  const prevLayout = useRef<{ id: number; sig: string; lefts: Map<string, number> } | null>(null);
+  const prevExiting = useRef(false);
+  const flights = useRef(new Set<Animation>());
   useLayoutEffect(() => {
     const ol = olRef.current;
     if (!ol) return;
-    const lefts = new Map<number, number>();
-    dentRefs.current.forEach((el, id) => lefts.set(id, el.offsetLeft));
-    const prev = prevLefts.current;
-    let moved = false;
-    if (prev.size > 0) {
-      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      dentRefs.current.forEach((el, id) => {
-        const before = prev.get(id);
-        if (before === undefined || before === lefts.get(id)) return;
-        moved = true;
-        if (reduced) return;
-        const dx = before - (lefts.get(id) ?? 0);
-        // L'ARC : la dent se soulève à mi-course — celle qui part vers le
-        // fond du rail reste lisible pendant son voyage (WAAPI : trois temps,
-        // compositor seul, l'état final est l'identité — aucun nettoyage).
-        el.animate(
-          [
-            { transform: `translateX(${dx}px)` },
-            { transform: `translateX(${dx / 2}px) translateY(-${ARC_LIFT}px)`, offset: 0.5 },
-            { transform: 'translateX(0) translateY(0)' },
-          ],
-          { duration: RESEAT_MS, easing: EASE_OUT },
+    // Coordonnées de contenu : rect du <li> moins rect de l'ol, PLUS le
+    // défilement (indépendant de tout offsetParent et de toute transform
+    // d'ancêtre — l'entrée de page bandeau/fourreau ne fausse pas la mesure).
+    const olX = ol.getBoundingClientRect().left - ol.scrollLeft;
+    const lefts = new Map<string, number>();
+    flipEls.current.forEach((entry, key) => {
+      lefts.set(key, entry.li.getBoundingClientRect().left - olX);
+    });
+    const sig = items.map((it) => (it.kind === 'round' ? FILET_KEY : it.c.id)).join('›');
+    const prev = prevLayout.current;
+    prevLayout.current = { id: encounter.id, sig, lefts };
+    // Fin de combat : les vols en cours s'arrêtent net — l'exit CSS prend la main.
+    if (exiting && !prevExiting.current) flights.current.forEach((a) => a.cancel());
+    prevExiting.current = exiting;
+    if (
+      !prev ||
+      prev.id !== encounter.id || // autre rencontre : c'est une arrivée (deal), pas une relève
+      prev.sig === sig // ordre inchangé : rien ne bouge (les mesures repartent à jour)
+    )
+      return;
+    ol.scrollTo({ left: 0 }); // la nouvelle tête est au début du contenu (auto en reduced)
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    // Une relève interrompt les vols en cours : on rejoue depuis le mesuré.
+    flights.current.forEach((a) => a.cancel());
+    flights.current.clear();
+    const track = (a: Animation) => {
+      flights.current.add(a);
+      a.finished.then(() => flights.current.delete(a)).catch(() => {});
+    };
+    const dxOf = (key: string): number | null => {
+      const before = prev.lefts.get(key);
+      const now = lefts.get(key);
+      // Absent de l'un des deux layouts : une dent qui arrive monte avec
+      // SON deal, une dent partie n'a plus de place — ni l'une ni l'autre
+      // ne volent.
+      return before !== undefined && now !== undefined && before !== now ? before - now : null;
+    };
+
+    // La relève ? La TÊTE de l'ancien ordre ferme la FILE du nouveau — la
+    // bande entière d'un groupe qui joue ensemble, et une double avance
+    // coalescée emmène sa bande d'un coup : on garde le PLUS LONG match.
+    const oldOrder = prev.sig.split('›');
+    const newOrder = sig.split('›');
+    let run = 0;
+    const maxRun = Math.min(oldOrder.length, newOrder.length - 1);
+    for (let k = 1; k <= maxRun; k++) {
+      let ok = true;
+      for (let i = 0; i < k; i++) {
+        if (oldOrder[i] !== newOrder[newOrder.length - k + i]) {
+          ok = false;
+          break;
+        }
+      }
+      if (ok) run = k;
+    }
+
+    if (run === 0) {
+      // Réordonnancement structurel (arrivée, départ) : pas de récit —
+      // tout le monde glisse ensemble, discret.
+      flipEls.current.forEach((entry, key) => {
+        const dx = dxOf(key);
+        if (dx === null) return;
+        track(
+          entry.card.animate(
+            [{ transform: `translate(${dx}px, 0px)` }, { transform: 'translate(0px, 0px)' }],
+            { duration: RESHUFFLE_MS, easing: EASE_OUT },
+          ),
         );
       });
-      if (moved) ol.scrollTo({ left: 0 }); // scroll-smooth (auto en reduced)
+      return;
     }
-    prevLefts.current = lefts;
+
+    // Temps 1-2 : la bande servie voyage — FLIP ancré à son ANCIENNE place
+    // (transform initial dx = ancienne − nouvelle) : soulevée du plan (temps
+    // 1, ombre de vol), survol de la file, pose en queue (temps 2). Fill
+    // backwards : une dent de bande retardée tient la tête pendant son
+    // écart interne. Les dents servies sont les DERNIÈRES du DOM : elles
+    // peignent au-dessus du rang sans z-index à gérer. L'allure vit dans le
+    // PLACEMENT des keyframes (interpolation linéaire) : un easing PAR
+    // keyframe, combiné aux offsets explicites des autres, fausse le
+    // découpage des segments en Chromium (le voyage entier se jouait en
+    // ~240 ms — constaté en
+    // test, repro isolé à l'appui).
+    for (let i = 0; i < run; i++) {
+      const key = oldOrder[i];
+      const entry = flipEls.current.get(key);
+      const dx = dxOf(key);
+      if (!entry || dx === null) continue;
+      track(
+        entry.card.animate(
+          [
+            { transform: `translate(${dx}px, 0px)`, boxShadow: SHADOW_TABLE },
+            {
+              transform: `translate(${dx}px, -${LIFT_PX * 0.75}px)`,
+              boxShadow: SHADOW_FLIGHT,
+              offset: 0.1,
+            },
+            {
+              transform: `translate(${dx * 0.94}px, -${LIFT_PX}px)`,
+              boxShadow: SHADOW_FLIGHT,
+              offset: 0.27,
+            },
+            {
+              transform: `translate(${dx / 2}px, -${LIFT_PX}px)`,
+              boxShadow: SHADOW_FLIGHT,
+              offset: 0.62,
+            },
+            {
+              transform: `translate(${dx * 0.07}px, -${LIFT_PX * 0.33}px)`,
+              boxShadow: SHADOW_TABLE,
+              offset: 0.88,
+            },
+            { transform: 'translate(0px, 0px)', boxShadow: SHADOW_LANDED },
+          ],
+          { duration: TRAVELER_MS, delay: i * GROUP_STAGGER_MS, fill: 'backwards' },
+        ),
+      );
+    }
+
+    // Temps 3 : la file cascade — la nouvelle meneuse part première, la
+    // suite suit, l'écart plafonné (une longue file ne rallonge pas la
+    // relève). fill backwards : PENDANT son délai la dent est TENUE à sa
+    // keyframe de départ (son ancienne place) — sans lui elle se peint à sa
+    // nouvelle place dès le commit puis REMPART en arrière quand son
+    // animation démarre (l'à-coup constaté en démo : « les cartes sont
+    // déjà à la première place pendant le soulèvement »).
+    for (let pos = 0; pos < newOrder.length - run; pos++) {
+      const key = newOrder[pos];
+      const entry = flipEls.current.get(key);
+      const dx = dxOf(key);
+      if (!entry || dx === null) continue;
+      track(
+        entry.card.animate(
+          [{ transform: `translate(${dx}px, 0px)` }, { transform: 'translate(0px, 0px)' }],
+          {
+            duration: SHIFT_MS,
+            delay: CASCADE_BASE_MS + Math.min(pos, CASCADE_MAX_STEPS) * CASCADE_STAGGER_MS,
+            easing: EASE_OUT,
+            fill: 'backwards',
+          },
+        ),
+      );
+    }
   });
 
   return (
@@ -162,6 +321,15 @@ export default function InitiativeStrip({
       <nav aria-label={t('combat.ordre.d.initiative')} className="min-w-0 flex-1">
         <ol
           ref={olRef}
+          onAnimationEnd={(e) => {
+            // Déplacer un <li> (réordonnancement) REJOUE ses animations CSS
+            // finies en Chromium — y compris le deal du montage (fondu
+            // compris) : la dent déplacée avait l'air retirée puis
+            // réajoutée à chaque passage de tour. Le deal n'appartient
+            // qu'au MONTAGE : sa classe se retire dès qu'il a joué. Le
+            // retrait d'une classe absente est sans effet (filet, repère).
+            (e.target as HTMLElement).classList.remove('rail-deal', 'rail-filet');
+          }}
           className="list-none flex h-full gap-1 overflow-x-auto scroll-smooth motion-reduce:scroll-auto"
         >
           {items.map((item, i) => {
@@ -170,11 +338,16 @@ export default function InitiativeStrip({
             const dealDelay = `${Math.min(i + 1, 7) * 60}ms`;
             return item.kind === 'round' ? (
               // Le filet de manche : l'ordre s'enroule ici — ces dents
-              // jouent au tour suivant.
+              // jouent au tour suivant. Item de la file comme les autres :
+              // il cascade avec les dents (FLIP sur le <li>), sa pose à lui
+              // est un fondu (rail-filet, index.css).
               <li
                 key={`round-${encounter.round}`}
-                className="rail-deal flex shrink-0 flex-col items-center justify-center gap-1 px-0.5"
-                style={{ animationDelay: dealDelay }}
+                ref={(el) => {
+                  if (el) flipEls.current.set(FILET_KEY, { li: el, card: el });
+                  else flipEls.current.delete(FILET_KEY);
+                }}
+                className="rail-item rail-filet flex shrink-0 flex-col items-center justify-center gap-1 px-0.5"
                 title={t('combat.rail.fin.de.tour')}
               >
                 <span aria-hidden="true" className="w-px flex-1 bg-parchment-300" />
@@ -190,7 +363,7 @@ export default function InitiativeStrip({
                 label={labels[item.idx] ?? item.c.name}
                 isCurrent={isCurrentDent(item.c)}
                 mine={item.c.id === myCombatantId}
-                dentRefs={dentRefs}
+                flipEls={flipEls}
                 dealDelay={dealDelay}
               />
             );
@@ -207,19 +380,36 @@ function Dent({
   label,
   isCurrent,
   mine,
-  dentRefs,
+  flipEls,
   dealDelay,
 }: {
   c: Combatant;
   label: string;
   isCurrent: boolean;
   mine: boolean;
-  dentRefs: RefObject<Map<number, HTMLDivElement>>;
-  /** Délai du deal (montage du rail) — posé sur le <li>, jamais sur la dent
-   *  interne que la réassise FLIP transforme. */
+  flipEls: RefObject<Map<string, FlipEntry>>;
+  /** Délai du deal (montage du rail) — FIGÉ au premier rendu : le délai
+   *  appartient au MONTAGE de la dent, jamais à sa position courante (le
+   *  GOTCHA d'en-tête : changer animation-delay rejoue l'animation finie). */
   dealDelay: string;
 }) {
   const { t } = useTranslation();
+  // Le deal de CETTE dent, décidé une fois pour toutes à son montage.
+  const mountDealDelay = useRef(dealDelay).current;
+  const liRef = useRef<HTMLLIElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  // Enregistrement post-refs (effet enfant → tourne AVANT la mesure du
+  // parent) : le <li> sert à mesurer la place, la carte à voler.
+  useLayoutEffect(() => {
+    const key = String(c.id);
+    const els = flipEls;
+    if (liRef.current && cardRef.current) {
+      els.current.set(key, { li: liRef.current, card: cardRef.current });
+    }
+    return () => {
+      els.current.delete(key);
+    };
+  }, [c.id, flipEls]);
   const hp = hpVisible(c);
   const phraseKey = feelingPhraseKey(c);
   const phrase = phraseKey !== null ? t(phraseKey) : null;
@@ -249,12 +439,13 @@ function Dent({
   if (isCurrent) srParts.push(t('combat.tour.en.cours'));
   const dentTitle = srParts.join(' · ');
   return (
-    <li className="rail-deal shrink-0" style={{ animationDelay: dealDelay }}>
+    <li
+      ref={liRef}
+      className="rail-item rail-deal shrink-0"
+      style={{ animationDelay: mountDealDelay }}
+    >
       <div
-        ref={(el) => {
-          if (el) dentRefs.current.set(c.id, el);
-          else dentRefs.current.delete(c.id);
-        }}
+        ref={cardRef}
         aria-current={isCurrent ? 'true' : undefined}
         title={dentTitle}
         className={`relative flex min-h-[52px] w-auto min-w-24 max-w-44 flex-col justify-center gap-1 rounded-lg border px-2 py-1.5 transition-colors duration-[450ms] motion-reduce:transition-none ${

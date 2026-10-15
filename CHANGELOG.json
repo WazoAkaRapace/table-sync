@@ -1,5 +1,14 @@
 [
   {
+    "version": "2026.10.15-3",
+    "sha": null,
+    "date": "2026-10-15",
+    "title": "la relève du rail",
+    "items": [
+      "L'animation de l'ordre d'initiative à la fin du tour est corrigée."
+    ]
+  },
+  {
     "version": "2026.10.15-2",
     "sha": "872e3317",
     "date": "2026-10-15",

@@ -763,15 +763,33 @@ html.ts-dark .card {
 /* Fin de combat — l'ordre se replie : les dents s'envolent vers le haut,
    la distribution rappelée (les délais inline du deal sont conservés —
    la tête part première), PENDANT que la bande referme sa hauteur (la
-   page anime la hauteur du fourreau au même moment). */
+   page anime la hauteur du fourreau au même moment). .rail-item : les
+   classes du deal se retirent après jeu (un <li> déplacé rejouerait ses
+   animations finies — voir InitiativeStrip), l'exit vise donc la classe
+   permanente ; .rail-deal couvre le repère de manche (hors ol, jamais
+   déplacé, jamais retiré). */
 @keyframes rail-deal-out {
   to {
     transform: translateY(-18px);
     opacity: 0;
   }
 }
-.rail-exiting .rail-deal {
+.rail-exiting .rail-deal,
+.rail-exiting .rail-item {
   animation: rail-deal-out 340ms cubic-bezier(0.5, 0, 0.75, 0.2) forwards;
+}
+
+/* Le filet de manche — item de la file comme les autres : sa course de
+   cascade vit en WAAPI côté InitiativeStrip (FLIP sur ce <li>), sa pose à
+   LUI est un simple fondu (il apparaît quand la première dent est servie,
+   pendant que la file est déjà en mouvement — pas de glissement à lire). */
+@keyframes rail-filet-in {
+  from {
+    opacity: 0;
+  }
+}
+.rail-filet {
+  animation: rail-filet-in 240ms ease-out backwards;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -780,7 +798,9 @@ html.ts-dark .card {
   .dial-item,
   .icon-swap,
   .rail-deal,
-  .rail-exiting .rail-deal {
+  .rail-filet,
+  .rail-exiting .rail-deal,
+  .rail-exiting .rail-item {
     animation: none;
   }
   .dock-indicator,
