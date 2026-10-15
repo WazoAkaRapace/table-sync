@@ -133,8 +133,15 @@ export default function CharacterSpellsTab({
   const [castingSpell, setCastingSpell] = useState<Spell | null>(null);
   const [castingRowId, setCastingRowId] = useState<number | null>(null);
 
-  // List filter for prepared-spell classes: all spells or the combat-ready set
+  // List filter for prepared-spell classes: all spells or the combat-ready set.
+  // #187 : à l'arrivée sur l'onglet, le filtre « Préparés » est sélectionné
+  // d'emblée (utile en combat) — appliqué quand la liste est chargée, cf.
+  // effet plus bas. Repli : zéro sort préparé (ou classe sans préparation,
+  // ex. Occultiste) → on reste sur « Tous ».
   const [listFilter, setListFilter] = useState<string>('all');
+  // Le défaut ne s'applique qu'une fois : après, la liste suit les clics du
+  // joueur (retour manuel à « Tous » respecté, refetchs silencieux ignorés).
+  const defaultFilterApplied = useRef(false);
 
   // Post-cast feedback: row flash (row-flash animation, cleared after 1.3 s)
   const [flashRowId, setFlashRowId] = useState<number | null>(null);
@@ -314,6 +321,28 @@ export default function CharacterSpellsTab({
   // Rattrapage de reconnexion : onglet à état local — les sorts appris se
   // rechargent silencieusement après un trou de connexion.
   useResyncOnReconnect(fetchCharSpells);
+
+  // #187 : au premier chargement de la liste, sélectionner « Préparés » si
+  // la fiche a au moins un sort préparé (combat : liste prête d'emblée).
+  // Zéro préparé → repli « Tous » (l'astuce « Touchez une étoile… » n'a de
+  // sens que si le joueur voit les ☆). Une seule application : les clics et
+  // refetchs ultérieurs ne rebasculent jamais le filtre.
+  useEffect(() => {
+    if (loadingSpells || defaultFilterApplied.current) return;
+    defaultFilterApplied.current = true;
+    // Même sémantique que le compteur : un tour de magie n'est jamais
+    // « préparé » (SRD) — il ne suffit pas à armer le filtre. Multiclassage :
+    // la classe qui a des sorts préparés, sinon rien (repli « Tous »).
+    const preparedClasses = new Set(
+      charSpells.filter((cs) => cs.prepared && cs.spell.level > 0).map((cs) => cs.classSource),
+    );
+    const target = limits.find((l) => preparedClasses.has(l.classKey)) ?? null;
+    if (target) setListFilter(`prep:${target.classKey}`);
+    // limits est dérivé du personnage (props), charSpells/loadingSpells de
+    // fetchCharSpells : au premier passage où la liste est prête, tout est
+    // déjà résolu — les accès sont volontairement hors deps.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadingSpells, charSpells]);
 
   // ---------- Effets de sort sur la CA (v1) ----------
   // Une requête au montage (cache état local, pas de react-query — même
@@ -895,7 +924,7 @@ export default function CharacterSpellsTab({
             </SkeletonRegion>
           ) : spellsByLevel.length === 0 ? (
             <p className="text-sm text-ink-400 italic">
-              {listFilter === 'prepared' ? (
+              {prepFilterClass !== null ? (
                 t('sorts.aucun.sort.prepare.touchez.une.etoile')
               ) : (
                 <>
