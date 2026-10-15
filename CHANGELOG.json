@@ -1,5 +1,15 @@
 [
   {
+    "version": "2026.10.15-2",
+    "sha": null,
+    "date": "2026-10-15",
+    "title": "journal soigné",
+    "items": [
+      "Le numéro de version dans Mon compte ouvre le journal des modifications.",
+      "Le journal des nouveautés est plus lisible."
+    ]
+  },
+  {
     "version": "2026.10.15",
     "sha": "d7a9bc50",
     "date": "2026-10-15",
