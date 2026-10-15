@@ -381,6 +381,7 @@ export function mapCharacterSummary(row: any): CharacterSummary {
     deathSaveFailures: row.death_save_failures ?? 0,
     inspiration: !!row.inspiration,
     concentrating: !!row.concentrating,
+    raging: !!row.raging,
     hidden: !!row.hidden,
     wildShapeSlug: row.wild_shape_slug ?? null,
     wildShapeHp: row.wild_shape_hp ?? null,

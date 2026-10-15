@@ -38,6 +38,7 @@ import { run as moveMerge } from './api-tests/mod-move-merge.ts';
 import { run as multiclass } from './api-tests/mod-multiclass.ts';
 import { run as npcsMonsters } from './api-tests/mod-npcs-monsters.ts';
 import { run as push } from './api-tests/mod-push.ts';
+import { run as rage } from './api-tests/mod-rage.ts';
 import { run as spells } from './api-tests/mod-spells.ts';
 import { run as spellEffects } from './api-tests/mod-spell-effects.ts';
 import { run as syncStress } from './api-tests/mod-sync-stress.ts';
@@ -69,6 +70,7 @@ const MODULES: Array<{
   { name: 'correspondance secrète', run: messages },
   { name: 'multiclassage', run: multiclass },
   { name: 'wild shape + rests', run: wildshapeRest },
+  { name: 'état Rage du barbare (#189)', run: rage },
   { name: 'issues #143–#148', run: issues143148 },
   { name: 'websocket sync', run: syncWs },
   { name: 'stress websocket', run: syncStress },
@@ -88,7 +90,9 @@ async function main(): Promise<void> {
     console.log('[test-api] building fixtures…');
     const fx = await buildFixtures(srv.base);
 
-    for (const mod of MODULES) {
+    const only = process.env.TEST_ONLY;
+    const mods = only ? MODULES.filter((m) => new RegExp(only, 'i').test(m.name)) : MODULES;
+    for (const mod of mods) {
       const started = Date.now();
       try {
         await mod.run(srv.base, fx, srv);

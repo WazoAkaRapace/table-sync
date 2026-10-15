@@ -477,6 +477,43 @@ export function SurvivalPanel({
     }
   };
 
+  // --- Issue #189 : Rage du barbare — consommer une charge pose l'état ---
+  // Entering = one charge spent + `raging` on the sheet (same request is NOT
+  // possible across two tables — sequential calls, state last so the sheet
+  // reflects the rage even if the counter write raced). Breaking the rage is
+  // a free bonus action: no charge back.
+  const [rageBusy, setRageBusy] = useState(false);
+  const rageFeature = resourceFeatures.find(
+    (f) => f.catalogId === 'barbare-rage' || f.title.toLowerCase() === 'rage',
+  );
+  const rageCharges = rageFeature
+    ? (rageFeature.counterCurrent ?? rageFeature.counterMax ?? 0)
+    : null;
+  const canEnterRage = canEdit && !character.raging && (rageCharges === null || rageCharges > 0); // null = pas de trait Rage posé : le MD/joueur peut quand même suivre l'état
+  const toggleRage = async () => {
+    if (rageBusy) return;
+    setRageBusy(true);
+    markLocalMutation();
+    try {
+      if (!character.raging && rageFeature && (rageFeature.counterCurrent ?? 0) > 0) {
+        await api.patch(`/api/character-features/${rageFeature.id}`, {
+          counterCurrent: (rageFeature.counterCurrent ?? 0) - 1,
+        });
+        setResourceFeatures((prev) =>
+          prev.map((f) =>
+            f.id === rageFeature.id ? { ...f, counterCurrent: (f.counterCurrent ?? 0) - 1 } : f,
+          ),
+        );
+      }
+      await api.patch(`/api/characters/${charId}`, { raging: !character.raging });
+      await onSaved();
+    } catch {
+      onError(t('survie.erreur.de.mise.a.jour'));
+    } finally {
+      setRageBusy(false);
+    }
+  };
+
   return (
     <>
       {/* ---------- 1. Vitalité — PV et mort (la mesure) ---------- */}
@@ -1069,6 +1106,8 @@ export function SurvivalPanel({
               const max = feature.counterMax ?? 0;
               const current = feature.counterCurrent ?? max;
               const isPool = def?.resource?.unit === 'PV';
+              // Issue #189 : la rangée Rage porte le bouton d'état
+              const isRageRow = feature.id === rageFeature?.id;
               // Recharge effective : choix du joueur, sinon règle SRD du catalogue
               // SRD multiclassage : la bascule court/long se juge au niveau de
               // la classe qui accorde la capacité, pas au niveau total.
@@ -1092,8 +1131,35 @@ export function SurvivalPanel({
                 >
                   <span className="text-sm font-medium text-ink-800 truncate flex items-center gap-1.5">
                     {isPool ? '❤️' : '⚡'} {feature.title}
+                    {isRageRow && character.raging && (
+                      <span className="text-xs font-bold text-blood-700">🔥</span>
+                    )}
                   </span>
                   <span className="flex items-center gap-1 shrink-0">
+                    {isRageRow && canEdit && (
+                      <button
+                        type="button"
+                        onClick={toggleRage}
+                        disabled={rageBusy || (character.raging ? false : !canEnterRage)}
+                        title={
+                          character.raging
+                            ? t('survie.rage.rompre.title')
+                            : t('survie.rage.entrer.title')
+                        }
+                        aria-label={
+                          character.raging
+                            ? t('survie.rage.rompre.title')
+                            : t('survie.rage.entrer.title')
+                        }
+                        className={`inline-flex items-center px-2.5 min-h-11 rounded-lg text-xs font-semibold border transition-colors ${
+                          character.raging
+                            ? 'bg-blood-700 border-blood-800 text-parchment-50'
+                            : 'bg-parchment-100 border-parchment-300 text-ink-700 hover:border-blood-400'
+                        } disabled:opacity-50 disabled:cursor-not-allowed`}
+                      >
+                        {character.raging ? t('survie.rage.rompre') : t('survie.rage.entrer')}
+                      </button>
+                    )}
                     <StepButton
                       onClick={() => stepResource(feature, current - 1)}
                       disabled={current <= 0}

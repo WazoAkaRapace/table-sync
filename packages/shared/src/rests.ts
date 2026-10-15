@@ -178,6 +178,9 @@ export function applyRest(
     patch.deathSaveSuccesses = 0;
     patch.deathSaveFailures = 0;
     patch.concentrating = false;
+    // Issue #189 : une rage (durée 1 minute) ne survit jamais à un repos
+    // long de 8 heures — l'état tombe avec la concentration.
+    patch.raging = false;
     if (classes.some((c) => findClass(c.classKey)?.name === 'Druide')) {
       patch.wildShapeUses = 2;
     }

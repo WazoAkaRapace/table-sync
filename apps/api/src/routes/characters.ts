@@ -402,6 +402,7 @@ export async function characterRoutes(app: FastifyInstance) {
         'deathSaveFailures',
         'inspiration',
         'concentrating',
+        'raging',
         'hidden',
         'wildShapeHp',
         'wildShapeUses',
@@ -607,6 +608,20 @@ export async function characterRoutes(app: FastifyInstance) {
         ) {
           values.concentrating = 0;
         }
+        // Issue #189 — Rage : « la rage prend fin si vous êtes inconscient ».
+        // Même juge que la concentration : tombé à 0 PV sans PV temporaires
+        // restants, l'état rage tombe. Un payload qui repose explicitement
+        // `raging: true` dans la MÊME requête que la chute ne tombe PAS —
+        // la main du joueur prime (helper pas automation).
+        const ragingAfter = body.raging !== undefined ? !!body.raging : !!char.raging;
+        if (
+          ragingAfter &&
+          body.currentHp <= 0 &&
+          (body.tempHp ?? char.temp_hp ?? 0) <= 0 &&
+          body.raging === undefined
+        ) {
+          values.raging = 0;
+        }
       }
 
       // --- Revival (#144): rising above 0 HP on the SHEET resets the
@@ -634,6 +649,23 @@ export async function characterRoutes(app: FastifyInstance) {
           concentrationBroken = breaking;
           if (body.concentrating === undefined) {
             values.concentrating = 0;
+          }
+        }
+      }
+
+      // Issue #189 — Rage : les conditions incapacitantes qui rompent la
+      // concentration font aussi tomber la rage (un barbare Neutralisé ne
+      // peut pas maintenir sa rage). Même garde : un payload qui repose
+      // explicitement `raging` prime.
+      let rageEndedByCondition: string | null = null;
+      if (body.conditions && char.raging && body.raging !== false) {
+        const breaking = body.conditions.find((c) =>
+          CONCENTRATION_BREAKING_CONDITIONS_FR.includes(c),
+        );
+        if (breaking) {
+          rageEndedByCondition = breaking;
+          if (body.raging === undefined) {
+            values.raging = 0;
           }
         }
       }
@@ -957,6 +989,7 @@ export async function characterRoutes(app: FastifyInstance) {
         character: mapCharacter(row),
         ...(concentrationCheck ? { concentrationCheck } : {}),
         ...(concentrationBroken ? { concentrationBroken } : {}),
+        ...(rageEndedByCondition ? { rageEnded: rageEndedByCondition } : {}),
       });
     },
   );

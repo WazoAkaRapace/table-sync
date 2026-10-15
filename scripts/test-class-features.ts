@@ -13,6 +13,7 @@ import {
   agonizingBlastBonus,
   eldritchBlastRays,
   maxSpellSlots,
+  rageDamageBonus,
   renderFeatureTemplate,
   SPELL_SLOTS_PACT,
 } from '@table-sync/shared';
@@ -148,6 +149,15 @@ check('rage @9 = 4 (palier suivant à 12, PHB 2014)', resourceMaxOf('barbare-rag
 check('rage @12 = 5', resourceMaxOf('barbare-rage', barb(12)), 5);
 check('rage @17 = 6', resourceMaxOf('barbare-rage', barb(17)), 6);
 check('rage @20 = ∞ (null)', resourceMaxOf('barbare-rage', barb(20)), null);
+
+// Bonus de dégâts de rage (PHB 2014) : +2@1, +3@9, +4@16 — #189
+check('rageDamageBonus @1 = +2', rageDamageBonus(1), 2);
+check('rageDamageBonus @8 = +2 (palier suivant à 9)', rageDamageBonus(8), 2);
+check('rageDamageBonus @9 = +3', rageDamageBonus(9), 3);
+check('rageDamageBonus @15 = +3 (palier suivant à 16)', rageDamageBonus(15), 3);
+check('rageDamageBonus @16 = +4', rageDamageBonus(16), 4);
+check('rageDamageBonus @20 = +4', rageDamageBonus(20), 4);
+check('rageDamageBonus sans niveaux de barbare = 0', rageDamageBonus(0), 0);
 
 // Ki = niveau (repos court) ; points de sorcellerie = niveau (repos long)
 check('ki @7 = 7', resourceMaxOf('moine-ki', mkChar({ characterClass: 'Moine', level: 7 })), 7);
