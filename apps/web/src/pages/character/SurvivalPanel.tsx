@@ -1146,7 +1146,12 @@ export function SurvivalPanel({
                             ? t('survie.rage.rompre.title')
                             : t('survie.rage.entrer.title')
                         }
-                        className={`text-xs font-semibold px-2 py-1 rounded-md border transition-colors ${
+                        aria-label={
+                          character.raging
+                            ? t('survie.rage.rompre.title')
+                            : t('survie.rage.entrer.title')
+                        }
+                        className={`inline-flex items-center px-2.5 min-h-11 rounded-lg text-xs font-semibold border transition-colors ${
                           character.raging
                             ? 'bg-blood-700 border-blood-800 text-parchment-50'
                             : 'bg-parchment-100 border-parchment-300 text-ink-700 hover:border-blood-400'

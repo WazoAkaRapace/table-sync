@@ -32,12 +32,17 @@ gmTest('rage: consommer une charge pose l’état, rompre le retire', async ({ p
   await expect(page.locator('[title="Rage en cours"]')).toHaveCount(0);
 
   // Entrer en rage : la charge passe 3/3 → 2/3 et l'état se pose
-  await page.getByRole('button', { name: '🔥 Entrer en rage' }).click();
+  // (le nom accessible = l'aria-label long ; le libellé visible porte le 🔥)
+  await page
+    .getByRole('button', { name: 'Entrer en rage (action bonus) — consomme une charge de rage' })
+    .click();
   await expect(page.getByText(/2\s*\/\s*3/).first()).toBeVisible();
   await expect(page.locator('[title="Rage en cours"]').first()).toBeVisible();
 
   // Rompre : la pastille disparaît, la charge reste dépensée (2/3)
-  await page.getByRole('button', { name: 'Rompre la rage' }).click();
+  await page
+    .getByRole('button', { name: 'Rompre la rage (action bonus) — la charge reste dépensée' })
+    .click();
   await expect(page.locator('[title="Rage en cours"]')).toHaveCount(0);
   await expect(page.getByText(/2\s*\/\s*3/).first()).toBeVisible();
 
