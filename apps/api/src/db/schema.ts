@@ -56,6 +56,12 @@ export const users = sqliteTable('users', {
   // Onglets dont la visite propre a déjà été jouée — JSON array d'ids
   // (['survival', 'stats', …]). NULL = aucun (nouveau compte ou reset).
   tutorialTabsDone: text('tutorial_tabs_done'),
+  // Visite guidée DÉSACTIVÉE pour ce compte (« Ne plus montrer les
+  // tutoriels », Mon compte) : coupe TOUT déclenchement, tous appareils —
+  // un membre aguerri ne veut plus jamais d'info-bulle, même sur un onglet
+  // jamais visité. Distinct de tutorialSeenAt (qui date l'adoption) : la
+  // désactivation survive au reset et inversement.
+  tutorialDisabled: integer('tutorial_disabled').notNull().default(0),
   createdAt: text('created_at')
     .notNull()
     .default(sql`(datetime('now'))`),

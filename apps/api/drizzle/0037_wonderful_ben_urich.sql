@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `tutorial_disabled` integer DEFAULT 0 NOT NULL;
