@@ -1,12 +1,17 @@
 [
   {
+    "version": "2026.10.20",
+    "sha": null,
+    "date": "2026-10-20",
+    "title": "mises à jour internes",
+    "items": ["Les mises à jour internes de sécurité et de stabilité sont appliquées."]
+  },
+  {
     "version": "2026.10.15-3",
     "sha": "a1d850a8",
     "date": "2026-10-15",
     "title": "la relève du rail",
-    "items": [
-      "L'animation de l'ordre d'initiative à la fin du tour est corrigée."
-    ]
+    "items": ["L'animation de l'ordre d'initiative à la fin du tour est corrigée."]
   },
   {
     "version": "2026.10.15-2",
