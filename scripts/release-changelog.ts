@@ -61,16 +61,26 @@ void writeFormatted().catch((err) => {
 async function writeFormatted(): Promise<void> {
   const json = `${JSON.stringify(entries, null, 2)}\n`;
   let out = json;
+  // Le job CI n'installe PAS les deps (tsx passe par npx) : l'API oxfmt est
+  // absente là-bas — on formate via le BINAIRE npx, toujours résolu.
   try {
-    const { format } = await import('oxfmt');
-    const res = (await format('CHANGELOG.json', json)) as unknown as {
-      code?: string;
-      content?: string;
-    };
-    if (typeof res?.code === 'string') out = res.code;
-    else if (typeof res?.content === 'string') out = res.content;
+    out = execSync('npx --yes oxfmt --stdin-filepath CHANGELOG.json', {
+      input: json,
+      cwd: ROOT,
+      encoding: 'utf8',
+    });
   } catch {
-    console.warn('oxfmt indisponible — écriture JSON brute (la gate lint pourrait dériver).');
+    try {
+      const { format } = await import('oxfmt');
+      const res = (await format('CHANGELOG.json', json)) as unknown as {
+        code?: string;
+        content?: string;
+      };
+      if (typeof res?.code === 'string') out = res.code;
+      else if (typeof res?.content === 'string') out = res.content;
+    } catch {
+      console.warn('oxfmt indisponible — écriture JSON brute (la gate lint pourrait dériver).');
+    }
   }
   writeFileSync(FILE, out);
   console.log('✓ CHANGELOG.json réécrit au format oxfmt.');
