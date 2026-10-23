@@ -1,5 +1,14 @@
 [
   {
+    "version": "2026.10.23",
+    "sha": null,
+    "date": "2026-10-23",
+    "title": "Images Docker : Node.js 22.23.4 (correctifs sécurité octobre 2026)",
+    "items": [
+      "Sécurité : correctifs Node.js 21/10/2026 (CVE-2026-111497 Brotli) — base épinglée sur node:22.23.4-alpine (Dockerfile.api, Dockerfile.web)."
+    ]
+  },
+  {
     "version": "2026.10.20-3",
     "sha": "990a8e27",
     "date": "2026-10-20",
