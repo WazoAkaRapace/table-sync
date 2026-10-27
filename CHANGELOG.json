@@ -1,5 +1,15 @@
 [
   {
+    "version": "2026.10.27",
+    "sha": null,
+    "date": "2026-10-27",
+    "title": "Dépendances : correctifs npm, react-query épinglé (régression e2e)",
+    "items": [
+      "Bumps npm : vite 8.3.5, oxlint 1.89, oxfmt 0.74, i18next 26.5.7, react-i18next 17.1.5, @fastify/multipart 10.1.6.",
+      "React-query épinglé 5.104.3 : la 5.104.5 casse la propagation WS en e2e."
+    ]
+  },
+  {
     "version": "2026.10.23",
     "sha": "c06c9053",
     "date": "2026-10-23",
