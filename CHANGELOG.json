@@ -1,7 +1,7 @@
 [
   {
     "version": "2026.10.27",
-    "sha": null,
+    "sha": "108e4ac6",
     "date": "2026-10-27",
     "title": "Dépendances : correctifs npm, react-query épinglé (régression e2e)",
     "items": [
