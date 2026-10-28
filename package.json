@@ -28,6 +28,7 @@
     "test-coin-rules": "tsx scripts/test-coin-rules.ts",
     "test-creation-data": "tsx scripts/test-creation-data.ts",
     "test-theme-contrast": "tsx scripts/test-theme-contrast.ts",
+    "test-combat-labels": "tsx scripts/test-combat-labels.ts",
     "test-api": "tsx scripts/test-api.ts",
     "test:e2e": "playwright test",
     "screenshots": "tsx scripts/generate-screenshots.ts",
