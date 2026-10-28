@@ -85281,6 +85281,10 @@
     ],
     "traits": [
       {
+        "name": "Agressif",
+        "desc": "Le zombi girallon peut dépenser une action bonus pour se dé\nplacer d'un nombre de mètres égal à sa vitesse en direction d'une\ncréature hostile présente dans son champ de vision."
+      },
+      {
         "name": "Robustesse de la non-vie",
         "desc": "Si le zombi tombe à 0 point de vie suite\nà des dégâts, il doit faire un jet de sauvegarde de Constitution\nDD S + dégâts subis, sauf si ces dégâts sont radiants ou viennent\nd'un coup critique. S'il réussit son jet, il tombe à l point de vie au\nlieu de O."
       }
