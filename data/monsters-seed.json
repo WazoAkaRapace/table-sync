@@ -386,10 +386,10 @@
     "actions": [
       {
         "name": "Contact paralysant",
-        "desc": "Attaque de sort au corps à corps : +8 pour\ntoucher, allonge 1,50 m, une créature. Touché: 10 (3d6) dégâts\nde froid. La cible doit réussir un jet de sauvegarde de Constitution\nDD 20, sans quoi elle est paralysée pendant 1 minute. La cible peut\nretenter le jet de sauvegarde à la fin de chacun de ses tours et met\nfin à l'effet dont elle est victime en cas de réussite.",
+        "desc": "Attaque de sort au corps à corps : +15 pour toucher, allonge 1,50 m, une créature. Touché: 10 (3d6) dégâts\nde froid. La cible doit réussir un jet de sauvegarde de Constitution\nDD 20, sans quoi elle est paralysée pendant 1 minute. La cible peut\nretenter le jet de sauvegarde à la fin de chacun de ses tours et met\nfin à l'effet dont elle est victime en cas de réussite.",
         "damageDice": "3d6",
         "damageType": "de froid",
-        "attackBonus": 8
+        "attackBonus": 15
       },
       {
         "name": "Bâton (bâton +3)",
@@ -1107,6 +1107,10 @@
       {
         "name": "Sens aiguisés",
         "desc": "l'almiraj est avantagé sur les tests de Sagesse\n(Perception) basés sur la vue ou l'ouïe."
+      },
+      {
+        "name": "Familier",
+        "desc": "Le MD peut autoriser un personnage apte à invoquer un familier à choisir un almiraj comme familier."
       }
     ],
     "actions": [
@@ -4708,17 +4712,20 @@
     "actions": [
       {
         "name": "Attaques multiples",
-        "desc": "Artus fait trois attaques avec"
-      },
-      {
-        "name": "Signet ou avec son arc long",
-        "desc": ""
+        "desc": "Artus effectue trois attaques avec Signet (dague +3)."
       },
       {
         "name": "Signet (dague +3)",
         "desc": "Attaque d'arme au corps à corps: +8 pour toucher,\nallonge 1,50 m, une cible. Touché: 7 (1d4+5) dégâts perforants.",
         "attackBonus": 8,
         "damageDice": "1d4+5",
+        "damageType": "perforants"
+      },
+      {
+        "name": "Arc long",
+        "desc": "Attaque d'arme à distance: +5 pour toucher, portée 45/180 m, une cible. Touché: 6 (1d8+2) dégâts perforants.",
+        "attackBonus": 5,
+        "damageDice": "1d8+2",
         "damageType": "perforants"
       }
     ],
@@ -5097,7 +5104,7 @@
     "hitPoints": 45,
     "hitDice": "7d10+7",
     "speed": {
-      "walk": 50
+      "walk": 2
     },
     "abilities": {
       "for": 15,
@@ -5136,7 +5143,9 @@
       {
         "name": "Enveloppement",
         "desc": "Attaque d'arme au corps à corps: +4 pour toucher,\nallonge 1,50 m, une créature de taille",
-        "attackBonus": 4
+        "attackBonus": 4,
+        "damageDice": "4d6",
+        "damageType": "perforants"
       },
       {
         "name": "Moyenne ou plus petite",
@@ -10579,6 +10588,10 @@
       {
         "name": "Indomptable (2/jour)",
         "desc": "Le champion relance un jet de\nsauvegarde raté."
+      },
+      {
+        "name": "Second souffle (rechargement après un court ou un long repos)",
+        "desc": "Le champion peut dépenser une action bonus pour regagner 1d10 + 8 points de vie (uniquement en combat)."
       }
     ],
     "actions": [
@@ -10601,8 +10614,8 @@
         "name": "Arc court",
         "desc": "Attaque d'arme à distance : +6 pour toucher, portée\n24/96 m, une cible. Touché: 5 (1 d6+2) dégâts perforants plus 7\n(2d6) dégâts tranchants si le champion possède plus de la moitié\nde son total de points de vie.",
         "attackBonus": 6,
-        "damageDice": "2d6",
-        "damageType": "tranchants"
+        "damageDice": "1d6+2",
+        "damageType": "perforants"
       }
     ],
     "legendaryActions": [],
@@ -13238,11 +13251,11 @@
       },
       {
         "name": "Incantation innée",
-        "desc": "Le chwinga utilise la"
+        "desc": "Le chwinga utilise la Il peut lancer les sorts suivants, sans\ncomposante verbale ni matérielle.\nÀ volonté : assistance, druidisme, passage sans trace, résistance"
       },
       {
-        "name": "Sagesse comme caracté ristique d'incantation innée",
-        "desc": "Il peut lancer les sorts suivants, sans\ncomposante verbale ni matérielle.\nÀ volonté : assistance, druidisme, passage sans trace, résistance"
+        "name": "Nature singulière",
+        "desc": "Le chwinga n'a pas besoin de respirer, de manger ou de dormir."
       }
     ],
     "actions": [
@@ -14637,6 +14650,10 @@
       {
         "name": "Amphibie",
         "desc": "Le crapaudonte respire aussi bien sous l'eau que sur la\nterre ferme.\nSensibilité foudre, il souffre de plusieurs effets jusqu'à la fin de son prochain à la foudre. Si le crapaudonte reçoit des dégâts de\ntour; sa vitesse est divisée par deux, il subit un malus de -2 à la\nCA et aux jets de sauvegarde de Dextérité, il ne peut pas utiliser\nde réaction ni d'attaques multiples et, à son tour, il peut utiliser\nseulement une action ou une action bonus, mais pas les deux."
+      },
+      {
+        "name": "Sensible à la foudre",
+        "desc": "Si le crapaudonte subit des dégâts de foudre, il subit deux effets jusqu'à la fin de son prochain tour : sa vitesse est divisée par deux et il subit un désavantage sur ses jets de sauvegarde de Dextérité."
       }
     ],
     "actions": [
@@ -31398,7 +31415,7 @@
         "name": "Morsure",
         "desc": "Attaque d'arme au corps à corps: +3 pour toucher, allonge\n1,50 m, une cible. Touché: 8 (2d6+1) dégâts perforants.",
         "attackBonus": 3,
-        "damageDice": "2d6+1",
+        "damageDice": "2d8+1",
         "damageType": "perforants"
       }
     ],
@@ -31777,9 +31794,10 @@
       },
       {
         "name": "Tentacule écraseur",
-        "desc": "Attaque d'arme au corps à corps: +S pour\ntoucher, allonge 3 m, une cible. Touché: 6 (1d6+3) dégâts\ncontondants.\nCoquille scintillante (rechargement après un court ou un long\nrepos). La coquille de l'escargot émet une lumière colorée éblouis\nsante jusqu'à la fin de son prochain tour. Pendant cette période,\nla coquille projette une vive lumière dans un rayon de 9 mètres et\nune faible lumière dans un rayon de 9 mètres de plus. Toutes les\ncréatures qui voient l'escargot sont désavantagées lors de leurs\njets d'attaque contre lui. De plus, toute créature qui se trouve dans\nla zone de lumière vive et voit l'escargot quand il active ce pouvoir\ndoit réussir un jet de sauvegarde de Sagesse DD 15, sans quoi elle\nest étourdie jusqu'à ce que la lumière disparaisse.",
+        "desc": "Attaque d'arme au corps à corps: +5 pour toucher, allonge 3 m, une cible. Touché: 6 (1d6+3) dégâts\ncontondants.\nCoquille scintillante (rechargement après un court ou un long\nrepos). La coquille de l'escargot émet une lumière colorée éblouis\nsante jusqu'à la fin de son prochain tour. Pendant cette période,\nla coquille projette une vive lumière dans un rayon de 9 mètres et\nune faible lumière dans un rayon de 9 mètres de plus. Toutes les\ncréatures qui voient l'escargot sont désavantagées lors de leurs\njets d'attaque contre lui. De plus, toute créature qui se trouve dans\nla zone de lumière vive et voit l'escargot quand il active ce pouvoir\ndoit réussir un jet de sauvegarde de Sagesse DD 15, sans quoi elle\nest étourdie jusqu'à ce que la lumière disparaisse.",
         "damageDice": "1d6+3",
-        "damageType": "contondants"
+        "damageType": "contondants",
+        "attackBonus": 5
       },
       {
         "name": "Coquille protectrice",
@@ -40794,7 +40812,8 @@
     "hitPoints": 11,
     "hitDice": "2d6+4",
     "speed": {
-      "walk": 50
+      "walk": 8,
+      "climb": 8
     },
     "abilities": {
       "for": 7,
@@ -40878,7 +40897,8 @@
     "hitPoints": 49,
     "hitDice": "9d6+18",
     "speed": {
-      "walk": 50
+      "walk": 8,
+      "climb": 8
     },
     "abilities": {
       "for": 7,
@@ -40973,7 +40993,8 @@
     "hitPoints": 27,
     "hitDice": "5d6+10",
     "speed": {
-      "walk": 50
+      "walk": 8,
+      "climb": 8
     },
     "abilities": {
       "for": 7,
@@ -41870,7 +41891,7 @@
     "hitPoints": 30,
     "hitDice": "4d8+12",
     "speed": {
-      "walk": 50
+      "walk": 8
     },
     "abilities": {
       "for": 13,
@@ -42335,7 +42356,9 @@
       {
         "name": "Queue",
         "desc": "Attaque d'arme au corps à corps: +4 pour toucher, allonge\n1,50 m, une cible. Touché: 7 {1d10+2) dégâts contondants.",
-        "attackBonus": 4
+        "attackBonus": 4,
+        "damageDice": "1d10+2",
+        "damageType": "contondants"
       }
     ],
     "legendaryActions": [],
@@ -46377,12 +46400,12 @@
       "walk": 15
     },
     "abilities": {
-      "for": 22,
-      "dex": 1,
-      "con": 21,
-      "int": 2,
-      "sag": 11,
-      "cha": 3
+      "for": 16,
+      "dex": 12,
+      "con": 15,
+      "int": 14,
+      "sag": 14,
+      "cha": 16
     },
     "savingThrows": [],
     "skills": [],
@@ -49309,7 +49332,8 @@
     "hitPoints": 85,
     "hitDice": "10d10+30",
     "speed": {
-      "walk": 50
+      "walk": 2,
+      "climb": 2
     },
     "abilities": {
       "for": 18,
@@ -49784,7 +49808,8 @@
     "hitPoints": 60,
     "hitDice": "11d8+11",
     "speed": {
-      "walk": 50
+      "walk": 2,
+      "climb": 2
     },
     "abilities": {
       "for": 12,
@@ -58047,7 +58072,8 @@
         "name": "Dague",
         "desc": "Attaque d'arme à distance ou au corps à corps: +2 pour tou\ncher, allonge 1,50 m ou portée 6/18 m, une cible. Touché: 2 (1d4)\ndégâts perforants.",
         "damageDice": "1d4",
-        "damageType": "perforants"
+        "damageType": "perforants",
+        "attackBonus": 2
       }
     ],
     "legendaryActions": [],
@@ -60517,7 +60543,8 @@
     "hitPoints": 22,
     "hitDice": "5d8",
     "speed": {
-      "walk": 50
+      "walk": 2,
+      "climb": 2
     },
     "abilities": {
       "for": 2,
@@ -60562,7 +60589,9 @@
       {
         "name": "Morsures",
         "desc": "Attaque d'arme au corps à corps: +0 pour toucher, allonge\n0 m, une créature dans l'emplacement de la nuée. Touché: 1d4 larves\ninfestent la cible qui reçoit 1d6 dégâts perforants au début de chacun\nde ses tours par larve qui l'infeste. Si on applique du feu sur la mor\nsure de larve avant la fin du prochain tour de la cible, cette dernière\nsubit 1 dégât de feu mais les larves sont tuées. Une fois ce délai passé,\nles larves se sont enfoncées trop loin sous la peau pour que l'on\npuisse les br0ler.\nSi une cible infestée de larves termine un tour à 0 pv, elle meurt tandis\nque les asticots s'enfoncent goulûment dans son cœur. Tout effet qui\nsoigne les maladies tue toutes les larves qui infestent une cible.",
-        "attackBonus": 0
+        "attackBonus": 0,
+        "damageDice": "1d6",
+        "damageType": "perforants"
       }
     ],
     "legendaryActions": [],
@@ -63377,15 +63406,15 @@
     "hitPoints": 11,
     "hitDice": "2d8+2",
     "speed": {
-      "walk": 50
+      "walk": 2
     },
     "abilities": {
-      "for": 1,
-      "dex": 10,
+      "for": 14,
+      "dex": 15,
       "con": 12,
-      "int": 1,
-      "sag": 10,
-      "cha": 1
+      "int": 9,
+      "sag": 13,
+      "cha": 9
     },
     "savingThrows": [],
     "skills": [],
@@ -65945,7 +65974,7 @@
     "subtype": null,
     "size": "M",
     "alignment": "neutre mauvaise",
-    "armorClass": 21,
+    "armorClass": 12,
     "armorDesc": "armure naturelle",
     "hitPoints": 26,
     "hitDice": "4d10+4",
@@ -66011,7 +66040,8 @@
         "name": "Javeline",
         "desc": "toucher, allonge 1,50 m ou portée 9/36 m, une cible. Attaque d'arme à distance ou au corps à corps: Touché: +4 pour9\n(2d6+2) dégâts perforants.",
         "damageDice": "2d6+2",
-        "damageType": "perforants"
+        "damageType": "perforants",
+        "attackBonus": 4
       }
     ],
     "legendaryActions": [],
@@ -66929,7 +66959,7 @@
         "attackBonus": 7
       },
       {
-        "name": "Résistance à fa magie",
+        "name": "Résistance à la magie",
         "desc": "Ras Nsi est avantagé sur les jets de sauve\ngarde contre les sorts et autres effets magiques."
       }
     ],
@@ -66950,6 +66980,13 @@
         "desc": "Attaque d'arme au corps à corps: +6 pour toucher,\nallonge l,50 m, une créature. Touché: 10 (2d6+3) dégâts conton\ndants et la cible est empoignée (évasion DD 14). Jusqu'à la fin de\nl'empoignade, la cible est également entravée et Ras Nsi ne peut\npas empoigner une autre cible.\nÉpée longue ardente (forme de yuan-ti uniquement). Attaque\nd'arme au corps à corps: +6 pour toucher, allonge l,50 m, une cible.\nTouché: 7 (1d8+3) dégâts tranchants ou 8 (1d10+3) dégâts tran\nchants si maniée à deux mains, plus 7 (2d6) dégâts de feu.",
         "attackBonus": 6,
         "damageDice": "2d6+3",
+        "damageType": "tranchants"
+      },
+      {
+        "name": "Épée longue langue-de-flamme (forme de yuan-ti uniquement)",
+        "desc": "Attaque d'arme au corps à corps: +6 pour toucher, allonge 1,50 m, une cible. Touché: 7 (1d8+3) dégâts tranchants, plus 7 (2d6) dégâts de feu.",
+        "attackBonus": 6,
+        "damageDice": "1d8+3",
         "damageType": "tranchants"
       }
     ],
@@ -72533,7 +72570,7 @@
     "hitPoints": 3,
     "hitDice": "1d6",
     "speed": {
-      "walk": 6,
+      "walk": 9,
       "climb": 6,
       "fly": 9
     },
@@ -72559,6 +72596,10 @@
       {
         "name": "Tactique de groupe",
         "desc": "Le singe volant est avantagé lors d'un jet\nd'attaque contre une créature s'il possède au moins un allié non\nneutralisé dans un rayon de 1,50 mètre autour de cette créature."
+      },
+      {
+        "name": "Familier",
+        "desc": "Le MD peut autoriser un personnage apte à invoquer un familier à choisir un singe volant comme familier."
       }
     ],
     "actions": [
@@ -72566,7 +72607,8 @@
         "name": "Morsure",
         "desc": "Attaque d'arme au corps à corps: +l pour toucher, allonge\n1,50 m, une cible. Touché: 1 (1d4-1) dégâts perforants.",
         "damageDice": "1d4-1",
-        "damageType": "perforants"
+        "damageType": "perforants",
+        "attackBonus": 1
       }
     ],
     "legendaryActions": [],
@@ -74753,7 +74795,7 @@
     "armorClass": 13,
     "armorDesc": "armure naturelle",
     "hitPoints": 76,
-    "hitDice": "8d10+24",
+    "hitDice": "8d12+24",
     "speed": {
       "walk": 12
     },
@@ -77511,8 +77553,8 @@
     "alignment": "non alignée",
     "armorClass": 17,
     "armorDesc": "armure naturelle",
-    "hitPoints": 1,
-    "hitDice": null,
+    "hitPoints": 75,
+    "hitDice": "10d10+20",
     "speed": {
       "walk": 9,
       "swim": 12
@@ -78491,7 +78533,7 @@
         "desc": "Le triton du feu respire aussi bien dans l'eau que sur la\nterre ferme."
       },
       {
-        "name": "Incantation innte",
+        "name": "Incantation innée",
         "desc": "Le triton du feu utilise le"
       },
       {
@@ -78502,6 +78544,10 @@
         "name": "Incantation",
         "desc": "Le triton du feu sorcier est un lanceur de sorts de niveau 3\nqui utilise le Charisme comme caractéristique d'incantation (jet de sau\nvegarde contre les sorts DD 12, +4 pour toucher avec les attaques de\nsort). Après un court ou un long repos, il récupère les emplacements\nde sorts qu'il a dépensés. Il connaît les sorts de sorcier suivants:\nTours de magie (à volonté) : assistance, lumière, main du mage,\nprestidigitation, trait de feu,\n1er et 2e niveaux (2 emplacements de sort de niveau 2) : mains brû-\nlantes, rayon ardent, représailles infernales, sphère de feu\nBénédiction d'lmix. Quand le triton du feu réduit un ennemi à\n0 point de vie, il regagne 5 points de vie temporaires.",
         "attackBonus": 4
+      },
+      {
+        "name": "Bénédiction d'Imix",
+        "desc": "Quand le triton du feu réduit un ennemi à 0 point de vie, il gagne 5 points de vie temporaires."
       }
     ],
     "actions": [
