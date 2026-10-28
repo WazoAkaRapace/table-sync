@@ -37,6 +37,7 @@ import {
   conditionsTitle,
   feelingDot,
   feelingPhraseKey,
+  groupMemberNumber,
   hpVisible,
   numberedCombatantLabels,
 } from '../combatDisplay';
@@ -1520,8 +1521,9 @@ function StagePanel({
   const combatants = encounter.combatants;
   const groupMembers =
     combatant.groupId !== null ? combatants.filter((c) => c.groupId === combatant.groupId) : [];
-  const memberLabel = (m: Combatant) =>
-    `${m.name} ${groupMembers.findIndex((g) => g.id === m.id) + 1}`;
+  // Numéro STABLE par rang d'insertion (id) : la mort d'un membre du groupe ne
+  // renumérote pas les survivants (le rail et ce panneau parlent le même dialecte).
+  const memberLabel = (m: Combatant) => `${m.name} ${groupMemberNumber(combatants, m)}`;
   const status = encounter.status;
   const label = groupMembers.length > 1 ? memberLabel(combatant) : combatant.name;
   const hp = hpVisible(combatant);

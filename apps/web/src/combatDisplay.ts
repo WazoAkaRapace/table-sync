@@ -22,15 +22,41 @@ export function conditionsTitle(
     .join(', ');
 }
 
-/** Number group members ("Gobelin 1", "Gobelin 2"…) in list order. */
+/**
+ * Numérotation des membres d'un groupe (« Gobelin 1 », « Gobelin 2 »…).
+ * STABLE : le numéro d'un combattant est son rang d'INSERTION dans le groupe
+ * (id croissant), jamais sa position dans la liste affichée — la mort
+ * (sortCombatants envoie les vaincus en fin de liste) ne renumérote donc
+ * jamais les survivants, et le numéro accompagne le mob toute la rencontre.
+ */
 export function numberedCombatantLabels(combatants: Combatant[]): string[] {
-  const counters = new Map<number, number>();
+  // Rang d'insertion par groupe : tri des ids UNE fois, hors ordre d'affichage.
+  const rankByGroupId = new Map<number, Map<number, number>>();
+  for (const c of combatants) {
+    if (c.groupId === null) continue;
+    let ranks = rankByGroupId.get(c.groupId);
+    if (!ranks) {
+      ranks = new Map<number, number>();
+      rankByGroupId.set(c.groupId, ranks);
+    }
+    if (!ranks.has(c.id)) ranks.set(c.id, 0); // réservé, rempli ci-dessous
+  }
+  for (const [, ranks] of rankByGroupId) {
+    const ids = [...ranks.keys()].sort((a, b) => a - b);
+    ids.forEach((id, i) => ranks.set(id, i + 1));
+  }
   return combatants.map((c) => {
     if (c.groupId === null) return c.name;
-    const n = (counters.get(c.groupId) ?? 0) + 1;
-    counters.set(c.groupId, n);
+    const n = rankByGroupId.get(c.groupId)?.get(c.id) ?? 1;
     return `${c.name} ${n}`;
   });
+}
+
+/** Numéro stable d'un membre de groupe (rang d'insertion), 1 par défaut. */
+export function groupMemberNumber(combatants: Combatant[], member: Combatant): number {
+  const siblings = combatants.filter((c) => c.groupId === member.groupId);
+  if (siblings.length <= 1) return 1;
+  return [...siblings].sort((a, b) => a.id - b.id).findIndex((c) => c.id === member.id) + 1;
 }
 
 // ---------- Apparent health (monsters, redacted views) ----------
