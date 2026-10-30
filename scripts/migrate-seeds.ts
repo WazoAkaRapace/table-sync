@@ -433,7 +433,11 @@ const SLOT_TABLES: Record<string, Record<string, string>> = {
 
 /** B3 — « round » → « tour » dans les champs FR uniquement (jamais la description EN). */
 function frRoundsToTours(text: string): string {
-  return text.replace(/\brounds\b/g, 'tours').replace(/\bround\b/g, 'tour');
+  return text
+    .replace(/\bRounds\b/g, 'Tours')
+    .replace(/\bRound\b/g, 'Tour')
+    .replace(/\brounds\b/g, 'tours')
+    .replace(/\bround\b/g, 'tour');
 }
 
 function migrateSpells(spells: SeedSpell[]): void {
