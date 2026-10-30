@@ -4651,14 +4651,15 @@ export function renderFeatureTemplate(text: string, character: Character): strin
   };
 
   // Class-resource variables (feature catalog formulas)
-  vars.bardic_die = bardicInspirationDie(level);
-  vars.song_die = songOfRestDie(level);
-  // SRD multiclassage : « Un prérequis de niveau pour une manifestation
-  // réfère au niveau d'occultiste » — le compteur suit la ligne de classe,
+  // SRD multiclassage : ces valeurs suivent la ligne de classe propriétaire,
   // pas le niveau total (mono-classe : identique, niveau total = niveau de classe).
+  vars.bardic_die = bardicInspirationDie(classLevelOf(character, 'Barde'));
+  vars.song_die = songOfRestDie(classLevelOf(character, 'Barde'));
+  // « Un prérequis de niveau pour une manifestation réfère au niveau
+  // d'occultiste » — le compteur suit la ligne de classe, pas le niveau total.
   vars.invocations = String(eldritchInvocationsCount(classLevelOf(character, 'Occultiste')));
-  vars.lay_on_hands = String(5 * level);
-  vars.sneak_dice = sneakAttackDice(level);
+  vars.lay_on_hands = String(5 * classLevelOf(character, 'Paladin'));
+  vars.sneak_dice = sneakAttackDice(classLevelOf(character, 'Roublard'));
 
   // Spellcasting variables
   if (isCaster) {

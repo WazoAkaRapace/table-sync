@@ -433,6 +433,63 @@ check(
   3,
 );
 
+// --- Multiclassage : variables de ressource au niveau de la CLASSE propriétaire ---
+
+// Paladin 5 / Roublard 5 (niveau total 10) : soins 5×5 = 25 (pas 50), sournoise 3d6 (pas 5d6)
+const mcPalRou = mkChar({
+  characterClass: 'Paladin',
+  level: 10,
+  classes: [
+    { classKey: 'Paladin', level: 5, subclassKey: null, hitDiceUsed: 0, fightingStyle: null },
+    { classKey: 'Roublard', level: 5, subclassKey: null, hitDiceUsed: 0, fightingStyle: null },
+  ],
+});
+check(
+  '{{lay_on_hands}} multiclassé Pal5/Rou5 = 25 (niveau de CLASSE, pas 50)',
+  renderFeatureTemplate('{{lay_on_hands}}', mcPalRou),
+  '25',
+);
+check(
+  '{{sneak_dice}} multiclassé Pal5/Rou5 = 3d6 (niveau de CLASSE, pas 5d6)',
+  renderFeatureTemplate('{{sneak_dice}}', mcPalRou),
+  '3d6',
+);
+// Barde 3 / Guerrier 7 (niveau total 10) : dé bardique d6 (pas d10)
+const mcBarGue = mkChar({
+  characterClass: 'Barde',
+  level: 10,
+  classes: [
+    { classKey: 'Barde', level: 3, subclassKey: null, hitDiceUsed: 0, fightingStyle: null },
+    { classKey: 'Guerrier', level: 7, subclassKey: null, hitDiceUsed: 0, fightingStyle: null },
+  ],
+});
+check(
+  '{{bardic_die}} multiclassé Bar3/Gue7 = 1d6 (niveau de CLASSE, pas 1d10)',
+  renderFeatureTemplate('{{bardic_die}}', mcBarGue),
+  '1d6',
+);
+check(
+  '{{song_die}} multiclassé Bar3/Gue7 = 1d6 (niveau de CLASSE)',
+  renderFeatureTemplate('{{song_die}}', mcBarGue),
+  '1d6',
+);
+// Mono-classe : inchangé (niveau total = niveau de classe)
+check(
+  '{{lay_on_hands}} mono-classe Paladin 6 = 30',
+  renderFeatureTemplate('{{lay_on_hands}}', mkChar({ characterClass: 'Paladin', level: 6 })),
+  '30',
+);
+check(
+  '{{sneak_dice}} mono-classe Roublard 9 = 5d6',
+  renderFeatureTemplate('{{sneak_dice}}', mkChar({ characterClass: 'Roublard', level: 9 })),
+  '5d6',
+);
+check(
+  '{{bardic_die}} mono-classe Barde 10 = 1d10',
+  renderFeatureTemplate('{{bardic_die}}', mkChar({ characterClass: 'Barde', level: 10 })),
+  '1d10',
+);
+
 // --- Manifestations occultes : catalogue WARLOCK_INVOCATIONS (PHB 2014) ---
 
 const SPELLS_SEED: Array<{ srdIndex: string }> = JSON.parse(
