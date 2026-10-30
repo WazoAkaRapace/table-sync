@@ -57,6 +57,9 @@ interface Props {
   onError: (msg: string) => void;
   /** Toast orange (règle) — échec non bloquant du POST d'effet de sort. */
   onWarn: (msg: string) => void;
+  /** Signal « un effet de sort vient d'être posé » — réveille le bandeau
+   *  d'état (état local, anti-écho WS : sans ce signal sa CA reste périmée). */
+  onEffectsChanged?: () => void;
   /** CA effective actuelle SANS les effets de sort (override manuel inclus) —
    *  base de l'annonce « CA X → Y » (le bandeau la possède déjà, la page la
    *  recalcule pour l'onglet). */
@@ -97,6 +100,7 @@ export default function CharacterSpellsTab({
   onSaved,
   onError,
   onWarn,
+  onEffectsChanged,
   currentEffectiveAc,
 }: Props) {
   const { t } = useTranslation();
@@ -721,6 +725,10 @@ export default function CharacterSpellsTab({
         }
       } finally {
         await reloadEffects();
+        // Réveille le bandeau d'état (CA locale) : son propre écho WS est
+        // supprimé par l'anti-écho — sans ce signal il reste sur l'ancienne
+        // CA jusqu'à un rechargement (succès ET 409 : l'effet est actif).
+        onEffectsChanged?.();
       }
     }
     if (ok) {

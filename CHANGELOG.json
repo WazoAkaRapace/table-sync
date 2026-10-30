@@ -1,5 +1,16 @@
 [
   {
+    "version": null,
+    "sha": null,
+    "date": "2026-10-30",
+    "title": "bouclier et classe d'armure",
+    "items": [
+      "Le sort Bouclier se retire tout seul à la fin de votre tour : plus de bonus oublié sur la fiche.",
+      "La classe d'armure du bandeau se met à jour dès qu'un sort est lancé, sans recharger la page.",
+      "La pastille du sort Bouclier indique sa durée : jusqu'à la fin de votre tour."
+    ]
+  },
+  {
     "version": "2026.10.30-5",
     "sha": "1608c024",
     "date": "2026-10-30",

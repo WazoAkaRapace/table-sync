@@ -2373,14 +2373,24 @@ export function computeAC(
  */
 export const SPELL_AC_EFFECTS: Record<
   string,
-  { kind: 'ac_bonus' | 'ac_floor' | 'ac_set_formula'; value: number; tiedToConcentration: boolean }
+  {
+    kind: 'ac_bonus' | 'ac_floor' | 'ac_set_formula';
+    value: number;
+    tiedToConcentration: boolean;
+    /**
+     * Effet éphémère « jusqu'au début de ton prochain tour » (Bouclier) :
+     * la ligne est désactivée automatiquement à la fin du tour du lanceur
+     * (traqueur) — le joueur n'a pas à la lever à la main.
+     */
+    expiresOnTurnEnd?: boolean;
+  }
 > = {
   'shield-of-faith': { kind: 'ac_bonus', value: 2, tiedToConcentration: true },
   barkskin: { kind: 'ac_floor', value: 16, tiedToConcentration: true },
   haste: { kind: 'ac_bonus', value: 2, tiedToConcentration: true },
   'tasha-s-otherworldly-guise': { kind: 'ac_bonus', value: 2, tiedToConcentration: true },
   'mage-armor': { kind: 'ac_set_formula', value: 13, tiedToConcentration: false },
-  shield: { kind: 'ac_bonus', value: 5, tiedToConcentration: false },
+  shield: { kind: 'ac_bonus', value: 5, tiedToConcentration: false, expiresOnTurnEnd: true },
 };
 
 /** Effet CA actif — ligne de character_spell_effects réduite au moteur. */

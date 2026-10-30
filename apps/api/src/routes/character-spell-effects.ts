@@ -21,7 +21,7 @@
  * bouge) — le traqueur suit la CA en continu, plus seulement à l'ajout.
  */
 
-import { and, eq, isNull, ne, or } from 'drizzle-orm';
+import { and, eq, inArray, isNull, ne, or } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../db/drizzle.ts';
 import { getDb } from '../db/index.ts';
@@ -146,6 +146,41 @@ export function breakConcentrationEffectsOnTracker(
 }
 
 /**
+ * Effets éphémères (Bouclier — réaction « jusqu'au début de ton prochain
+ * tour ») : désactivation à la FIN DU TOUR DU LANCEUR (approximation jouable
+ * du RAW — fin de tour au lieu de début du prochain : jamais de CA fantôme
+ * pendant les tours adverses), miroir CA du porteur, retour des ids à
+ * rafraîchir (porteur + lanceur quand ils diffèrent).
+ */
+export function expireEphemeralEffects(casterId: number): number[] {
+  const drizzle = getDrizzle();
+  const dropped = drizzle
+    .select({ id: characterSpellEffects.id, characterId: characterSpellEffects.characterId })
+    .from(characterSpellEffects)
+    .where(
+      and(
+        eq(characterSpellEffects.casterCharacterId, casterId),
+        eq(characterSpellEffects.expiresOnTurnEnd, 1),
+        eq(characterSpellEffects.active, 1),
+      ),
+    )
+    .all() as any[];
+  if (dropped.length === 0) return [];
+  drizzle
+    .update(characterSpellEffects)
+    .set({ active: 0 })
+    .where(
+      inArray(
+        characterSpellEffects.id,
+        dropped.map((r) => r.id),
+      ),
+    )
+    .run();
+  const bearerIds = [...new Set(dropped.map((r) => r.characterId))];
+  return bearerIds;
+}
+
+/**
  * CA effective du personnage TELLE QUE PORTÉE PAR UN COMBATTANT : équipement
  * + effets de sort actifs, l'override manuel GAGNE (même règle qu'à l'ajout
  * du combatant — combat.ts). Relu à chaque appel : les lignes d'effet et la
@@ -231,6 +266,7 @@ function mapSpellEffect(row: any, lang: AppLang) {
     effectKind: row.effect_kind,
     acValue: row.ac_value,
     tiedToConcentration: !!row.tied_to_concentration,
+    expiresOnTurnEnd: !!row.expires_on_turn_end,
     active: !!row.active,
     createdAt: row.created_at,
     spell: row.spell_name
@@ -281,6 +317,7 @@ export async function characterSpellEffectRoutes(app: FastifyInstance) {
           effect_kind: characterSpellEffects.effectKind,
           ac_value: characterSpellEffects.acValue,
           tied_to_concentration: characterSpellEffects.tiedToConcentration,
+          expires_on_turn_end: characterSpellEffects.expiresOnTurnEnd,
           active: characterSpellEffects.active,
           created_at: characterSpellEffects.createdAt,
           spell_name: spells.name,
@@ -425,6 +462,7 @@ export async function characterSpellEffectRoutes(app: FastifyInstance) {
             effectKind: def.kind,
             acValue: def.value,
             tiedToConcentration: def.tiedToConcentration ? 1 : 0,
+            expiresOnTurnEnd: def.expiresOnTurnEnd ? 1 : 0,
             targetLabel: target.kind === 'label' ? target.label : null,
             active: 1,
           })
@@ -458,6 +496,7 @@ export async function characterSpellEffectRoutes(app: FastifyInstance) {
           effect_kind: characterSpellEffects.effectKind,
           ac_value: characterSpellEffects.acValue,
           tied_to_concentration: characterSpellEffects.tiedToConcentration,
+          expires_on_turn_end: characterSpellEffects.expiresOnTurnEnd,
           active: characterSpellEffects.active,
           created_at: characterSpellEffects.createdAt,
           spell_name: spells.name,

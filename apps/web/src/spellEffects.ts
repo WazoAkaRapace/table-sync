@@ -26,6 +26,7 @@ export interface SpellEffectRow {
   effectKind: string;
   acValue: number;
   tiedToConcentration: boolean;
+  expiresOnTurnEnd?: boolean;
   role?: 'bearer' | 'caster';
   targetCharacterId?: number | null;
   targetLabel?: string | null;
@@ -90,6 +91,8 @@ interface RawSpellEffectRow {
   ac_value?: unknown;
   tiedToConcentration?: unknown;
   tied_to_concentration?: unknown;
+  expiresOnTurnEnd?: unknown;
+  expires_on_turn_end?: unknown;
   spell?: unknown;
   role?: unknown;
   targetCharacterId?: unknown;
@@ -143,6 +146,7 @@ function normalizeRow(raw: RawSpellEffectRow): SpellEffectRow | null {
     effectKind: String(raw.effectKind ?? raw.effect_kind ?? 'ac_bonus'),
     acValue: num(raw.acValue ?? raw.ac_value),
     tiedToConcentration: !!(raw.tiedToConcentration ?? raw.tied_to_concentration ?? false),
+    expiresOnTurnEnd: !!(raw.expiresOnTurnEnd ?? raw.expires_on_turn_end ?? false),
     role,
     targetCharacterId: nullableNum(raw.targetCharacterId ?? raw.target_character_id),
     targetLabel: nullableStr(raw.targetLabel ?? raw.target_label),

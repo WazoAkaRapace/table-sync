@@ -75,6 +75,13 @@ interface Props {
   onNotice: (msg: string) => void;
   /** Damage while concentrating — the page surfaces the CON-save popup. */
   onConcentrationCheck: (check: ConcentrationCheck) => void;
+  /**
+   * Signal « effets de sort changés » (cast depuis l'onglet Sorts) : nos
+   * effets vivent en état LOCAL hors react-query, et l'écho WS du propre
+   * cast est supprimé par l'anti-écho — ce compteur est le seul réveil.
+   * Les LEVÉES locales (liftEffect) rechargent déjà d'elles-mêmes.
+   */
+  effectsVersion: number;
 }
 
 export default function CharacterStateBand({
@@ -90,6 +97,7 @@ export default function CharacterStateBand({
   onError,
   onNotice,
   onConcentrationCheck,
+  effectsVersion,
 }: Props) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
@@ -182,6 +190,13 @@ export default function CharacterStateBand({
   useEffect(() => {
     void reloadEffects();
   }, [reloadEffects, character.currentHp, character.concentrating, character.spellSlotsUsed]);
+
+  // Signal page (cast depuis l'onglet Sorts) : les effets ont changé SANS que
+  // PV/concentration/emplacements ne bougent nécessairement — re-tire.
+  useEffect(() => {
+    if (effectsVersion > 0) void reloadEffects();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- signal volontaire : seul le numéro de version doit réveiller, reloadEffects est stable (useCallback [character.id]).
+  }, [effectsVersion]);
 
   /** Lever un effet — DELETE ; le serveur retombe `concentrating` si plus
    *  rien ne le justifie (contrat Task 3). La ligne disparaît, la CA suit. */
@@ -684,10 +699,17 @@ export default function CharacterStateBand({
                     <Chip
                       key={row.id}
                       tone="gold"
-                      title={t('band.effet.chip.title', {
-                        name: row.spellName,
-                        mod: effectModLabel(row),
-                      })}
+                      title={
+                        row.expiresOnTurnEnd
+                          ? t('band.effet.chip.title.ephemere', {
+                              name: row.spellName,
+                              mod: effectModLabel(row),
+                            })
+                          : t('band.effet.chip.title', {
+                              name: row.spellName,
+                              mod: effectModLabel(row),
+                            })
+                      }
                     >
                       {effectModLabel(row)} · {row.spellName || t('band.effets.sort')}
                     </Chip>
@@ -726,10 +748,17 @@ export default function CharacterStateBand({
                     <Chip
                       key={row.id}
                       tone="gold"
-                      title={t('band.effet.chip.title', {
-                        name: row.spellName,
-                        mod: effectModLabel(row),
-                      })}
+                      title={
+                        row.expiresOnTurnEnd
+                          ? t('band.effet.chip.title.ephemere', {
+                              name: row.spellName,
+                              mod: effectModLabel(row),
+                            })
+                          : t('band.effet.chip.title', {
+                              name: row.spellName,
+                              mod: effectModLabel(row),
+                            })
+                      }
                     >
                       {effectModLabel(row)} · {row.spellName || t('band.effets.sort')}
                     </Chip>

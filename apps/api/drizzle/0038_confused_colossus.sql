@@ -1,0 +1,1 @@
+ALTER TABLE `character_spell_effects` ADD `expires_on_turn_end` integer DEFAULT 0 NOT NULL;
