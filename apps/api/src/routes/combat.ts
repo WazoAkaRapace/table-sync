@@ -440,7 +440,11 @@ export async function combatRoutes(app: FastifyInstance) {
           // GM name mask: the placeholder substitutes the real name BEFORE it
           // ever leaves the server — the leak is impossible by construction,
           // whichever player surface renders it.
-          if (c.nameHidden && c.type === 'monster') c.name = HIDDEN_COMBATANT_NAME;
+          if (c.nameHidden && c.type === 'monster') {
+            c.name = HIDDEN_COMBATANT_NAME;
+            // Le slug identifie le monstre autant que son nom — même fuite, même redaction.
+            c.monsterSlug = null;
+          }
           // Stable per-combatant jitter (±8 % on the tier boundaries): the same
           // monster always flips wording at the same hidden ratio, and players
           // can't average their way back to exact HP from repeated reads.
