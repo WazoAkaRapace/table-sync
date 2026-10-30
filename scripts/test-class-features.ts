@@ -468,6 +468,12 @@ check(
   ],
   [true, true],
 );
+// Sombre présage : le sort gratuit est malédiction (bestow-curse), pas maléfice (hex)
+check(
+  'Sombre présage : free-cast bestow-curse (PHB 2014 p.110)',
+  findWarlockInvocation('occultiste-invo-sombre-presage')?.effect,
+  { kind: 'free-cast', spell: 'bestow-curse' },
+);
 // free-cast ⇒ compteur 1/repos long ; compteur ⇒ free-cast
 check(
   'manifestations : free-cast ⇒ compteur 1/RL',

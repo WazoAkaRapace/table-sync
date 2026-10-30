@@ -257,7 +257,7 @@ export const WARLOCK_INVOCATIONS: WarlockInvocation[] = [
     prereqLevel: 5,
     description:
       'Vous pouvez lancer malédiction une fois en utilisant un emplacement de sort d’occultiste. Vous ne pouvez le lancer de nouveau avant d’avoir terminé un repos long.',
-    effect: { kind: 'free-cast', spell: 'hex' },
+    effect: { kind: 'free-cast', spell: 'bestow-curse' },
     resource: { max: () => 1, reset: 'long' },
   },
   {
