@@ -25,7 +25,7 @@ export type PactBoon = 'lame' | 'chaine' | 'grimoire';
 export type WarlockInvocationEffect =
   /** Décharge déchirante : +mod CHA aux dégâts de décharge occulte (Phase B). */
   | { kind: 'agonizing-blast' }
-  /** Lance occulte : portée de décharge occulte ×2,5 (36 m → 90 m) (Phase B). */
+  /** Lance occulte : portée de décharge occulte portée à 45 m (150 ft, PHB 2014 p.111). */
   | { kind: 'eldritch-spear' }
   /** Sorts lancables à volonté (slugs srd_index du catalogue spells). */
   | { kind: 'at-will'; spells: string[] }
@@ -112,7 +112,7 @@ export const WARLOCK_INVOCATIONS: WarlockInvocation[] = [
     id: 'occultiste-invo-lance-occulte',
     name: 'Lance occulte',
     prereqEldritchBlast: true,
-    description: 'Lorsque vous lancez décharge occulte, sa portée passe à 90 mètres.',
+    description: 'Lorsque vous lancez décharge occulte, sa portée passe à 45 mètres.',
     effect: { kind: 'eldritch-spear' },
   },
   {

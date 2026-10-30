@@ -29,6 +29,7 @@ import {
 } from '@table-sync/shared/classFeatures';
 import { applyRest } from '@table-sync/shared/rests';
 import { findWarlockInvocation, WARLOCK_INVOCATIONS } from '@table-sync/shared/warlockInvocations';
+import { WARLOCK_INVOCATIONS_EN } from '@table-sync/shared/warlockInvocations.en';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -457,6 +458,15 @@ check(
   'manifestations : sorts référencés présents dans spells-seed',
   refSpells.filter((s) => !spellSlugs.has(s)),
   [],
+);
+// Lance occulte : 45 m (150 ft) en PHB 2014 — pas 90 m / 300 ft (règle 2024)
+check(
+  'Lance occulte : portée 45 m (150 ft, PHB 2014 p.111)',
+  [
+    findWarlockInvocation('occultiste-invo-lance-occulte')?.description.includes('45 mètres'),
+    WARLOCK_INVOCATIONS_EN['occultiste-invo-lance-occulte']?.description.includes('150 feet'),
+  ],
+  [true, true],
 );
 // free-cast ⇒ compteur 1/repos long ; compteur ⇒ free-cast
 check(

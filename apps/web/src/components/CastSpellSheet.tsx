@@ -580,7 +580,7 @@ export default function CastSpellSheet({
               )}
               {spearRange && (
                 <Chip tone="gold" title={t('cast.lance.occulte.title')}>
-                  🎯 {t('cast.portee.90m')}
+                  🎯 {t('cast.portee.45m')}
                 </Chip>
               )}
               {healing.dice && (
