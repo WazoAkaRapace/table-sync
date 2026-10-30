@@ -49,26 +49,29 @@ jobs:
           git push origin HEAD:main
 
           # La release pointe le commit stampé (le tip de main après push).
+          # --verify-tag vérifie le TAG (v<prefix>) — la version est nue.
           STAMPED=$(git rev-parse HEAD)
-          if ! gh release create "$VERSION" --title "$VERSION" \
+          if ! gh release create "$GITHUB_REF_NAME" --title "$VERSION" \
             --notes-file /tmp/release-notes.md --target "$STAMPED" \
             --verify-tag; then
-            echo "release $VERSION existante — notes mises à jour"
-            gh release edit "$VERSION" --notes-file /tmp/release-notes.md || true
+            echo "release $GITHUB_REF_NAME existante — notes mises à jour"
+            gh release edit "$GITHUB_REF_NAME" --notes-file /tmp/release-notes.md || true
           fi
 
       # Le build (ci.yml) écoute release: published — mais une release créée
-      # avec GITHUB_TOKEN ne déclenche PAS cet événement (anti-récursion
-      # GitHub). On dispatch donc le build une fois, depuis la ref du TAG :
-      # contrairement à l'ancien flux (dispatch au merge, refusé quand le
-      # workflow venait de changer), ici le contexte est stable et un éventuel
-      # refus se voit dans CE run — un seul endroit à surveiller.
+      # avec GITHUB_TOKEN ne déclenche NI cet événement NI un workflow_dispatch
+      # (403 « Resource not accessible by integration ») : anti-récursion
+      # GitHub. Le dispatch est donc un « best effort » : s'il échoue, le run
+      # reste VERT et signale la relance à la main (gh workflow run … depuis
+      # un jeton authentifié). Un PAT en secret resterait la seule automatisation.
       - name: Dispatcher le build d'images
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          set -eu
           VERSION="${GITHUB_REF_NAME#v}"
-          gh workflow run "Build & Push Docker Images" \
-            --ref "$GITHUB_REF_NAME" -f version="$VERSION"
-          echo "Build dispatché pour $VERSION (ref $GITHUB_REF_NAME)."
+          if gh workflow run "Build & Push Docker Images" \
+            --ref "$GITHUB_REF_NAME" -f version="$VERSION"; then
+            echo "Build dispatché pour $VERSION (ref $GITHUB_REF_NAME)."
+          else
+            echo "::warning::dispatch refusé (GITHUB_TOKEN) — relancer : gh workflow run 'Build & Push Docker Images' --ref $GITHUB_REF_NAME -f version=$VERSION"
+          fi
