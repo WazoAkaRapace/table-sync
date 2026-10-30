@@ -792,6 +792,16 @@ check(
   ['none', 'long', null],
 );
 
+// Restauration arcanique (magicien) : 1×/jour après un repos court (PHB 2014 p.114)
+check(
+  'effectiveReset : Restauration arcanique recharge au repos court',
+  [
+    findClassFeature('magicien-recuperation-arcanique')?.resource?.reset,
+    effectiveFeatureReset({ catalogId: 'magicien-recuperation-arcanique', resetType: null }, 1),
+  ],
+  ['short', 'short'],
+);
+
 // Override 'long' sur un trait de catalogue dont la règle SRD est 'short'
 // (Second souffle) : le repos court ne le recharge PLUS, le repos long si.
 const overridden = [
