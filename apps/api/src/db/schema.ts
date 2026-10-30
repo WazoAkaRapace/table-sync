@@ -565,6 +565,12 @@ export const characterSpellEffects = sqliteTable(
     tiedToConcentration: integer('tied_to_concentration').notNull().default(1),
     /** v2 « Autre » : nom libre de la cible sans fiche (ex. « Gobelin »), ≤ 60 chars. */
     targetLabel: text('target_label'),
+    /**
+     * Effet éphémère (Bouclier : réaction, « jusqu'au début de ton prochain
+     * tour ») : désactivé automatiquement quand le tour du LANCEUR se termine
+     * (advanceTurnTx) — pas de levée manuelle à retenir.
+     */
+    expiresOnTurnEnd: integer('expires_on_turn_end').notNull().default(0),
     active: integer('active').notNull().default(1),
     createdAt: text('created_at')
       .notNull()

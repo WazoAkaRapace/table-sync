@@ -44,7 +44,12 @@ import {
 } from '../db/schema.ts';
 import { type PushPayload, type PushSendOptions, sendPushToUser } from '../push/send.ts';
 import { bus } from '../sync/bus.ts';
-import { breakConcentrationEffectsOnTracker, trackerAcOf } from './character-spell-effects.ts';
+import {
+  breakConcentrationEffectsOnTracker,
+  expireEphemeralEffects,
+  mirrorAcToCombatants,
+  trackerAcOf,
+} from './character-spell-effects.ts';
 import {
   getUserId,
   isPartyGM,
@@ -1668,6 +1673,23 @@ function advanceTurnTx(
         // (null duration = until dispelled, never touched by the advance)
         if (c.conditions.some((cond) => cond.duration !== null)) {
           snapshotConditions.push({ combatantId: c.id, conditions: c.conditions });
+        }
+        // --- Effets de sort éphémères (Bouclier) : fin du tour du LANCEUR ---
+        // RAW « jusqu'au début de ton prochain tour », approximé en fin de
+        // tour (jamais de CA fantôme) ; miroir CA + emitChange 'stats' des
+        // porteurs touchés — dans la même transaction que l'avance.
+        if (c.characterId) {
+          const expiredBearers = expireEphemeralEffects(c.characterId);
+          for (const bearerId of expiredBearers) {
+            mirrorAcToCombatants(bearerId, userId, { emit: false });
+            bus.emitChange({
+              type: 'character:change',
+              partyId: enc.partyId,
+              characterId: bearerId,
+              action: 'stats',
+              actorUserId: userId,
+            });
+          }
         }
         if (c.conditions.length === 0) continue;
         let changed = false;

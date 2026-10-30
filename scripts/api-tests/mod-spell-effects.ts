@@ -649,6 +649,43 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   );
   eq(alyaAc(), 11, "CA Alya toujours 11 (rien n'a bougé)");
 
+  // ---------- Bouclier éphémère : expire à la fin du tour du lanceur ----------
+  // (RAW « jusqu'au début de ton prochain tour », approximé fin de tour.)
+  r = await api(base, 'POST', `/api/characters/${A}/spell-effects`, {
+    token: fx.player.token,
+    body: { spellId: shieldSpell },
+  });
+  eq(r.status, 201, 'pose Bouclier (réaction)');
+  eq(r.data.effect.expiresOnTurnEnd, true, 'flag éphémère servi au POST');
+  eq(combatantAc(), 18, 'CA du combatant inclut le Bouclier (13+5)');
+  // La rencontre doit être ACTIVE pour avancer les tours.
+  r = await api(base, 'PATCH', `/api/encounters/${enc.data.encounter.id}`, {
+    token: fx.gm.token,
+    body: { status: 'active', round: 1, turnIndex: 0 },
+  });
+  eq(r.status, 200, 'rencontre démarrée');
+  // Le tour de Bran se termine → le Bouclier tombe (expireOnTurnEnd).
+  r = await api(base, 'POST', `/api/encounters/${enc.data.encounter.id}/next-turn`, {
+    token: fx.gm.token,
+  });
+  eq(r.status, 200, 'tour suivant');
+  eq(
+    srv.query(
+      'SELECT active FROM character_spell_effects WHERE character_id = ? AND spell_id = ?',
+      A,
+      shieldSpell,
+    ).active,
+    0,
+    'Bouclier éphémère désactivé à la fin du tour du lanceur',
+  );
+  eq(combatantAc(), 13, 'CA du combatant retombée à 13 après expiration');
+  r = await api(base, 'GET', `/api/characters/${A}/spell-effects`, { token: fx.player.token });
+  eq(
+    r.data.effects.filter((e: { spellId: number }) => e.spellId === shieldSpell).length,
+    0,
+    'GET ne sert plus le Bouclier expiré',
+  );
+
   // ---------- 404 cible d'un AUTRE groupe ----------
   r = await api(base, 'POST', `/api/characters/${Alya}/spell-effects`, {
     token: fx.gm.token,
