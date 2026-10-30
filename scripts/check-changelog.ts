@@ -110,18 +110,12 @@ function selftest(): number {
     { name: 'en attente avec sha (interdit)', raw: [mk(null, 'a1b2c3d')], expectErrors: true },
     {
       name: 'sha partagé dans un lot du même jour (flux tag)',
-      raw: [
-        mk('2026.10.30', 'a1b2c3d'),
-        mk('2026.10.30-2', 'a1b2c3d'),
-      ],
+      raw: [mk('2026.10.30', 'a1b2c3d'), mk('2026.10.30-2', 'a1b2c3d')],
       expectErrors: false,
     },
     {
       name: 'sha dupliqué sur deux jours (double-stamp)',
-      raw: [
-        mk('2026.10.30', 'a1b2c3d'),
-        mk('2026.10.28', 'a1b2c3d', '2026-10-28'),
-      ],
+      raw: [mk('2026.10.30', 'a1b2c3d'), mk('2026.10.28', 'a1b2c3d', '2026-10-28')],
       expectErrors: true,
     },
     {
