@@ -3,6 +3,20 @@
     "version": null,
     "sha": null,
     "date": "2026-10-30",
+    "title": "correctifs combat",
+    "items": [
+      "Le masquage du nom d'un monstre masque aussi son identité : les joueurs ne peuvent plus ouvrir sa fiche de bestiaire.",
+      "Un personnage qui retombe à 0 point de vie en forme animale redevient mourant : il reste dans l'ordre d'initiative.",
+      "Un repos court sans soin ne marque plus un personnage à 0 point de vie comme vaincu dans le traqueur.",
+      "Le repos n'écrase plus la barre de points de vie de la forme animale dans le traqueur de combat.",
+      "Le bouton Tour suivant d'une rencontre terminée renvoie une erreur propre au lieu d'avancer le tour.",
+      "La modification d'une rencontre valide le statut, la manche et l'index de tour : erreur claire au lieu d'un échec serveur."
+    ]
+  },
+  {
+    "version": null,
+    "sha": null,
+    "date": "2026-10-30",
     "title": "releases par tag",
     "items": [
       "Les mises à jour arrivent quand une version est publiée, pas à chaque fusion de branche.",
