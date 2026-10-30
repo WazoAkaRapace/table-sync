@@ -440,7 +440,11 @@ export async function combatRoutes(app: FastifyInstance) {
           // GM name mask: the placeholder substitutes the real name BEFORE it
           // ever leaves the server — the leak is impossible by construction,
           // whichever player surface renders it.
-          if (c.nameHidden && c.type === 'monster') c.name = HIDDEN_COMBATANT_NAME;
+          if (c.nameHidden && c.type === 'monster') {
+            c.name = HIDDEN_COMBATANT_NAME;
+            // Le slug identifie le monstre autant que son nom — même fuite, même redaction.
+            c.monsterSlug = null;
+          }
           // Stable per-combatant jitter (±8 % on the tier boundaries): the same
           // monster always flips wording at the same hidden ratio, and players
           // can't average their way back to exact HP from repeated reads.
@@ -494,9 +498,23 @@ export async function combatRoutes(app: FastifyInstance) {
       const body = req.body || {};
       const values: Record<string, unknown> = {};
       if (body.name !== undefined) values.name = body.name.trim();
-      if (body.status !== undefined) values.status = body.status;
-      if (body.round !== undefined) values.round = body.round;
-      if (body.turnIndex !== undefined) values.turnIndex = body.turnIndex;
+      if (body.status !== undefined) {
+        if (!['setup', 'active', 'ended'].includes(body.status))
+          return reply
+            .code(400)
+            .send({ error: apiMsg(req, "Statut invalide ('setup' | 'active' | 'ended')") });
+        values.status = body.status;
+      }
+      if (body.round !== undefined) {
+        if (!Number.isInteger(body.round) || body.round < 0)
+          return reply.code(400).send({ error: apiMsg(req, 'round doit être un entier ≥ 0') });
+        values.round = body.round;
+      }
+      if (body.turnIndex !== undefined) {
+        if (!Number.isInteger(body.turnIndex) || body.turnIndex < 0)
+          return reply.code(400).send({ error: apiMsg(req, 'turnIndex doit être un entier ≥ 0') });
+        values.turnIndex = body.turnIndex;
+      }
 
       if (Object.keys(values).length === 0) {
         return reply.code(400).send({ error: apiMsg(req, 'no fields to update') });
@@ -1104,11 +1122,12 @@ export async function combatRoutes(app: FastifyInstance) {
               .run();
             drizzle
               .update(combatantsTable)
+              // #148 : PJ à 0 PV = mourant, pas vaincu
               .set({
                 name: revertName,
                 hitPoints: newHp,
                 maxHitPoints: ch.max_hp ?? 1,
-                defeated: newHp <= 0 ? 1 : 0,
+                defeated: 0,
               })
               .where(eq(combatantsTable.id, combatant.id))
               .run();
@@ -1135,7 +1154,8 @@ export async function combatRoutes(app: FastifyInstance) {
               valuesC.tempHp = tempHp - absorbed;
               drizzle
                 .update(combatantsTable)
-                .set({ hitPoints: newHp, defeated: newHp <= 0 ? 1 : 0 })
+                // branche player-only : un PJ à 0 PV réel reste mourant (#148)
+                .set({ hitPoints: newHp, defeated: 0 })
                 .where(eq(combatantsTable.id, combatant.id))
                 .run();
             }
@@ -1334,6 +1354,10 @@ export async function combatRoutes(app: FastifyInstance) {
       if (!enc) return reply.code(404).send({ error: apiMsg(req, 'Rencontre introuvable') });
       if (!isPartyGM(enc.partyId, userId))
         return reply.code(403).send({ error: apiMsg(req, 'Réservé au MD') });
+
+      // Une rencontre terminée n'avance plus (setup reste accepté : c'est le démarrage).
+      if (enc.status === 'ended')
+        return reply.code(400).send({ error: apiMsg(req, 'Combat terminé') });
 
       const sorted = sortCombatants(
         drizzle

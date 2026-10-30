@@ -428,12 +428,13 @@ export async function wildShapeRoutes(app: FastifyInstance) {
           const ac = normalAC(char);
           drizzle
             .update(combatants)
+            // #148 : PJ à 0 PV = mourant, pas vaincu
             .set({
               name: char.name,
               hitPoints: newHp,
               maxHitPoints: char.max_hp ?? 1,
               armorClass: ac ?? 10,
-              defeated: newHp <= 0 ? 1 : 0,
+              defeated: 0,
             })
             .where(eq(combatants.id, combatant.id))
             .run();

@@ -23,6 +23,7 @@ import { run as campaignCalendar } from './api-tests/mod-campaign-calendar.ts';
 import { run as characters } from './api-tests/mod-characters.ts';
 import { run as coinTransfer } from './api-tests/mod-coin-transfer.ts';
 import { run as combat } from './api-tests/mod-combat.ts';
+import { run as combatAudit } from './api-tests/mod-combat-audit.ts';
 import { run as containerTransfer } from './api-tests/mod-container-transfer.ts';
 import { run as email } from './api-tests/mod-email.ts';
 import { run as featuresNotes } from './api-tests/mod-features-notes.ts';
@@ -72,6 +73,7 @@ const MODULES: Array<{
   { name: 'wild shape + rests', run: wildshapeRest },
   { name: 'état Rage du barbare (#189)', run: rage },
   { name: 'issues #143–#148', run: issues143148 },
+  { name: 'combat — correctifs audit 2026-10-30', run: combatAudit },
   { name: 'websocket sync', run: syncWs },
   { name: 'stress websocket', run: syncStress },
   { name: 'heartbeat websocket', run: heartbeat },
