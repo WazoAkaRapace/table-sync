@@ -163,19 +163,17 @@ function enName(slug: string): string | null {
   return overlay[slug]?.name ?? EN_NAME_MAP[slug] ?? null;
 }
 
-/** Résout un monstre EN par nom dans cos -> mm -> vrgr, en suivant les _copy. */
+/** Résout un monstre EN par nom dans cos -> mm -> vrgr, en suivant les _copy
+ *  champ par champ (un _copy peut avoir son hp mais hériter le speed de sa base). */
 function resolveEn(name: string, depth = 0): EnMonster | null {
   if (depth > 5) return null;
   for (const tag of ['cos', 'mm', 'vrgr'] as const) {
     const hit = bestiaries[tag].find((m) => m.name.toLowerCase() === name.toLowerCase());
-    if (hit) {
-      if (hit.hp || hit.speed || !hit._copy) return hit;
-      const base = resolveEn(hit._copy.name, depth + 1);
-      if (base && (base.hp || base.speed)) {
-        return { ...base, name: hit.name, _copy: undefined };
-      }
-      return hit;
-    }
+    if (!hit) continue;
+    if (!hit._copy) return hit;
+    const base = resolveEn(hit._copy.name, depth + 1);
+    if (!base) return hit;
+    return { name: hit.name, hp: hit.hp ?? base.hp, speed: hit.speed ?? base.speed };
   }
   return null;
 }
@@ -454,6 +452,8 @@ function main(): void {
         console.log(`  - ${c.slug}.${c.key}: ${JSON.stringify(c.from)} -> ${c.to} (${c.note})`);
       }
       if (changes.length > 40) console.log(`  … ${changes.length - 40} de plus`);
+      for (const c of nan)
+        console.log(`  - ${c.slug}.${c.key}: ${JSON.stringify(c.from)} -> ${c.to} (${c.note})`);
     }
   }
   if (lots.includes(4)) {
