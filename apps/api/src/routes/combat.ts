@@ -1108,11 +1108,12 @@ export async function combatRoutes(app: FastifyInstance) {
               .run();
             drizzle
               .update(combatantsTable)
+              // #148 : PJ à 0 PV = mourant, pas vaincu
               .set({
                 name: revertName,
                 hitPoints: newHp,
                 maxHitPoints: ch.max_hp ?? 1,
-                defeated: newHp <= 0 ? 1 : 0,
+                defeated: 0,
               })
               .where(eq(combatantsTable.id, combatant.id))
               .run();
@@ -1139,7 +1140,8 @@ export async function combatRoutes(app: FastifyInstance) {
               valuesC.tempHp = tempHp - absorbed;
               drizzle
                 .update(combatantsTable)
-                .set({ hitPoints: newHp, defeated: newHp <= 0 ? 1 : 0 })
+                // branche player-only : un PJ à 0 PV réel reste mourant (#148)
+                .set({ hitPoints: newHp, defeated: 0 })
                 .where(eq(combatantsTable.id, combatant.id))
                 .run();
             }
