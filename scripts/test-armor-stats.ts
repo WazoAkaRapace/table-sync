@@ -230,6 +230,66 @@ check(
   16,
 );
 
+// Magic shield: the +1/+2/+3 bonus must land in the AC (Shield +1 = +3 total)
+r = resolveMagicArmorBase(
+  mkArmor({
+    name: 'Shield, +1',
+    nameFr: 'Bouclier +1',
+    description: 'Armure (bouclier), rare … bonus de +1 à la CA …',
+    weightKg: 2.7,
+  }),
+);
+check(
+  'Bouclier +1 → shield, bonus 1',
+  { shield: r.shield, bonus: r.magicBonus },
+  { shield: true, bonus: 1 },
+);
+
+const bouclierPlus1 = mkArmor({
+  name: 'Shield, +1',
+  nameFr: 'Bouclier +1',
+  description: 'Armure (bouclier), rare … bonus de +1 à la CA …',
+  weightKg: 2.7,
+});
+const acBouclierPlus1 = computeAC([entry(bouclierPlus1)], dex4);
+check('Bouclier +1 seul → 10 + DEX 4 + 3 = 17', acBouclierPlus1.ac, 17);
+check('Bouclier +1 → source « Bouclier +3 »', acBouclierPlus1.source.includes('Bouclier +3'), true);
+
+const harnoisLourd = mkArmor({
+  name: 'Plate Armor',
+  nameFr: 'Harnois',
+  rarity: 'none' as any,
+  acBase: 18,
+  strMin: 15,
+  description: '',
+});
+check(
+  'Harnois 18 + Bouclier +1 → 18 + 3 = 21 (lourde, pas de DEX)',
+  computeAC([entry(harnoisLourd), entry(bouclierPlus1)], dex4).ac,
+  21,
+);
+
+check(
+  'Bouclier +2 par clés (armorFamily shield, magicBonus 2) → 10 + 4 + 4 = 18',
+  computeAC(
+    [
+      entry(
+        mkArmor({
+          name: 'Shield, +2',
+          nameFr: 'Bouclier +2',
+          description: '',
+          baseArmor: 'Shield',
+          armorFamily: 'shield',
+          magicBonus: 2,
+          weightKg: 2.7,
+        }),
+      ),
+    ],
+    dex4,
+  ).ac,
+  18,
+);
+
 check(
   'Armure +1 seule (famille) → sans armure 10 + DEX',
   computeAC(

@@ -2189,6 +2189,7 @@ export function computeAC(
   } | null = null;
   let hasShield = false;
   let magicAcBonus = 0;
+  let shieldMagicBonus = 0;
 
   for (const entry of entries) {
     if (!entry.equipped) continue;
@@ -2203,6 +2204,7 @@ export function computeAC(
       const magic = resolveMagicArmorBase(entry.item);
       if (magic.shield) {
         hasShield = true;
+        shieldMagicBonus = magic.magicBonus;
         continue;
       }
       if (!magic.base) continue; // family armor (légère/intermédiaire/lourde): base unknowable
@@ -2335,8 +2337,12 @@ export function computeAC(
   }
 
   if (hasShield) {
-    ac += 2;
-    source += pickLang(lang, ' · Bouclier +2', ' · Shield +2');
+    ac += 2 + shieldMagicBonus;
+    source += pickLang(
+      lang,
+      ` · Bouclier +${2 + shieldMagicBonus}`,
+      ` · Shield +${2 + shieldMagicBonus}`,
+    );
   }
 
   // Défense fighting style: +1 while wearing armor
