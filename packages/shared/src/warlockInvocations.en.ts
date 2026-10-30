@@ -30,7 +30,7 @@ export const WARLOCK_INVOCATIONS_EN: Record<string, { name: string; description:
   'occultiste-invo-lance-occulte': {
     name: 'Eldritch Spear',
     description:
-      'Prerequisite: eldritch blast cantrip\n\nWhen you cast eldritch blast, its range is 300 feet.',
+      'Prerequisite: eldritch blast cantrip\n\nWhen you cast eldritch blast, its range is 150 feet.',
   },
   'occultiste-invo-langage-animal': {
     name: 'Beast Speech',

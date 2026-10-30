@@ -2189,6 +2189,7 @@ export function computeAC(
   } | null = null;
   let hasShield = false;
   let magicAcBonus = 0;
+  let shieldMagicBonus = 0;
 
   for (const entry of entries) {
     if (!entry.equipped) continue;
@@ -2203,6 +2204,7 @@ export function computeAC(
       const magic = resolveMagicArmorBase(entry.item);
       if (magic.shield) {
         hasShield = true;
+        shieldMagicBonus = magic.magicBonus;
         continue;
       }
       if (!magic.base) continue; // family armor (légère/intermédiaire/lourde): base unknowable
@@ -2335,8 +2337,12 @@ export function computeAC(
   }
 
   if (hasShield) {
-    ac += 2;
-    source += pickLang(lang, ' · Bouclier +2', ' · Shield +2');
+    ac += 2 + shieldMagicBonus;
+    source += pickLang(
+      lang,
+      ` · Bouclier +${2 + shieldMagicBonus}`,
+      ` · Shield +${2 + shieldMagicBonus}`,
+    );
   }
 
   // Défense fighting style: +1 while wearing armor
@@ -4542,7 +4548,7 @@ export function songOfRestDie(level: number): string {
   return '1d6';
 }
 
-/** Manifestations occultes connues (PHB 2014) : 2@2, 3@5, 4@7, 5@9, 6@12, 7@15, 8@18. */
+/** Manifestations occultes connues (PHB 2014) : 0@1, 2@2, 3@5, 4@7, 5@9, 6@12, 7@15, 8@18. */
 export function eldritchInvocationsCount(level: number): number {
   if (level >= 18) return 8;
   if (level >= 15) return 7;
@@ -4550,7 +4556,8 @@ export function eldritchInvocationsCount(level: number): number {
   if (level >= 9) return 5;
   if (level >= 7) return 4;
   if (level >= 5) return 3;
-  return 2;
+  if (level >= 2) return 2;
+  return 0; // feature au niv. 2 en 2014
 }
 
 // ---------- Manifestations occultes : effets moteur (Phase B) ----------
@@ -4644,14 +4651,15 @@ export function renderFeatureTemplate(text: string, character: Character): strin
   };
 
   // Class-resource variables (feature catalog formulas)
-  vars.bardic_die = bardicInspirationDie(level);
-  vars.song_die = songOfRestDie(level);
-  // SRD multiclassage : « Un prérequis de niveau pour une manifestation
-  // réfère au niveau d'occultiste » — le compteur suit la ligne de classe,
+  // SRD multiclassage : ces valeurs suivent la ligne de classe propriétaire,
   // pas le niveau total (mono-classe : identique, niveau total = niveau de classe).
+  vars.bardic_die = bardicInspirationDie(classLevelOf(character, 'Barde'));
+  vars.song_die = songOfRestDie(classLevelOf(character, 'Barde'));
+  // « Un prérequis de niveau pour une manifestation réfère au niveau
+  // d'occultiste » — le compteur suit la ligne de classe, pas le niveau total.
   vars.invocations = String(eldritchInvocationsCount(classLevelOf(character, 'Occultiste')));
-  vars.lay_on_hands = String(5 * level);
-  vars.sneak_dice = sneakAttackDice(level);
+  vars.lay_on_hands = String(5 * classLevelOf(character, 'Paladin'));
+  vars.sneak_dice = sneakAttackDice(classLevelOf(character, 'Roublard'));
 
   // Spellcasting variables
   if (isCaster) {

@@ -29,6 +29,7 @@ import {
 } from '@table-sync/shared/classFeatures';
 import { applyRest } from '@table-sync/shared/rests';
 import { findWarlockInvocation, WARLOCK_INVOCATIONS } from '@table-sync/shared/warlockInvocations';
+import { WARLOCK_INVOCATIONS_EN } from '@table-sync/shared/warlockInvocations.en';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -354,7 +355,11 @@ check('pacte L20 = 4×niv5', SPELL_SLOTS_PACT[19], [0, 0, 0, 0, 4, 0, 0, 0, 0]);
 
 // --- Manifestations occultes (PHB 2014 : 2@2, 3@5, 4@7, 5@9, 6@12, 7@15, 8@18) ---
 
-check('manifestations @2 = 2', [eldritchInvocationsCount(2), eldritchInvocationsCount(4)], [2, 2]);
+check(
+  'manifestations @1 = 0 (feature au niv. 2 en 2014), @2 = 2',
+  [eldritchInvocationsCount(1), eldritchInvocationsCount(2), eldritchInvocationsCount(4)],
+  [0, 2, 2],
+);
 check(
   'manifestations @5-6 = 3, @7-8 = 4, @9 = 5',
   [
@@ -418,9 +423,71 @@ check(
   '5',
 );
 check(
+  '{{invocations}} mono-classe Occultiste 1 = 0 (PHB 2014 : aucune manifestation au niv. 1)',
+  renderFeatureTemplate('{{invocations}}', mkChar({ characterClass: 'Occultiste', level: 1 })),
+  '0',
+);
+check(
   'manifestations Occ5/Gue10 : eldritchInvocationsCount au niveau de classe',
   eldritchInvocationsCount(5),
   3,
+);
+
+// --- Multiclassage : variables de ressource au niveau de la CLASSE propriétaire ---
+
+// Paladin 5 / Roublard 5 (niveau total 10) : soins 5×5 = 25 (pas 50), sournoise 3d6 (pas 5d6)
+const mcPalRou = mkChar({
+  characterClass: 'Paladin',
+  level: 10,
+  classes: [
+    { classKey: 'Paladin', level: 5, subclassKey: null, hitDiceUsed: 0, fightingStyle: null },
+    { classKey: 'Roublard', level: 5, subclassKey: null, hitDiceUsed: 0, fightingStyle: null },
+  ],
+});
+check(
+  '{{lay_on_hands}} multiclassé Pal5/Rou5 = 25 (niveau de CLASSE, pas 50)',
+  renderFeatureTemplate('{{lay_on_hands}}', mcPalRou),
+  '25',
+);
+check(
+  '{{sneak_dice}} multiclassé Pal5/Rou5 = 3d6 (niveau de CLASSE, pas 5d6)',
+  renderFeatureTemplate('{{sneak_dice}}', mcPalRou),
+  '3d6',
+);
+// Barde 3 / Guerrier 7 (niveau total 10) : dé bardique d6 (pas d10)
+const mcBarGue = mkChar({
+  characterClass: 'Barde',
+  level: 10,
+  classes: [
+    { classKey: 'Barde', level: 3, subclassKey: null, hitDiceUsed: 0, fightingStyle: null },
+    { classKey: 'Guerrier', level: 7, subclassKey: null, hitDiceUsed: 0, fightingStyle: null },
+  ],
+});
+check(
+  '{{bardic_die}} multiclassé Bar3/Gue7 = 1d6 (niveau de CLASSE, pas 1d10)',
+  renderFeatureTemplate('{{bardic_die}}', mcBarGue),
+  '1d6',
+);
+check(
+  '{{song_die}} multiclassé Bar3/Gue7 = 1d6 (niveau de CLASSE)',
+  renderFeatureTemplate('{{song_die}}', mcBarGue),
+  '1d6',
+);
+// Mono-classe : inchangé (niveau total = niveau de classe)
+check(
+  '{{lay_on_hands}} mono-classe Paladin 6 = 30',
+  renderFeatureTemplate('{{lay_on_hands}}', mkChar({ characterClass: 'Paladin', level: 6 })),
+  '30',
+);
+check(
+  '{{sneak_dice}} mono-classe Roublard 9 = 5d6',
+  renderFeatureTemplate('{{sneak_dice}}', mkChar({ characterClass: 'Roublard', level: 9 })),
+  '5d6',
+);
+check(
+  '{{bardic_die}} mono-classe Barde 10 = 1d10',
+  renderFeatureTemplate('{{bardic_die}}', mkChar({ characterClass: 'Barde', level: 10 })),
+  '1d10',
 );
 
 // --- Manifestations occultes : catalogue WARLOCK_INVOCATIONS (PHB 2014) ---
@@ -457,6 +524,21 @@ check(
   'manifestations : sorts référencés présents dans spells-seed',
   refSpells.filter((s) => !spellSlugs.has(s)),
   [],
+);
+// Lance occulte : 45 m (150 ft) en PHB 2014 — pas 90 m / 300 ft (règle 2024)
+check(
+  'Lance occulte : portée 45 m (150 ft, PHB 2014 p.111)',
+  [
+    findWarlockInvocation('occultiste-invo-lance-occulte')?.description.includes('45 mètres'),
+    WARLOCK_INVOCATIONS_EN['occultiste-invo-lance-occulte']?.description.includes('150 feet'),
+  ],
+  [true, true],
+);
+// Sombre présage : le sort gratuit est malédiction (bestow-curse), pas maléfice (hex)
+check(
+  'Sombre présage : free-cast bestow-curse (PHB 2014 p.110)',
+  findWarlockInvocation('occultiste-invo-sombre-presage')?.effect,
+  { kind: 'free-cast', spell: 'bestow-curse' },
 );
 // free-cast ⇒ compteur 1/repos long ; compteur ⇒ free-cast
 check(
@@ -790,6 +872,27 @@ check(
     effectiveFeatureReset({ catalogId: null, resetType: null }, 10),
   ],
   ['none', 'long', null],
+);
+
+// Restauration arcanique (magicien) : 1×/jour après un repos court (PHB 2014 p.114)
+check(
+  'effectiveReset : Restauration arcanique recharge au repos court',
+  [
+    findClassFeature('magicien-recuperation-arcanique')?.resource?.reset,
+    effectiveFeatureReset({ catalogId: 'magicien-recuperation-arcanique', resetType: null }, 1),
+  ],
+  ['short', 'short'],
+);
+
+// Récupération naturelle (cercle de la Terre) : idem, 1× par repos court (PHB 2014 p.69)
+check(
+  'effectiveReset : Récupération naturelle recharge au repos court',
+  [
+    findClassFeature('terre-recuperation-naturelle')?.resource?.reset,
+    effectiveFeatureReset({ catalogId: 'terre-recuperation-naturelle', resetType: null }, 2),
+    findClassFeature('terre-recuperation-naturelle')?.description.includes('1× par repos court.'),
+  ],
+  ['short', 'short', true],
 );
 
 // Override 'long' sur un trait de catalogue dont la règle SRD est 'short'

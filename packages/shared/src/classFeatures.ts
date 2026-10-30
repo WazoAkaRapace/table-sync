@@ -502,7 +502,7 @@ export const CLASS_FEATURES: Record<string, ClassFeatureDef[]> = {
       name: 'Restauration arcanique',
       description:
         '1×/jour, après un repos court, récupérez des emplacements dépensés d’un niveau total ≤ {{level}} ÷ 2 (arrondi supérieur, max niv. 5).',
-      resource: { max: () => 1, reset: 'long' },
+      resource: { max: () => 1, reset: 'short' },
     },
     {
       id: 'magicien-ecole-de-magie',
@@ -1595,8 +1595,8 @@ export const CLASS_SUBCLASSES: Record<string, SubclassDef[]> = {
           level: 2,
           name: 'Récupération naturelle',
           description:
-            'Après un repos court, récupérez des emplacements de sorts d’un niveau total ≤ {{level}} ÷ 2 (arrondi sup., max niv. 5) — 1× par repos long.',
-          resource: { max: () => 1, reset: 'long' },
+            'Après un repos court, récupérez des emplacements de sorts d’un niveau total ≤ {{level}} ÷ 2 (arrondi sup., max niv. 5) — 1× par repos court.',
+          resource: { max: () => 1, reset: 'short' },
         },
         {
           id: 'terre-foulee-tellurique',
