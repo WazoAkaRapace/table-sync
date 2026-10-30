@@ -1,7 +1,7 @@
 [
   {
-    "version": null,
-    "sha": null,
+    "version": "2026.10.30-5",
+    "sha": "1608c024",
     "date": "2026-10-30",
     "title": "bestiaire : dés, vitesses, perceptions",
     "items": [
@@ -12,8 +12,8 @@
     ]
   },
   {
-    "version": null,
-    "sha": null,
+    "version": "2026.10.30-4",
+    "sha": "1608c024",
     "date": "2026-10-30",
     "title": "seeds : prix, poids, raretés, sorts",
     "items": [
@@ -29,8 +29,8 @@
     ]
   },
   {
-    "version": null,
-    "sha": null,
+    "version": "2026.10.30-3",
+    "sha": "1608c024",
     "date": "2026-10-30",
     "title": "moteur : règles 2014",
     "items": [
@@ -44,8 +44,8 @@
     ]
   },
   {
-    "version": null,
-    "sha": null,
+    "version": "2026.10.30-2",
+    "sha": "1608c024",
     "date": "2026-10-30",
     "title": "correctifs combat",
     "items": [
@@ -58,8 +58,8 @@
     ]
   },
   {
-    "version": null,
-    "sha": null,
+    "version": "2026.10.30",
+    "sha": "1608c024",
     "date": "2026-10-30",
     "title": "releases par tag",
     "items": [
