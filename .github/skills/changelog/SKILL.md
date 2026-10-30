@@ -1,6 +1,6 @@
 ---
 name: changelog
-description: Use when committing or opening a PR on table-sync. Every user-facing change requires a CHANGELOG.json entry carrying the release version — the CI gate fails without it.
+description: Use when committing or opening a PR on table-sync. Every user-facing change requires a CHANGELOG.json entry — version stays null; the release tag assigns it.
 ---
 
 # Journal des modifications (CHANGELOG.json)
@@ -8,9 +8,15 @@ description: Use when committing or opening a PR on table-sync. Every user-facin
 Chaque PR qui change ce que voit un utilisateur (UI, règles, données,
 corrections) DOIT ajouter une entrée dans `CHANGELOG.json` à la racine du
 repo, **avant d'ouvrir la PR**. La CI du workflow `validate` rejette la PR
-sans elle. Au merge, la CI pose le SHA réel, crée la **release GitHub**
-`<version>` (notes = tes puces) et déploie les images depuis cette release —
-la version est donc déclarée PAR TOI, une seule fois, sans course au SHA.
+sans elle.
+
+**La version n'est plus choisie par l'auteur** : pose `"version": null`.
+Les releases sont pilotées par TAG — quand on veut sortir, on pousse
+`git tag vYYYY.MM.DD && git push origin vYYYY.MM.DD` : le workflow
+`Release (tag)` versionne TOUTES les entrées en attente (suffixes -2, -3…
+automatiques si besoin), les stamp du sha, crée la release GitHub et
+dispatche le build des images. Merger une PR ne release RIEN ; tagger
+release tout ce qui a été mergé.
 
 ## Format
 
@@ -19,9 +25,9 @@ la version est donc déclarée PAR TOI, une seule fois, sans course au SHA.
 ```json
 [
   {
-    "version": "2026.10.15",
+    "version": null,
     "sha": null,
-    "date": "2026-10-15",
+    "date": "2026-10-30",
     "title": "journal des modifications",
     "items": [
       "L'application affiche les nouveautés après chaque mise à jour.",
@@ -33,11 +39,9 @@ la version est donc déclarée PAR TOI, une seule fois, sans course au SHA.
 
 ### Règles de rédaction
 
-- `version` : **calver `YYYY.MM.DD`** (la date du jour). Plusieurs versions
-  le même jour → suffixe `-2`, `-3`… Le tag de la release GitHub porte
-  EXACTEMENT cette valeur — pas de `v` préfixe.
-- `sha` : laisse `null` — le job `changelog-release` pose le SHA squash
-  après le merge. Ne mets jamais un SHA à la main.
+- `version` : **`null`** — le workflow release du tag pose le calver
+  `YYYY.MM.DD` (+ suffixes automatiques si plusieurs entrées le même jour).
+- `sha` : `null` toujours — le workflow release le pose au tag.
 - `date` : ISO `YYYY-MM-DD` (jour de l'entrée).
 - `title` : 2-5 mots, minuscules, sans verbe — une étiquette
   (« pastilles lisibles », « rail d'initiative »).
@@ -62,7 +66,7 @@ la version est donc déclarée PAR TOI, une seule fois, sans course au SHA.
 
 - commits de merge/squash générés par GitHub
 - les commits du bot (`changelog:`, `changelog-release:`, `[skip ci]` —
-  stamp de SHA, création de release)
+  versionnement par tag, création de release)
 - `chore:` touchant SEULEMENT : `.github/`, `scripts/` hors `apps/`,
   `docs/` hors captures, `site/`, le changelog lui-même
 
@@ -72,8 +76,8 @@ la version est donc déclarée PAR TOI, une seule fois, sans course au SHA.
 # valider le format + l'ordre (toujours avant de pousser)
 npm run changelog:check -- --check-format
 
-# valider qu'une version précise a son entrée (mode CI)
-npm run changelog:check -- --check-version 2026.10.15
+# valider qu'une entrée en attente existe (mode CI, PR)
+npm run changelog:check -- --check-pending
 
 # auto-test interne (fixtures)
 npm run changelog:check -- --selftest
@@ -82,12 +86,26 @@ npm run changelog:check -- --selftest
 ## Workflow d'une PR
 
 1. Code + tests.
-2. Ajoute l'entrée en TÊTE de `CHANGELOG.json` : `version` = calver du jour
-   (suffixe `-2` si une version est déjà sortie aujourd'hui), `sha: null`.
+2. Ajoute l'entrée en TÊTE de `CHANGELOG.json` : `version: null`,
+   `sha: null`, la date du jour.
 3. `npm run changelog:check -- --check-format` → vert.
-4. Pousse, ouvre la PR. La CI vérifie la version de ta première entrée.
-5. Après le squash-merge : `changelog-release` (ci.yml) pose le SHA réel,
-   crée la release `<version>` avec tes puces en notes, et le build de
-   déploiement (release: published) construit les images avec
-   `APP_VERSION=<version>` — les joueurs voient la version lisible dans
-   « Mon compte » et le popup de nouveautés au chargement suivant.
+4. Pousse, ouvre la PR. La CI vérifie la présence d'une entrée en attente.
+5. Au merge : RIEN ne sort — le code s'accumule sur main.
+
+## Workflow d'une release
+
+```
+git tag v2026.11.01 && git push origin v2026.11.01
+```
+
+Le workflow `Release (tag)` fait tout : versionne le lot d'entrées en
+attente (calver de la date du TAG ; si le jour a déjà des versions, le lot
+démarre au premier suffixe libre), stamp les sha, committe et pousse main,
+crée la release GitHub (notes = une section par entrée), dispatche le build
+d'images avec `APP_VERSION=<calver>`. Les joueurs voient la version lisible
+dans « Mon compte » et le popup de nouveautés au chargement suivant.
+Ensuite : redeploiement Arcane (skill docker-management-arcane) puis
+`version.json` en prod comme preuve.
+
+Si le tag part avant que la CI des PR mergées soit verte, la release embarque
+quand même — on tague donc sur un main validé.
