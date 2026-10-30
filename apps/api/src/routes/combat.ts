@@ -498,9 +498,23 @@ export async function combatRoutes(app: FastifyInstance) {
       const body = req.body || {};
       const values: Record<string, unknown> = {};
       if (body.name !== undefined) values.name = body.name.trim();
-      if (body.status !== undefined) values.status = body.status;
-      if (body.round !== undefined) values.round = body.round;
-      if (body.turnIndex !== undefined) values.turnIndex = body.turnIndex;
+      if (body.status !== undefined) {
+        if (!['setup', 'active', 'ended'].includes(body.status))
+          return reply
+            .code(400)
+            .send({ error: apiMsg(req, "Statut invalide ('setup' | 'active' | 'ended')") });
+        values.status = body.status;
+      }
+      if (body.round !== undefined) {
+        if (!Number.isInteger(body.round) || body.round < 0)
+          return reply.code(400).send({ error: apiMsg(req, 'round doit être un entier ≥ 0') });
+        values.round = body.round;
+      }
+      if (body.turnIndex !== undefined) {
+        if (!Number.isInteger(body.turnIndex) || body.turnIndex < 0)
+          return reply.code(400).send({ error: apiMsg(req, 'turnIndex doit être un entier ≥ 0') });
+        values.turnIndex = body.turnIndex;
+      }
 
       if (Object.keys(values).length === 0) {
         return reply.code(400).send({ error: apiMsg(req, 'no fields to update') });
