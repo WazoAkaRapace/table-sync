@@ -128,7 +128,7 @@
       "S"
     ],
     "material": null,
-    "duration": "1 round",
+    "duration": "1 tour",
     "concentration": false,
     "ritual": false,
     "description": "You create a ghostly, skeletal hand in the space of a creature within range. Make a ranged spell attack against the creature to assail it with the chill of the grave. On a hit, the target takes 1d8 necrotic damage, and it can't regain hit points until the start of your next turn. Until then, the hand clings to the target.\nIf you hit an undead target, it also has disadvantage on attack rolls against you until the end of your next turn.\nThis spell's damage increases by 1d8 when you reach 5th level (2d8), 11th level (3d8), and 17th level (4d8).",
@@ -184,7 +184,7 @@
       "S"
     ],
     "material": null,
-    "duration": "concentration, jusqu'à 1 round",
+    "duration": "concentration, jusqu'à 1 tour",
     "concentration": true,
     "ritual": false,
     "description": "You extend your hand and point a finger at a target in range. Your magic grants you a brief insight into the target's defenses. On your next turn, you gain advantage on your first attack roll against the target, provided that this spell hasn't ended.",
@@ -221,7 +221,7 @@
     "higherLevel": null,
     "higherLevelFr": null,
     "attackType": null,
-    "damageJson": null,
+    "damageJson": "{\"damage_type\":{\"index\":\"thunder\",\"name\":\"Thunder\",\"url\":\"/api/2014/damage-types/thunder\"},\"damage_at_character_level\":{\"1\":\"1d6\",\"5\":\"2d6\",\"11\":\"3d6\",\"17\":\"4d6\"}}",
     "dcJson": null,
     "classes": [
       "Barde",
@@ -275,7 +275,7 @@
     "concentration": false,
     "ritual": false,
     "description": "Whispering to the spirits of nature, you create one of the following effects within 'range':\n- You create a tiny, harmless sensory effect that predicts what the weather will be at your location for the next 24 hours. The effect might manifest as a golden orb for clear skies, a cloud for rain, falling snowflakes for snow, and so on. This effect persists for 1 round.\n- You instantly make a flower bloom, a seed pod open, or a leaf bud bloom.\n- You create an instantaneous, harmless sensory effect, such as falling leaves, a puff of wind, the sound of a small animal, or the faint order of skunk. The effect must fit in a 5-foot cube.\n- You instantly light or snuff out a candle, a torch, or a small campfire.",
-    "descriptionFr": "En murmurant aux esprits de la nature, vous créez l'un des effets suivants, dans la portée du sort :\n• Vous créez un minuscule et inoffensif effet sensoriel qui permet de prédire les conditions météorologiques pour les 24 prochaines heures, à l'endroit où vous êtes. L'effet pourrait se manifester comme un orbe doré pour indiquer un ciel dégagé, un nuage pour annoncer la pluie, un flocon de neige pour une chute de neige et ainsi de suite. L'effet persiste pour 1 round.\n• Vous provoquez immédiatement la floraison d'une fleur, l'ouverture d'une gousse ou le débourrement d'un bourgeon de feuille.\n• Vous créez un inoffensif effet sensoriel instantané comme une chute de feuilles, une légère brise, le son d'un petit animal ou une subtile odeur de putois. L'effet doit se limiter à un cube de 1,50 mètre d'arête.\n• Vous éteignez ou allumez instantanément une bougie, une torche ou un petit feu de camp.",
+    "descriptionFr": "En murmurant aux esprits de la nature, vous créez l'un des effets suivants, dans la portée du sort :\n• Vous créez un minuscule et inoffensif effet sensoriel qui permet de prédire les conditions météorologiques pour les 24 prochaines heures, à l'endroit où vous êtes. L'effet pourrait se manifester comme un orbe doré pour indiquer un ciel dégagé, un nuage pour annoncer la pluie, un flocon de neige pour une chute de neige et ainsi de suite. L'effet persiste pour 1 tour.\n• Vous provoquez immédiatement la floraison d'une fleur, l'ouverture d'une gousse ou le débourrement d'un bourgeon de feuille.\n• Vous créez un inoffensif effet sensoriel instantané comme une chute de feuilles, une légère brise, le son d'un petit animal ou une subtile odeur de putois. L'effet doit se limiter à un cube de 1,50 mètre d'arête.\n• Vous éteignez ou allumez instantanément une bougie, une torche ou un petit feu de camp.",
     "higherLevel": null,
     "higherLevelFr": null,
     "attackType": null,
@@ -306,7 +306,7 @@
     "higherLevel": null,
     "higherLevelFr": null,
     "attackType": null,
-    "damageJson": null,
+    "damageJson": "{\"damage_type\":{\"index\":\"fire\",\"name\":\"Fire\",\"url\":\"/api/2014/damage-types/fire\"},\"damage_at_character_level\":{\"1\":\"1d8\",\"5\":\"2d8\",\"11\":\"3d8\",\"17\":\"4d8\"}}",
     "dcJson": null,
     "classes": [
       "Druide",
@@ -335,7 +335,7 @@
     "higherLevel": null,
     "higherLevelFr": null,
     "attackType": null,
-    "damageJson": null,
+    "damageJson": "{\"damage_type\":{\"index\":\"force\",\"name\":\"Force\",\"url\":\"/api/2014/damage-types/force\"},\"damage_at_character_level\":{\"1\":\"1d6\",\"5\":\"2d6\",\"11\":\"3d6\",\"17\":\"4d6\"}}",
     "dcJson": null,
     "classes": [
       "Ensorceleur",
@@ -419,7 +419,7 @@
     "higherLevel": null,
     "higherLevelFr": null,
     "attackType": null,
-    "damageJson": null,
+    "damageJson": "{\"damage_type\":{\"index\":\"lightning\",\"name\":\"Lightning\",\"url\":\"/api/2014/damage-types/lightning\"},\"damage_at_character_level\":{\"1\":\"1d8\",\"5\":\"2d8\",\"11\":\"3d8\",\"17\":\"4d8\"}}",
     "dcJson": null,
     "classes": [
       "Ensorceleur",
@@ -503,7 +503,7 @@
     "higherLevel": null,
     "higherLevelFr": null,
     "attackType": null,
-    "damageJson": null,
+    "damageJson": "{\"damage_type\":{\"index\":\"piercing\",\"name\":\"Piercing\",\"url\":\"/api/2014/damage-types/piercing\"},\"damage_at_character_level\":{\"1\":\"1d6\",\"5\":\"2d6\",\"11\":\"3d6\",\"17\":\"4d6\"}}",
     "dcJson": null,
     "classes": [
       "Druide"
@@ -530,7 +530,7 @@
     "higherLevel": null,
     "higherLevelFr": null,
     "attackType": null,
-    "damageJson": null,
+    "damageJson": "{\"damage_type\":{\"index\":\"cold\",\"name\":\"Cold\",\"url\":\"/api/2014/damage-types/cold\"},\"damage_at_character_level\":{\"1\":\"1d6\",\"5\":\"2d6\",\"11\":\"3d6\",\"17\":\"4d6\"}}",
     "dcJson": null,
     "classes": [
       "Druide",
@@ -560,7 +560,7 @@
     "higherLevel": null,
     "higherLevelFr": null,
     "attackType": null,
-    "damageJson": null,
+    "damageJson": "{\"damage_type\":{\"index\":\"necrotic\",\"name\":\"Necrotic\",\"url\":\"/api/2014/damage-types/necrotic\"},\"damage_at_character_level\":{\"1\":\"1d8\",\"5\":\"2d8\",\"11\":\"3d8\",\"17\":\"4d8\"}}",
     "dcJson": null,
     "classes": [
       "Clerc",
@@ -648,7 +648,7 @@
     "higherLevel": null,
     "higherLevelFr": null,
     "attackType": null,
-    "damageJson": null,
+    "damageJson": "{\"damage_type\":{\"index\":\"poison\",\"name\":\"Poison\",\"url\":\"/api/2014/damage-types/poison\"},\"damage_at_character_level\":{\"1\":\"1d6\",\"5\":\"2d6\",\"11\":\"3d6\",\"17\":\"4d6\"}}",
     "dcJson": null,
     "classes": [
       "Druide",
@@ -678,7 +678,7 @@
     "higherLevel": null,
     "higherLevelFr": null,
     "attackType": null,
-    "damageJson": null,
+    "damageJson": "{\"damage_type\":{\"index\":\"fire\",\"name\":\"Fire\",\"url\":\"/api/2014/damage-types/fire\"},\"damage_at_character_level\":{\"1\":\"1d8\",\"5\":\"2d8\",\"11\":\"3d8\",\"17\":\"4d8\"}}",
     "dcJson": null,
     "classes": [
       "Ensorceleur",
@@ -699,7 +699,7 @@
       "M"
     ],
     "material": "une arme de corps à corps valant au moins 1 pa",
-    "duration": "1 round",
+    "duration": "1 tour",
     "concentration": false,
     "ritual": false,
     "description": "You brandish the weapon used in the spell's casting and make a melee attack with it against one creature within 5 feet of you. On a hit, the target suffers the weapon attack's normal effects and then becomes sheathed in booming energy until the start of your next turn. If the target willingly moves 5 feet or more before then, the target takes 1d8 thunder damage, and the spell ends.\nThis spell's damage increases when you reach certain levels. At 5th level, the melee attack deals an extra 1d8 thunder damage to the target on a hit, and the damage the target takes for moving increases to 2d8. Both damage rolls increase by 1d8 at 11th level (2d8 and 3d8) and again at 17th level (3d8 and 4d8).",
@@ -707,7 +707,7 @@
     "higherLevel": null,
     "higherLevelFr": null,
     "attackType": null,
-    "damageJson": null,
+    "damageJson": "{\"damage_type\":{\"index\":\"thunder\",\"name\":\"Thunder\",\"url\":\"/api/2014/damage-types/thunder\"},\"damage_at_character_level\":{\"1\":\"1d8\",\"5\":\"2d8\",\"11\":\"3d8\",\"17\":\"4d8\"}}",
     "dcJson": null,
     "classes": [
       "Ensorceleur",
@@ -819,7 +819,7 @@
       "M"
     ],
     "material": "un petit bout de fil de cuivre",
-    "duration": "1 round",
+    "duration": "1 tour",
     "concentration": false,
     "ritual": false,
     "description": "You point your finger toward a creature within range and whisper a message. The target (and only the target) hears the message and can reply in a whisper that only you can hear.\nYou can cast this spell through solid objects if you are familiar with the target and know it is beyond the barrier. Magical silence, 1 foot of stone, 1 inch of common metal, a thin sheet of lead, or 3 feet of wood blocks the spell. The spell doesn't have to follow a straight line and can travel freely around corners or through openings.",
@@ -882,7 +882,7 @@
     "higherLevel": null,
     "higherLevelFr": null,
     "attackType": null,
-    "damageJson": null,
+    "damageJson": "{\"damage_type\":{\"index\":\"radiant\",\"name\":\"Radiant\",\"url\":\"/api/2014/damage-types/radiant\"},\"damage_at_character_level\":{\"1\":\"1d6\",\"5\":\"2d6\",\"11\":\"3d6\",\"17\":\"4d6\"}}",
     "dcJson": null,
     "classes": [
       "Clerc"
@@ -909,7 +909,7 @@
     "higherLevel": null,
     "higherLevelFr": null,
     "attackType": null,
-    "damageJson": null,
+    "damageJson": "{\"damage_type\":{\"index\":\"bludgeoning\",\"name\":\"Bludgeoning\",\"url\":\"/api/2014/damage-types/bludgeoning\"},\"damage_at_character_level\":{\"1\":\"1d6\",\"5\":\"2d6\",\"11\":\"3d6\",\"17\":\"4d6\"}}",
     "dcJson": null,
     "classes": [
       "Druide",
@@ -928,7 +928,7 @@
       "V"
     ],
     "material": null,
-    "duration": "1 round",
+    "duration": "1 tour",
     "concentration": false,
     "ritual": false,
     "description": "You drive a disorienting spike of psychic energy into the mind of one creature you can see within range. The target must succeed on an Intelligence saving throw or take 1d6 psychic damage and subtract 1d4 from the next saving throw it makes before the end of your next turn.\nThis spell's damage increases by 1d6 when you reach certain levels: 5th level (2d6), 11th level (3d6), and 17th level (4d6).",
@@ -936,7 +936,7 @@
     "higherLevel": null,
     "higherLevelFr": null,
     "attackType": null,
-    "damageJson": null,
+    "damageJson": "{\"damage_type\":{\"index\":\"psychic\",\"name\":\"Psychic\",\"url\":\"/api/2014/damage-types/psychic\"},\"damage_at_character_level\":{\"1\":\"1d6\",\"5\":\"2d6\",\"11\":\"3d6\",\"17\":\"4d6\"}}",
     "dcJson": null,
     "classes": [
       "Ensorceleur",
@@ -1015,7 +1015,7 @@
       "S"
     ],
     "material": null,
-    "duration": "1 round",
+    "duration": "1 tour",
     "concentration": false,
     "ritual": false,
     "description": "You extend your hand and trace a sigil of warding in the air. Until the end of your next turn, you have resistance against bludgeoning, piercing, and slashing damage dealt by weapon attacks.",
@@ -1170,7 +1170,7 @@
     "higherLevel": null,
     "higherLevelFr": null,
     "attackType": null,
-    "damageJson": null,
+    "damageJson": "{\"damage_type\":null,\"damage_at_character_level\":{\"1\":\"1d10\",\"5\":\"2d10\",\"11\":\"3d10\",\"17\":\"4d10\"}}",
     "dcJson": null,
     "classes": [
       "Druide"
@@ -1269,7 +1269,7 @@
       "S"
     ],
     "material": null,
-    "duration": "1 round",
+    "duration": "1 tour",
     "concentration": false,
     "ritual": false,
     "description": "The spell captures some of the incoming energy, lessening its effect on you and storing it for your next melee attack. You have resistance to the triggering damage type until the start of your next turn. Also, the first time you hit with a melee attack on your next turn, the target takes an extra 1d6 damage of the triggering type, and the spell ends.",
@@ -1549,14 +1549,14 @@
     "nameFr": "Bouclier",
     "level": 1,
     "school": "abjuration",
-    "castingTime": "1 reaction",
+    "castingTime": "1 réaction",
     "rangeText": "personnelle",
     "components": [
       "V",
       "S"
     ],
     "material": null,
-    "duration": "1 round",
+    "duration": "1 tour",
     "concentration": false,
     "ritual": false,
     "description": "An invisible barrier of magical force appears and protects you. Until the start of your next turn, you have a +5 bonus to AC, including against the triggering attack, and you take no damage from magic missile.",
@@ -1868,7 +1868,7 @@
       "M"
     ],
     "material": "une pincée de poudre ou de sable de couleur rouge, jaune et bleu",
-    "duration": "1 round",
+    "duration": "1 tour",
     "concentration": false,
     "ritual": false,
     "description": "A dazzling array of flashing, colored light springs from your hand. Roll 6d10; the total is how many hit points of creatures this spell can effect. Creatures in a 15-foot cone originating from you are affected in ascending order of their current hit points (ignoring unconscious creatures and creatures that can't see).\nStarting with the creature that has the lowest current hit points, each creature affected by this spell is blinded until the spell ends. Subtract each creature's hit points from the total before moving on to the creature with the next lowest hit points. A creature's hit points must be equal to or less than the remaining total for that creature to be affected.",
@@ -2156,7 +2156,7 @@
       "S"
     ],
     "material": null,
-    "duration": "1 round",
+    "duration": "1 tour",
     "concentration": false,
     "ritual": false,
     "description": "A flash of light streaks toward a creature of your choice within range. Make a ranged spell attack against the target. On a hit, the target takes 4d6 radiant damage, and the next attack roll made against this target before the end of your next turn has advantage, thanks to the mystical dim light glittering on the target until then.",
@@ -2241,7 +2241,7 @@
     "concentration": false,
     "ritual": false,
     "description": "Choose up to five falling creatures within range. A falling creature's rate of descent slows to 60 feet per round until the spell ends. If the creature lands before the spell ends, it takes no falling damage and can land on its feet, and the spell ends for that creature.",
-    "descriptionFr": "Choisissez jusqu'à cinq créatures en chute libre dans la portée du sort. Le taux de descente d'une créature en chute libre est ramené à 18 mètres par round jusqu'à la fin du sort. Si la créature atterrit avant la fin du sort, elle ne subit aucun dégât de chute et elle retombe sur ses pieds. Le sort prend alors fin pour cette créature.",
+    "descriptionFr": "Choisissez jusqu'à cinq créatures en chute libre dans la portée du sort. Le taux de descente d'une créature en chute libre est ramené à 18 mètres par tour jusqu'à la fin du sort. Si la créature atterrit avant la fin du sort, elle ne subit aucun dégât de chute et elle retombe sur ses pieds. Le sort prend alors fin pour cette créature.",
     "higherLevel": null,
     "higherLevelFr": null,
     "attackType": null,
@@ -2574,7 +2574,7 @@
       "V"
     ],
     "material": null,
-    "duration": "1 round",
+    "duration": "1 tour",
     "concentration": false,
     "ritual": false,
     "description": "You speak a one-word command to a creature you can see within range. The target must succeed on a wisdom saving throw or follow the command on its next turn. The spell has no effect if the target is undead, if it doesn't understand your language, or if your command is directly harmful to it.\nSome typical commands and their effects follow. You might issue a command other than one described here. If you do so, the GM determines how the target behaves. If the target can't follow your command, the spell ends.\n***Approach.*** The target moves toward you by the shortest and most direct route, ending its turn if it moves within 5 feet of you.\n***Drop.*** The target drops whatever it is holding and then ends its turn.\n***Flee.*** The target spends its turn moving away from you by the fastest available means.\n***Grovel.*** The target falls prone and then ends its turn.\n***Halt.*** The target doesn't move and takes no actions. A flying creature stays aloft, provided that it is able to do so. If it must move to stay aloft, it flies the minimum distance needed to remain in the air.",
@@ -3271,7 +3271,7 @@
     "higherLevel": "When you cast this spell using a spell slot of 2nd level or higher, roll an additional 2d8 for each slot level above 1st.",
     "higherLevelFr": "Lorsque vous lancez ce sort en utilisant un emplacement de sort de niveau 2 ou supérieur, lancez 2d8 supplémentaires pour chaque niveau d'emplacement au-delà du niveau 1.",
     "attackType": null,
-    "damageJson": "{\"damage_at_slot_level\":{\"1\":\"5d8\"}}",
+    "damageJson": "{\"damage_at_slot_level\":{\"1\":\"5d8\",\"2\":\"7d8\",\"3\":\"9d8\",\"4\":\"11d8\",\"5\":\"13d8\",\"6\":\"15d8\",\"7\":\"17d8\",\"8\":\"19d8\",\"9\":\"21d8\"}}",
     "dcJson": null,
     "classes": [
       "Barde",
@@ -3638,7 +3638,7 @@
     "concentration": true,
     "ritual": false,
     "description": "Choose one creature you can see within range. Yellow strips of magical energy loop around the creature. The target must succeed on a Strength saving throw, or its flying speed (if any) is reduced to 0 feet for the spell's duration. An airborne creature affected by this spell safely descends at 60 feet per round until it reaches the ground or the spell ends.",
-    "descriptionFr": "Choisissez une créature que vous pouvez voir dans la portée. Des bandes jaunes d'énergie magique entourent la créature. La cible doit réussir un jet de sauvegarde de Force sous peine de voir sa vitesse de vol (le cas échéant) réduite à 0 mètre pour la durée du sort. Une créature volante affectée par ce sort descend à la vitesse de 18 mètres par round jusqu'à ce qu'elle atteigne le sol ou que le sort se termine.",
+    "descriptionFr": "Choisissez une créature que vous pouvez voir dans la portée. Des bandes jaunes d'énergie magique entourent la créature. La cible doit réussir un jet de sauvegarde de Force sous peine de voir sa vitesse de vol (le cas échéant) réduite à 0 mètre pour la durée du sort. Une créature volante affectée par ce sort descend à la vitesse de 18 mètres par tour jusqu'à ce qu'elle atteigne le sol ou que le sort se termine.",
     "higherLevel": null,
     "higherLevelFr": null,
     "attackType": null,
@@ -4295,7 +4295,7 @@
     "concentration": true,
     "ritual": false,
     "description": "You craft an illusion that takes root in the mind of a creature that you can see within range. The target must make an Intelligence saving throw. On a failed save, you create a phantasmal object, creature, or other visible phenomenon of your choice that is no larger than a 10-foot cube and that is perceivable only to the target for the duration. This spell has no effect on undead or constructs.\nThe phantasm includes sound, temperature, and other stimuli, also evident only to the creature.\nThe target can use its action to examine the phantasm with an Intelligence (Investigation) check against your spell save DC. If the check succeeds, the target realizes that the phantasm is an illusion, and the spell ends.\nWhile a target is affected by the spell, the target treats the phantasm as if it were real. The target rationalizes any illogical outcomes from interacting with the phantasm. For example, a target attempting to walk across a phantasmal bridge that spans a chasm falls once it steps onto the bridge. If the target survives the fall, it still believes that the bridge exists and comes up with some other explanation for its fall—it was pushed, it slipped, or a strong wind might have knocked it off.\nAn affected target is so convinced of the phantasm's reality that it can even take damage from the illusion. A phantasm created to appear as a creature can attack the target. Similarly, a phantasm created to appear as fire, a pool of acid, or lava can burn the target. Each round on your turn, the phantasm can deal 1d6 psychic damage to the target if it is in the phantasm's area or within 5 feet of the phantasm, provided that the illusion is of a creature or hazard that could logically deal damage, such as by attacking. The target perceives the damage as a type appropriate to the illusion.",
-    "descriptionFr": "Vous façonnez une illusion qui s'enracine dans l'esprit d'une créature que vous pouvez voir dans la portée du sort. La cible doit réussir un jet de sauvegarde d'Intelligence sans quoi elle percevra comme réel un objet, une créature ou tout autre phénomène visible de votre conception, pas plus grand qu'un cube de 3 mètres d'arête, et ce pour la durée du sort. Le sort n'a pas d'effet sur les morts-vivants et les artificiels.\nLe fantasme inclut les sons, la température et d'autres stimuli qui ne sont évidents que pour la créature.\nLa cible peut utiliser son action pour examiner le fantasme avec un jet d'Intelligence (Investigation) contre le DD de sauvegarde de votre sort. En cas de réussite, la cible comprend que le fantasme n'est qu'une illusion et le sort prend fin.\nTant que la cible est sous l'effet du sort, elle considère le fantasme comme réel. La cible rationalise toute conséquence insensée lorsqu'elle interagit avec le fantasme. Par exemple, une cible qui tente de traverser un pont fantasmatique qui enjambe un gouffre tombe après avoir fait un pas sur le pont. Si la cible survit à la chute, elle croit toujours que le pont existe bien et trouve une explication logique à sa chute (on l'a poussé, elle a glissé, une rafale l'a fait basculer).\nUne cible affectée est tellement persuadée de la réalité du fantasme que l'illusion peut même lui faire subir des dégâts. Un fantasme façonné à l'image d'une créature peut attaquer la cible. De la même manière, un fantasme apparaissant comme du feu, un bassin d'acide ou du magma peut brûler la cible. À chaque round, lors de votre tour, le fantasme peut infliger 1d6 dégâts psychiques à la cible si elle se trouve dans l'espace du fantasme ou à 1,50 mètre ou moins du fantasme, dans le cas où l'illusion est celle d'une créature ou un danger qui pourrait logiquement infliger des dégâts, comme une attaque. La cible perçoit les dégâts comme étant du type approprié à l'illusion.",
+    "descriptionFr": "Vous façonnez une illusion qui s'enracine dans l'esprit d'une créature que vous pouvez voir dans la portée du sort. La cible doit réussir un jet de sauvegarde d'Intelligence sans quoi elle percevra comme réel un objet, une créature ou tout autre phénomène visible de votre conception, pas plus grand qu'un cube de 3 mètres d'arête, et ce pour la durée du sort. Le sort n'a pas d'effet sur les morts-vivants et les artificiels.\nLe fantasme inclut les sons, la température et d'autres stimuli qui ne sont évidents que pour la créature.\nLa cible peut utiliser son action pour examiner le fantasme avec un jet d'Intelligence (Investigation) contre le DD de sauvegarde de votre sort. En cas de réussite, la cible comprend que le fantasme n'est qu'une illusion et le sort prend fin.\nTant que la cible est sous l'effet du sort, elle considère le fantasme comme réel. La cible rationalise toute conséquence insensée lorsqu'elle interagit avec le fantasme. Par exemple, une cible qui tente de traverser un pont fantasmatique qui enjambe un gouffre tombe après avoir fait un pas sur le pont. Si la cible survit à la chute, elle croit toujours que le pont existe bien et trouve une explication logique à sa chute (on l'a poussé, elle a glissé, une rafale l'a fait basculer).\nUne cible affectée est tellement persuadée de la réalité du fantasme que l'illusion peut même lui faire subir des dégâts. Un fantasme façonné à l'image d'une créature peut attaquer la cible. De la même manière, un fantasme apparaissant comme du feu, un bassin d'acide ou du magma peut brûler la cible. À chaque tour, lors de votre tour, le fantasme peut infliger 1d6 dégâts psychiques à la cible si elle se trouve dans l'espace du fantasme ou à 1,50 mètre ou moins du fantasme, dans le cas où l'illusion est celle d'une créature ou un danger qui pourrait logiquement infliger des dégâts, comme une attaque. La cible perçoit les dégâts comme étant du type approprié à l'illusion.",
     "higherLevel": null,
     "higherLevelFr": null,
     "attackType": null,
@@ -4319,7 +4319,7 @@
       "V"
     ],
     "material": null,
-    "duration": "1 round",
+    "duration": "1 tour",
     "concentration": false,
     "ritual": false,
     "description": "You psychically lash out at one creature you can see within range. The target must make an Intelligence saving throw. On a failed save, the target takes 3d6 psychic damage, and it can't take a reaction until the end of its next turn. Moreover, on its next turn, it must choose whether it gets a move, an action, or a bonus action; it gets only one of the three. On a successful save, the target takes half as much damage and suffers none of the spell's other effects.",
@@ -5435,7 +5435,7 @@
     "concentration": true,
     "ritual": false,
     "description": "You conjure a mass of thick, sticky webbing at a point of your choice within range. The webs fill a 20-foot cube from that point for the duration. The webs are difficult terrain and lightly obscure their area.\nIf the webs aren't anchored between two solid masses (such as walls or trees) or layered across a floor, wall, or ceiling, the conjured web collapses on itself, and the spell ends at the start of your next turn. Webs layered over a flat surface have a depth of 5 feet.\nEach creature that starts its turn in the webs or that enters them during its turn must make a dexterity saving throw. On a failed save, the creature is restrained as long as it remains in the webs or until it breaks free.\nA creature restrained by the webs can use its action to make a Strength check against your spell save DC. If it succeeds, it is no longer restrained.\nThe webs are flammable. Any 5-foot cube of webs exposed to fire burns away in 1 round, dealing 2d4 fire damage to any creature that starts its turn in the fire.",
-    "descriptionFr": "Vous invoquez une masse de toiles d'araignées épaisse et collante à un point de votre choix dans la portée du sort. Les toiles remplissent un cube de 6 mètres d'arête à cet endroit pendant la durée du sort. Les toiles sont considérées comme un terrain difficile et la visibilité y est réduite.\nSi les toiles ne sont pas ancrées entre deux masses solides (comme des murs ou des arbres) ou superposées à partir du sol, d'un mur ou du plafond, la masse de toiles invoquée s'effondre sur elle-même et le sort se termine au début de votre prochain tour. Les toiles superposées sur une surface plane ont une épaisseur de 1,50 mètre.\nChaque créature qui commence son tour dans les toiles ou qui y entre au cours de son tour doit faire un jet de sauvegarde de Dextérité. En cas d'échec, la créature est entravée aussi longtemps qu'elle demeure dans les toiles ou jusqu'à ce qu'elle se libère.\nUne créature entravée par les toiles peut utiliser son action pour faire un jet de Force contre le DD de sauvegarde de votre sort. Si elle réussit, elle n'est plus entravée.\nLes toiles sont inflammables. Un cube de toiles de 1,50 mètre d'arête exposé au feu se consume en un round, causant 2d4 dégâts de feu à toute créature commençant son tour dans les toiles enflammées.",
+    "descriptionFr": "Vous invoquez une masse de toiles d'araignées épaisse et collante à un point de votre choix dans la portée du sort. Les toiles remplissent un cube de 6 mètres d'arête à cet endroit pendant la durée du sort. Les toiles sont considérées comme un terrain difficile et la visibilité y est réduite.\nSi les toiles ne sont pas ancrées entre deux masses solides (comme des murs ou des arbres) ou superposées à partir du sol, d'un mur ou du plafond, la masse de toiles invoquée s'effondre sur elle-même et le sort se termine au début de votre prochain tour. Les toiles superposées sur une surface plane ont une épaisseur de 1,50 mètre.\nChaque créature qui commence son tour dans les toiles ou qui y entre au cours de son tour doit faire un jet de sauvegarde de Dextérité. En cas d'échec, la créature est entravée aussi longtemps qu'elle demeure dans les toiles ou jusqu'à ce qu'elle se libère.\nUne créature entravée par les toiles peut utiliser son action pour faire un jet de Force contre le DD de sauvegarde de votre sort. Si elle réussit, elle n'est plus entravée.\nLes toiles sont inflammables. Un cube de toiles de 1,50 mètre d'arête exposé au feu se consume en un tour, causant 2d4 dégâts de feu à toute créature commençant son tour dans les toiles enflammées.",
     "higherLevel": null,
     "higherLevelFr": null,
     "attackType": null,
@@ -5947,7 +5947,7 @@
       "M"
     ],
     "material": "un petit morceau de fil de cuivre",
-    "duration": "1 round",
+    "duration": "1 tour",
     "concentration": false,
     "ritual": false,
     "description": "You send a short message of twenty-five words or less to a creature with which you are familiar. The creature hears the message in its mind, recognizes you as the sender if it knows you, and can answer in a like manner immediately. The spell enables creatures with Intelligence scores of at least 1 to understand the meaning of your message.\nYou can send the message across any distance and even to other planes of existence, but if the target is on a different plane than you, there is a 5 percent chance that the message doesn't arrive.",
@@ -6916,7 +6916,7 @@
     "concentration": false,
     "ritual": true,
     "description": "This spell grants the ability to move across any liquid surface--such as water, acid, mud, snow, quicksand, or lava--as if it were harmless solid ground (creatures crossing molten lava can still take damage from the heat). Up to ten willing creatures you can see within range gain this ability for the duration.\nIf you target a creature submerged in a liquid, the spell carries the target to the surface of the liquid at a rate of 60 feet per round.",
-    "descriptionFr": "Le sort attribue la capacité de se déplacer sur toute surface liquide (eau, acide, boue, neige, sables mouvants, lave, etc.) comme si c'était un sol dur. Les créatures qui traversent de la lave en fusion subissent tout de même les dégâts dus à la chaleur. Jusqu'à dix créatures consentantes et que vous pouvez voir dans la portée du sort obtiennent cette capacité pour la durée du sort.\nSi vous ciblez une créature submergée dans un liquide, le sort déplace la cible vers la surface du liquide à une vitesse de 18 mètres par round.",
+    "descriptionFr": "Le sort attribue la capacité de se déplacer sur toute surface liquide (eau, acide, boue, neige, sables mouvants, lave, etc.) comme si c'était un sol dur. Les créatures qui traversent de la lave en fusion subissent tout de même les dégâts dus à la chaleur. Jusqu'à dix créatures consentantes et que vous pouvez voir dans la portée du sort obtiennent cette capacité pour la durée du sort.\nSi vous ciblez une créature submergée dans un liquide, le sort déplace la cible vers la surface du liquide à une vitesse de 18 mètres par tour.",
     "higherLevel": null,
     "higherLevelFr": null,
     "attackType": null,
@@ -7177,7 +7177,7 @@
     "concentration": true,
     "ritual": false,
     "description": "You create a 20-foot-radius sphere of yellow, nauseating gas centered on a point within range. The cloud spreads around corners, and its area is heavily obscured. The cloud lingers in the air for the duration.\nEach creature that is completely within the cloud at the start of its turn must make a constitution saving throw against poison. On a failed save, the creature spends its action that turn retching and reeling. Creatures that don't need to breathe or are immune to poison automatically succeed on this saving throw.\nA moderate wind (at least 10 miles per hour) disperses the cloud after 4 rounds. A strong wind (at least 20 miles per hour) disperses it after 1 round.",
-    "descriptionFr": "Vous créez une sphère de gaz jaune nauséabond de 6 mètres de rayon, centrée sur un point à portée. Le nuage se propage dans tous les coins et la visibilité de la zone est fortement réduite. Le nuage persiste dans l'air pour la durée du sort.\nChaque créature totalement dans le nuage au début de son tour doit effectuer un jet de sauvegarde de Constitution contre le poison. En cas d'échec, la créature est prise de nausées et chancelle, perdant ainsi son action. Les créatures qui n'ont pas besoin de respirer ou qui sont immunisées contre le poison réussissent automatiquement leur jet de sauvegarde.\nUn vent modéré (d'au moins 15 km/h) disperse le nuage après 4 rounds. Un vent fort (d'au moins 30 km/h) le disperse après 1 round.",
+    "descriptionFr": "Vous créez une sphère de gaz jaune nauséabond de 6 mètres de rayon, centrée sur un point à portée. Le nuage se propage dans tous les coins et la visibilité de la zone est fortement réduite. Le nuage persiste dans l'air pour la durée du sort.\nChaque créature totalement dans le nuage au début de son tour doit effectuer un jet de sauvegarde de Constitution contre le poison. En cas d'échec, la créature est prise de nausées et chancelle, perdant ainsi son action. Les créatures qui n'ont pas besoin de respirer ou qui sont immunisées contre le poison réussissent automatiquement leur jet de sauvegarde.\nUn vent modéré (d'au moins 15 km/h) disperse le nuage après 4 tours. Un vent fort (d'au moins 30 km/h) le disperse après 1 tour.",
     "higherLevel": null,
     "higherLevelFr": null,
     "attackType": null,
@@ -7648,7 +7648,7 @@
     "higherLevel": "When you cast this spell using a spell slot of 5th level or higher, the damage increases by 1d10 for each slot level above 4th.",
     "higherLevelFr": "Lorsque vous lancez ce sort en utilisant un emplacement de sort de niveau 5 ou supérieur, les dégâts sont augmentés de 1d10 pour chaque niveau d'emplacement au-delà du niveau 4.",
     "attackType": null,
-    "damageJson": "{\"damage_type\":{\"index\":\"psychic\",\"name\":\"Psychic\",\"url\":\"/api/2014/damage-types/psychic\"},\"damage_at_slot_level\":{\"4\":\"4d10\"}}",
+    "damageJson": "{\"damage_type\":{\"index\":\"psychic\",\"name\":\"Psychic\",\"url\":\"/api/2014/damage-types/psychic\"},\"damage_at_slot_level\":{\"4\":\"4d10\",\"5\":\"5d10\",\"6\":\"6d10\",\"7\":\"7d10\",\"8\":\"8d10\",\"9\":\"9d10\"}}",
     "dcJson": "{\"dc_type\":{\"index\":\"wis\",\"name\":\"WIS\",\"url\":\"/api/2014/ability-scores/wis\"},\"dc_success\":\"none\"}",
     "classes": [
       "Magicien"
@@ -8072,7 +8072,7 @@
     "concentration": true,
     "ritual": false,
     "description": "You utter foul words, summoning one demon from the chaos of the Abyss. You choose the demon's type, which must be one of challenge rating 5 or lower, such as a shadow demon or a barlgura. The demon appears in an unoccupied space you can see within range, and the demon disappears when it drops to 0 hit points or when the spell ends.\nRoll initiative for the demon, which has its own turns. When you summon it and on each of your turns thereafter, you can issue a verbal command to it (requiring no action on your part), telling it what it must do on its next turn. If you issue no command, it spends its turn attacking any creature within reach that has attacked it.\nAt the end of each of the demon's turns, it makes a Charisma saving throw. The demon has disadvantage on this saving throw if you say its true name. On a failed save, the demon continues to obey you. On a successful save, your control of the demon ends for the rest of the duration, and the demon spends its turns pursuing and attacking the nearest non-demons to the best of its ability. If you stop concentration on the spell before it reaches its full duration, an uncontrolled demon doesn't disappear for 1d6 rounds if it still has hit points.\nAs part of casting the spell, you can form a circle on the ground with the blood used as a material component. The circle is large enough to encompass your space. While the spell lasts, the summoned demon can't cross the circle or harm it, and it can't target anyone within it. Using the material component in this manner consumes it when the spell ends.",
-    "descriptionFr": "Vous prononcez des mots vulgaires, invoquant un démon du chaos des Abysses. Choisissez le type du démon, qui doit être de FP 5 ou inférieur, comme un démon des ombres ou un barlgura. Le démon apparaît dans un espace inoccupé que vous pouvez voir à portée, et il disparaît lorsqu'il tombe à 0 point de vie ou lorsque le sort se termine.\nLancer l'initiative pour le démon, qui a ses propres tours. Lorsque vous l'invoquez et à chacun de vos tours par la suite, vous pouvez lui donner un ordre verbal (aucune action requise) pour lui indiquer ce qu'il doit faire lors de son prochain tour. Si vous ne donnez aucun ordre, il passe son tour à attaquer toute créature à sa portée qui l'a attaquée. À la fin de chacun des tours de démons, il effectue un jet de sauvegarde de Charisme. Le démon a un désavantage sur ce jet de sauvegarde si vous dites son vrai nom. En cas d'échec de sauvegarde, le démon continue de vous obéir. En cas de sauvegarde réussie, votre contrôle du démon prend fin pour le reste de la durée, et le démon passe son tour à poursuivre et à attaquer les non-démons les plus proches au mieux de ses capacités. Si vous arrêtez de vous concentrer sur le sort avant qu'il n'atteigne sa durée totale, un démon incontrôlé disparaît après 1d6 rounds s'il a encore des points de vie. Dans le cadre du lancement du sort, vous pouvez former un cercle au sol avec le sang utilisé comme composant matériel. Le cercle est suffisamment grand pour englober votre espace. Tant que le sort dure, le démon invoqué ne peut pas traverser le cercle ou lui faire du mal, et il ne peut cibler personne à l'intérieur. Utiliser le composant matériel de cette manière le consomme à la fin du sort.",
+    "descriptionFr": "Vous prononcez des mots vulgaires, invoquant un démon du chaos des Abysses. Choisissez le type du démon, qui doit être de FP 5 ou inférieur, comme un démon des ombres ou un barlgura. Le démon apparaît dans un espace inoccupé que vous pouvez voir à portée, et il disparaît lorsqu'il tombe à 0 point de vie ou lorsque le sort se termine.\nLancer l'initiative pour le démon, qui a ses propres tours. Lorsque vous l'invoquez et à chacun de vos tours par la suite, vous pouvez lui donner un ordre verbal (aucune action requise) pour lui indiquer ce qu'il doit faire lors de son prochain tour. Si vous ne donnez aucun ordre, il passe son tour à attaquer toute créature à sa portée qui l'a attaquée. À la fin de chacun des tours de démons, il effectue un jet de sauvegarde de Charisme. Le démon a un désavantage sur ce jet de sauvegarde si vous dites son vrai nom. En cas d'échec de sauvegarde, le démon continue de vous obéir. En cas de sauvegarde réussie, votre contrôle du démon prend fin pour le reste de la durée, et le démon passe son tour à poursuivre et à attaquer les non-démons les plus proches au mieux de ses capacités. Si vous arrêtez de vous concentrer sur le sort avant qu'il n'atteigne sa durée totale, un démon incontrôlé disparaît après 1d6 tours s'il a encore des points de vie. Dans le cadre du lancement du sort, vous pouvez former un cercle au sol avec le sang utilisé comme composant matériel. Le cercle est suffisamment grand pour englober votre espace. Tant que le sort dure, le démon invoqué ne peut pas traverser le cercle ou lui faire du mal, et il ne peut cibler personne à l'intérieur. Utiliser le composant matériel de cette manière le consomme à la fin du sort.",
     "higherLevel": "At Higher Levels.\nWhen you cast this spell using a spell slot of 5th level or higher, the challenge rating increases by 1 for each slot level above 4th.",
     "higherLevelFr": "Lorsque vous lancez ce sort en utilisant un emplacement de sort de niveau 5 ou supérieur, le FP augmente de 1 pour chaque niveau d'emplacement au-delà du niveau 4.",
     "attackType": null,
@@ -8325,7 +8325,7 @@
     "concentration": true,
     "ritual": false,
     "description": "You transform up to ten centipedes, three spiders, five wasps, or one scorpion within range into giant versions of their natural forms for the duration. A centipede becomes a giant centipede, a spider becomes a giant spider, a wasp becomes a giant wasp, and a scorpion becomes a giant scorpion.\nEach creature obeys your verbal commands, and in combat, they act on your turn each round. The GM has the statistics for these creatures and resolves their actions and movement.\nA creature remains in its giant size for the duration, until it drops to 0 hit points, or until you use an action to dismiss the effect on it.\nThe GM might allow you to choose different targets. For example, if you transform a bee, its giant version might have the same statistics as a giant wasp.",
-    "descriptionFr": "Vous transformez jusqu'à dix mille-pattes, trois araignées, cinq guêpes, ou un scorpion, à portée, en version géante de leur forme naturelle pour toute la durée du sort. Un mille-pattes devient un mille-pattes géant, une araignée devient une araignée géante, une guêpe devient une guêpe géante, et un scorpion devient un scorpion géant.\nChaque créature obéit à vos ordres verbaux et, en combat, à chaque round, elles agissent à votre tour. Le MD possède les statistiques de ces créatures et détermine leurs actions et déplacements.\nUne créature reste à sa taille géante pour la durée du sort, jusqu'à ce qu'elle tombe à 0 point de vie, ou jusqu'à ce que vous utilisiez une action pour annuler l'effet sur elle.\nLe MD peut vous autoriser à choisir des cibles différentes de celles présentées ci-dessus. Par exemple, si vous transformez une abeille, sa version géante pourrait avoir les mêmes statistiques que la guêpe géante.",
+    "descriptionFr": "Vous transformez jusqu'à dix mille-pattes, trois araignées, cinq guêpes, ou un scorpion, à portée, en version géante de leur forme naturelle pour toute la durée du sort. Un mille-pattes devient un mille-pattes géant, une araignée devient une araignée géante, une guêpe devient une guêpe géante, et un scorpion devient un scorpion géant.\nChaque créature obéit à vos ordres verbaux et, en combat, à chaque tour, elles agissent à votre tour. Le MD possède les statistiques de ces créatures et détermine leurs actions et déplacements.\nUne créature reste à sa taille géante pour la durée du sort, jusqu'à ce qu'elle tombe à 0 point de vie, ou jusqu'à ce que vous utilisiez une action pour annuler l'effet sur elle.\nLe MD peut vous autoriser à choisir des cibles différentes de celles présentées ci-dessus. Par exemple, si vous transformez une abeille, sa version géante pourrait avoir les mêmes statistiques que la guêpe géante.",
     "higherLevel": null,
     "higherLevelFr": null,
     "attackType": null,
@@ -8622,7 +8622,7 @@
     "higherLevel": "When you cast this spell using a spell slot of 5th level or higher, the damage increases by 1d8 for each slot level above 4th.",
     "higherLevelFr": "Lorsque vous lancez ce sort en utilisant un emplacement de sort de niveau 5 ou supérieur, les dégâts du sort augmentent de 1d8 pour chaque niveau d'emplacement au-delà du niveau 4.",
     "attackType": null,
-    "damageJson": "{\"damage_type\":{\"index\":\"fire\",\"name\":\"Fire\",\"url\":\"/api/2014/damage-types/fire\"},\"damage_at_slot_level\":{\"4\":\"5d8\"}}",
+    "damageJson": "{\"damage_type\":{\"index\":\"fire\",\"name\":\"Fire\",\"url\":\"/api/2014/damage-types/fire\"},\"damage_at_slot_level\":{\"4\":\"5d8\",\"5\":\"6d8\",\"6\":\"7d8\",\"7\":\"8d8\",\"8\":\"9d8\",\"9\":\"10d8\"}}",
     "dcJson": "{\"dc_type\":{\"index\":\"dex\",\"name\":\"DEX\",\"url\":\"/api/2014/ability-scores/dex\"},\"dc_success\":\"half\"}",
     "classes": [
       "Druide",
@@ -9334,7 +9334,7 @@
       "M"
     ],
     "material": "des craies et encres rares imprégnées de pierres précieuses d'une valeur d'au moins 50 po, que le sort consomme",
-    "duration": "1 round",
+    "duration": "1 tour",
     "concentration": false,
     "ritual": false,
     "description": "As you cast the spell, you draw a 10-foot-diameter circle on the ground inscribed with sigils that link your location to a permanent teleportation circle of your choice whose sigil sequence you know and that is on the same plane of existence as you. A shimmering portal opens within the circle you drew and remains open until the end of your next turn. Any creature that enters the portal instantly appears within 5 feet of the destination circle or in the nearest unoccupied space if that space is occupied.\nMany major temples, guilds, and other important places have permanent teleportation circles inscribed somewhere within their confines. Each such circle includes a unique sigil sequence--a string of magical runes arranged in a particular pattern. When you first gain the ability to cast this spell, you learn the sigil sequences for two destinations on the Material Plane, determined by the GM. You can learn additional sigil sequences during your adventures. You can commit a new sigil sequence to memory after studying it for 1 minute.\nYou can create a permanent teleportation circle by casting this spell in the same location every day for one year. You need not use the circle to teleport when you cast the spell in this way.",
@@ -11203,7 +11203,7 @@
     "higherLevel": "When you cast this spell using a spell slot of 7th level or higher, the damage increases by 3d6 for each slot level above 6th.",
     "higherLevelFr": "Lorsque vous lancez ce sort en utilisant un emplacement de sort de niveau 7 ou supérieur, les dégâts sont augmentés de 3d6 pour chaque niveau d'emplacement au-delà du niveau 6.",
     "attackType": null,
-    "damageJson": "{\"damage_type\":{\"index\":\"force\",\"name\":\"Force\",\"url\":\"/api/2014/damage-types/force\"},\"damage_at_slot_level\":{\"6\":\"10d6 + 40\"}}",
+    "damageJson": "{\"damage_type\":{\"index\":\"force\",\"name\":\"Force\",\"url\":\"/api/2014/damage-types/force\"},\"damage_at_slot_level\":{\"6\":\"10d6 + 40\",\"7\":\"13d6 + 40\",\"8\":\"16d6 + 40\",\"9\":\"19d6 + 40\"}}",
     "dcJson": "{\"dc_type\":{\"index\":\"dex\",\"name\":\"DEX\",\"url\":\"/api/2014/ability-scores/dex\"},\"dc_success\":\"none\"}",
     "classes": [
       "Ensorceleur",
@@ -11427,7 +11427,7 @@
     "concentration": false,
     "ritual": false,
     "description": "You and up to ten willing creatures you can see within range assume a gaseous form for the duration, appearing as wisps of cloud. While in this cloud form, a creature has a flying speed of 300 feet and has resistance to damage from nonmagical weapons. The only actions a creature can take in this form are the Dash action or to revert to its normal form. Reverting takes 1 minute, during which time a creature is incapacitated and can't move. Until the spell ends, a creature can revert to cloud form, which also requires the 1-minute transformation.\nIf a creature is in cloud form and flying when the effect ends, the creature descends 60 feet per round for 1 minute until it lands, which it does safely. If it can't land after 1 minute, the creature falls the remaining distance.",
-    "descriptionFr": "Vous et jusqu'à 10 créatures consentantes que vous pouvez voir et à portée, êtes transformés en vapeur pour la durée du sort, ressemblant à de petits nuages. Tant qu'elle est sous cette forme de nuage, une créature obtient une vitesse de vol de 90 mètres ainsi que la résistance aux dégâts des armes non magiques. Les seules actions que peut effectuer une créature sous cette forme sont l'action Foncer et le retour à sa forme normale. Revenir à sa forme normale prend 1 minute, durant laquelle la créature est incapable d'agir et ne peut pas se déplacer. Jusqu'à la fin du sort, une créature peut revenir en forme nuageuse, ce qui lui prendra également 1 minute de transformation.\nSi une créature est sous forme nuageuse et en train de voler lorsque l'effet prend fin, la créature redescend à la vitesse de 18 mètres par round pendant 1 minute jusqu'à ce qu'elle touche terre, ce qu'elle fait sans encombre. Si elle ne touche pas le sol après 1 minute, la créature chute de la distance restante.",
+    "descriptionFr": "Vous et jusqu'à 10 créatures consentantes que vous pouvez voir et à portée, êtes transformés en vapeur pour la durée du sort, ressemblant à de petits nuages. Tant qu'elle est sous cette forme de nuage, une créature obtient une vitesse de vol de 90 mètres ainsi que la résistance aux dégâts des armes non magiques. Les seules actions que peut effectuer une créature sous cette forme sont l'action Foncer et le retour à sa forme normale. Revenir à sa forme normale prend 1 minute, durant laquelle la créature est incapable d'agir et ne peut pas se déplacer. Jusqu'à la fin du sort, une créature peut revenir en forme nuageuse, ce qui lui prendra également 1 minute de transformation.\nSi une créature est sous forme nuageuse et en train de voler lorsque l'effet prend fin, la créature redescend à la vitesse de 18 mètres par tour pendant 1 minute jusqu'à ce qu'elle touche terre, ce qu'elle fait sans encombre. Si elle ne touche pas le sol après 1 minute, la créature chute de la distance restante.",
     "higherLevel": null,
     "higherLevelFr": null,
     "attackType": null,
@@ -11948,7 +11948,7 @@
     "higherLevel": "When you cast this spell using a spell slot of 7th level or higher, the damage increases by 1d6 for each slot level above 6th.",
     "higherLevelFr": "Lorsque vous lancez ce sort en utilisant un emplacement de sort de niveau 7 ou supérieur, les dégâts augmentent de 1d6 pour chaque niveau d'emplacement au-delà du niveau 6.",
     "attackType": null,
-    "damageJson": "{\"damage_type\":{\"index\":\"cold\",\"name\":\"Cold\",\"url\":\"/api/2014/damage-types/cold\"},\"damage_at_slot_level\":{\"6\":\"10d6\"}}",
+    "damageJson": "{\"damage_type\":{\"index\":\"cold\",\"name\":\"Cold\",\"url\":\"/api/2014/damage-types/cold\"},\"damage_at_slot_level\":{\"6\":\"10d6\",\"7\":\"11d6\",\"8\":\"12d6\",\"9\":\"13d6\"}}",
     "dcJson": "{\"dc_type\":{\"index\":\"con\",\"name\":\"CON\",\"url\":\"/api/2014/ability-scores/con\"},\"dc_success\":\"half\"}",
     "classes": [
       "Magicien"
@@ -12115,7 +12115,7 @@
       "S"
     ],
     "material": null,
-    "duration": "1 round",
+    "duration": "1 tour",
     "concentration": false,
     "ritual": false,
     "description": "This spell creates a magical link between a Large or larger inanimate plant within range and another plant, at any distance, on the same plane of existence. You must have seen or touched the destination plant at least once before. For the duration, any creature can step into the target plant and exit from the destination plant by using 5 feet of movement.",
@@ -13494,11 +13494,11 @@
       "S"
     ],
     "material": null,
-    "duration": "concentration, jusqu'à 6 rounds",
+    "duration": "concentration, jusqu'à 6 tours",
     "concentration": true,
     "ritual": false,
     "description": "A wall of water springs into existence at a point you choose within range. You can make the wall up to 300 feet long, 300 feet high, and 50 feet thick. The wall lasts for the duration.\nWhen the wall appears, each creature within its area must make a Strength saving throw. On a failed save, a creature takes 6d10 bludgeoning damage, or half as much damage on a successful save.\nAt the start of each of your turns after the wall appears, the wall, along with any creatures in it, moves 50 feet away from you. Any Huge or smaller creature inside the wall or whose space the wall enters when it moves must succeed on a Strength saving throw or take 5d10 bludgeoning damage. A creature can take this damage only once per round. At the end of the turn, the wall's height is reduced by 50 feet, and the damage creatures take from the spell on subsequent rounds is reduced by 1d10. When the wall reaches 0 feet in height, the spell ends.\nA creature caught in the wall can move by swimming. Because of the force of the wave, though, the creature must make a successful Strength (Athletics) check against your spell save DC in order to move at all. If it fails the check, it can't move. A creature that moves out of the area falls to the ground.",
-    "descriptionFr": "Un mur d'eau apparaît en un point de votre choix, à portée. Vous pouvez créer un mur qui peut atteindre jusqu'à 90 mètres de long, 90 mètres de haut et 15 mètres d'épaisseur. Le mur reste en place pour toute la durée du sort.\nLorsque le mur apparaît, chaque créature se trouvant dans la zone doit effectuer un jet de sauvegarde de Force. Une créature subit 6d10 dégâts contondants en cas d'échec, ou la moitié de ces dégâts en cas de réussite.\nAu début de chacun de vos tours après que le mur soit apparu, le mur, ainsi que toutes les créatures à l'intérieur, s'éloigne de vous en se déplaçant de 15 mètres. Toutes les créatures de taille G ou inférieure situées à l'intérieur du mur, ou le percutant lorsque celui-ci se déplace, doivent réussir un jet de sauvegarde de Force sous peine de subir 5d10 dégâts contondants. Une créature ne peut subir ces dégâts qu'une seule fois par tour.\nÀ la fin du tour, la hauteur du mur est réduite de 15 mètres et les dégâts que les créatures vont subir aux rounds suivants sont réduits de 1d10. Lorsque la hauteur du mur tombe à 0, le sort prend fin.\nUne créature piégée dans le mur peut se déplacer en nageant. Cependant, du fait de la puissance de la vague, une créature doit réussir un jet de Force (Athlétisme) contre le DD de sauvegarde de votre sort pour pouvoir se déplacer. Si elle échoue, elle ne peut pas bouger. Une créature qui se déplace en dehors de la zone d'effet tombe au sol.",
+    "descriptionFr": "Un mur d'eau apparaît en un point de votre choix, à portée. Vous pouvez créer un mur qui peut atteindre jusqu'à 90 mètres de long, 90 mètres de haut et 15 mètres d'épaisseur. Le mur reste en place pour toute la durée du sort.\nLorsque le mur apparaît, chaque créature se trouvant dans la zone doit effectuer un jet de sauvegarde de Force. Une créature subit 6d10 dégâts contondants en cas d'échec, ou la moitié de ces dégâts en cas de réussite.\nAu début de chacun de vos tours après que le mur soit apparu, le mur, ainsi que toutes les créatures à l'intérieur, s'éloigne de vous en se déplaçant de 15 mètres. Toutes les créatures de taille G ou inférieure situées à l'intérieur du mur, ou le percutant lorsque celui-ci se déplace, doivent réussir un jet de sauvegarde de Force sous peine de subir 5d10 dégâts contondants. Une créature ne peut subir ces dégâts qu'une seule fois par tour.\nÀ la fin du tour, la hauteur du mur est réduite de 15 mètres et les dégâts que les créatures vont subir aux tours suivants sont réduits de 1d10. Lorsque la hauteur du mur tombe à 0, le sort prend fin.\nUne créature piégée dans le mur peut se déplacer en nageant. Cependant, du fait de la puissance de la vague, une créature doit réussir un jet de Force (Athlétisme) contre le DD de sauvegarde de votre sort pour pouvoir se déplacer. Si elle échoue, elle ne peut pas bouger. Une créature qui se déplace en dehors de la zone d'effet tombe au sol.",
     "higherLevel": null,
     "higherLevelFr": null,
     "attackType": null,
@@ -14040,7 +14040,7 @@
     "concentration": false,
     "ritual": false,
     "description": "Wish is the mightiest spell a mortal creature can cast. By simply speaking aloud, you can alter the very foundations of reality in accord with your desires.\nThe basic use of this spell is to duplicate any other spell of 8th level or lower. You don't need to meet any requirements in that spell, including costly components. The spell simply takes effect.\nAlternatively, you can create one of the following effects of your choice:\n- You create one object of up to 25,000 gp in value that isn't a magic item. The object can be no more than 300 feet in any dimension, and it appears in an unoccupied space you can see on the ground.\n- You allow up to twenty creatures that you can see to regain all hit points, and you end all effects on them described in the greater restoration spell.\n- You grant up to ten creatures that you can see resistance to a damage type you choose.\n- You grant up to ten creatures you can see immunity to a single spell or other magical effect for 8 hours. For instance, you could make yourself and all your companions immune to a lich's life drain attack.\n- You undo a single recent event by forcing a reroll of any roll made within the last round (including your last turn). Reality reshapes itself to accommodate the new result. For example, a wish spell could undo an opponent's successful save, a foe's critical hit, or a friend's failed save. You can force the reroll to be made with advantage or disadvantage, and you can choose whether to use the reroll or the original roll.\nYou might be able to achieve something beyond the scope of the above examples. State your wish to the GM as precisely as possible. The GM has great latitude in ruling what occurs in such an instance; the greater the wish, the greater the likelihood that something goes wrong. This spell might simply fail, the effect you desire might only be partly achieved, or you might suffer some unforeseen consequence as a result of how you worded the wish. For example, wishing that a villain were dead might propel you forward in time to a period when that villain is no longer alive, effectively removing you from the game. Similarly, wishing for a legendary magic item or artifact might instantly transport you to the presence of the item's current owner.\nThe stress of casting this spell to produce any effect other than duplicating another spell weakens you. After enduring that stress, each time you cast a spell until you finish a long rest, you take 1d10 necrotic damage per level of that spell. This damage can't be reduced or prevented in any way. In addition, your Strength drops to 3, if it isn't 3 or lower already, for 2d4 days. For each of those days that you spend resting and doing nothing more than light activity, your remaining recovery time decreases by 2 days. Finally, there is a 33 percent chance that you are unable to cast wish ever again if you suffer this stress.",
-    "descriptionFr": "Souhait est le sort le plus puissant qu'une créature mortelle puisse lancer. Simplement en parlant à haute voix, vous pouvez altérer les fondements mêmes de la réalité selon vos désirs.\nL'utilisation la plus basique de ce sort est de dupliquer n'importe quel autre sort de niveau 8 ou inférieur. Aucune condition n'est exigée pour ce sort, pas même la nécessité de composantes couteuses. Le sort prend simplement effet. Vous pouvez également créer un des effets suivants de votre choix :\n• Vous créez un objet non magique d'une valeur maximale de 25 000 po. L'objet ne peut faire plus de 90 mètres d'arête et apparait sur le sol dans un espace inoccupé que vous pouvez voir.\n• Vous permettez à un maximum de vingt créatures que vous pouvez voir de récupérer tous leurs points de vie et vous dissipez tous les effets les affectant, comme décrit dans le sort restauration supérieure.\n• Vous accordez à un maximum de dix créatures que vous pouvez voir une résistance à un type de dégâts de votre choix.\n• Vous accordez à un maximum de dix créatures que vous pouvez voir l'immunité à un sort unique ou un autre effet magique pendant 8 heures. Par exemple, vous pouvez vous immuniser ainsi que vos compagnons contre l'attaque drainante d'une liche.\n• Vous annulez un événement unique récent en obligeant un nouveau jet de dés en remplacement de n'importe quel jet effectué durant le dernier round (incluant votre dernier tour). La réalité se transforme pour correspondre au nouveau lancer. Par exemple, un sort de souhait peut annuler la réussite d'un jet de sauvegarde ennemi, le coup critique d'un adversaire ou un jet de sauvegarde allié manqué. Vous pouvez imposer un jet avec avantage ou désavantage, et vous pouvez choisir d'utiliser le nouveau résultat du lancer ou l'ancien.\nVous pouvez également réaliser d'autres choses que les exemples ci-dessus. Décrivez votre souhait à votre MD de la manière la plus précise possible. Le MD est libre de déterminer ce qui se produit dans ce cas ; plus le souhait est important, plus la probabilité est grande que quelque chose tourne mal. Ce sort pourrait simplement échouer, l'effet que vous souhaitez pourrait être seulement partiellement exécuté, ou vous pourriez subir d'imprévisibles conséquences en fonction de votre formulation du souhait. Par exemple, souhaiter qu'un ennemi soit mort pourrait vous propulser à une époque future où votre ennemi n'est plus vivant, vous éliminant ainsi efficacement du jeu. De la même manière, désirer un objet magique légendaire ou un artéfact pourrait vous transporter instantanément en présence de l'actuel possesseur de l'objet.\nLe stress de lancer ce sort pour produire un effet autre que la reproduction d'un autre sort vous affaiblit. Après avoir subi cette tension, chaque fois que vous lancez un sort avant d'avoir terminé un repos long, vous subissez 1d10 dégâts nécrotiques par niveau de sort. Ces dégâts ne peuvent être réduits ou évités, d'une quelconque manière. De plus, votre Force tombe à 3, si elle n'est pas déjà inférieure à 3, pendant 2d4 jours. Pour chaque jour passé à vous reposer ou à pratiquer une activité mineure, votre temps de récupération diminue de 2 jours. Enfin, vous avez 33 % de chance de ne plus jamais être capable de lancer le sort souhait si vous avez subi ce stress.",
+    "descriptionFr": "Souhait est le sort le plus puissant qu'une créature mortelle puisse lancer. Simplement en parlant à haute voix, vous pouvez altérer les fondements mêmes de la réalité selon vos désirs.\nL'utilisation la plus basique de ce sort est de dupliquer n'importe quel autre sort de niveau 8 ou inférieur. Aucune condition n'est exigée pour ce sort, pas même la nécessité de composantes couteuses. Le sort prend simplement effet. Vous pouvez également créer un des effets suivants de votre choix :\n• Vous créez un objet non magique d'une valeur maximale de 25 000 po. L'objet ne peut faire plus de 90 mètres d'arête et apparait sur le sol dans un espace inoccupé que vous pouvez voir.\n• Vous permettez à un maximum de vingt créatures que vous pouvez voir de récupérer tous leurs points de vie et vous dissipez tous les effets les affectant, comme décrit dans le sort restauration supérieure.\n• Vous accordez à un maximum de dix créatures que vous pouvez voir une résistance à un type de dégâts de votre choix.\n• Vous accordez à un maximum de dix créatures que vous pouvez voir l'immunité à un sort unique ou un autre effet magique pendant 8 heures. Par exemple, vous pouvez vous immuniser ainsi que vos compagnons contre l'attaque drainante d'une liche.\n• Vous annulez un événement unique récent en obligeant un nouveau jet de dés en remplacement de n'importe quel jet effectué durant le dernier tour (incluant votre dernier tour). La réalité se transforme pour correspondre au nouveau lancer. Par exemple, un sort de souhait peut annuler la réussite d'un jet de sauvegarde ennemi, le coup critique d'un adversaire ou un jet de sauvegarde allié manqué. Vous pouvez imposer un jet avec avantage ou désavantage, et vous pouvez choisir d'utiliser le nouveau résultat du lancer ou l'ancien.\nVous pouvez également réaliser d'autres choses que les exemples ci-dessus. Décrivez votre souhait à votre MD de la manière la plus précise possible. Le MD est libre de déterminer ce qui se produit dans ce cas ; plus le souhait est important, plus la probabilité est grande que quelque chose tourne mal. Ce sort pourrait simplement échouer, l'effet que vous souhaitez pourrait être seulement partiellement exécuté, ou vous pourriez subir d'imprévisibles conséquences en fonction de votre formulation du souhait. Par exemple, souhaiter qu'un ennemi soit mort pourrait vous propulser à une époque future où votre ennemi n'est plus vivant, vous éliminant ainsi efficacement du jeu. De la même manière, désirer un objet magique légendaire ou un artéfact pourrait vous transporter instantanément en présence de l'actuel possesseur de l'objet.\nLe stress de lancer ce sort pour produire un effet autre que la reproduction d'un autre sort vous affaiblit. Après avoir subi cette tension, chaque fois que vous lancez un sort avant d'avoir terminé un repos long, vous subissez 1d10 dégâts nécrotiques par niveau de sort. Ces dégâts ne peuvent être réduits ou évités, d'une quelconque manière. De plus, votre Force tombe à 3, si elle n'est pas déjà inférieure à 3, pendant 2d4 jours. Pour chaque jour passé à vous reposer ou à pratiquer une activité mineure, votre temps de récupération diminue de 2 jours. Enfin, vous avez 33 % de chance de ne plus jamais être capable de lancer le sort souhait si vous avez subi ce stress.",
     "higherLevel": null,
     "higherLevelFr": null,
     "attackType": null,
@@ -14068,7 +14068,7 @@
     "concentration": true,
     "ritual": false,
     "description": "A churning storm cloud forms, centered on a point you can see and spreading to a radius of 360 feet. Lightning flashes in the area, thunder booms, and strong winds roar. Each creature under the cloud (no more than 5,000 feet beneath the cloud) when it appears must make a constitution saving throw. On a failed save, a creature takes 2d6 thunder damage and becomes deafened for 5 minutes.\nEach round you maintain concentration on this spell, the storm produces additional effects on your turn.\n***Round 2.*** Acidic rain falls from the cloud. Each creature and object under the cloud takes 1d6 acid damage.\n***Round 3.*** You call six bolts of lightning from the cloud to strike six creatures or objects of your choice beneath the cloud. A given creature or object can't be struck by more than one bolt. A struck creature must make a dexterity saving throw. The creature takes 10d6 lightning damage on a failed save, or half as much damage on a successful one.\n***Round 4.*** Hailstones rain down from the cloud. Each creature under the cloud takes 2d6 bludgeoning damage.\n***Round 5-10.*** Gusts and freezing rain assail the area under the cloud. The area becomes difficult terrain and is heavily obscured. Each creature there takes 1d6 cold damage. Ranged weapon attacks in the area are impossible. The wind and rain count as a severe distraction for the purposes of maintaining concentration on spells. Finally, gusts of strong wind (ranging from 20 to 50 miles per hour) automatically disperse fog, mists, and similar phenomena in the area, whether mundane or magical.",
-    "descriptionFr": "Des nuages orageux tourbillonnants apparaissent, centrés sur un point que vous pouvez voir et s'étalant dans un rayon de 108 mètres. Des éclairs zèbrent le ciel dans la zone, le tonnerre éclate, et de puissants vents font rage. Chaque créature située sous le nuage (à 1 500 mètres au-dessous maximum) lorsqu'il apparaît doit effectuer un jet de sauvegarde de Constitution. En cas d'échec, une créature subit 2d6 dégâts de tonnerre et est assourdie pendant 5 minutes.\nPour chaque round durant lequel vous maintenez votre concentration sur ce sort, la tempête produit différents effets lors de votre tour.\nRound 2. Une pluie acide tombe du nuage. Chaque créature ou objet sous le nuage subit 1d6 dégâts d'acide.\nRound 3. Vous appelez six éclairs pour qu'ils frappent chacun une créature ou un objet de votre choix et situé sous le nuage. Une créature ou un objet ne peut être ciblé par plus d'un éclair. Une créature touchée doit effectuer un jet de sauvegarde de Dextérité, subissant 10d6 dégâts de foudre en cas d'échec, ou la moitié de ces dégâts en cas de réussite.\nRound 4. Une pluie de grêlon s'abat. Chaque créature située sous le nuage subit 2d6 dégâts contondants.\nRound 5-10. Des rafales de vent et des pluies glaciales se déchaînent dans la zone sous le nuage. La zone devient un terrain difficile et est profondément obscurcie. Chaque créature qui s'y trouve subit 1d6 dégâts de froid. Les attaques à distance avec une arme sont impossibles dans la zone. Le vent et la pluie compte comme une distraction importante pour ce qui est de maintenir sa concentration sur ses sorts. Enfin, les puissantes rafales de vent (atteignant 30 à 75 km/h) dispersent automatiquement le brouillard, le brume, et tout autre phénomène similaire dans la zone, qu'ils soient naturels ou magiques.",
+    "descriptionFr": "Des nuages orageux tourbillonnants apparaissent, centrés sur un point que vous pouvez voir et s'étalant dans un rayon de 108 mètres. Des éclairs zèbrent le ciel dans la zone, le tonnerre éclate, et de puissants vents font rage. Chaque créature située sous le nuage (à 1 500 mètres au-dessous maximum) lorsqu'il apparaît doit effectuer un jet de sauvegarde de Constitution. En cas d'échec, une créature subit 2d6 dégâts de tonnerre et est assourdie pendant 5 minutes.\nPour chaque tour durant lequel vous maintenez votre concentration sur ce sort, la tempête produit différents effets lors de votre tour.\nRound 2. Une pluie acide tombe du nuage. Chaque créature ou objet sous le nuage subit 1d6 dégâts d'acide.\nRound 3. Vous appelez six éclairs pour qu'ils frappent chacun une créature ou un objet de votre choix et situé sous le nuage. Une créature ou un objet ne peut être ciblé par plus d'un éclair. Une créature touchée doit effectuer un jet de sauvegarde de Dextérité, subissant 10d6 dégâts de foudre en cas d'échec, ou la moitié de ces dégâts en cas de réussite.\nRound 4. Une pluie de grêlon s'abat. Chaque créature située sous le nuage subit 2d6 dégâts contondants.\nRound 5-10. Des rafales de vent et des pluies glaciales se déchaînent dans la zone sous le nuage. La zone devient un terrain difficile et est profondément obscurcie. Chaque créature qui s'y trouve subit 1d6 dégâts de froid. Les attaques à distance avec une arme sont impossibles dans la zone. Le vent et la pluie compte comme une distraction importante pour ce qui est de maintenir sa concentration sur ses sorts. Enfin, les puissantes rafales de vent (atteignant 30 à 75 km/h) dispersent automatiquement le brouillard, le brume, et tout autre phénomène similaire dans la zone, qu'ils soient naturels ou magiques.",
     "higherLevel": null,
     "higherLevelFr": null,
     "attackType": null,
