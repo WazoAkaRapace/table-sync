@@ -129,6 +129,7 @@ const EN: Record<string, string> = {
   'Colle la clé GM Assistant (elle commence par « gma_ »).':
     'Paste the GM Assistant key (it starts with “gma_”).',
   'Combat non actif': 'Combat not active',
+  'Combat terminé': 'Combat ended',
   "Plus d'historique de tour": 'No turn history left',
   'Déjà sous forme animale': 'Already in animal form',
   'Enregistre d’abord ta clé GM Assistant ci-dessus.': 'Save your GM Assistant key above first.',

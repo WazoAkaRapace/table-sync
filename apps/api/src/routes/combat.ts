@@ -1341,6 +1341,10 @@ export async function combatRoutes(app: FastifyInstance) {
       if (!isPartyGM(enc.partyId, userId))
         return reply.code(403).send({ error: apiMsg(req, 'Réservé au MD') });
 
+      // Une rencontre terminée n'avance plus (setup reste accepté : c'est le démarrage).
+      if (enc.status === 'ended')
+        return reply.code(400).send({ error: apiMsg(req, 'Combat terminé') });
+
       const sorted = sortCombatants(
         drizzle
           .select()
