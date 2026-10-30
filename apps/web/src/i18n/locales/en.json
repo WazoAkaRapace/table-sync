@@ -2073,6 +2073,7 @@
   "band.ca.effets.actifs.title": "{{count}} spell effect(s) on AC — tap to lift",
   "band.ca.effets.actifs.count": "{{count}} active spell effect(s) on armor class — open the lift sheet",
   "band.effet.chip.title": "{{name}}: {{mod}} to AC",
+  "band.effet.chip.title.ephemere": "{{name}}: {{mod}} to AC — ends at the end of your turn",
   "band.ca.manuelle.effet.non.applique": "Manual AC — effect not applied",
   "band.ca.manuelle.effet.non.applique.title": "Manual AC overrides spell effects: the gold contribution is not part of the displayed number",
   "band.ca.manuelle.note": "Manual AC wins: the effects above do not change the displayed number.",

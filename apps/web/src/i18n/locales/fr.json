@@ -2072,6 +2072,7 @@
   "band.ca.effets.actifs.title": "{{count}} effet(s) de sort sur la CA — toucher pour lever",
   "band.ca.effets.actifs.count": "{{count}} effet(s) de sort actif(s) sur la classe d'armure — ouvrir la feuille de levée",
   "band.effet.chip.title": "{{name}} : {{mod}} à la CA",
+  "band.effet.chip.title.ephemere": "{{name}} : {{mod}} à la CA — tombe à la fin de votre tour",
   "band.ca.manuelle.effet.non.applique": "CA manuelle — effet non appliqué",
   "band.ca.manuelle.effet.non.applique.title": "La CA manuelle prime sur les effets de sort : la contribution or n'entre pas dans le chiffre affiché",
   "band.ca.manuelle.note": "La CA manuelle prime : les effets ci-dessus ne modifient pas le chiffre affiché.",

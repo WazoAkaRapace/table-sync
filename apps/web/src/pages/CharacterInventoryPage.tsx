@@ -190,6 +190,11 @@ export default function CharacterInventoryPage() {
 
   // Row highlight (flash newly added/changed rows)
   const [flashEntryId, setFlashEntryId] = useState<number | null>(null);
+  // Signal « les effets de sort ont changé » (POST/DELETE) : le bandeau d'état
+  // lit ses effets depuis un état LOCAL (hors react-query) — son propre écho
+  // WS est supprimé par l'anti-écho, ce compteur est le seul chemin qui le
+  // réveille après UN CAST DEPUIS CETTE PAGE (bug CA périmée, Agathys).
+  const [effectsVersion, setEffectsVersion] = useState(0);
 
   // Per-entry optimistic in-flight flags
   const [busyEntryIds, setBusyEntryIds] = useState<Set<number>>(new Set());
@@ -1025,6 +1030,7 @@ export default function CharacterInventoryPage() {
           onError={(msg) => pushToast(msg, 'error')}
           onNotice={(msg) => pushToast(msg)}
           onConcentrationCheck={setConcCheck}
+          effectsVersion={effectsVersion}
         />
       </div>
 
@@ -1424,6 +1430,7 @@ export default function CharacterInventoryPage() {
             onSaved={refreshInventory}
             onError={(msg) => pushToast(msg, 'error')}
             onWarn={(msg) => pushToast(msg, 'warn')}
+            onEffectsChanged={() => setEffectsVersion((v) => v + 1)}
             currentEffectiveAc={baseAcNoEffects ?? undefined}
           />
         )}
