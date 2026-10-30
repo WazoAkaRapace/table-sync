@@ -73,9 +73,18 @@ const INSERT = `
   )
   ON CONFLICT(srd_index) DO UPDATE SET
     name_fr = excluded.name_fr,
+    rarity = excluded.rarity,
     weight_kg = excluded.weight_kg,
+    cost_qty = excluded.cost_qty,
+    cost_unit = excluded.cost_unit,
     description = excluded.description,
     description_en = excluded.description_en,
+    damage_dice = excluded.damage_dice,
+    damage_type = excluded.damage_type,
+    ac_base = excluded.ac_base,
+    str_min = excluded.str_min,
+    stealth_disadvantage = excluded.stealth_disadvantage,
+    properties_json = excluded.properties_json,
     survival_tags = excluded.survival_tags,
     aliases = excluded.aliases,
     base_weapon = excluded.base_weapon,
