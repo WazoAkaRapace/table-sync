@@ -545,4 +545,49 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
     0,
     'zero entry gone',
   );
+
+  // ---------- lots de munitions (#143/A7) ----------
+  // Ajouter « Flèches (20) » crédite 20 unités de « Flèche » (taggée arrow) —
+  // jamais une ligne de lot morte. 2 lots × 20 = 40 unités, cumulées si la
+  // ligne unitaire existe déjà.
+  const pack = srv.query("SELECT id FROM items WHERE srd_index = 'arrows-20' LIMIT 1") as {
+    id: number;
+  };
+  const unit = srv.query("SELECT id FROM items WHERE srd_index = 'arrow' LIMIT 1") as {
+    id: number;
+  };
+  ok(!!pack && !!unit, 'lot et unité flèche présents au seed');
+  r = await api(base, 'POST', `/api/characters/${A}/inventory`, {
+    token: fx.gm.token,
+    body: { itemId: pack.id, quantity: 2 },
+  });
+  eq(r.status, 201, 'ajout lot flèches ×2');
+  eq(r.data.entry.item.id, unit.id, 'le lot crédite la munition UNITAIRE');
+  eq(r.data.entry.quantity, 40, '2 lots → 40 flèches');
+  eq(
+    srv.query('SELECT COUNT(*) AS c FROM inventory WHERE item_id = ?', pack.id).c,
+    0,
+    'aucune ligne de lot en inventaire',
+  );
+  // Le tir décrémente bien ces flèches (tag arrow).
+  r = await api(base, 'POST', `/api/characters/${A}/consume`, {
+    token: fx.gm.token,
+    body: { type: 'ammo', ammo: 'arrow' },
+  });
+  eq(r.status, 200, 'tir consomme les flèches du lot');
+  eq(r.data.changes[0].entry.quantity, 39, '40 → 39 après un tir');
+  // Idem carreaux.
+  const boltsPack = srv.query(
+    "SELECT id FROM items WHERE srd_index = 'crossbow-bolts-20' LIMIT 1",
+  ) as { id: number };
+  const bolt = srv.query("SELECT id FROM items WHERE srd_index = 'crossbow-bolt' LIMIT 1") as {
+    id: number;
+  };
+  r = await api(base, 'POST', `/api/characters/${A}/inventory`, {
+    token: fx.gm.token,
+    body: { itemId: boltsPack.id, quantity: 1 },
+  });
+  eq(r.status, 201, 'ajout lot carreaux');
+  eq(r.data.entry.item.id, bolt.id, 'le lot de carreaux crédite le carreau unitaire');
+  eq(r.data.entry.quantity, 20, '1 lot → 20 carreaux');
 }

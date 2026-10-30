@@ -11,7 +11,7 @@ import multipart from '@fastify/multipart';
 import websocket from '@fastify/websocket';
 import Fastify from 'fastify';
 import { verifyAccess } from './auth/refresh.ts';
-import { backfillItemBases, backfillMonsterSearchText } from './db/backfill.ts';
+import { backfillItemBases, backfillMonsterSearchText, reconcileAmmoPacks } from './db/backfill.ts';
 import { runDrizzleMigrations } from './db/drizzle.ts';
 import { migrate } from './db/index.ts';
 import { seedItems, seedMonsters, seedSpells } from './db/seed.ts';
@@ -197,6 +197,15 @@ async function start() {
     backfillMonsterSearchText();
   } catch (err) {
     console.warn(`[server] monster search backfill skipped: ${(err as Error).message}`);
+  }
+  try {
+    // #143/A7 : réconcilie les lots de munitions ajoutés AVANT le fix — les
+    // lignes « Flèches (20) » mortes (pas de tag de tir) deviennent des
+    // unités sur la munition taggée. Idempotent : après la passe, plus
+    // aucune ligne de lot n'existe.
+    reconcileAmmoPacks();
+  } catch (err) {
+    console.warn(`[server] ammo pack reconciliation skipped: ${(err as Error).message}`);
   }
 
   const app = await buildServer();

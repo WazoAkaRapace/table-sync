@@ -5,6 +5,7 @@
 
 import {
   type AddInventoryPayload,
+  AMMO_PACKS,
   type CharacterInventory,
   type CoinAmounts,
   coinsTotalCp,
@@ -318,10 +319,68 @@ export async function inventoryRoutes(app: FastifyInstance) {
         return reply.code(403).send({ error: apiMsg(req, 'this item belongs to another party') });
       }
 
-      // Resolve storage location (default to carried)
+      // Resolve storage location (default to carried) — AVANT le bloc lot :
+      // l'interception munitions crédite la ligne unitaire au même endroit.
       const { ensureCarriedLocation } = await import('./locations.ts');
       const carriedId = ensureCarriedLocation(char.id);
       const locId = body.storageLocationId ?? carriedId;
+
+      // Lot de munitions (A7/#143) : le lot lui-même n'est PAS une ligne
+      // d'inventaire — il n'a pas de tag de tir. L'ajouter crédite la
+      // munition UNITAIRE taggée (qty × taille) : « Flèches (20) » → 20
+      // Flèches, la ligne que l'arc équipé décrémente au tir.
+      const pack = AMMO_PACKS[addedItem.srd_index];
+      if (pack) {
+        const unitItem = drizzle
+          .select(cols(items))
+          .from(items)
+          .where(and(eq(items.srdIndex, pack.unit), isNull(items.partyId)))
+          .get() as any;
+        if (unitItem) {
+          const unitQty = qty * pack.size;
+          drizzle
+            .insert(inventory)
+            .values({
+              characterId: char.id,
+              itemId: unitItem.id,
+              quantity: unitQty,
+              equipped: 0,
+              notes,
+              storageLocationId: locId,
+            })
+            .onConflictDoUpdate({
+              target: [inventory.characterId, inventory.itemId, inventory.storageLocationId],
+              set: { quantity: sql`${inventory.quantity} + excluded.quantity` },
+            })
+            .run();
+          logTransaction(drizzle, {
+            partyId: char.party_id,
+            characterId: char.id,
+            itemId: unitItem.id,
+            itemName: unitItem.nameFr || unitItem.name,
+            deltaQty: unitQty,
+            reason: 'add',
+            actorUserId: userId,
+          });
+          bus.emitChange({
+            type: 'inventory:change',
+            partyId: char.party_id,
+            characterId: char.id,
+            action: 'add',
+            itemName: unitItem.nameFr || unitItem.name,
+            actorUserId: userId,
+          });
+          const unitRow = drizzle
+            .select(INVENTORY_WITH_ITEM)
+            .from(inventory)
+            .innerJoin(items, eq(items.id, inventory.itemId))
+            .where(and(eq(inventory.characterId, char.id), eq(inventory.itemId, unitItem.id)))
+            .get();
+          return reply.code(201).send({ entry: mapInventoryEntry(unitRow, langFromReq(req)) });
+        }
+        // Item unitaire introuvable (seed exotique) : on retombe sur le
+        // comportement générique ci-dessous — jamais d'échec silencieux.
+      }
 
       drizzle
         .insert(inventory)
