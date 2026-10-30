@@ -3,6 +3,21 @@
     "version": null,
     "sha": null,
     "date": "2026-10-30",
+    "title": "moteur : règles 2014",
+    "items": [
+      "Un bouclier magique ajoute enfin son bonus à la classe d'armure.",
+      "La Restauration arcanique du magicien se recharge dès le repos court.",
+      "La Récupération naturelle du cercle de la Terre se recharge dès le repos court.",
+      "La Lance occulte porte la décharge occulte à 45 mètres, comme en 2014.",
+      "Le Sombre présage lance malédiction, comme dans les règles, au lieu de maléfice.",
+      "Un occultiste de niveau 1 ne connaît aucune manifestation : il en gagne deux au niveau 2.",
+      "En multiclassage, les valeurs des capacités suivent le niveau de leur classe."
+    ]
+  },
+  {
+    "version": null,
+    "sha": null,
+    "date": "2026-10-30",
     "title": "correctifs combat",
     "items": [
       "Le masquage du nom d'un monstre masque aussi son identité : les joueurs ne peuvent plus ouvrir sa fiche de bestiaire.",
