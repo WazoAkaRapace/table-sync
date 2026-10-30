@@ -3,6 +3,18 @@
     "version": null,
     "sha": null,
     "date": "2026-10-30",
+    "title": "bestiaire : dés, vitesses, perceptions",
+    "items": [
+      "Les dés de vie de 15 monstres d'aventure correspondent enfin à leurs points de vie.",
+      "Les vitesses de tous les monstres sont des nombres lisibles, plus de valeurs cassées.",
+      "Chaque monstre affiche sa Perception passive.",
+      "Les monstres aux descriptions encore en anglais sont listés dans un document de suivi."
+    ]
+  },
+  {
+    "version": null,
+    "sha": null,
+    "date": "2026-10-30",
     "title": "seeds : prix, poids, raretés, sorts",
     "items": [
       "La chemise de mailles coûte 75 pièces d'or et la fronde 1 pièce de cuivre, comme dans les règles.",
