@@ -2813,7 +2813,7 @@
     "armorClass": 10,
     "armorDesc": null,
     "hitPoints": 2,
-    "hitDice": "1d8",
+    "hitDice": "1d8-2",
     "speed": {
       "walk": "9"
     },
@@ -4414,7 +4414,7 @@
     "armorClass": 17,
     "armorDesc": "{@item half plate armor|phb}",
     "hitPoints": 84,
-    "hitDice": "7d10+14",
+    "hitDice": "7d10+46",
     "speed": {
       "walk": "12"
     },
@@ -5422,7 +5422,7 @@
     "armorClass": 20,
     "armorDesc": null,
     "hitPoints": 10,
-    "hitDice": null,
+    "hitDice": "2d8+1",
     "speed": {
       "walk": "18",
       "fly": "18",
@@ -7595,7 +7595,7 @@
     "armorClass": 13,
     "armorDesc": "armure naturelle",
     "hitPoints": 104,
-    "hitDice": "8d10+24",
+    "hitDice": "8d10+60",
     "speed": {
       "walk": "18",
       "fly": "27"
@@ -30795,7 +30795,7 @@
     "armorClass": 11,
     "armorDesc": null,
     "hitPoints": 72,
-    "hitDice": "9d8+18",
+    "hitDice": "9d8+32",
     "speed": {
       "walk": "NaN"
     },
@@ -32226,7 +32226,7 @@
     "armorClass": 13,
     "armorDesc": "armure naturelle",
     "hitPoints": 5,
-    "hitDice": null,
+    "hitDice": "2d4",
     "speed": {
       "walk": "9",
       "climb": "9"
@@ -32503,7 +32503,7 @@
     "armorClass": 17,
     "armorDesc": "armure naturelle",
     "hitPoints": 99,
-    "hitDice": "18d8+54",
+    "hitDice": "18d8+18",
     "speed": {
       "walk": "9"
     },
@@ -45250,7 +45250,7 @@
     "armorClass": 19,
     "armorDesc": "armure naturelle",
     "hitPoints": 241,
-    "hitDice": null,
+    "hitDice": "37d12+1",
     "speed": {
       "walk": "15",
       "special": "(6 m, vol 36 m sous forme de roc)"
@@ -45922,7 +45922,7 @@
     "armorClass": 15,
     "armorDesc": "{@item breastplate|phb}",
     "hitPoints": 14,
-    "hitDice": "2d8",
+    "hitDice": "2d8+5",
     "speed": {
       "walk": "9"
     },
@@ -46852,7 +46852,7 @@
     "armorClass": 11,
     "armorDesc": null,
     "hitPoints": 90,
-    "hitDice": "9d8+18",
+    "hitDice": "9d8+50",
     "speed": {
       "walk": "NaN"
     },
@@ -53074,7 +53074,7 @@
     "armorClass": 16,
     "armorDesc": "armure naturelle",
     "hitPoints": 38,
-    "hitDice": null,
+    "hitDice": "15d4+1",
     "speed": {
       "walk": "6"
     },
@@ -62440,7 +62440,7 @@
     "armorClass": 19,
     "armorDesc": "armure naturelle",
     "hitPoints": 261,
-    "hitDice": null,
+    "hitDice": "47d10+3",
     "speed": {
       "walk": "12"
     },
@@ -70418,7 +70418,7 @@
     "armorClass": 11,
     "armorDesc": "armure naturelle",
     "hitPoints": 33,
-    "hitDice": "3d10+3",
+    "hitDice": "3d10+17",
     "speed": {
       "walk": "12"
     },
@@ -82693,7 +82693,7 @@
     "armorClass": 17,
     "armorDesc": "{@item half plate armor|phb}",
     "hitPoints": 192,
-    "hitDice": "16d8+64",
+    "hitDice": "16d8+120",
     "speed": {
       "walk": "9"
     },
@@ -85111,7 +85111,7 @@
     "armorClass": 16,
     "armorDesc": "armure naturelle",
     "hitPoints": 105,
-    "hitDice": null,
+    "hitDice": "23d8+2",
     "speed": {
       "walk": "9",
       "swim": "6"
