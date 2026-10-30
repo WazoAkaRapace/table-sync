@@ -4548,7 +4548,7 @@ export function songOfRestDie(level: number): string {
   return '1d6';
 }
 
-/** Manifestations occultes connues (PHB 2014) : 2@2, 3@5, 4@7, 5@9, 6@12, 7@15, 8@18. */
+/** Manifestations occultes connues (PHB 2014) : 0@1, 2@2, 3@5, 4@7, 5@9, 6@12, 7@15, 8@18. */
 export function eldritchInvocationsCount(level: number): number {
   if (level >= 18) return 8;
   if (level >= 15) return 7;
@@ -4556,7 +4556,8 @@ export function eldritchInvocationsCount(level: number): number {
   if (level >= 9) return 5;
   if (level >= 7) return 4;
   if (level >= 5) return 3;
-  return 2;
+  if (level >= 2) return 2;
+  return 0; // feature au niv. 2 en 2014
 }
 
 // ---------- Manifestations occultes : effets moteur (Phase B) ----------

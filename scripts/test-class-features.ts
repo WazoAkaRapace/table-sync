@@ -355,7 +355,11 @@ check('pacte L20 = 4×niv5', SPELL_SLOTS_PACT[19], [0, 0, 0, 0, 4, 0, 0, 0, 0]);
 
 // --- Manifestations occultes (PHB 2014 : 2@2, 3@5, 4@7, 5@9, 6@12, 7@15, 8@18) ---
 
-check('manifestations @2 = 2', [eldritchInvocationsCount(2), eldritchInvocationsCount(4)], [2, 2]);
+check(
+  'manifestations @1 = 0 (feature au niv. 2 en 2014), @2 = 2',
+  [eldritchInvocationsCount(1), eldritchInvocationsCount(2), eldritchInvocationsCount(4)],
+  [0, 2, 2],
+);
 check(
   'manifestations @5-6 = 3, @7-8 = 4, @9 = 5',
   [
@@ -417,6 +421,11 @@ check(
   '{{invocations}} mono-classe Occultiste 9 = 5',
   renderFeatureTemplate('{{invocations}}', mkChar({ characterClass: 'Occultiste', level: 9 })),
   '5',
+);
+check(
+  '{{invocations}} mono-classe Occultiste 1 = 0 (PHB 2014 : aucune manifestation au niv. 1)',
+  renderFeatureTemplate('{{invocations}}', mkChar({ characterClass: 'Occultiste', level: 1 })),
+  '0',
 );
 check(
   'manifestations Occ5/Gue10 : eldritchInvocationsCount au niveau de classe',
