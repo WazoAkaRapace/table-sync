@@ -3,6 +3,23 @@
     "version": null,
     "sha": null,
     "date": "2026-10-30",
+    "title": "seeds : prix, poids, raretés, sorts",
+    "items": [
+      "La chemise de mailles coûte 75 pièces d'or et la fronde 1 pièce de cuivre, comme dans les règles.",
+      "Le harnois pèse 29,5 kilos et la cotte d'écailles 20,4, bardes de cheval ajustées.",
+      "La lance d'arçon est lourde, le ceinturon de géant de pierre pèse son poids.",
+      "Les munitions se vendent aussi en lots : 20 flèches, carreaux ou balles, 50 fléchettes.",
+      "Les objets peu communs portent enfin leur rareté dans le catalogue.",
+      "Les sacs d'équipement affichent leur contenu et leur poids réel.",
+      "Les cantrips de dégâts affichent leurs dés à chaque palier de niveau.",
+      "L'augmentation de niveau de Sommeil, Mur de feu, Désintégration et autres sorts est complète.",
+      "Plus aucun mot anglais round dans les durées et descriptions de sorts."
+    ]
+  },
+  {
+    "version": null,
+    "sha": null,
+    "date": "2026-10-30",
     "title": "moteur : règles 2014",
     "items": [
       "Un bouclier magique ajoute enfin son bonus à la classe d'armure.",
