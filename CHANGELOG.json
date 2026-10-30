@@ -1,7 +1,17 @@
 [
   {
+    "version": null,
+    "sha": null,
+    "date": "2026-10-30",
+    "title": "releases par tag",
+    "items": [
+      "Les mises à jour arrivent quand une version est publiée, pas à chaque fusion de branche.",
+      "Plusieurs changements fusionnés sortent ensemble dans une seule mise à jour."
+    ]
+  },
+  {
     "version": "2026.10.28",
-    "sha": "f7b6eb35",
+    "sha": "9d7c2df",
     "date": "2026-10-28",
     "title": "zombi girallon agressif",
     "items": [

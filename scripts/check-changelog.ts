@@ -21,7 +21,7 @@ const ROOT = resolve(HERE, '..');
 const FILE = resolve(ROOT, 'CHANGELOG.json');
 
 type Entry = {
-  version: string;
+  version: string | null;
   sha: string | null;
   date: string;
   title: string;
@@ -46,8 +46,13 @@ function fmtErrors(raw: unknown): string[] {
       return;
     }
     const { version, sha, date, title, items } = e as Record<string, unknown>;
-    if (typeof version !== 'string' || !VER_RE.test(version)) {
-      errs.push(`${where} : version invalide (« ${String(version)} », calver YYYY.MM.DD attendu).`);
+    // version: calver OU null (entrée en attente du versionnement par tag)
+    if (version === null) {
+      if (sha !== null) errs.push(`${where} : une entrée version:null doit avoir sha:null.`);
+    } else if (typeof version !== 'string' || !VER_RE.test(version)) {
+      errs.push(
+        `${where} : version invalide (« ${String(version)} », calver YYYY.MM.DD ou null attendu).`,
+      );
     } else if (versions.has(version)) {
       errs.push(`${where} : version ${version} déjà présente.`);
     } else versions.add(version);
@@ -82,7 +87,7 @@ function fmtErrors(raw: unknown): string[] {
 }
 
 function selftest(): number {
-  const mk = (version: string, sha: string | null = 'a1b2c3d', date = '2026-10-15') => ({
+  const mk = (version: string | null, sha: string | null = 'a1b2c3d', date = '2026-10-15') => ({
     version,
     sha,
     date,
@@ -92,6 +97,12 @@ function selftest(): number {
   const cases: { name: string; raw: unknown; expectErrors: boolean }[] = [
     { name: 'valide', raw: [mk('2026.10.15')], expectErrors: false },
     { name: 'sha null avant merge', raw: [mk('2026.10.15', null)], expectErrors: false },
+    {
+      name: 'entrée en attente (version null)',
+      raw: [mk(null, null), mk('2026.10.15')],
+      expectErrors: false,
+    },
+    { name: 'en attente avec sha (interdit)', raw: [mk(null, 'a1b2c3d')], expectErrors: true },
     {
       name: 'version dupliquée',
       raw: [mk('2026.10.15'), mk('2026.10.15', 'e4f5a6b')],
@@ -125,6 +136,16 @@ function selftest(): number {
   return fail;
 }
 
+/** Commits du bot exemptés des gates PR (stamp, release). */
+function botCommitted(): boolean {
+  const subjects = execSync('git log -1 --format=%s', { cwd: ROOT }).toString().trim();
+  if (/^\[?changelog-(stamp|release)\]?|^changelog:|^\[skip ci\]/i.test(subjects)) {
+    console.log(`✓ Commit « ${subjects} » exempté.`);
+    return true;
+  }
+  return false;
+}
+
 function main(): number {
   const args = process.argv.slice(2);
   if (args.includes('--selftest')) {
@@ -143,6 +164,20 @@ function main(): number {
     }
     console.log(`✓ Format changelog (${(raw as Entry[]).length} entrée(s)).`);
   }
+  const pIdx = args.indexOf('--check-pending');
+  if (pIdx !== -1) {
+    // Mode PR (flow par tag) : le tip de la PR doit ajouter AU MOINS une
+    // entrée en attente (version:null). Exempté : les commits du bot.
+    if (botCommitted()) return 0;
+    const pending = (Array.isArray(raw) ? (raw as Entry[]) : []).filter((e) => e.version === null);
+    if (pending.length === 0) {
+      console.error(
+        '✗ Aucune entrée changelog en attente — ajoute une entrée "version": null en tête de CHANGELOG.json (voir .github/skills/changelog/SKILL.md).',
+      );
+      return 1;
+    }
+    console.log(`✓ ${pending.length} entrée(s) changelog en attente (« ${pending[0].title} »…).`);
+  }
   const vIdx = args.indexOf('--check-version');
   if (vIdx !== -1) {
     const want = args[vIdx + 1];
@@ -151,12 +186,7 @@ function main(): number {
       return 1;
     }
     const entries = Array.isArray(raw) ? (raw as Entry[]) : [];
-    // Exemptions : le job release lui-même (stamp/release [skip ci]).
-    const subjects = execSync('git log -1 --format=%s', { cwd: ROOT }).toString().trim();
-    if (/^\[?changelog-(stamp|release)\]?|^changelog:|^\[skip ci\]/i.test(subjects)) {
-      console.log(`✓ Commit « ${subjects} » exempté.`);
-      return 0;
-    }
+    if (botCommitted()) return 0;
     const hit = entries.find((e) => e.version === want);
     if (!hit) {
       console.error(
@@ -166,8 +196,10 @@ function main(): number {
     }
     console.log(`✓ Entrée changelog présente pour ${want} (« ${hit.title} »).`);
   }
-  if (!args.includes('--check-format') && vIdx === -1) {
-    console.error('Usage : check-changelog.ts --check-format | --check-version <v> | --selftest');
+  if (!args.includes('--check-format') && pIdx === -1 && vIdx === -1) {
+    console.error(
+      'Usage : check-changelog.ts --check-format | --check-pending | --check-version <v> | --selftest',
+    );
     return 1;
   }
   return 0;

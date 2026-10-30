@@ -39,16 +39,14 @@ jobs:
       - name: Lint (oxlint)
         run: npm run lint
 
-      # ---- Changelog : format toujours ; entrée requise sur le tip d'une PR
-      #      (contrat : .github/skills/changelog/SKILL.md ; le SHA squash
-      #      final est retamponné par le job changelog-stamp de ci.yml). ----
+      # ---- Changelog : format toujours ; une entrée EN ATTENTE (version:
+      #      null) au tip d'une PR — le calver est posé par le TAG de release,
+      #      plus par l'auteur (contrat : .github/skills/changelog/SKILL.md). ----
       - name: Changelog (format + selftest)
         run: npm run changelog:check -- --check-format --selftest
-      - name: Changelog (entrée pour cette version)
+      - name: Changelog (entrée en attente)
         if: github.event_name == 'pull_request'
-        run: |
-          VERSION=$(node -p "require('./CHANGELOG.json')[0].version")
-          npm run changelog:check -- --check-version "$VERSION"
+        run: npm run changelog:check -- --check-pending
 
       # ---- Ratchet i18n : le FR hors catalogue ne peut que descendre ----
       - name: i18n ratchet
