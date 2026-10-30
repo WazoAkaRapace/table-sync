@@ -59,12 +59,16 @@ if (lot === 0) {
 // ancienne entrée du lot prend le calver nu et les suivantes -2, -3… ; sinon
 // tout le lot démarre au premier suffixe libre (jamais de « -1 », jamais de
 // trou). L'entrée [0] (la plus récente) porte le suffixe le plus haut.
-const dayPrefix = `${version}`;
+// Le TAG lui-même peut être nu (v2026.10.30) ou suffixé (v2026.10.30-2,
+// deuxième release du même jour) : on en retire le préfixe du JOUR — la
+// numérotation du lot reste continue avec ce qui est déjà sorti.
+const dayPrefix = version.replace(/-\d+$/, '');
+const tagSuffix = /-\d+$/.test(version);
 const existing = new Set(entries.map((e) => e.version));
 const dayHasAny = entries.some(
   (e) => e.version === dayPrefix || (e.version ?? '').startsWith(`${dayPrefix}-`),
 );
-let depth = dayHasAny ? 1 : 0; // 0 = calver nu ; sinon on démarre à -2
+let depth = dayHasAny || tagSuffix ? 1 : 0; // 0 = calver nu ; sinon on démarre à -2
 while (existing.has(depth === 0 ? dayPrefix : `${dayPrefix}-${depth + 1}`)) depth++;
 const suffixes: string[] = [];
 for (let i = 0; i < lot; i++) {
