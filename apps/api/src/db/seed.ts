@@ -301,7 +301,7 @@ interface SeedMonster {
   armorDesc: string | null;
   hitPoints: number;
   hitDice: string | null;
-  speed: Record<string, number>;
+  speed: Record<string, number | string | boolean>;
   abilities: { for: number; dex: number; con: number; int: number; sag: number; cha: number };
   savingThrows: string[];
   skills: { name: string; isExpert: boolean }[];
@@ -340,13 +340,29 @@ const MONSTER_INSERT = `
   ON CONFLICT(slug) DO UPDATE SET
     name_fr = excluded.name_fr,
     type = excluded.type,
+    subtype = excluded.subtype,
+    size = excluded.size,
+    alignment = excluded.alignment,
     armor_class = excluded.armor_class,
+    armor_desc = excluded.armor_desc,
     hit_points = excluded.hit_points,
-    challenge_rating = excluded.challenge_rating,
+    hit_dice = excluded.hit_dice,
+    speed_json = excluded.speed_json,
     abilities_json = excluded.abilities_json,
+    saving_throws_json = excluded.saving_throws_json,
+    skills_json = excluded.skills_json,
+    languages_json = excluded.languages_json,
+    challenge_rating = excluded.challenge_rating,
+    xp = excluded.xp,
+    senses = excluded.senses,
+    telepathy = excluded.telepathy,
+    damage_resistances_json = excluded.damage_resistances_json,
+    damage_immunities_json = excluded.damage_immunities_json,
+    condition_immunities_json = excluded.condition_immunities_json,
+    traits_json = excluded.traits_json,
     actions_json = excluded.actions_json,
     legendary_actions_json = excluded.legendary_actions_json,
-    traits_json = excluded.traits_json,
+    source = excluded.source,
     overlay_en = excluded.overlay_en
 `;
 
