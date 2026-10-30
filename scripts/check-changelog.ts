@@ -37,7 +37,7 @@ function fmtErrors(raw: unknown): string[] {
   if (!Array.isArray(raw)) return ['CHANGELOG.json doit être un tableau JSON.'];
   if (raw.length === 0) errs.push('CHANGELOG.json est vide — chaque version doit y figurer.');
   const versions = new Set<string>();
-  const shas = new Set<string>();
+  const shaOwners = new Map<string, string>();
   let prevDate = '';
   raw.forEach((e, i) => {
     const where = `entrée ${i}`;
@@ -57,10 +57,15 @@ function fmtErrors(raw: unknown): string[] {
       errs.push(`${where} : version ${version} déjà présente.`);
     } else versions.add(version);
     if (sha !== null && (typeof sha !== 'string' || !SHA_RE.test(sha))) {
-      errs.push(`${where} : sha invalide (« ${String(sha)} », 7-8 hex ou null avant merge).`);
+      errs.push(`${where} : sha invalide (« ${String(sha)} », 7-8 hex ou null avant release).`);
     } else if (typeof sha === 'string') {
-      if (shas.has(sha)) errs.push(`${where} : sha ${sha} déjà présent.`);
-      else shas.add(sha);
+      // Un LOT de release (flux par tag) partage légitimement le sha du tag :
+      // toutes les entrées d'un même JOUR peuvent porter le même sha. Un sha
+      // répété sur des jours DIFFÉRENTS reste une erreur (double-stamp).
+      const seen = shaOwners.get(sha);
+      if (seen !== undefined && seen !== date) {
+        errs.push(`${where} : sha ${sha} déjà présent (jour ${seen}).`);
+      } else shaOwners.set(sha, date);
     }
     if (typeof date !== 'string' || !DATE_RE.test(date)) {
       errs.push(`${where} : date invalide (YYYY-MM-DD attendu).`);
@@ -103,6 +108,22 @@ function selftest(): number {
       expectErrors: false,
     },
     { name: 'en attente avec sha (interdit)', raw: [mk(null, 'a1b2c3d')], expectErrors: true },
+    {
+      name: 'sha partagé dans un lot du même jour (flux tag)',
+      raw: [
+        mk('2026.10.30', 'a1b2c3d'),
+        mk('2026.10.30-2', 'a1b2c3d'),
+      ],
+      expectErrors: false,
+    },
+    {
+      name: 'sha dupliqué sur deux jours (double-stamp)',
+      raw: [
+        mk('2026.10.30', 'a1b2c3d'),
+        mk('2026.10.28', 'a1b2c3d', '2026-10-28'),
+      ],
+      expectErrors: true,
+    },
     {
       name: 'version dupliquée',
       raw: [mk('2026.10.15'), mk('2026.10.15', 'e4f5a6b')],
