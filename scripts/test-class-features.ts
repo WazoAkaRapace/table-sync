@@ -802,6 +802,17 @@ check(
   ['short', 'short'],
 );
 
+// Récupération naturelle (cercle de la Terre) : idem, 1× par repos court (PHB 2014 p.69)
+check(
+  'effectiveReset : Récupération naturelle recharge au repos court',
+  [
+    findClassFeature('terre-recuperation-naturelle')?.resource?.reset,
+    effectiveFeatureReset({ catalogId: 'terre-recuperation-naturelle', resetType: null }, 2),
+    findClassFeature('terre-recuperation-naturelle')?.description.includes('1× par repos court.'),
+  ],
+  ['short', 'short', true],
+);
+
 // Override 'long' sur un trait de catalogue dont la règle SRD est 'short'
 // (Second souffle) : le repos court ne le recharge PLUS, le repos long si.
 const overridden = [
