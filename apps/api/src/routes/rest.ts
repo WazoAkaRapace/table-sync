@@ -269,13 +269,20 @@ export async function restRoutes(app: FastifyInstance) {
           )
           .all();
         for (const cr of activeCombatants) {
+          // En forme animale (repos court), la ligne du traqueur affiche la
+          // barre de forme : le miroir ne l'écrase pas. Repos long = la forme
+          // est annulée plus haut, on retombe sur currentHp.
+          const hp =
+            char.wild_shape_slug && body.type !== 'long'
+              ? (char.wild_shape_hp ?? 0)
+              : Math.max(0, patch.currentHp);
           drizzle
             .update(combatants)
             // #148 : un PJ à 0 PV est mourant ; le repos ne pose jamais
             // defeated=1 sur un PJ (on ne fait que lever un vaincu manuel si PV > 0)
             .set({
-              hitPoints: Math.max(0, patch.currentHp),
-              defeated: patch.currentHp > 0 ? 0 : cr.defeated,
+              hitPoints: hp,
+              defeated: hp > 0 ? 0 : cr.defeated,
             })
             .where(eq(combatants.id, cr.id))
             .run();
