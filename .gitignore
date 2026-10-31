@@ -59,3 +59,8 @@ site/assets/
 
 # Python tooling (scripts/i18n)
 __pycache__/
+CLAUDE.md
+.hermes/
+
+# Rapports d'audit Mistral 2026-10 (référence locale, pas versionnés)
+audit/
