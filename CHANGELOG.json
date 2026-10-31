@@ -1,5 +1,15 @@
 [
   {
+    "version": null,
+    "sha": null,
+    "date": "2026-10-30",
+    "title": "lots de munitions",
+    "items": [
+      "Ajouter « Flèches (20) » ou « Carreaux (20) » crédite 20 munitions : les arcs et arbalètes peuvent enfin les tirer.",
+      "Les lots déjà présents dans un inventaire sont convertis automatiquement."
+    ]
+  },
+  {
     "version": "2026.10.30-6",
     "sha": "60f40c72",
     "date": "2026-10-30",

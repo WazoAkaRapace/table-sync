@@ -3167,6 +3167,21 @@ export const WEAPON_AMMUNITION: Record<string, string> = {
   'Crossbow, hand': 'crossbow-bolt',
 };
 
+/**
+ * Lots de munitions du catalogue (SRD : vendus par paquet). La clé est le
+ * srd_index du lot, la valeur donne l'item UNITAIRE taggé survie à
+ * créditer (srd_index) et la taille du lot. Ajouter un lot à l'inventaire
+ * n'ajoute PAS une ligne « Flèches (20) » morte (pas de tag de tir) :
+ * l'ajout crédite `qty × taille` unités de la munition unitaire — la seule
+ * ligne que le tir (#143) décrémente. A7 : « le lot de 20 coûte 1 gp ».
+ */
+export const AMMO_PACKS: Record<string, { unit: string; size: number }> = {
+  'arrows-20': { unit: 'arrow', size: 20 },
+  'crossbow-bolts-20': { unit: 'crossbow-bolt', size: 20 },
+  'sling-bullets-20': { unit: 'sling-bullet', size: 20 },
+  'blowgun-needles-50': { unit: 'blowgun-needle', size: 50 },
+};
+
 /** Genre de munition d'une arme (clé de base → tag), null si elle n'en consomme pas. */
 export function weaponAmmunitionKind(item: { baseWeapon?: string | null }): string | null {
   return item.baseWeapon ? (WEAPON_AMMUNITION[item.baseWeapon] ?? null) : null;

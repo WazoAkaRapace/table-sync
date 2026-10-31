@@ -2,11 +2,11 @@
 // (docs/i18n-engine-refactor-plan.md § 2). Idempotent — ne touche que les
 // lignes arme/armure encore sans clés ; devient un no-op dès que tout est résolu.
 
-import { resolveItemBases } from '@table-sync/shared';
-import { and, eq, inArray, isNull } from 'drizzle-orm';
+import { AMMO_PACKS, resolveItemBases } from '@table-sync/shared';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { getDrizzle } from './drizzle.ts';
 import { getDb, normalizeText } from './index.ts';
-import { items, monsters } from './schema.ts';
+import { inventory, items, monsters } from './schema.ts';
 
 export function backfillItemBases(): void {
   const db = getDrizzle();
@@ -97,4 +97,82 @@ export function backfillMonsterSearchText(): void {
     }
   })();
   console.log(`[backfill] monsters.search_text rempli pour ${pending.length} lignes`);
+}
+
+/**
+ * #143/A7 : réconcilie les lots de munitions (« Flèches (20) », srd_index
+ * arrows-20…) ajoutés aux inventaires AVANT le fix — des lignes mortes,
+ * sans tag de tir. Chaque ligne devient `quantité × taille` unités de la
+ * munition unitaire taggée (même personnage, même lieu de stockage),
+ * puis la ligne de lot est supprimée. Idempotent : sans ligne de lot,
+ * la passe est un no-op.
+ */
+export function reconcileAmmoPacks(): void {
+  const db = getDrizzle();
+  const packIndex = new Map(Object.entries(AMMO_PACKS).map(([k, v]) => [k, v]));
+  // Ids catalogue des lots et de leurs munitions unitaires (globaux, hors items custom de partie)
+  const packRows = db
+    .select({ id: items.id, srdIndex: items.srdIndex })
+    .from(items)
+    .where(inArray(items.srdIndex, [...packIndex.keys()]))
+    .all() as Array<{ id: number; srdIndex: string | null }>;
+  if (packRows.length === 0) return;
+  const unitIds = new Map<string, number>();
+  for (const [, pack] of packIndex) {
+    if (unitIds.has(pack.unit)) continue;
+    const row = db
+      .select({ id: items.id })
+      .from(items)
+      .where(and(eq(items.srdIndex, pack.unit), isNull(items.partyId)))
+      .get() as { id: number } | undefined;
+    if (row) unitIds.set(pack.unit, row.id);
+  }
+  let migrated = 0;
+  let credited = 0;
+  for (const packRow of packRows) {
+    const pack = packRow.srdIndex ? packIndex.get(packRow.srdIndex) : undefined;
+    const unitId = pack ? unitIds.get(pack.unit) : undefined;
+    if (!pack || !unitId) continue;
+    const lots = db
+      .select({
+        id: inventory.id,
+        characterId: inventory.characterId,
+        quantity: inventory.quantity,
+        storageLocationId: inventory.storageLocationId,
+      })
+      .from(inventory)
+      .where(eq(inventory.itemId, packRow.id))
+      .all() as Array<{
+      id: number;
+      characterId: number;
+      quantity: number;
+      storageLocationId: number | null;
+    }>;
+    for (const lot of lots) {
+      const units = lot.quantity * pack.size;
+      getDb().transaction(() => {
+        db.insert(inventory)
+          .values({
+            characterId: lot.characterId,
+            itemId: unitId,
+            quantity: units,
+            equipped: 0,
+            storageLocationId: lot.storageLocationId,
+          })
+          .onConflictDoUpdate({
+            target: [inventory.characterId, inventory.itemId, inventory.storageLocationId],
+            set: { quantity: sql`${inventory.quantity} + ${units}` },
+          })
+          .run();
+        db.delete(inventory).where(eq(inventory.id, lot.id)).run();
+      })();
+      migrated += 1;
+      credited += units;
+    }
+  }
+  if (migrated > 0) {
+    console.log(
+      `[backfill] ammo packs : ${migrated} ligne(s) de lot → ${credited} munitions unitaires`,
+    );
+  }
 }
