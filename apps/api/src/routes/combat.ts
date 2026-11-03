@@ -749,10 +749,35 @@ export async function combatRoutes(app: FastifyInstance) {
       getDb().transaction(() => {
         for (const char of chars) {
           const dexMod = abilityModifier(char.dexterity ?? 10);
-          // CA d'ajout = équipement + effets de sort actifs, override GAGNE —
-          // la même formule que mirrorAcToCombatants : création et miroirs ne
-          // peuvent pas diverger.
-          const ac = trackerAcOf(char);
+          // Ajout PENDANT une forme sauvage : le combatant NAÎT bête (nom, PV
+          // et CA de la forme) — mêmes valeurs que la route wild-shape écrit
+          // sur les combatants existants, sinon le traqueur affiche la fiche
+          // humaine et les miroirs (mirrorAcToCombatants saute les formes)
+          // ne le rattrapent jamais.
+          let name = char.name;
+          let hp = char.current_hp ?? 1;
+          let maxHp = char.max_hp ?? 1;
+          let ac: number;
+          if (char.wild_shape_slug) {
+            const beast = drizzle
+              .select({ name_fr: monsters.nameFr, armor_class: monsters.armorClass })
+              .from(monsters)
+              .where(eq(monsters.slug, char.wild_shape_slug))
+              .get() as any;
+            if (beast) {
+              name = `${char.name} (${beast.name_fr ?? char.wild_shape_slug})`;
+              hp = char.wild_shape_hp ?? hp;
+              maxHp = char.wild_shape_max_hp ?? maxHp;
+              ac = beast.armor_class ?? 10;
+            } else {
+              ac = trackerAcOf(char);
+            }
+          } else {
+            // CA d'ajout = équipement + effets de sort actifs, override GAGNE —
+            // la même formule que mirrorAcToCombatants : création et miroirs ne
+            // peuvent pas diverger.
+            ac = trackerAcOf(char);
+          }
 
           const { id } = drizzle
             .insert(combatantsTable)
@@ -760,12 +785,12 @@ export async function combatRoutes(app: FastifyInstance) {
               encounterId: enc.id,
               type: 'player',
               characterId: char.id,
-              name: char.name,
+              name,
               count: 1,
               initiativeBonus: dexMod,
               armorClass: ac,
-              hitPoints: char.current_hp ?? 1,
-              maxHitPoints: char.max_hp ?? 1,
+              hitPoints: hp,
+              maxHitPoints: maxHp,
               sortOrder: Date.now(),
             })
             .returning({ id: combatantsTable.id })

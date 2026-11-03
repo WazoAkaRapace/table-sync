@@ -373,4 +373,44 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   r = await api(base, 'PATCH', `/api/encounters/${encV.id}`, { token: GM, body: { turnIndex: 2 } });
   eq(r.status, 200, '6 : turnIndex entier accepté');
   await api(base, 'DELETE', `/api/encounters/${encV.id}`, { token: GM });
+
+  // ===== 7. Ajout au traqueur PENDANT une forme sauvage : le combatant
+  // naît bête (nom, PV et CA de la forme), pas avec la fiche humaine =====
+  r = await api(base, 'POST', `/api/characters/${druid.id}/wild-shape`, {
+    token: GM,
+    body: { slug: beasts[0].slug },
+  });
+  eq(r.status, 201, '7 : transformation');
+  const beastRow = srv.query(
+    'SELECT name_fr, armor_class FROM monsters WHERE slug = ?',
+    beasts[0].slug,
+  );
+  const shapeRow7 = srv.query(
+    'SELECT wild_shape_hp AS hp, wild_shape_max_hp AS max FROM characters WHERE id = ?',
+    druid.id,
+  );
+  const encA = (
+    await api(base, 'POST', `/api/parties/${P}/encounters`, {
+      token: GM,
+      body: { name: 'Ajout en forme audit' },
+    })
+  ).data.encounter;
+  r = await api(base, 'POST', `/api/encounters/${encA.id}/combatants/player`, {
+    token: GM,
+    body: { characterId: druid.id },
+  });
+  eq(r.status, 201, '7 : ajout du druide transformé');
+  const combA = r.data.combatants[0];
+  eq(combA.name, `Auditforme (${beastRow.name_fr})`, '7 : nom = PJ (bête)');
+  eq(combA.hitPoints, shapeRow7.hp, '7 : PV de la forme');
+  eq(combA.maxHitPoints, shapeRow7.max, '7 : PV max de la forme');
+  eq(combA.armorClass, beastRow.armor_class, '7 : CA de la forme');
+  // Le revert ramène ce combatant à la fiche normale
+  r = await api(base, 'POST', `/api/characters/${druid.id}/wild-shape/revert`, { token: GM });
+  eq(r.status, 200, '7 : revert');
+  row = srv.query('SELECT name, hit_points, max_hit_points FROM combatants WHERE id = ?', combA.id);
+  eq(row.name, 'Auditforme', '7 : le revert ramène le nom du PJ');
+  eq(row.hit_points, r.data.hp, '7 : le revert ramène les PV du PJ');
+  eq(row.max_hit_points, 17, '7 : le revert ramène les PV max du PJ');
+  await api(base, 'DELETE', `/api/encounters/${encA.id}`, { token: GM });
 }

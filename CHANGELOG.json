@@ -3,6 +3,15 @@
     "version": null,
     "sha": null,
     "date": "2026-11-03",
+    "title": "druide en forme animale : ajout au traqueur",
+    "items": [
+      "Ajouter un druide déjà transformé à un combat affiche enfin sa forme animale : nom de la bête, ses points de vie et sa classe d'armure."
+    ]
+  },
+  {
+    "version": null,
+    "sha": null,
+    "date": "2026-11-03",
     "title": "dépendances : correctifs npm, axios épinglé",
     "items": [
       "Bumps npm : @types/node, oxfmt, oxlint, postcss, react-router-dom, i18next, react-i18next, @fastify/jwt, @fastify/cookie.",
