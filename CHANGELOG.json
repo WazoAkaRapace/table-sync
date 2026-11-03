@@ -1,5 +1,15 @@
 [
   {
+    "version": null,
+    "sha": null,
+    "date": "2026-11-03",
+    "title": "dépendances : correctifs npm, axios épinglé",
+    "items": [
+      "Bumps npm : @types/node, oxfmt, oxlint, postcss, react-router-dom, i18next, react-i18next, @fastify/jwt, @fastify/cookie.",
+      "Axios reste en 1.20.0 : la 1.21.0 casse la session par cookies et la synchro temps réel."
+    ]
+  },
+  {
     "version": "2026.10.30-7",
     "sha": "1efc0fe3",
     "date": "2026-10-30",
