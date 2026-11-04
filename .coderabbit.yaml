@@ -1,0 +1,49 @@
+# CodeRabbit — revue de code IA (gratuit pour les dépôts OSS publics).
+# Doc complète : https://docs.coderabbit.ai/reference/configuration
+language: fr
+reviews:
+  profile: chill
+  poem: false
+  review_status: true
+  auto_review:
+    enabled: true
+    drafts: false
+  # Le bot review le code, pas les données : les seeds sont du CONTENU D&D
+  # (noms/stats officiels à ne jamais "corriger"), pas du code à relire.
+  path_filters:
+    - "!data/**"
+    - "!apps/api/drizzle/**"
+    - "!docs/screenshots/**"
+    - "!site/assets/**"
+    - "!**/package-lock.json"
+  path_instructions:
+    - path: "packages/shared/src/**"
+      instructions: |
+        - Moteur de règles D&D 5e épinglé SRD 5.1 / édition 2014 : ne jamais
+          suggérer de valeurs issues des règles 2024 (5.5) — vérifier les
+          tables SRD avant de proposer un changement de nombre.
+        - Ne jamais proposer de traduction française d'un terme de règle :
+          les noms officiels viennent d'AideDD.org uniquement.
+        - Les règles métier vivent ICI, partagées API + web : signaler toute
+          duplication de logique de règle côté apps/.
+    - path: "apps/api/src/routes/**"
+      instructions: |
+        - Requêtes = Drizzle query builder uniquement (raw SQL banni dans
+          routes/ + sync/) — signaler tout .prepare( ou sql` brut.
+        - Toute mutation de combat doit émettre un événement WS via bus.emitChange
+          avec actorUserId posé.
+        - POST responses wrapped ({character: …}, {encounter: …}) : vérifier que
+          les tests lisent la bonne clé.
+    - path: "apps/web/src/**"
+      instructions: |
+        - Chaque nouvelle clé d'i18n doit exister en fr.json ET en.json.
+        - Les bottom sheets passent par createPortal(document.body).
+        - Cibles tactiles ≥ 44 px, aria-labels en français.
+    - path: "scripts/api-tests/**"
+      instructions: |
+        - eq() est strict (===) : comparer les tableaux par .sort().join(',').
+        - Les modules partagent UN monde fixture : ne pas supposer un état vierge.
+    - path: "CHANGELOG.json"
+      instructions: |
+        - Toute PR changeant ce que voit l'utilisateur doit porter une entrée
+          "version": null en tête (le tag de release versionne le lot).
