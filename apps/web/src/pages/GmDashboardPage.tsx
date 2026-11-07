@@ -26,6 +26,7 @@ import {
   EMPTY_WEAPON_DRAFT,
   WeaponFields,
   type WeaponDraft,
+  weaponDraftFromItem,
   weaponDraftPayload,
 } from '../components/WeaponFields';
 import {
@@ -1120,6 +1121,9 @@ function CustomItemsTab({
     setWeight(item.weightKg !== null ? String(item.weightKg) : '');
     setDesc(item.description || '');
     setImageValue(EMPTY_ITEM_IMAGE); // l'illustration existante s'affiche via son URL
+    // Le panneau d'arme repart de l'état réel de l'objet (dés, type, bonus,
+    // propriétés, base) — la soumission PATCH les renvoie.
+    setWeaponDraft(weaponDraftFromItem(item));
     setError('');
     setShowModal(true);
   };
@@ -1138,9 +1142,9 @@ function CustomItemsTab({
       description: desc.trim() || null,
     };
     // Champs d'arme : uniquement pour la catégorie Arme (l'API les ignore —
-    // et les rejette — sinon). En création seule pour l'instant : l'édition
-    // hydrate le draft avant de les envoyer (T8).
-    if (!editing && category === 'weapon') Object.assign(payload, weaponDraftPayload(weaponDraft));
+    // et les rejette — sinon). Création comme édition : le modal d'édition
+    // hydrate le draft depuis l'item, la payload remplace l'état complet.
+    if (category === 'weapon') Object.assign(payload, weaponDraftPayload(weaponDraft));
     try {
       let itemId = editing?.id as number | undefined;
       if (editing) {
