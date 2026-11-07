@@ -2,6 +2,13 @@
   {
     "version": null,
     "sha": null,
+    "date": "2026-11-07",
+    "title": "armes personnalisées complètes",
+    "items": ["Le MD et les joueurs créent des armes personnalisées avec aperçu des dégâts."]
+  },
+  {
+    "version": null,
+    "sha": null,
     "date": "2026-11-03",
     "title": "druide en forme animale : ajout au traqueur",
     "items": [

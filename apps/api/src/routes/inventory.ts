@@ -88,6 +88,7 @@ export const INVENTORY_WITH_ITEM = {
   i_magic_bonus: items.magicBonus,
   i_damage_dice: items.damageDice,
   i_damage_type: items.damageType,
+  i_two_handed_dice: items.twoHandedDice,
   i_ac_base: items.acBase,
   i_str_min: items.strMin,
   i_stealth_disadvantage: items.stealthDisadvantage,

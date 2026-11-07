@@ -259,6 +259,11 @@ const EN: Record<string, string> = {
   unknown_session: 'unknown_session',
   'userId is required': 'userId is required',
   'utilisateur introuvable': 'user not found',
+  'template de dégâts invalide': 'invalid damage template',
+  'type de dégâts invalide': 'invalid damage type',
+  'bonus magique invalide': 'invalid magic bonus',
+  'arme de base inconnue': 'unknown base weapon',
+  'propriétés invalides': 'invalid properties',
 };
 
 export function apiMsg(req: FastifyRequest | undefined, msg: string): string {

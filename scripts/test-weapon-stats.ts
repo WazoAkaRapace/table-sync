@@ -102,6 +102,7 @@ const mkWeapon = (over: Partial<Item>): Item => ({
   description: null,
   damageDice: '2d6',
   damageType: 'Slashing',
+  twoHandedDice: null,
   acBase: null,
   strMin: null,
   stealthDisadvantage: false,
@@ -694,6 +695,92 @@ check(
   '1d10+3',
 );
 check('Mono-locale FR + clé → base résolue (martial, qualifié)', s4?.proficient, true);
+
+// --- Armes personnalisées complètes (plan armes-custom 2026-11) ---
+// Cas d'école utilisateur : « Épée à deux mains +2 », dés 4d6+FOR+2, FOR 18
+// → ⚔ 4d6+6 tranchants ; le +2 magique vaut pour l'ATTAQUE (pas de
+// double-passe dans les dégâts : le template ne contient pas « magie »).
+const epeeCustom = mkWeapon({
+  source: 'custom',
+  name: 'Épée à deux mains +2',
+  nameFr: 'Épée à deux mains +2',
+  damageDice: '4d6+FOR+2',
+  damageType: 'Slashing',
+  magicBonus: 2,
+  baseWeapon: 'Greatsword',
+  properties: ['heavy', 'two-handed'],
+});
+const guerrier1For18 = mkChar({ strength: 18, level: 1 }); // FOR +4, prof +2
+const sc = computeWeaponStats(epeeCustom, guerrier1For18);
+check(
+  'Custom 4d6+FOR+2 +2 magie → attaque FOR+prof+2, dégâts 4d6+6',
+  sc && { ab: sc.attackBonus, dmg: sc.damageStr, type: sc.damageTypeFr, magic: sc.magicBonus },
+  { ab: 8, dmg: '4d6+6', type: 'tranchants', magic: 2 },
+);
+check('Custom → base Greatsword (martial, guerrier qualifié)', sc?.proficient, true);
+// Une épée à deux mains n'est PAS polyvalente : jamais de ligne 2M, même en
+// présence d'une valeur twoHandedDice parasite (revue #255 — le repli SRD ne
+// vaut que pour « versatile »).
+check('Custom non polyvalente → pas de dégâts à deux mains', sc?.versatileDamageStr, null);
+
+// Custom POLYVALENTE basée sur l'épée longue : les dés 2M explicites
+// (twoHandedDice) rendent seuls, template à mot-clé compris.
+const lamePolyvalente = mkWeapon({
+  source: 'custom',
+  name: 'Lame du cocheur +1',
+  nameFr: 'Lame du cocheur +1',
+  damageDice: '1d8+FOR',
+  damageType: 'Slashing',
+  twoHandedDice: '1d10+FOR',
+  magicBonus: 1,
+  baseWeapon: 'Longsword',
+  properties: ['versatile'],
+});
+const sp = computeWeaponStats(lamePolyvalente, guerrier1For18);
+check('Custom polyvalente → 2M depuis twoHandedDice', sp?.versatileDamageStr, '1d10+4');
+// Sans « versatile » cochée (base épée longue), le repli SRD (1d10) ne
+// s'applique plus : la propriété retirée par le créateur retire la variante.
+const lameNonPolyvalente = mkWeapon({ ...lamePolyvalente, properties: [] });
+const spn = computeWeaponStats(lameNonPolyvalente, guerrier1For18);
+check('Custom sans « versatile » → pas de repli SRD 2M', spn?.versatileDamageStr, null);
+
+// Le bonus magique explicite compte AUSSI sans mot-clé dans les dés :
+// arme custom 2d6 avec magicBonus 3 → dégâts 2d6+FOR+3, attaque +3.
+const customSansMotCle = mkWeapon({
+  source: 'custom',
+  name: 'Lame runique',
+  nameFr: 'Lame runique',
+  damageDice: '2d6',
+  magicBonus: 3,
+  baseWeapon: 'Longsword',
+  properties: ['versatile'],
+});
+const sc2 = computeWeaponStats(customSansMotCle, guerrier1For18);
+check(
+  'Custom dés purs + magicBonus 3 → attaque +3, dégâts 2d6+7',
+  sc2 && { ab: sc2.attackBonus, dmg: sc2.damageStr, v: sc2.versatileDamageStr },
+  { ab: 9, dmg: '2d6+7', v: '1d10+7' },
+);
+
+// Moine + template multiterme : court-circuit propre du dé d'arts
+// martiaux (un template n'est pas un dé unique — pas de remplacement).
+const moine1 = mkChar({ strength: 12, dexterity: 16, level: 1, characterClass: 'Moine' });
+const customMoine = mkWeapon({
+  source: 'custom',
+  name: 'Bâton lesté',
+  nameFr: 'Bâton lesté',
+  damageDice: '1d6+FOR',
+  damageType: 'Bludgeoning',
+  baseWeapon: 'Quarterstaff',
+  properties: ['versatile'],
+  twoHandedDice: null,
+});
+const sm = computeWeaponStats(customMoine, moine1);
+check(
+  'Moine + template 1d6+FOR → pas de dé martial, rendu chiffré',
+  sm && { martial: sm.martialArtsDie, dmg: sm.damageStr },
+  { martial: false, dmg: '1d6+3' },
+);
 
 console.log(failures === 0 ? '\n✅ All weapon stats checks pass' : `\n❌ ${failures} failure(s)`);
 process.exit(failures === 0 ? 0 : 1);

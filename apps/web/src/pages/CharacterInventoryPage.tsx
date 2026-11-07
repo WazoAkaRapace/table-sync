@@ -49,6 +49,12 @@ import {
 } from '../components/ItemImageField';
 import { combatVibrate, useTurnSlash } from '../components/TurnSlash';
 import {
+  EMPTY_WEAPON_DRAFT,
+  WeaponFields,
+  type WeaponDraft,
+  weaponDraftPayload,
+} from '../components/WeaponFields';
+import {
   BottomSheet,
   EmptyState,
   ErrorMsg,
@@ -254,6 +260,9 @@ export default function CharacterInventoryPage() {
   // Illustration stagée du créateur d'objet — envoyée après le POST (une fois
   // l'id connu), jamais dans le JSON de création.
   const [createItemImage, setCreateItemImage] = useState<ItemImageValue>(EMPTY_ITEM_IMAGE);
+  // Panneau d'arme du créateur (category 'weapon') — l'aperçu vit dedans,
+  // rendu chiffré sur CE personnage.
+  const [createItemWeapon, setCreateItemWeapon] = useState<WeaponDraft>(EMPTY_WEAPON_DRAFT);
   const [creatingItem, setCreatingItem] = useState(false);
 
   // Transfer modal
@@ -636,6 +645,7 @@ export default function CharacterInventoryPage() {
     setCreateItemWeight('');
     setCreateItemDesc('');
     setCreateItemImage(EMPTY_ITEM_IMAGE);
+    setCreateItemWeapon(EMPTY_WEAPON_DRAFT);
     // Fold the catalog sheet: the creator modal takes over, and the freshly
     // created item lands in the bag (toast) rather than behind the sheet.
     setCatalogOpen(false);
@@ -647,12 +657,18 @@ export default function CharacterInventoryPage() {
     if (!createItemName.trim() || creatingItem) return;
     setCreatingItem(true);
     try {
-      const res = await api.post(`/api/parties/${partyId}/items`, {
+      const body: Record<string, unknown> = {
         name: createItemName.trim(),
         category: createItemCategory,
         weightKg: createItemWeight.trim() === '' ? null : Number(createItemWeight),
         description: createItemDesc.trim() || undefined,
-      });
+      };
+      // Champs d'arme : uniquement pour la catégorie Arme (l'API les ignore —
+      // et les rejette — sinon).
+      if (createItemCategory === 'weapon') {
+        Object.assign(body, weaponDraftPayload(createItemWeapon));
+      }
+      const res = await api.post(`/api/parties/${partyId}/items`, body);
       const created: Item = res.data.item;
       setCreateItemOpen(false);
       // L'illustration part après la création (l'id vient d'exister). Si elle
@@ -1796,6 +1812,15 @@ export default function CharacterInventoryPage() {
               />
             </label>
           </div>
+          {/* Panneau Arme : sous la catégorie, uniquement pour les armes —
+            aperçu chiffré sur le personnage courant. */}
+          {createItemCategory === 'weapon' && (
+            <WeaponFields
+              draft={createItemWeapon}
+              onChange={setCreateItemWeapon}
+              previewCharacter={character}
+            />
+          )}
           <label className="block">
             <span className="label">{t('onglet.description')}</span>
             <textarea

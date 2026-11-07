@@ -1,0 +1,1 @@
+ALTER TABLE `items` ADD `two_handed_dice` text;

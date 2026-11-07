@@ -299,6 +299,8 @@ export const items = sqliteTable(
     magicBonus: integer('magic_bonus'),
     damageDice: text('damage_dice'),
     damageType: text('damage_type'),
+    /** Template de dégâts à deux mains (armes polyvalentes custom). */
+    twoHandedDice: text('two_handed_dice'),
     acBase: integer('ac_base'),
     strMin: integer('str_min'),
     stealthDisadvantage: integer('stealth_disadvantage').notNull().default(0),

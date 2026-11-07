@@ -13,9 +13,12 @@ import type { FeatureResetType } from './classFeatures.ts';
 // Manifestations occultes : catalogue de données LÉGER (~14 KB, aucune
 // traduction) — import runtime assumé : invocationIdsOf en valide les ids.
 import { WARLOCK_INVOCATIONS } from './warlockInvocations.ts';
+import { parseDamageTemplate, renderDamageTemplate } from './damageTemplate.ts';
 
 export * from './catalogs.en.ts';
 export * from './labels.en.ts';
+// Moteur de template de dégâts des armes personnalisées (« 4d6+FOR+2 »).
+export * from './damageTemplate.ts';
 
 // ---------- Langue des chaînes calculées ----------
 
@@ -84,6 +87,8 @@ export interface Item {
   // Weapon/armor specifics
   damageDice: string | null;
   damageType: string | null;
+  /** Template de dégâts à deux mains (armes polyvalentes custom). */
+  twoHandedDice: string | null;
   acBase: number | null;
   strMin: number | null;
   stealthDisadvantage: boolean;
@@ -131,6 +136,19 @@ export interface CreateCustomItem {
   costQty?: number | null;
   costUnit?: CostUnit | null;
   description?: string;
+  // ----- Champs d'arme (category === 'weapon' uniquement) -----
+  /** Template de dégâts libre : « 4d6+FOR+2 ». Validé par parseDamageTemplate. */
+  damageDice?: string | null;
+  /** Type de dégâts SRD (clé de DAMAGE_TYPE_LABELS_FR). */
+  damageType?: string | null;
+  /** Template dégâts à deux mains (armes polyvalentes). */
+  twoHandedDice?: string | null;
+  /** Bonus magique +1/+2/+3 (attaque ET dégâts). */
+  magicBonus?: number | null;
+  /** Clé stable de l'arme SRD de base (sélecteur « Basée sur »). */
+  baseWeapon?: string | null;
+  /** Propriétés SRD (clés de WEAPON_PROPERTY_LABELS_FR). */
+  properties?: string[] | null;
 }
 
 // ---------- Users & auth ----------
@@ -3087,6 +3105,10 @@ export interface ItemBasesInput {
   description?: string | null;
   properties?: string[];
   damageDice?: string | null;
+  /** Clé stable explicite (sélecteur « Basée sur » des armes custom) — prioritaire sur le parse de nom. */
+  baseWeapon?: string | null;
+  /** Bonus magique explicite de la payload — prioritaire sur le parse « +N » du nom. */
+  magicBonus?: number | null;
 }
 
 /** Clés de base stables d'un objet — persistées en base, lues par le moteur. */
@@ -3111,12 +3133,28 @@ export function resolveItemBases(item: ItemBasesInput): ItemBases {
     magicBonus: null,
   };
   if (item.category === 'weapon') {
-    const base = item.damageDice
-      ? findMundaneByName(item.name, item.nameFr)
-      : resolveMagicWeaponBase(item).base;
-    if (base) {
-      out.baseWeapon = base.nameEn;
-      out.magicBonus = item.damageDice ? 0 : resolveMagicWeaponBase(item).magicBonus;
+    // Clé explicite (sélecteur « Basée sur » des armes custom) prioritaire
+    // sur toute résolution par nom — un nom custom ne matche jamais
+    // findMundaneByName (correspondance EXACTE), la clé est le seul chemin.
+    const keyed = item.baseWeapon
+      ? MUNDANE_WEAPONS.find((m) => m.nameEn === item.baseWeapon)
+      : null;
+    if (item.damageDice) {
+      // Dés explicites : le bonus magique est celui de la payload, sinon le
+      // « +N » du nom (avant : forcé à 0 — les armes custom +N à dés libres
+      // perdaient leur bonus, plan armes-custom 2026-11).
+      const base = keyed ?? findMundaneByName(item.name, item.nameFr);
+      if (base) {
+        out.baseWeapon = base.nameEn;
+        const nameBonus = (item.name ?? '').match(/\+(\d)/);
+        out.magicBonus = item.magicBonus ?? (nameBonus ? parseInt(nameBonus[1], 10) : 0);
+      }
+      return out;
+    }
+    const magic = resolveMagicWeaponBase(item);
+    if (magic.base) {
+      out.baseWeapon = magic.base.nameEn;
+      out.magicBonus = magic.magicBonus;
     }
     return out;
   }
@@ -3342,6 +3380,8 @@ export function computeWeaponStats(
     properties?: string[];
     damageDice?: string | null;
     damageType?: string | null;
+    /** Template de dégâts à deux mains (armes polyvalentes custom) — prioritaire sur la base SRD. */
+    twoHandedDice?: string | null;
   } & ItemBaseKeys,
   character: CharacterClassSource &
     Pick<Character, 'strength' | 'dexterity' | 'level'> & {
@@ -3375,6 +3415,10 @@ export function computeWeaponStats(
     magicBonus = magic.magicBonus;
     presumedBase = magic.presumed;
     nameEn = magic.base.nameEn;
+  } else {
+    // Dés explicites (armes custom) : le bonus magique explicite compte AUSSI
+    // dans cette branche (attaque ET dégâts) — avant il restait 0 ici.
+    magicBonus = item.magicBonus ?? 0;
   }
 
   const strMod = abilityModifier(character.strength ?? 10);
@@ -3433,14 +3477,46 @@ export function computeWeaponStats(
 
   // Fighting style: Dueling — +2 damage with a one-handed melee weapon
   // (the SRD "no other weapon" condition can't be checked per-item)
-  const dueling = styles.has('dueling') && !ranged && !props.includes('two-handed');
-  const damageStr = dice
-    ? formatDiceWithMod(dice, abilityMod + magicBonus + (dueling ? 2 : 0))
+  const dueling = styles.has('dueling') && !ranged && !props.includes('two-handed') ? 2 : 0;
+  // Template de dégâts (« 4d6+FOR+2 ») : les mods du porteur se fondent en
+  // une seule somme. SANS mot-clé (NdM pur SRD), les mods implicites
+  // (capacité + magie [+ Duel]) s'ajoutent comme l'ancien formatDiceWithMod —
+  // rendu identique octet pour octet. AVEC mot-clé (FOR/DEX/magie), SEUL le
+  // template décide (le bonus magique explicite ne double-passe pas dans les
+  // dégâts : il vaut pour l'attaque, « magie » l'y ramène si voulu). Une
+  // valeur legacy imparsable replie sur l'ancien formateur.
+  const renderDiceLine = (expr: string, includeDuel: boolean): string | null => {
+    const parsed = parseDamageTemplate(expr);
+    if (!parsed) return null;
+    const hasKeyword = parsed.tokens.some(
+      (t) => t.kind === 'str' || t.kind === 'dex' || t.kind === 'magic',
+    );
+    const flat = hasKeyword
+      ? includeDuel
+        ? dueling
+        : 0
+      : abilityMod + magicBonus + (includeDuel ? dueling : 0);
+    return renderDamageTemplate(parsed, { strMod: abilityMod, dexMod, magicBonus }, flat);
+  };
+  let damageStr: string | null = null;
+  if (dice) {
+    damageStr =
+      renderDiceLine(dice, true) ?? formatDiceWithMod(dice, abilityMod + magicBonus + dueling);
+  }
+  // Le repli SRD ne vaut que pour une arme Polyvalente : une custom basée sur
+  // une épée longue mais débarrassée de « versatile » n'a PAS de dégâts à
+  // deux mains (les dés explicites d'un item polyvalente vivent dans
+  // twoHandedDice — jamais hérités de la base en silence).
+  const twoHanded = props.includes('versatile')
+    ? (item.twoHandedDice ??
+      base?.twoHandedDice ??
+      MUNDANE_WEAPONS.find((m) => m.nameEn === nameEn)?.twoHandedDice)
     : null;
-  const twoHanded =
-    base?.twoHandedDice ?? MUNDANE_WEAPONS.find((m) => m.nameEn === nameEn)?.twoHandedDice;
-  const versatileDamageStr =
-    twoHanded && dice ? formatDiceWithMod(twoHanded, abilityMod + magicBonus) : null;
+  let versatileDamageStr: string | null = null;
+  if (twoHanded && dice) {
+    versatileDamageStr =
+      renderDiceLine(twoHanded, false) ?? formatDiceWithMod(twoHanded, abilityMod + magicBonus);
+  }
 
   return {
     proficient,
