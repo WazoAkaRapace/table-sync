@@ -70,6 +70,12 @@ updates:
       - "web"
     commit-message:
       prefix: "chore(web-deps)"
+    ignore:
+      # axios 1.21.0 (27/10/2026) casse la session par cookies et la synchro
+      # WebSocket temps réel — 1.20.0 épinglé exact dans apps/web. Une 1.22+
+      # sera reproposée par le bot pour re-test.
+      - dependency-name: "axios"
+        versions: ["1.21.x"]
 
   # Shared workspace
   - package-ecosystem: "npm"
