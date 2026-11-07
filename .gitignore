@@ -52,6 +52,7 @@ gui-test-screenshots/
 playwright-report/
 test-results/
 e2e/.seed.json
+e2e/.captures/
 
 # Marketing site: assets are copied from docs/ by scripts/serve-site.mjs
 # and by the Pages workflow at deploy time (docs/ stays the single source)
