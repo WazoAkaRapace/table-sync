@@ -50,6 +50,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
+          set -euo pipefail
           # Liste des fichiers de la PR → exemption outillage dans le script.
           # (github.event.pull_request.files n'existe pas dans le payload des
           # événements — sous-ressource REST : on la récupère via gh, PAGINÉE
