@@ -23,6 +23,12 @@ import {
 } from '../components/ItemImageField';
 import { ItemImageViewer } from '../components/ItemImageViewer';
 import {
+  EMPTY_WEAPON_DRAFT,
+  WeaponFields,
+  type WeaponDraft,
+  weaponDraftPayload,
+} from '../components/WeaponFields';
+import {
   CategoryBadge,
   ConfirmButton,
   EmptyState,
@@ -1036,6 +1042,9 @@ function CustomItemsTab({
   const [desc, setDesc] = useState('');
   // Illustration : stagée ici, envoyée à l'enregistrement (jamais au choix).
   const [imageValue, setImageValue] = useState<ItemImageValue>(EMPTY_ITEM_IMAGE);
+  // Panneau d'arme (category 'weapon') : le draft vit ici, hydraté à
+  // l'édition, remis à zéro en création.
+  const [weaponDraft, setWeaponDraft] = useState<WeaponDraft>(EMPTY_WEAPON_DRAFT);
   // Mini-châssis de la liste → visionneuse plein écran (rev capturée à
   // l'ouverture : l'URL change si le fichier a changé entre-temps).
   const [viewingImage, setViewingImage] = useState<{
@@ -1099,6 +1108,7 @@ function CustomItemsTab({
     setWeight('');
     setDesc('');
     setImageValue(EMPTY_ITEM_IMAGE);
+    setWeaponDraft(EMPTY_WEAPON_DRAFT);
     setError('');
     setShowModal(true);
   };
@@ -1121,12 +1131,16 @@ function CustomItemsTab({
     }
     setSaving(true);
     setError('');
-    const payload = {
+    const payload: Record<string, unknown> = {
       name: name.trim(),
       category,
       weightKg: weight ? parseFloat(weight) : null,
       description: desc.trim() || null,
     };
+    // Champs d'arme : uniquement pour la catégorie Arme (l'API les ignore —
+    // et les rejette — sinon). En création seule pour l'instant : l'édition
+    // hydrate le draft avant de les envoyer (T8).
+    if (!editing && category === 'weapon') Object.assign(payload, weaponDraftPayload(weaponDraft));
     try {
       let itemId = editing?.id as number | undefined;
       if (editing) {
@@ -1334,6 +1348,9 @@ function CustomItemsTab({
               </select>
             </label>
           </div>
+          {/* Panneau Arme : sous la catégorie, uniquement pour les armes —
+            aperçu symbolique (le MD n'a pas de porteur). */}
+          {category === 'weapon' && <WeaponFields draft={weaponDraft} onChange={setWeaponDraft} />}
           <label className="block">
             <span className="label">{t('md.poids.kg')}</span>
             <input
