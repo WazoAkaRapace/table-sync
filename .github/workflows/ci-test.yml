@@ -46,7 +46,18 @@ jobs:
         run: npm run changelog:check -- --check-format --selftest
       - name: Changelog (entrée en attente)
         if: github.event_name == 'pull_request'
-        run: npm run changelog:check -- --check-pending
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          # Liste des fichiers de la PR → exemption outillage dans le script.
+          # (github.event.pull_request.files n'existe pas dans le payload des
+          # événements — sous-ressource REST : on la récupère via gh.)
+          PR_FILES=$(gh pr view "$PR_NUMBER" -R "$GITHUB_REPOSITORY" \
+            --json files --jq '[.files[].path]')
+          echo "Fichiers de la PR : $PR_FILES"
+          export PR_FILES
+          npm run changelog:check -- --check-pending
 
       # ---- Ratchet i18n : le FR hors catalogue ne peut que descendre ----
       - name: i18n ratchet

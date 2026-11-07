@@ -15,6 +15,7 @@ import { readFileSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { continuityErrors } from './changelog-continuity.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '..');
@@ -60,12 +61,18 @@ function fmtErrors(raw: unknown): string[] {
       errs.push(`${where} : sha invalide (« ${String(sha)} », 7-8 hex ou null avant release).`);
     } else if (typeof sha === 'string') {
       // Un LOT de release (flux par tag) partage légitimement le sha du tag :
-      // toutes les entrées d'un même JOUR peuvent porter le même sha. Un sha
-      // répété sur des jours DIFFÉRENTS reste une erreur (double-stamp).
+      // toutes les entrées du même JOUR-CALVER peuvent le porter — même si
+      // leurs PR ont fusionné des jours différents (la « date » de l'entrée
+      // est la date de merge, PAS la date du tag). Un sha répété sur des
+      // jours-calver DIFFÉRENTS reste une erreur (double-stamp).
+      const day =
+        typeof version === 'string' && VER_RE.test(version) ? version.replace(/-\d+$/, '') : null;
       const seen = shaOwners.get(sha);
-      if (seen !== undefined && seen !== date) {
+      if (day !== null && seen !== undefined && seen !== day) {
         errs.push(`${where} : sha ${sha} déjà présent (jour ${seen}).`);
-      } else shaOwners.set(sha, date);
+      } else if (day !== null) {
+        shaOwners.set(sha, day);
+      }
     }
     if (typeof date !== 'string' || !DATE_RE.test(date)) {
       errs.push(`${where} : date invalide (YYYY-MM-DD attendu).`);
@@ -88,6 +95,9 @@ function fmtErrors(raw: unknown): string[] {
       });
     }
   });
+  // Continuité des numéros de versions par jour (base, -2, -3… sans trou) :
+  // les entrées versionnées sont groupées par préfixe calver.
+  if (Array.isArray(raw)) errs.push(...continuityErrors(raw as Entry[]));
   return errs;
 }
 
@@ -114,6 +124,11 @@ function selftest(): number {
       expectErrors: false,
     },
     {
+      name: 'sha partagé au sein du lot, PR fusionnées des jours différents',
+      raw: [mk('2026.11.07-2', 'a1b2c3d', '2026-11-07'), mk('2026.11.07', 'a1b2c3d', '2026-11-03')],
+      expectErrors: false,
+    },
+    {
       name: 'sha dupliqué sur deux jours (double-stamp)',
       raw: [mk('2026.10.30', 'a1b2c3d'), mk('2026.10.28', 'a1b2c3d', '2026-10-28')],
       expectErrors: true,
@@ -133,6 +148,40 @@ function selftest(): number {
       name: 'suffixe même jour',
       raw: [mk('2026.10.15'), mk('2026.10.15-2', 'e4f5a6b')],
       expectErrors: false,
+    },
+    {
+      name: 'jour complet multi-lots (base, -2, -3, -4)',
+      raw: [
+        mk('2026.10.15-4', 'a1b2c3d'),
+        mk('2026.10.15-3', 'a1b2c3d'),
+        mk('2026.10.15-2', 'a1b2c3d'),
+        mk('2026.10.15', 'a1b2c3d'),
+      ],
+      expectErrors: false,
+    },
+    {
+      name: 'trou dans le jour (base, -2, -4)',
+      raw: [mk('2026.10.15'), mk('2026.10.15-2', 'e4f5a6b'), mk('2026.10.15-4', 'b7c8d9e')],
+      expectErrors: true,
+    },
+    {
+      name: 'suffixe -1 interdit',
+      raw: [mk('2026.10.15'), mk('2026.10.15-1', 'e4f5a6b')],
+      expectErrors: true,
+    },
+    {
+      name: 'base du jour absente',
+      raw: [mk('2026.10.15-2', 'e4f5a6b'), mk('2026.10.15-3', 'a1b2c3d')],
+      expectErrors: true,
+    },
+    {
+      name: 'jour non contigu (refermé plus bas)',
+      raw: [
+        mk('2026.10.30', 'a1b2c3d', '2026-10-30'),
+        mk('2026.10.28', 'e4f5a6b', '2026-10-28'),
+        mk('2026.10.30-2', 'b7c8d9e', '2026-10-30'),
+      ],
+      expectErrors: true,
     },
     {
       name: 'puce sans point',
@@ -161,6 +210,43 @@ function botCommitted(): boolean {
   return false;
 }
 
+/** PR purement outillage (exception documentée du SKILL.md) : sujet `chore`
+ * ET fichiers tous hors code produit (.github/, scripts/, docs/, site/,
+ * CHANGELOG.json). Le lecteur du journal est un joueur — l'outillage n'a
+ * rien à y dire.
+ *
+ * En CI, HEAD est le commit de merge test de GitHub (sujet « Merge … ») :
+ * l'heuristique sur le commit local ne s'applique pas — la liste des
+ * fichiers de la PR arrive alors par env PR_FILES (tableau JSON des chemins,
+ * posé par ci-test.yml depuis github.event.pull_request.files). */
+function choreOnlyCommit(): boolean {
+  const CHORE_RE = /^(\.github\/|scripts\/|docs\/|site\/|CHANGELOG\.json$)/;
+  const envFiles = process.env.PR_FILES;
+  if (envFiles) {
+    try {
+      const files = JSON.parse(envFiles) as string[];
+      const exempt = files.length > 0 && files.every((f) => CHORE_RE.test(f));
+      if (exempt) {
+        console.log('✓ PR outillage exemptée (fichiers hors code produit, liste de la PR).');
+      }
+      return exempt;
+    } catch {
+      return false; // env illisible → pas d'exemption
+    }
+  }
+  const subject = execSync('git log -1 --format=%s', { cwd: ROOT }).toString().trim();
+  if (!/^chore/i.test(subject)) return false;
+  const files = execSync('git show --name-only --format= HEAD', { cwd: ROOT })
+    .toString()
+    .trim()
+    .split('\n')
+    .filter(Boolean);
+  const exempt = files.length > 0 && files.every((f) => CHORE_RE.test(f));
+  if (exempt)
+    console.log(`✓ Commit outillage « ${subject} » exempté (fichiers hors code produit).`);
+  return exempt;
+}
+
 function main(): number {
   const args = process.argv.slice(2);
   if (args.includes('--selftest')) {
@@ -182,8 +268,9 @@ function main(): number {
   const pIdx = args.indexOf('--check-pending');
   if (pIdx !== -1) {
     // Mode PR (flow par tag) : le tip de la PR doit ajouter AU MOINS une
-    // entrée en attente (version:null). Exempté : les commits du bot.
-    if (botCommitted()) return 0;
+    // entrée en attente (version:null). Exemptés : commits du bot et PR
+    // purement outillage (chore hors code produit).
+    if (botCommitted() || choreOnlyCommit()) return 0;
     const pending = (Array.isArray(raw) ? (raw as Entry[]) : []).filter((e) => e.version === null);
     if (pending.length === 0) {
       console.error(
