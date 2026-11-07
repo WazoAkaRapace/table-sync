@@ -1473,10 +1473,12 @@ function SpellStatBadges({
   const scaleLevel =
     spell.level === 0 ? cantripScaleLevel(spell, character, classSource) : charLevel;
   const potent = potentBonusFor(spell, character, classSource);
-  const { dice, typeFr } = spellDamageAtLevel(spell, spell.level, scaleLevel);
+  const { dice, typeFr, addsModifier } = spellDamageAtLevel(spell, spell.level, scaleLevel);
+  // « + MOD » (Arme spirituelle) : modificateur d'incantation du sort.
+  const modPart = addsModifier ? formatModifier(castingMod) : '';
   const damageDice = !dice
     ? null
-    : `${dice}${potent > 0 ? `+${potent}` : ''}${typeFr ? ` ${damageType(typeFr) ?? typeFr}` : ''}`;
+    : `${dice}${potent > 0 ? `+${potent}` : ''}${modPart}${typeFr ? ` ${damageType(typeFr) ?? typeFr}` : ''}`;
   const potentTitle =
     potent > 0 ? t('sorts.degats.incantation.puissante', { mod: potent }) : undefined;
   const healing = spellHealingAtLevel(spell, spell.level, charLevel);

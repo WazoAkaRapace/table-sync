@@ -1789,6 +1789,7 @@
   "cast.gratuit.restant_other": "{{count}} lancers gratuits restants — repos long",
   "cast.sans.emplacement.deux.points": "— sans emplacement :",
   "cast.par.rayon": "par rayon",
+  "cast.degats.mod.incantation": "Dégâts + modificateur d’incantation",
   "cast.par.rayon.court": "/ rayon",
   "cast.rayons.count_one": "✦ {{count}} rayon",
   "cast.rayons.count_other": "✦ {{count}} rayons",
@@ -2163,7 +2164,6 @@
   "changelog.vide": "Aucune nouveauté pour le moment.",
   "changelog.ouvrir": "Journal des modifications",
   "changelog.ouvrir.version": "Journal des modifications de la version {{version}}",
-
   "arme.basee.sur": "Basée sur",
   "arme.basee.libre": "— Libre —",
   "arme.degats": "Dégâts",

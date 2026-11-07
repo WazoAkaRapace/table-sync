@@ -3,8 +3,10 @@
     "version": null,
     "sha": null,
     "date": "2026-11-07",
-    "title": "potions de soin renommées",
-    "items": ["Les noms des potions de soin sont corrigés."]
+    "title": "arme spirituelle",
+    "items": [
+      "L’arme spirituelle affiche ses dégâts avec le modificateur d’incantation du lanceur."
+    ]
   },
   {
     "version": "2026.11.07-5",

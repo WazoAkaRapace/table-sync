@@ -570,6 +570,7 @@ const bouleDeFeu: any = {
 check('Boule de feu niveau 3 → 8d6 de feu', spellDamageAtLevel(bouleDeFeu, 3, 10), {
   dice: '8d6',
   typeFr: 'de feu',
+  addsModifier: false,
 });
 check('Boule de feu niveau 4 → 9d6 (upcast)', spellDamageAtLevel(bouleDeFeu, 4, 10).dice, '9d6');
 check(
@@ -577,6 +578,23 @@ check(
   spellDamageAtLevel(bouleDeFeu, 5, 10).dice,
   '9d6',
 );
+const armeSpirituelle: any = {
+  level: 2,
+  damageJson: JSON.stringify({
+    damage_type: { index: 'force' },
+    damage_at_slot_level: { '2': '1d8 + MOD', '3': '1d8 + MOD', '4': '2d8 + MOD' },
+  }),
+};
+check(
+  'Arme spirituelle : « 1d8 + MOD » → dés nus + drapeau addsModifier (le placeholder ne fuit jamais)',
+  spellDamageAtLevel(armeSpirituelle, 2, 10),
+  { dice: '1d8', typeFr: 'de force', addsModifier: true },
+);
+check('Arme spirituelle niveau 4 → 2d8 + mod', spellDamageAtLevel(armeSpirituelle, 4, 10), {
+  dice: '2d8',
+  typeFr: 'de force',
+  addsModifier: true,
+});
 const rayonFeu: any = {
   level: 0,
   damageJson: JSON.stringify({
@@ -588,6 +606,7 @@ check('Sort mineur niveau 10 → 2d10 (palier 5)', spellDamageAtLevel(rayonFeu, 
 check('Sort sans dégâts → null', spellDamageAtLevel({ level: 1, damageJson: null } as any, 1, 10), {
   dice: null,
   typeFr: null,
+  addsModifier: false,
 });
 
 // --- Fighting styles ---

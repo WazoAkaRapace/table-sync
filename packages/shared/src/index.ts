@@ -3704,6 +3704,10 @@ export interface SpellDamagePreview {
   dice: string | null;
   /** French damage type, e.g. "de feu". */
   typeFr: string | null;
+  /** True quand la table SRD porte « + MOD » (Arme spirituelle) : les dégâts
+   *  s'ajoutent au modificateur D'INCANTATION du lanceur — l'UI l'append
+   *  (miroir du addsModifier des soins). Le « + MOD » est retiré du dé. */
+  addsModifier: boolean;
 }
 
 /** Lowercase English damage types from spell damageJson → French. */
@@ -3734,7 +3738,7 @@ export function spellDamageAtLevel(
   slotLevel: number,
   charLevel: number,
 ): SpellDamagePreview {
-  if (!spell.damageJson) return { dice: null, typeFr: null };
+  if (!spell.damageJson) return { dice: null, typeFr: null, addsModifier: false };
   try {
     const dmg = JSON.parse(spell.damageJson) as {
       damage_type?: { index?: string };
@@ -3742,19 +3746,24 @@ export function spellDamageAtLevel(
       damage_at_character_level?: Record<string, string>;
     };
     const table = spell.level === 0 ? dmg.damage_at_character_level : dmg.damage_at_slot_level;
-    if (!table) return { dice: null, typeFr: null };
+    if (!table) return { dice: null, typeFr: null, addsModifier: false };
     const wanted = spell.level === 0 ? charLevel : slotLevel;
     const keys = Object.keys(table)
       .map(Number)
       .sort((a, b) => a - b);
     const best = [...keys].reverse().find((k) => k <= Math.max(wanted, keys[0]));
     const typeEn = dmg.damage_type?.index ?? '';
+    const raw = best !== undefined ? (table[String(best)] ?? null) : null;
+    // « 1d8 + MOD » (Arme spirituelle) : le mod d'incantation du lanceur
+    // s'ajoute aux dégâts — le placeholder ne doit JAMAIS fuiter vers l'UI.
+    const addsModifier = raw !== null && /\s*\+\s*MOD$/i.test(raw);
     return {
-      dice: best !== undefined ? (table[String(best)] ?? null) : null,
+      dice: raw !== null ? raw.replace(/\s*\+\s*MOD$/i, '') : null,
       typeFr: SPELL_DAMAGE_TYPE_FR[typeEn] ?? null,
+      addsModifier,
     };
   } catch {
-    return { dice: null, typeFr: null };
+    return { dice: null, typeFr: null, addsModifier: false };
   }
 }
 
