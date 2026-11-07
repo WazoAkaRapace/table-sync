@@ -66,19 +66,23 @@ export async function domainSpellRoutes(app: FastifyInstance) {
                 },
               ]
             : [];
-      const groups: Array<{ level: number; names: string[] }> = [];
+      // La classe d'origine voyage avec chaque groupe : un sort de serment de
+      // Paladin n'est PAS un sort de clerc (mod de Charisme, revue #272).
+      const groups: Array<{ level: number; names: string[]; classKey: string }> = [];
       for (const line of lines) {
         const name = findClass(line.classKey)?.name ?? null;
         if (!name) continue;
+        const tag = (gs: Array<{ level: number; names: string[] }>) =>
+          gs.map((g) => ({ ...g, classKey: name }));
         if (name === 'Clerc' && line.subclassKey) {
-          groups.push(...domainSpellsFor(line.subclassKey, line.level));
+          groups.push(...tag(domainSpellsFor(line.subclassKey, line.level)));
         } else if (name === 'Druide' && line.subclassKey === 'terre' && char.land_circle) {
-          groups.push(...bonusPreparedSpells('Druide', char.land_circle, line.level));
+          groups.push(...tag(bonusPreparedSpells('Druide', char.land_circle, line.level)));
         } else if (name === 'Paladin' && line.subclassKey) {
-          groups.push(...bonusPreparedSpells('Paladin', line.subclassKey, line.level));
+          groups.push(...tag(bonusPreparedSpells('Paladin', line.subclassKey, line.level)));
         }
       }
-      const domainSpells: Array<Spell & { domainLevel: number }> = [];
+      const domainSpells: Array<Spell & { domainLevel: number; sourceClass: string }> = [];
       for (const g of groups) {
         for (const name of g.names) {
           const row = drizzle
@@ -90,6 +94,7 @@ export async function domainSpellRoutes(app: FastifyInstance) {
             domainSpells.push({
               ...withSpellEnMeta(mapSpell(row, langFromReq(req)), langFromReq(req)),
               domainLevel: g.level,
+              sourceClass: g.classKey,
             });
         }
       }

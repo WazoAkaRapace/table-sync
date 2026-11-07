@@ -9,6 +9,13 @@
     ]
   },
   {
+    "version": null,
+    "sha": null,
+    "date": "2026-11-07",
+    "title": "potions de soin renommées",
+    "items": ["Les noms des potions de soin sont corrigés."]
+  },
+  {
     "version": "2026.11.07-5",
     "sha": "4533a833",
     "date": "2026-11-07",

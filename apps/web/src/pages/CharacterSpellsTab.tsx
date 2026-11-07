@@ -68,7 +68,7 @@ interface Props {
   currentEffectiveAc?: number;
 }
 
-type DomainSpell = Spell & { domainLevel: number };
+type DomainSpell = Spell & { domainLevel: number; sourceClass?: string };
 
 const PAGE_SIZE = 30;
 
@@ -756,9 +756,10 @@ export default function CharacterSpellsTab({
       characterId: Number(charId),
       spell: sp,
       prepared: true,
-      // Source Clerc : le domaine EST la liste de clerc — sans elle, un
-      // bi-lanceur affichait le mod de sa première classe (revue #272).
-      classSource: 'Clerc',
+      // Classe d'origine portée par la route (domaine de clerc, cercle de
+      // druide, serment de paladin) — sans elle, un bi-lanceur affichait le
+      // mod de sa première classe (revue #272).
+      classSource: sp.sourceClass ?? 'Clerc',
       source: null,
       sortOrder: 0,
       addedAt: '',
@@ -813,8 +814,9 @@ export default function CharacterSpellsTab({
     addingSpellId,
     knownSpellIds: new Set(charSpells.map((cs) => cs.spell.id)),
     // Source de classe des sorts connus : sans filtre, le catalogue affiche
-    // le modificateur de la classe ENREGISTRÉE (pas de la 1re classe) — revue #272.
-    knownClassSources: new Map(charSpells.map((cs) => [cs.spell.id, cs.classSource])),
+    // le modificateur de la classe ENREGISTRÉE (pas de la 1re classe). Depuis
+    // allRows pour inclure les sorts bonus synthétiques (revue #272).
+    knownClassSources: new Map(allRows.map((cs) => [cs.spell.id, cs.classSource])),
     castingMod,
     profBonus,
     isCaster,
