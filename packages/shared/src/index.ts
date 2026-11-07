@@ -87,6 +87,8 @@ export interface Item {
   // Weapon/armor specifics
   damageDice: string | null;
   damageType: string | null;
+  /** Template de dégâts à deux mains (armes polyvalentes custom). */
+  twoHandedDice: string | null;
   acBase: number | null;
   strMin: number | null;
   stealthDisadvantage: boolean;
@@ -134,6 +136,19 @@ export interface CreateCustomItem {
   costQty?: number | null;
   costUnit?: CostUnit | null;
   description?: string;
+  // ----- Champs d'arme (category === 'weapon' uniquement) -----
+  /** Template de dégâts libre : « 4d6+FOR+2 ». Validé par parseDamageTemplate. */
+  damageDice?: string | null;
+  /** Type de dégâts SRD (clé de DAMAGE_TYPE_LABELS_FR). */
+  damageType?: string | null;
+  /** Template dégâts à deux mains (armes polyvalentes). */
+  twoHandedDice?: string | null;
+  /** Bonus magique +1/+2/+3 (attaque ET dégâts). */
+  magicBonus?: number | null;
+  /** Clé stable de l'arme SRD de base (sélecteur « Basée sur »). */
+  baseWeapon?: string | null;
+  /** Propriétés SRD (clés de WEAPON_PROPERTY_LABELS_FR). */
+  properties?: string[] | null;
 }
 
 // ---------- Users & auth ----------
