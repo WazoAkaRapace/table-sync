@@ -41,7 +41,7 @@ Navigateurs minimum : Safari/iPadOS 16.4, Chrome/Edge 111, Firefox 128 (imposés
 
 ## Démarrage
 
-Prérequis : **Node.js ≥ 20** et npm. Docker pour l'auto-hébergement.
+Prérequis : **Node.js ≥ 22.14** et npm. Docker pour l'auto-hébergement.
 
 ### Développement
 
