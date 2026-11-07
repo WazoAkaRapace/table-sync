@@ -17,7 +17,7 @@
     "@fastify/cookie": "^11.1.5",
     "@fastify/cors": "^11.3.1",
     "@fastify/jwt": "^10.2.6",
-    "@fastify/multipart": "^10.1.6",
+    "@fastify/multipart": "^10.1.7",
     "@fastify/websocket": "^11.3.4",
     "@table-sync/shared": "*",
     "bcryptjs": "^3.0.3",
