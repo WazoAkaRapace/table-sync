@@ -257,6 +257,13 @@ export function reconcileHealingPotionDuplicate(): void {
       }
       moved++;
     }
+    // Exemplaires annotés dérivés de l'entrée obsolète : repointés sur la
+    // gardienne (sinon le SET NULL de la FK les fait réapparaître au
+    // catalogue — revue #271).
+    db.prepare('UPDATE items SET derived_from_item_id = ? WHERE derived_from_item_id = ?').run(
+      keeper.id,
+      stale.id,
+    );
     db.prepare('DELETE FROM items WHERE id = ?').run(stale.id);
   })();
   console.log(
