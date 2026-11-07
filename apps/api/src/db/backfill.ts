@@ -264,6 +264,13 @@ export function reconcileHealingPotionDuplicate(): void {
       keeper.id,
       stale.id,
     );
+    // Conteneurs liés à l'entrée obsolète (storage_locations.item_id) :
+    // repointés sur la gardienne — sinon le SET NULL de la FK détache le sac
+    // de son objet (revue #271).
+    db.prepare('UPDATE storage_locations SET item_id = ? WHERE item_id = ?').run(
+      keeper.id,
+      stale.id,
+    );
     db.prepare('DELETE FROM items WHERE id = ?').run(stale.id);
   })();
   console.log(
