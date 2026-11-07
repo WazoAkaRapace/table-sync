@@ -46,6 +46,30 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   });
   ok(r.data.total > 0, "accented search 'épée' matches");
 
+  // Famille des potions de soin — noms officiels, un cran par puissance
+  // (fix 2026-11 : greater/superior/supreme étaient décalés d'un cran) et
+  // plus de doublon de la potion basique.
+  {
+    const expect: Array<[string, string]> = [
+      ['Potion de soin', 'potion-of-healing-common'],
+      ['Potion de soin majeure', 'potion-of-healing-greater'],
+      ['Potion de soin supérieure', 'potion-of-healing-superior'],
+      ['Potion de soin suprême', 'potion-of-healing-supreme'],
+    ];
+    for (const [name, srd] of expect) {
+      r = await api(base, 'GET', `/api/items?search=${encodeURIComponent(name)}`, {
+        token: fx.gm.token,
+      });
+      const hit = r.data.items.find((i: any) => i.srdIndex === srd);
+      eq(hit?.name, name, `« ${name} » trouve bien ${srd}`);
+    }
+    eq(
+      srv.query("SELECT COUNT(*) AS c FROM items WHERE srd_index = 'potion-of-healing'").c,
+      0,
+      "l'entrée « variable » dédoublonnée n'existe plus",
+    );
+  }
+
   // dashes in the query are treated as spaces
   const firstSword = srv.queryAll("SELECT name FROM items WHERE name LIKE '%sword%' LIMIT 1")[0];
   if (firstSword) {
