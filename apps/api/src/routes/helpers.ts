@@ -282,6 +282,7 @@ export function mapItem(row: any, lang: AppLang = 'fr', summary = false): Item {
     magicBonus: row.magic_bonus ?? null,
     damageDice: row.damage_dice,
     damageType: row.damage_type,
+    twoHandedDice: row.two_handed_dice ?? null,
     acBase: row.ac_base,
     strMin: row.str_min,
     stealthDisadvantage: !!row.stealth_disadvantage,

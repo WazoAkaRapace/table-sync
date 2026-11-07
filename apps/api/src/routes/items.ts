@@ -5,7 +5,13 @@
 import { existsSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import type { CreateCustomItem } from '@table-sync/shared';
-import { resolveItemBases } from '@table-sync/shared';
+import {
+  DAMAGE_TYPE_LABELS_FR,
+  MUNDANE_WEAPONS,
+  WEAPON_PROPERTY_LABELS_FR,
+  parseDamageTemplate,
+  resolveItemBases,
+} from '@table-sync/shared';
 import { and, eq, inArray, isNull, or, type SQL, sql } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../db/drizzle.ts';
@@ -39,6 +45,69 @@ const ITEM_SUMMARY_COLS: Record<string, any> = {
 };
 delete ITEM_SUMMARY_COLS.description;
 delete ITEM_SUMMARY_COLS.description_en;
+
+// ---------- Champs d'arme des objets custom (plan armes-custom 2026-11) ----------
+
+/** Champs d'arme normalisés prêts à écrire en base (ou message d'erreur FR). */
+interface WeaponFields {
+  damageDice: string | null;
+  damageType: string | null;
+  twoHandedDice: string | null;
+  magicBonus: number | null;
+  baseWeapon: string | null;
+  properties: string[];
+}
+
+/**
+ * Valide les champs d'arme d'une payload POST/PATCH. `input` porte les champs
+ * fournis (ou fusionnés avec la ligne existante pour un PATCH) ; tout champ
+ * absent vaut null. Retourne le message d'erreur FR, ou les champs validés.
+ * Le template deux mains n'est conservé que si la propriété Polyvalente est
+ * cochée — les propriétés inconnues sont filtrées silencieusement (jamais
+ * d'injection de clé arbitraire dans properties_json).
+ */
+function validateWeaponFields(input: {
+  damageDice?: unknown;
+  damageType?: unknown;
+  twoHandedDice?: unknown;
+  magicBonus?: unknown;
+  baseWeapon?: unknown;
+  properties?: unknown;
+}): string | WeaponFields {
+  const asTrimmed = (v: unknown): string | null =>
+    typeof v === 'string' && v.trim() !== '' ? v.trim() : null;
+
+  const damageDice = asTrimmed(input.damageDice);
+  if (damageDice && parseDamageTemplate(damageDice) === null) return 'template de dégâts invalide';
+
+  const damageType = asTrimmed(input.damageType);
+  if (damageType && !(damageType in DAMAGE_TYPE_LABELS_FR)) return 'type de dégâts invalide';
+
+  let properties: string[];
+  if (input.properties === undefined || input.properties === null) properties = [];
+  else if (Array.isArray(input.properties))
+    properties = input.properties.filter(
+      (p): p is string => typeof p === 'string' && p in WEAPON_PROPERTY_LABELS_FR,
+    );
+  else return 'propriétés invalides';
+
+  const twoHandedDice = properties.includes('versatile') ? asTrimmed(input.twoHandedDice) : null;
+  if (twoHandedDice && parseDamageTemplate(twoHandedDice) === null)
+    return 'template de dégâts invalide';
+
+  const rawBonus = input.magicBonus;
+  if (rawBonus !== undefined && rawBonus !== null) {
+    if (typeof rawBonus !== 'number' || ![0, 1, 2, 3].includes(rawBonus))
+      return 'bonus magique invalide';
+  }
+  const magicBonus = rawBonus === undefined || rawBonus === null ? null : rawBonus;
+
+  const baseWeapon = asTrimmed(input.baseWeapon);
+  if (baseWeapon && !MUNDANE_WEAPONS.some((m) => m.nameEn === baseWeapon))
+    return 'arme de base inconnue';
+
+  return { damageDice, damageType, twoHandedDice, magicBonus, baseWeapon, properties };
+}
 
 export async function itemRoutes(app: FastifyInstance) {
   // ---------- Search catalog ----------
@@ -203,12 +272,29 @@ export async function itemRoutes(app: FastifyInstance) {
         return reply.code(400).send({ error: apiMsg(req, 'name is required') });
       }
 
-      // Clés de base résolues à la création (découplage moteur/noms)
+      const category = body.category || 'custom';
+      // Champs d'arme (category 'weapon' uniquement) : template de dégâts,
+      // type SRD, bonus magique, propriétés, arme de base, dés 2M.
+      let weapon: WeaponFields | null = null;
+      if (category === 'weapon') {
+        const checked = validateWeaponFields(body);
+        if (typeof checked === 'string') {
+          return reply.code(400).send({ error: apiMsg(req, checked) });
+        }
+        weapon = checked;
+      }
+
+      // Clés de base résolues à la création (découplage moteur/noms) — la clé
+      // explicite « Basée sur » et le bonus magique de la payload sont
+      // prioritaires sur le parse de nom.
       const bases = resolveItemBases({
-        category: body.category || 'custom',
+        category,
         name: body.name.trim(),
         nameFr: body.nameFr || body.name.trim(),
         description: body.description || null,
+        damageDice: weapon?.damageDice ?? null,
+        baseWeapon: weapon?.baseWeapon ?? null,
+        magicBonus: weapon?.magicBonus ?? null,
       });
       const row = drizzle
         .insert(items)
@@ -216,7 +302,7 @@ export async function itemRoutes(app: FastifyInstance) {
           source: 'custom',
           partyId,
           createdBy: userId,
-          category: body.category || 'custom',
+          category,
           name: body.name.trim(),
           nameFr: body.nameFr || null,
           rarity: body.rarity || 'none',
@@ -227,7 +313,11 @@ export async function itemRoutes(app: FastifyInstance) {
           baseWeapon: bases.baseWeapon,
           baseArmor: bases.baseArmor,
           armorFamily: bases.armorFamily,
-          magicBonus: bases.magicBonus,
+          magicBonus: weapon ? (weapon.magicBonus ?? bases.magicBonus) : bases.magicBonus,
+          damageDice: weapon?.damageDice ?? null,
+          damageType: weapon?.damageType ?? null,
+          twoHandedDice: weapon?.twoHandedDice ?? null,
+          propertiesJson: JSON.stringify(weapon?.properties ?? []),
         })
         .returning(cols(items))
         .get() as any;
@@ -264,6 +354,58 @@ export async function itemRoutes(app: FastifyInstance) {
       if (body.costQty !== undefined) values.costQty = body.costQty;
       if (body.costUnit !== undefined) values.costUnit = body.costUnit;
       if (body.description !== undefined) values.description = body.description;
+
+      // Champs d'arme : validés sur le contexte FUSIONNÉ (champs de la payload
+      // + colonnes existantes) puis réécrits ; les clés de base sont
+      // re-résolues quand un champ d'arme, le nom ou la catégorie bouge.
+      const WEAPON_KEYS = [
+        'damageDice',
+        'damageType',
+        'twoHandedDice',
+        'magicBonus',
+        'baseWeapon',
+        'properties',
+      ] as const;
+      const hasWeaponKey = WEAPON_KEYS.some((k) => body[k] !== undefined);
+      const category = (values.category as string | undefined) ?? item.category;
+      if (
+        category === 'weapon' &&
+        (hasWeaponKey || values.name !== undefined || values.category !== undefined)
+      ) {
+        const checked = validateWeaponFields({
+          damageDice: body.damageDice !== undefined ? body.damageDice : item.damage_dice,
+          damageType: body.damageType !== undefined ? body.damageType : item.damage_type,
+          twoHandedDice:
+            body.twoHandedDice !== undefined ? body.twoHandedDice : item.two_handed_dice,
+          magicBonus: body.magicBonus !== undefined ? body.magicBonus : item.magic_bonus,
+          baseWeapon: body.baseWeapon !== undefined ? body.baseWeapon : item.base_weapon,
+          properties:
+            body.properties !== undefined
+              ? body.properties
+              : JSON.parse(item.properties_json || '[]'),
+        });
+        if (typeof checked === 'string') {
+          return reply.code(400).send({ error: apiMsg(req, checked) });
+        }
+        const bases = resolveItemBases({
+          category,
+          name: ((values.name as string) ?? item.name) || null,
+          nameFr: item.name_fr ?? null,
+          description: ((values.description as string) ?? item.description) || null,
+          damageDice: checked.damageDice,
+          baseWeapon: checked.baseWeapon,
+          magicBonus: checked.magicBonus,
+        });
+        values.damageDice = checked.damageDice;
+        values.damageType = checked.damageType;
+        values.twoHandedDice = checked.twoHandedDice;
+        values.magicBonus = checked.magicBonus ?? bases.magicBonus;
+        values.baseWeapon = bases.baseWeapon;
+        values.baseArmor = bases.baseArmor;
+        values.armorFamily = bases.armorFamily;
+        values.propertiesJson = JSON.stringify(checked.properties);
+      }
+
       if (Object.keys(values).length === 0) {
         return reply.code(400).send({ error: apiMsg(req, 'no fields to update') });
       }
