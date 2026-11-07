@@ -108,6 +108,20 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   eq(r.status, 201, 'player creates a custom item when the party allows it');
   eq(r.data.item.createdBy, fx.player.userId, 'player creation records the author');
 
+  // arme complète par un JOUEUR (setting on) — payload D1-D5 du plan
+  r = await api(base, 'POST', `/api/parties/${P}/items`, {
+    token: fx.player.token,
+    body: {
+      name: 'Arc du joueur',
+      category: 'weapon',
+      damageDice: '1d8+DEX',
+      damageType: 'Piercing',
+      properties: ['ammunition'],
+      baseWeapon: 'Shortbow',
+    },
+  });
+  eq(r.status, 201, 'player creates a full custom weapon when the party allows it');
+
   // the GM's kill switch: once off, players are back to GM-only creation
   r = await api(base, 'PATCH', `/api/parties/${P}`, {
     token: fx.gm.token,
@@ -119,6 +133,11 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
     body: { name: 'Interdit' },
   });
   eq(r.status, 403, 'player creation blocked once the setting is off');
+  r = await api(base, 'POST', `/api/parties/${P}/items`, {
+    token: fx.player.token,
+    body: { name: 'Interdite aussi', category: 'weapon', damageDice: '1d6' },
+  });
+  eq(r.status, 403, 'player WEAPON creation blocked once the setting is off');
 
   // non-members never create, whatever the setting
   r = await api(base, 'POST', `/api/parties/${P}/items`, {
@@ -147,6 +166,104 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   eq(custom.source, 'custom', 'custom source');
   eq(custom.partyId, P, 'attached to party');
   eq(custom.createdBy, fx.gm.userId, 'GM creation records the author');
+
+  // ---------- armes personnalisées complètes (plan armes-custom 2026-11) ----------
+  // Cas d'école utilisateur : « Épée à deux mains +2 », dés 4d6+FOR+2.
+  r = await api(base, 'POST', `/api/parties/${P}/items`, {
+    token: fx.gm.token,
+    body: {
+      name: 'Épée à deux mains +2',
+      category: 'weapon',
+      damageDice: '4d6+FOR+2',
+      damageType: 'Slashing',
+      magicBonus: 2,
+      baseWeapon: 'Greatsword',
+      properties: ['heavy', 'two-handed'],
+    },
+  });
+  eq(r.status, 201, 'create full custom weapon');
+  const epee = r.data.item;
+  eq(epee.damageDice, '4d6+FOR+2', 'custom weapon stores the damage template');
+  eq(epee.damageType, 'Slashing', 'custom weapon stores the SRD damage type');
+  eq(epee.baseWeapon, 'Greatsword', 'custom weapon carries the stable base key');
+  eq(epee.magicBonus, 2, 'explicit magic bonus kept with explicit dice');
+  eq(epee.twoHandedDice, null, 'no two-handed dice without the versatile property');
+  eq(epee.properties.sort().join(','), 'heavy,two-handed', 'weapon properties stored');
+  const rowEpee = srv.query('SELECT * FROM items WHERE id = ?', epee.id);
+  eq(rowEpee.two_handed_dice, null, 'two_handed_dice column null in DB');
+  eq(rowEpee.magic_bonus, 2, 'magic_bonus column in DB');
+
+  // polyvalente : les dés 2M ne sont conservés qu'avec la propriété
+  r = await api(base, 'POST', `/api/parties/${P}/items`, {
+    token: fx.gm.token,
+    body: {
+      name: 'Lame polyvalente',
+      category: 'weapon',
+      damageDice: '1d8+FOR',
+      twoHandedDice: '1d10+FOR',
+      properties: ['versatile'],
+    },
+  });
+  eq(r.status, 201, 'create versatile custom weapon');
+  eq(r.data.item.twoHandedDice, '1d10+FOR', 'versatile keeps the 2H template');
+  r = await api(base, 'POST', `/api/parties/${P}/items`, {
+    token: fx.gm.token,
+    body: {
+      name: 'Lame lourde 2M ignorée',
+      category: 'weapon',
+      damageDice: '2d6',
+      twoHandedDice: '1d12',
+      properties: ['heavy'],
+    },
+  });
+  eq(r.status, 201, 'create non-versatile weapon with 2H dice');
+  eq(r.data.item.twoHandedDice, null, '2H dice silently dropped without versatile');
+
+  // propriétés inconnues filtrées silencieusement — jamais d'injection
+  r = await api(base, 'POST', `/api/parties/${P}/items`, {
+    token: fx.gm.token,
+    body: {
+      name: 'Dague étrange',
+      category: 'weapon',
+      damageDice: '1d4+FOR',
+      properties: ['finesse', 'mwahaha'],
+    },
+  });
+  eq(r.status, 201, 'unknown properties are filtered, not rejected');
+  eq(r.data.item.properties.join(','), 'finesse', 'only SRD property keys stored');
+
+  // validations → 400
+  r = await api(base, 'POST', `/api/parties/${P}/items`, {
+    token: fx.gm.token,
+    body: { name: 'Invalide', category: 'weapon', damageDice: '4d6+FOO' },
+  });
+  eq(r.status, 400, 'invalid damage template → 400');
+  r = await api(base, 'POST', `/api/parties/${P}/items`, {
+    token: fx.gm.token,
+    body: {
+      name: 'Invalide 2M',
+      category: 'weapon',
+      damageDice: '1d8',
+      twoHandedDice: '1d10+BAR',
+      properties: ['versatile'],
+    },
+  });
+  eq(r.status, 400, 'invalid 2H template → 400');
+  r = await api(base, 'POST', `/api/parties/${P}/items`, {
+    token: fx.gm.token,
+    body: { name: 'Invalide bonus', category: 'weapon', damageDice: '1d8', magicBonus: 5 },
+  });
+  eq(r.status, 400, 'magic bonus out of +1/+2/+3 → 400');
+  r = await api(base, 'POST', `/api/parties/${P}/items`, {
+    token: fx.gm.token,
+    body: { name: 'Invalide type', category: 'weapon', damageDice: '1d8', damageType: 'Plasma' },
+  });
+  eq(r.status, 400, 'non-SRD damage type → 400');
+  r = await api(base, 'POST', `/api/parties/${P}/items`, {
+    token: fx.gm.token,
+    body: { name: 'Invalide base', category: 'weapon', damageDice: '1d8', baseWeapon: 'Excalibur' },
+  });
+  eq(r.status, 400, 'unknown base weapon → 400');
 
   // party context: SRD catalog + this party's customs — and nothing from
   // other parties, even for a user member of both (DM here, player there)
@@ -263,6 +380,28 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   });
   eq(r.status, 200, 'patch custom item');
   eq(r.data.item.name, 'Lame renommée', 'item renamed');
+
+  // PATCH d'une arme custom : dés + propriétés + base changés → re-résolution
+  r = await api(base, 'PATCH', `/api/items/${epee.id}`, {
+    token: fx.gm.token,
+    body: {
+      damageDice: '2d6+FOR',
+      properties: ['versatile'],
+      twoHandedDice: '1d12',
+      baseWeapon: 'Longsword',
+    },
+  });
+  eq(r.status, 200, 'patch custom weapon fields');
+  eq(r.data.item.damageDice, '2d6+FOR', 'patched template stored');
+  eq(r.data.item.twoHandedDice, '1d12', 'patched 2H template stored');
+  eq(r.data.item.baseWeapon, 'Longsword', 'base key re-resolved to the new base');
+  eq(r.data.item.properties.join(','), 'versatile', 'patched properties stored');
+  eq(r.data.item.magicBonus, 2, 'magic bonus preserved through re-resolution');
+  r = await api(base, 'PATCH', `/api/items/${epee.id}`, {
+    token: fx.gm.token,
+    body: { damageDice: '2d6+OUPS' },
+  });
+  eq(r.status, 400, 'patch with invalid template → 400');
   r = await api(base, 'PATCH', '/api/items/999999', { token: fx.gm.token, body: { name: 'x' } });
   eq(r.status, 404, 'patch item 404');
 
