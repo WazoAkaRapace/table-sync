@@ -203,13 +203,15 @@ export function reconcileHealingPotionDuplicate(): void {
   db.transaction(() => {
     const rows = db
       .prepare(
-        'SELECT id, character_id, storage_location_id, quantity FROM inventory WHERE item_id = ?',
+        'SELECT id, character_id, storage_location_id, quantity, equipped, notes FROM inventory WHERE item_id = ?',
       )
       .all(stale.id) as Array<{
       id: number;
       character_id: number;
       storage_location_id: number | null;
       quantity: number;
+      equipped: number;
+      notes: string | null;
     }>;
     for (const row of rows) {
       // Fusion sur la ligne existante du même personnage/emplacement (upsert
@@ -228,8 +230,25 @@ export function reconcileHealingPotionDuplicate(): void {
         ...(row.storage_location_id === null ? [] : [row.storage_location_id]),
       ) as { id: number; quantity: number } | undefined;
       if (target) {
-        db.prepare('UPDATE inventory SET quantity = ? WHERE id = ?').run(
+        // Fusion : quantités additionnées, état équipé conservé (OR) et notes
+        // des DEUX lignes retenues (jamais écrasées) — revue #271.
+        db.prepare(
+          `UPDATE inventory SET
+             quantity = ?,
+             equipped = MAX(equipped, ?),
+             notes = CASE
+               WHEN notes IS NULL OR notes = '' THEN ?
+               WHEN ? IS NULL OR ? = '' THEN notes
+               ELSE notes || ' · ' || ?
+             END
+           WHERE id = ?`,
+        ).run(
           target.quantity + row.quantity,
+          row.equipped,
+          row.notes,
+          row.notes,
+          row.notes,
+          row.notes,
           target.id,
         );
         db.prepare('DELETE FROM inventory WHERE id = ?').run(row.id);

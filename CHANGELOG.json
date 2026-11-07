@@ -4,9 +4,7 @@
     "sha": null,
     "date": "2026-11-07",
     "title": "potions de soin renommées",
-    "items": [
-      "Les potions de soin majeure, supérieure et suprême portent enfin leur juste nom, et la potion de soin basique n'existe plus en double."
-    ]
+    "items": ["Les noms des potions de soin sont corrigés."]
   },
   {
     "version": "2026.11.07-5",
