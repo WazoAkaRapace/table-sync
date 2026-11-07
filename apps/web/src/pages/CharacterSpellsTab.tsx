@@ -756,7 +756,9 @@ export default function CharacterSpellsTab({
       characterId: Number(charId),
       spell: sp,
       prepared: true,
-      classSource: null,
+      // Source Clerc : le domaine EST la liste de clerc — sans elle, un
+      // bi-lanceur affichait le mod de sa première classe (revue #272).
+      classSource: 'Clerc',
       source: null,
       sortOrder: 0,
       addedAt: '',
@@ -810,6 +812,9 @@ export default function CharacterSpellsTab({
     selectedClass: catalogClass,
     addingSpellId,
     knownSpellIds: new Set(charSpells.map((cs) => cs.spell.id)),
+    // Source de classe des sorts connus : sans filtre, le catalogue affiche
+    // le modificateur de la classe ENREGISTRÉE (pas de la 1re classe) — revue #272.
+    knownClassSources: new Map(charSpells.map((cs) => [cs.spell.id, cs.classSource])),
     castingMod,
     profBonus,
     isCaster,
@@ -1216,7 +1221,9 @@ export default function CharacterSpellsTab({
           pactSlots={pactSlots}
           pactUsed={pactUsed}
           castingMod={modForSpell(
-            charSpells.find((cs) => cs.id === castingRowId)?.classSource ?? null,
+            // Toutes les rangées : les sorts de domaine portent un id
+            // synthétique absent de charSpells (revue #272).
+            allRows.find((cs) => cs.id === castingRowId)?.classSource ?? null,
           )}
           profBonus={profBonus}
           charLevel={level}
@@ -1611,6 +1618,7 @@ function SpellCatalog({
   charLevel,
   character,
   modForClass,
+  knownClassSources,
   onSearch,
   onLevel,
   onSchool,
@@ -1638,6 +1646,9 @@ function SpellCatalog({
   /** Modificateur d'incantation d'une classe du personnage (repli : premier
    *  lanceur) — aligne DD/attaque des badges sur la classe du filtre. */
   modForClass: (cls: string) => number;
+  /** Source de classe enregistrée des sorts connus (sans filtre sélectionné,
+   *  les badges d'un sort connu suivent SA classe, revue #272). */
+  knownClassSources: Map<number, string | null>;
   onSearch: (v: string) => void;
   onLevel: (v: string) => void;
   onSchool: (v: string) => void;
@@ -1799,15 +1810,23 @@ function SpellCatalog({
                   {isExpanded && (
                     <div className="px-3 pb-3 pt-2 border-t border-parchment-200 text-xs text-ink-600 space-y-2 bg-parchment-50">
                       <SpellProse spell={spell} />
-                      <SpellStatBadges
-                        spell={spell}
-                        castingMod={selectedClass ? modForClass(selectedClass) : castingMod}
-                        profBonus={profBonus}
-                        isCaster={isCaster}
-                        charLevel={charLevel}
-                        character={character}
-                        classSource={selectedClass || null}
-                      />
+                      {(() => {
+                        // Sans filtre, un sort CONNU garde sa classe
+                        // enregistrée (bi-lanceur : bon modificateur).
+                        const known = knownClassSources.get(spell.id) ?? null;
+                        const cls = selectedClass || known;
+                        return (
+                          <SpellStatBadges
+                            spell={spell}
+                            castingMod={cls ? modForClass(cls) : castingMod}
+                            profBonus={profBonus}
+                            isCaster={isCaster}
+                            charLevel={charLevel}
+                            character={character}
+                            classSource={cls}
+                          />
+                        );
+                      })()}
                       <SpellMetaLine spell={spell} />
                       {spell.classes.length > 0 && (
                         <p className="text-ink-400">
