@@ -451,6 +451,7 @@ export function mapInventoryEntry(row: any, lang: AppLang = 'fr'): InventoryEntr
         has_description: row.i_has_description,
         damage_dice: row.i_damage_dice,
         damage_type: row.i_damage_type,
+        two_handed_dice: row.i_two_handed_dice ?? null,
         ac_base: row.i_ac_base,
         str_min: row.i_str_min,
         stealth_disadvantage: row.i_stealth_disadvantage,

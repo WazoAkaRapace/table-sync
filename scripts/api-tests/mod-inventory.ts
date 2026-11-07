@@ -86,6 +86,33 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   r = await api(base, 'GET', `/api/characters/${A}/inventory`, { token: fx.gm.token });
   const daggerEntry = r.data.entries.find((e: any) => e.item.baseWeapon === 'Dagger');
   ok(daggerEntry, 'GET inventory entry carries baseWeapon');
+
+  // Les dés à deux mains CUSTOM transitent par la même projection i_ (revue
+  // #255) : sans la colonne, la fiche retombait sur les dés SRD de la base.
+  r = await api(base, 'POST', `/api/parties/${fx.partyId}/items`, {
+    token: fx.gm.token,
+    body: {
+      name: 'Lame polyvalente (vue)',
+      category: 'weapon',
+      damageDice: '1d8+FOR',
+      twoHandedDice: '1d10+FOR',
+      properties: ['versatile'],
+    },
+  });
+  eq(r.status, 201, 'create versatile custom weapon');
+  const lameVue = r.data.item.id as number;
+  r = await api(base, 'POST', `/api/characters/${A}/inventory`, {
+    token: fx.gm.token,
+    body: { itemId: lameVue },
+  });
+  eq(r.status, 201, 'add versatile custom weapon');
+  eq(r.data.entry.item.twoHandedDice, '1d10+FOR', 'POST entry carries the custom 2H template');
+  r = await api(base, 'GET', `/api/characters/${A}/inventory`, { token: fx.gm.token });
+  ok(
+    r.data.entries.some((e: any) => e.item.id === lameVue && e.item.twoHandedDice === '1d10+FOR'),
+    'GET inventory entry carries the custom 2H template',
+  );
+
   // Régime connectivité : la fiche embarque des objets en RÉSUMÉ — prose à
   // null + drapeau d'existence (lazyDetails ouvre la ligne → GET /items/:id).
   ok(

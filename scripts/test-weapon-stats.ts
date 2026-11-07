@@ -706,7 +706,6 @@ const epeeCustom = mkWeapon({
   nameFr: 'Épée à deux mains +2',
   damageDice: '4d6+FOR+2',
   damageType: 'Slashing',
-  twoHandedDice: '2d6+FOR+2',
   magicBonus: 2,
   baseWeapon: 'Greatsword',
   properties: ['heavy', 'two-handed'],
@@ -718,8 +717,32 @@ check(
   sc && { ab: sc.attackBonus, dmg: sc.damageStr, type: sc.damageTypeFr, magic: sc.magicBonus },
   { ab: 8, dmg: '4d6+6', type: 'tranchants', magic: 2 },
 );
-check('Custom → deux mains rendues depuis twoHandedDice', sc?.versatileDamageStr, '2d6+6');
 check('Custom → base Greatsword (martial, guerrier qualifié)', sc?.proficient, true);
+// Une épée à deux mains n'est PAS polyvalente : jamais de ligne 2M, même en
+// présence d'une valeur twoHandedDice parasite (revue #255 — le repli SRD ne
+// vaut que pour « versatile »).
+check('Custom non polyvalente → pas de dégâts à deux mains', sc?.versatileDamageStr, null);
+
+// Custom POLYVALENTE basée sur l'épée longue : les dés 2M explicites
+// (twoHandedDice) rendent seuls, template à mot-clé compris.
+const lamePolyvalente = mkWeapon({
+  source: 'custom',
+  name: 'Lame du cocheur +1',
+  nameFr: 'Lame du cocheur +1',
+  damageDice: '1d8+FOR',
+  damageType: 'Slashing',
+  twoHandedDice: '1d10+FOR',
+  magicBonus: 1,
+  baseWeapon: 'Longsword',
+  properties: ['versatile'],
+});
+const sp = computeWeaponStats(lamePolyvalente, guerrier1For18);
+check('Custom polyvalente → 2M depuis twoHandedDice', sp?.versatileDamageStr, '1d10+4');
+// Sans « versatile » cochée (base épée longue), le repli SRD (1d10) ne
+// s'applique plus : la propriété retirée par le créateur retire la variante.
+const lameNonPolyvalente = mkWeapon({ ...lamePolyvalente, properties: [] });
+const spn = computeWeaponStats(lameNonPolyvalente, guerrier1For18);
+check('Custom sans « versatile » → pas de repli SRD 2M', spn?.versatileDamageStr, null);
 
 // Le bonus magique explicite compte AUSSI sans mot-clé dans les dés :
 // arme custom 2d6 avec magicBonus 3 → dégâts 2d6+FOR+3, attaque +3.

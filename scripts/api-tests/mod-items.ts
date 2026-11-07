@@ -206,6 +206,7 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   });
   eq(r.status, 201, 'create versatile custom weapon');
   eq(r.data.item.twoHandedDice, '1d10+FOR', 'versatile keeps the 2H template');
+
   r = await api(base, 'POST', `/api/parties/${P}/items`, {
     token: fx.gm.token,
     body: {

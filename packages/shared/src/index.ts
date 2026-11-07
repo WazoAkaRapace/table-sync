@@ -3503,10 +3503,15 @@ export function computeWeaponStats(
     damageStr =
       renderDiceLine(dice, true) ?? formatDiceWithMod(dice, abilityMod + magicBonus + dueling);
   }
-  const twoHanded =
-    item.twoHandedDice ??
-    base?.twoHandedDice ??
-    MUNDANE_WEAPONS.find((m) => m.nameEn === nameEn)?.twoHandedDice;
+  // Le repli SRD ne vaut que pour une arme Polyvalente : une custom basée sur
+  // une épée longue mais débarrassée de « versatile » n'a PAS de dégâts à
+  // deux mains (les dés explicites d'un item polyvalente vivent dans
+  // twoHandedDice — jamais hérités de la base en silence).
+  const twoHanded = props.includes('versatile')
+    ? (item.twoHandedDice ??
+      base?.twoHandedDice ??
+      MUNDANE_WEAPONS.find((m) => m.nameEn === nameEn)?.twoHandedDice)
+    : null;
   let versatileDamageStr: string | null = null;
   if (twoHanded && dice) {
     versatileDamageStr =
