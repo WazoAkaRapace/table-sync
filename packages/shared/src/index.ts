@@ -13,9 +13,12 @@ import type { FeatureResetType } from './classFeatures.ts';
 // Manifestations occultes : catalogue de données LÉGER (~14 KB, aucune
 // traduction) — import runtime assumé : invocationIdsOf en valide les ids.
 import { WARLOCK_INVOCATIONS } from './warlockInvocations.ts';
+import { parseDamageTemplate, renderDamageTemplate } from './damageTemplate.ts';
 
 export * from './catalogs.en.ts';
 export * from './labels.en.ts';
+// Moteur de template de dégâts des armes personnalisées (« 4d6+FOR+2 »).
+export * from './damageTemplate.ts';
 
 // ---------- Langue des chaînes calculées ----------
 
