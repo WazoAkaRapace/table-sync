@@ -1267,6 +1267,7 @@
   "sorts.non.prepare": "Not prepared",
   "sorts.grimoire": "Spellbook",
   "sorts.dd": "DC",
+  "sorts.degats.incantation.puissante": "Potent Spellcasting: +{{mod}} (Wisdom)",
   "sorts.attaque": "Attack",
   "sorts.att": "atk.",
   "sorts.aucun.effet.en.cas.de.reussite": "No effect on a success",

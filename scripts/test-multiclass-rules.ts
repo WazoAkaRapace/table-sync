@@ -28,6 +28,7 @@ import {
   preparedLimits,
   SPELL_SLOTS_FULL,
   sneakAttackDice,
+  potentCantripBonus,
   spellDamageAtLevel,
   totalLevel,
   unarmoredDefensesOf,
@@ -546,6 +547,65 @@ check(
   'Second souffle Guerrier 2 : 1 utilisation',
   secondWindDef ? classFeatureResourceMax(secondWindDef, secondWindChar) : null,
   1,
+);
+
+// ---------- Incantation puissante (Lumière/Savoir 8, SRD 5.1) ----------
+// PHB 2014 : « vous ajoutez votre modificateur de Sagesse aux dégâts de vos
+// sorts mineurs de clerc » — niveau de CLASSE Clerc, domaines Lumière/Savoir.
+check(
+  'Incantation puissante : Clerc Lumière 8, SAG 16 → +3',
+  potentCantripBonus(
+    char({ characterClass: 'Clerc', level: 8, wisdom: 16, divineDomain: 'Lumière' }),
+  ),
+  3,
+);
+check(
+  'Incantation puissante : niveau de CLASSE — Clerc Lumière 7 → 0',
+  potentCantripBonus(
+    char({ characterClass: 'Clerc', level: 7, wisdom: 16, divineDomain: 'Lumière' }),
+  ),
+  0,
+);
+check(
+  'Incantation puissante : Savoir 8, SAG 18 → +4',
+  potentCantripBonus(
+    char({ characterClass: 'Clerc', level: 8, wisdom: 18, divineDomain: 'Savoir' }),
+  ),
+  4,
+);
+check(
+  'Incantation puissante : domaine non porteur (Guerre 8) → 0',
+  potentCantripBonus(
+    char({ characterClass: 'Clerc', level: 8, wisdom: 16, divineDomain: 'Guerre' }),
+  ),
+  0,
+);
+check(
+  'Incantation puissante : multiclassé Guerrier 6/Clerc Lumière 8 (domaine sur la ligne de classe) → +3',
+  potentCantripBonus(
+    char({
+      level: 14,
+      wisdom: 16,
+      classes: [entry('Guerrier', 6), entry('Clerc', 8, { subclassKey: 'Lumière' })],
+    }),
+  ),
+  3,
+);
+check(
+  'Incantation puissante : multiclassé niveau total 14 mais Clerc 7 → 0',
+  potentCantripBonus(
+    char({
+      level: 14,
+      wisdom: 16,
+      classes: [entry('Guerrier', 7), entry('Clerc', 7, { subclassKey: 'Lumière' })],
+    }),
+  ),
+  0,
+);
+check(
+  'Incantation puissante : non-clerc → 0',
+  potentCantripBonus(char({ characterClass: 'Magicien', level: 10, wisdom: 16 })),
+  0,
 );
 
 if (failures > 0) {
