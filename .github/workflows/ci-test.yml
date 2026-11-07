@@ -46,6 +46,10 @@ jobs:
         run: npm run changelog:check -- --check-format --selftest
       - name: Changelog (entrée en attente)
         if: github.event_name == 'pull_request'
+        env:
+          # Liste des fichiers de la PR → exemption outillage dans le script
+          # (en CI, HEAD est le commit de merge test : sujet non exploitable).
+          PR_FILES: ${{ toJSON(github.event.pull_request.files.*.path) }}
         run: npm run changelog:check -- --check-pending
 
       # ---- Ratchet i18n : le FR hors catalogue ne peut que descendre ----

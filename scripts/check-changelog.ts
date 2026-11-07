@@ -213,8 +213,27 @@ function botCommitted(): boolean {
 /** PR purement outillage (exception documentée du SKILL.md) : sujet `chore`
  * ET fichiers tous hors code produit (.github/, scripts/, docs/, site/,
  * CHANGELOG.json). Le lecteur du journal est un joueur — l'outillage n'a
- * rien à y dire. */
+ * rien à y dire.
+ *
+ * En CI, HEAD est le commit de merge test de GitHub (sujet « Merge … ») :
+ * l'heuristique sur le commit local ne s'applique pas — la liste des
+ * fichiers de la PR arrive alors par env PR_FILES (tableau JSON des chemins,
+ * posé par ci-test.yml depuis github.event.pull_request.files). */
 function choreOnlyCommit(): boolean {
+  const CHORE_RE = /^(\.github\/|scripts\/|docs\/|site\/|CHANGELOG\.json$)/;
+  const envFiles = process.env.PR_FILES;
+  if (envFiles) {
+    try {
+      const files = JSON.parse(envFiles) as string[];
+      const exempt = files.length > 0 && files.every((f) => CHORE_RE.test(f));
+      if (exempt) {
+        console.log('✓ PR outillage exemptée (fichiers hors code produit, liste de la PR).');
+      }
+      return exempt;
+    } catch {
+      return false; // env illisible → pas d'exemption
+    }
+  }
   const subject = execSync('git log -1 --format=%s', { cwd: ROOT }).toString().trim();
   if (!/^chore/i.test(subject)) return false;
   const files = execSync('git show --name-only --format= HEAD', { cwd: ROOT })
@@ -222,7 +241,6 @@ function choreOnlyCommit(): boolean {
     .trim()
     .split('\n')
     .filter(Boolean);
-  const CHORE_RE = /^(\.github\/|scripts\/|docs\/|site\/|CHANGELOG\.json$)/;
   const exempt = files.length > 0 && files.every((f) => CHORE_RE.test(f));
   if (exempt)
     console.log(`✓ Commit outillage « ${subject} » exempté (fichiers hors code produit).`);
