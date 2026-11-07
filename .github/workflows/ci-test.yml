@@ -50,11 +50,14 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
+          set -euo pipefail
           # Liste des fichiers de la PR → exemption outillage dans le script.
           # (github.event.pull_request.files n'existe pas dans le payload des
-          # événements — sous-ressource REST : on la récupère via gh.)
-          PR_FILES=$(gh pr view "$PR_NUMBER" -R "$GITHUB_REPOSITORY" \
-            --json files --jq '[.files[].path]')
+          # événements — sous-ressource REST : on la récupère via gh, PAGINÉE
+          # — gh pr view --json files tronque à 100 fichiers sans pagination.)
+          PR_FILES=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/files" \
+            --paginate --jq '.[].filename' \
+            | jq -R -s 'split("\n") | map(select(length > 0))')
           echo "Fichiers de la PR : $PR_FILES"
           export PR_FILES
           npm run changelog:check -- --check-pending

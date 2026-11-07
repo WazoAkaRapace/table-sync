@@ -814,6 +814,7 @@ export default function CharacterSpellsTab({
     profBonus,
     isCaster,
     character,
+    modForClass: modForSpell,
     charLevel: level,
     onSearch: setCatalogSearch,
     onLevel: setCatalogLevel,
@@ -1427,9 +1428,14 @@ function potentBonusFor(spell: Spell, character: Character, classSource: string 
 }
 
 /** Niveau de mise à l'échelle d'un mineur : niveau de CLASSE du sort (RAW),
- *  pas le niveau total — repli sur le total si la source est inconnue. */
+ *  pas le niveau total. Une source NON POSSÉDÉE par le personnage (filtre du
+ *  catalogue) ne compte pas : repli sur une classe possédée qui propose le
+ *  sort, sinon le niveau total — jamais le niveau 1 d'une classe absente. */
 function cantripScaleLevel(spell: Spell, character: Character, classSource: string | null): number {
-  if (classSource) return Math.max(1, classLevelOf(character, classSource));
+  if (classSource) {
+    const lvl = classLevelOf(character, classSource);
+    if (lvl > 0) return lvl;
+  }
   const match = classesOf(character).find((c) => spell.classes.includes(c.classKey));
   return match ? match.level : (character.level ?? 1);
 }
@@ -1602,6 +1608,7 @@ function SpellCatalog({
   isCaster,
   charLevel,
   character,
+  modForClass,
   onSearch,
   onLevel,
   onSchool,
@@ -1626,6 +1633,9 @@ function SpellCatalog({
   isCaster: boolean;
   charLevel: number;
   character: Character;
+  /** Modificateur d'incantation d'une classe du personnage (repli : premier
+   *  lanceur) — aligne DD/attaque des badges sur la classe du filtre. */
+  modForClass: (cls: string) => number;
   onSearch: (v: string) => void;
   onLevel: (v: string) => void;
   onSchool: (v: string) => void;
@@ -1789,11 +1799,12 @@ function SpellCatalog({
                       <SpellProse spell={spell} />
                       <SpellStatBadges
                         spell={spell}
-                        castingMod={castingMod}
+                        castingMod={selectedClass ? modForClass(selectedClass) : castingMod}
                         profBonus={profBonus}
                         isCaster={isCaster}
                         charLevel={charLevel}
                         character={character}
+                        classSource={selectedClass || null}
                       />
                       <SpellMetaLine spell={spell} />
                       {spell.classes.length > 0 && (

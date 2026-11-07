@@ -3758,15 +3758,26 @@ export function spellDamageAtLevel(
   }
 }
 
-/** Domaines de clerc porteurs d'Incantation puissante (niveau 8, SRD 5.1). */
-export const POTENT_SPELLCASTING_DOMAINS: readonly string[] = ['Lumière', 'Savoir'];
+/** Domaines de clerc porteurs d'Incantation puissante (niveau 8, SRD 5.1) —
+ * clés NORMALISÉES de CLASS_SUBCLASSES : les vrais payloads portent les clés
+ * ('lumiere', 'savoir'), les libellés ('Lumière', 'Savoir') sont acceptés
+ * par normalisation (accents/casse). */
+const POTENT_DOMAIN_KEYS: ReadonlySet<string> = new Set(['lumiere', 'savoir']);
+
+function normalizeDomainKey(candidate: string): string {
+  return candidate
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
 
 /**
  * Incantation puissante (Lumière/Savoir 8, SRD 5.1) : les sorts mineurs de
  * clerc du personnage infligent +modificateur de Sagesse. Renvoie ce bonus,
  * 0 si le trait est absent. Le niveau 8 s'entend au niveau de CLASSE Clerc
- * (multiclassé) ; le domaine vient de `divineDomain` (colonne dédiée) ou, à
- * défaut, de la ligne Clerc multiclassée (`classes[].subclassKey`).
+ * (multiclassé) ; le domaine vient de la LIGNE de classe Clerc
+ * (`classes[].subclassKey`, clé 'lumiere'/'savoir') — source de vérité du
+ * multiclassage — avec repli sur la colonne dédiée `divineDomain`.
  */
 export function potentCantripBonus(
   character: CharacterClassSource & {
@@ -3775,11 +3786,9 @@ export function potentCantripBonus(
   },
 ): number {
   if (classLevelOf(character, 'Clerc') < 8) return 0;
-  const domain =
-    character.divineDomain ??
-    classesOf(character).find((c) => c.classKey === 'Clerc')?.subclassKey ??
-    null;
-  if (!domain || !POTENT_SPELLCASTING_DOMAINS.includes(domain)) return 0;
+  const clericLine = classesOf(character).find((c) => c.classKey === 'Clerc');
+  const domain = clericLine?.subclassKey ?? character.divineDomain ?? null;
+  if (!domain || !POTENT_DOMAIN_KEYS.has(normalizeDomainKey(domain))) return 0;
   return abilityModifier(character.wisdom ?? 10);
 }
 
