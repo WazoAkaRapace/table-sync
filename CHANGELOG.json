@@ -1,5 +1,14 @@
 [
   {
+    "version": null,
+    "sha": null,
+    "date": "2026-11-07",
+    "title": "incantation puissante",
+    "items": [
+      "Les sorts mineurs d'un clerc de la Lumière ou du Savoir affichent leurs dégâts avec le bonus de Sagesse d'Incantation puissante."
+    ]
+  },
+  {
     "version": "2026.11.07-4",
     "sha": "cab9f921",
     "date": "2026-11-07",

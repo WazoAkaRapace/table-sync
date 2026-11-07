@@ -10,12 +10,14 @@ import {
   type Character,
   type CharacterFeature,
   type CharacterSpell,
+  classLevelOf,
   classesOf,
   computeSpellcastingPools,
   DND_CLASSES,
   findClass,
   formatModifier,
   invocationIdsOf,
+  potentCantripBonus,
   preparedLimits,
   proficiencyBonus,
   SPELL_SCHOOL_LABELS_FR,
@@ -811,6 +813,7 @@ export default function CharacterSpellsTab({
     castingMod,
     profBonus,
     isCaster,
+    character,
     charLevel: level,
     onSearch: setCatalogSearch,
     onLevel: setCatalogLevel,
@@ -1137,6 +1140,8 @@ export default function CharacterSpellsTab({
                                     profBonus={profBonus}
                                     isCaster={isCaster}
                                     charLevel={level}
+                                    character={character}
+                                    classSource={cs.classSource}
                                   />
                                   <SpellMetaLine spell={spell} />
                                   {canRemove && (
@@ -1409,11 +1414,24 @@ function safeParse<T>(json: string | null): T | null {
   }
 }
 
-/** Damage dice string for a spell based on character level / spell level. */
-function computeDamageDice(spell: Spell, charLevel: number): string | null {
-  const { dice, typeFr } = spellDamageAtLevel(spell, spell.level, charLevel);
-  if (!dice) return null;
-  return typeFr ? `${dice} ${damageType(typeFr) ?? typeFr}` : dice;
+/**
+ * Incantation puissante (Lumière/Savoir 8) sur un mineur : +SAG si le sort
+ * est bien un mineur DE CLERC pour ce personnage (source Clerc connue, ou
+ * catalogue où le sort est proposé au Clerc).
+ */
+function potentBonusFor(spell: Spell, character: Character, classSource: string | null): number {
+  if (spell.level !== 0) return 0;
+  const isClericCantrip =
+    classSource === 'Clerc' || (!classSource && spell.classes.includes('Clerc'));
+  return isClericCantrip ? potentCantripBonus(character) : 0;
+}
+
+/** Niveau de mise à l'échelle d'un mineur : niveau de CLASSE du sort (RAW),
+ *  pas le niveau total — repli sur le total si la source est inconnue. */
+function cantripScaleLevel(spell: Spell, character: Character, classSource: string | null): number {
+  if (classSource) return Math.max(1, classLevelOf(character, classSource));
+  const match = classesOf(character).find((c) => spell.classes.includes(c.classKey));
+  return match ? match.level : (character.level ?? 1);
 }
 
 /** Render spell stat badges: save DC, attack bonus, damage — computed from character stats. */
@@ -1423,22 +1441,38 @@ function SpellStatBadges({
   profBonus,
   isCaster,
   charLevel,
+  character,
+  classSource = null,
 }: {
   spell: Spell;
   castingMod: number;
   profBonus: number;
   isCaster: boolean;
   charLevel: number;
+  character: Character;
+  /** Classe d'origine du sort (mineurs : mise à l'échelle + Incantation
+   *  puissante par niveau de CLASSE) — null au catalogue. */
+  classSource?: string | null;
 }) {
   const { t } = useTranslation();
   if (!isCaster) return null;
 
   const dc = safeParse<{
-    dc_type?: { index?: string; name?: string };
+    dc_type?: { index?: string; name?: string } | null;
     dc_success?: string;
   }>(spell.dcJson);
 
-  const damageDice = computeDamageDice(spell, charLevel);
+  // Mineurs : le dé suit le niveau de CLASSE (RAW), le bonus d'Incantation
+  // puissante (Lumière/Savoir 8) s'y ajoute — title qui nomme le trait.
+  const scaleLevel =
+    spell.level === 0 ? cantripScaleLevel(spell, character, classSource) : charLevel;
+  const potent = potentBonusFor(spell, character, classSource);
+  const { dice, typeFr } = spellDamageAtLevel(spell, spell.level, scaleLevel);
+  const damageDice = !dice
+    ? null
+    : `${dice}${potent > 0 ? `+${potent}` : ''}${typeFr ? ` ${damageType(typeFr) ?? typeFr}` : ''}`;
+  const potentTitle =
+    potent > 0 ? t('sorts.degats.incantation.puissante', { mod: potent }) : undefined;
   const healing = spellHealingAtLevel(spell, spell.level, charLevel);
   const attackBonus = castingMod + profBonus;
   const dcValue = spellSaveDC(castingMod, profBonus);
@@ -1473,7 +1507,11 @@ function SpellStatBadges({
           </span>
         </Chip>
       )}
-      {damageDice && <Chip tone="orange">⚔ {damageDice}</Chip>}
+      {damageDice && (
+        <Chip tone="orange" title={potentTitle}>
+          ⚔ {damageDice}
+        </Chip>
+      )}
       {healing.dice && (
         <Chip
           tone="green"
@@ -1563,6 +1601,7 @@ function SpellCatalog({
   profBonus,
   isCaster,
   charLevel,
+  character,
   onSearch,
   onLevel,
   onSchool,
@@ -1586,6 +1625,7 @@ function SpellCatalog({
   profBonus: number;
   isCaster: boolean;
   charLevel: number;
+  character: Character;
   onSearch: (v: string) => void;
   onLevel: (v: string) => void;
   onSchool: (v: string) => void;
@@ -1753,6 +1793,7 @@ function SpellCatalog({
                         profBonus={profBonus}
                         isCaster={isCaster}
                         charLevel={charLevel}
+                        character={character}
                       />
                       <SpellMetaLine spell={spell} />
                       {spell.classes.length > 0 && (

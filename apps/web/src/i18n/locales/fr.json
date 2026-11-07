@@ -1266,6 +1266,7 @@
   "sorts.non.prepare": "Non préparé",
   "sorts.grimoire": "Grimoire",
   "sorts.dd": "DD",
+  "sorts.degats.incantation.puissante": "Incantation puissante : +{{mod}} (Sagesse)",
   "sorts.attaque": "Attaque",
   "sorts.att": "att.",
   "sorts.aucun.effet.en.cas.de.reussite": "Aucun effet en cas de réussite",
