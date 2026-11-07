@@ -11,7 +11,12 @@ import multipart from '@fastify/multipart';
 import websocket from '@fastify/websocket';
 import Fastify from 'fastify';
 import { verifyAccess } from './auth/refresh.ts';
-import { backfillItemBases, backfillMonsterSearchText, reconcileAmmoPacks } from './db/backfill.ts';
+import {
+  backfillItemBases,
+  backfillMonsterSearchText,
+  reconcileAmmoPacks,
+  reconcileHealingPotionDuplicate,
+} from './db/backfill.ts';
 import { runDrizzleMigrations } from './db/drizzle.ts';
 import { migrate } from './db/index.ts';
 import { seedItems, seedMonsters, seedSpells } from './db/seed.ts';
@@ -206,6 +211,14 @@ async function start() {
     reconcileAmmoPacks();
   } catch (err) {
     console.warn(`[server] ammo pack reconciliation skipped: ${(err as Error).message}`);
+  }
+  try {
+    // 2026-11 : la Potion de soin basique existait en double au seed SRD —
+    // les inventaires pointant l'entrée « variable » partent sur l'entrée
+    // « commune », puis la ligne obsolète disparaît. Idempotent.
+    reconcileHealingPotionDuplicate();
+  } catch (err) {
+    console.warn(`[server] healing potion dedup skipped: ${(err as Error).message}`);
   }
 
   const app = await buildServer();

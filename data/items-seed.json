@@ -9017,26 +9017,6 @@
   {
     "source": "srd",
     "category": "magic",
-    "srdIndex": "potion-of-healing",
-    "name": "Potion of Healing",
-    "rarity": "none",
-    "weightKg": 0.1,
-    "costQty": null,
-    "costUnit": null,
-    "description": "Potion, variable\nVous regagnez des points de vie lorsque vous buvez cette potion. Le nombre de points de vie dépend de la rareté de la potion, comme indiqué sur la table des potions de soin. Quelle que soit sa puissance, le liquide rouge de la potion miroite lorsqu'on l'agite.\nPotions de soin (table)\n| Potion de... | Rareté | PV regagnés |\n|---|---|---|\n| Soin | Commune | 2d4 + 2 |\n| Soin supérieur | Peu commun | 4d4 + 4 |\n| Soin supérieur | Rare | 8d4 + 8 |\n| Soin exceptionnel | Très rare | 10d4 + 20 |",
-    "damageDice": null,
-    "damageType": null,
-    "acBase": null,
-    "strMin": null,
-    "stealthDisadvantage": false,
-    "properties": [],
-    "imagePath": null,
-    "nameFr": "Potion de soin",
-    "descriptionEn": "You regain 2d4 + 2 hit points when you drink this potion. The potion's red liquid glimmers when agitated."
-  },
-  {
-    "source": "srd",
-    "category": "magic",
     "srdIndex": "potion-of-healing-common",
     "name": "Potion of Healing",
     "rarity": "common",
@@ -9071,7 +9051,7 @@
     "stealthDisadvantage": false,
     "properties": [],
     "imagePath": null,
-    "nameFr": "Potion de soin supérieure",
+    "nameFr": "Potion de soin majeure",
     "descriptionEn": "You regain 4d4 + 4 hit points when you drink this potion. The potion's red liquid glimmers when agitated."
   },
   {
@@ -9091,7 +9071,7 @@
     "stealthDisadvantage": false,
     "properties": [],
     "imagePath": null,
-    "nameFr": "Potion de soin suprême",
+    "nameFr": "Potion de soin supérieure",
     "descriptionEn": "You regain 8d4 + 8 hit points when you drink this potion. The potion's red liquid glimmers when agitated."
   },
   {
@@ -9111,7 +9091,7 @@
     "stealthDisadvantage": false,
     "properties": [],
     "imagePath": null,
-    "nameFr": "Potion de soins exceptionnels",
+    "nameFr": "Potion de soin suprême",
     "descriptionEn": "You regain 10d4 + 20 hit points when you drink this potion. The potion's red liquid glimmers when agitated."
   },
   {

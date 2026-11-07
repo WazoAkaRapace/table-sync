@@ -176,3 +176,104 @@ export function reconcileAmmoPacks(): void {
     );
   }
 }
+
+/**
+ * Dédoublonnage de la Potion de soin (2026-11) : le seed SRD portait DEUX
+ * entrées pour la potion basique — `potion-of-healing` (rareté « variable »,
+ * description générique avec table) et `potion-of-healing-common` (commune,
+ * 2d4+2). Le seed ne garde plus que la seconde ; les inventaires qui
+ * référencent la première sont repointés (quantités fusionnées par
+ * personnage et emplacement) puis la ligne obsolète est supprimée.
+ * Idempotent : no-op dès que l'ancienne entrée n'existe plus.
+ */
+export function reconcileHealingPotionDuplicate(): void {
+  const db = getDb();
+  const stale = db
+    .prepare("SELECT id FROM items WHERE srd_index = 'potion-of-healing' AND party_id IS NULL")
+    .get() as { id: number } | undefined;
+  if (!stale) return;
+  const keeper = db
+    .prepare(
+      "SELECT id FROM items WHERE srd_index = 'potion-of-healing-common' AND party_id IS NULL",
+    )
+    .get() as { id: number } | undefined;
+  if (!keeper) return;
+
+  let moved = 0;
+  db.transaction(() => {
+    const rows = db
+      .prepare(
+        'SELECT id, character_id, storage_location_id, quantity, equipped, notes FROM inventory WHERE item_id = ?',
+      )
+      .all(stale.id) as Array<{
+      id: number;
+      character_id: number;
+      storage_location_id: number | null;
+      quantity: number;
+      equipped: number;
+      notes: string | null;
+    }>;
+    for (const row of rows) {
+      // Fusion sur la ligne existante du même personnage/emplacement (upsert
+      // quantité), sinon simple repoint de la ligne.
+      const target = (
+        row.storage_location_id === null
+          ? db.prepare(
+              'SELECT id, quantity FROM inventory WHERE character_id = ? AND item_id = ? AND storage_location_id IS NULL',
+            )
+          : db.prepare(
+              'SELECT id, quantity FROM inventory WHERE character_id = ? AND item_id = ? AND storage_location_id = ?',
+            )
+      ).get(
+        row.character_id,
+        keeper.id,
+        ...(row.storage_location_id === null ? [] : [row.storage_location_id]),
+      ) as { id: number; quantity: number } | undefined;
+      if (target) {
+        // Fusion : quantités additionnées, état équipé conservé (OR) et notes
+        // des DEUX lignes retenues (jamais écrasées) — revue #271.
+        db.prepare(
+          `UPDATE inventory SET
+             quantity = ?,
+             equipped = MAX(equipped, ?),
+             notes = CASE
+               WHEN notes IS NULL OR notes = '' THEN ?
+               WHEN ? IS NULL OR ? = '' THEN notes
+               ELSE notes || ' · ' || ?
+             END
+           WHERE id = ?`,
+        ).run(
+          target.quantity + row.quantity,
+          row.equipped,
+          row.notes,
+          row.notes,
+          row.notes,
+          row.notes,
+          target.id,
+        );
+        db.prepare('DELETE FROM inventory WHERE id = ?').run(row.id);
+      } else {
+        db.prepare('UPDATE inventory SET item_id = ? WHERE id = ?').run(keeper.id, row.id);
+      }
+      moved++;
+    }
+    // Exemplaires annotés dérivés de l'entrée obsolète : repointés sur la
+    // gardienne (sinon le SET NULL de la FK les fait réapparaître au
+    // catalogue — revue #271).
+    db.prepare('UPDATE items SET derived_from_item_id = ? WHERE derived_from_item_id = ?').run(
+      keeper.id,
+      stale.id,
+    );
+    // Conteneurs liés à l'entrée obsolète (storage_locations.item_id) :
+    // repointés sur la gardienne — sinon le SET NULL de la FK détache le sac
+    // de son objet (revue #271).
+    db.prepare('UPDATE storage_locations SET item_id = ? WHERE item_id = ?').run(
+      keeper.id,
+      stale.id,
+    );
+    db.prepare('DELETE FROM items WHERE id = ?').run(stale.id);
+  })();
+  console.log(
+    `[backfill] potion de soin dédoublonnée : ${moved} ligne(s) d'inventaire repointée(s), entrée « variable » supprimée`,
+  );
+}
