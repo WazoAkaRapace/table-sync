@@ -1790,6 +1790,7 @@
   "cast.gratuit.restant_other": "{{count}} free casts remaining — long rest",
   "cast.sans.emplacement.deux.points": "— without a slot:",
   "cast.par.rayon": "per beam",
+  "cast.degats.mod.incantation": "Damage + spellcasting modifier",
   "cast.par.rayon.court": "/ beam",
   "cast.rayons.count_one": "✦ {{count}} beam",
   "cast.rayons.count_other": "✦ {{count}} beams",
@@ -2164,7 +2165,6 @@
   "changelog.vide": "Nothing new yet.",
   "changelog.ouvrir": "Changelog",
   "changelog.ouvrir.version": "Changelog for version {{version}}",
-
   "arme.basee.sur": "Based on",
   "arme.basee.libre": "— Free —",
   "arme.degats": "Damage",

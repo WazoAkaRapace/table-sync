@@ -553,11 +553,21 @@ export default function CastSpellSheet({
                 </span>
               )}
               {dmg.dice && (
-                <Chip tone="orange" title={isEldritchBlast ? t('cast.par.rayon') : undefined}>
+                <Chip
+                  tone="orange"
+                  title={
+                    isEldritchBlast
+                      ? t('cast.par.rayon')
+                      : dmg.addsModifier
+                        ? t('cast.degats.mod.incantation')
+                        : undefined
+                  }
+                >
                   ⚔{' '}
                   {isEldritchBlast && blastRays > 1
                     ? `${blastRays} × ${dmg.dice}${perRayBonus ? formatModifier(perRayBonus) : ''}`
                     : `${dmg.dice}${isEldritchBlast && perRayBonus ? formatModifier(perRayBonus) : ''}`}
+                  {dmg.addsModifier && castingMod !== undefined ? formatModifier(castingMod) : ''}
                   {dmg.typeFr
                     ? ` ${t('cast.degats.de.type', { type: damageType(dmg.typeFr) ?? dmg.typeFr })}`
                     : ''}
