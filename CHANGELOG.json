@@ -1,14 +1,14 @@
 [
   {
-    "version": null,
-    "sha": null,
+    "version": "2026.11.07-3",
+    "sha": "b725405a",
     "date": "2026-11-07",
     "title": "armes personnalisées complètes",
     "items": ["Le MD et les joueurs créent des armes personnalisées avec aperçu des dégâts."]
   },
   {
-    "version": null,
-    "sha": null,
+    "version": "2026.11.07-2",
+    "sha": "b725405a",
     "date": "2026-11-03",
     "title": "druide en forme animale : ajout au traqueur",
     "items": [
@@ -16,8 +16,8 @@
     ]
   },
   {
-    "version": null,
-    "sha": null,
+    "version": "2026.11.07",
+    "sha": "b725405a",
     "date": "2026-11-03",
     "title": "dépendances : correctifs npm, axios épinglé",
     "items": [
