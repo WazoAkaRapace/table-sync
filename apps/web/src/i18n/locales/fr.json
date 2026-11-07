@@ -2161,5 +2161,19 @@
   "changelog.tout.voir": "Voir tout le journal",
   "changelog.vide": "Aucune nouveauté pour le moment.",
   "changelog.ouvrir": "Journal des modifications",
-  "changelog.ouvrir.version": "Journal des modifications de la version {{version}}"
+  "changelog.ouvrir.version": "Journal des modifications de la version {{version}}",
+
+  "arme.basee.sur": "Basée sur",
+  "arme.basee.libre": "— Libre —",
+  "arme.degats": "Dégâts",
+  "arme.degats.aide": "Dés, FOR, DEX ou magie — ex. 2d6+FOR+2",
+  "arme.degats.aria": "Dégâts (dés, FOR, DEX ou magie)",
+  "arme.degats.invalide": "Modèle de dégâts invalide — dés (2d6), FOR, DEX, magie ou fixe (+2)",
+  "arme.type.degats": "Type de dégâts",
+  "arme.bonus.magique": "Bonus magique",
+  "arme.aucun": "Aucun",
+  "arme.proprietes": "Propriétés",
+  "arme.des.deux.mains": "Dés à deux mains",
+  "arme.apercu": "Aperçu",
+  "arme.apercu.vide": "Renseigne les dés pour voir l’aperçu"
 }

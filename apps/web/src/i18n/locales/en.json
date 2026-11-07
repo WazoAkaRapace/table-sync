@@ -2162,5 +2162,19 @@
   "changelog.tout.voir": "View full changelog",
   "changelog.vide": "Nothing new yet.",
   "changelog.ouvrir": "Changelog",
-  "changelog.ouvrir.version": "Changelog for version {{version}}"
+  "changelog.ouvrir.version": "Changelog for version {{version}}",
+
+  "arme.basee.sur": "Based on",
+  "arme.basee.libre": "— Free —",
+  "arme.degats": "Damage",
+  "arme.degats.aide": "Dice, FOR, DEX or magie — e.g. 2d6+FOR+2",
+  "arme.degats.aria": "Damage (dice, FOR, DEX or magie)",
+  "arme.degats.invalide": "Invalid damage template — dice (2d6), FOR, DEX, magie or fixed (+2)",
+  "arme.type.degats": "Damage type",
+  "arme.bonus.magique": "Magic bonus",
+  "arme.aucun": "None",
+  "arme.proprietes": "Properties",
+  "arme.des.deux.mains": "Two-handed dice",
+  "arme.apercu": "Preview",
+  "arme.apercu.vide": "Enter damage dice to see the preview"
 }
