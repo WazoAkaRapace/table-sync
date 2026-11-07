@@ -21,6 +21,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { continuityErrors } from './changelog-continuity.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '..');
@@ -91,6 +92,22 @@ for (let i = 0; i < lot; i++) {
   );
   console.log(`✓ Entrée « ${e.title} » → ${e.version} (sha ${sha}).`);
 }
+
+// Auto-contrôle APRÈS assignation : si le stamp venait à créer un trou ou un
+// jour non contigu, la release échoue ICI — avant d'écrire quoi que ce soit.
+const continuity = continuityErrors(entries);
+if (continuity.length > 0) {
+  console.error(`✗ Continuité des versions rompue par ce lot :`);
+  continuity.forEach((e) => console.error(`  - ${e}`));
+  process.exit(1);
+}
+console.log('✓ Continuité des versions du changelog vérifiée (base, -2, -3… sans trou).');
+
+// Version du lot = le suffixe le plus haut (l'entrée [0], la plus récente).
+// La release GitHub et l'APP_VERSION du build la portent : la version
+// affichée aux joueurs désigne TOUJOURS une entrée du journal (le nom du
+// tag, lui, compte les releases du jour — deux séquences distinctes).
+console.log(`LOT_VERSION=${suffixes[0]}`);
 
 writeFileSync('/tmp/release-notes.md', sections.join('\n\n---\n\n') + '\n');
 console.log(`✓ Notes de release générées (${lot} section(s)) → /tmp/release-notes.md`);

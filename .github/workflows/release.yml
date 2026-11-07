@@ -30,11 +30,23 @@ jobs:
           node-version: 26
 
       - name: Versionner le lot + générer les notes
+        id: versioning
         run: |
           set -eu
           VERSION="${GITHUB_REF_NAME#v}"
           echo "Version: $VERSION (tag $GITHUB_REF_NAME, sha $GITHUB_SHA)"
-          npx tsx scripts/release-tag.ts "$VERSION" "$GITHUB_SHA"
+          OUT=$(npx tsx scripts/release-tag.ts "$VERSION" "$GITHUB_SHA")
+          echo "$OUT"
+          # LOT_VERSION = version la plus haute du lot (désigne une vraie
+          # entrée du journal) — le titre de la release et l'APP_VERSION du
+          # build la portent, PAS le nom du tag (qui compte les releases du
+          # jour : v2026.11.07-2 ≠ entrée 2026.11.07-2 — leçon 2026-11-07).
+          LOT_VERSION=$(echo "$OUT" | grep -oE '^LOT_VERSION=[0-9.-]+$' | cut -d= -f2)
+          if [ -z "$LOT_VERSION" ]; then
+            echo "::error::LOT_VERSION absent de la sortie de release-tag.ts"
+            exit 1
+          fi
+          echo "lot_version=$LOT_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Committer le changelog versionné + créer la release
         env:
@@ -49,13 +61,16 @@ jobs:
           git push origin HEAD:main
 
           # La release pointe le commit stampé (le tip de main après push).
-          # --verify-tag vérifie le TAG (v<prefix>) — la version est nue.
+          # --verify-tag vérifie le TAG (v<prefix>). Le TITRE porte la version
+          # du lot (l'entrée la plus haute du journal) — cohérent avec ce que
+          # le joueur voit dans Mon compte et le journal des modifications.
           STAMPED=$(git rev-parse HEAD)
-          if ! gh release create "$GITHUB_REF_NAME" --title "$VERSION" \
+          LOT_VERSION="${{ steps.versioning.outputs.lot_version }}"
+          if ! gh release create "$GITHUB_REF_NAME" --title "$LOT_VERSION" \
             --notes-file /tmp/release-notes.md --target "$STAMPED" \
             --verify-tag; then
             echo "release $GITHUB_REF_NAME existante — notes mises à jour"
-            gh release edit "$GITHUB_REF_NAME" --notes-file /tmp/release-notes.md || true
+            gh release edit "$GITHUB_REF_NAME" --title "$LOT_VERSION" --notes-file /tmp/release-notes.md || true
           fi
 
       # Le build (ci.yml) écoute release: published — mais une release créée
@@ -68,7 +83,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="${{ steps.versioning.outputs.lot_version }}"
           if gh workflow run "Build & Push Docker Images" \
             --ref "$GITHUB_REF_NAME" -f version="$VERSION"; then
             echo "Build dispatché pour $VERSION (ref $GITHUB_REF_NAME)."

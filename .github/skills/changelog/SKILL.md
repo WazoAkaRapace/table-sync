@@ -70,6 +70,25 @@ release tout ce qui a été mergé.
 - `chore:` touchant SEULEMENT : `.github/`, `scripts/` hors `apps/`,
   `docs/` hors captures, `site/`, le changelog lui-même
 
+### Continuité des numéros (gate automatique)
+
+Par jour (préfixe calver), les versions forment une séquence COMPLÈTE :
+base (calver nu), puis `-2`, `-3`… — **jamais `-1`, jamais de trou**, la base
+du jour est obligatoire, et un jour refermé ne réapparaît pas plus bas dans
+le fichier. Vérifié à deux endroits : `--check-format` (chaque PR) et un
+auto-contrôle dans `release-tag.ts` APRÈS assignation du lot (un stamp qui
+créerait un trou fait échouer la release avant d'écrire).
+
+### Deux séquences distinctes : TAG vs VERSION (leçon 2026-11-07)
+
+Le nom du TAG compte les **releases** du jour (`v2026.11.07-2` = deuxième
+release du jour) ; les suffixes d'entrées comptent les **versions** du jour
+(`2026.11.07-4` = quatrième entrée). Les deux divergent dès qu'un lot porte
+plusieurs entrées — le TITRE de la release GitHub et l'`APP_VERSION` du build
+portent donc la **version la plus haute du lot** (sortie `LOT_VERSION=` de
+`release-tag.ts`), jamais le nom du tag : la version affichée dans
+« Mon compte » désigne toujours une vraie entrée du journal.
+
 ## Commandes
 
 ```bash
