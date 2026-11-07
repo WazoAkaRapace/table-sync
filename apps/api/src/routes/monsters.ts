@@ -12,6 +12,7 @@ import {
 import { eq, sql } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../db/drizzle.ts';
+import { normalizeText } from '../db/index.ts';
 import { cols } from '../db/projections.ts';
 import { monsters } from '../db/schema.ts';
 import { requireUser } from './helpers.ts';
@@ -192,14 +193,22 @@ export async function monsterRoutes(app: FastifyInstance) {
       // Le texte EN de l'overlay contient « damage » : une recherche
       // « mage » matchait 957/1061 monstres (sous-chaîne de « damage ») et
       // le tri par CR seul reléguait « Mage » en position ~640 — au-delà de
-      // la limite. On classe d'abord par POSITION de la première occurrence
-      // (instr) : les monstres dont le NOM porte le terme sortent en tête,
-      // les hits perdus au fond du bloc EN restent en fin de liste.
+      // la limite. Deux étages : (1) le NOM porte le motif (name_search
+      // prénormalisé) — sinon « mort » laissait les centaines de
+      // « Mort-vivant » (TYPE) exclure « Avatar de la mort » (revue #273) ;
+      // (2) position de la première occurrence (instr) — les hits au fond du
+      // bloc EN restent en fin de liste.
       // NB : pas de repli `sql`0`` sans recherche — SQLite lit un entier nu
       // en ORDER BY comme un INDEX de colonne (« out of range »), pas une
-      // constante : le terme n'entre dans le tri QUE lorsqu'il y a un motif.
+      // constante : les termes n'entrent dans le tri QUE lorsqu'il y a un motif.
+      const nameNeedle = needle !== null ? normalizeText(needle) : null;
       const relevance =
-        needle !== null ? [sql`instr(${monsters.searchText}, normalize(${needle}))`] : [];
+        needle !== null
+          ? [
+              sql`(${monsters.nameSearch} LIKE ${`%${nameNeedle}%`}) DESC`,
+              sql`instr(${monsters.searchText}, normalize(${needle}))`,
+            ]
+          : [];
 
       const rows = getDrizzle()
         .select({

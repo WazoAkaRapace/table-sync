@@ -237,6 +237,16 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
     names.slice(0, 6).some((n) => n === 'Mage' || n.startsWith('Drow, mage')),
     `'mage' : le Mage arrive en tête (reçu: ${names.slice(0, 3).join(', ')})`,
   );
+  // « mort » : le TYPE « Mort-vivant » matche des centaines de monstres —
+  // les NOMS portant « mort » (Avatar de la mort) doivent rester en tête.
+  r = await api(base, 'GET', `/api/monsters?search=${encodeURIComponent('mort')}&limit=30`, {
+    token: fx.gm.token,
+  });
+  const mortNames = (r.data.monsters as Array<{ name: string }>).map((m) => m.name);
+  ok(
+    mortNames.slice(0, 10).some((n) => n.toLowerCase().includes('mort') && !n.toLowerCase().includes('mort-vivant')),
+    `'mort' : un monstre NOMMÉ mort arrive en tête (reçu: ${mortNames.slice(0, 5).join(', ')})`,
+  );
 
   r = await api(base, 'GET', `/api/monsters/${goblin.slug}`, { token: fx.gm.token });
   eq(r.status, 200, 'monster detail');

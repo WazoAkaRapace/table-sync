@@ -281,6 +281,13 @@
       "when": 1794050480248,
       "tag": "0039_spooky_lightspeed",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "6",
+      "when": 1794080214101,
+      "tag": "0040_breezy_vance_astro",
+      "breakpoints": true
     }
   ]
 }
