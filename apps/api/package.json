@@ -13,12 +13,12 @@
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {
-    "@fastify/compress": "^9.2.0",
+    "@fastify/compress": "^9.3.0",
     "@fastify/cookie": "^11.1.5",
-    "@fastify/cors": "^11.3.1",
-    "@fastify/jwt": "^10.2.6",
-    "@fastify/multipart": "^10.1.6",
-    "@fastify/websocket": "^11.3.4",
+    "@fastify/cors": "^11.4.0",
+    "@fastify/jwt": "^10.2.7",
+    "@fastify/multipart": "^10.1.7",
+    "@fastify/websocket": "^11.3.7",
     "@table-sync/shared": "*",
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^13.0.3",
