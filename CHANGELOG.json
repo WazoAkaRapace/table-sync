@@ -2,6 +2,17 @@
   {
     "version": null,
     "sha": null,
+    "date": "2026-11-07",
+    "title": "armes personnalisées complètes",
+    "items": [
+      "Le MD et les joueurs créent des armes sur mesure : dés de dégâts libres (4d6+FOR+2), type de dégâts, bonus magique et propriétés.",
+      "Une arme peut partir d'une arme officielle et tout modifier, ou être entièrement libre.",
+      "Un aperçu en direct montre les dégâts calculés avant la création."
+    ]
+  },
+  {
+    "version": null,
+    "sha": null,
     "date": "2026-11-03",
     "title": "druide en forme animale : ajout au traqueur",
     "items": [
