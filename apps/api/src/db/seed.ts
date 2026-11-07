@@ -340,6 +340,11 @@ const MONSTER_INSERT = `
   ON CONFLICT(slug) DO UPDATE SET
     name_fr = excluded.name_fr,
     type = excluded.type,
+    -- Colonnes de recherche dérivées : invalidées au re-seed, le backfill
+    -- de boot les recalcule (sinon un nom FR modifié laissait search_text
+    -- et name_search périmés — revue #273).
+    search_text = NULL,
+    name_search = NULL,
     subtype = excluded.subtype,
     size = excluded.size,
     alignment = excluded.alignment,
