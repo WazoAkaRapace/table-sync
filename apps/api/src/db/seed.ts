@@ -434,6 +434,11 @@ export function seedMonsters(): void {
 if (import.meta.url === `file://${process.argv[1]}`) {
   const { migrate } = await import('./index.ts');
   migrate();
+  // Migrations Drizzle AUSSI en seed autonome : les upserts référencent des
+  // colonnes drizzle (name_search, 0040) — sans elles, la préparation du
+  // statement échoue sur une base existante (revue #273).
+  const { runDrizzleMigrations } = await import('./drizzle.ts');
+  runDrizzleMigrations();
   seedItems();
   seedSpells();
   seedMonsters();
