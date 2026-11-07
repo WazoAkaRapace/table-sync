@@ -1794,6 +1794,7 @@ function SpellCatalog({
                         isCaster={isCaster}
                         charLevel={charLevel}
                         character={character}
+                        classSource={selectedClass || null}
                       />
                       <SpellMetaLine spell={spell} />
                       {spell.classes.length > 0 && (

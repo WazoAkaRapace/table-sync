@@ -607,6 +607,40 @@ check(
   potentCantripBonus(char({ characterClass: 'Magicien', level: 10, wisdom: 16 })),
   0,
 );
+// Clés RÉELLES des payloads (CLASS_SUBCLASSES : subclassKey 'lumiere'/'savoir'
+// — la colonne divineDomain porte la même clé) — revue #269 : les libellés
+// seuls laissaient la fonction muette sur les vrais personnages.
+check(
+  'Incantation puissante : clé réelle — Clerc 8 ligne de classe lumiere (sans colonne) → +3',
+  potentCantripBonus(
+    char({
+      level: 8,
+      wisdom: 16,
+      classes: [entry('Clerc', 8, { subclassKey: 'lumiere' })],
+    }),
+  ),
+  3,
+);
+check(
+  'Incantation puissante : clé réelle en colonne — divineDomain lumiere → +3',
+  potentCantripBonus(
+    char({ characterClass: 'Clerc', level: 8, wisdom: 16, divineDomain: 'lumiere' }),
+  ),
+  3,
+);
+check(
+  'Incantation puissante : la LIGNE de classe prime sur la colonne divergente (vie ≠ porteur) → 0',
+  potentCantripBonus(
+    char({
+      characterClass: 'Clerc',
+      level: 8,
+      wisdom: 16,
+      divineDomain: 'Lumière',
+      classes: [entry('Clerc', 8, { subclassKey: 'vie' })],
+    }),
+  ),
+  0,
+);
 
 if (failures > 0) {
   console.error(`\n${failures} échec(s) — règles de multiclassage`);

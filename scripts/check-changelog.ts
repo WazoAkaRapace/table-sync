@@ -170,6 +170,11 @@ function selftest(): number {
       expectErrors: true,
     },
     {
+      name: 'suffixe -0 interdit (se ferait passer pour la base)',
+      raw: [mk('2026.10.15-0', 'e4f5a6b')],
+      expectErrors: true,
+    },
+    {
       name: 'base du jour absente',
       raw: [mk('2026.10.15-2', 'e4f5a6b'), mk('2026.10.15-3', 'a1b2c3d')],
       expectErrors: true,

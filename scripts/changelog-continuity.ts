@@ -37,6 +37,10 @@ export function continuityErrors(entries: ContinuityEntry[]): string[] {
     if (!m) return; // format invalide : déjà signalé par fmtErrors
     const prefix = m[1];
     const suffix = m[2] ? parseInt(m[2], 10) : 0;
+    // Suffixe non canonique : -0 passerait pour la base, -1 n'existe jamais.
+    if (m[2] && suffix < 2) {
+      errs.push(`entrée ${i} : suffixe -${m[2]} interdit (-2 minimum).`);
+    }
     let group = groups[groups.length - 1];
     if (!group || group.prefix !== prefix) {
       if (seenDays.has(prefix)) {
