@@ -244,7 +244,9 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   });
   const mortNames = (r.data.monsters as Array<{ name: string }>).map((m) => m.name);
   ok(
-    mortNames.slice(0, 10).some((n) => n.toLowerCase().includes('mort') && !n.toLowerCase().includes('mort-vivant')),
+    mortNames
+      .slice(0, 10)
+      .some((n) => n.toLowerCase().includes('mort') && !n.toLowerCase().includes('mort-vivant')),
     `'mort' : un monstre NOMMÉ mort arrive en tête (reçu: ${mortNames.slice(0, 5).join(', ')})`,
   );
 
