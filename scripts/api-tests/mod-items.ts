@@ -60,8 +60,15 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
       r = await api(base, 'GET', `/api/items?search=${encodeURIComponent(name)}`, {
         token: fx.gm.token,
       });
-      const hit = r.data.items.find((i: any) => i.srdIndex === srd);
-      eq(hit?.name, name, `« ${name} » trouve bien ${srd}`);
+      // Le payload Item ne porte pas srdIndex : on vérifie via la ligne SQL.
+      const row = srv.query('SELECT name_fr FROM items WHERE srd_index = ?', srd) as {
+        name_fr: string;
+      };
+      eq(row?.name_fr, name, `${srd} porte bien « ${name} »`);
+      ok(
+        r.data.items.some((i: any) => i.name === name),
+        `la recherche « ${name} » la trouve`,
+      );
     }
     eq(
       srv.query("SELECT COUNT(*) AS c FROM items WHERE srd_index = 'potion-of-healing'").c,
