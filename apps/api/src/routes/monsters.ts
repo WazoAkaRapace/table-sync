@@ -12,6 +12,7 @@ import {
 import { eq, sql } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../db/drizzle.ts';
+import { normalizeText } from '../db/index.ts';
 import { cols } from '../db/projections.ts';
 import { monsters } from '../db/schema.ts';
 import { requireUser } from './helpers.ts';
@@ -185,10 +186,29 @@ export async function monsterRoutes(app: FastifyInstance) {
       // ligne (dont l'overlay de ~1,6 KB), ~3000 appels JS par recherche.
       // Seul le MOTIF passe encore par normalize() (une fois par requête).
       // L'overlay EN n'est sélectionné que pour l'affichage anglais.
-      const conditions =
-        search !== undefined && search !== ''
-          ? sql`${monsters.searchText} LIKE normalize(${`%${search}%`})`
-          : undefined;
+      const needle = search !== undefined && search !== '' ? search : null;
+      const conditions = needle
+        ? sql`${monsters.searchText} LIKE normalize(${`%${needle}%`})`
+        : undefined;
+      // Le texte EN de l'overlay contient « damage » : une recherche
+      // « mage » matchait 957/1061 monstres (sous-chaîne de « damage ») et
+      // le tri par CR seul reléguait « Mage » en position ~640 — au-delà de
+      // la limite. Deux étages : (1) le NOM porte le motif (name_search
+      // prénormalisé) — sinon « mort » laissait les centaines de
+      // « Mort-vivant » (TYPE) exclure « Avatar de la mort » (revue #273) ;
+      // (2) position de la première occurrence (instr) — les hits au fond du
+      // bloc EN restent en fin de liste.
+      // NB : pas de repli `sql`0`` sans recherche — SQLite lit un entier nu
+      // en ORDER BY comme un INDEX de colonne (« out of range »), pas une
+      // constante : les termes n'entrent dans le tri QUE lorsqu'il y a un motif.
+      const nameNeedle = needle !== null ? normalizeText(needle) : null;
+      const relevance =
+        needle !== null
+          ? [
+              sql`(${monsters.nameSearch} LIKE ${`%${nameNeedle}%`}) DESC`,
+              sql`instr(${monsters.searchText}, normalize(${needle}))`,
+            ]
+          : [];
 
       const rows = getDrizzle()
         .select({
@@ -203,7 +223,7 @@ export async function monsterRoutes(app: FastifyInstance) {
         })
         .from(monsters)
         .where(conditions)
-        .orderBy(monsters.challengeRating, sql`${monsters.nameFr} COLLATE NOCASE ASC`)
+        .orderBy(...relevance, monsters.challengeRating, sql`${monsters.nameFr} COLLATE NOCASE ASC`)
         .limit(lim)
         .all();
 

@@ -1,0 +1,1 @@
+ALTER TABLE `monsters` ADD `name_search` text;

@@ -647,6 +647,10 @@ export const monsters = sqliteTable(
      *  sans diacritiques) — la recherche LIKE évite les appels UDF normalize()
      *  par ligne. Remplie au backfill de boot (idempotent, voir db/backfill.ts). */
     searchText: text('search_text'),
+    /** Nom FR normalisé seul — permet de classer les monstres dont le NOM
+     *  porte le motif AVANT ceux qui ne le portent que dans leur type ou le
+     *  bloc EN (« mage » ⊂ « damage », « mort » ⊂ « Mort-vivant »). */
+    nameSearch: text('name_search'),
     type: text('type'),
     subtype: text('subtype'),
     size: text('size'),

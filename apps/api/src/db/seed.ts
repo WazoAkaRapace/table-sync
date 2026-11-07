@@ -340,6 +340,11 @@ const MONSTER_INSERT = `
   ON CONFLICT(slug) DO UPDATE SET
     name_fr = excluded.name_fr,
     type = excluded.type,
+    -- Colonnes de recherche dérivées : invalidées au re-seed, le backfill
+    -- de boot les recalcule (sinon un nom FR modifié laissait search_text
+    -- et name_search périmés — revue #273).
+    search_text = NULL,
+    name_search = NULL,
     subtype = excluded.subtype,
     size = excluded.size,
     alignment = excluded.alignment,
@@ -429,6 +434,11 @@ export function seedMonsters(): void {
 if (import.meta.url === `file://${process.argv[1]}`) {
   const { migrate } = await import('./index.ts');
   migrate();
+  // Migrations Drizzle AUSSI en seed autonome : les upserts référencent des
+  // colonnes drizzle (name_search, 0040) — sans elles, la préparation du
+  // statement échoue sur une base existante (revue #273).
+  const { runDrizzleMigrations } = await import('./drizzle.ts');
+  runDrizzleMigrations();
   seedItems();
   seedSpells();
   seedMonsters();

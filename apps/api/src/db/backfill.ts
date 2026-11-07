@@ -3,7 +3,7 @@
 // lignes arme/armure encore sans clés ; devient un no-op dès que tout est résolu.
 
 import { AMMO_PACKS, resolveItemBases } from '@table-sync/shared';
-import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, or, sql } from 'drizzle-orm';
 import { getDrizzle } from './drizzle.ts';
 import { getDb, normalizeText } from './index.ts';
 import { inventory, items, monsters } from './schema.ts';
@@ -83,7 +83,7 @@ export function backfillMonsterSearchText(): void {
       overlayEn: monsters.overlayEn,
     })
     .from(monsters)
-    .where(isNull(monsters.searchText))
+    .where(or(isNull(monsters.searchText), isNull(monsters.nameSearch)))
     .all();
   if (pending.length === 0) return;
   // better-sqlite3 : .transaction(fn) RETOURNE une fonction enveloppée —
@@ -93,7 +93,10 @@ export function backfillMonsterSearchText(): void {
       const text = normalizeText(
         `${row.nameFr ?? ''} ${row.type ?? ''} ${row.overlayEn ?? ''}`.replace(/\s+/g, ' ').trim(),
       );
-      db.update(monsters).set({ searchText: text }).where(eq(monsters.slug, row.slug)).run();
+      db.update(monsters)
+        .set({ searchText: text, nameSearch: normalizeText(row.nameFr ?? '') })
+        .where(eq(monsters.slug, row.slug))
+        .run();
     }
   })();
   console.log(`[backfill] monsters.search_text rempli pour ${pending.length} lignes`);

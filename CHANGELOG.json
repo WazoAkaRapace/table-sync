@@ -1,5 +1,14 @@
 [
   {
+    "version": null,
+    "sha": null,
+    "date": "2026-11-07",
+    "title": "bestiaire recherche",
+    "items": [
+      "La recherche du bestiaire place les monstres dont le nom correspond en tête de liste."
+    ]
+  },
+  {
     "version": "2026.11.07-7",
     "sha": "0e294a76",
     "date": "2026-11-07",
