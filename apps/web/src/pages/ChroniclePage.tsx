@@ -59,7 +59,7 @@ const MOMENT_TYPE_STYLE: Record<string, MomentStyle> = {
     ornament: true,
   },
   funny: {
-    glyph: '😄',
+    glyph: <Glyph name="smile" />,
     ring: 'border-amber-400',
     filet: 'border-l-amber-400',
     text: 'text-[15px]',
@@ -71,19 +71,19 @@ const MOMENT_TYPE_STYLE: Record<string, MomentStyle> = {
     text: 'font-body italic text-[15px]',
   },
   tragic: {
-    glyph: '🕯',
+    glyph: <Glyph name="candle" />,
     ring: 'border-ink-900',
     filet: 'border-l-ink-900',
     text: 'font-body italic text-[15px] text-ink-500',
   },
   intriguing: {
-    glyph: '🗝',
+    glyph: <Glyph name="key" />,
     ring: 'border-indigo-400',
     filet: 'border-l-indigo-400',
     text: 'text-[15px]',
   },
   other: {
-    glyph: '📌',
+    glyph: <Glyph name="pin" />,
     ring: 'border-parchment-300',
     filet: 'border-l-parchment-300',
     text: 'text-[15px]',
@@ -202,7 +202,7 @@ export default function ChroniclePage() {
     return (
       <div className="mx-auto w-full max-w-xl">
         <EmptyState
-          icon="📜"
+          icon={<Glyph name="scroll" />}
           title={t('chronique.pas.de.chronique.pour.ce.groupe')}
           hint={t('chronique.lier.hint')}
         />
@@ -275,7 +275,7 @@ export default function ChroniclePage() {
           {recapsError && <ErrorMsg message={recapsError} />}
           {!recapsLoading && !recapsError && !active && (
             <EmptyState
-              icon="🖋"
+              icon={<Glyph name="annotate" />}
               title={t('chronique.aucun.resume.pour.cette.seance')}
               hint={t('chronique.recaps.hint')}
             />
@@ -378,7 +378,7 @@ export default function ChroniclePage() {
       {ordered.length === 0 ? (
         <div className="pt-8">
           <EmptyState
-            icon="📜"
+            icon={<Glyph name="scroll" />}
             title={t('chronique.aucune.seance.pour.l.instant')}
             hint={t('chronique.seances.hint')}
           />

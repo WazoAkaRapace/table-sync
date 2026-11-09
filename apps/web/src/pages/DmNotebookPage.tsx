@@ -67,11 +67,12 @@ function questTier(status: DmQuestStatus): number {
   return 2;
 }
 
-const QUEST_STATUS_GLYPH: Record<DmQuestStatus, string> = {
-  active: '🔴',
-  preparation: '⚪',
-  done: '⚫',
-  failed: '⚫',
+/** Pastilles d'état de quête — points CSS (rouge sang / clair / encré). */
+const QUEST_STATUS_DOT: Record<DmQuestStatus, string> = {
+  active: 'bg-blood-600',
+  preparation: 'bg-parchment-300 ring-1 ring-ink-400',
+  done: 'bg-ink-500',
+  failed: 'bg-ink-700',
 };
 
 interface TabProps {
@@ -562,7 +563,11 @@ function QuestsTab({ campaign, partyId, reload, onError }: TabProps) {
         /* Page vierge : chemin de création inline sous la double règle */
         <div className="py-6">
           <div className="card p-8">
-            <EmptyState icon="🗺️" title={t('carnet.qu.vierge')} hint={t('carnet.qu.vierge.hint')} />
+            <EmptyState
+              icon={<Glyph name="map" />}
+              title={t('carnet.qu.vierge')}
+              hint={t('carnet.qu.vierge.hint')}
+            />
           </div>
           <form
             className="mt-4 flex items-center gap-2"
@@ -643,7 +648,11 @@ function QuestsTab({ campaign, partyId, reload, onError }: TabProps) {
                           {quest.title}
                         </span>
                         <span className="mt-0.5 block text-sm text-ink-400">
-                          {QUEST_STATUS_GLYPH[quest.status]} {t(`carnet.qu.status.${quest.status}`)}
+                          <span
+                            aria-hidden="true"
+                            className={`mr-1.5 inline-block h-2 w-2 rounded-full ${QUEST_STATUS_DOT[quest.status]}`}
+                          />{' '}
+                          {t(`carnet.qu.status.${quest.status}`)}
                           {isCompact &&
                             ` · ${parseSqliteDate(quest.updatedAt).toLocaleDateString(appLocale())}`}
                         </span>
@@ -956,12 +965,16 @@ function NotesTab({ campaign, partyId, reload, onError, setCampaign }: TabProps)
 
       {notes.length === 0 ? (
         <div className="card p-8">
-          <EmptyState icon="📝" title={t('notes.aucune.note')} hint={t('carnet.nt.vierge.hint')} />
+          <EmptyState
+            icon={<Glyph name="note" />}
+            title={t('notes.aucune.note')}
+            hint={t('carnet.nt.vierge.hint')}
+          />
         </div>
       ) : filtered.length === 0 ? (
         <div className="card p-8">
           <EmptyState
-            icon="🔍"
+            icon={<Glyph name="search" />}
             title={t('carnet.nt.aucun.resultat')}
             hint={t('carnet.nt.modifie.recherche')}
           />

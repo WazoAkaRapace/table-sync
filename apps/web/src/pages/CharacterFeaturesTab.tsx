@@ -404,7 +404,7 @@ export default function CharacterFeaturesTab({
       {features.length === 0 ? (
         <div className="card p-8">
           <EmptyState
-            icon="📋"
+            icon={<Glyph name="list" />}
             title={t('traits.aucun.trait')}
             hint={t('traits.ajoute.tes.capacites.de.classe.traits.raciaux.dons.ou.toute')}
           />
@@ -845,7 +845,9 @@ function CatalogCard({
           className="flex items-center gap-2 text-sm font-semibold text-ink-700 hover:text-blood-400 transition-colors inline-flex min-h-11 py-1"
           aria-expanded={open}
         >
-          <span aria-hidden="true">📚</span>
+          <span aria-hidden="true">
+            <Glyph name="book" />
+          </span>
           {t('traits.catalogue.de.classe')}
           <span className="text-xs font-normal text-ink-400">{open ? '▼' : '▶'}</span>
         </button>

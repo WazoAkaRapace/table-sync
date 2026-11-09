@@ -7,7 +7,7 @@ import { createContext, type ReactNode, useCallback, useContext, useEffect, useS
 
 interface HeaderAction {
   label: string; // desktop label
-  short: string; // mobile label (usually an icon)
+  short: ReactNode; // mobile label (usually an icon)
   to: string;
 }
 

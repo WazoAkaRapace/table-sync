@@ -506,7 +506,7 @@ function CharactersTab({
   if (characters.length === 0) {
     return (
       <EmptyState
-        icon="🧙"
+        icon={<Glyph name="mage" />}
         title={t('md.aucun.personnage')}
         hint={t('md.les.joueurs.doivent.creer.leurs')}
       />
@@ -673,8 +673,8 @@ function CharactersTab({
               )}
               {c.currentHp <= 0 && (
                 <span className="text-red-700 font-medium">
-                  🩸 {c.deathSaveSuccesses}/3 <Glyph name="check" /> · {c.deathSaveFailures}/3{' '}
-                  <Glyph name="close" />
+                  <Glyph name="water" className="text-blood" /> {c.deathSaveSuccesses}/3{' '}
+                  <Glyph name="check" /> · {c.deathSaveFailures}/3 <Glyph name="close" />
                 </span>
               )}
             </div>
@@ -967,7 +967,7 @@ function TransactionsTab({ transactions }: { transactions: Transaction[] }) {
   if (transactions.length === 0) {
     return (
       <EmptyState
-        icon="📋"
+        icon={<Glyph name="list" />}
         title={t('md.aucune.transaction')}
         hint={t('md.les.modifications.d.inventaire')}
       />
@@ -1242,7 +1242,7 @@ function CustomItemsTab({
       ) : customItems.length === 0 ? (
         <div className="card p-8">
           <EmptyState
-            icon="✨"
+            icon={<Glyph name="spark" />}
             title={t('md.aucun.objet.personnalise')}
             hint={t('md.cree.des.objets.non.srd')}
           />

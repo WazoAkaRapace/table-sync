@@ -1143,7 +1143,7 @@ export default function CharacterSpellsTab({
                                   aria-label={t('sorts.lancer.name', { name: name })}
                                   title={t('sorts.lancer.le.sort')}
                                 >
-                                  🪄
+                                  <Glyph name="spark" />
                                 </button>
                               </div>
                               {isExpanded && (
@@ -1555,7 +1555,7 @@ function SpellStatBadges({
 
 // ---------- Expanded-detail meta line ----------
 
-/** Duration reading: 🌀 replaces the data's "concentration, " prefix. */
+/** Duration reading: the concentration glyph precedes the data's label (prefix stripped). */
 function spellDurationLabel(spell: Spell, concLabel: string): string | null {
   if (!spell.duration && !spell.concentration) return null;
   let d = spell.duration ?? '';
@@ -1563,7 +1563,7 @@ function spellDurationLabel(spell: Spell, concLabel: string): string | null {
     d = d.replace(/^concentration,?\s*/i, '');
     return `${d ? d.charAt(0).toUpperCase() + d.slice(1) : concLabel}`;
   }
-  if (spell.concentration) return `🌀 ${d || concLabel}`;
+  if (spell.concentration) return d || concLabel;
   return d.charAt(0).toUpperCase() + d.slice(1);
 }
 

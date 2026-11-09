@@ -675,7 +675,9 @@ function WeaponMasteryCard({
               className={chip(effective.simple)}
               aria-pressed={effective.simple}
             >
-              <span aria-hidden="true">🗡</span>
+              <span aria-hidden="true">
+                <Glyph name="combat" />
+              </span>
               {t('skills.armes.simples')}
             </button>
             <button
@@ -848,11 +850,11 @@ function ArmorMasteryCard({
             >
               <span aria-hidden="true">
                 {token === 'light' ? (
-                  '🪶'
+                  <Glyph name="feather" />
                 ) : token === 'medium' ? (
-                  '🧥'
+                  <Glyph name="armor" />
                 ) : token === 'heavy' ? (
-                  '⚓'
+                  <Glyph name="anchor" />
                 ) : (
                   <Glyph name="shield" />
                 )}

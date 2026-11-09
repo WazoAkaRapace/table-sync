@@ -717,7 +717,7 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
       ) : filtered.length === 0 ? (
         <div className="card p-4">
           <EmptyState
-            icon="🎭"
+            icon={<Glyph name="masks" />}
             title={npcs.length === 0 ? t('pnj.aucun') : t('pnj.aucun.resultat')}
             hint={
               npcs.length === 0 ? t('pnj.ajoutez.vos.rencontres') : t('pnj.modifiez.vos.filtres')
@@ -739,7 +739,7 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
                     className="w-full min-h-11 flex items-center gap-2 text-left"
                   >
                     <span className="text-blood-500 shrink-0" aria-hidden="true">
-                      ⚜
+                      <Glyph name="lily" />
                     </span>
                     <span className="section-title truncate">{label}</span>
                     <span className="text-ink-400 text-sm font-normal tabular-nums shrink-0">
@@ -1014,7 +1014,7 @@ function NpcCard({
           role="img"
           aria-label={npc.isShared ? t('pnj.partage') : t('pnj.prive')}
         >
-          {npc.isShared ? '🔗' : <Glyph name="lock" />}
+          {npc.isShared ? <Glyph name="link" /> : <Glyph name="lock" />}
         </span>
         {groupEditable && (
           <span
@@ -1103,7 +1103,9 @@ function NpcCard({
             className="text-xs font-medium text-purple-700 hover:underline flex items-center gap-1"
             aria-expanded={showSecret}
           >
-            <span aria-hidden="true">🤫</span>
+            <span aria-hidden="true">
+              <Glyph name="hide" />
+            </span>
             {t('pnj.secret')}
             <span className={`text-ink-400 chevron ${showSecret ? 'is-open' : 'is-closed'}`}>
               ▼
@@ -1883,7 +1885,7 @@ function GmaNpcPickerModal({
                       </span>
                     </span>
                     <span className="text-xs text-ink-400 shrink-0" aria-hidden="true">
-                      {n.isShared ? '🔗' : <Glyph name="lock" />}
+                      {n.isShared ? <Glyph name="link" /> : <Glyph name="lock" />}
                     </span>
                   </button>
                 </li>

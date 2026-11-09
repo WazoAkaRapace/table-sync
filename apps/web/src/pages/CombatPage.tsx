@@ -180,7 +180,7 @@ export default function CombatPage() {
       myCharacter && partyId
         ? {
             label: t('desc.ma.fiche'),
-            short: '🧙',
+            short: <Glyph name="mage" />,
             to: `/party/${partyId}/character/${myCharacter.id}`,
           }
         : null,
@@ -771,7 +771,7 @@ function EncounterRegister({
           </section>
         ) : (
           <EmptyState
-            icon="⚔"
+            icon={<Glyph name="combat" />}
             title={t('combat.aucune.rencontre')}
             hint={t('combat.le.md.n.a.pas.encore.ouvert')}
           />
@@ -862,16 +862,28 @@ function EncounterRegister({
                     </span>
                     {isLive && (
                       <span className="mt-1.5 block text-sm text-ink-500">
+                        <span
+                          aria-hidden="true"
+                          className="mr-1.5 inline-block h-2 w-2 shrink-0 rounded-full bg-blood-600"
+                        />
                         {t('combat.registre.en.cours.ligne', { count: enc.combatantCount })}
                       </span>
                     )}
                     {!isLive && !isDone && (
                       <span className="mt-0.5 block text-sm text-ink-400">
+                        <span
+                          aria-hidden="true"
+                          className="mr-1.5 inline-block h-2 w-2 shrink-0 rounded-full bg-parchment-300 ring-1 ring-ink-400"
+                        />
                         {t('combat.registre.preparation.ligne', { count: enc.combatantCount })}
                       </span>
                     )}
                     {isDone && (
                       <span className="mt-0.5 block text-sm text-ink-400">
+                        <span
+                          aria-hidden="true"
+                          className="mr-1.5 inline-block h-2 w-2 shrink-0 rounded-full bg-ink-500"
+                        />
                         {t('combat.terminee.tour.created', {
                           round: enc.round,
                           created: formatCreated(enc.createdAt, t('combat.creee')),
@@ -1200,7 +1212,7 @@ function CombatTheatre({
               )}
             </div>
             <EmptyState
-              icon="🎭"
+              icon={<Glyph name="masks" />}
               title={t('combat.aucun.combattant')}
               hint={
                 isGM
@@ -1375,7 +1387,7 @@ function InitiativeRail({
                         className="shrink-0 text-xs"
                         title={t('combat.mourant')}
                       >
-                        🩸
+                        <Glyph name="water" className="text-blood" />
                       </span>
                     )}
                 </span>
@@ -1804,7 +1816,7 @@ function StagePanel({
             className="btn-secondary flex items-center justify-center gap-1 py-3 text-sm"
             title={t('combat.marque.de.couleur.relier.l.ecran')}
           >
-            🎨 <span>{t('combat.marque')}</span>
+            <Glyph name="draw" /> <span>{t('combat.marque')}</span>
           </button>
         </div>
       )}

@@ -24,6 +24,7 @@ import {
 import { useSyncEvent } from '../sync';
 import { usePartyRole } from '../usePartyRole';
 import { formatMessageTime, toRoman } from '../utils';
+import { Glyph } from '../components/Glyph';
 
 export default function MessagesInboxPage() {
   const { t } = useTranslation();
@@ -197,7 +198,7 @@ export default function MessagesInboxPage() {
       ) : threads.length === 0 ? (
         <div className="card mx-auto mt-6 max-w-md p-8">
           <EmptyState
-            icon="✉️"
+            icon={<Glyph name="mail" />}
             title={t('msgs.correspondance')}
             hint={t('msgs.aucun.message.md')}
           />

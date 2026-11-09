@@ -12,6 +12,7 @@ import { NoteEditorModal } from '../components/NoteEditorModal';
 import { SortableGrid } from '../components/SortableGrid';
 import { EmptyState } from '../components/ui';
 import { useOwnEchoGuard, useResyncOnReconnect, useSyncEvent } from '../sync';
+import { Glyph } from '../components/Glyph';
 
 interface Props {
   character: Character;
@@ -158,7 +159,11 @@ export default function CharacterNotesTab({
 
       {notes.length === 0 ? (
         <div className="card p-8">
-          <EmptyState icon="📝" title={t('notes.aucune.note')} hint={t('notes.cree.des.notes')} />
+          <EmptyState
+            icon={<Glyph name="note" />}
+            title={t('notes.aucune.note')}
+            hint={t('notes.cree.des.notes')}
+          />
         </div>
       ) : (
         <SortableGrid
