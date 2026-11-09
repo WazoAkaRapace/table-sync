@@ -185,6 +185,21 @@ check(
 
 // Ki = niveau (repos court) ; points de sorcellerie = niveau (repos long)
 check('ki @7 = 7', resourceMaxOf('moine-ki', mkChar({ characterClass: 'Moine', level: 7 })), 7);
+// PHB 2014 : les points de ki se régagent au repos court OU long — le catalogue
+// pré-remplit « court » (le plus favorable), le joueur peut surcharger en « long »
+check(
+  'ki : recharge repos court (catalogue)',
+  effectiveFeatureReset({ catalogId: 'moine-ki', resetType: null }, 5),
+  'short',
+);
+// SRD 5.1 p.73 : Plénitude physique — « You must finish a LONG rest before you
+// can use this feature again » (le PHB 2014 dit « short or long » : l'app suit
+// le SRD, écart volontaire PHB, épinglé ici pour mémoire)
+check(
+  'plénitude physique : recharge repos long (SRD 5.1 ; PHB : court ou long)',
+  findClassFeature('main-ouverte-plenitude-physique')?.resource?.reset,
+  'long',
+);
 
 // PHB 2014 : les 3 voies du Moine au catalogue (paume, ombre, quatre éléments)
 check(
