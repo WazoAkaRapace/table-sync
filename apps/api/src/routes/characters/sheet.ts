@@ -23,7 +23,8 @@ import {
   validateClassEntries,
 } from '../lib/character-classes.ts';
 import { mapCharacter, mapCharacterSummary } from '../lib/mappers.ts';
-import { characterVisibleTo, isPartyGM, isPartyMember, requireUser } from '../lib/membership.ts';
+import { getCharacterWithOwnerById, requireCharacterAccess } from '../lib/access.ts';
+import { isPartyGM, isPartyMember, requireUser } from '../lib/membership.ts';
 import { sendCachedJson } from '../httpCache.ts';
 // Imports hérités du monolithe (R4_LEGACY, shrink-only) : extraction routes/lib en phase 4b.
 import { loadInventoryView } from '../inventory/index.ts';
@@ -33,15 +34,6 @@ import { apiMsg } from '../messages.ts';
 
 /** characters.* + the owner's display_name (JOIN users) — the mappers' shape. */
 const CHARACTER_WITH_OWNER = { ...cols(characters), owner_name: users.displayName };
-
-export function getCharacterWithOwner(drizzle: ReturnType<typeof getDrizzle>, id: number): any {
-  return drizzle
-    .select(CHARACTER_WITH_OWNER)
-    .from(characters)
-    .innerJoin(users, eq(users.id, characters.ownerId))
-    .where(eq(characters.id, id))
-    .get() as any;
-}
 
 /** The character's player combatants in non-ended encounters (newest first). */
 export function activePlayerCombatants(characterId: number): any[] {
@@ -146,7 +138,7 @@ export async function characterSheetRoutes(app: FastifyInstance) {
         if (!validated.ok) return reply.code(400).send({ error: validated.error });
         replaceCharacterClasses(charId, validated.entries);
       }
-      const row = getCharacterWithOwner(drizzle, charId);
+      const row = getCharacterWithOwnerById(drizzle, charId);
       attachCharacterClasses([row]);
       bus.emitChange({
         type: 'party:change',
@@ -258,15 +250,12 @@ export async function characterSheetRoutes(app: FastifyInstance) {
   app.get(
     '/characters/:id',
     async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const row = getCharacterWithOwner(getDrizzle(), Number(req.params.id));
-      if (!row) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
-      if (!isPartyMember(row.party_id, userId))
-        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
-      // 404 (not 403): a hidden character must not betray its existence
-      if (!characterVisibleTo(row, userId))
-        return reply.code(404).send({ error: apiMsg(req, 'character not found') });
+      const access = requireCharacterAccess(req, reply, Number(req.params.id), {
+        access: 'member-visible',
+        withOwner: true,
+      });
+      if (!access) return;
+      const { char: row } = access;
       attachCharacterClasses([row]);
       return reply.send({ character: mapCharacter(row) });
     },
@@ -276,19 +265,13 @@ export async function characterSheetRoutes(app: FastifyInstance) {
   app.delete(
     '/characters/:id',
     async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
+      const access = requireCharacterAccess(req, reply, Number(req.params.id), {
+        access: 'owner-or-gm',
+        forbiddenMsg: 'only the owner or GM can delete',
+      });
+      if (!access) return;
+      const { char, userId } = access;
       const drizzle = getDrizzle();
-      const char = drizzle
-        .select(cols(characters))
-        .from(characters)
-        .where(eq(characters.id, Number(req.params.id)))
-        .get() as any;
-      if (!char) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
-      const isGM = isPartyGM(char.party_id, userId);
-      if (char.owner_id !== userId && !isGM) {
-        return reply.code(403).send({ error: apiMsg(req, 'only the owner or GM can delete') });
-      }
       drizzle.delete(characters).where(eq(characters.id, char.id)).run();
       bus.emitChange({
         type: 'party:change',

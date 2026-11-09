@@ -19,7 +19,8 @@ import { cols } from '../db/projections.ts';
 import { characterClasses, characterSpells, characters, spells } from '../db/schema.ts';
 import { bus } from '../sync/bus.ts';
 import { mapCharacterSpell } from './lib/mappers.ts';
-import { characterVisibleTo, isPartyGM, isPartyMember, requireUser } from './lib/membership.ts';
+import { checkCharacterAccess, requireCharacterAccess } from './lib/access.ts';
+import { requireUser } from './lib/membership.ts';
 import { sendCachedJson } from './httpCache.ts';
 import { type AppLang, langFromReq } from './lang.ts';
 import { apiMsg } from './messages.ts';
@@ -114,32 +115,17 @@ function getLinkWithCharacter(linkId: number): { link: any; char: any } | null {
   return { link, char };
 }
 
-/** Returns true if the user is the owner or the GM of the character's party. */
-function isOwnerOrGM(char: any, userId: number): boolean {
-  return char.owner_id === userId || isPartyGM(char.party_id, userId);
-}
-
 export async function characterSpellRoutes(app: FastifyInstance) {
   // ---------- List a character's spells ----------
   app.get(
     '/characters/:id/spells',
     async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
+      const access = requireCharacterAccess(req, reply, Number(req.params.id), {
+        access: 'member-visible',
+      });
+      if (!access) return;
+      const { char } = access;
       const drizzle = getDrizzle();
-      const char = drizzle
-        .select(cols(characters))
-        .from(characters)
-        .where(eq(characters.id, Number(req.params.id)))
-        .get() as any;
-      if (!char) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
-      if (!isPartyMember(char.party_id, userId)) {
-        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
-      }
-      // Hidden character: 404 for everyone but its owner and the GM
-      if (!characterVisibleTo(char, userId)) {
-        return reply.code(404).send({ error: apiMsg(req, 'character not found') });
-      }
 
       const rows = drizzle
         .select(LINK_WITH_SPELL)
@@ -169,23 +155,14 @@ export async function characterSpellRoutes(app: FastifyInstance) {
       req: FastifyRequest<{ Params: { id: string }; Body: AddCharacterSpellPayload }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
+      const access = requireCharacterAccess(req, reply, Number(req.params.id), {
+        access: 'owner-or-gm',
+        requireMember: true,
+        forbiddenMsg: 'only the owner or GM can modify spells',
+      });
+      if (!access) return;
+      const { char, userId } = access;
       const drizzle = getDrizzle();
-      const char = drizzle
-        .select(cols(characters))
-        .from(characters)
-        .where(eq(characters.id, Number(req.params.id)))
-        .get() as any;
-      if (!char) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
-      if (!isPartyMember(char.party_id, userId)) {
-        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
-      }
-      if (!isOwnerOrGM(char, userId)) {
-        return reply
-          .code(403)
-          .send({ error: apiMsg(req, 'only the owner or GM can modify spells') });
-      }
 
       const body = req.body || ({} as AddCharacterSpellPayload);
       if (!body.spellId) return reply.code(400).send({ error: apiMsg(req, 'spellId is required') });
@@ -286,14 +263,14 @@ export async function characterSpellRoutes(app: FastifyInstance) {
       if (!resolved)
         return reply.code(404).send({ error: apiMsg(req, 'character spell not found') });
       const { link, char } = resolved;
-      if (!isPartyMember(char.party_id, userId)) {
-        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
-      }
-      if (!isOwnerOrGM(char, userId)) {
-        return reply
-          .code(403)
-          .send({ error: apiMsg(req, 'only the owner or GM can modify spells') });
-      }
+      if (
+        !checkCharacterAccess(req, reply, char, userId, {
+          access: 'owner-or-gm',
+          requireMember: true,
+          forbiddenMsg: 'only the owner or GM can modify spells',
+        })
+      )
+        return;
 
       const body = req.body || {};
       const values: Record<string, unknown> = {};
@@ -336,14 +313,14 @@ export async function characterSpellRoutes(app: FastifyInstance) {
       if (!resolved)
         return reply.code(404).send({ error: apiMsg(req, 'character spell not found') });
       const { link, char } = resolved;
-      if (!isPartyMember(char.party_id, userId)) {
-        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
-      }
-      if (!isOwnerOrGM(char, userId)) {
-        return reply
-          .code(403)
-          .send({ error: apiMsg(req, 'only the owner or GM can modify spells') });
-      }
+      if (
+        !checkCharacterAccess(req, reply, char, userId, {
+          access: 'owner-or-gm',
+          requireMember: true,
+          forbiddenMsg: 'only the owner or GM can modify spells',
+        })
+      )
+        return;
 
       drizzle.delete(characterSpells).where(eq(characterSpells.id, link.id)).run();
       bus.emitChange({

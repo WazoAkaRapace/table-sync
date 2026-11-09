@@ -30,7 +30,7 @@ import { bus } from '../sync/bus.ts';
 import { attachCharacterClasses } from './lib/character-classes.ts';
 import { mirrorConditionsToCombatants } from './lib/conditions.ts';
 import { mapCharacter } from './lib/mappers.ts';
-import { isPartyGM, isPartyMember, requireUser } from './lib/membership.ts';
+import { requireCharacterAccess } from './lib/access.ts';
 import { mirrorAcToCombatants } from './character-spell-effects.ts';
 import { apiMsg } from './messages.ts';
 
@@ -49,22 +49,14 @@ export async function restRoutes(app: FastifyInstance) {
       }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
+      const access = requireCharacterAccess(req, reply, Number(req.params.id), {
+        access: 'owner-or-gm',
+        requireMember: true,
+        forbiddenMsg: 'only the owner or GM can rest',
+      });
+      if (!access) return;
+      const { char, userId } = access;
       const drizzle = getDrizzle();
-      const char = drizzle
-        .select(cols(characters))
-        .from(characters)
-        .where(eq(characters.id, Number(req.params.id)))
-        .get() as any;
-      if (!char) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
-      const isGM = isPartyGM(char.party_id, userId);
-      if (!isPartyMember(char.party_id, userId)) {
-        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
-      }
-      if (char.owner_id !== userId && !isGM) {
-        return reply.code(403).send({ error: apiMsg(req, 'only the owner or GM can rest') });
-      }
 
       const body = req.body || {};
       if (body.type !== 'short' && body.type !== 'long') {
