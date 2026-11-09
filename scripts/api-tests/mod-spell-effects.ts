@@ -713,4 +713,76 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   if (alyaRow) {
     await api(base, 'DELETE', `/api/spell-effects/${alyaRow.id}`, { token: fx.gm.token });
   }
+
+  // ---------- CodeRabbit #281 : rupture de concentration → combat:change
+  // PAR rencontre affectée (le porteur peut combattre dans PLUSIEURS
+  // rencontres en parallèle — chacune reçoit SON événement chirurgical).
+  // La rupture passe par le chemin 0 PV (inconscient) : c'est lui qui
+  // droppe les effets dans la même écriture et miroite la CA — les dégâts
+  // simples ANNONCENT le jet de sauvegarde sans casser (design v2).
+  const staleFaith = srv.query(
+    'SELECT id FROM character_spell_effects WHERE character_id = ? AND spell_id = ? AND active = 1',
+    A,
+    faith,
+  );
+  if (staleFaith) {
+    await api(base, 'DELETE', '/api/spell-effects/' + staleFaith.id, { token: fx.player.token });
+  }
+  r = await api(base, 'POST', '/api/characters/' + A + '/spell-effects', {
+    token: fx.player.token,
+    body: { spellId: faith },
+  });
+  eq(r.status, 201, 're-caste la foi (concentration) pour le test multi-rencontres');
+  const enc2 = await api(base, 'POST', '/api/parties/' + fx.partyId + '/encounters', {
+    token: fx.gm.token,
+    body: { name: 'Rencontre parallèle' },
+  });
+  eq(enc2.status, 201, 'rencontre 2 créée');
+  const enc2Id = enc2.data.encounter.id;
+  r = await api(base, 'POST', '/api/encounters/' + enc2Id + '/combatants/player', {
+    token: fx.gm.token,
+    body: { characterIds: [A] },
+  });
+  eq(r.status, 201, 'A ajouté comme combattant de la rencontre 2');
+  const enc2AcBefore = srv.query(
+    'SELECT armor_class AS ac FROM combatants WHERE encounter_id = ? AND character_id = ?',
+    enc2Id,
+    A,
+  ).ac;
+
+  const ws = new WebSocket(
+    base.replace(/^http/, 'ws') + '/ws?token=' + encodeURIComponent(fx.gm.token),
+  );
+  const wsMessages: any[] = [];
+  ws.addEventListener('message', (ev) => wsMessages.push(JSON.parse(String(ev.data))));
+  await new Promise<void>((resolve) => ws.addEventListener('open', () => resolve()));
+
+  r = await api(base, 'PATCH', '/api/combatants/' + combatantId, {
+    token: fx.gm.token,
+    body: { hitPoints: 0 },
+  });
+  eq(r.status, 200, 'traqueur à 0 PV (inconscient → rupture)');
+
+  const hit2 = await new Promise<any>((resolve, reject) => {
+    const started = Date.now();
+    const t = setInterval(() => {
+      const m = wsMessages.find((x) => x.type === 'combat:change' && x.encounterId === enc2Id);
+      if (m) {
+        clearInterval(t);
+        resolve(m);
+      } else if (Date.now() - started > 5000) {
+        clearInterval(t);
+        reject(new Error('pas de combat:change chirurgical pour la rencontre 2'));
+      }
+    }, 25);
+  });
+  eq(hit2.action, 'ac', 'rencontre 2 : combat:change action ac (CA resynchronisée)');
+  const ac2 = srv.query(
+    'SELECT armor_class AS ac FROM combatants WHERE encounter_id = ? AND character_id = ?',
+    enc2Id,
+    A,
+  ).ac;
+  ok(ac2 < enc2AcBefore, 'CA du traqueur 2 a perdu le bonus de concentration');
+  eq(ac2, combatantAc(), 'CA du traqueur 2 = CA du traqueur 1 (resynchronisées)');
+  ws.close();
 }
