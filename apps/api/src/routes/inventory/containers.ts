@@ -13,9 +13,9 @@ import { cols } from '../../db/projections.ts';
 import { inventory, storageLocations } from '../../db/schema.ts';
 import { bus } from '../../sync/bus.ts';
 import { mirrorAcToCombatants } from '../character-spell-effects.ts';
-import { isOwnerOrGM, requireUser } from '../lib/membership.ts';
+import { requireUser } from '../lib/membership.ts';
 import { apiMsg } from '../messages.ts';
-import { getCharacter, logTransaction } from './shared.ts';
+import { logTransaction, resolveTransferChars } from './shared.ts';
 
 export async function containersRoutes(app: FastifyInstance) {
   // ---------- Transfer a container (with its content) between characters ----------
@@ -48,18 +48,16 @@ export async function containersRoutes(app: FastifyInstance) {
       }
 
       const drizzle = getDrizzle();
-      const fromChar = getCharacter(drizzle, fromCharId);
-      const toChar = getCharacter(drizzle, Number(toCharacterId));
-      if (!fromChar || !toChar)
-        return reply.code(404).send({ error: apiMsg(req, 'character not found') });
-      if (fromChar.party_id !== toChar.party_id) {
-        return reply.code(400).send({ error: apiMsg(req, 'characters must be in the same party') });
-      }
-      if (!isOwnerOrGM(fromChar, userId)) {
-        return reply
-          .code(403)
-          .send({ error: apiMsg(req, 'only the owner or GM can transfer from this character') });
-      }
+      const pair = resolveTransferChars(
+        req,
+        reply,
+        drizzle,
+        userId,
+        fromCharId,
+        Number(toCharacterId),
+      );
+      if (pair === null) return;
+      const { fromChar, toChar } = pair;
 
       const loc = drizzle
         .select(cols(storageLocations))

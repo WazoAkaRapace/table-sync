@@ -44,6 +44,31 @@ export function getCharacterWithOwnerById(drizzle: ReturnType<typeof getDrizzle>
     .get() as any;
 }
 
+/**
+ * Porte « éditeur d'inventaire » (POST /characters/:id/inventory, /consume,
+ * /refill) : 404 « character not found », puis owner/MD requis (403 « only
+ * the owner or GM can edit this inventory »). Renvoie null après avoir
+ * envoyé la réponse — l'appelant fait `return`.
+ */
+export function getInventoryEditor(
+  req: FastifyRequest,
+  reply: FastifyReply,
+  characterId: number,
+): { userId: number; char: any } | null {
+  const userId = requireUser(req, reply);
+  if (userId === null) return null;
+  const char = getCharacterById(getDrizzle(), characterId);
+  if (!char) {
+    reply.code(404).send({ error: apiMsg(req, 'character not found') });
+    return null;
+  }
+  if (!isOwnerOrGM(char, userId)) {
+    reply.code(403).send({ error: apiMsg(req, 'only the owner or GM can edit this inventory') });
+    return null;
+  }
+  return { userId, char };
+}
+
 /** Régime d'accès exigé par la route (voir l'en-tête du module). */
 export type CharacterAccessMode =
   | { access: 'member-visible' }
