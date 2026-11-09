@@ -263,6 +263,25 @@ check(
   13,
 );
 
+// --- Ensorceleur : recharge & origine sauvage (PHB 2014) ---
+
+// PHB 2014 p.103 : les points de sorcellerie se régagnent au repos LONG
+check(
+  'points de sorcellerie : recharge repos long',
+  findClassFeature('ensorceleur-source-de-magie')?.resource?.reset,
+  'long',
+);
+// PHB 2014 p.117 : Marée du chaos (Origine sauvage) — 1 utilisation / repos long
+const ensorceleur = mkChar({ characterClass: 'Ensorceleur', level: 1, subclass: 'sauvage' });
+check(
+  'marée du chaos : 1 utilisation, recharge repos long',
+  [
+    resourceMaxOf('sauvage-maree-du-chaos', ensorceleur),
+    findClassFeature('sauvage-maree-du-chaos')?.resource?.reset,
+  ],
+  [1, 'long'],
+);
+
 // Imposition des mains = 5 × niveau (PV, repos long) — capacité de NIVEAU 1 (PHB 2014)
 check(
   'imposition des mains @6 = 30 PV',
