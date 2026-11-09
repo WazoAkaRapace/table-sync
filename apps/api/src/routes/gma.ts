@@ -636,7 +636,7 @@ async function syncEntities(partyId: number, link: any, key: string): Promise<st
         .run();
     }
     // --- Id-migration sweep (see doc comment) ---
-    const liveIds = new Set(merged.values().map((m) => m.entityId));
+    const liveIds = new Set(Array.from(merged.values(), (m) => m.entityId));
     const snTargetById = new Map<string, string>();
     for (const [k, m] of merged) snTargetById.set(`sn:${k.replace(/ /g, '-')}`, m.entityId);
     const knownIds = new Set<string>();

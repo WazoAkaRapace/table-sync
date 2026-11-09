@@ -16,6 +16,7 @@ import { mapSpell, requireUser } from './helpers.ts';
 import { sendCachedJson } from './httpCache.ts';
 import { type AppLang, langFromReq, pickLocalized } from './lang.ts';
 import { apiMsg } from './messages.ts';
+import type { Spell } from '@table-sync/shared';
 
 // ---------- English spell meta (data/spells-en-meta.json) ----------
 //
@@ -66,7 +67,7 @@ const SPELL_EN_META = loadSpellEnMeta();
  * (clé : srdIndex). Repli CHAMP PAR CHAMP sur la valeur existante (FR)
  * lorsqu'une entrée ou un champ manque — jamais de payload mixte cassé.
  */
-export function withSpellEnMeta<T extends { srdIndex: string | null }>(spell: T, lang: AppLang): T {
+export function withSpellEnMeta<T extends Spell>(spell: T, lang: AppLang): T {
   if (lang !== 'en') return spell;
   const meta = spell.srdIndex ? SPELL_EN_META[spell.srdIndex] : undefined;
   if (!meta) return spell;

@@ -91,7 +91,7 @@ export async function sendPushToUser(
           }),
           {
             vapidDetails: config,
-            TTL: String(options.ttl ?? 0),
+            TTL: options.ttl ?? 0,
             urgency: options.urgency ?? 'normal',
           },
         );

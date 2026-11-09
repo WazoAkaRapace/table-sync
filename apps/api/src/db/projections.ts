@@ -7,12 +7,23 @@
  * mappers untouched. This is the load-bearing convention of the raw-SQL →
  * Drizzle migration: a query rewrite must not change what mappers see.
  */
-import { type Column, getTableColumns, type SQLiteTable } from 'drizzle-orm';
+import { getTableColumns } from 'drizzle-orm';
+import type { SQLiteTable } from 'drizzle-orm/sqlite-core';
 
-export function cols(table: SQLiteTable): Record<string, Column> {
-  const out: Record<string, Column> = {};
+/**
+ * A table's columns re-keyed by their DB column name (snake_case) — the exact
+ * row shape `select()` produces, so typed results flow to the mappers.
+ */
+export type ColumnsByDbName<T extends SQLiteTable> = {
+  [
+    K in keyof T['_']['columns'] & string as T['_']['columns'][K]['_']['name']
+  ]: T['_']['columns'][K];
+};
+
+export function cols<T extends SQLiteTable>(table: T): ColumnsByDbName<T> {
+  const out = {} as ColumnsByDbName<T>;
   for (const column of Object.values(getTableColumns(table))) {
-    out[column.name] = column;
+    (out as Record<string, unknown>)[column.name] = column;
   }
   return out;
 }

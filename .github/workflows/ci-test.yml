@@ -95,14 +95,18 @@ jobs:
       # (shared exports raw TS sources). The baseline errors that used to
       # live here were fixed in shared in Aug 2026 — this is now a hard gate.
       #
-      # The API is deliberately NOT tsc-gated: its tsconfig uses NodeNext
-      # resolution while the codebase imports with `.ts` extensions (TS5097
-      # noise everywhere, plus pre-existing type errors in routes) — the API
-      # runs via tsx with no build step, and its real signal is the API
+      # apps/api is tsc-gated as well, via apps/api/tsconfig.typecheck.json:
+      # a noEmit typecheck in bundler resolution (same as web), so `.ts`
+      # import extensions typecheck cleanly. The MAIN apps/api tsconfig
+      # keeps NodeNext — it models the tsx RUNTIME (no build step; tsx just
+      # strips types), and runtime behavior stays covered by the API
       # integration suite below, which boots an actual tsx server.
       - name: Typecheck (apps/web + packages/shared)
         working-directory: apps/web
         run: npx tsc -b
+
+      - name: Typecheck (apps/api)
+        run: npm run typecheck:api
 
       # ---- API integration suite, LAST (slowest: boots a throwaway server) ----
       # Own temp SQLite + seeds on a free port; includes the 100% query-site

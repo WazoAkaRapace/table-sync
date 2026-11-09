@@ -940,7 +940,10 @@ export async function inventoryRoutes(app: FastifyInstance) {
   app.post(
     '/characters/:id/consume',
     async (
-      req: FastifyRequest<{ Params: { id: string }; Body: { type: 'food' | 'water' } }>,
+      req: FastifyRequest<{
+        Params: { id: string };
+        Body: { type: 'food' | 'water' | 'ammo'; ammo?: string };
+      }>,
       reply: FastifyReply,
     ) => {
       const userId = requireUser(req, reply);
@@ -960,11 +963,12 @@ export async function inventoryRoutes(app: FastifyInstance) {
       // valeur est celle de WEAPON_AMMUNITION (shared) : l'arme équipée
       // désigne SON consommable, arc → flèches, arbalète → carreaux.
       const ammoKind = req.body?.ammo;
-      if (type === 'ammo' && !AMMO_KINDS.includes(ammoKind))
+      if (type === 'ammo' && !AMMO_KINDS.includes(ammoKind ?? ''))
         return reply.code(400).send({
           error: apiMsg(req, `ammo kind must be one of: ${AMMO_KINDS.join(', ')}`),
         });
-      const tag = type === 'ammo' ? ammoKind : type;
+      // Garde ci-dessus : pour type 'ammo', ammoKind est validé (donc défini)
+      const tag = type === 'ammo' ? ammoKind! : type;
 
       // Find a tagged inventory item
       // For water: skip items with notes containing 'empty' (already drunk)
