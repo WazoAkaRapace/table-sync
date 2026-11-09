@@ -20,6 +20,10 @@ import {
   SPELL_SLOTS_ARTIFICIER,
   SPELL_SLOTS_HALF,
   SPELL_SLOTS_PACT,
+  wildShapeCanFly,
+  wildShapeCanSwim,
+  wildShapeDurationHours,
+  wildShapeMaxCR,
 } from '@table-sync/shared';
 import {
   CLASS_FEATURES,
@@ -1025,6 +1029,57 @@ check(
   'druide Corps immortel @18 (RAW, pas 15)',
   findClassFeature('druide-corps-immortel')?.level,
   18,
+);
+
+// --- Druide : Forme sauvage (PHB 2014) ---
+
+// PHB 2014 p.67 : CR max 1/4 @2, 1/2 @4, 1 @8
+check(
+  'forme sauvage : CR max 1/4 @2, 1/2 @4, 1 @8 (PHB 2014)',
+  [2, 4, 8].map((lv) => wildShapeMaxCR(lv)),
+  [0.25, 0.5, 1],
+);
+// PHB 2014 p.69 : Cercle de la Lune — CR = ⌊niv/3⌋, minimum 1
+check(
+  'forme sauvage Lune : CR ⌊niv/3⌋ min 1 (@3=1, @6=2, @9=3, @20=6)',
+  [3, 6, 9, 20].map((lv) => wildShapeMaxCR(lv, 'lune')),
+  [1, 2, 3, 6],
+);
+// PHB 2014 p.67 : nage possible dès le niv 4 (pas avant, sauf Lune dès le début
+// pour les formes terrestres — la limite ici est la règle générale @4)
+check(
+  'forme sauvage : nage interdite @3, possible @4',
+  [wildShapeCanSwim(3), wildShapeCanSwim(4)],
+  [false, true],
+);
+// PHB 2014 p.67 : vol possible dès le niv 8
+check(
+  'forme sauvage : vol interdit @7, possible @8',
+  [wildShapeCanFly(7), wildShapeCanFly(8)],
+  [false, true],
+);
+// PHB 2014 p.67 : durée = ⌊niv/2⌋ heures (minimum 1)
+check(
+  'forme sauvage : durée ⌊niv/2⌋ h (@2=1, @6=3, @20=10)',
+  [wildShapeDurationHours(2), wildShapeDurationHours(6), wildShapeDurationHours(20)],
+  [1, 3, 10],
+);
+// ⚠ ÉCART SRD 2014 — bug candidat, NON corrigé (périmètre tests) : le SRD 5.1
+// (Natural Recovery) autorise la Récupération naturelle LORS d'un repos court
+// mais « you can't use this feature again until you finish a long rest » —
+// soit max 1 entre deux repos LONGS. Le catalogue (reset 'short') recharge le
+// compteur à CHAQUE repos court, ce qui autorise plusieurs emplois par jour.
+// Le check épingle la valeur ACTUELLE pour rendre l'écart visible.
+const druideRN = mkChar({ characterClass: 'Druide', level: 2, druidCircle: 'terre' });
+const rnDejaUtilisee = () => [mkFeature(30, 'terre-recuperation-naturelle', 1, 1)];
+check(
+  'récupération naturelle : recharge à CHAQUE repos court (ÉCART SRD 2014, bug candidat)',
+  [
+    findClassFeature('terre-recuperation-naturelle')?.resource?.reset,
+    applyRest(druideRN, rnDejaUtilisee(), { type: 'short' }).featureResets.length,
+    applyRest(druideRN, rnDejaUtilisee(), { type: 'short' }).featureResets.length,
+  ],
+  ['short', 1, 1],
 );
 
 // --- Choix du joueur vs règle SRD du catalogue (le catalogue pré-remplit, le joueur décide) ---
