@@ -1371,7 +1371,9 @@ check(
   [
     findClassFeature('terre-recuperation-naturelle')?.resource?.reset,
     effectiveFeatureReset({ catalogId: 'terre-recuperation-naturelle', resetType: null }, 2),
-    findClassFeature('terre-recuperation-naturelle')?.description.includes('impossible avant un repos long'),
+    findClassFeature('terre-recuperation-naturelle')?.description.includes(
+      'impossible avant un repos long',
+    ),
   ],
   ['long', 'long', true],
 );
