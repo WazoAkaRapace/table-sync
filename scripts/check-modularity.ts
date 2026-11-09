@@ -91,7 +91,7 @@ const R4_LEGACY: Record<string, string[]> = {
   'apps/api/src/routes/combat/turns.ts': ['../character-spell-effects.ts'],
   'apps/api/src/routes/combat/update.ts': ['../character-spell-effects.ts'],
   'apps/api/src/routes/domain-spells.ts': ['./spells.ts'],
-  'apps/api/src/routes/gma.ts': ['./npcs.ts'],
+  'apps/api/src/routes/gma/entities.ts': ['../npcs.ts'],
   'apps/api/src/routes/inventory/containers.ts': ['../character-spell-effects.ts'],
   'apps/api/src/routes/inventory/entries.ts': ['../character-spell-effects.ts'],
   'apps/api/src/routes/inventory/flows.ts': ['../character-spell-effects.ts'],

@@ -3,9 +3,6 @@
     "apps/api/src/routes/auth.ts": {
       "lines": 806
     },
-    "apps/api/src/routes/gma.ts": {
-      "lines": 2182
-    },
     "apps/api/src/routes/helpers.ts": {
       "lines": 734
     },

@@ -33,7 +33,7 @@ import { characterSpellRoutes } from './routes/character-spells.ts';
 import { characterRoutes } from './routes/characters/index.ts';
 import { combatRoutes } from './routes/combat/index.ts';
 import { domainSpellRoutes } from './routes/domain-spells.ts';
-import { gmaRoutes } from './routes/gma.ts';
+import { gmaRoutes } from './routes/gma/index.ts';
 import { inventoryRoutes } from './routes/inventory/index.ts';
 import { itemImageRoutes } from './routes/item-images.ts';
 import { itemRoutes } from './routes/items.ts';
