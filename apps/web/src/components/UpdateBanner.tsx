@@ -23,6 +23,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
+import { Glyph } from './Glyph';
 
 const CHECK_INTERVAL_MS = 30 * 60 * 1000;
 /** Secours : sans « precache-done » d'ici là, on montre le bandeau —
@@ -161,7 +162,7 @@ export default function UpdateBanner() {
           className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-ink-400 hover:bg-parchment-200 hover:text-ink-700"
           aria-label={t('cast.fermer')}
         >
-          ✕
+          <Glyph name="close" />
         </button>
       </div>
     </div>,

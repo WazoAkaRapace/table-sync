@@ -81,7 +81,8 @@ gmTest(
       timeout: 10_000,
     });
 
-    // — Le « Vu » coche la réponse chez la joueuse (reflow du marquage MD) —
+    // — Le « Vu » coche la réponse chez la joueuse (reflow du marquage MD ;
+    //    la coche est un glyphe SVG depuis la passe emoji→glyphes) —
     await expect(playerPage.getByText('Vu', { exact: true }).first()).toBeVisible({
       timeout: 10_000,
     });

@@ -22,6 +22,7 @@ import {
   isTargetableAcSpell,
   previewAc,
 } from '../spellEffects';
+import { Glyph } from './Glyph';
 import { Chip } from './ui';
 import TargetPickerSheet, { type CastTarget } from './TargetPickerSheet';
 
@@ -303,7 +304,9 @@ export default function CastSpellSheet({
       >
         <div className="flex items-start justify-between gap-2 mb-3">
           <div>
-            <h3 className="section-title">🪄 {spell.name}</h3>
+            <h3 className="section-title">
+              <Glyph name="spark" /> {spell.name}
+            </h3>
             <p className="text-xs text-ink-400">
               {isCantrip
                 ? t('cast.tour.de.magie')
@@ -328,7 +331,7 @@ export default function CastSpellSheet({
             className="text-ink-400 hover:text-ink-700 text-lg leading-none px-1"
             aria-label={t('cast.fermer')}
           >
-            ✕
+            <Glyph name="close" />
           </button>
         </div>
 
@@ -367,7 +370,7 @@ export default function CastSpellSheet({
           >
             {acAnnouncement.flat ? (
               <p className="font-medium">
-                ⛨{' '}
+                <Glyph name="shield-cross" />{' '}
                 {t('cast.ca.annonce.plate.from.mod.autant', {
                   from: acAnnouncement.from,
                   mod: acAnnouncement.mod,
@@ -375,7 +378,7 @@ export default function CastSpellSheet({
               </p>
             ) : (
               <p className="font-medium">
-                ⛨{' '}
+                <Glyph name="shield-cross" />{' '}
                 {t('cast.ca.annonce.from.to.mod', {
                   from: acAnnouncement.from,
                   to: acAnnouncement.to,
@@ -396,7 +399,8 @@ export default function CastSpellSheet({
             })}
           >
             <p className="font-medium">
-              ⛨ {t('cast.ca.annonce.autre', { mod: otherAnnouncement.mod, name: targetName })}
+              <Glyph name="shield-cross" />{' '}
+              {t('cast.ca.annonce.autre', { mod: otherAnnouncement.mod, name: targetName })}
             </p>
             <p className="mt-0.5 text-xs text-gold-700">
               {isMageArmor
@@ -563,7 +567,7 @@ export default function CastSpellSheet({
                         : undefined
                   }
                 >
-                  ⚔{' '}
+                  <Glyph name="combat" />{' '}
                   {isEldritchBlast && blastRays > 1
                     ? `${blastRays} × ${dmg.dice}${perRayBonus ? formatModifier(perRayBonus) : ''}`
                     : `${dmg.dice}${isEldritchBlast && perRayBonus ? formatModifier(perRayBonus) : ''}`}
@@ -576,7 +580,7 @@ export default function CastSpellSheet({
               )}
               {isEldritchBlast && (
                 <Chip tone="gold" title={t('cast.decharge.occulte.rayons.title')}>
-                  ✦{' '}
+                  <Glyph name="spark-outline" />{' '}
                   {t('cast.rayons.count', {
                     count: blastRays,
                     rays: blastRays,
@@ -585,12 +589,13 @@ export default function CastSpellSheet({
               )}
               {isEldritchBlast && perRayBonus !== 0 && (
                 <Chip tone="gold" title={t('cast.decharge.dechirante.title')}>
-                  ✦ {formatModifier(perRayBonus)} {t('cast.par.rayon.court')}
+                  <Glyph name="spark-outline" /> {formatModifier(perRayBonus)}{' '}
+                  {t('cast.par.rayon.court')}
                 </Chip>
               )}
               {spearRange && (
                 <Chip tone="gold" title={t('cast.lance.occulte.title')}>
-                  🎯 {t('cast.portee.45m')}
+                  <Glyph name="target" /> {t('cast.portee.45m')}
                 </Chip>
               )}
               {healing.dice && (
@@ -602,7 +607,7 @@ export default function CastSpellSheet({
                       : t('sorts.points.de.vie.restaures')
                   }
                 >
-                  ✚ {healing.dice}
+                  <Glyph name="heart" /> {healing.dice}
                   {healing.addsModifier && castingMod !== undefined
                     ? formatModifier(castingMod)
                     : ''}{' '}
@@ -611,11 +616,13 @@ export default function CastSpellSheet({
               )}
               {spell.dcJson && castingMod !== undefined && profBonus !== undefined && (
                 <Chip tone="blue">
-                  🛡 {t('sorts.dd')} {spellSaveDC(castingMod, profBonus)}
+                  <Glyph name="shield" /> {t('sorts.dd')} {spellSaveDC(castingMod, profBonus)}
                 </Chip>
               )}
               {spell.attackType && castingMod !== undefined && profBonus !== undefined && (
-                <Chip tone="red">🎯 {formatModifier(castingMod + profBonus)}</Chip>
+                <Chip tone="red">
+                  <Glyph name="target" /> {formatModifier(castingMod + profBonus)}
+                </Chip>
               )}
             </div>
           );

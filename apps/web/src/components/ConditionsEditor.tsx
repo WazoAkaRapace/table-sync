@@ -9,9 +9,10 @@
 
 import type { CombatantCondition } from '@table-sync/shared';
 import { CONCENTRATION_BREAKING_CONDITIONS_FR, DND_CONDITIONS_FR } from '@table-sync/shared';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { conditionHintKey, conditionLabel } from '../i18n/labels';
+import { Glyph } from './Glyph';
 import { BottomSheet } from './ui';
 
 interface Props {
@@ -22,23 +23,23 @@ interface Props {
   combatantName: string;
 }
 
-export const CONDITION_ICONS: Record<string, string> = {
-  Aveuglé: '🙈',
+export const CONDITION_ICONS: Record<string, ReactNode> = {
+  Aveuglé: <Glyph name="hide" />,
   Assourdi: '🔇',
   Charmé: '💕',
   Effrayé: '😱',
-  Empoisonné: '☠️',
-  'En feu': '🔥',
-  Entravé: '🪢',
-  Étourdi: '💫',
+  Empoisonné: <Glyph name="death" />,
+  'En feu': <Glyph name="fire" />,
+  Entravé: <Glyph name="link" />,
+  Étourdi: <Glyph name="spark-outline" />,
   Inconscient: '😴',
   Invisible: '👻',
   Agrippé: '🤝',
   'À terre': '🔽',
   Paralysé: '🧊',
   Pétrifié: '🗿',
-  Possédé: '👁',
-  Neutralisé: '✖️',
+  Possédé: <Glyph name="eye" />,
+  Neutralisé: <Glyph name="close" />,
 };
 
 export default function ConditionsEditor({
@@ -135,7 +136,7 @@ export default function ConditionsEditor({
                   className="text-sm shrink-0 text-indigo-600"
                   title={t('survie.interrompt.la.concentration')}
                 >
-                  🌀
+                  <Glyph name="concentration" />
                 </span>
               )}
             </button>

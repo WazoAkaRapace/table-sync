@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import i18next from '../i18n';
+import { Glyph } from './Glyph';
 import { categoryLabel, coinLabel, encumbranceLabel, rarityLabel } from '../i18n/labels';
 
 export function RarityBadge({ rarity }: { rarity: Rarity }) {
@@ -690,7 +691,15 @@ export function ErrorMsg({ message, onRetry }: { message: string; onRetry?: () =
   );
 }
 
-export function EmptyState({ icon, title, hint }: { icon: string; title: string; hint?: string }) {
+export function EmptyState({
+  icon,
+  title,
+  hint,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  hint?: string;
+}) {
   return (
     <div className="text-center py-12 px-4">
       <div className="text-4xl mb-2" aria-hidden="true">
@@ -1068,7 +1077,7 @@ export function Modal({
             className="btn-ghost shrink-0 text-ink-500 p-1"
             aria-label={t('common.close')}
           >
-            ✕
+            <Glyph name="close" />
           </button>
         </div>
         {children}
@@ -1139,7 +1148,7 @@ export function BottomSheet({
             className="btn-ghost text-ink-500 p-1"
             aria-label={t('common.close')}
           >
-            ✕
+            <Glyph name="close" />
           </button>
         </div>
         <div className={`overflow-y-auto overscroll-contain p-4 flex-1 ${bodyClassName}`}>

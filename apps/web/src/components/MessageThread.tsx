@@ -20,6 +20,7 @@ import api from '../api';
 import { useAuth } from '../auth';
 import { useSyncEvent } from '../sync';
 import { formatMessageTime } from '../utils';
+import { Glyph } from './Glyph';
 import {
   ConfirmButton,
   EmptyState,
@@ -261,7 +262,7 @@ export default function MessageThread({
 
       {messages.length === 0 ? (
         <EmptyState
-          icon="✉️"
+          icon={<Glyph name="mail" />}
           title={isGMView ? t('msgs.aucun.message.md') : t('msgs.aucun.message')}
           hint={isGMView ? t('msgs.aide.vide.md') : t('msgs.aide.vide')}
         />
@@ -313,7 +314,9 @@ export default function MessageThread({
                   {m.body}
                 </p>
                 {mine && m.readAt && (
-                  <p className="mt-1 text-[10px] text-ink-400">{t('msgs.vu')} ✓</p>
+                  <p className="mt-1 text-[10px] text-ink-400">
+                    {t('msgs.vu')} <Glyph name="check" />
+                  </p>
                 )}
               </li>
             );
