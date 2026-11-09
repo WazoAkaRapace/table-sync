@@ -271,20 +271,7 @@ export async function clockRoutes(app: FastifyInstance) {
         }
         values.season = body.season;
       }
-      if (body.weather !== undefined) {
-        const weather = cleanOptionalText(body.weather, MAX_WEATHER_LEN);
-        if (weather === undefined) {
-          return reply.code(400).send({ error: apiMsg(req, 'invalid weather') });
-        }
-        values.weather = weather;
-      }
-      if (body.note !== undefined) {
-        const note = cleanOptionalText(body.note, MAX_NOTE_LEN);
-        if (note === undefined) {
-          return reply.code(400).send({ error: apiMsg(req, 'invalid note') });
-        }
-        values.note = note;
-      }
+      if (!applyOptionalDayFields(req, reply, body, values)) return;
       if (Object.keys(values).length === 0) {
         return reply.code(400).send({ error: apiMsg(req, 'no fields to update') });
       }
@@ -324,20 +311,7 @@ export async function clockRoutes(app: FastifyInstance) {
 
       const body = req.body || ({} as PatchCampaignDayPayload);
       const values: Record<string, unknown> = {};
-      if (body.weather !== undefined) {
-        const weather = cleanOptionalText(body.weather, MAX_WEATHER_LEN);
-        if (weather === undefined) {
-          return reply.code(400).send({ error: apiMsg(req, 'invalid weather') });
-        }
-        values.weather = weather;
-      }
-      if (body.note !== undefined) {
-        const note = cleanOptionalText(body.note, MAX_NOTE_LEN);
-        if (note === undefined) {
-          return reply.code(400).send({ error: apiMsg(req, 'invalid note') });
-        }
-        values.note = note;
-      }
+      if (!applyOptionalDayFields(req, reply, body, values)) return;
       if (Object.keys(values).length === 0) {
         return reply.code(400).send({ error: apiMsg(req, 'no fields to update') });
       }
@@ -368,4 +342,34 @@ export async function clockRoutes(app: FastifyInstance) {
       return reply.send({ day: mapDay(updated) });
     },
   );
+}
+
+/**
+ * Champs optionnels partagés état/jour (météo + journal du jour) : nettoyage
+ * cleanOptionalText, 400 au premier invalide, écriture dans `values` sinon.
+ * Renvoie false après avoir envoyé la réponse — l'appelant fait `return`.
+ */
+function applyOptionalDayFields(
+  req: FastifyRequest,
+  reply: FastifyReply,
+  body: { weather?: unknown; note?: unknown },
+  values: Record<string, unknown>,
+): boolean {
+  if (body.weather !== undefined) {
+    const weather = cleanOptionalText(body.weather, MAX_WEATHER_LEN);
+    if (weather === undefined) {
+      reply.code(400).send({ error: apiMsg(req, 'invalid weather') });
+      return false;
+    }
+    values.weather = weather;
+  }
+  if (body.note !== undefined) {
+    const note = cleanOptionalText(body.note, MAX_NOTE_LEN);
+    if (note === undefined) {
+      reply.code(400).send({ error: apiMsg(req, 'invalid note') });
+      return false;
+    }
+    values.note = note;
+  }
+  return true;
 }

@@ -12,6 +12,15 @@
     "version": null,
     "sha": null,
     "date": "2026-11-09",
+    "title": "déduplication intra-fichiers de l'API",
+    "items": [
+      "L'application reçoit une mise à jour technique interne, sans changement visible à table."
+    ]
+  },
+  {
+    "version": null,
+    "sha": null,
+    "date": "2026-11-09",
     "title": "préambule d'accès fiche partagé (déduplication)",
     "items": [
       "L'application reçoit une mise à jour technique interne, sans changement visible à table."

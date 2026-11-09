@@ -16,7 +16,7 @@ import { campaignCountdowns } from '../../db/schema.ts';
 import { bus } from '../../sync/bus.ts';
 import { requireUser } from '../lib/membership.ts';
 import { apiMsg } from '../messages.ts';
-import { MAX_DAY, MAX_LABEL_LEN, gmGuard, mapCountdown } from './shared.ts';
+import { MAX_DAY, MAX_LABEL_LEN, getCampaignRowForGM, gmGuard, mapCountdown } from './shared.ts';
 
 export async function countdownsRoutes(app: FastifyInstance) {
   // ---------- Countdowns ----------
@@ -66,16 +66,15 @@ export async function countdownsRoutes(app: FastifyInstance) {
       req: FastifyRequest<{ Params: { id: string }; Body: PatchCampaignCountdownPayload }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const drizzle = getDrizzle();
-      const row = drizzle
-        .select(cols(campaignCountdowns))
-        .from(campaignCountdowns)
-        .where(eq(campaignCountdowns.id, Number(req.params.id)))
-        .get() as any;
-      if (!row) return reply.code(404).send({ error: apiMsg(req, 'countdown not found') });
-      if (!gmGuard(req, reply, row.party_id, userId)) return;
+      const ctx = getCampaignRowForGM(
+        req,
+        reply,
+        campaignCountdowns,
+        Number(req.params.id),
+        'countdown not found',
+      );
+      if (ctx === null) return;
+      const { userId, row, drizzle } = ctx;
 
       const body = req.body || ({} as PatchCampaignCountdownPayload);
       const values: Record<string, unknown> = {};
@@ -115,16 +114,15 @@ export async function countdownsRoutes(app: FastifyInstance) {
   app.delete(
     '/campaign-countdowns/:id',
     async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const drizzle = getDrizzle();
-      const row = drizzle
-        .select(cols(campaignCountdowns))
-        .from(campaignCountdowns)
-        .where(eq(campaignCountdowns.id, Number(req.params.id)))
-        .get() as any;
-      if (!row) return reply.code(404).send({ error: apiMsg(req, 'countdown not found') });
-      if (!gmGuard(req, reply, row.party_id, userId)) return;
+      const ctx = getCampaignRowForGM(
+        req,
+        reply,
+        campaignCountdowns,
+        Number(req.params.id),
+        'countdown not found',
+      );
+      if (ctx === null) return;
+      const { userId, row, drizzle } = ctx;
 
       drizzle.delete(campaignCountdowns).where(eq(campaignCountdowns.id, row.id)).run();
       bus.emitChange({

@@ -10,7 +10,7 @@ import type {
   ReorderPayload,
 } from '@table-sync/shared';
 import { eq, inArray, sql } from 'drizzle-orm';
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../db/drizzle.ts';
 import { getDb } from '../db/index.ts';
 import { cols } from '../db/projections.ts';
@@ -60,6 +60,43 @@ function isOwnerOrGM(char: any, userId: number): boolean {
   return char.owner_id === userId || isPartyGM(char.party_id, userId);
 }
 
+/** Garde « éditeur de notes » : membre du groupe, puis owner/MD (les libellés
+ *  403 sont propres à ce fichier). Renvoie false après réponse envoyée. */
+function guardNoteEditor(
+  req: FastifyRequest,
+  reply: FastifyReply,
+  char: any,
+  userId: number,
+): boolean {
+  if (!isPartyMember(char.party_id, userId)) {
+    reply.code(403).send({ error: apiMsg(req, 'Not a party member') });
+    return false;
+  }
+  if (!isOwnerOrGM(char, userId)) {
+    reply.code(403).send({ error: apiMsg(req, 'Only the owner or GM can modify') });
+    return false;
+  }
+  return true;
+}
+
+/** Porte « note par id » (PATCH/DELETE /character-notes/:noteId) : 404 « Note
+ *  not found », puis la garde éditeur sur la fiche porteuse. Renvoie null
+ *  après avoir envoyé la réponse — l'appelant fait `return`. */
+function getNoteForEditor(
+  req: FastifyRequest,
+  reply: FastifyReply,
+  noteId: number,
+  userId: number,
+): { note: any; char: any } | null {
+  const pair = getNoteWithCharacter(noteId);
+  if (!pair) {
+    reply.code(404).send({ error: apiMsg(req, 'Note not found') });
+    return null;
+  }
+  if (!guardNoteEditor(req, reply, pair.char, userId)) return null;
+  return pair;
+}
+
 export async function characterNoteRoutes(app: FastifyInstance) {
   app.get('/characters/:id/notes', async (req, reply) => {
     const userId = await requireUser(req, reply);
@@ -90,10 +127,7 @@ export async function characterNoteRoutes(app: FastifyInstance) {
     const drizzle = getDrizzle();
     const char = getCharacter(drizzle, charId);
     if (!char) return reply.code(404).send({ error: apiMsg(req, 'Character not found') });
-    if (!isPartyMember(char.party_id, userId))
-      return reply.code(403).send({ error: apiMsg(req, 'Not a party member') });
-    if (!isOwnerOrGM(char, userId))
-      return reply.code(403).send({ error: apiMsg(req, 'Only the owner or GM can modify') });
+    if (!guardNoteEditor(req, reply, char, userId)) return;
 
     const body = req.body as CreateCharacterNotePayload;
     const title = body?.title?.trim();
@@ -134,13 +168,9 @@ export async function characterNoteRoutes(app: FastifyInstance) {
     const userId = await requireUser(req, reply);
     if (!userId) return;
     const noteId = Number((req.params as any).noteId);
-    const pair = getNoteWithCharacter(noteId);
-    if (!pair) return reply.code(404).send({ error: apiMsg(req, 'Note not found') });
+    const pair = getNoteForEditor(req, reply, noteId, userId);
+    if (pair === null) return;
     const { note, char } = pair;
-    if (!isPartyMember(char.party_id, userId))
-      return reply.code(403).send({ error: apiMsg(req, 'Not a party member') });
-    if (!isOwnerOrGM(char, userId))
-      return reply.code(403).send({ error: apiMsg(req, 'Only the owner or GM can modify') });
 
     const body = req.body as PatchCharacterNotePayload;
     const values: Record<string, unknown> = {};
@@ -181,10 +211,7 @@ export async function characterNoteRoutes(app: FastifyInstance) {
     const drizzle = getDrizzle();
     const char = getCharacter(drizzle, charId);
     if (!char) return reply.code(404).send({ error: apiMsg(req, 'Character not found') });
-    if (!isPartyMember(char.party_id, userId))
-      return reply.code(403).send({ error: apiMsg(req, 'Not a party member') });
-    if (!isOwnerOrGM(char, userId))
-      return reply.code(403).send({ error: apiMsg(req, 'Only the owner or GM can modify') });
+    if (!guardNoteEditor(req, reply, char, userId)) return;
 
     const body = req.body as ReorderPayload;
     const order = [
@@ -234,13 +261,9 @@ export async function characterNoteRoutes(app: FastifyInstance) {
     const userId = await requireUser(req, reply);
     if (!userId) return;
     const noteId = Number((req.params as any).noteId);
-    const pair = getNoteWithCharacter(noteId);
-    if (!pair) return reply.code(404).send({ error: apiMsg(req, 'Note not found') });
+    const pair = getNoteForEditor(req, reply, noteId, userId);
+    if (pair === null) return;
     const { note, char } = pair;
-    if (!isPartyMember(char.party_id, userId))
-      return reply.code(403).send({ error: apiMsg(req, 'Not a party member') });
-    if (!isOwnerOrGM(char, userId))
-      return reply.code(403).send({ error: apiMsg(req, 'Only the owner or GM can modify') });
 
     getDrizzle().delete(characterNotes).where(eq(characterNotes.id, noteId)).run();
     bus.emitChange({

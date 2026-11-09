@@ -14,16 +14,14 @@ import { cols } from '../../db/projections.ts';
 import { gmaPcLinks, partyGmaLinks, userGmaLinks } from '../../db/schema.ts';
 import { GmaError, gmaErrorToResponse, gmaListAll, gmaRequest } from '../../gma/client.ts';
 import { apiMsg } from '../messages.ts';
-import { requireUser } from '../lib/membership.ts';
 import {
   desiredPc,
   emitGma,
-  getPartyLink,
   gmaDescription,
   loadPartyCharacters,
   noteScope,
   nowIso,
-  requirePartyGM,
+  requireGmaLinked,
   resolveLinkKey,
 } from './shared.ts';
 
@@ -36,17 +34,9 @@ export async function characterSyncRoutes(app: FastifyInstance) {
       req: FastifyRequest<{ Params: { partyId: string }; Body: GmaSyncCharactersPayload }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const partyId = Number(req.params.partyId);
-      if (!requirePartyGM(req, reply, partyId)) return;
-      const link = getPartyLink(partyId);
-      if (!link) {
-        return reply.code(404).send({
-          error: apiMsg(req, 'not_linked'),
-          message: apiMsg(req, 'Ce groupe n’est pas lié à une campagne GM Assistant.'),
-        });
-      }
+      const ctx = requireGmaLinked(req, reply, req.params.partyId);
+      if (ctx === null) return;
+      const { userId, partyId, link } = ctx;
       const key = resolveLinkKey(link);
       if (!key) {
         return reply.code(400).send({
@@ -245,17 +235,9 @@ export async function characterSyncRoutes(app: FastifyInstance) {
       req: FastifyRequest<{ Params: { partyId: string; gmaPcId: string } }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const partyId = Number(req.params.partyId);
-      if (!requirePartyGM(req, reply, partyId)) return;
-      const link = getPartyLink(partyId);
-      if (!link) {
-        return reply.code(404).send({
-          error: apiMsg(req, 'not_linked'),
-          message: apiMsg(req, 'Ce groupe n’est pas lié à une campagne GM Assistant.'),
-        });
-      }
+      const ctx = requireGmaLinked(req, reply, req.params.partyId);
+      if (ctx === null) return;
+      const { userId, partyId, link } = ctx;
       const row = getDrizzle()
         .select(cols(gmaPcLinks))
         .from(gmaPcLinks)

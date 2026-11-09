@@ -171,19 +171,56 @@ function getCharacter(id: number): any {
     .get() as any;
 }
 
+/**
+ * Porte « forme sauvage » des 3 routes /characters/:id/wild-shape* : 404
+ * « Personnage introuvable », puis owner/MD (403 « Réservé au propriétaire
+ * ou au MD »). Renvoie null après avoir envoyé la réponse — l'appelant fait
+ * `return`.
+ */
+function requireWildShapeChar(
+  req: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply,
+): { userId: number; char: any; gm: boolean } | null {
+  const userId = requireUser(req, reply);
+  if (userId === null) return null;
+  const char = getCharacter(Number(req.params.id));
+  if (!char) {
+    reply.code(404).send({ error: apiMsg(req, 'Personnage introuvable') });
+    return null;
+  }
+  const gm = isPartyGM(char.party_id, userId);
+  if (char.owner_id !== userId && !gm) {
+    reply.code(403).send({ error: apiMsg(req, 'Réservé au propriétaire ou au MD') });
+    return null;
+  }
+  return { userId, char, gm };
+}
+
+/** Double émission de fin de geste forme sauvage : fiche (stats) + traqueurs (hp). */
+function emitWildShapeChanges(char: { party_id: number; id: number }, userId: number): void {
+  bus.emitChange({
+    type: 'character:change',
+    partyId: char.party_id,
+    characterId: char.id,
+    action: 'stats',
+    actorUserId: userId,
+  });
+  bus.emitChange({
+    type: 'combat:change',
+    partyId: char.party_id,
+    action: 'hp',
+    actorUserId: userId,
+  });
+}
+
 export async function wildShapeRoutes(app: FastifyInstance) {
   // ===== Eligible beast list for this druid =====
   app.get(
     '/characters/:id/wild-shape/forms',
     async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const char = getCharacter(Number(req.params.id));
-      if (!char) return reply.code(404).send({ error: apiMsg(req, 'Personnage introuvable') });
-      const gm = isPartyGM(char.party_id, userId);
-      if (char.owner_id !== userId && !gm) {
-        return reply.code(403).send({ error: apiMsg(req, 'Réservé au propriétaire ou au MD') });
-      }
+      const ctx = requireWildShapeChar(req, reply);
+      if (ctx === null) return;
+      const { char } = ctx;
 
       const { level, circle } = druidLine(char);
       const isMoon = circle === 'lune';
@@ -268,14 +305,9 @@ export async function wildShapeRoutes(app: FastifyInstance) {
       req: FastifyRequest<{ Params: { id: string }; Body: { slug?: string } }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const char = getCharacter(Number(req.params.id));
-      if (!char) return reply.code(404).send({ error: apiMsg(req, 'Personnage introuvable') });
-      const gm = isPartyGM(char.party_id, userId);
-      if (char.owner_id !== userId && !gm) {
-        return reply.code(403).send({ error: apiMsg(req, 'Réservé au propriétaire ou au MD') });
-      }
+      const ctx = requireWildShapeChar(req, reply);
+      if (ctx === null) return;
+      const { userId, char } = ctx;
       if (char.wild_shape_slug) {
         return reply.code(400).send({ error: apiMsg(req, 'Déjà sous forme animale') });
       }
@@ -359,19 +391,7 @@ export async function wildShapeRoutes(app: FastifyInstance) {
         }
       })();
 
-      bus.emitChange({
-        type: 'character:change',
-        partyId: char.party_id,
-        characterId: char.id,
-        action: 'stats',
-        actorUserId: userId,
-      });
-      bus.emitChange({
-        type: 'combat:change',
-        partyId: char.party_id,
-        action: 'hp',
-        actorUserId: userId,
-      });
+      emitWildShapeChanges(char, userId);
       return reply.code(201).send({
         shape: {
           slug: beast.slug,
@@ -388,14 +408,9 @@ export async function wildShapeRoutes(app: FastifyInstance) {
   app.post(
     '/characters/:id/wild-shape/revert',
     async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const char = getCharacter(Number(req.params.id));
-      if (!char) return reply.code(404).send({ error: apiMsg(req, 'Personnage introuvable') });
-      const gm = isPartyGM(char.party_id, userId);
-      if (char.owner_id !== userId && !gm) {
-        return reply.code(403).send({ error: apiMsg(req, 'Réservé au propriétaire ou au MD') });
-      }
+      const ctx = requireWildShapeChar(req, reply);
+      if (ctx === null) return;
+      const { userId, char } = ctx;
       if (!char.wild_shape_slug) {
         return reply.code(400).send({ error: apiMsg(req, 'Pas sous forme animale') });
       }
@@ -441,19 +456,7 @@ export async function wildShapeRoutes(app: FastifyInstance) {
         }
       })();
 
-      bus.emitChange({
-        type: 'character:change',
-        partyId: char.party_id,
-        characterId: char.id,
-        action: 'stats',
-        actorUserId: userId,
-      });
-      bus.emitChange({
-        type: 'combat:change',
-        partyId: char.party_id,
-        action: 'hp',
-        actorUserId: userId,
-      });
+      emitWildShapeChanges(char, userId);
       return reply.send({ hp: newHp, excessDamage: carried });
     },
   );

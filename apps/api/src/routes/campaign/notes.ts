@@ -14,7 +14,7 @@ import { dmNotes } from '../../db/schema.ts';
 import { bus } from '../../sync/bus.ts';
 import { requireUser } from '../lib/membership.ts';
 import { apiMsg } from '../messages.ts';
-import { MAX_TITLE_LEN, gmGuard, mapNote, nextSort } from './shared.ts';
+import { MAX_TITLE_LEN, getCampaignRowForGM, gmGuard, mapNote, nextSort } from './shared.ts';
 
 export async function notesRoutes(app: FastifyInstance) {
   // ---------- Notes (grammar of character notes, party-scoped) ----------
@@ -58,16 +58,9 @@ export async function notesRoutes(app: FastifyInstance) {
       req: FastifyRequest<{ Params: { id: string }; Body: PatchDmNotePayload }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const drizzle = getDrizzle();
-      const note = drizzle
-        .select(cols(dmNotes))
-        .from(dmNotes)
-        .where(eq(dmNotes.id, Number(req.params.id)))
-        .get() as any;
-      if (!note) return reply.code(404).send({ error: apiMsg(req, 'note not found') });
-      if (!gmGuard(req, reply, note.party_id, userId)) return;
+      const ctx = getCampaignRowForGM(req, reply, dmNotes, Number(req.params.id), 'note not found');
+      if (ctx === null) return;
+      const { userId, row: note, drizzle } = ctx;
 
       const body = req.body || ({} as PatchDmNotePayload);
       const values: Record<string, unknown> = {};
@@ -150,16 +143,9 @@ export async function notesRoutes(app: FastifyInstance) {
   app.delete(
     '/dm-notes/:id',
     async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const drizzle = getDrizzle();
-      const note = drizzle
-        .select(cols(dmNotes))
-        .from(dmNotes)
-        .where(eq(dmNotes.id, Number(req.params.id)))
-        .get() as any;
-      if (!note) return reply.code(404).send({ error: apiMsg(req, 'note not found') });
-      if (!gmGuard(req, reply, note.party_id, userId)) return;
+      const ctx = getCampaignRowForGM(req, reply, dmNotes, Number(req.params.id), 'note not found');
+      if (ctx === null) return;
+      const { userId, row: note, drizzle } = ctx;
 
       drizzle.delete(dmNotes).where(eq(dmNotes.id, note.id)).run();
       bus.emitChange({

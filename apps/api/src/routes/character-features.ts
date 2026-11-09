@@ -60,6 +60,36 @@ function getFeatureWithCharacter(featureId: number): { feature: any; char: any }
   return { feature, char };
 }
 
+/** Contrat d'accès éditeur des traits — identique aux 4 routes d'écriture. */
+const FEATURE_EDITOR_ACCESS = {
+  access: 'owner-or-gm',
+  requireMember: true,
+  forbiddenMsg: 'only the owner or GM can modify features',
+} as const;
+
+/**
+ * Porte « trait par id » (PATCH/DELETE /character-features/:featureId) :
+ * 404 « feature not found », puis owner/MD (requireMember). Renvoie null
+ * après avoir envoyé la réponse — l'appelant fait `return`.
+ */
+function getFeatureForEditor(
+  req: FastifyRequest,
+  reply: FastifyReply,
+  featureId: number,
+): { userId: number; feature: any; char: any; drizzle: ReturnType<typeof getDrizzle> } | null {
+  const userId = requireUser(req, reply);
+  if (userId === null) return null;
+  const drizzle = getDrizzle();
+  const resolved = getFeatureWithCharacter(featureId);
+  if (!resolved) {
+    reply.code(404).send({ error: apiMsg(req, 'feature not found') });
+    return null;
+  }
+  const { feature, char } = resolved;
+  if (!checkCharacterAccess(req, reply, char, userId, FEATURE_EDITOR_ACCESS)) return null;
+  return { userId, feature, char, drizzle };
+}
+
 export async function characterFeatureRoutes(app: FastifyInstance) {
   // ---------- List a character's features ----------
   app.get(
@@ -91,9 +121,7 @@ export async function characterFeatureRoutes(app: FastifyInstance) {
       reply: FastifyReply,
     ) => {
       const access = requireCharacterAccess(req, reply, Number(req.params.id), {
-        access: 'owner-or-gm',
-        requireMember: true,
-        forbiddenMsg: 'only the owner or GM can modify features',
+        ...FEATURE_EDITOR_ACCESS,
       });
       if (!access) return;
       const { char, userId } = access;
@@ -196,20 +224,9 @@ export async function characterFeatureRoutes(app: FastifyInstance) {
       req: FastifyRequest<{ Params: { featureId: string }; Body: PatchCharacterFeaturePayload }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const drizzle = getDrizzle();
-      const resolved = getFeatureWithCharacter(Number(req.params.featureId));
-      if (!resolved) return reply.code(404).send({ error: apiMsg(req, 'feature not found') });
-      const { feature, char } = resolved;
-      if (
-        !checkCharacterAccess(req, reply, char, userId, {
-          access: 'owner-or-gm',
-          requireMember: true,
-          forbiddenMsg: 'only the owner or GM can modify features',
-        })
-      )
-        return;
+      const ctx = getFeatureForEditor(req, reply, Number(req.params.featureId));
+      if (ctx === null) return;
+      const { userId, feature, char, drizzle } = ctx;
 
       const body = req.body || {};
       const values: Record<string, unknown> = {};
@@ -271,9 +288,7 @@ export async function characterFeatureRoutes(app: FastifyInstance) {
       reply: FastifyReply,
     ) => {
       const access = requireCharacterAccess(req, reply, Number(req.params.id), {
-        access: 'owner-or-gm',
-        requireMember: true,
-        forbiddenMsg: 'only the owner or GM can modify features',
+        ...FEATURE_EDITOR_ACCESS,
       });
       if (!access) return;
       const { char, userId } = access;
@@ -329,20 +344,9 @@ export async function characterFeatureRoutes(app: FastifyInstance) {
   app.delete(
     '/character-features/:featureId',
     async (req: FastifyRequest<{ Params: { featureId: string } }>, reply: FastifyReply) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const drizzle = getDrizzle();
-      const resolved = getFeatureWithCharacter(Number(req.params.featureId));
-      if (!resolved) return reply.code(404).send({ error: apiMsg(req, 'feature not found') });
-      const { feature, char } = resolved;
-      if (
-        !checkCharacterAccess(req, reply, char, userId, {
-          access: 'owner-or-gm',
-          requireMember: true,
-          forbiddenMsg: 'only the owner or GM can modify features',
-        })
-      )
-        return;
+      const ctx = getFeatureForEditor(req, reply, Number(req.params.featureId));
+      if (ctx === null) return;
+      const { userId, feature, char, drizzle } = ctx;
 
       drizzle.delete(characterFeatures).where(eq(characterFeatures.id, feature.id)).run();
       bus.emitChange({

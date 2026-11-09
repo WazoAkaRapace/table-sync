@@ -15,12 +15,11 @@ import { inventory, items, storageLocations } from '../../db/schema.ts';
 import { bus } from '../../sync/bus.ts';
 import { mirrorAcToCombatants } from '../character-spell-effects.ts';
 import { mapInventoryEntry } from '../lib/mappers.ts';
-import { isOwnerOrGM, requireUser } from '../lib/membership.ts';
 import { langFromReq } from '../lang.ts';
 import { apiMsg } from '../messages.ts';
 import {
-  getCharacter,
   getEntryWithItem,
+  getInvEntryForEditor,
   INVENTORY_WITH_ITEM,
   itemDisplayName,
   logTransaction,
@@ -34,20 +33,10 @@ export async function entriesRoutes(app: FastifyInstance) {
       req: FastifyRequest<{ Params: { invId: string }; Body: PatchInventoryPayload }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
+      const ctx = getInvEntryForEditor(req, reply, Number(req.params.invId));
+      if (ctx === null) return;
+      const { userId, inv, char } = ctx;
       const drizzle = getDrizzle();
-      const inv = drizzle
-        .select(cols(inventory))
-        .from(inventory)
-        .where(eq(inventory.id, Number(req.params.invId)))
-        .get() as any;
-      if (!inv) return reply.code(404).send({ error: apiMsg(req, 'inventory entry not found') });
-      const char = getCharacter(drizzle, inv.character_id);
-      if (!isOwnerOrGM(char, userId))
-        return reply
-          .code(403)
-          .send({ error: apiMsg(req, 'only the owner or GM can edit this inventory') });
 
       const body = req.body || {};
 
@@ -206,20 +195,10 @@ export async function entriesRoutes(app: FastifyInstance) {
   app.delete(
     '/inventory/:invId',
     async (req: FastifyRequest<{ Params: { invId: string } }>, reply: FastifyReply) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
+      const ctx = getInvEntryForEditor(req, reply, Number(req.params.invId));
+      if (ctx === null) return;
+      const { userId, inv, char } = ctx;
       const drizzle = getDrizzle();
-      const inv = drizzle
-        .select(cols(inventory))
-        .from(inventory)
-        .where(eq(inventory.id, Number(req.params.invId)))
-        .get() as any;
-      if (!inv) return reply.code(404).send({ error: apiMsg(req, 'inventory entry not found') });
-      const char = getCharacter(drizzle, inv.character_id);
-      if (!isOwnerOrGM(char, userId))
-        return reply
-          .code(403)
-          .send({ error: apiMsg(req, 'only the owner or GM can edit this inventory') });
 
       const itemRow = itemDisplayName(inv.item_id);
       logTransaction(drizzle, {

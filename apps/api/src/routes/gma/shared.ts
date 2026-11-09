@@ -131,6 +131,101 @@ export function requirePartyGM(req: FastifyRequest, reply: FastifyReply, partyId
   return true;
 }
 
+/** Contexte renvoyé par les portes membre/lien — link pour les routes qui l'utilisent. */
+export interface GmaMemberLink {
+  userId: number;
+  partyId: number;
+  link: any;
+}
+
+/**
+ * Porte « membre + lien GMA » des routes entités/chronique : 401 implicite
+ * (requireUser), 403 « not a member » hors groupe, puis 404 « not_linked »
+ * sans campagne liée. Renvoie null après avoir envoyé la réponse —
+ * l'appelant fait `return`.
+ */
+export function requireGmaMemberLink(
+  req: FastifyRequest,
+  reply: FastifyReply,
+  partyIdRaw: string,
+): GmaMemberLink | null {
+  const userId = requireUser(req, reply);
+  if (userId === null) return null;
+  const partyId = Number(partyIdRaw);
+  if (!isPartyMember(partyId, userId)) {
+    reply.code(403).send({
+      error: apiMsg(req, 'not a member'),
+      message: apiMsg(req, 'Tu n’es pas membre de ce groupe.'),
+    });
+    return null;
+  }
+  const link = getPartyLink(partyId);
+  if (!link) {
+    reply.code(404).send({
+      error: apiMsg(req, 'not_linked'),
+      message: apiMsg(req, 'Aucune campagne GM Assistant liée à ce groupe.'),
+    });
+    return null;
+  }
+  return { userId, partyId, link };
+}
+
+/**
+ * Porte « GM + lien requis » (sync/delete PNJ GMA, unlink de campagne) :
+ * même contrat, 404 « not_linked » au libellé « Ce groupe n'est pas lié… ».
+ */
+export function requireGmaLinked(
+  req: FastifyRequest,
+  reply: FastifyReply,
+  partyIdRaw: string,
+): GmaMemberLink | null {
+  const userId = requireUser(req, reply);
+  if (userId === null) return null;
+  const partyId = Number(partyIdRaw);
+  if (!requirePartyGM(req, reply, partyId)) return null;
+  const link = getPartyLink(partyId);
+  if (!link) {
+    reply.code(404).send({
+      error: apiMsg(req, 'not_linked'),
+      message: apiMsg(req, 'Ce groupe n’est pas lié à une campagne GM Assistant.'),
+    });
+    return null;
+  }
+  return { userId, partyId, link };
+}
+
+/**
+ * Porte « init/link » : GM + groupe PAS encore lié (409 already_linked) +
+ * clé utilisateur enregistrée (400 no_key). Renvoie la clé ou null après
+ * avoir envoyé la réponse.
+ */
+export function requireGmaFreshKey(
+  req: FastifyRequest,
+  reply: FastifyReply,
+  partyIdRaw: string,
+): { userId: number; partyId: number; key: string } | null {
+  const userId = requireUser(req, reply);
+  if (userId === null) return null;
+  const partyId = Number(partyIdRaw);
+  if (!requirePartyGM(req, reply, partyId)) return null;
+  if (getPartyLink(partyId)) {
+    reply.code(409).send({
+      error: apiMsg(req, 'already_linked'),
+      message: apiMsg(req, 'Ce groupe est déjà lié à une campagne GM Assistant.'),
+    });
+    return null;
+  }
+  const key = decryptUserKey(getUserKeyRow(userId));
+  if (!key) {
+    reply.code(400).send({
+      error: apiMsg(req, 'no_key'),
+      message: apiMsg(req, 'Enregistre d’abord ta clé GM Assistant ci-dessus.'),
+    });
+    return null;
+  }
+  return { userId, partyId, key };
+}
+
 /** Any successful write proves full_access; insufficient_scope proves read. */
 export function noteScope(userId: number, err: unknown): void {
   const scope =
