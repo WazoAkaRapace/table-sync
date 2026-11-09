@@ -1268,14 +1268,18 @@ check(
 // Le check épingle la valeur ACTUELLE pour rendre l'écart visible.
 const druideRN = mkChar({ characterClass: 'Druide', level: 2, druidCircle: 'terre' });
 const rnDejaUtilisee = () => [mkFeature(30, 'terre-recuperation-naturelle', 1, 1)];
+// SRD 5.1 : utilisable LORS d'un repos court, une seule fois entre deux repos
+// longs (« You can't use this feature again until you finish a long rest ») —
+// correction 2026-11 (l'ancien reset 'short' permettait plusieurs emplois/jour).
 check(
-  'récupération naturelle : recharge à CHAQUE repos court (ÉCART SRD 2014, bug candidat)',
+  'récupération naturelle : recharge repos long (SRD 5.1)',
   [
     findClassFeature('terre-recuperation-naturelle')?.resource?.reset,
     applyRest(druideRN, rnDejaUtilisee(), { type: 'short' }).featureResets.length,
     applyRest(druideRN, rnDejaUtilisee(), { type: 'short' }).featureResets.length,
+    applyRest(druideRN, rnDejaUtilisee(), { type: 'long' }).featureResets.length,
   ],
-  ['short', 1, 1],
+  ['long', 0, 0, 1],
 );
 
 // --- Choix du joueur vs règle SRD du catalogue (le catalogue pré-remplit, le joueur décide) ---
@@ -1359,15 +1363,17 @@ check(
   [1, 'long'],
 );
 
-// Récupération naturelle (cercle de la Terre) : idem, 1× par repos court (PHB 2014 p.69)
+// Récupération naturelle (cercle de la Terre) : SRD 5.1 — utilisable à l'occasion
+// d'un repos court, une seule fois entre deux repos longs (l'app suit le SRD,
+// diverge du PHB 2014 « short or long » — même politique que Plénitude physique).
 check(
-  'effectiveReset : Récupération naturelle recharge au repos court',
+  'effectiveReset : Récupération naturelle recharge au repos long (SRD 5.1)',
   [
     findClassFeature('terre-recuperation-naturelle')?.resource?.reset,
     effectiveFeatureReset({ catalogId: 'terre-recuperation-naturelle', resetType: null }, 2),
-    findClassFeature('terre-recuperation-naturelle')?.description.includes('1× par repos court.'),
+    findClassFeature('terre-recuperation-naturelle')?.description.includes('impossible avant un repos long'),
   ],
-  ['short', 'short', true],
+  ['long', 'long', true],
 );
 
 // Override 'long' sur un trait de catalogue dont la règle SRD est 'short'
