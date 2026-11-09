@@ -97,8 +97,8 @@ playerTest.describe('Occultiste (manifestations)', () => {
       await expect(cast).toBeVisible();
       // Niv. occultiste 11 → 3 rayons ; CHA 16 → +3 par rayon.
       await expect(cast.getByText(/3 × 1d10\+3/)).toBeVisible();
-      await expect(cast.getByText('✦ 3 rayons')).toBeVisible();
-      await expect(cast.getByText('✦ +3 / rayon')).toBeVisible();
+      await expect(cast.getByText('3 rayons')).toBeVisible();
+      await expect(cast.getByText('+3 / rayon')).toBeVisible();
     },
   );
 

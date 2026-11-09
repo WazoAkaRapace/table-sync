@@ -84,8 +84,9 @@ playerTest.describe('Arme personnalisée (joueur)', () => {
 
     // Aperçu live AVANT soumission : FOR 16 → +3, template 4d6+FOR+2 → 4d6+5
     // (le bonus +2 vaut l'attaque : puce or à part).
-    await expect(modal).toContainText('⚔ 4d6+5 · tranchants');
-    await expect(modal).toContainText('✨ +2');
+    await expect(modal).toContainText('4d6+5 · tranchants');
+    // puce magique : le glyphe ✨ est un SVG, on cible la puce par son texte
+    await expect(modal.locator('span.inline-flex').filter({ hasText: '+2' })).toBeVisible();
     await page.screenshot({ path: 'e2e/.captures/custom-weapon-joueur.png' });
 
     await modal.getByRole('button', { name: '✨ Créer et ajouter' }).click();
@@ -125,7 +126,7 @@ gmTest.describe('Arme personnalisée (MD)', () => {
     await diceInput.fill('4d6+FOR+2');
 
     // Aperçu SYMBOLIQUE : sans porteur, FOR reste une lettre.
-    await expect(modal).toContainText('⚔ 4d6+FOR+2 · tranchants');
+    await expect(modal).toContainText('4d6+FOR+2 · tranchants');
     await expect(modal).toContainText('1d10 · deux mains');
     await page.screenshot({ path: 'e2e/.captures/custom-weapon-md.png' });
 

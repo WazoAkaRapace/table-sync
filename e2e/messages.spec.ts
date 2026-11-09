@@ -81,8 +81,11 @@ gmTest(
       timeout: 10_000,
     });
 
-    // — Le « Vu » coche la réponse chez la joueuse (reflow du marquage MD) —
-    await expect(playerPage.getByText('Vu ✓').first()).toBeVisible({ timeout: 10_000 });
+    // — Le « Vu » coche la réponse chez la joueuse (reflow du marquage MD ;
+    //    la coche est un glyphe SVG depuis la passe emoji→glyphes) —
+    await expect(playerPage.getByText('Vu', { exact: true }).first()).toBeVisible({
+      timeout: 10_000,
+    });
 
     // — La pastille du registre MD s'éteint avec le marquage : le fil ouvert
     //    A marqué, et le lecteur n'a pas d'écho WS de sa propre lecture —

@@ -719,7 +719,7 @@ playerTest.describe('Annotations (joueuse)', () => {
       name: "Agrandir l'illustration de Croquis annotable",
     });
     await expect(chassis).toBeVisible();
-    await expect(chassis.getByText('🔍')).toBeVisible();
+    await expect(chassis.locator('svg.inline-glyph')).toBeVisible();
 
     const bytesAfter = await getImageBytes(derivedId, seed().gm.token);
     expect(bytesAfter.equals(bytesBefore)).toBe(true);
