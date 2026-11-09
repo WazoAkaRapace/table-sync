@@ -434,6 +434,17 @@ check(
   resourceMaxOf('guerrier-sursaut-activite', mkChar({ level: 17 })),
   2,
 );
+// PHB 2014 p.75 : dés de Supériorité martiale — 4 @3, 5 @7, 6 @15 (repos court)
+check(
+  'supériorité martiale : 4/5/6 dés aux paliers 3/7/15 (PHB 2014)',
+  [3, 7, 15].map((lv) =>
+    resourceMaxOf(
+      'maitre-guerre-superiorite-martial',
+      mkChar({ characterClass: 'Guerrier', level: lv, subclass: 'maitre-de-guerre' }),
+    ),
+  ),
+  [4, 5, 6],
+);
 check('indomptable @9 = 1', resourceMaxOf('guerrier-indomptable', mkChar({ level: 9 })), 1);
 check('indomptable @13 = 2', resourceMaxOf('guerrier-indomptable', mkChar({ level: 13 })), 2);
 check('indomptable @17 = 3', resourceMaxOf('guerrier-indomptable', mkChar({ level: 17 })), 3);
