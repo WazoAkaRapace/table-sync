@@ -1526,7 +1526,7 @@ export default function CharacterInventoryPage() {
                         }`}
                         aria-pressed={isActive}
                       >
-                        <span aria-hidden="true">{LOCATION_TYPE_ICON[loc.type]}</span>
+                        <Glyph name={LOCATION_TYPE_ICON[loc.type]} />
                         <span>{loc.name}</span>
                         <span
                           className={`text-xs px-1.5 py-0.5 rounded-full ${
@@ -1634,9 +1634,11 @@ export default function CharacterInventoryPage() {
                   <div className="card p-4">
                     <EmptyState
                       icon={
-                        isActiveCarried
-                          ? '🎒'
-                          : LOCATION_TYPE_ICON[activeLocation?.type ?? 'carried']
+                        isActiveCarried ? (
+                          <Glyph name="pack" />
+                        ) : (
+                          <Glyph name={LOCATION_TYPE_ICON[activeLocation?.type ?? 'carried']} />
+                        )
                       }
                       title={isActiveCarried ? t('inv.sac.a.dos.vide') : t('inv.aucun.objet.ici')}
                       hint={t('inv.appuie.sur.ajouter')}

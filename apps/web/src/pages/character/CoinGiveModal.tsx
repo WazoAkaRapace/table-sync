@@ -8,6 +8,7 @@ import { usePartyRecipients } from '../../usePartyRecipients';
 import { COIN_FIELDS } from './CoinPurse';
 import { formatPlainCp, formatPurse } from './coinFormat';
 import { apiError, type CoinsState } from './types';
+import { Glyph } from '../../components/Glyph';
 
 // ---------- Donner à… (transfert de bourse entre personnages) ----------
 // Quatrième verbe de la bourse : la main tendue. Le destinataire vient du
@@ -108,7 +109,7 @@ export function CoinGiveModal({
         <LoadingSpinner label={t('transfert.chargement.du.groupe')} />
       ) : others.length === 0 ? (
         <EmptyState
-          icon="👤"
+          icon={<Glyph name="user" />}
           title={t('transfert.aucun.autre.personnage')}
           hint={t('transfert.aucun.destinataire.dans.ce.groupe')}
         />

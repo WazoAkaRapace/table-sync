@@ -18,6 +18,8 @@
  */
 
 import type { CampaignCalendarResponse, CampaignSeason } from '@table-sync/shared';
+import type { GlyphName } from '../../components/Glyph';
+import { Glyph } from '../../components/Glyph';
 import { CAMPAIGN_SEASONS } from '@table-sync/shared';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
@@ -80,14 +82,29 @@ function materialize(
   return rows;
 }
 
-// Préréglages météo — mêmes emojis que le carnet (famille visuelle existante).
-const WEATHER_PRESETS: { emoji: string; labelKey: string }[] = [
-  { emoji: '☀️', labelKey: 'carnet.cal.meteo.clear' },
-  { emoji: '🌧️', labelKey: 'carnet.cal.meteo.rain' },
-  { emoji: '🌩️', labelKey: 'carnet.cal.meteo.storm' },
-  { emoji: '❄️', labelKey: 'carnet.cal.meteo.snow' },
-  { emoji: '🌫️', labelKey: 'carnet.cal.meteo.fog' },
+// Préréglages météo : rendu en glyphes SVG. L'emoji reste dans la VALEUR
+// stockée (compatibilité des données existantes) — seul le rendu le convertit.
+const WEATHER_PRESETS: { emoji: string; glyph: GlyphName; labelKey: string }[] = [
+  { emoji: '☀️', glyph: 'sun', labelKey: 'carnet.cal.meteo.clear' },
+  { emoji: '🌧️', glyph: 'rain', labelKey: 'carnet.cal.meteo.rain' },
+  { emoji: '🌩️', glyph: 'storm', labelKey: 'carnet.cal.meteo.storm' },
+  { emoji: '❄️', glyph: 'snow', labelKey: 'carnet.cal.meteo.snow' },
+  { emoji: '🌫️', glyph: 'fog', labelKey: 'carnet.cal.meteo.fog' },
 ];
+
+/** Emoji de météo (1ᵉʳ token de la valeur stockée) → glyphe SVG. */
+const WEATHER_GLYPH_BY_EMOJI: Record<string, GlyphName> = {
+  '☀️': 'sun',
+  '☀': 'sun',
+  '🌧️': 'rain',
+  '🌧': 'rain',
+  '🌩️': 'storm',
+  '🌩': 'storm',
+  '❄️': 'snow',
+  '❄': 'snow',
+  '🌫️': 'fog',
+  '🌫': 'fog',
+};
 
 /** Textarea auto-extensible (le journal pousse avec la plume). */
 function AutoTextarea({
@@ -259,8 +276,6 @@ function CalendarDayRow({
     }
   }
 
-  const glyphOf = (weather: string) => weather.trim().split(/\s+/)[0] ?? '';
-
   return (
     <li
       className={`rounded-xl border transition-colors ${
@@ -283,7 +298,7 @@ function CalendarDayRow({
         </span>
         {row.weather ? (
           <span className="emoji-glyph shrink-0 text-base" title={row.weather}>
-            {glyphOf(row.weather)}
+            <WeatherGlyph weather={row.weather} />
           </span>
         ) : null}
         <span className="min-w-0 flex-1 truncate text-sm text-ink-500">
@@ -373,9 +388,7 @@ function CalendarDayRow({
                         if (value !== (row.weather ?? '')) commitDmDay({ weather: value });
                       }}
                     >
-                      <span aria-hidden="true" className="emoji-glyph">
-                        {p.emoji}
-                      </span>
+                      <Glyph name={p.glyph} />
                     </button>
                   ))}
                 </fieldset>
@@ -631,4 +644,13 @@ export default function WeekCalendar({
       </ul>
     </section>
   );
+}
+
+/** Rangée météo : emoji stocké converti en glyphe ; fallback texte (ancien jeton). */
+function WeatherGlyph({ weather }: { weather: string }) {
+  const first = weather.trim().split(/\s+/)[0] ?? '';
+  const glyph = WEATHER_GLYPH_BY_EMOJI[first];
+  if (glyph) return <Glyph name={glyph} />;
+  const rest = weather.trim().split(/\s+/).slice(1).join(' ');
+  return <span className="text-sm text-ink-500">{rest || first}</span>;
 }

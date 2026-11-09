@@ -458,7 +458,9 @@ export function InventoryRow({
                         <span>{t('rangee.for.min', { min: item.strMin })}</span>
                       )}
                       {item.stealthDisadvantage && (
-                        <span>{t('rangee.desavantage.discretion')}</span>
+                        <span>
+                          <Glyph name="hide" /> {t('rangee.desavantage.discretion')}
+                        </span>
                       )}
                       {item.properties &&
                         item.properties.filter((p) => p !== 'monk').length > 0 && (
@@ -500,7 +502,7 @@ export function InventoryRow({
                           </option>
                           {otherLocations.map((l) => (
                             <option key={l.id} value={l.id}>
-                              {LOCATION_TYPE_ICON[l.type]} {l.name}
+                              <Glyph name={LOCATION_TYPE_ICON[l.type]} /> {l.name}
                             </option>
                           ))}
                         </select>

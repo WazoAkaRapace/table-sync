@@ -776,7 +776,7 @@ export function SurvivalPanel({
                             stats_critRange: stats.critRange,
                           })}
                         >
-                          🩸 crit {stats.critRange}-20
+                          <Glyph name="water" className="text-blood" /> crit {stats.critRange}-20
                         </Chip>
                       )}
                       {(() => {
@@ -794,7 +794,7 @@ export function SurvivalPanel({
                                 count: count,
                               })}
                             >
-                              🏹 ×{count}
+                              <Glyph name="bow" /> ×{count}
                             </Chip>
                             {count > 0 && canEdit && (
                               <button
@@ -806,7 +806,7 @@ export function SurvivalPanel({
                                 title={t('survie.tirer.une.munition', { name, count })}
                                 aria-label={t('survie.tirer.une.munition', { name, count })}
                               >
-                                {t('survie.tirer')}
+                                <Glyph name="bow" /> {t('survie.tirer')}
                               </button>
                             )}
                           </>
@@ -885,7 +885,7 @@ export function SurvivalPanel({
             <div className="bg-parchment-50 rounded-lg px-3 py-2 border border-parchment-200 space-y-1">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-sm font-medium text-ink-800 truncate">
-                  {t('survie.frappe.sans.arme')}
+                  <Glyph name="hand" /> {t('survie.frappe.sans.arme')}
                 </span>
                 {u.monk && (
                   <span className="text-[10px] font-semibold text-indigo-600 shrink-0">
@@ -917,7 +917,7 @@ export function SurvivalPanel({
                 </Chip>
                 {u.bonusActionAttack && (
                   <Chip tone="indigo" title={t('survie.arts.martiaux.une.frappe.sans.arme')}>
-                    {t('survie.action.bonus')}
+                    <Glyph name="spark" /> {t('survie.action.bonus')}
                   </Chip>
                 )}
               </div>
@@ -1129,7 +1129,14 @@ export function SurvivalPanel({
 
       {/* ---------- 4. Ressources — traits avec compteur, par catégorie ---------- */}
       {resourceFeatures.length > 0 && (
-        <Panel title={t('survie.ressources')} tuto="survie-ressources">
+        <Panel
+          title={
+            <>
+              <Glyph name="spark" /> {t('survie.ressources')}
+            </>
+          }
+          tuto="survie-ressources"
+        >
           {(() => {
             // Sections par catégorie, ordre fixe — aucune section vide rendue.
             // Mono-classe avec ressources : une seule section « Classe », le
@@ -1170,7 +1177,7 @@ export function SurvivalPanel({
                   className="flex items-center justify-between gap-2 bg-parchment-50 rounded-lg px-3 py-2 border border-parchment-200"
                 >
                   <span className="text-sm font-medium text-ink-800 truncate flex items-center gap-1.5">
-                    {isPool ? <Glyph name="heart" /> : '⚡'} {feature.title}
+                    {isPool ? <Glyph name="heart" /> : <Glyph name="spark" />} {feature.title}
                     {isRageRow && character.raging && (
                       <span className="text-xs font-bold text-blood-700">
                         <Glyph name="fire" />
@@ -1420,7 +1427,7 @@ export function SurvivalPanel({
               className="btn-rest-short"
               title={t('survie.emplacements.de.pacte.forme.sauvage.ressources')}
             >
-              {t('survie.repos.court')}
+              <Glyph name="camp" /> {t('survie.repos.court')}
             </button>
             <button
               type="button"

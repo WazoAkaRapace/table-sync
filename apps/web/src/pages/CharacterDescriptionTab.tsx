@@ -519,7 +519,8 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
               onClick={() => fileInputRef.current?.click()}
               className="btn-primary text-sm px-3 py-1.5"
             >
-              📷 {character.portraitUrl ? t('desc.changer') : t('desc.televerser')}
+              <Glyph name="camera" />{' '}
+              {character.portraitUrl ? t('desc.changer') : t('desc.televerser')}
             </button>
             {character.portraitUrl && (
               <ConfirmButton
