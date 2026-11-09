@@ -3,6 +3,15 @@
     "version": null,
     "sha": null,
     "date": "2026-11-09",
+    "title": "découpage inventory (modularité)",
+    "items": [
+      "L'application reçoit une mise à jour technique interne, sans changement visible à table."
+    ]
+  },
+  {
+    "version": null,
+    "sha": null,
+    "date": "2026-11-09",
     "title": "découpage campaign (modularité)",
     "items": [
       "L'application reçoit une mise à jour technique interne, sans changement visible à table."
