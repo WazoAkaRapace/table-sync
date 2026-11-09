@@ -46,7 +46,7 @@ playerTest.describe('Objets-illustrations (joueur)', () => {
     await expandCustomGroup(page);
   });
 
-  playerTest('la ligne repliée porte le glyphe 🗺 et l’indice « illustré »', async ({ page }) => {
+  playerTest('la ligne repliée porte le glyphe carte (SVG) et l’indice « illustré »', async ({ page }) => {
     const rowButton = page.getByRole('button', {
       name: 'Lettre du duc, 1 exemplaire, illustré',
     });
@@ -64,7 +64,7 @@ playerTest.describe('Objets-illustrations (joueur)', () => {
     await expect(chassis).toBeVisible();
     // La pastille 🔍 ne s'affiche qu'une fois l'octet arrivé (onLoad) —
     // preuve du chargement réel depuis l'API, pas d'un plateau vide.
-    await expect(chassis.getByText('🔍')).toBeVisible();
+    await expect(chassis.locator('.inline-glyph').first()).toBeVisible();
     await expect(chassis.locator('img')).toHaveJSProperty('naturalWidth', 400);
   });
 

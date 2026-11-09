@@ -97,8 +97,8 @@ playerTest.describe('Occultiste (manifestations)', () => {
       await expect(cast).toBeVisible();
       // Niv. occultiste 11 → 3 rayons ; CHA 16 → +3 par rayon.
       await expect(cast.getByText(/3 × 1d10\+3/)).toBeVisible();
-      await expect(cast.getByText('✦ 3 rayons')).toBeVisible();
-      await expect(cast.getByText('✦ +3 / rayon')).toBeVisible();
+      await expect(cast.getByText('3 rayons')).toBeVisible();
+      await expect(cast.getByText('+3 / rayon')).toBeVisible();
     },
   );
 
@@ -203,8 +203,8 @@ playerTest.describe('Occultiste (manifestations)', () => {
 
       // Repos long : le compteur revient, l'option Arcanum réapparaît.
       await openTab(page, 'Survie');
-      await page.getByRole('button', { name: '🌙 Repos long' }).click();
-      const restSheet = page.getByRole('dialog', { name: '🌙 Repos long (8 h)' });
+      await page.getByRole('button', { name: 'Repos long' }).click();
+      const restSheet = page.getByRole('dialog', { name: 'Repos long (8 h)' });
       await restSheet.getByRole('button', { name: 'Se reposer' }).click();
       await expect(restSheet).toHaveCount(0);
       await openTab(page, 'Traits');

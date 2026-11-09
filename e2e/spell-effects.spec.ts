@@ -125,7 +125,7 @@ playerTest.describe('Effets de sort sur la CA', () => {
 
       // — Rupture par condition brisante : Neutralisé via le picker d'états —
       await openTab(page, 'Survie');
-      await page.getByRole('button', { name: '🎭 Ajouter un état' }).click();
+      await page.getByRole('button', { name: 'Ajouter un état' }).click();
       await page.getByRole('button', { name: /^Neutralisé/ }).click();
       // Toast règle : la concentration est rompue, le sort interrompu…
       await expect(

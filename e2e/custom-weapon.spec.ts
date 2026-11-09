@@ -84,11 +84,11 @@ playerTest.describe('Arme personnalisée (joueur)', () => {
 
     // Aperçu live AVANT soumission : FOR 16 → +3, template 4d6+FOR+2 → 4d6+5
     // (le bonus +2 vaut l'attaque : puce or à part).
-    await expect(modal).toContainText('⚔ 4d6+5 · tranchants');
-    await expect(modal).toContainText('✨ +2');
+    await expect(modal).toContainText('4d6+5 · tranchants');
+    await expect(modal).toContainText('+2');
     await page.screenshot({ path: 'e2e/.captures/custom-weapon-joueur.png' });
 
-    await modal.getByRole('button', { name: '✨ Créer et ajouter' }).click();
+    await modal.getByRole('button', { name: 'Créer et ajouter' }).click();
 
     // L'arme atterrit dans le sac : la ligne déployée rend les puces moteur.
     await expandCategory(page, 'Arme');
@@ -125,7 +125,7 @@ gmTest.describe('Arme personnalisée (MD)', () => {
     await diceInput.fill('4d6+FOR+2');
 
     // Aperçu SYMBOLIQUE : sans porteur, FOR reste une lettre.
-    await expect(modal).toContainText('⚔ 4d6+FOR+2 · tranchants');
+    await expect(modal).toContainText('4d6+FOR+2 · tranchants');
     await expect(modal).toContainText('1d10 · deux mains');
     await page.screenshot({ path: 'e2e/.captures/custom-weapon-md.png' });
 

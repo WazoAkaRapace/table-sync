@@ -42,10 +42,10 @@ gmTest(
       gmPage.getByRole('heading', { name: seed().guerrier.name, exact: true }),
     ).toBeVisible();
 
-    await gmPage.getByRole('button', { name: '⚔ Dégâts' }).click();
+    await gmPage.getByRole('button', { name: 'Dégâts' }).click();
     const sheet = gmPage.getByRole('dialog');
     await sheet.getByLabel('Montant (dégâts ou soins)').fill('5');
-    await sheet.getByRole('button', { name: '⚔ Dégâts' }).click();
+    await sheet.getByRole('button', { name: 'Dégâts' }).click();
 
     // — La fiche joueur reçoit le coup sans rechargement (WS → invalidation) —
     await expect.poll(() => hpInput.inputValue(), { timeout: 10_000 }).toBe(String(before - 5));

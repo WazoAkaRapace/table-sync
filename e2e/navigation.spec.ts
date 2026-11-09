@@ -31,7 +31,7 @@ playerTest.describe('Navigation (routes lazy)', () => {
     await page.goto(sheetUrl(seed().guerrier.id));
     // Bandeau d'état : nom du personnage + section Vitalité (tab par défaut).
     await expect(page.getByText(seed().guerrier.name).first()).toBeVisible();
-    await expect(page.getByRole('heading', { name: '❤️ Vitalité' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Vitalité' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Survie', exact: true })).toBeVisible();
   });
 

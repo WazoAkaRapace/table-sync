@@ -78,7 +78,7 @@ playerTest.describe('Inventaire (guerrier)', () => {
 
     // --- Corriger : remet la bourse au seed (31 PO) pour les specs suivantes ---
     await bourseCard.getByRole('button', { name: '− Dépenser' }).click();
-    await modal.getByRole('button', { name: /✎ Corriger/ }).click();
+    await modal.getByRole('button', { name: 'Corriger', exact: true }).click();
     await expect(modal.getByLabel('Quantité de PO')).toHaveValue('32'); // draft pré-rempli
     await modal.getByLabel('Quantité de PA').fill('0');
     await modal.getByLabel('Quantité de PO').fill('31');

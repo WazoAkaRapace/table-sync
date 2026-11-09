@@ -99,7 +99,7 @@ playerTest.describe('Multiclassage', () => {
       await page.goto(sheetUrl(korgId));
       await expect(page.getByText('Korg').first()).toBeVisible();
       await openTab(page, 'Description');
-      await page.getByRole('button', { name: '✎ Modifier' }).click();
+      await page.getByRole('button', { name: 'Modifier' }).click();
       await expect(
         page.getByRole('dialog', { name: 'Identité & classe' }).getByText('Barbare'),
       ).toBeVisible();

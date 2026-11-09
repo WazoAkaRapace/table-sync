@@ -35,7 +35,7 @@ playerTest.describe('Gabarits de sécurité (paysage & 320 px)', () => {
     playerTest(`fiche Survie tient le coup — ${vp.label} @smoke`, async ({ page }) => {
       await page.setViewportSize(vp.size);
       await page.goto(sheetUrl(seed().guerrier.id));
-      await expect(page.getByRole('heading', { name: '❤️ Vitalité' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Vitalité' })).toBeVisible();
       // Le dock bas rend bien à ce gabarit (bouton Survie du dock ou hub).
       await expect(
         page

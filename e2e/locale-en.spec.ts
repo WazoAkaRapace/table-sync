@@ -19,8 +19,8 @@ playerTest('locale EN — login et libellés localisés', async ({ page }) => {
 playerTest('locale EN — survie : vitalité, états, repos', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('dnd-inv-lang', 'en'));
   await page.goto(sheetUrl(seed().guerrier.id));
-  await expect(page.getByRole('heading', { name: '❤️ Vitality' })).toBeVisible();
-  await expect(page.getByText('🎭 Conditions')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Vitality' })).toBeVisible();
+  await expect(page.getByText('Conditions')).toBeVisible();
 });
 
 playerTest('locale EN — sorts de la fiche', async ({ page }) => {

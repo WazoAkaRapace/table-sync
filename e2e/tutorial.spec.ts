@@ -111,7 +111,7 @@ playerTest.describe('visite guidée', () => {
       // Drapeau posé par la fixture : pas de visite au premier chargement
       // (la fiche est rendue et le délai de 800 ms est passé).
       await page.goto(sheetUrl(seed().guerrier.id));
-      await expect(page.getByRole('heading', { name: '❤️ Vitalité' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Vitalité' })).toBeVisible();
       await page.waitForTimeout(1500);
       await expect(page.getByRole('alertdialog')).toHaveCount(0);
 
@@ -148,7 +148,7 @@ playerTest.describe('visite guidée', () => {
       localStorage.removeItem('dnd-inv-tour-tabs');
     });
     await page.goto(sheetUrl(s.guerrier.id));
-    await expect(page.getByRole('heading', { name: '❤️ Vitalité' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Vitalité' })).toBeVisible();
     await page.waitForTimeout(1500);
     await expect(page.getByRole('alertdialog')).toHaveCount(0);
   });
@@ -188,7 +188,7 @@ playerTest.describe('visite guidée', () => {
       ),
     );
     await page.goto(sheetUrl(seed().guerrier.id));
-    await expect(page.getByRole('heading', { name: '❤️ Vitalité' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Vitalité' })).toBeVisible();
 
     await openTab(page, 'Inventaire');
     await expect(page.getByText('Tes rangements')).toBeVisible();
