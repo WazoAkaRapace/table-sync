@@ -16,6 +16,7 @@ import { Link } from 'react-router-dom';
 import api from './api';
 import { useAuth } from './auth';
 import { useCampaignInvalidation, useLightDay } from './campaignCalendar';
+import { Glyph } from './components/Glyph';
 
 interface CharacterSummaryLite {
   id: number;
@@ -55,7 +56,7 @@ export default function CampaignDayChip({ partyId }: { partyId: number }) {
       title={t('calendrier.chip.aria', { day })}
     >
       <span aria-hidden="true" className="mr-1.5">
-        📅
+        <Glyph name="calendar" />
       </span>
       {t('carnet.jours.passe', { day })}
     </Link>

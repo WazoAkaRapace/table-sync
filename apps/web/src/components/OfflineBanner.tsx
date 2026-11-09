@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Glyph } from './Glyph';
 
 /**
  * Bandeau « hors ligne » : navigator.onLine + événements online/offline.
@@ -27,7 +28,7 @@ export function OfflineBanner() {
       role="status"
       aria-live="polite"
     >
-      ⚡ {t('app.hors.ligne')}
+      <Glyph name="spark" /> {t('app.hors.ligne')}
     </div>
   );
 }

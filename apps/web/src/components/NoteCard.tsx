@@ -2,6 +2,7 @@ import type { CharacterNote } from '@table-sync/shared';
 import { useTranslation } from 'react-i18next';
 import { appLocale } from '../i18n';
 import { parseSqliteDate } from '../utils';
+import { Glyph } from './Glyph';
 import { renderMarkdown } from './markdown';
 import { SortableCard } from './SortableGrid';
 import { ConfirmButton } from './ui';
@@ -35,7 +36,7 @@ export function NoteCard({ note, showHandle, onEdit, onRemove }: NoteCardProps) 
                 className="text-ink-400 hover:text-blood-500 text-sm p-1"
                 aria-label={t('notes.modifier.note.title', { note_title: note.title })}
               >
-                ✎
+                <Glyph name="edit" />
               </button>
               <ConfirmButton
                 onConfirm={onRemove}
