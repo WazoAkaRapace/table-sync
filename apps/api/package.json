@@ -17,6 +17,7 @@
     "@fastify/jwt": "^10.2.7",
     "@fastify/multipart": "^10.1.7",
     "@fastify/websocket": "^11.3.7",
+    "@sinclair/typebox": "^0.34.52",
     "@table-sync/shared": "*",
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^13.0.3",

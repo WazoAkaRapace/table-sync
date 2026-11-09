@@ -247,6 +247,7 @@ const EN: Record<string, string> = {
     'only the owner or GM can transfer from this character',
   'order is required': 'order is required',
   'playersCreateItems must be a boolean': 'playersCreateItems must be a boolean',
+  'requête invalide': 'invalid request',
   'round doit être un entier ≥ 0': 'round must be an integer ≥ 0',
   'seul le propriétaire peut changer la visibilité': 'only the owner can change visibility',
   'spellId is required': 'spellId is required',

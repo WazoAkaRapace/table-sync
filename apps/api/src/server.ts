@@ -45,7 +45,9 @@ import { pushRoutes } from './routes/push.ts';
 import { restRoutes } from './routes/rest.ts';
 import { spellRoutes } from './routes/spells.ts';
 import { wildShapeRoutes } from './routes/wildshape.ts';
+import { apiMsg } from './routes/messages.ts';
 import { registerWsRoutes } from './sync/ws.ts';
+import { validationMessage } from './validation.ts';
 
 const PORT = parseInt(process.env.PORT || '4000', 10);
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-only-change-me-in-production';
@@ -120,9 +122,20 @@ async function buildServer() {
   // message client devient générique. Les erreurs < 500 (validation Fastify,
   // 4xx métier) passent telles quelles : les 400 apiMsg i18n des routes ne
   // doivent jamais être réécrits (des tests les épignent).
-  app.setErrorHandler((err: FastifyError, _request: FastifyRequest, reply: FastifyReply) => {
+  app.setErrorHandler((err: FastifyError, request: FastifyRequest, reply: FastifyReply) => {
     const status = err.statusCode ?? 500;
     if (reply.sent) return; // la route a déjà répondu : ne rien réécrire
+    // 400 de validation de schéma (TypeBox/ajv, phase 3) : le message
+    // technique ajv (« must be object », « must have required property »)
+    // ne part JAMAIS vers le joueur — la table validationMessage restitue
+    // le message métier FR exact que le check manuel de la route servait
+    // (contrat { error: apiMsg } inchangé, tests épignés).
+    if (Array.isArray(err.validation) && err.validation.length > 0) {
+      const msg =
+        validationMessage(request.method, request.routeOptions?.url, err.validation) ??
+        'requête invalide';
+      return reply.status(400).send({ error: apiMsg(request, msg) });
+    }
     if (status < 500) return reply.send(err);
     app.log.error(err);
     const message =
