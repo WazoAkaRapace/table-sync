@@ -548,6 +548,12 @@ check(
   [extraAttacks('Paladin', 4), extraAttacks('Paladin', 5)],
   [1, 2],
 );
+// PHB 2014 : Rôdeur @5 → 2 attaques (4 → 1, débloqué au niveau 5)
+check(
+  'Extra Attack : Rôdeur 4 → 1, Rôdeur 5 → 2 (PHB 2014)',
+  [extraAttacks('Rôdeur', 4), extraAttacks('Rôdeur', 5)],
+  [1, 2],
+);
 
 const bouleDeFeu: any = {
   level: 3,
