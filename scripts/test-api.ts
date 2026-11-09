@@ -28,6 +28,7 @@ import { run as combatAudit } from './api-tests/mod-combat-audit.ts';
 import { run as containerTransfer } from './api-tests/mod-container-transfer.ts';
 import { run as email } from './api-tests/mod-email.ts';
 import { run as errorHandler } from './api-tests/mod-error-handler.ts';
+import { run as fullSession } from './api-tests/mod-full-session.ts';
 import { run as featuresNotes } from './api-tests/mod-features-notes.ts';
 import { run as gma } from './api-tests/mod-gma.ts';
 import { run as heartbeat } from './api-tests/mod-heartbeat.ts';
@@ -85,6 +86,7 @@ const MODULES: Array<{
   { name: 'gestionnaire d’erreurs global', run: errorHandler },
   { name: 'validation typebox (schémas + 400 i18n)', run: validation },
   { name: 'accès personnage (préambule partagé)', run: characterAccess },
+  { name: 'full-session — une partie du début à la fin', run: fullSession },
 ];
 
 async function main(): Promise<void> {
