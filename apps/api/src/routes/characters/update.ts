@@ -1,294 +1,41 @@
 /**
- * Character routes: create, list, get, update, delete.
+ * Fiche personnage — PATCH /characters/:id : mise à jour centrale (validation
+ * des champs, forme sauvage, concentration/rage, miroirs HP/CA/conditions vers
+ * le traqueur, visibilité).
+ * Découpage 2026-11 (phase 4) : déplacement pur depuis routes/characters.ts.
  */
 
-import type {
-  ConcentrationCheck,
-  CreateCharacterPayload,
-  PatchCharacterPayload,
-} from '@table-sync/shared';
+import type { ConcentrationCheck, PatchCharacterPayload } from '@table-sync/shared';
 import {
   abilityModifier,
   CONCENTRATION_BREAKING_CONDITIONS_FR,
   computeAC,
   raceSpeedMeters,
 } from '@table-sync/shared';
-import { CLASS_SUBCLASSES } from '@table-sync/shared/classFeatures';
-import { and, desc, eq, inArray, ne, sql } from 'drizzle-orm';
+import { and, eq, inArray, ne } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { getDrizzle } from '../db/drizzle.ts';
-import { getDb } from '../db/index.ts';
-import { cols } from '../db/projections.ts';
-import {
-  characterClasses,
-  characters,
-  characterSpellEffects,
-  combatants,
-  encounters,
-  parties as partiesTable,
-  users,
-} from '../db/schema.ts';
-import { bus } from '../sync/bus.ts';
+import { getDrizzle } from '../../db/drizzle.ts';
+import { getDb } from '../../db/index.ts';
+import { cols } from '../../db/projections.ts';
+import { characters, characterSpellEffects, combatants, encounters } from '../../db/schema.ts';
+import { bus } from '../../sync/bus.ts';
 import {
   attachCharacterClasses,
-  characterVisibleTo,
   equippedAcRows,
   isPartyGM,
-  isPartyMember,
   mapCharacter,
-  mapCharacterSummary,
   mirrorConditionsToCombatants,
   replaceCharacterClasses,
   requireUser,
   validateClassEntries,
-} from './helpers.ts';
-import { sendCachedJson } from './httpCache.ts';
-import { loadInventoryView } from './inventory.ts';
-import { activeAcEffectsOf, mirrorAcToCombatants } from './character-spell-effects.ts';
-import { langFromReq } from './lang.ts';
-import { apiMsg } from './messages.ts';
+} from '../helpers.ts';
+// Import hérité du monolithe (R4_LEGACY, shrink-only) : miroir CA des effets de sort.
+import { activeAcEffectsOf, mirrorAcToCombatants } from '../character-spell-effects.ts';
+import { apiMsg } from '../messages.ts';
+import { activePlayerCombatants, getCharacterWithOwner } from './sheet.ts';
+import { applyLegacyClassFields } from './classes.ts';
 
-/** characters.* + the owner's display_name (JOIN users) — the mappers' shape. */
-const CHARACTER_WITH_OWNER = { ...cols(characters), owner_name: users.displayName };
-
-function getCharacterWithOwner(drizzle: ReturnType<typeof getDrizzle>, id: number): any {
-  return drizzle
-    .select(CHARACTER_WITH_OWNER)
-    .from(characters)
-    .innerJoin(users, eq(users.id, characters.ownerId))
-    .where(eq(characters.id, id))
-    .get() as any;
-}
-
-/** The character's player combatants in non-ended encounters (newest first). */
-function activePlayerCombatants(characterId: number): any[] {
-  return getDrizzle()
-    .select(cols(combatants))
-    .from(combatants)
-    .innerJoin(encounters, eq(combatants.encounterId, encounters.id))
-    .where(
-      and(
-        eq(combatants.characterId, characterId),
-        eq(combatants.type, 'player'),
-        ne(encounters.status, 'ended'),
-      ),
-    )
-    .orderBy(desc(encounters.createdAt), desc(combatants.id))
-    .all() as any[];
-}
-
-export async function characterRoutes(app: FastifyInstance) {
-  // ---------- Create character in a party ----------
-  app.post(
-    '/parties/:partyId/characters',
-    async (
-      req: FastifyRequest<{ Params: { partyId: string }; Body: CreateCharacterPayload }>,
-      reply: FastifyReply,
-    ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const partyId = Number(req.params.partyId);
-      if (!isPartyMember(partyId, userId))
-        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
-
-      const body = req.body || ({} as CreateCharacterPayload);
-      if (!body.name?.trim())
-        return reply.code(400).send({ error: apiMsg(req, 'name is required') });
-      const ability = (value: number | undefined, fallback: number): number => {
-        const score = value ?? fallback;
-        if (score < 1 || score > 30) return -1;
-        return score;
-      };
-      const abilities = {
-        strength: ability(body.strength, 10),
-        dexterity: ability(body.dexterity, 10),
-        constitution: ability(body.constitution, 10),
-        intelligence: ability(body.intelligence, 10),
-        wisdom: ability(body.wisdom, 10),
-        charisma: ability(body.charisma, 10),
-      };
-      for (const [label, score] of Object.entries(abilities)) {
-        if (score < 0) return reply.code(400).send({ error: `${label} must be between 1 and 30` });
-      }
-      const maxHp = body.maxHp ?? 1;
-      if (maxHp < 1) return reply.code(400).send({ error: apiMsg(req, 'maxHp must be ≥ 1') });
-      const currentHp = body.currentHp ?? maxHp;
-      const capMult = body.capacityMultiplier ?? 1;
-      // Vitesse de base : explicite (fiche libre) sinon dérivée de l'espèce
-      // SRD (petites races 7,5 m, Elfe des bois 10,5 m…), repli 9 m.
-      const speed =
-        typeof body.speed === 'number' && Number.isFinite(body.speed) && body.speed >= 0
-          ? body.speed
-          : (raceSpeedMeters(body.race) ?? 9);
-      const skillProficiencies = (body.skillProficiencies ?? []).filter(
-        (s): s is string => typeof s === 'string' && s.trim().length > 0,
-      );
-      const languages = (body.languages ?? []).filter(
-        (l): l is string => typeof l === 'string' && l.trim().length > 0,
-      );
-
-      const drizzle = getDrizzle();
-      const { id: charId } = drizzle
-        .insert(characters)
-        .values({
-          partyId,
-          ownerId: userId,
-          name: body.name.trim(),
-          strength: abilities.strength,
-          dexterity: abilities.dexterity,
-          constitution: abilities.constitution,
-          intelligence: abilities.intelligence,
-          wisdom: abilities.wisdom,
-          charisma: abilities.charisma,
-          capacityMultiplier: capMult,
-          characterClass: body.characterClass ?? null,
-          level: body.level ?? 1,
-          race: body.race ?? null,
-          background: body.background ?? null,
-          skillProficiencies: JSON.stringify(skillProficiencies),
-          languages: JSON.stringify(languages),
-          maxHp,
-          currentHp,
-          speed,
-          hidden: body.hidden ? 1 : 0,
-        })
-        .returning({ id: characters.id })
-        .get();
-      // Multiclassage : lignes de classe (toujours présentes, même mono-classe)
-      const classPayload =
-        body.classes ??
-        (body.characterClass ? [{ classKey: body.characterClass, level: body.level ?? 1 }] : []);
-      if (classPayload.length > 0) {
-        const validated = validateClassEntries(classPayload);
-        if (!validated.ok) return reply.code(400).send({ error: validated.error });
-        replaceCharacterClasses(charId, validated.entries);
-      }
-      const row = getCharacterWithOwner(drizzle, charId);
-      attachCharacterClasses([row]);
-      bus.emitChange({
-        type: 'party:change',
-        partyId,
-        characterId: charId,
-        action: 'stats',
-        actorUserId: userId,
-      });
-      return reply.code(201).send({ character: mapCharacterSummary(row) });
-    },
-  );
-
-  // ---------- List characters in a party ----------
-  app.get(
-    '/parties/:partyId/characters',
-    async (req: FastifyRequest<{ Params: { partyId: string } }>, reply: FastifyReply) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const partyId = Number(req.params.partyId);
-      if (!isPartyMember(partyId, userId))
-        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
-
-      const rows = getDrizzle()
-        .select(CHARACTER_WITH_OWNER)
-        .from(characters)
-        .innerJoin(users, eq(users.id, characters.ownerId))
-        .where(eq(characters.partyId, partyId))
-        .orderBy(sql`${characters.name} COLLATE NOCASE ASC`)
-        .all() as any[];
-      // Hidden characters leave the party listing for everyone but their
-      // owner and the GM.
-      const callerIsGM = isPartyGM(partyId, userId);
-      const visible = rows.filter((row) => !row.hidden || row.owner_id === userId || callerIsGM);
-      attachCharacterClasses(visible);
-      return reply.send({ characters: visible.map(mapCharacterSummary) });
-    },
-  );
-
-  // ---------- Roster overview (tableau MD : UNE requête au lieu de N fiches) ----------
-  // Le tableau du MD ne rend par personnage que 4 chiffres dérivés de la
-  // fiche complète (CA effective, % de charge, ration, eau pleine) — il
-  // téléchargeait l'inventaire ENTIER de chaque joueur (N × fiches complètes,
-  // entrées + objets inclus). Mêmes règles de visibilité que le détail de
-  // groupe (personnages cachés : propriétaire + MD). ETag : le tableau
-  // rafraîchit à chaque geste d'inventaire du groupe — inchangé → 304.
-  app.get(
-    '/parties/:partyId/roster-overview',
-    async (req: FastifyRequest<{ Params: { partyId: string } }>, reply: FastifyReply) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const partyId = Number(req.params.partyId);
-      if (!isPartyMember(partyId, userId))
-        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
-
-      const drizzle = getDrizzle();
-      const chars = drizzle
-        .select({ ...cols(characters), encumbrance_mode: partiesTable.encumbranceMode })
-        .from(characters)
-        .innerJoin(partiesTable, eq(partiesTable.id, characters.partyId))
-        .where(eq(characters.partyId, partyId))
-        .orderBy(sql`${characters.name} COLLATE NOCASE ASC`)
-        .all() as any[];
-      const callerIsGM = isPartyGM(partyId, userId);
-      const visible = chars.filter((c) => !c.hidden || c.owner_id === userId || callerIsGM);
-      const lang = langFromReq(req);
-
-      const overview = await Promise.all(
-        visible.map(async (char) => {
-          const view = await loadInventoryView(drizzle, char, lang);
-          const character = view.character as any;
-          const dexMod = abilityModifier(character.dexterity ?? 10);
-          const ac = computeAC(
-            view.entries,
-            dexMod,
-            character.fightingStyle === 'defense',
-            character,
-            'fr',
-            // Effets de sort actifs (Bouclier de la foi…) : la CA du
-            // tableau MD suit — le miroir de roster-overview.
-            activeAcEffectsOf(character.id),
-          );
-          // Rations / eau : mêmes règles que la carte du tableau (les gourdes
-          // VIDES portent « empty » en note et ne comptent pas).
-          let foodCount = 0;
-          let fullWaterCount = 0;
-          for (const e of view.entries as any[]) {
-            const tags = e.item?.survivalTags ?? [];
-            if (tags.includes('food')) foodCount += e.quantity;
-            if (tags.includes('water') && !e.notes?.includes('empty')) fullWaterCount += e.quantity;
-          }
-          return {
-            characterId: character.id,
-            ac: ac?.ac ?? null,
-            weightPct: view.encumbrance?.pct ?? null,
-            // Kg bruts pour l'étiquette de la barre de charge (« x / y kg »).
-            carriedKg: view.encumbrance?.totalWeightKg ?? null,
-            capacityKg: view.encumbrance?.maxCarryKg ?? null,
-            foodCount,
-            fullWaterCount,
-          };
-        }),
-      );
-
-      return sendCachedJson(req, reply, { overview });
-    },
-  );
-
-  // ---------- Get single character ----------
-  app.get(
-    '/characters/:id',
-    async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const row = getCharacterWithOwner(getDrizzle(), Number(req.params.id));
-      if (!row) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
-      if (!isPartyMember(row.party_id, userId))
-        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
-      // 404 (not 403): a hidden character must not betray its existence
-      if (!characterVisibleTo(row, userId))
-        return reply.code(404).send({ error: apiMsg(req, 'character not found') });
-      attachCharacterClasses([row]);
-      return reply.send({ character: mapCharacter(row) });
-    },
-  );
-
+export async function characterUpdateRoutes(app: FastifyInstance) {
   // ---------- Update character ----------
   app.patch(
     '/characters/:id',
@@ -827,118 +574,9 @@ export async function characterRoutes(app: FastifyInstance) {
       });
       const removedCount = writeTx();
 
-      // --- Champs de classe « plats » (rétrocompat mono-classe) : les reporter
-      // sur les lignes de classe, qui font foi pour le moteur (multiclassage).
-      // Une fiche multiclassée s'édite via classes[] — un `level` seul sur une
-      // telle fiche est ambigu et ne touche pas les lignes.
-      const legacyClassFields = [
-        'characterClass',
-        'level',
-        'subclass',
-        'divineDomain',
-        'druidCircle',
-        'sacredOath',
-        'fightingStyle',
-        'hitDiceUsed',
-      ] as const;
-      const changedLegacy = legacyClassFields.filter((f) => (body as any)[f] !== undefined);
-      const classRows = getDrizzle()
-        .select(cols(characterClasses))
-        .from(characterClasses)
-        .where(eq(characterClasses.characterId, char.id))
-        .orderBy(characterClasses.position, characterClasses.id)
-        .all() as any[];
-      if (changedLegacy.length > 0) {
-        const entries =
-          classRows.length > 0
-            ? classRows.map((r) => ({
-                classKey: r.class_key as string,
-                level: r.level as number,
-                subclassKey: (r.subclass_key as string | null) ?? null,
-                hitDiceUsed: (r.hit_dice_used as number) ?? 0,
-                fightingStyle: (r.fighting_style as string | null) ?? null,
-              }))
-            : [
-                {
-                  classKey: (body.characterClass ?? char.character_class ?? '') as string,
-                  level: (body.level ?? char.level ?? 1) as number,
-                  subclassKey: (body.divineDomain ??
-                    char.divine_domain ??
-                    body.druidCircle ??
-                    char.druid_circle ??
-                    body.sacredOath ??
-                    char.sacred_oath ??
-                    body.subclass ??
-                    char.subclass ??
-                    null) as string | null,
-                  hitDiceUsed: (char.hit_dice_used as number) ?? 0,
-                  fightingStyle: (body.fightingStyle ?? char.fighting_style ?? null) as
-                    | string
-                    | null,
-                },
-              ];
-        const first = entries[0];
-        if (body.characterClass !== undefined) first.classKey = body.characterClass;
-        if (body.level !== undefined) {
-          // `level` plat = niveau TOTAL : le delta va sur la DERNIÈRE ligne
-          // (la classe en cours d'avancement — convention du multiclassage ;
-          // mono-classe, c'est simplement la ligne unique). Une sous-classe
-          // qui passe sous son palier RAW est retirée de la ligne.
-          const delta = body.level - entries.reduce((sum, e) => sum + e.level, 0);
-          const last = entries[entries.length - 1];
-          last.level = Math.max(1, last.level + delta);
-          for (const e of entries) {
-            if (!e.subclassKey) continue;
-            const def = (CLASS_SUBCLASSES[e.classKey] ?? []).find((s) => s.key === e.subclassKey);
-            if (def && def.level > e.level) e.subclassKey = null;
-          }
-        }
-        if (entries.length === 1) {
-          if (first.classKey === 'Clerc' && body.divineDomain !== undefined) {
-            first.subclassKey = body.divineDomain;
-          } else if (first.classKey === 'Druide' && body.druidCircle !== undefined) {
-            first.subclassKey = body.druidCircle;
-          } else if (first.classKey === 'Paladin' && body.sacredOath !== undefined) {
-            first.subclassKey = body.sacredOath;
-          } else if (body.subclass !== undefined) {
-            first.subclassKey = body.subclass;
-          }
-        }
-        if (body.fightingStyle !== undefined) first.fightingStyle = body.fightingStyle;
-        if (body.hitDiceUsed !== undefined && Number.isFinite(body.hitDiceUsed)) {
-          // `hitDiceUsed` plat = TOTAL dépensé : le delta se répartit en FIFO
-          // sur les lignes (mêmes conventions qu'applyRest — on dépense dans
-          // l'ordre des lignes, on récupère front-loaded). Sans cette
-          // répercussion, la fiche (qui lit les lignes via hitDiceByClassOf)
-          // ignorait le compteur plat : les +/− de Survie semblaient inertes,
-          // et le prochain replaceCharacterClasses écrasait la colonne
-          // dénormalisée avec la somme des lignes restées figées.
-          const currentTotal = entries.reduce((sum, e) => sum + (e.hitDiceUsed ?? 0), 0);
-          const maxTotal = entries.reduce((sum, e) => sum + e.level, 0);
-          let delta =
-            Math.max(0, Math.min(Math.trunc(body.hitDiceUsed as number), maxTotal)) - currentTotal;
-          for (const e of entries) {
-            if (delta === 0) break;
-            if (delta > 0) {
-              const take = Math.min(e.level - (e.hitDiceUsed ?? 0), delta);
-              if (take > 0) {
-                e.hitDiceUsed = (e.hitDiceUsed ?? 0) + take;
-                delta -= take;
-              }
-            } else {
-              const regain = Math.min(e.hitDiceUsed ?? 0, -delta);
-              if (regain > 0) {
-                e.hitDiceUsed = (e.hitDiceUsed ?? 0) - regain;
-                delta += regain;
-              }
-            }
-          }
-        }
-        const validated = validateClassEntries(entries);
-        // Une fiche héritée peut dévier du catalogue (sous-classe hors palier) :
-        // on synchronise seulement l'état valide, sans rejeter l'écriture.
-        if (validated.ok) replaceCharacterClasses(char.id, validated.entries);
-      }
+      // Champs de classe « plats » (rétrocompat mono-classe) : reportés sur les
+      // lignes de classe par ./classes.ts (déplacement pur, phase 4).
+      applyLegacyClassFields(char, body);
 
       if (hpMirrorTargets.length > 0) {
         bus.emitChange({
@@ -992,35 +630,6 @@ export async function characterRoutes(app: FastifyInstance) {
         ...(concentrationBroken ? { concentrationBroken } : {}),
         ...(rageEndedByCondition ? { rageEnded: rageEndedByCondition } : {}),
       });
-    },
-  );
-
-  // ---------- Delete character ----------
-  app.delete(
-    '/characters/:id',
-    async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const drizzle = getDrizzle();
-      const char = drizzle
-        .select(cols(characters))
-        .from(characters)
-        .where(eq(characters.id, Number(req.params.id)))
-        .get() as any;
-      if (!char) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
-      const isGM = isPartyGM(char.party_id, userId);
-      if (char.owner_id !== userId && !isGM) {
-        return reply.code(403).send({ error: apiMsg(req, 'only the owner or GM can delete') });
-      }
-      drizzle.delete(characters).where(eq(characters.id, char.id)).run();
-      bus.emitChange({
-        type: 'party:change',
-        partyId: char.party_id,
-        characterId: char.id,
-        action: 'stats',
-        actorUserId: userId,
-      });
-      return reply.code(204).send();
     },
   );
 }

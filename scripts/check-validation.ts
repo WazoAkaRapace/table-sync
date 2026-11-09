@@ -40,7 +40,7 @@ interface RouteSite {
 
 /** Identité stable d'une route (indépendante des numéros de ligne). */
 function routeIdentity(s: RouteSite): string {
-  return `${s.file} ${s.method.toUpperCase()} ${s.path}`;
+  return `${s.file.split('\\').join('/')} ${s.method.toUpperCase()} ${s.path}`;
 }
 
 /** Chemin déclaré de la route : 1re chaîne entre quotes après `app.méthode(`. */
@@ -105,15 +105,19 @@ interface ValBaseline {
   routes: string[];
 }
 
-function loadBaseline(): ValBaseline | null {
+function loadBaseline(): { baseline: ValBaseline | null; invalid: boolean } {
+  let text: string;
   try {
-    const raw = JSON.parse(readFileSync(BASELINE_PATH, 'utf8')) as Partial<ValBaseline> & {
-      withoutSchema?: number;
-    };
-    if (Array.isArray(raw.routes)) return { routes: raw.routes };
-    return null;
+    text = readFileSync(BASELINE_PATH, 'utf8');
   } catch {
-    return null;
+    return { baseline: null, invalid: false }; // fichier absent = init possible
+  }
+  try {
+    const raw = JSON.parse(text) as Partial<ValBaseline> & { withoutSchema?: number };
+    if (Array.isArray(raw.routes)) return { baseline: { routes: raw.routes }, invalid: false };
+    return { baseline: null, invalid: true }; // ancien format compteur = à ré-init
+  } catch {
+    return { baseline: null, invalid: true }; // JSON invalide = ne jamais réécrire
   }
 }
 
@@ -122,7 +126,13 @@ const { sites, total } = computeWithoutSchema();
 const identities = sites.map(routeIdentity);
 
 if (args.includes('--update-baseline')) {
-  const prev = loadBaseline();
+  const { baseline: prev, invalid } = loadBaseline();
+  if (invalid) {
+    console.error(
+      '✗ scripts/validation-baseline.json existe mais est illisible/invalide — corrigez-le à la main avant tout --update-baseline (jamais de réécriture par-dessus une baseline corrompue).',
+    );
+    process.exit(1);
+  }
   const additions = prev ? identities.filter((id) => !prev.routes.includes(id)) : [];
   if (prev && additions.length > 0) {
     console.error(
@@ -138,10 +148,12 @@ if (args.includes('--update-baseline')) {
   process.exit(0);
 }
 
-const baseline = loadBaseline();
+const { baseline, invalid } = loadBaseline();
 if (!baseline) {
   console.error(
-    "✗ scripts/validation-baseline.json absent (ou ancien format compteur) — lancez d'abord --update-baseline (init).",
+    invalid
+      ? '✗ scripts/validation-baseline.json illisible/invalide — corrigez-le à la main.'
+      : "✗ scripts/validation-baseline.json absent (ou ancien format compteur) — lancez d'abord --update-baseline (init).",
   );
   process.exit(1);
 }

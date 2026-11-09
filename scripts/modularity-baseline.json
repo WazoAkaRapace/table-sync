@@ -6,9 +6,6 @@
     "apps/api/src/routes/campaign.ts": {
       "lines": 1060
     },
-    "apps/api/src/routes/characters.ts": {
-      "lines": 1027
-    },
     "apps/api/src/routes/combat.ts": {
       "lines": 1827
     },

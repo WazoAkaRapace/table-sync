@@ -30,7 +30,7 @@ import { characterMessageRoutes } from './routes/character-messages.ts';
 import { characterNoteRoutes } from './routes/character-notes.ts';
 import { characterSpellEffectRoutes } from './routes/character-spell-effects.ts';
 import { characterSpellRoutes } from './routes/character-spells.ts';
-import { characterRoutes } from './routes/characters.ts';
+import { characterRoutes } from './routes/characters/index.ts';
 import { combatRoutes } from './routes/combat.ts';
 import { domainSpellRoutes } from './routes/domain-spells.ts';
 import { gmaRoutes } from './routes/gma.ts';

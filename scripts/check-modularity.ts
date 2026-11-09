@@ -11,11 +11,13 @@
  *  R3 — un registrar par fichier routes : routes/*.ts n'exporte qu'UNE
  *       fonction *Routes (+ types/const privés autorisés).
  *  R4 — pas d'import d'un autre fichier routes/* TOP-LEVEL (hors lib
- *       autorisée : helpers, lang, messages, httpCache). Les imports vers un
- *       SOUS-DOSSIER routes/<resource>/** sont autorisés — c'est la structure
- *       cible du découpage (routes/<resource>/index.ts + sous-domaines,
- *       routes/lib/*). Les 10 sites hérités sont listés dans R4_LEGACY
- *       (shrink-only : retirez une entrée quand l'import disparaît).
+ *       autorisée : helpers, lang, messages, httpCache). Raffiné 2026-11-09
+ *       (phase 4) : les imports ENTRE FICHIERS DU MÊME dossier
+ *       routes/<resource>/ sont autorisés (le registrar index.ts agrège ses
+ *       sous-modules), ainsi que vers la future lib routes/lib/* ; un import
+ *       vers un AUTRE dossier routes/<autre>/ est un couplage cross-resource
+ *       refusé. Les sites hérités sont listés dans R4_LEGACY (shrink-only :
+ *       retirez une entrée quand l'import disparaît).
  *
  * Usage :
  *   tsx scripts/check-modularity.ts                   # gate (exit 1 si violation)
@@ -27,7 +29,7 @@
  *   tsx scripts/check-modularity.ts --selftest        # auto-test (comme
  *       check-changelog) : fichier 701 l. hors baseline, hausse vs ratchet,
  *       baisse acceptée, exempté déclaratif, nouvel export helpers.ts, double
- *       registrar, import croisé.
+ *       registrar, import croisé, import cross-dossier (R4 raffiné).
  *
  * Exemptions déclaratives (fichiers de définition de données, jamais de logique) :
  *   - apps/api/src/db/schema.ts (jamais dans la baseline : pas de ratchet)
@@ -71,7 +73,8 @@ const ROUTE_LIB_ALLOWLIST = new Set(['helpers', 'lang', 'messages', 'httpCache']
  */
 const R4_LEGACY: Record<string, string[]> = {
   'apps/api/src/routes/character-spells.ts': ['./spells.ts'],
-  'apps/api/src/routes/characters.ts': ['./inventory.ts', './character-spell-effects.ts'],
+  'apps/api/src/routes/characters/sheet.ts': ['../inventory.ts', '../character-spell-effects.ts'],
+  'apps/api/src/routes/characters/update.ts': ['../character-spell-effects.ts'],
   'apps/api/src/routes/combat.ts': ['./character-spell-effects.ts'],
   'apps/api/src/routes/domain-spells.ts': ['./spells.ts'],
   'apps/api/src/routes/gma.ts': ['./npcs.ts'],
@@ -138,20 +141,30 @@ function resolveRelative(fromFile: string, spec: string): string {
 }
 
 /**
- * R4 : imports d'un fichier routes/** vers un AUTRE fichier routes top-level
- * (hors allowlist). Les cibles sous-dossier (routes/<resource>/**, routes/lib/*)
- * sont la structure cible du découpage : autorisées.
+ * R4 : imports d'un fichier routes/** vers un AUTRE fichier routes :
+ *  - top-level routes/*.ts : uniquement la lib partagée (allowlist) ;
+ *  - sous-dossier : uniquement le MÊME dossier routes/<resource>/ (les
+ *    sous-modules d'un découpage s'importent entre eux — index.ts agrège)
+ *    ou la future lib routes/lib/* ;
+ *  - tout autre dossier routes/<autre>/ = couplage cross-resource refusé.
  */
 function findRouteCrossImports(text: string, repoPath: string): string[] {
   if (!repoPath.startsWith(ROUTES_DIR)) return [];
   const offenders: string[] = [];
+  const srcDir = repoPath.slice(0, repoPath.lastIndexOf('/'));
   for (const m of text.matchAll(/from\s+'(\.[^']*)'/g)) {
     const spec = m[1];
     const resolved = resolveRelative(repoPath, spec);
     if (!resolved.startsWith(ROUTES_DIR)) continue; // db/, sync/, shared… : OK
     const rel = resolved.slice(ROUTES_DIR.length);
-    if (rel.includes('/')) continue; // sous-dossier : structure cible, OK
-    if (!ROUTE_LIB_ALLOWLIST.has(rel)) offenders.push(spec);
+    if (!rel.includes('/')) {
+      // Fichier top-level routes/*.ts : bibliothèque partagée uniquement.
+      if (!ROUTE_LIB_ALLOWLIST.has(rel)) offenders.push(spec);
+      continue;
+    }
+    // Sous-dossier : même dossier routes/<resource>/ ou routes/lib/*.
+    const tgtDir = resolved.slice(0, resolved.lastIndexOf('/'));
+    if (tgtDir !== srcDir && tgtDir !== `${ROUTES_DIR}lib`) offenders.push(spec);
   }
   return offenders;
 }
@@ -411,7 +424,30 @@ function selftest(): number {
       throw new Error('héritage R4 flaggé à tort');
     }
 
-    console.log('✓ selftest check-modularity : 8/8 scénarios.');
+    // 9. R4 raffiné : intra-dossier routes/<resource>/ autorisé (index.ts qui
+    // agrège ses sous-modules), vers un AUTRE dossier routes/<autre>/ refusé.
+    const subSrc = [
+      "import { x } from './sheet.ts';",
+      "import { y } from '../helpers.ts';",
+      "import { z } from '../inventory/sheet.ts';",
+    ].join('\n');
+    const foundSub = findRouteCrossImports(subSrc, 'apps/api/src/routes/characters/index.ts');
+    if (foundSub.length !== 1 || foundSub[0] !== '../inventory/sheet.ts') {
+      throw new Error(`parse R4 raffiné inattendu : ${foundSub.join(', ')}`);
+    }
+    v = check(
+      [
+        mk('apps/api/src/routes/characters/index.ts', 100, {
+          routeImportsFromRoutes: foundSub,
+        }),
+      ],
+      { files: {} },
+    );
+    if (!v.some((x) => x.rule === 'R4' && x.message.includes('../inventory/sheet.ts'))) {
+      throw new Error('import cross-dossier non détecté');
+    }
+
+    console.log('✓ selftest check-modularity : 9/9 scénarios.');
     return 0;
   } catch (err) {
     console.error(`✗ selftest échoué : ${(err as Error).message}`);

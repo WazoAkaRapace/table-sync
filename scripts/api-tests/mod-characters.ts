@@ -2,7 +2,7 @@
  * Characters: create/list/get/delete + the big PATCH (dynamic SET builder,
  * JSON fields, concentration flows). Combat-mirror branches of PATCH are
  * exercised in mod-combat / mod-wildshape (they need live encounters).
- * Covers every .prepare site in routes/characters.ts.
+ * Covers every .prepare site in routes/characters/.
  */
 import { api, createCharacter, eq, type Fixtures, ok, type ServerHandle } from './harness.ts';
 
