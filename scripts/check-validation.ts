@@ -35,6 +35,18 @@ interface RouteSite {
   file: string;
   method: string;
   line: number;
+  path: string;
+}
+
+/** Identité stable d'une route (indépendante des numéros de ligne). */
+function routeIdentity(s: RouteSite): string {
+  return `${s.file} ${s.method.toUpperCase()} ${s.path}`;
+}
+
+/** Chemin déclaré de la route : 1re chaîne entre quotes après `app.méthode(`. */
+function routePathOf(segment: string): string {
+  const m = segment.match(/\(\s*['"`]([^'"`]+)['"`]/);
+  return m ? m[1] : '?';
 }
 
 function listRouteFiles(dir: string): string[] {
@@ -62,8 +74,13 @@ function writeRoutesIn(source: string, relFile: string, totals: { total: number 
     // fichier, pas de routes imbriquées).
     const end = matches[i + 1]?.index ?? source.length;
     const segment = source.slice(m.index, end);
-    if (!/\bschema\s*:/.test(segment)) {
-      sites.push({ file: relFile, method, line });
+    // Couvert = l'option `schema` de la ROUTE déclare un `body:` (validation
+    // du corps). Un `schema:` seul (ex. schema.response) ne compte PAS, et un
+    // `body:` hors options non plus — d'où la double condition.
+    const hasSchemaOption = /\bschema\s*:\s*\{/.test(segment);
+    const hasBody = /\bbody\s*:/.test(segment);
+    if (!(hasSchemaOption && hasBody)) {
+      sites.push({ file: relFile, method, line, path: routePathOf(segment) });
     }
   }
   return sites;
@@ -83,12 +100,18 @@ function computeWithoutSchema(): { sites: RouteSite[]; total: number } {
 }
 
 interface ValBaseline {
-  withoutSchema: number;
+  /** Identités des routes en écriture sans schéma (ratchet par identité :
+   *  une NOUVELLE route sans schéma échoue même à total constant). */
+  routes: string[];
 }
 
 function loadBaseline(): ValBaseline | null {
   try {
-    return JSON.parse(readFileSync(BASELINE_PATH, 'utf8')) as ValBaseline;
+    const raw = JSON.parse(readFileSync(BASELINE_PATH, 'utf8')) as Partial<ValBaseline> & {
+      withoutSchema?: number;
+    };
+    if (Array.isArray(raw.routes)) return { routes: raw.routes };
+    return null;
   } catch {
     return null;
   }
@@ -96,40 +119,44 @@ function loadBaseline(): ValBaseline | null {
 
 const args = process.argv.slice(2);
 const { sites, total } = computeWithoutSchema();
+const identities = sites.map(routeIdentity);
 
 if (args.includes('--update-baseline')) {
   const prev = loadBaseline();
-  if (prev && sites.length > prev.withoutSchema) {
+  const additions = prev ? identities.filter((id) => !prev.routes.includes(id)) : [];
+  if (prev && additions.length > 0) {
     console.error(
-      `✗ baseline : refuse la hausse (${prev.withoutSchema} → ${sites.length}). ` +
-        'Une route en écriture nouvelle ou modifiée DOIT fournir son schéma TypeBox ' +
-        '(apps/api/src/validation.ts ; NoBody pour les routes sans corps).',
+      `✗ baseline : ${additions.length} nouvelle(s) route(s) en écriture sans schéma — ` +
+        'refusé. Une route en écriture nouvelle ou modifiée DOIT fournir son schéma TypeBox ' +
+        '(apps/api/src/validation.ts ; NoBody pour les routes sans corps) :',
     );
+    for (const id of additions) console.error(`    - ${id}`);
     process.exit(1);
   }
-  writeFileSync(BASELINE_PATH, JSON.stringify({ withoutSchema: sites.length }, null, 2) + '\n');
-  console.log(`✓ baseline validation : ${sites.length} routes en écriture sans schéma.`);
+  writeFileSync(BASELINE_PATH, JSON.stringify({ routes: identities }, null, 2) + '\n');
+  console.log(`✓ baseline validation : ${identities.length} routes en écriture sans schéma.`);
   process.exit(0);
 }
 
 const baseline = loadBaseline();
 if (!baseline) {
   console.error(
-    "✗ scripts/validation-baseline.json absent — lancez d'abord --update-baseline (init).",
+    "✗ scripts/validation-baseline.json absent (ou ancien format compteur) — lancez d'abord --update-baseline (init).",
   );
   process.exit(1);
 }
 
-if (sites.length > baseline.withoutSchema) {
+const additions = identities.filter((id) => !baseline.routes.includes(id));
+if (additions.length > 0) {
   console.error(
-    `✗ routes en écriture sans schéma : ${baseline.withoutSchema} → ${sites.length} (HAUSSE). ` +
+    `✗ ${additions.length} route(s) en écriture SANS schéma et absentes de la baseline (ratchet par identité). ` +
       'Chaque route en écriture nouvelle ou modifiée fournit son schéma TypeBox — convertissez-la ' +
-      '(apps/api/src/validation.ts, mapping validationMessage dans server.ts) puis --update-baseline.',
+      '(apps/api/src/validation.ts, mapping validationMessage dans server.ts) puis --update-baseline :',
   );
-  for (const s of sites) console.error(`    - ${s.file}:${s.line} app.${s}`);
+  for (const id of additions) console.error(`    - ${id}`);
   process.exit(1);
 }
 console.log(
-  `✓ validation ratchet : ${sites.length} routes en écriture sans schéma ` +
-    `(baseline ${baseline.withoutSchema}, shrink-only) — ${total - sites.length}/${total} couvertes.`,
+  `✓ validation ratchet : ${identities.length} routes en écriture sans schéma ` +
+    `(baseline ${baseline.routes.length}, shrink-only par identité) — ${total - sites.length}/${total} couvertes.`,
 );
