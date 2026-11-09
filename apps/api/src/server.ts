@@ -9,7 +9,7 @@ import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
 import multipart from '@fastify/multipart';
 import websocket from '@fastify/websocket';
-import Fastify from 'fastify';
+import Fastify, { type FastifyError, type FastifyReply, type FastifyRequest } from 'fastify';
 import { verifyAccess } from './auth/refresh.ts';
 import {
   backfillItemBases,
@@ -66,7 +66,10 @@ async function buildServer() {
     logger: {
       serializers: {
         // Strip the WS auth token (?token=<JWT>) from logged URLs.
-        req(req: any) {
+        // remoteAddress/remotePort existent sur l'objet requête à l'exécution
+        // mais pas sur le type FastifyRequest de cette version — typage
+        // structurel minimal au lieu de `any`.
+        req(req: FastifyRequest & { remoteAddress?: string; remotePort?: number }) {
           const url =
             typeof req.url === 'string'
               ? req.url.replace(/([?&])token=[^&]*/, '$1token=***')
@@ -116,7 +119,7 @@ async function buildServer() {
   // message client devient générique. Les erreurs < 500 (validation Fastify,
   // 4xx métier) passent telles quelles : les 400 apiMsg i18n des routes ne
   // doivent jamais être réécrits (des tests les épignent).
-  app.setErrorHandler((err, _request, reply) => {
+  app.setErrorHandler((err: FastifyError, _request: FastifyRequest, reply: FastifyReply) => {
     const status = err.statusCode ?? 500;
     if (reply.sent) return; // la route a déjà répondu : ne rien réécrire
     if (status < 500) return reply.send(err);
@@ -140,7 +143,7 @@ async function buildServer() {
 
   // Auth decorator — header Authorization d'abord (scripts/tests), sinon le
   // cookie HttpOnly ts_access (le chemin du navigateur). Cf. verifyAccess.
-  app.decorate('authenticate', async (request: any, reply: any) => {
+  app.decorate('authenticate', async (request: FastifyRequest, reply: FastifyReply) => {
     if (!(await verifyAccess(request))) {
       reply.code(401).send({ error: 'unauthorized' });
     }
@@ -152,7 +155,7 @@ async function buildServer() {
   // siblings self-authenticate via their onRequest hook). GET /api/auth/token
   // n'est PAS dans l'allowlist : elle est authentifiée par le cookie
   // ts_access (c'est l'échange contrôlé JWT ↔ cookie pour WS/images).
-  app.addHook('onRequest', async (request: any, reply: any) => {
+  app.addHook('onRequest', async (request: FastifyRequest, reply: FastifyReply) => {
     const url = request.url.split('?')[0];
     if (
       url === '/api/health' ||

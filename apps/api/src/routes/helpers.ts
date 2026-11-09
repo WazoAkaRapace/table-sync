@@ -54,7 +54,7 @@ function parseJsonArray(raw: any, fallback: any[] = []): any[] {
 
 /** Get the authenticated user id from the JWT-decoded payload. */
 export function getUserId(req: FastifyRequest): number | null {
-  const sub = (req as any).user?.sub;
+  const sub = req.user?.sub;
   return typeof sub === 'number' ? sub : null;
 }
 
@@ -154,7 +154,7 @@ export function validateClassEntries(
   raw: unknown,
 ): { ok: true; entries: CharacterClassEntry[] } | { ok: false; error: string } {
   if (!Array.isArray(raw) || raw.length === 0) {
-    return { ok: false, error: apiMsg(req, 'classes doit être un tableau non vide') };
+    return { ok: false, error: 'classes doit être un tableau non vide' };
   }
   const seen = new Set<string>();
   let total = 0;
