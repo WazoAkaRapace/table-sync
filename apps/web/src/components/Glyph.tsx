@@ -55,9 +55,44 @@ export type GlyphName =
   | 'hand'
   | 'home'
   | 'close'
-  | 'check';
+  | 'check'
+  | 'deafened'
+  | 'charmed'
+  | 'frightened'
+  | 'unconscious'
+  | 'invisible'
+  | 'grappled'
+  | 'prone'
+  | 'paralyzed'
+  | 'petrified'
+  | 'question'
+  | 'signal'
+  | 'mage'
+  | 'camera'
+  | 'bow'
+  | 'camp'
+  | 'book'
+  | 'key'
+  | 'candle'
+  | 'smile'
+  | 'mount'
+  | 'lily'
+  | 'feather'
+  | 'armor'
+  | 'anchor'
+  | 'sun'
+  | 'rain'
+  | 'storm'
+  | 'snow'
+  | 'fog';
 
-const S = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+const S = {
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: 1.8,
+  strokeLinecap: 'round' as const,
+  strokeLinejoin: 'round' as const,
+};
 
 const PATHS: Record<GlyphName, ReactNode> = {
   combat: (
@@ -66,9 +101,7 @@ const PATHS: Record<GlyphName, ReactNode> = {
       <path d="m17 7 2-2M19 9l2-2" strokeWidth={1.4} />
     </g>
   ),
-  shield: (
-    <path {...S} d="M12 3l7 3v5c0 5-3.2 8.4-7 10-3.8-1.6-7-5-7-10V6z" />
-  ),
+  shield: <path {...S} d="M12 3l7 3v5c0 5-3.2 8.4-7 10-3.8-1.6-7-5-7-10V6z" />,
   'shield-cross': (
     <g {...S}>
       <path d="M12 3l7 3v5c0 5-3.2 8.4-7 10-3.8-1.6-7-5-7-10V6z" />
@@ -87,9 +120,7 @@ const PATHS: Record<GlyphName, ReactNode> = {
       <path d="M19 15l.9 2.6L22.5 18.5l-2.6.9L19 22l-.9-2.6-2.6-.9 2.6-.9z" strokeWidth={1.3} />
     </g>
   ),
-  'spark-outline': (
-    <path {...S} d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" />
-  ),
+  'spark-outline': <path {...S} d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" />,
   edit: (
     <g {...S}>
       <path d="M4 20h16" />
@@ -172,7 +203,10 @@ const PATHS: Record<GlyphName, ReactNode> = {
     </g>
   ),
   fire: (
-    <path {...S} d="M12 3c1 3-3 4.5-3 8a3 3 0 0 0 6 .3C15 9 18 10 18 14a6 6 0 0 1-12 0c0-5 4-7 6-11z" />
+    <path
+      {...S}
+      d="M12 3c1 3-3 4.5-3 8a3 3 0 0 0 6 .3C15 9 18 10 18 14a6 6 0 0 1-12 0c0-5 4-7 6-11z"
+    />
   ),
   lock: (
     <g {...S}>
@@ -186,21 +220,23 @@ const PATHS: Record<GlyphName, ReactNode> = {
       <path d="m16 16 4 4" />
     </g>
   ),
-  star: (
-    <path {...S} d="M12 3l2.5 6 6.5.5-5 4 1.8 6-5.8-3.6L6.2 19.5 8 13.5 3 9.5l6.5-.5z" />
-  ),
+  star: <path {...S} d="M12 3l2.5 6 6.5.5-5 4 1.8 6-5.8-3.6L6.2 19.5 8 13.5 3 9.5l6.5-.5z" />,
   'star-outline': (
     <g {...S}>
-      <path d="M12 4l2 5 5 .4-3.8 3.2 1.2 4.9-4.4-2.7-4.4 2.7 1.2-4.9L5 9.4l5-.4z" strokeWidth={1.4} />
+      <path
+        d="M12 4l2 5 5 .4-3.8 3.2 1.2 4.9-4.4-2.7-4.4 2.7 1.2-4.9L5 9.4l5-.4z"
+        strokeWidth={1.4}
+      />
     </g>
   ),
-  moon: (
-    <path {...S} d="M19 14.5A8 8 0 0 1 9.5 5 8 8 0 1 0 19 14.5z" />
-  ),
+  moon: <path {...S} d="M19 14.5A8 8 0 0 1 9.5 5 8 8 0 1 0 19 14.5z" />,
   hide: (
     <g {...S}>
       <path d="M4 4l16 16" strokeWidth={1.5} />
-      <path d="M9 5.5A9.8 9.8 0 0 1 12 5c5 0 8.5 4.5 9.5 7-.4 1-1.3 2.4-2.6 3.6M6.5 6.8C4.4 8.1 3 9.9 2.5 12c1 2.5 4.5 7 9.5 7 1.3 0 2.5-.3 3.5-.8" strokeWidth={1.4} />
+      <path
+        d="M9 5.5A9.8 9.8 0 0 1 12 5c5 0 8.5 4.5 9.5 7-.4 1-1.3 2.4-2.6 3.6M6.5 6.8C4.4 8.1 3 9.9 2.5 12c1 2.5 4.5 7 9.5 7 1.3 0 2.5-.3 3.5-.8"
+        strokeWidth={1.4}
+      />
       <path d="M9.5 9.5a3.5 3.5 0 0 0 5 5" strokeWidth={1.4} />
     </g>
   ),
@@ -254,9 +290,7 @@ const PATHS: Record<GlyphName, ReactNode> = {
       <path d="M4 10h16M8 3v4M16 3v4" strokeWidth={1.4} />
     </g>
   ),
-  water: (
-    <path {...S} d="M12 4c2.5 4 5.5 6.5 5.5 10a5.5 5.5 0 0 1-11 0c0-3.5 3-6 5.5-10z" />
-  ),
+  water: <path {...S} d="M12 4c2.5 4 5.5 6.5 5.5 10a5.5 5.5 0 0 1-11 0c0-3.5 3-6 5.5-10z" />,
   death: (
     <g {...S}>
       <circle cx="12" cy="12" r="8" />
@@ -310,8 +344,208 @@ const PATHS: Record<GlyphName, ReactNode> = {
       <path d="M6 6l12 12M18 6L6 18" />
     </g>
   ),
-  check: (
-    <path {...S} d="m5 13 4.5 4.5L19 7" />
+  check: <path {...S} d="m5 13 4.5 4.5L19 7" />,
+  deafened: (
+    <g {...S}>
+      <path d="M17 9.5a5 5 0 0 0-9.5-2A4.5 4.5 0 0 0 9 14c.8 1 1.2 1.8 1.2 3" strokeWidth={1.5} />
+      <path d="M5 4l14 16" />
+    </g>
+  ),
+  charmed: (
+    <g {...S}>
+      <path
+        d="M12 20S5 15.5 5 10.5A3.8 3.8 0 0 1 12 8a3.8 3.8 0 0 1 7 2.5C19 15.5 12 20 12 20z"
+        strokeWidth={1.5}
+      />
+      <path d="M4 4l1.5 1.5M20 4l-1.5 1.5M12 2v1.5" strokeWidth={1.2} />
+    </g>
+  ),
+  frightened: (
+    <g {...S}>
+      <circle cx="12" cy="12" r="8" />
+      <path d="M8 9.5h2.5M13.5 9.5H16" strokeWidth={1.5} />
+      <ellipse cx="12" cy="15.5" rx="2.2" ry="2.8" strokeWidth={1.3} />
+    </g>
+  ),
+  unconscious: (
+    <g {...S}>
+      <path d="M7 10h3M14 10h3" strokeWidth={1.4} />
+      <path d="M9 15.5c1.5-1.2 4.5-1.2 6 0" strokeWidth={1.3} />
+      <path d="M17 4h3l-3 3h3" strokeWidth={1.2} />
+      <path d="M4 5h2.5l-2.5 2.5h2.5" strokeWidth={1.2} />
+    </g>
+  ),
+  invisible: (
+    <g {...S} strokeDasharray="2.5 2.5" strokeWidth={1.4}>
+      <path d="M6 21V12a6 6 0 0 1 12 0v9" />
+      <circle cx="12" cy="6.5" r="2.5" />
+    </g>
+  ),
+  grappled: (
+    <g {...S}>
+      <path d="M8 4v6a4 4 0 0 0 8 0V4" />
+      <path d="M8 20v-6a4 4 0 0 1 8 0v6" />
+      <path d="M6 12h12" strokeWidth={1.3} />
+    </g>
+  ),
+  prone: (
+    <g {...S}>
+      <path d="M12 4v9M8 9l4 4 4-4" />
+      <path d="M5 19h14" strokeWidth={1.5} />
+    </g>
+  ),
+  paralyzed: (
+    <g {...S}>
+      <path d="M12 2v20M2 12h20M5 5l14 14M19 5 5 19" strokeWidth={1.3} />
+      <circle cx="12" cy="12" r="3" />
+    </g>
+  ),
+  petrified: (
+    <g {...S}>
+      <path d="M6 21v-6c-1.5-2-2-4-1.5-6.5L6 4l4 1.5L12 4l2 1.5L18 4l1.5 4.5c.5 2.5 0 4.5-1.5 6.5v6" />
+      <path d="M8 16l2-2M16 16l-2-2" strokeWidth={1.2} />
+    </g>
+  ),
+  question: (
+    <g {...S}>
+      <path d="M8.5 9a3.5 3.5 0 1 1 5.5 3c-1.3 1-2 1.8-2 3.5" strokeWidth={1.8} />
+      <path d="M12 19.5v.01" strokeWidth={2.2} />
+    </g>
+  ),
+  signal: (
+    <g {...S}>
+      <path d="M4 20v-4M9.3 20v-8M14.6 20v-12M20 20V6" strokeWidth={2} />
+    </g>
+  ),
+  mage: (
+    <g {...S}>
+      <circle cx="12" cy="9" r="3" />
+      <path d="M7 9a5 5 0 0 1 10 0M4.5 20c1.2-4 3.8-6 7.5-6s6.3 2 7.5 6" strokeWidth={1.4} />
+    </g>
+  ),
+  camera: (
+    <g {...S}>
+      <rect x="3" y="7" width="18" height="13" rx="2" />
+      <path d="M9 7l1-2.5h4L15 7" strokeWidth={1.4} />
+      <circle cx="12" cy="13.5" r="3.5" />
+    </g>
+  ),
+  bow: (
+    <g {...S}>
+      <path d="M5 3c8 3 8 15 0 18" strokeWidth={1.5} />
+      <path d="M5 3v18" strokeWidth={1.2} />
+      <path d="M5 12h13M18 12l-3-2M18 12l-3 2" strokeWidth={1.4} />
+    </g>
+  ),
+  camp: (
+    <g {...S}>
+      <path d="M12 4 3 20h18z" />
+      <path d="M12 12l-3.5 8M12 12l3.5 8" strokeWidth={1.3} />
+    </g>
+  ),
+  book: (
+    <g {...S}>
+      <path d="M5 4h11a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2z" />
+      <path d="M5 17a2 2 0 0 1 2-2h11" strokeWidth={1.4} />
+    </g>
+  ),
+  key: (
+    <g {...S}>
+      <circle cx="8" cy="8" r="3.5" />
+      <path d="M10.5 10.5 20 20M16 20v-3.5M20 20v-3.5" strokeWidth={1.4} />
+    </g>
+  ),
+  candle: (
+    <g {...S}>
+      <rect x="9" y="10" width="6" height="11" rx="1" />
+      <path d="M12 10V7" strokeWidth={1.4} />
+      <path d="M12 3c1.5 1.6 1.5 3 0 4-1.5-1-1.5-2.4 0-4z" strokeWidth={1.2} />
+    </g>
+  ),
+  smile: (
+    <g {...S}>
+      <circle cx="12" cy="12" r="8" />
+      <path d="M8.5 14c1.5 2 5.5 2 7 0" strokeWidth={1.4} />
+      <path d="M9 9.5h.01M15 9.5h.01" strokeWidth={2} />
+    </g>
+  ),
+  mount: (
+    <g {...S}>
+      <path
+        d="M5 21v-4c0-5 2.5-8 6-9l1-4 3.5 2.5c3 .5 4.5 2.5 4.5 6l-2.5 1c-.5 3-1.5 5-3 7.5"
+        strokeWidth={1.4}
+      />
+      <path d="M16 10.5h.01" strokeWidth={2} />
+    </g>
+  ),
+  lily: (
+    <g {...S}>
+      <path d="M12 3c-1.8 2.5-1.8 5.5 0 8 1.8-2.5 1.8-5.5 0-8z" strokeWidth={1.4} />
+      <path d="M6 8c-.5 4 2 6.5 6 6.5S18.5 12 18 8" strokeWidth={1.4} />
+      <path d="M12 14.5v5M9.5 19.5h5" strokeWidth={1.4} />
+    </g>
+  ),
+  feather: (
+    <g {...S}>
+      <path d="M19 4c-7 1-11 5-13 13l-2 3" strokeWidth={1.4} />
+      <path d="M19 4c1 7-3 11-9 12" strokeWidth={1.4} />
+      <path d="M9 9.5l3.5 1M6.5 13.5l3.5 1" strokeWidth={1.2} />
+    </g>
+  ),
+  armor: (
+    <g {...S}>
+      <path d="M6 4l4 2 2-1 2 1 4-2v7l-3 9H9l-3-9z" strokeWidth={1.4} />
+      <path d="M10 6l2 3 2-3" strokeWidth={1.2} />
+    </g>
+  ),
+  anchor: (
+    <g {...S}>
+      <circle cx="12" cy="5" r="2" />
+      <path d="M12 7v13M7 11h10" strokeWidth={1.4} />
+      <path d="M4 14a8 8 0 0 0 16 0" strokeWidth={1.4} />
+    </g>
+  ),
+  sun: (
+    <g {...S}>
+      <circle cx="12" cy="12" r="4" />
+      <path
+        d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8"
+        strokeWidth={1.3}
+      />
+    </g>
+  ),
+  rain: (
+    <g {...S}>
+      <path
+        d="M7 15a4 4 0 0 1-.5-8 5.5 5.5 0 0 1 10.7 1.3A3.5 3.5 0 0 1 17 15z"
+        strokeWidth={1.4}
+      />
+      <path d="M8.5 18l-1 2.5M12.5 18l-1 2.5M16.5 18l-1 2.5" strokeWidth={1.3} />
+    </g>
+  ),
+  storm: (
+    <g {...S}>
+      <path
+        d="M7 13a4 4 0 0 1-.5-8 5.5 5.5 0 0 1 10.7 1.3A3.5 3.5 0 0 1 17 13z"
+        strokeWidth={1.4}
+      />
+      <path d="M12.5 12.5 10 17h4l-2.5 4.5" strokeWidth={1.3} />
+    </g>
+  ),
+  snow: (
+    <g {...S}>
+      <path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9" strokeWidth={1.2} />
+      <path d="M12 6l-2-1.5M12 6l2-1.5M12 18l-2 1.5M12 18l2 1.5" strokeWidth={1} />
+    </g>
+  ),
+  fog: (
+    <g {...S}>
+      <path
+        d="M7 12a4 4 0 0 1-.5-8 5.5 5.5 0 0 1 10.7 1.3A3.5 3.5 0 0 1 17 12z"
+        strokeWidth={1.4}
+      />
+      <path d="M5 16h14M7 19.5h10" strokeWidth={1.3} />
+    </g>
   ),
 };
 

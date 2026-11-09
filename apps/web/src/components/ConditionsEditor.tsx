@@ -25,19 +25,19 @@ interface Props {
 
 export const CONDITION_ICONS: Record<string, ReactNode> = {
   Aveuglé: <Glyph name="hide" />,
-  Assourdi: '🔇',
-  Charmé: '💕',
-  Effrayé: '😱',
+  Assourdi: <Glyph name="deafened" />,
+  Charmé: <Glyph name="charmed" />,
+  Effrayé: <Glyph name="frightened" />,
   Empoisonné: <Glyph name="death" />,
   'En feu': <Glyph name="fire" />,
   Entravé: <Glyph name="link" />,
   Étourdi: <Glyph name="spark-outline" />,
-  Inconscient: '😴',
-  Invisible: '👻',
-  Agrippé: '🤝',
-  'À terre': '🔽',
-  Paralysé: '🧊',
-  Pétrifié: '🗿',
+  Inconscient: <Glyph name="unconscious" />,
+  Invisible: <Glyph name="invisible" />,
+  Agrippé: <Glyph name="grappled" />,
+  'À terre': <Glyph name="prone" />,
+  Paralysé: <Glyph name="paralyzed" />,
+  Pétrifié: <Glyph name="petrified" />,
   Possédé: <Glyph name="eye" />,
   Neutralisé: <Glyph name="close" />,
 };
@@ -123,7 +123,7 @@ export default function ConditionsEditor({
               className="flex min-w-0 flex-1 items-center gap-3 px-3 py-2.5 text-left"
             >
               <span className="text-lg shrink-0" aria-hidden="true">
-                {CONDITION_ICONS[cond] ?? '❓'}
+                {CONDITION_ICONS[cond] ?? <Glyph name="question" />}
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-medium text-ink-800">

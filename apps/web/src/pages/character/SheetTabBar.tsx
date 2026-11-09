@@ -44,7 +44,13 @@ export const CHARACTER_TABS: {
   primary: boolean;
   short?: string;
 }[] = [
-  { key: 'survival', label: 'onglet.survie', icon: '🩸', primary: true, short: 'onglet.survie' },
+  {
+    key: 'survival',
+    label: 'onglet.survie',
+    icon: <Glyph name="water" className="text-blood" />,
+    primary: true,
+    short: 'onglet.survie',
+  },
   {
     key: 'stats',
     label: 'onglet.caracteristiques',

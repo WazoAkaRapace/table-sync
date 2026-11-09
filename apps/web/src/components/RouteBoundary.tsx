@@ -1,6 +1,7 @@
 import type { ErrorInfo, ReactNode } from 'react';
 import { Component } from 'react';
 import i18next from '../i18n';
+import { Glyph } from './Glyph';
 
 interface RouteBoundaryState {
   error: Error | null;
@@ -58,7 +59,7 @@ export class RouteBoundary extends Component<{ children: ReactNode }, RouteBound
     return (
       <div className="card mx-auto mt-16 max-w-md p-6 text-center" role="alert">
         <div className="mb-2 text-4xl" aria-hidden="true">
-          📶
+          <Glyph name="signal" />
         </div>
         <h1 className="section-title mb-2">{i18next.t('err.titre')}</h1>
         <p className="mb-4 text-sm text-ink-500">{i18next.t('err.chargement.module')}</p>
