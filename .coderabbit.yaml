@@ -30,12 +30,24 @@ reviews:
       instructions: |
         - Requêtes = Drizzle query builder uniquement (raw SQL banni dans
           routes/ + sync/) — signaler tout .prepare( ou sql` brut.
+        - Modularité (gate check:modularity) : un fichier > 700 lignes doit
+          être proposé en DÉCOUPAGE, jamais approuvé — la baseline
+          scripts/modularity-baseline.json est shrink-only (un monolithe ne
+          regrandit pas, aucun nouveau fichier géant n'entre).
+        - Bloc copié-collé de plus de ~15 lignes : proposer l'EXTRACTION dans
+          un helper partagé (ratchet jscpd check:duplication).
         - Toute mutation de combat doit émettre un événement WS via bus.emitChange
           avec actorUserId posé.
         - POST responses wrapped ({character: …}, {encounter: …}) : vérifier que
           les tests lisent la bonne clé.
     - path: "apps/web/src/**"
       instructions: |
+        - Modularité (gate check:modularity) : un fichier > 700 lignes doit
+          être proposé en DÉCOUPAGE, jamais approuvé — la baseline
+          scripts/modularity-baseline.json est shrink-only (un monolithe ne
+          regrandit pas, aucun nouveau fichier géant n'entre).
+        - Bloc copié-collé de plus de ~15 lignes : proposer l'EXTRACTION dans
+          un composant/hook partagé (ratchet jscpd check:duplication).
         - Chaque nouvelle clé d'i18n doit exister en fr.json ET en.json.
         - Les bottom sheets passent par createPortal(document.body).
         - Cibles tactiles ≥ 44 px, aria-labels en français.
