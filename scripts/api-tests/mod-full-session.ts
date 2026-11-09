@@ -677,7 +677,19 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   );
   const wsMessages: any[] = [];
   ws.addEventListener('message', (ev) => wsMessages.push(JSON.parse(String(ev.data))));
-  await new Promise<void>((resolve) => ws.addEventListener('open', () => resolve()));
+  // CodeRabbit #289 : l'ouverture doit avoir une limite — une connexion qui
+  // échoue ne doit pas faire pendre la promesse (pattern mod-spell-effects).
+  await new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('ouverture WS > 5 s')), 5000);
+    ws.addEventListener('open', () => {
+      clearTimeout(timer);
+      resolve();
+    });
+    ws.addEventListener('error', () => {
+      clearTimeout(timer);
+      reject(new Error('connexion WS échouée'));
+    });
+  });
   r = await api(base, 'PATCH', `/api/combatants/${clercComb.id}`, {
     token: gm.token,
     body: { hitPoints: 30 },
