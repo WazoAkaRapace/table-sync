@@ -14,7 +14,7 @@ import { dmQuests } from '../../db/schema.ts';
 import { bus } from '../../sync/bus.ts';
 import { requireUser } from '../lib/membership.ts';
 import { apiMsg } from '../messages.ts';
-import { MAX_TITLE_LEN, gmGuard, mapQuest, nextSort } from './shared.ts';
+import { MAX_TITLE_LEN, getCampaignRowForGM, gmGuard, mapQuest, nextSort } from './shared.ts';
 
 export async function questsRoutes(app: FastifyInstance) {
   // ---------- Quests (lifecycle register) ----------
@@ -63,16 +63,9 @@ export async function questsRoutes(app: FastifyInstance) {
       req: FastifyRequest<{ Params: { id: string }; Body: PatchDmQuestPayload }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const drizzle = getDrizzle();
-      const quest = drizzle
-        .select(cols(dmQuests))
-        .from(dmQuests)
-        .where(eq(dmQuests.id, Number(req.params.id)))
-        .get() as any;
-      if (!quest) return reply.code(404).send({ error: apiMsg(req, 'quest not found') });
-      if (!gmGuard(req, reply, quest.party_id, userId)) return;
+      const ctx = getCampaignRowForGM(req, reply, dmQuests, Number(req.params.id), 'quest not found');
+      if (ctx === null) return;
+      const { userId, row: quest, drizzle } = ctx;
 
       const body = req.body || ({} as PatchDmQuestPayload);
       const values: Record<string, unknown> = {};
@@ -115,16 +108,9 @@ export async function questsRoutes(app: FastifyInstance) {
   app.delete(
     '/dm-quests/:id',
     async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const drizzle = getDrizzle();
-      const quest = drizzle
-        .select(cols(dmQuests))
-        .from(dmQuests)
-        .where(eq(dmQuests.id, Number(req.params.id)))
-        .get() as any;
-      if (!quest) return reply.code(404).send({ error: apiMsg(req, 'quest not found') });
-      if (!gmGuard(req, reply, quest.party_id, userId)) return;
+      const ctx = getCampaignRowForGM(req, reply, dmQuests, Number(req.params.id), 'quest not found');
+      if (ctx === null) return;
+      const { userId, row: quest, drizzle } = ctx;
 
       drizzle.delete(dmQuests).where(eq(dmQuests.id, quest.id)).run();
       bus.emitChange({
