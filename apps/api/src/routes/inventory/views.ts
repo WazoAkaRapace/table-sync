@@ -12,8 +12,9 @@ import { getDrizzle } from '../../db/drizzle.ts';
 import { cols } from '../../db/projections.ts';
 import { characters, inventory, items, parties, storageLocations, users } from '../../db/schema.ts';
 import { attachCharacterClasses } from '../lib/character-classes.ts';
+import { checkCharacterAccess } from '../lib/access.ts';
 import { mapCharacter, mapInventoryEntry } from '../lib/mappers.ts';
-import { characterVisibleTo, isPartyMember, requireUser } from '../lib/membership.ts';
+import { requireUser } from '../lib/membership.ts';
 import { type AppLang, langFromReq } from '../lang.ts';
 import { apiMsg } from '../messages.ts';
 import { INVENTORY_WITH_ITEM } from './shared.ts';
@@ -123,13 +124,7 @@ export async function viewsRoutes(app: FastifyInstance) {
         .where(eq(characters.id, Number(req.params.id)))
         .get() as any;
       if (!char) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
-      if (!isPartyMember(char.party_id, userId)) {
-        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
-      }
-      // Hidden character: 404 for everyone but its owner and the GM
-      if (!characterVisibleTo(char, userId)) {
-        return reply.code(404).send({ error: apiMsg(req, 'character not found') });
-      }
+      if (!checkCharacterAccess(req, reply, char, userId, { access: 'member-visible' })) return;
 
       const view = await loadInventoryView(drizzle, char, langFromReq(req));
 

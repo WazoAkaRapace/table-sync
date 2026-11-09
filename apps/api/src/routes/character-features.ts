@@ -27,7 +27,8 @@ import { characterFeatures, characters } from '../db/schema.ts';
 import { bus } from '../sync/bus.ts';
 import { attachCharacterClasses } from './lib/character-classes.ts';
 import { mapCharacter, mapFeature } from './lib/mappers.ts';
-import { characterVisibleTo, isPartyGM, isPartyMember, requireUser } from './lib/membership.ts';
+import { checkCharacterAccess, requireCharacterAccess } from './lib/access.ts';
+import { requireUser } from './lib/membership.ts';
 import { apiMsg } from './messages.ts';
 
 /** Traits « Faveur de pacte » MUTEX (Occultiste niveau 3) : poser l'une retire les autres. */
@@ -59,36 +60,17 @@ function getFeatureWithCharacter(featureId: number): { feature: any; char: any }
   return { feature, char };
 }
 
-/** Returns true if the user is the owner or the GM of the character's party. */
-function isOwnerOrGM(char: any, userId: number): boolean {
-  return char.owner_id === userId || isPartyGM(char.party_id, userId);
-}
-
-function getCharacter(drizzle: ReturnType<typeof getDrizzle>, id: number): any {
-  return drizzle
-    .select(cols(characters))
-    .from(characters)
-    .where(eq(characters.id, id))
-    .get() as any;
-}
-
 export async function characterFeatureRoutes(app: FastifyInstance) {
   // ---------- List a character's features ----------
   app.get(
     '/characters/:id/features',
     async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
+      const access = requireCharacterAccess(req, reply, Number(req.params.id), {
+        access: 'member-visible',
+      });
+      if (!access) return;
+      const { char } = access;
       const drizzle = getDrizzle();
-      const char = getCharacter(drizzle, Number(req.params.id));
-      if (!char) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
-      if (!isPartyMember(char.party_id, userId)) {
-        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
-      }
-      // Hidden character: 404 for everyone but its owner and the GM
-      if (!characterVisibleTo(char, userId)) {
-        return reply.code(404).send({ error: apiMsg(req, 'character not found') });
-      }
 
       const rows = drizzle
         .select(cols(characterFeatures))
@@ -108,19 +90,14 @@ export async function characterFeatureRoutes(app: FastifyInstance) {
       req: FastifyRequest<{ Params: { id: string }; Body: CreateCharacterFeaturePayload }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
+      const access = requireCharacterAccess(req, reply, Number(req.params.id), {
+        access: 'owner-or-gm',
+        requireMember: true,
+        forbiddenMsg: 'only the owner or GM can modify features',
+      });
+      if (!access) return;
+      const { char, userId } = access;
       const drizzle = getDrizzle();
-      const char = getCharacter(drizzle, Number(req.params.id));
-      if (!char) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
-      if (!isPartyMember(char.party_id, userId)) {
-        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
-      }
-      if (!isOwnerOrGM(char, userId)) {
-        return reply
-          .code(403)
-          .send({ error: apiMsg(req, 'only the owner or GM can modify features') });
-      }
 
       const body = req.body || ({} as CreateCharacterFeaturePayload);
       if (!body.title?.trim()) {
@@ -225,14 +202,14 @@ export async function characterFeatureRoutes(app: FastifyInstance) {
       const resolved = getFeatureWithCharacter(Number(req.params.featureId));
       if (!resolved) return reply.code(404).send({ error: apiMsg(req, 'feature not found') });
       const { feature, char } = resolved;
-      if (!isPartyMember(char.party_id, userId)) {
-        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
-      }
-      if (!isOwnerOrGM(char, userId)) {
-        return reply
-          .code(403)
-          .send({ error: apiMsg(req, 'only the owner or GM can modify features') });
-      }
+      if (
+        !checkCharacterAccess(req, reply, char, userId, {
+          access: 'owner-or-gm',
+          requireMember: true,
+          forbiddenMsg: 'only the owner or GM can modify features',
+        })
+      )
+        return;
 
       const body = req.body || {};
       const values: Record<string, unknown> = {};
@@ -293,19 +270,14 @@ export async function characterFeatureRoutes(app: FastifyInstance) {
       req: FastifyRequest<{ Params: { id: string }; Body: ReorderPayload }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
+      const access = requireCharacterAccess(req, reply, Number(req.params.id), {
+        access: 'owner-or-gm',
+        requireMember: true,
+        forbiddenMsg: 'only the owner or GM can modify features',
+      });
+      if (!access) return;
+      const { char, userId } = access;
       const drizzle = getDrizzle();
-      const char = getCharacter(drizzle, Number(req.params.id));
-      if (!char) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
-      if (!isPartyMember(char.party_id, userId)) {
-        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
-      }
-      if (!isOwnerOrGM(char, userId)) {
-        return reply
-          .code(403)
-          .send({ error: apiMsg(req, 'only the owner or GM can modify features') });
-      }
 
       const body = req.body || ({} as ReorderPayload);
       const order = [
@@ -363,14 +335,14 @@ export async function characterFeatureRoutes(app: FastifyInstance) {
       const resolved = getFeatureWithCharacter(Number(req.params.featureId));
       if (!resolved) return reply.code(404).send({ error: apiMsg(req, 'feature not found') });
       const { feature, char } = resolved;
-      if (!isPartyMember(char.party_id, userId)) {
-        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
-      }
-      if (!isOwnerOrGM(char, userId)) {
-        return reply
-          .code(403)
-          .send({ error: apiMsg(req, 'only the owner or GM can modify features') });
-      }
+      if (
+        !checkCharacterAccess(req, reply, char, userId, {
+          access: 'owner-or-gm',
+          requireMember: true,
+          forbiddenMsg: 'only the owner or GM can modify features',
+        })
+      )
+        return;
 
       drizzle.delete(characterFeatures).where(eq(characterFeatures.id, feature.id)).run();
       bus.emitChange({
