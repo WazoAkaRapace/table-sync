@@ -15,6 +15,7 @@ import {
   maxSpellSlots,
   rageDamageBonus,
   renderFeatureTemplate,
+  SPELL_SLOTS_ARTIFICIER,
   SPELL_SLOTS_PACT,
 } from '@table-sync/shared';
 import {
@@ -342,6 +343,91 @@ check(
     mkChar({ characterClass: 'Paladin', level: 14, charisma: 12 }),
   ),
   1,
+);
+
+// --- Artificier (Tasha — hors SRD 2014 : la classe n'y existe pas, valeurs TCE épinglées) ---
+
+// TCE p.60 : table d'emplacements propre à l'artificier (2 dès le niv. 1,
+// max niv. 5) — ni la table pleine, ni la table demi-incantateur.
+const SRD_ARTIFICIER_SLOTS: number[][] = [
+  [2, 0, 0, 0, 0, 0, 0, 0, 0], // L1
+  [2, 0, 0, 0, 0, 0, 0, 0, 0], // L2
+  [3, 0, 0, 0, 0, 0, 0, 0, 0], // L3
+  [3, 0, 0, 0, 0, 0, 0, 0, 0], // L4
+  [4, 2, 0, 0, 0, 0, 0, 0, 0], // L5
+  [4, 2, 0, 0, 0, 0, 0, 0, 0], // L6
+  [4, 3, 0, 0, 0, 0, 0, 0, 0], // L7
+  [4, 3, 0, 0, 0, 0, 0, 0, 0], // L8
+  [4, 3, 2, 0, 0, 0, 0, 0, 0], // L9
+  [4, 3, 2, 0, 0, 0, 0, 0, 0], // L10
+  [4, 3, 3, 0, 0, 0, 0, 0, 0], // L11
+  [4, 3, 3, 0, 0, 0, 0, 0, 0], // L12
+  [4, 3, 3, 1, 0, 0, 0, 0, 0], // L13
+  [4, 3, 3, 1, 0, 0, 0, 0, 0], // L14
+  [4, 3, 3, 2, 0, 0, 0, 0, 0], // L15
+  [4, 3, 3, 2, 0, 0, 0, 0, 0], // L16
+  [4, 3, 3, 3, 1, 0, 0, 0, 0], // L17
+  [4, 3, 3, 3, 1, 0, 0, 0, 0], // L18
+  [4, 3, 3, 3, 2, 0, 0, 0, 0], // L19
+  [4, 3, 3, 3, 2, 0, 0, 0, 0], // L20
+];
+check('emplacements artificier (TCE p.60) == SPELL_SLOTS_ARTIFICIER', SPELL_SLOTS_ARTIFICIER, SRD_ARTIFICIER_SLOTS);
+// TCE p.61 : Imprégnation d'objet — 2 objets @2, 3 @6, 4 @10, 5 @14, 6 @18
+check(
+  'imprégnation d’objet : 2/3/4/5/6 objets aux paliers 2/6/10/14/18 (TCE)',
+  [2, 6, 10, 14, 18].map(
+    (lv) => resourceMaxOf('artificier-objets-infuses', mkChar({ characterClass: 'Artificier', level: lv })),
+  ),
+  [2, 3, 4, 5, 6],
+);
+// TCE p.62 : Génie éclair — MOD INT, minimum 1 (repos long)
+check(
+  'génie éclair INT 6 = 1 (min, TCE)',
+  resourceMaxOf(
+    'artificier-genie-eclair',
+    mkChar({ characterClass: 'Artificier', level: 7, intelligence: 6 }),
+  ),
+  1,
+);
+// TCE p.118 : Élixir expérimental — 1 @3, 2 @6, 3 @15 (repos long)
+const artificier = (level: number) => mkChar({ characterClass: 'Artificier', level });
+check(
+  'élixir expérimental : 1/2/3 aux paliers 3/6/15 (TCE p.118)',
+  [3, 6, 15].map(
+    (lv) => resourceMaxOf('alchimiste-elixir-experimental', artificier(lv)),
+  ),
+  [1, 2, 3],
+);
+// TCE p.119 : Ingrédients revigorants — Restauration partielle gratuite MOD INT, min 1
+check(
+  'ingrédients revigorants : INT 16 → 3, INT 6 → 1 (min, TCE p.119)',
+  [16, 6].map((int) =>
+    resourceMaxOf(
+      'alchimiste-ingredients-revigorants',
+      mkChar({ characterClass: 'Artificier', level: 9, intelligence: int }),
+    ),
+  ),
+  [3, 1],
+);
+// TCE p.61 : Canon occulte — 1 utilisation, recharge repos long
+check(
+  'canon occulte @3 : 1 utilisation, recharge repos long (TCE p.61)',
+  [
+    resourceMaxOf('artilleur-canon-occulte', artificier(3)),
+    findClassFeature('artilleur-canon-occulte')?.resource?.reset,
+  ],
+  [1, 'long'],
+);
+// TCE p.75 : Décharge arcanique — MOD INT, min 1 (repos long)
+check(
+  'décharge arcanique : INT 16 → 3, INT 6 → 1 (min, TCE p.75)',
+  [16, 6].map((int) =>
+    resourceMaxOf(
+      'forgeron-decharge-arcanique',
+      mkChar({ characterClass: 'Artificier', level: 9, intelligence: int }),
+    ),
+  ),
+  [3, 1],
 );
 
 // --- Pact magic (RAW) ---
