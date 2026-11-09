@@ -417,6 +417,11 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   });
   eq(wsConc.damage, 6, 'concentration save triggered (via WS)');
   eq(wsConc.dc, 10, 'dc 10 for 6 damage');
+  // CodeRabbit #281 : combat:change doit porter encounterId quand la route la
+  // connaît (combats parallèles — sinon les clients retombent en refresh large).
+  const wsCombatChange = wsMessages.find((m) => m.type === 'combat:change');
+  ok(wsCombatChange !== undefined, 'combat:change received on patch');
+  eq(typeof wsCombatChange.encounterId, 'number', 'combat:change carries encounterId');
   ws.close();
 
   // unconscious via tracker → concentration auto-ends on the sheet

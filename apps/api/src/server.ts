@@ -31,7 +31,7 @@ import { characterNoteRoutes } from './routes/character-notes.ts';
 import { characterSpellEffectRoutes } from './routes/character-spell-effects.ts';
 import { characterSpellRoutes } from './routes/character-spells.ts';
 import { characterRoutes } from './routes/characters/index.ts';
-import { combatRoutes } from './routes/combat.ts';
+import { combatRoutes } from './routes/combat/index.ts';
 import { domainSpellRoutes } from './routes/domain-spells.ts';
 import { gmaRoutes } from './routes/gma.ts';
 import { inventoryRoutes } from './routes/inventory/index.ts';
