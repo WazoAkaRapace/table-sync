@@ -393,7 +393,7 @@ export async function combatantRoutes(app: FastifyInstance) {
       if (!combatant) return reply.code(404).send({ error: apiMsg(req, 'Combattant introuvable') });
 
       const enc = drizzle
-        .select({ party_id: encountersTable.partyId })
+        .select({ party_id: encountersTable.partyId, id: encountersTable.id })
         .from(encountersTable)
         .where(eq(encountersTable.id, combatant.encounter_id))
         .get() as any;
