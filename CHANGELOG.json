@@ -1,5 +1,14 @@
 [
   {
+    "version": null,
+    "sha": null,
+    "date": "2026-11-09",
+    "title": "fondations techniques",
+    "items": [
+      "L'application reçoit une mise à jour technique interne, sans changement visible à table."
+    ]
+  },
+  {
     "version": "2026.11.07-8",
     "sha": "1d78b4a1",
     "date": "2026-11-07",
