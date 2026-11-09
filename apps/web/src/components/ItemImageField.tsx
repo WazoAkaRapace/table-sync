@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { itemImageUrl, useAccessJwt } from '../api';
 import { appLocale } from '../i18n';
 import { downscaleImage } from '../utils';
+import { Glyph } from './Glyph';
 import { ConfirmButton } from './ui';
 
 export interface StagedImage {
@@ -184,7 +185,7 @@ export function ItemImageField({
           }`}
         >
           <span aria-hidden="true" className="text-2xl text-ink-400">
-            🗺
+            <Glyph name="map" />
           </span>
           <span className="text-sm font-medium text-ink-700">
             {dragOver ? t('champ.glisse.une.image.ici') : t('champ.ajouter.une.illustration')}
