@@ -1057,6 +1057,29 @@ check(
   [1, 'long'],
 );
 
+// --- Roublard : compteurs fin de progression (PHB 2014) ---
+
+// PHB 2014 p.96 : Coup de chance @20 — 1 utilisation, recharge repos court OU long
+const roublard20 = mkChar({ characterClass: 'Roublard', level: 20 });
+check(
+  'coup de chance @20 : 1 utilisation, recharge repos court',
+  [
+    resourceMaxOf('roublard-coup-de-chance', roublard20),
+    findClassFeature('roublard-coup-de-chance')?.resource?.reset,
+  ],
+  [1, 'short'],
+);
+// PHB 2014 p.97 : Voleur de sort (Escroc arcanique @17) — 1 / repos long
+const escroc17 = mkChar({ characterClass: 'Roublard', level: 20, subclass: 'escroc-arcanique' });
+check(
+  'voleur de sort (Escroc arcanique @17) : 1 utilisation, recharge repos long',
+  [
+    resourceMaxOf('escroc-arcanique-voleur-de-sort', escroc17),
+    findClassFeature('escroc-arcanique-voleur-de-sort')?.resource?.reset,
+  ],
+  [1, 'long'],
+);
+
 // --- applyRest ---
 
 const restChar = (over: Partial<Character> = {}) =>
