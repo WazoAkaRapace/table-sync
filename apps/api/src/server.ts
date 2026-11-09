@@ -109,8 +109,34 @@ async function buildServer() {
   await app.register(multipart, { limits: { fileSize: 5 * 1024 * 1024, files: 1 } });
   await app.register(websocket);
 
+  // Gestionnaire d'erreurs global : toute erreur NON anticipée rend un 500
+  // JSON structuré { error: <message> } (le contrat {error} existant) au lieu
+  // du payload Fastify par défaut — la stack part dans les logs serveur
+  // (app.log.error), JAMAIS dans la réponse ; en NODE_ENV=production le
+  // message client devient générique. Les erreurs < 500 (validation Fastify,
+  // 4xx métier) passent telles quelles : les 400 apiMsg i18n des routes ne
+  // doivent jamais être réécrits (des tests les épignent).
+  app.setErrorHandler((err, _request, reply) => {
+    const status = err.statusCode ?? 500;
+    if (reply.sent) return; // la route a déjà répondu : ne rien réécrire
+    if (status < 500) return reply.send(err);
+    app.log.error(err);
+    const message =
+      process.env.NODE_ENV === 'production' ? 'erreur interne' : (err.message ?? 'erreur interne');
+    return reply.status(500).send({ error: message });
+  });
+
   // Health check (public)
   app.get('/api/health', async () => ({ status: 'ok', time: new Date().toISOString() }));
+
+  // Route de test du gestionnaire d'erreurs — montée UNIQUEMENT sous
+  // TEST_ONLY=error-handler (mod-error-handler.ts boote sa propre instance
+  // avec cette variable). Hors /api : hors du garde d'auth global.
+  if (process.env.TEST_ONLY === 'error-handler') {
+    app.get('/__test/boom', async () => {
+      throw new Error('boom intentionnel (error-handler)');
+    });
+  }
 
   // Auth decorator — header Authorization d'abord (scripts/tests), sinon le
   // cookie HttpOnly ts_access (le chemin du navigateur). Cf. verifyAccess.
