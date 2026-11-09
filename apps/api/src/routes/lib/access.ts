@@ -44,7 +44,6 @@ export function getCharacterWithOwnerById(drizzle: ReturnType<typeof getDrizzle>
     .get() as any;
 }
 
-
 /**
  * Porte « éditeur d'inventaire » (POST /characters/:id/inventory, /consume,
  * /refill) : 404 « character not found », puis owner/MD requis (403 « only
