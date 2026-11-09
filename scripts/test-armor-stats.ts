@@ -398,6 +398,19 @@ check(
   16,
 );
 check('Moine en armure → règle normale', computeAC([entry(cuir)], 4, false, moine).ac, 15);
+// --- Style de combat Défense (Guerrier/Paladin/Rôdeur, PHB 2014) ---
+// PHB 2014 : +1 CA tant que l'on PORTE une armure (bouclier cumule)
+check(
+  'style Défense en armure → Cuir 11 + 4 DEX + 1 = 16 (PHB 2014)',
+  computeAC([entry(cuir)], 4, true).ac,
+  16,
+);
+// PHB 2014 : le bonus s'applique aussi en armure lourde (Harnois 18 + 1)
+check(
+  'style Défense en armure lourde → Harnois 18 + 1 = 19 (PHB 2014)',
+  computeAC([entry(harnois)], 4, true).ac,
+  19,
+);
 check(
   'Non-classe sans armure → 10 + DEX (inchangé)',
   computeAC([], 4, false, { constitution: 18, wisdom: 18, characterClass: 'Guerrier' }).ac,

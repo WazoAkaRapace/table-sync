@@ -13,9 +13,18 @@ import {
   agonizingBlastBonus,
   eldritchBlastRays,
   maxSpellSlots,
+  bardicInspirationDie,
   rageDamageBonus,
   renderFeatureTemplate,
+  songOfRestDie,
+  SPELL_SLOTS_ARTIFICIER,
+  SPELL_SLOTS_HALF,
   SPELL_SLOTS_PACT,
+  auraRadiusMeters,
+  wildShapeCanFly,
+  wildShapeCanSwim,
+  wildShapeDurationHours,
+  wildShapeMaxCR,
 } from '@table-sync/shared';
 import {
   CLASS_FEATURES,
@@ -160,8 +169,34 @@ check('rageDamageBonus @16 = +4', rageDamageBonus(16), 4);
 check('rageDamageBonus @20 = +4', rageDamageBonus(20), 4);
 check('rageDamageBonus sans niveaux de barbare = 0', rageDamageBonus(0), 0);
 
+// --- Barbare : recharge & paliers complémentaires ---
+
+// PHB 2014 : la Rage ne se recharge qu'au repos LONG (jamais au repos court)
+check(
+  'rage : recharge repos long uniquement',
+  effectiveFeatureReset({ catalogId: 'barbare-rage', resetType: null }, 5),
+  'long',
+);
+// PHB 2014 : palier intermédiaire 12-16 — la rage reste à 5 (6 seulement à 17)
+check('rage @14 = 5 (palier 12-16, PHB 2014)', resourceMaxOf('barbare-rage', barb(14)), 5);
+
 // Ki = niveau (repos court) ; points de sorcellerie = niveau (repos long)
 check('ki @7 = 7', resourceMaxOf('moine-ki', mkChar({ characterClass: 'Moine', level: 7 })), 7);
+// PHB 2014 : les points de ki se régagent au repos court OU long — le catalogue
+// pré-remplit « court » (le plus favorable), le joueur peut surcharger en « long »
+check(
+  'ki : recharge repos court (catalogue)',
+  effectiveFeatureReset({ catalogId: 'moine-ki', resetType: null }, 5),
+  'short',
+);
+// SRD 5.1 : Plénitude physique — « You must finish a LONG rest before you
+// can use this feature again » (le PHB 2014 dit « short or long » : l'app suit
+// le SRD, écart volontaire PHB, épinglé ici pour mémoire)
+check(
+  'plénitude physique : recharge repos long (SRD 5.1 ; PHB : court ou long)',
+  findClassFeature('main-ouverte-plenitude-physique')?.resource?.reset,
+  'long',
+);
 
 // PHB 2014 : les 3 voies du Moine au catalogue (paume, ombre, quatre éléments)
 check(
@@ -240,6 +275,25 @@ check(
   13,
 );
 
+// --- Ensorceleur : recharge & origine sauvage (PHB 2014) ---
+
+// PHB 2014 : les points de sorcellerie se régagnent au repos LONG
+check(
+  'points de sorcellerie : recharge repos long',
+  findClassFeature('ensorceleur-source-de-magie')?.resource?.reset,
+  'long',
+);
+// PHB 2014 : Marée du chaos (Origine sauvage) — 1 utilisation / repos long
+const ensorceleur = mkChar({ characterClass: 'Ensorceleur', level: 1, subclass: 'sauvage' });
+check(
+  'marée du chaos : 1 utilisation, recharge repos long',
+  [
+    resourceMaxOf('sauvage-maree-du-chaos', ensorceleur),
+    findClassFeature('sauvage-maree-du-chaos')?.resource?.reset,
+  ],
+  [1, 'long'],
+);
+
 // Imposition des mains = 5 × niveau (PV, repos long) — capacité de NIVEAU 1 (PHB 2014)
 check(
   'imposition des mains @6 = 30 PV',
@@ -293,6 +347,21 @@ check(
   5,
 );
 
+// --- Barde : dés d'inspiration et du chant reposant (PHB 2014) ---
+
+// PHB 2014 : dé d'Inspiration bardique 1d6 @1, 1d8 @5, 1d10 @10, 1d12 @15
+check(
+  'dé d’inspiration bardique : d6/d8/d10/d12 aux paliers 1/5/10/15 (PHB 2014)',
+  [1, 5, 10, 15].map(bardicInspirationDie),
+  ['1d6', '1d8', '1d10', '1d12'],
+);
+// PHB 2014 : dé du Chant reposant 1d6 @2, 1d8 @9, 1d10 @13, 1d12 @17
+check(
+  'dé du chant reposant : d6/d8/d10/d12 aux paliers 2/9/13/17 (PHB 2014)',
+  [1, 2, 9, 13, 17].map(songOfRestDie),
+  ['1d6', '1d6', '1d8', '1d10', '1d12'],
+);
+
 // Canalisation divine : 1/2@6/3@18 (Clerc & Paladin, repos court)
 check(
   'canalisation clerc @2 = 1',
@@ -310,6 +379,118 @@ check(
   3,
 );
 
+// --- Clerc : paliers complémentaires & compteurs de domaine (PHB 2014) ---
+
+// PHB 2014 : canalisation divine clerc passe à 3 au niveau 18
+check(
+  'canalisation clerc @18 = 3',
+  resourceMaxOf('clerc-canalisation-divine', mkChar({ characterClass: 'Clerc', level: 18 })),
+  3,
+);
+// PHB 2014 : canalisation divine paladin passe à 2 au niveau 6
+check(
+  'canalisation paladin @6 = 2',
+  resourceMaxOf('paladin-canalisation-divine', mkChar({ characterClass: 'Paladin', level: 6 })),
+  2,
+);
+// PHB 2014 : Intervention divine — 1 utilisation, recharge repos long
+const clerc = (level: number) => mkChar({ characterClass: 'Clerc', level });
+check(
+  'intervention divine @10 : 1 utilisation, recharge repos long',
+  [
+    resourceMaxOf('clerc-intervention-divine', clerc(10)),
+    findClassFeature('clerc-intervention-divine')?.resource?.reset,
+  ],
+  [1, 'long'],
+);
+// PHB 2014 : domaines — Illumination protectrice (Lumière) = MOD SAG / RL
+const clercDomaine = (wis: number) => mkChar({ characterClass: 'Clerc', level: 3, wisdom: wis });
+check(
+  'illumination protectrice : SAG 16 → 3, SAG 6 → 1 (min, PHB 2014)',
+  [16, 6].map((wis) => resourceMaxOf('lumiere-illumination-protectrice', clercDomaine(wis))),
+  [3, 1],
+);
+// PHB 2014 : Fureur de l'ouragan (Tempête) = MOD SAG / RL
+check(
+  'fureur de l’ouragan : SAG 14 → 2 (PHB 2014)',
+  resourceMaxOf('tempete-fureur-ouragan', clercDomaine(14)),
+  2,
+);
+// PHB 2014 : Prêtre de la guerre (Guerre) = MOD SAG / RL
+check(
+  'prêtre de la guerre : SAG 12 → 1 (PHB 2014)',
+  resourceMaxOf('guerre-pretre-de-guerre', clercDomaine(12)),
+  1,
+);
+// PHB 2014 : Visions du passé (Savoir @17) — 1 utilisation, recharge repos court
+check(
+  'visions du passé @17 : 1 utilisation, recharge repos court',
+  [
+    resourceMaxOf('savoir-visions-du-passe', clerc(17)),
+    findClassFeature('savoir-visions-du-passe')?.resource?.reset,
+  ],
+  [1, 'short'],
+);
+
+// --- Paladin : rayon d'aura & capstones de serment (PHB 2014) ---
+
+// PHB 2014 : rayon d'aura 10 pieds (3 m) ; Aura améliorée @18 → 30 pieds (9 m)
+check('rayon d’aura : 3 m @6, 9 m @18 (PHB 2014)', [6, 17, 18].map(auraRadiusMeters), [3, 3, 9]);
+const paladinOath = (sacredOath: string, id: string, level: number) => [
+  resourceMaxOf(id, mkChar({ characterClass: 'Paladin', level, sacredOath })),
+  findClassFeature(id)?.resource?.reset,
+];
+// PHB 2014 : Nimbe sacré (Dévotion @20) — 1 / repos long
+check(
+  'nimbe sacré (Dévotion @20) : 1 utilisation, recharge repos long',
+  paladinOath('devotion', 'paladin-nimbe-sacre', 20),
+  [1, 'long'],
+);
+// PHB 2014 : Sentinelle immortelle (Anciennes @15) — 1 / repos long
+check(
+  'sentinelle immortelle (Anciennes @15) : 1 utilisation, recharge repos long',
+  paladinOath('anciennes', 'paladin-sentinelle-immortelle', 15),
+  [1, 'long'],
+);
+// PHB 2014 : Ange vengeur (Vengeance @20) — 1 / repos long
+check(
+  'ange vengeur (Vengeance @20) : 1 utilisation, recharge repos long',
+  paladinOath('vengeance', 'paladin-ange-vengeance', 20),
+  [1, 'long'],
+);
+
+// --- Table demi-incantateur (PHB 2014) : Paladin & Rôdeur (les Clerc et
+// Magicien suivent la table FULL, déjà couverte par l'oracle multiclassé). ---
+
+// PHB 2014 : Paladin & Rôdeur — AUCUN emplacement au niv. 1, 2×niv.1 @2 …
+const SRD_HALF_SLOTS: number[][] = [
+  [0, 0, 0, 0, 0, 0, 0, 0, 0], // L1
+  [2, 0, 0, 0, 0, 0, 0, 0, 0], // L2
+  [3, 0, 0, 0, 0, 0, 0, 0, 0], // L3
+  [3, 0, 0, 0, 0, 0, 0, 0, 0], // L4
+  [4, 2, 0, 0, 0, 0, 0, 0, 0], // L5
+  [4, 2, 0, 0, 0, 0, 0, 0, 0], // L6
+  [4, 3, 0, 0, 0, 0, 0, 0, 0], // L7
+  [4, 3, 0, 0, 0, 0, 0, 0, 0], // L8
+  [4, 3, 2, 0, 0, 0, 0, 0, 0], // L9
+  [4, 3, 2, 0, 0, 0, 0, 0, 0], // L10
+  [4, 3, 3, 0, 0, 0, 0, 0, 0], // L11
+  [4, 3, 3, 0, 0, 0, 0, 0, 0], // L12
+  [4, 3, 3, 1, 0, 0, 0, 0, 0], // L13
+  [4, 3, 3, 1, 0, 0, 0, 0, 0], // L14
+  [4, 3, 3, 2, 0, 0, 0, 0, 0], // L15
+  [4, 3, 3, 2, 0, 0, 0, 0, 0], // L16
+  [4, 3, 3, 3, 1, 0, 0, 0, 0], // L17
+  [4, 3, 3, 3, 1, 0, 0, 0, 0], // L18
+  [4, 3, 3, 3, 2, 0, 0, 0, 0], // L19
+  [4, 3, 3, 3, 2, 0, 0, 0, 0], // L20
+];
+check(
+  'table demi-incantateur (Paladin/Rôdeur, PHB 2014) == SPELL_SLOTS_HALF',
+  SPELL_SLOTS_HALF,
+  SRD_HALF_SLOTS,
+);
+
 // Second souffle ×1 (court) ; Élan d'action 1→2@17 (court) ; Indomptable 1/2/3 (long)
 check('second souffle = 1', resourceMaxOf('guerrier-second-souffle', mkChar({ level: 1 })), 1);
 check(
@@ -321,6 +502,17 @@ check(
   'sursaut d’activité @17 = 2',
   resourceMaxOf('guerrier-sursaut-activite', mkChar({ level: 17 })),
   2,
+);
+// PHB 2014 : dés de Supériorité martiale — 4 @3, 5 @7, 6 @15 (repos court)
+check(
+  'supériorité martiale : 4/5/6 dés aux paliers 3/7/15 (PHB 2014)',
+  [3, 7, 15].map((lv) =>
+    resourceMaxOf(
+      'maitre-guerre-superiorite-martial',
+      mkChar({ characterClass: 'Guerrier', level: lv, subclass: 'maitre-de-guerre' }),
+    ),
+  ),
+  [4, 5, 6],
 );
 check('indomptable @9 = 1', resourceMaxOf('guerrier-indomptable', mkChar({ level: 9 })), 1);
 check('indomptable @13 = 2', resourceMaxOf('guerrier-indomptable', mkChar({ level: 13 })), 2);
@@ -342,6 +534,93 @@ check(
     mkChar({ characterClass: 'Paladin', level: 14, charisma: 12 }),
   ),
   1,
+);
+
+// --- Artificier (Tasha — hors SRD 2014 : la classe n'y existe pas, valeurs TCE épinglées) ---
+
+// TCE : table d'emplacements propre à l'artificier (2 dès le niv. 1,
+// max niv. 5) — ni la table pleine, ni la table demi-incantateur.
+const SRD_ARTIFICIER_SLOTS: number[][] = [
+  [2, 0, 0, 0, 0, 0, 0, 0, 0], // L1
+  [2, 0, 0, 0, 0, 0, 0, 0, 0], // L2
+  [3, 0, 0, 0, 0, 0, 0, 0, 0], // L3
+  [3, 0, 0, 0, 0, 0, 0, 0, 0], // L4
+  [4, 2, 0, 0, 0, 0, 0, 0, 0], // L5
+  [4, 2, 0, 0, 0, 0, 0, 0, 0], // L6
+  [4, 3, 0, 0, 0, 0, 0, 0, 0], // L7
+  [4, 3, 0, 0, 0, 0, 0, 0, 0], // L8
+  [4, 3, 2, 0, 0, 0, 0, 0, 0], // L9
+  [4, 3, 2, 0, 0, 0, 0, 0, 0], // L10
+  [4, 3, 3, 0, 0, 0, 0, 0, 0], // L11
+  [4, 3, 3, 0, 0, 0, 0, 0, 0], // L12
+  [4, 3, 3, 1, 0, 0, 0, 0, 0], // L13
+  [4, 3, 3, 1, 0, 0, 0, 0, 0], // L14
+  [4, 3, 3, 2, 0, 0, 0, 0, 0], // L15
+  [4, 3, 3, 2, 0, 0, 0, 0, 0], // L16
+  [4, 3, 3, 3, 1, 0, 0, 0, 0], // L17
+  [4, 3, 3, 3, 1, 0, 0, 0, 0], // L18
+  [4, 3, 3, 3, 2, 0, 0, 0, 0], // L19
+  [4, 3, 3, 3, 2, 0, 0, 0, 0], // L20
+];
+check(
+  'emplacements artificier (TCE) == SPELL_SLOTS_ARTIFICIER',
+  SPELL_SLOTS_ARTIFICIER,
+  SRD_ARTIFICIER_SLOTS,
+);
+// TCE : Imprégnation d'objet — 2 objets @2, 3 @6, 4 @10, 5 @14, 6 @18
+check(
+  'imprégnation d’objet : 2/3/4/5/6 objets aux paliers 2/6/10/14/18 (TCE)',
+  [2, 6, 10, 14, 18].map((lv) =>
+    resourceMaxOf('artificier-objets-infuses', mkChar({ characterClass: 'Artificier', level: lv })),
+  ),
+  [2, 3, 4, 5, 6],
+);
+// TCE : Génie éclair — MOD INT, minimum 1 (repos long)
+check(
+  'génie éclair INT 6 = 1 (min, TCE)',
+  resourceMaxOf(
+    'artificier-genie-eclair',
+    mkChar({ characterClass: 'Artificier', level: 7, intelligence: 6 }),
+  ),
+  1,
+);
+// TCE : Élixir expérimental — 1 @3, 2 @6, 3 @15 (repos long)
+const artificier = (level: number) => mkChar({ characterClass: 'Artificier', level });
+check(
+  'élixir expérimental : 1/2/3 aux paliers 3/6/15 (TCE)',
+  [3, 6, 15].map((lv) => resourceMaxOf('alchimiste-elixir-experimental', artificier(lv))),
+  [1, 2, 3],
+);
+// TCE : Ingrédients revigorants — Restauration partielle gratuite MOD INT, min 1
+check(
+  'ingrédients revigorants : INT 16 → 3, INT 6 → 1 (min, TCE)',
+  [16, 6].map((int) =>
+    resourceMaxOf(
+      'alchimiste-ingredients-revigorants',
+      mkChar({ characterClass: 'Artificier', level: 9, intelligence: int }),
+    ),
+  ),
+  [3, 1],
+);
+// TCE : Canon occulte — 1 utilisation, recharge repos long
+check(
+  'canon occulte @3 : 1 utilisation, recharge repos long (TCE)',
+  [
+    resourceMaxOf('artilleur-canon-occulte', artificier(3)),
+    findClassFeature('artilleur-canon-occulte')?.resource?.reset,
+  ],
+  [1, 'long'],
+);
+// TCE : Décharge arcanique — MOD INT, min 1 (repos long)
+check(
+  'décharge arcanique : INT 16 → 3, INT 6 → 1 (min, TCE)',
+  [16, 6].map((int) =>
+    resourceMaxOf(
+      'forgeron-decharge-arcanique',
+      mkChar({ characterClass: 'Artificier', level: 9, intelligence: int }),
+    ),
+  ),
+  [3, 1],
 );
 
 // --- Pact magic (RAW) ---
@@ -703,6 +982,101 @@ check(
   true,
 );
 
+// --- Occultiste : arcanums mystiques & compteurs de patron (PHB 2014) ---
+
+// PHB 2014 : Arcanum mystique — sort de niv.6 @11, niv.7 @13, niv.8 @15, niv.9 @17
+check(
+  'arcanum mystique : niveaux d’acquisition 11/13/15/17',
+  [
+    'occultiste-arcanum-6',
+    'occultiste-arcanum-7',
+    'occultiste-arcanum-8',
+    'occultiste-arcanum-9',
+  ].map((id) => findClassFeature(id)?.level),
+  [11, 13, 15, 17],
+);
+// PHB 2014 : chaque arcanum = 1 utilisation, recharge repos LONG (1 sort par repos)
+const arcanumIds = [
+  'occultiste-arcanum-6',
+  'occultiste-arcanum-7',
+  'occultiste-arcanum-8',
+  'occultiste-arcanum-9',
+];
+const occ20 = mkChar({ characterClass: 'Occultiste', level: 20 });
+check(
+  'arcanum mystique : 1 utilisation chacun, recharge repos long',
+  arcanumIds.map((id) => [resourceMaxOf(id, occ20), findClassFeature(id)?.resource?.reset]),
+  arcanumIds.map(() => [1, 'long']),
+);
+// PHB 2014 : Maître occulte @20 — 1 arcanum de niv.6 supplémentaire / repos long
+check(
+  'maître occulte @20 : 1 utilisation, recharge repos long',
+  [
+    resourceMaxOf('occultiste-maitre-occulte', occ20),
+    findClassFeature('occultiste-maitre-occulte')?.resource?.reset,
+  ],
+  [1, 'long'],
+);
+// PHB 2014 : compteurs de patron — 1 utilisation, recharge SRD (court sauf mention)
+const occultistePatron = (subclass: string) =>
+  mkChar({ characterClass: 'Occultiste', level: 20, subclass });
+check(
+  'présence féerique (Archée @1) : 1 utilisation, recharge repos court',
+  [
+    resourceMaxOf('archfee-presence-feerique', occultistePatron('archfee')),
+    findClassFeature('archfee-presence-feerique')?.resource?.reset,
+  ],
+  [1, 'short'],
+);
+check(
+  'chance du ténébreux (Fiélon @6) : 1 utilisation, recharge repos court',
+  [
+    resourceMaxOf('fielon-chance-du-tenebreux', occultistePatron('fielon')),
+    findClassFeature('fielon-chance-du-tenebreux')?.resource?.reset,
+  ],
+  [1, 'short'],
+);
+check(
+  'protection entropique (Grand ancien @6) : 1 utilisation, recharge repos court',
+  [
+    resourceMaxOf('grand-ancien-protection-entropique', occultistePatron('grand-ancien')),
+    findClassFeature('grand-ancien-protection-entropique')?.resource?.reset,
+  ],
+  [1, 'short'],
+);
+// PHB 2014 : Traversée des enfers (Fiélon @14) — 1 / repos long
+check(
+  'traversée des enfers (Fiélon @14) : 1 utilisation, recharge repos long',
+  [
+    resourceMaxOf('fielon-traversee-des-enfers', occultistePatron('fielon')),
+    findClassFeature('fielon-traversee-des-enfers')?.resource?.reset,
+  ],
+  [1, 'long'],
+);
+
+// --- Roublard : compteurs fin de progression (PHB 2014) ---
+
+// PHB 2014 : Coup de chance @20 — 1 utilisation, recharge repos court OU long
+const roublard20 = mkChar({ characterClass: 'Roublard', level: 20 });
+check(
+  'coup de chance @20 : 1 utilisation, recharge repos court',
+  [
+    resourceMaxOf('roublard-coup-de-chance', roublard20),
+    findClassFeature('roublard-coup-de-chance')?.resource?.reset,
+  ],
+  [1, 'short'],
+);
+// PHB 2014 : Voleur de sort (Escroc arcanique @17) — 1 / repos long
+const escroc17 = mkChar({ characterClass: 'Roublard', level: 20, subclass: 'escroc-arcanique' });
+check(
+  'voleur de sort (Escroc arcanique @17) : 1 utilisation, recharge repos long',
+  [
+    resourceMaxOf('escroc-arcanique-voleur-de-sort', escroc17),
+    findClassFeature('escroc-arcanique-voleur-de-sort')?.resource?.reset,
+  ],
+  [1, 'long'],
+);
+
 // --- applyRest ---
 
 const restChar = (over: Partial<Character> = {}) =>
@@ -853,6 +1227,61 @@ check(
   18,
 );
 
+// --- Druide : Forme sauvage (PHB 2014) ---
+
+// PHB 2014 : CR max 1/4 @2, 1/2 @4, 1 @8
+check(
+  'forme sauvage : CR max 1/4 @2, 1/2 @4, 1 @8 (PHB 2014)',
+  [2, 4, 8].map((lv) => wildShapeMaxCR(lv)),
+  [0.25, 0.5, 1],
+);
+// PHB 2014 : Cercle de la Lune — CR = ⌊niv/3⌋, minimum 1
+check(
+  'forme sauvage Lune : CR ⌊niv/3⌋ min 1 (@3=1, @6=2, @9=3, @20=6)',
+  [3, 6, 9, 20].map((lv) => wildShapeMaxCR(lv, 'lune')),
+  [1, 2, 3, 6],
+);
+// PHB 2014 : nage possible dès le niv 4 (pas avant, sauf Lune dès le début
+// pour les formes terrestres — la limite ici est la règle générale @4)
+check(
+  'forme sauvage : nage interdite @3, possible @4',
+  [wildShapeCanSwim(3), wildShapeCanSwim(4)],
+  [false, true],
+);
+// PHB 2014 : vol possible dès le niv 8
+check(
+  'forme sauvage : vol interdit @7, possible @8',
+  [wildShapeCanFly(7), wildShapeCanFly(8)],
+  [false, true],
+);
+// PHB 2014 : durée = ⌊niv/2⌋ heures (minimum 1)
+check(
+  'forme sauvage : durée ⌊niv/2⌋ h (@2=1, @6=3, @20=10)',
+  [wildShapeDurationHours(2), wildShapeDurationHours(6), wildShapeDurationHours(20)],
+  [1, 3, 10],
+);
+// ⚠ ÉCART SRD 2014 — bug candidat, NON corrigé (périmètre tests) : le SRD 5.1
+// (Natural Recovery) autorise la Récupération naturelle LORS d'un repos court
+// mais « you can't use this feature again until you finish a long rest » —
+// soit max 1 entre deux repos LONGS. Le catalogue (reset 'short') recharge le
+// compteur à CHAQUE repos court, ce qui autorise plusieurs emplois par jour.
+// Le check épingle la valeur ACTUELLE pour rendre l'écart visible.
+const druideRN = mkChar({ characterClass: 'Druide', level: 2, druidCircle: 'terre' });
+const rnDejaUtilisee = () => [mkFeature(30, 'terre-recuperation-naturelle', 1, 1)];
+// SRD 5.1 : utilisable LORS d'un repos court, une seule fois entre deux repos
+// longs (« You can't use this feature again until you finish a long rest ») —
+// correction 2026-11 (l'ancien reset 'short' permettait plusieurs emplois/jour).
+check(
+  'récupération naturelle : recharge repos long (SRD 5.1)',
+  [
+    findClassFeature('terre-recuperation-naturelle')?.resource?.reset,
+    applyRest(druideRN, rnDejaUtilisee(), { type: 'short' }).featureResets.length,
+    applyRest(druideRN, rnDejaUtilisee(), { type: 'short' }).featureResets.length,
+    applyRest(druideRN, rnDejaUtilisee(), { type: 'long' }).featureResets.length,
+  ],
+  ['long', 0, 0, 1],
+);
+
 // --- Choix du joueur vs règle SRD du catalogue (le catalogue pré-remplit, le joueur décide) ---
 
 // Recharge effective : null = règle SRD au niveau actuel (bardique 'long' < niv. 5)
@@ -884,15 +1313,69 @@ check(
   ['short', 'short'],
 );
 
-// Récupération naturelle (cercle de la Terre) : idem, 1× par repos court (PHB 2014 p.69)
+// --- Magicien : compteurs des écoles (PHB 2014) ---
+// Un compteur par capacité limitée : 1 utilisation au palier SRD, recharge SRD.
+const magicienEcole = (subclass: string, level: number) =>
+  mkChar({ characterClass: 'Magicien', level, subclass });
+// PHB 2014 : Protection arcanique (Abjuration @2) — 1 / repos long
 check(
-  'effectiveReset : Récupération naturelle recharge au repos court',
+  'protection arcanique @2 : 1 utilisation, recharge repos long',
+  [
+    resourceMaxOf('abjuration-protection-arcanique', magicienEcole('abjuration', 2)),
+    findClassFeature('abjuration-protection-arcanique')?.resource?.reset,
+  ],
+  [1, 'long'],
+);
+// PHB 2014 : Double illusoire (Illusion @10) — 1 / repos court
+check(
+  'double illusoire @10 : 1 utilisation, recharge repos court',
+  [
+    resourceMaxOf('illusion-double-illusoire', magicienEcole('illusion', 10)),
+    findClassFeature('illusion-double-illusoire')?.resource?.reset,
+  ],
+  [1, 'short'],
+);
+// PHB 2014 : Permutation (Invocation @6) — 1 / repos long
+check(
+  'permutation @6 : 1 utilisation, recharge repos long',
+  [
+    resourceMaxOf('invocation-permutation', magicienEcole('invocation', 6)),
+    findClassFeature('invocation-permutation')?.resource?.reset,
+  ],
+  [1, 'long'],
+);
+// PHB 2014 : Métamorphe (Transmutation @10) — 1 / repos court
+check(
+  'métamorphe @10 : 1 utilisation, recharge repos court',
+  [
+    resourceMaxOf('transmutation-metamorphe', magicienEcole('transmutation', 10)),
+    findClassFeature('transmutation-metamorphe')?.resource?.reset,
+  ],
+  [1, 'short'],
+);
+// PHB 2014 : Maître transmutateur (Transmutation @14) — 1 / repos long
+check(
+  'maître transmutateur @14 : 1 utilisation, recharge repos long',
+  [
+    resourceMaxOf('transmutation-maitre-transmutateur', magicienEcole('transmutation', 14)),
+    findClassFeature('transmutation-maitre-transmutateur')?.resource?.reset,
+  ],
+  [1, 'long'],
+);
+
+// Récupération naturelle (cercle de la Terre) : SRD 5.1 — utilisable à l'occasion
+// d'un repos court, une seule fois entre deux repos longs (l'app suit le SRD,
+// diverge du PHB 2014 « short or long » — même politique que Plénitude physique).
+check(
+  'effectiveReset : Récupération naturelle recharge au repos long (SRD 5.1)',
   [
     findClassFeature('terre-recuperation-naturelle')?.resource?.reset,
     effectiveFeatureReset({ catalogId: 'terre-recuperation-naturelle', resetType: null }, 2),
-    findClassFeature('terre-recuperation-naturelle')?.description.includes('1× par repos court.'),
+    findClassFeature('terre-recuperation-naturelle')?.description.includes(
+      'impossible avant un repos long',
+    ),
   ],
-  ['short', 'short', true],
+  ['long', 'long', true],
 );
 
 // Override 'long' sur un trait de catalogue dont la règle SRD est 'short'

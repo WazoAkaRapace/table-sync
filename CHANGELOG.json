@@ -3,6 +3,24 @@
     "version": null,
     "sha": null,
     "date": "2026-11-09",
+    "title": "règle du druide corrigée",
+    "items": [
+      "Correction d'une règle du Druide : la Récupération naturelle se recharge après un repos long, conformément au SRD."
+    ]
+  },
+  {
+    "version": null,
+    "sha": null,
+    "date": "2026-11-09",
+    "title": "couverture de tests SRD 2014 classe par classe",
+    "items": [
+      "L'application reçoit une mise à jour technique interne, sans changement visible à table."
+    ]
+  },
+  {
+    "version": null,
+    "sha": null,
+    "date": "2026-11-09",
     "title": "simulation de session complète",
     "items": [
       "L'application reçoit une mise à jour technique interne, sans changement visible à table."

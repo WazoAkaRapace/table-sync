@@ -1595,8 +1595,8 @@ export const CLASS_SUBCLASSES: Record<string, SubclassDef[]> = {
           level: 2,
           name: 'Récupération naturelle',
           description:
-            'Après un repos court, récupérez des emplacements de sorts d’un niveau total ≤ {{level}} ÷ 2 (arrondi sup., max niv. 5) — 1× par repos court.',
-          resource: { max: () => 1, reset: 'short' },
+            'À l’occasion d’un repos court, récupérez des emplacements de sorts d’un niveau total ≤ {{level}} ÷ 2 (arrondi sup., max niv. 5) — impossible avant un repos long (SRD 5.1).',
+          resource: { max: () => 1, reset: 'long' },
         },
         {
           id: 'terre-foulee-tellurique',
