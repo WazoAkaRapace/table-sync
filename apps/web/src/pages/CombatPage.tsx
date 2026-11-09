@@ -60,6 +60,7 @@ import {
 import { useHeaderOverride } from '../headerContext';
 import { useResyncOnReconnect, useSyncEvent } from '../sync';
 import { formatCreated, toRoman } from '../utils';
+import { Glyph } from '../components/Glyph';
 
 // ---------- Small combat helpers ----------
 
@@ -1070,7 +1071,9 @@ function CombatTheatre({
           className="btn-primary min-h-[44px] text-sm"
           aria-label={t('combat.terminer.mon.tour.passer.au.combattant')}
         >
-          {t('combat.j.ai.fini.mon.tour')}
+          <span className="inline-flex items-center gap-1">
+            <Glyph name="check" /> {t('combat.j.ai.fini.mon.tour')}
+          </span>
         </button>
         {nextHint}
       </div>
@@ -1118,9 +1121,13 @@ function CombatTheatre({
                   needsInitiative ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'
                 }`}
               >
-                {needsInitiative
-                  ? t('combat.en.attente.d.initiative')
-                  : t('combat.pret.a.demarrer')}
+                {needsInitiative ? (
+                  t('combat.en.attente.d.initiative')
+                ) : (
+                  <span className="inline-flex items-center gap-1">
+                    <Glyph name="check" /> {t('combat.pret.a.demarrer')}
+                  </span>
+                )}
               </span>
               <div className="ml-auto flex flex-wrap items-center gap-2">
                 {needsInitiative && (
@@ -1131,7 +1138,15 @@ function CombatTheatre({
                     className="btn-secondary min-h-[44px] text-sm disabled:opacity-40"
                     title={t('combat.lancer.d20.dex.pour.toutes.les')}
                   >
-                    {rollingInit ? t('combat.lances') : t('combat.tout.lancer')}
+                    {rollingInit ? (
+                      <span className="inline-flex items-center gap-1">
+                        <Glyph name="dice" /> {t('combat.lances')}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1">
+                        <Glyph name="dice" /> {t('combat.tout.lancer')}
+                      </span>
+                    )}
                   </button>
                 )}
                 <button
@@ -1324,7 +1339,7 @@ function InitiativeRail({
                       className="shrink-0 text-xs"
                       title={t('combat.nom.masque.aide')}
                     >
-                      🙈
+                      <Glyph name="hide" />
                     </span>
                   )}
                   {c.conditions.length > 0 && (
@@ -1346,7 +1361,7 @@ function InitiativeRail({
                   )}
                   {c.defeated && (
                     <span aria-hidden="true" className="shrink-0 text-xs">
-                      💀
+                      <Glyph name="death" />
                     </span>
                   )}
                   {!c.defeated &&
@@ -1410,7 +1425,10 @@ function DamageChipDock({
           }`}
           title={applyMode ? t('combat.annuler.echap') : t('combat.appliquer.a.une.cible')}
         >
-          {t('combat.chip.degats', { n: Math.floor(chip.value * (chip.half ? 0.5 : 1)) })}
+          <span className="inline-flex items-center gap-1">
+            <Glyph name="combat" />{' '}
+            {t('combat.chip.degats', { n: Math.floor(chip.value * (chip.half ? 0.5 : 1)) })}
+          </span>
           <span className="ml-1.5 font-sans text-xs font-normal opacity-75">{chip.source}</span>
         </button>
         <button
@@ -1433,7 +1451,7 @@ function DamageChipDock({
           className="btn-ghost min-h-[44px] min-w-[44px] p-2 text-sm text-ink-400 hover:text-ink-700"
           aria-label={t('combat.annuler.la.puce.de.degats')}
         >
-          ✕
+          <Glyph name="close" />
         </button>
         <span className="ml-auto text-xs text-ink-500">
           {applyMode ? t('combat.touchez.une.cible') : t('combat.touchez.la.puce.puis.une.cible')}
@@ -1565,7 +1583,9 @@ function StagePanel({
               </span>
             )}
             {combatant.defeated && (
-              <span className="text-sm font-medium text-ink-400">{t('combat.mort.vaincu')}</span>
+              <span className="text-sm font-medium text-ink-400 inline-flex items-center gap-1">
+                <Glyph name="death" /> {t('combat.mort.vaincu')}
+              </span>
             )}
           </div>
           {/* The name carries its own mask — the toggle sits beside what it
@@ -1595,7 +1615,9 @@ function StagePanel({
                     : 'rounded-full border border-parchment-300 px-3 py-1.5 font-sans text-xs font-medium text-ink-400 transition-colors hover:border-ink-300 hover:text-ink-600'
                 }
               >
-                <span aria-hidden="true">{combatant.nameHidden ? '🙈' : '👁'}</span>{' '}
+                <span aria-hidden="true">
+                  {combatant.nameHidden ? <Glyph name="hide" /> : <Glyph name="eye" />}
+                </span>{' '}
                 {combatant.nameHidden
                   ? t('combat.nom.masque.aux.joueurs')
                   : t('combat.nom.masquer.le.nom')}
@@ -1615,7 +1637,9 @@ function StagePanel({
               className="flex items-center gap-1 rounded-lg border border-parchment-200 bg-parchment-100 px-2 py-1 font-mono text-sm font-semibold text-ink-700"
               title={t('combat.classe.d.armure')}
             >
-              <span aria-hidden="true">🛡</span>
+              <span aria-hidden="true">
+                <Glyph name="shield" />
+              </span>
               {combatant.armorClass}
             </span>
           )}
@@ -1657,7 +1681,7 @@ function StagePanel({
         {hp ? (
           <div className="flex items-center gap-2">
             <span className="shrink-0 text-sm text-ink-400" aria-hidden="true">
-              ❤
+              <Glyph name="heart" />
             </span>
             <HpBar
               current={combatant.hitPoints ?? 0}
@@ -1728,7 +1752,9 @@ function StagePanel({
               className="btn-secondary text-sm"
               title={t('combat.lancer.l.initiative.d20.dex')}
             >
-              {t('combat.lancer')}
+              <span className="inline-flex items-center gap-1">
+                <Glyph name="dice" /> {t('combat.lancer')}
+              </span>
             </button>
           )}
           <span className="text-xs text-ink-400">
@@ -1750,7 +1776,7 @@ function StagePanel({
             className="btn-secondary flex items-center justify-center gap-1 py-3 text-sm"
             title={t('combat.degats.soins.pv')}
           >
-            {t('combat.degats')}
+            <Glyph name="combat" /> {t('combat.degats')}
           </button>
           {!combatant.defeated && (
             <button
@@ -1759,7 +1785,7 @@ function StagePanel({
               className="btn-secondary flex items-center justify-center gap-1 py-3 text-sm"
               title={t('combat.conditions')}
             >
-              ✎ <span>{t('combat.cond')}</span>
+              <Glyph name="edit" /> <span>{t('combat.cond')}</span>
             </button>
           )}
           {combatant.monsterSlug && (
@@ -1769,7 +1795,7 @@ function StagePanel({
               className="btn-secondary flex items-center justify-center gap-1 py-3 text-sm"
               title={t('combat.bloc.de.stats')}
             >
-              📜 <span>{t('combat.stats')}</span>
+              <Glyph name="scroll" /> <span>{t('combat.stats')}</span>
             </button>
           )}
           <button
@@ -1971,7 +1997,7 @@ function DamageSheet({
           onClick={() => applyDamage(1)}
           className="btn-secondary bg-red-100 py-3 text-sm text-red-700 hover:bg-red-200"
         >
-          {t('combat.degats')}
+          <Glyph name="combat" /> {t('combat.degats')}
         </button>
         <button
           type="button"
@@ -1979,14 +2005,14 @@ function DamageSheet({
           className="btn-secondary bg-orange-100 py-3 text-sm text-orange-700 hover:bg-orange-200"
           title={t('combat.resistance.demi.degats')}
         >
-          {t('combat.resist')}
+          <Glyph name="shield" /> {t('combat.resist')}
         </button>
         <button
           type="button"
           onClick={applyHeal}
           className="btn-secondary bg-green-100 py-3 text-sm text-green-700 hover:bg-green-200"
         >
-          {t('combat.soins')}
+          <Glyph name="heart" /> {t('combat.soins')}
         </button>
         <button
           type="button"
@@ -1996,7 +2022,15 @@ function DamageSheet({
           }}
           className="btn-secondary py-3 text-sm"
         >
-          {combatant.defeated ? t('combat.reanimer') : t('combat.mort.vaincu')}
+          {combatant.defeated ? (
+            <span className="inline-flex items-center gap-1">
+              <Glyph name="spark" /> {t('combat.reanimer')}
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1">
+              <Glyph name="death" /> {t('combat.mort.vaincu')}
+            </span>
+          )}
         </button>
       </div>
 

@@ -27,6 +27,7 @@ import { ErrorMsg, RegisterHead, SkeletonRegister } from '../components/ui';
 import { useResyncOnReconnect, useSyncEvent } from '../sync';
 import { useMessagesUnread } from '../useMessagesUnread';
 import { activeCharactersFirst, copyText } from '../utils';
+import { Glyph } from '../components/Glyph';
 
 // ---------- Small pieces of the contents ----------
 
@@ -132,7 +133,7 @@ function TocLink({
 }: {
   to: string;
   label: string;
-  glyph: string;
+  glyph: ReactNode;
   badge?: number;
   badgeLabel?: string;
   queue?: string;
@@ -186,7 +187,7 @@ function Instrument({
   className,
 }: {
   to: string;
-  glyph: string;
+  glyph: ReactNode;
   name: string;
   value?: ReactNode;
   className?: string;
@@ -244,7 +245,7 @@ function MemberCharacters({
               className="shrink-0 text-xs text-ink-300"
               title={t('party.seul.son.joueur.peut.ouvrir.cette')}
             >
-              🔒
+              <Glyph name="lock" />
             </span>
           </li>
         ))}
@@ -686,21 +687,21 @@ export default function PartyPage() {
             <ul className="card grid list-none grid-cols-2 overflow-hidden">
               <Instrument
                 to={`/party/${partyId}/gm`}
-                glyph="🛡"
+                glyph={<Glyph name="shield" />}
                 name={t('party.toc.md')}
                 value={t('party.toc.md.meta')}
                 className="border-r border-b border-parchment-200"
               />
               <Instrument
                 to={`/party/${partyId}/combat`}
-                glyph="⚔"
+                glyph={<Glyph name="combat" />}
                 name={t('party.toc.combat')}
                 value={combatLeadMeta}
                 className="border-b border-parchment-200"
               />
               <Instrument
                 to={`/party/${partyId}/carnet`}
-                glyph="📓"
+                glyph={<Glyph name="note" />}
                 name={t('party.toc.carnet')}
                 value={
                   carnetClock
@@ -714,7 +715,7 @@ export default function PartyPage() {
               />
               <Instrument
                 to={`/party/${partyId}/npcs`}
-                glyph="🎭"
+                glyph={<Glyph name="masks" />}
                 name={t('party.toc.pnj')}
                 value={t('party.toc.pnj.meta')}
               />
@@ -724,13 +725,13 @@ export default function PartyPage() {
                 <TocLink
                   to={`/party/${partyId}/chronique`}
                   label={t('party.toc.chronique')}
-                  glyph="📜"
+                  glyph={<Glyph name="scroll" />}
                 />
               )}
               <TocLink
                 to={`/party/${partyId}/messages`}
                 label={t('party.toc.correspondance')}
-                glyph="✉️"
+                glyph={<Glyph name="mail" />}
                 badge={messagesUnread}
                 badgeLabel={t('msgs.non.lus', { n: messagesUnread })}
               />
@@ -758,11 +759,15 @@ export default function PartyPage() {
                       party_party_inviteCode: party.party.inviteCode,
                     })}
                   >
-                    {inviteCopied
-                      ? t('commun.copie.ok')
-                      : inviteCopyFailed
-                        ? t('commun.copie.impossible')
-                        : t('commun.copier')}
+                    {inviteCopied ? (
+                      <span className="inline-flex items-center gap-1">
+                        <Glyph name="check" /> {t('commun.copie.ok')}
+                      </span>
+                    ) : inviteCopyFailed ? (
+                      t('commun.copie.impossible')
+                    ) : (
+                      t('commun.copier')
+                    )}
                   </button>
                 </div>
               </li>
@@ -773,17 +778,21 @@ export default function PartyPage() {
             <TocLink
               to={`/party/${partyId}/combat`}
               label={t('party.toc.combat')}
-              glyph="⚔"
+              glyph={<Glyph name="combat" />}
               queue={combatPlayerQueue}
             />
             {gmaLinked && (
               <TocLink
                 to={`/party/${partyId}/chronique`}
                 label={t('party.toc.chronique')}
-                glyph="📜"
+                glyph={<Glyph name="scroll" />}
               />
             )}
-            <TocLink to={`/party/${partyId}/npcs`} label={t('party.toc.pnj')} glyph="🎭" />
+            <TocLink
+              to={`/party/${partyId}/npcs`}
+              label={t('party.toc.pnj')}
+              glyph={<Glyph name="masks" />}
+            />
           </ul>
         )}
       </section>

@@ -26,6 +26,7 @@ import { appLocale } from '../i18n';
 import { useResyncOnReconnect, useSyncEvent } from '../sync';
 import { usePartyRole } from '../usePartyRole';
 import { parseSqliteDate, toRoman } from '../utils';
+import { Glyph } from '../components/Glyph';
 
 // ---------- Status / disposition styling ----------
 
@@ -552,7 +553,9 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
             className="w-full min-h-11 flex items-center justify-between gap-2 text-left"
           >
             <span className="flex items-center gap-2 min-w-0">
-              <span aria-hidden="true">📜</span>
+              <span aria-hidden="true">
+                <Glyph name="scroll" />
+              </span>
               <span className="text-sm font-semibold text-ink-800 truncate">
                 {t('pnj.gma.rail.titre')}
               </span>
@@ -1011,7 +1014,7 @@ function NpcCard({
           role="img"
           aria-label={npc.isShared ? t('pnj.partage') : t('pnj.prive')}
         >
-          {npc.isShared ? '🔗' : '🔒'}
+          {npc.isShared ? '🔗' : <Glyph name="lock" />}
         </span>
         {groupEditable && (
           <span
@@ -1020,7 +1023,7 @@ function NpcCard({
             role="img"
             aria-label={t('pnj.modifiable.par.le.groupe')}
           >
-            ✏️
+            <Glyph name="draw" />
           </span>
         )}
       </div>
@@ -1048,7 +1051,9 @@ function NpcCard({
       {/* Location */}
       {npc.location && (
         <p className="text-sm text-ink-600 flex items-center gap-1">
-          <span aria-hidden="true">📍</span>
+          <span aria-hidden="true">
+            <Glyph name="pin" />
+          </span>
           <span className="truncate">{npc.location}</span>
         </p>
       )}
@@ -1081,7 +1086,9 @@ function NpcCard({
             title={t('pnj.gma.badge.title')}
             aria-label={t('pnj.gma.badge.aria', { name: npc.name })}
           >
-            <span aria-hidden="true">📜</span>
+            <span aria-hidden="true">
+              <Glyph name="scroll" />
+            </span>
           </button>
           <GmaSessionOrdinals sessions={mergeGmaSessions(gma)} partyId={partyId} />
         </div>
@@ -1125,7 +1132,7 @@ function NpcCard({
               className="text-xs px-2 min-h-11 inline-flex items-center rounded-lg text-ink-600 hover:bg-parchment-100"
               aria-label={t('pnj.modifier.npc.name', { npc_name: npc.name })}
             >
-              {t('pnj.modifier')}
+              <Glyph name="edit" /> {t('pnj.modifier')}
             </button>
             {canDelete && (
               <button
@@ -1134,7 +1141,7 @@ function NpcCard({
                 className="text-xs inline-flex items-center justify-center min-w-11 min-h-11 rounded-lg text-red-700 hover:bg-red-50"
                 aria-label={t('pnj.supprimer.npc.name', { npc_name: npc.name })}
               >
-                🗑
+                <Glyph name="trash" />
               </button>
             )}
           </div>
@@ -1186,7 +1193,9 @@ function NpcDetailModal({
 
         {npc.location && (
           <p className="text-sm text-ink-600 flex items-center gap-1">
-            <span aria-hidden="true">📍</span>
+            <span aria-hidden="true">
+              <Glyph name="pin" />
+            </span>
             <span>{npc.location}</span>
           </p>
         )}
@@ -1500,7 +1509,9 @@ function NpcFormModal({
           // Éditeur « groupe » : contenu seulement — la pastille encre des
           // états discrets (idiome « Caché »), le sang est réservé
           <span className="inline-flex items-center gap-1.5 self-start text-xs font-medium text-ink-600 bg-ink-100 rounded-full px-2.5 py-1">
-            <span aria-hidden="true">✏️</span>
+            <span aria-hidden="true">
+              <Glyph name="draw" />
+            </span>
             {t('pnj.vous.pouvez.modifier.ce.pnj.partage')}
           </span>
         )}
@@ -1872,7 +1883,7 @@ function GmaNpcPickerModal({
                       </span>
                     </span>
                     <span className="text-xs text-ink-400 shrink-0" aria-hidden="true">
-                      {n.isShared ? '🔗' : '🔒'}
+                      {n.isShared ? '🔗' : <Glyph name="lock" />}
                     </span>
                   </button>
                 </li>
@@ -1946,7 +1957,7 @@ function GmaOriginModal({
                     className="w-full min-h-11 flex items-center gap-3 py-2 text-left group"
                   >
                     <span className="w-8 shrink-0 text-center" aria-hidden="true">
-                      📜
+                      <Glyph name="scroll" />
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block text-sm font-medium text-ink-800 truncate group-hover:text-blood-500">

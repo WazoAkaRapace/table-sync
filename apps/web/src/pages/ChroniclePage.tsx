@@ -17,6 +17,8 @@ import { useHeaderOverride } from '../headerContext';
 import { appLang, appLocale } from '../i18n';
 import { useResyncOnReconnect, useSyncEvent } from '../sync';
 import { parseSqliteDate, toRoman } from '../utils';
+import type { ReactNode } from 'react';
+import { Glyph } from '../components/Glyph';
 
 function playedAtLabel(playedAt: string | null, t: (key: string) => string): string {
   if (!playedAt) return t('chronique.date.inconnue');
@@ -40,7 +42,7 @@ function fetchedAtLabel(fetchedAt: string | null): string | null {
 // (vert/jaune/orange/rouge des PV et de l'encombrance). Types inconnus
 // (enum ouvert côté GM Assistant) → registre neutre.
 interface MomentStyle {
-  glyph: string;
+  glyph: ReactNode;
   ring: string;
   filet: string;
   text: string;
@@ -50,7 +52,7 @@ interface MomentStyle {
 
 const MOMENT_TYPE_STYLE: Record<string, MomentStyle> = {
   epic: {
-    glyph: '⚔',
+    glyph: <Glyph name="combat" />,
     ring: 'border-gold-500',
     filet: 'border-l-gold-500',
     text: 'font-display text-[15px] tracking-wide text-ink-900',
@@ -63,7 +65,7 @@ const MOMENT_TYPE_STYLE: Record<string, MomentStyle> = {
     text: 'text-[15px]',
   },
   dramatic: {
-    glyph: '🎭',
+    glyph: <Glyph name="masks" />,
     ring: 'border-blood-700',
     filet: 'border-l-blood-700',
     text: 'font-body italic text-[15px]',
@@ -325,7 +327,7 @@ export default function ChroniclePage() {
                         <p className={`leading-relaxed ${style.text}`}>
                           {style.ornament && (
                             <span aria-hidden="true" className="mr-1.5 text-gold-500">
-                              ✦
+                              <Glyph name="spark-outline" />
                             </span>
                           )}
                           {m.isQuote ? `« ${m.description} »` : m.description}
