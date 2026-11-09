@@ -1,0 +1,70 @@
+{
+  "files": {
+    "apps/api/src/routes/auth.ts": {
+      "lines": 861
+    },
+    "apps/api/src/routes/campaign.ts": {
+      "lines": 1060
+    },
+    "apps/api/src/routes/characters.ts": {
+      "lines": 1027
+    },
+    "apps/api/src/routes/combat.ts": {
+      "lines": 1827
+    },
+    "apps/api/src/routes/gma.ts": {
+      "lines": 2182
+    },
+    "apps/api/src/routes/helpers.ts": {
+      "lines": 734
+    },
+    "apps/api/src/routes/inventory.ts": {
+      "lines": 1430
+    },
+    "apps/web/src/components/CharacterStateBand.tsx": {
+      "lines": 1236
+    },
+    "apps/web/src/components/GmaAssistantTab.tsx": {
+      "lines": 817
+    },
+    "apps/web/src/components/ItemImageViewer.tsx": {
+      "lines": 1627
+    },
+    "apps/web/src/components/ui.tsx": {
+      "lines": 1156
+    },
+    "apps/web/src/pages/CharacterCreatePage.tsx": {
+      "lines": 985
+    },
+    "apps/web/src/pages/CharacterFeaturesTab.tsx": {
+      "lines": 1138
+    },
+    "apps/web/src/pages/CharacterInventoryPage.tsx": {
+      "lines": 1905
+    },
+    "apps/web/src/pages/CharacterSkillsTab.tsx": {
+      "lines": 882
+    },
+    "apps/web/src/pages/CharacterSpellsTab.tsx": {
+      "lines": 1970
+    },
+    "apps/web/src/pages/CombatPage.tsx": {
+      "lines": 2046
+    },
+    "apps/web/src/pages/DmNotebookPage.tsx": {
+      "lines": 1115
+    },
+    "apps/web/src/pages/GmDashboardPage.tsx": {
+      "lines": 1426
+    },
+    "apps/web/src/pages/NpcPage.tsx": {
+      "lines": 2053
+    },
+    "apps/web/src/pages/PartyPage.tsx": {
+      "lines": 793
+    },
+    "apps/web/src/pages/character/SurvivalPanel.tsx": {
+      "lines": 1999
+    }
+  }
+}
