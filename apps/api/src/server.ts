@@ -24,7 +24,7 @@ import { emailEnabled } from './email/config.ts';
 import { pushEnabled } from './push/config.ts';
 import { errorRateLimit } from './rateLimit.ts';
 import { authRoutes } from './routes/auth.ts';
-import { campaignRoutes } from './routes/campaign.ts';
+import { campaignRoutes } from './routes/campaign/index.ts';
 import { characterFeatureRoutes } from './routes/character-features.ts';
 import { characterMessageRoutes } from './routes/character-messages.ts';
 import { characterNoteRoutes } from './routes/character-notes.ts';

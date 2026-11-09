@@ -3,7 +3,7 @@
  * note MD masquée aux joueurs), avance du jour par tout membre, journal de
  * table partagé (upsert sans toucher météo/note MD), notes privées par
  * personnage/jour (owner-or-GM, isolation entre joueurs). Couvre
- * routes/campaign.ts. Le module vit sur des jours ∻ 1000 pour ignorer le
+ * routes/campaign/. Le module vit sur des jours ∻ 1000 pour ignorer le
  * registre laissé par le module carnet.
  */
 import { api, eq, type Fixtures, ok, type ServerHandle } from './harness.ts';
