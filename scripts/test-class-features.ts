@@ -163,6 +163,21 @@ check('rageDamageBonus @16 = +4', rageDamageBonus(16), 4);
 check('rageDamageBonus @20 = +4', rageDamageBonus(20), 4);
 check('rageDamageBonus sans niveaux de barbare = 0', rageDamageBonus(0), 0);
 
+// --- Barbare : recharge & paliers complémentaires ---
+
+// PHB 2014 : la Rage ne se recharge qu'au repos LONG (jamais au repos court)
+check(
+  'rage : recharge repos long uniquement',
+  effectiveFeatureReset({ catalogId: 'barbare-rage', resetType: null }, 5),
+  'long',
+);
+// PHB 2014 : palier intermédiaire 12-16 — la rage reste à 5 (6 seulement à 17)
+check(
+  'rage @14 = 5 (palier 12-16, PHB 2014)',
+  resourceMaxOf('barbare-rage', barb(14)),
+  5,
+);
+
 // Ki = niveau (repos court) ; points de sorcellerie = niveau (repos long)
 check('ki @7 = 7', resourceMaxOf('moine-ki', mkChar({ characterClass: 'Moine', level: 7 })), 7);
 
