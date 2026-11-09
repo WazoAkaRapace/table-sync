@@ -1,7 +1,7 @@
 [
   {
-    "version": null,
-    "sha": null,
+    "version": "2026.11.09-16",
+    "sha": "390c9ef1",
     "date": "2026-11-09",
     "title": "règle du druide corrigée",
     "items": [
@@ -9,8 +9,8 @@
     ]
   },
   {
-    "version": null,
-    "sha": null,
+    "version": "2026.11.09-15",
+    "sha": "390c9ef1",
     "date": "2026-11-09",
     "title": "couverture de tests SRD 2014 classe par classe",
     "items": [
@@ -18,8 +18,8 @@
     ]
   },
   {
-    "version": null,
-    "sha": null,
+    "version": "2026.11.09-14",
+    "sha": "390c9ef1",
     "date": "2026-11-09",
     "title": "simulation de session complète",
     "items": [
@@ -27,8 +27,8 @@
     ]
   },
   {
-    "version": null,
-    "sha": null,
+    "version": "2026.11.09-13",
+    "sha": "390c9ef1",
     "date": "2026-11-09",
     "title": "déduplication web (notes, bourse, état)",
     "items": [
@@ -36,8 +36,8 @@
     ]
   },
   {
-    "version": null,
-    "sha": null,
+    "version": "2026.11.09-12",
+    "sha": "390c9ef1",
     "date": "2026-11-09",
     "title": "déduplication intra-fichiers de l'API",
     "items": [
@@ -45,8 +45,8 @@
     ]
   },
   {
-    "version": null,
-    "sha": null,
+    "version": "2026.11.09-11",
+    "sha": "390c9ef1",
     "date": "2026-11-09",
     "title": "préambule d'accès fiche partagé (déduplication)",
     "items": [
@@ -54,8 +54,8 @@
     ]
   },
   {
-    "version": null,
-    "sha": null,
+    "version": "2026.11.09-10",
+    "sha": "390c9ef1",
     "date": "2026-11-09",
     "title": "dissolution du fourre-tout helpers (modularité)",
     "items": [
@@ -63,8 +63,8 @@
     ]
   },
   {
-    "version": null,
-    "sha": null,
+    "version": "2026.11.09-9",
+    "sha": "390c9ef1",
     "date": "2026-11-09",
     "title": "découpage gm assistant (modularité)",
     "items": [
@@ -72,8 +72,8 @@
     ]
   },
   {
-    "version": null,
-    "sha": null,
+    "version": "2026.11.09-8",
+    "sha": "390c9ef1",
     "date": "2026-11-09",
     "title": "découpage combat (modularité)",
     "items": [
@@ -81,8 +81,8 @@
     ]
   },
   {
-    "version": null,
-    "sha": null,
+    "version": "2026.11.09-7",
+    "sha": "390c9ef1",
     "date": "2026-11-09",
     "title": "découpage inventory (modularité)",
     "items": [
@@ -90,8 +90,8 @@
     ]
   },
   {
-    "version": null,
-    "sha": null,
+    "version": "2026.11.09-6",
+    "sha": "390c9ef1",
     "date": "2026-11-09",
     "title": "découpage campaign (modularité)",
     "items": [
@@ -99,8 +99,8 @@
     ]
   },
   {
-    "version": null,
-    "sha": null,
+    "version": "2026.11.09-5",
+    "sha": "390c9ef1",
     "date": "2026-11-09",
     "title": "découpage characters (modularité)",
     "items": [
@@ -108,8 +108,8 @@
     ]
   },
   {
-    "version": null,
-    "sha": null,
+    "version": "2026.11.09-4",
+    "sha": "390c9ef1",
     "date": "2026-11-09",
     "title": "validation typebox",
     "items": [
@@ -117,8 +117,8 @@
     ]
   },
   {
-    "version": null,
-    "sha": null,
+    "version": "2026.11.09-3",
+    "sha": "390c9ef1",
     "date": "2026-11-09",
     "title": "gates de modularité et de duplication",
     "items": [
@@ -126,8 +126,8 @@
     ]
   },
   {
-    "version": null,
-    "sha": null,
+    "version": "2026.11.09-2",
+    "sha": "390c9ef1",
     "date": "2026-11-09",
     "title": "typecheck api",
     "items": [
@@ -135,8 +135,8 @@
     ]
   },
   {
-    "version": null,
-    "sha": null,
+    "version": "2026.11.09",
+    "sha": "390c9ef1",
     "date": "2026-11-09",
     "title": "fondations techniques",
     "items": [
