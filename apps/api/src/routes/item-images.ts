@@ -6,7 +6,7 @@
  *
  * Responsiveness contract: image BYTES never ride in list/search/inventory
  * payloads — those carry only the derived hasImage boolean + imageRev (file
- * version, see helpers.imageRevision). The GET below is the single fetch per
+ * version, see lib/mappers.ts imageRevision). The GET below is the single fetch per
  * item (ETag + no-cache : le cache sert, chaque ouverture revalide).
  *
  * GET authenticates via ?token=<JWT> like /ws (an <img src> cannot send an
@@ -28,14 +28,8 @@ import { getDb, getItemImagesDir } from '../db/index.ts';
 import { cols } from '../db/projections.ts';
 import { characters, inventory, items, parties } from '../db/schema.ts';
 import { bus } from '../sync/bus.ts';
-import {
-  imageRevision,
-  isOwnerOrGM,
-  isPartyGM,
-  isPartyMember,
-  mapInventoryEntry,
-  requireUser,
-} from './helpers.ts';
+import { imageRevision, mapInventoryEntry } from './lib/mappers.ts';
+import { isOwnerOrGM, isPartyGM, isPartyMember, requireUser } from './lib/membership.ts';
 import { INVENTORY_WITH_ITEM } from './inventory/index.ts';
 import { langFromReq } from './lang.ts';
 import { apiMsg } from './messages.ts';

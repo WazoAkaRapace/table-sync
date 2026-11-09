@@ -25,7 +25,8 @@ import {
 } from '../../db/schema.ts';
 import { bus } from '../../sync/bus.ts';
 import { breakConcentrationEffectsOnTracker } from '../character-spell-effects.ts';
-import { isPartyGM, mirrorConditionsToCharacter, requireUser } from '../helpers.ts';
+import { mirrorConditionsToCharacter } from '../lib/conditions.ts';
+import { isPartyGM, requireUser } from '../lib/membership.ts';
 import { apiMsg } from '../messages.ts';
 import { getCombatant, mapCombatant, parseConditions } from './shared.ts';
 

@@ -14,7 +14,7 @@ import { cols } from '../../db/projections.ts';
 import { gmaPcLinks, partyGmaLinks, userGmaLinks } from '../../db/schema.ts';
 import { GmaError, gmaErrorToResponse, gmaListAll, gmaRequest } from '../../gma/client.ts';
 import { apiMsg } from '../messages.ts';
-import { requireUser } from '../helpers.ts';
+import { requireUser } from '../lib/membership.ts';
 import {
   desiredPc,
   emitGma,

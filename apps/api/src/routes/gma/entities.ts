@@ -16,7 +16,7 @@ import { cols } from '../../db/projections.ts';
 import { gmaEntityDiscards, gmaEntitySessions, gmaNpcLinks, npcs, users } from '../../db/schema.ts';
 import { gmaErrorToResponse } from '../../gma/client.ts';
 import { bus } from '../../sync/bus.ts';
-import { isPartyGM, isPartyMember, requireUser } from '../helpers.ts';
+import { isPartyGM, isPartyMember, requireUser } from '../lib/membership.ts';
 import { apiMsg } from '../messages.ts';
 import { mapNpc } from '../npcs.ts';
 import {

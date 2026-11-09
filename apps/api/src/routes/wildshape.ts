@@ -32,7 +32,7 @@ import {
 } from '../db/schema.ts';
 import { bus } from '../sync/bus.ts';
 import { activeAcEffectsOf } from './character-spell-effects.ts';
-import { isPartyGM, requireUser } from './helpers.ts';
+import { isPartyGM, requireUser } from './lib/membership.ts';
 import { langFromReq, pickLocalized } from './lang.ts';
 import { apiMsg } from './messages.ts';
 

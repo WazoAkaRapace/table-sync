@@ -15,7 +15,8 @@ import { cols } from '../../db/projections.ts';
 import { characters, inventory, items } from '../../db/schema.ts';
 import { bus } from '../../sync/bus.ts';
 import { mirrorAcToCombatants } from '../character-spell-effects.ts';
-import { isOwnerOrGM, mapInventoryEntry, requireUser } from '../helpers.ts';
+import { mapInventoryEntry } from '../lib/mappers.ts';
+import { isOwnerOrGM, requireUser } from '../lib/membership.ts';
 import { langFromReq } from '../lang.ts';
 import { apiMsg } from '../messages.ts';
 import {

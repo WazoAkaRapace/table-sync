@@ -26,7 +26,7 @@ import {
 } from '../../db/schema.ts';
 import { bus } from '../../sync/bus.ts';
 import { trackerAcOf } from '../character-spell-effects.ts';
-import { isPartyGM, isPartyMember, requireUser } from '../helpers.ts';
+import { isPartyGM, isPartyMember, requireUser } from '../lib/membership.ts';
 import { apiMsg } from '../messages.ts';
 import { getCombatant, getEncounter, mapCombatant, pushSafe } from './shared.ts';
 

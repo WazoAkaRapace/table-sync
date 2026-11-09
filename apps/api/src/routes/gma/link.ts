@@ -23,7 +23,7 @@ import {
 } from '../../db/schema.ts';
 import { gmaErrorToResponse, gmaListAll, gmaRequest } from '../../gma/client.ts';
 import { apiMsg } from '../messages.ts';
-import { isPartyMember, requireUser } from '../helpers.ts';
+import { isPartyMember, requireUser } from '../lib/membership.ts';
 import {
   UUID_RE,
   decryptUserKey,

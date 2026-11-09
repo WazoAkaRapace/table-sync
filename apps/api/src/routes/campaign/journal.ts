@@ -11,7 +11,7 @@ import { getDrizzle } from '../../db/drizzle.ts';
 import { cols } from '../../db/projections.ts';
 import { campaignDayNotes, campaignDays, characters } from '../../db/schema.ts';
 import { bus } from '../../sync/bus.ts';
-import { isOwnerOrGM, requireUser } from '../helpers.ts';
+import { isOwnerOrGM, requireUser } from '../lib/membership.ts';
 import { apiMsg } from '../messages.ts';
 import { MAX_DAY, MAX_TABLE_NOTE_LEN, mapDay, memberGuard } from './shared.ts';
 

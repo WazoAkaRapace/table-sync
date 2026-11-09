@@ -26,7 +26,7 @@ import { cols } from '../db/projections.ts';
 import { characterMessages, characters, partyMembers, users } from '../db/schema.ts';
 import { type PushPayload, type PushSendOptions, sendPushToUser } from '../push/send.ts';
 import { bus } from '../sync/bus.ts';
-import { characterVisibleTo, isPartyGM, isPartyMember, requireUser } from './helpers.ts';
+import { characterVisibleTo, isPartyGM, isPartyMember, requireUser } from './lib/membership.ts';
 import { apiMsg } from './messages.ts';
 
 const MAX_MESSAGE_LENGTH = 2000;

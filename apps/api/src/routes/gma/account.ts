@@ -17,7 +17,7 @@ import {
   maskEmail,
 } from '../../gma/client.ts';
 import { apiMsg } from '../messages.ts';
-import { requireUser } from '../helpers.ts';
+import { requireUser } from '../lib/membership.ts';
 import { getUserKeyRow, nowIso } from './shared.ts';
 
 export async function accountRoutes(app: FastifyInstance) {

@@ -15,7 +15,7 @@ import { getDrizzle } from '../db/drizzle.ts';
 import { normalizeText } from '../db/index.ts';
 import { cols } from '../db/projections.ts';
 import { monsters } from '../db/schema.ts';
-import { requireUser } from './helpers.ts';
+import { requireUser } from './lib/membership.ts';
 import { sendCachedJson } from './httpCache.ts';
 import { type AppLang, langFromReq } from './lang.ts';
 import { apiMsg } from './messages.ts';

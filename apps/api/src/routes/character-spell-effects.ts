@@ -28,13 +28,8 @@ import { getDb } from '../db/index.ts';
 import { cols } from '../db/projections.ts';
 import { characterSpellEffects, characters, combatants, encounters, spells } from '../db/schema.ts';
 import { bus } from '../sync/bus.ts';
-import {
-  characterVisibleTo,
-  equippedAcRows,
-  isPartyGM,
-  isPartyMember,
-  requireUser,
-} from './helpers.ts';
+import { equippedAcRows } from './lib/conditions.ts';
+import { characterVisibleTo, isPartyGM, isPartyMember, requireUser } from './lib/membership.ts';
 import { type AppLang, langFromReq } from './lang.ts';
 import { apiMsg } from './messages.ts';
 import { abilityModifier, computeAC, SPELL_AC_EFFECTS } from '@table-sync/shared';

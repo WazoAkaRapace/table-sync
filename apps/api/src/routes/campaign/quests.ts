@@ -12,7 +12,7 @@ import { getDrizzle } from '../../db/drizzle.ts';
 import { cols } from '../../db/projections.ts';
 import { dmQuests } from '../../db/schema.ts';
 import { bus } from '../../sync/bus.ts';
-import { requireUser } from '../helpers.ts';
+import { requireUser } from '../lib/membership.ts';
 import { apiMsg } from '../messages.ts';
 import { MAX_TITLE_LEN, gmGuard, mapQuest, nextSort } from './shared.ts';
 

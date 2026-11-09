@@ -3,7 +3,7 @@
  * multi-add), initiative, PATCH combatant (HP/temp-HP/concentration
  * mirrors, conditions sync), next-turn expiry, hidden-character purge,
  * deletes. Covers every .prepare site in routes/combat.ts and the two
- * condition-mirror helpers in routes/helpers.ts.
+ * condition-mirror helpers in routes/lib/conditions.ts.
  */
 import {
   api,
@@ -468,7 +468,7 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   });
   eq(r.data.concentrationBroken, 'Paralysé', 'paralyzed breaks concentration');
 
-  // conditions sheet → tracker mirror (helpers.ts)
+  // conditions sheet → tracker mirror (routes/lib/conditions.ts)
   r = await api(base, 'PATCH', `/api/characters/${fx.charAlya.id}`, {
     token: fx.gm.token,
     body: { conditions: ['Aveuglé'] },

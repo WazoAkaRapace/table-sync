@@ -19,15 +19,11 @@ import {
 import { bus } from '../../sync/bus.ts';
 import {
   attachCharacterClasses,
-  characterVisibleTo,
-  isPartyGM,
-  isPartyMember,
-  mapCharacter,
-  mapCharacterSummary,
   replaceCharacterClasses,
-  requireUser,
   validateClassEntries,
-} from '../helpers.ts';
+} from '../lib/character-classes.ts';
+import { mapCharacter, mapCharacterSummary } from '../lib/mappers.ts';
+import { characterVisibleTo, isPartyGM, isPartyMember, requireUser } from '../lib/membership.ts';
 import { sendCachedJson } from '../httpCache.ts';
 // Imports hérités du monolithe (R4_LEGACY, shrink-only) : extraction routes/lib en phase 4b.
 import { loadInventoryView } from '../inventory/index.ts';

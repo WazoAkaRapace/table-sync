@@ -339,7 +339,7 @@ Adaptations (signatures « character mono-classe » → « classes[] » — gard
   (remplacement atomique de l'ensemble des lignes en transaction + resynchronisation des
   dénormalisés). Validation structurelle uniquement : clés connues, niveaux 1-20, somme ≤ 20,
   sous-classes ∈ `CLASS_SUBCLASSES[classe]` et niveau ≥ `SubclassDef.level`. `mapCharacterSummary`
-  (`helpers.ts`) sérialise `classes[]` + `pactSlotsUsed`.
+  (`routes/lib/character-classes.ts`) sérialise `classes[]` + `pactSlotsUsed`.
 - `character-spells.ts` : `classSource` à l'ajout (choice UI), UPSERT sur la nouvelle clé, PATCH/DELETE inchangés.
 - `spells.ts` : filtre `class` accepte une liste (OR sur `classes_json`).
 - `domain-spells.ts` : itère toutes les sources divines avec leur niveau de classe.

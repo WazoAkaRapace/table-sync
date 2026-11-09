@@ -12,7 +12,8 @@ import { cols } from '../../db/projections.ts';
 import { characters, partyGmaLinks, userGmaLinks, users } from '../../db/schema.ts';
 import { decryptSecret, GmaError, gmaCacheTtlMs } from '../../gma/client.ts';
 import { bus } from '../../sync/bus.ts';
-import { attachCharacterClasses, isPartyGM, isPartyMember, requireUser } from '../helpers.ts';
+import { attachCharacterClasses } from '../lib/character-classes.ts';
+import { isPartyGM, isPartyMember, requireUser } from '../lib/membership.ts';
 import { apiMsg } from '../messages.ts';
 export const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

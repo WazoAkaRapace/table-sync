@@ -15,7 +15,7 @@ import { getDrizzle } from '../db/drizzle.ts';
 import { pushSubscriptions } from '../db/schema.ts';
 import { pushEnabled, pushVapidConfig } from '../push/config.ts';
 import { sendPushToUser } from '../push/send.ts';
-import { requireUser } from './helpers.ts';
+import { requireUser } from './lib/membership.ts';
 import { langFromReq } from './lang.ts';
 import { apiMsg } from './messages.ts';
 

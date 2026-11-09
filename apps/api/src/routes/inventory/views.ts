@@ -11,14 +11,9 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../../db/drizzle.ts';
 import { cols } from '../../db/projections.ts';
 import { characters, inventory, items, parties, storageLocations, users } from '../../db/schema.ts';
-import {
-  attachCharacterClasses,
-  characterVisibleTo,
-  isPartyMember,
-  mapCharacter,
-  mapInventoryEntry,
-  requireUser,
-} from '../helpers.ts';
+import { attachCharacterClasses } from '../lib/character-classes.ts';
+import { mapCharacter, mapInventoryEntry } from '../lib/mappers.ts';
+import { characterVisibleTo, isPartyMember, requireUser } from '../lib/membership.ts';
 import { type AppLang, langFromReq } from '../lang.ts';
 import { apiMsg } from '../messages.ts';
 import { INVENTORY_WITH_ITEM } from './shared.ts';
