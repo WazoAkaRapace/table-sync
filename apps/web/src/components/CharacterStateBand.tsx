@@ -686,112 +686,75 @@ export default function CharacterStateBand({
               portent AUCUN delta CA (pense-bête, pas de fiche). */}
           {(bearerRows.length > 0 || castRows.length > 0) && (
             <div className="flex flex-wrap items-center gap-1.5">
-              {canEdit ? (
-                <button
-                  type="button"
-                  onClick={() => setEffectsOpen(true)}
-                  className="flex flex-wrap items-center gap-1.5 text-left min-h-11 py-1"
-                  aria-label={t('band.ca.effets.actifs.count', {
-                    count: bearerRows.length + castRows.length,
-                  })}
-                >
-                  {bearerRows.map((row) => (
-                    <Chip
-                      key={row.id}
-                      tone="gold"
-                      title={
-                        row.expiresOnTurnEnd
-                          ? t('band.effet.chip.title.ephemere', {
-                              name: row.spellName,
-                              mod: effectModLabel(row),
-                            })
-                          : t('band.effet.chip.title', {
-                              name: row.spellName,
-                              mod: effectModLabel(row),
-                            })
-                      }
-                    >
-                      {effectModLabel(row)} · {row.spellName || t('band.effets.sort')}
-                    </Chip>
-                  ))}
-                  {castRows.map((row) =>
-                    row.targetLabel ? (
+              {(() => {
+                // Chips d'effets IDENTIQUES dans les deux branches (éditable =
+                // enveloppées dans le bouton d'ouverture, sinon posées nues) —
+                // une seule fabrication, zéro clone.
+                const effectChips = (
+                  <>
+                    {bearerRows.map((row) => (
                       <Chip
                         key={row.id}
                         tone="gold"
-                        title={t('band.effet.chip.caster.autre.title', {
-                          name: row.spellName,
-                          target: row.targetLabel,
-                        })}
+                        title={
+                          row.expiresOnTurnEnd
+                            ? t('band.effet.chip.title.ephemere', {
+                                name: row.spellName,
+                                mod: effectModLabel(row),
+                              })
+                            : t('band.effet.chip.title', {
+                                name: row.spellName,
+                                mod: effectModLabel(row),
+                              })
+                        }
                       >
-                        {row.spellName || t('band.effets.sort')} → {row.targetLabel}
+                        {effectModLabel(row)} · {row.spellName || t('band.effets.sort')}
                       </Chip>
-                    ) : (
-                      <Chip
-                        key={row.id}
-                        tone="gold"
-                        title={t('band.effet.chip.caster.title', {
-                          name: row.spellName,
-                          mod: effectModLabel(row),
-                          target: targetDisplayName(row),
-                        })}
-                      >
-                        {effectModLabel(row)} · {row.spellName || t('band.effets.sort')} →{' '}
-                        {targetDisplayName(row)}
-                      </Chip>
-                    ),
-                  )}
-                </button>
-              ) : (
-                <>
-                  {bearerRows.map((row) => (
-                    <Chip
-                      key={row.id}
-                      tone="gold"
-                      title={
-                        row.expiresOnTurnEnd
-                          ? t('band.effet.chip.title.ephemere', {
-                              name: row.spellName,
-                              mod: effectModLabel(row),
-                            })
-                          : t('band.effet.chip.title', {
-                              name: row.spellName,
-                              mod: effectModLabel(row),
-                            })
-                      }
-                    >
-                      {effectModLabel(row)} · {row.spellName || t('band.effets.sort')}
-                    </Chip>
-                  ))}
-                  {castRows.map((row) =>
-                    row.targetLabel ? (
-                      <Chip
-                        key={row.id}
-                        tone="gold"
-                        title={t('band.effet.chip.caster.autre.title', {
-                          name: row.spellName,
-                          target: row.targetLabel,
-                        })}
-                      >
-                        {row.spellName || t('band.effets.sort')} → {row.targetLabel}
-                      </Chip>
-                    ) : (
-                      <Chip
-                        key={row.id}
-                        tone="gold"
-                        title={t('band.effet.chip.caster.title', {
-                          name: row.spellName,
-                          mod: effectModLabel(row),
-                          target: targetDisplayName(row),
-                        })}
-                      >
-                        {effectModLabel(row)} · {row.spellName || t('band.effets.sort')} →{' '}
-                        {targetDisplayName(row)}
-                      </Chip>
-                    ),
-                  )}
-                </>
-              )}
+                    ))}
+                    {castRows.map((row) =>
+                      row.targetLabel ? (
+                        <Chip
+                          key={row.id}
+                          tone="gold"
+                          title={t('band.effet.chip.caster.autre.title', {
+                            name: row.spellName,
+                            target: row.targetLabel,
+                          })}
+                        >
+                          {row.spellName || t('band.effets.sort')} → {row.targetLabel}
+                        </Chip>
+                      ) : (
+                        <Chip
+                          key={row.id}
+                          tone="gold"
+                          title={t('band.effet.chip.caster.title', {
+                            name: row.spellName,
+                            mod: effectModLabel(row),
+                            target: targetDisplayName(row),
+                          })}
+                        >
+                          {effectModLabel(row)} · {row.spellName || t('band.effets.sort')} →{' '}
+                          {targetDisplayName(row)}
+                        </Chip>
+                      ),
+                    )}
+                  </>
+                );
+                return canEdit ? (
+                  <button
+                    type="button"
+                    onClick={() => setEffectsOpen(true)}
+                    className="flex flex-wrap items-center gap-1.5 text-left min-h-11 py-1"
+                    aria-label={t('band.ca.effets.actifs.count', {
+                      count: bearerRows.length + castRows.length,
+                    })}
+                  >
+                    {effectChips}
+                  </button>
+                ) : (
+                  effectChips
+                );
+              })()}
               {hasAcOverride && (
                 <Chip tone="orange" title={t('band.ca.manuelle.effet.non.applique.title')}>
                   {t('band.ca.manuelle.effet.non.applique')}
