@@ -27,14 +27,15 @@ import { characterVisibleTo, isOwnerOrGM, isPartyMember, requireUser } from './m
 
 /** characters.* seul — la projection des routes d'écriture. */
 export function getCharacterById(drizzle: ReturnType<typeof getDrizzle>, id: number): any {
-  return drizzle.select(cols(characters)).from(characters).where(eq(characters.id, id)).get() as any;
+  return drizzle
+    .select(cols(characters))
+    .from(characters)
+    .where(eq(characters.id, id))
+    .get() as any;
 }
 
 /** characters.* + owner_name (JOIN users) — la projection des mappers (fiche). */
-export function getCharacterWithOwnerById(
-  drizzle: ReturnType<typeof getDrizzle>,
-  id: number,
-): any {
+export function getCharacterWithOwnerById(drizzle: ReturnType<typeof getDrizzle>, id: number): any {
   return drizzle
     .select({ ...cols(characters), owner_name: users.displayName })
     .from(characters)
@@ -96,7 +97,9 @@ export function requireCharacterAccess(
   req: FastifyRequest,
   reply: FastifyReply,
   charId: number,
-  mode: CharacterAccessMode & { /** Fetch avec le JOIN owner (fiche complète). */ withOwner?: boolean },
+  mode: CharacterAccessMode & {
+    /** Fetch avec le JOIN owner (fiche complète). */ withOwner?: boolean;
+  },
 ): { char: any; userId: number } | null {
   const userId = requireUser(req, reply);
   if (userId === null) return null;

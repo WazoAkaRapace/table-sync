@@ -29,11 +29,7 @@ import { cols } from '../db/projections.ts';
 import { characterSpellEffects, characters, combatants, encounters, spells } from '../db/schema.ts';
 import { bus } from '../sync/bus.ts';
 import { equippedAcRows } from './lib/conditions.ts';
-import {
-  checkCharacterAccess,
-  getCharacterById,
-  requireCharacterAccess,
-} from './lib/access.ts';
+import { checkCharacterAccess, getCharacterById, requireCharacterAccess } from './lib/access.ts';
 import { requireUser } from './lib/membership.ts';
 import { type AppLang, langFromReq } from './lang.ts';
 import { apiMsg } from './messages.ts';

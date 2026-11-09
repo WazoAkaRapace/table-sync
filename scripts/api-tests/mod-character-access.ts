@@ -32,17 +32,21 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   const outsider = await registerUser(base, 'acc-out'); // hors groupe
   const party = await createParty(base, gm.token, 'Accès personnage — test');
   ok(
-    (await api(base, 'POST', '/api/parties/join', {
-      token: owner.token,
-      body: { inviteCode: party.inviteCode },
-    })).status === 201,
+    (
+      await api(base, 'POST', '/api/parties/join', {
+        token: owner.token,
+        body: { inviteCode: party.inviteCode },
+      })
+    ).status === 201,
     'owner joins party',
   );
   ok(
-    (await api(base, 'POST', '/api/parties/join', {
-      token: member.token,
-      body: { inviteCode: party.inviteCode },
-    })).status === 201,
+    (
+      await api(base, 'POST', '/api/parties/join', {
+        token: member.token,
+        body: { inviteCode: party.inviteCode },
+      })
+    ).status === 201,
     'member joins party',
   );
   const char = await createCharacter(base, owner.token, party.id, { name: 'Éponine', maxHp: 10 });
