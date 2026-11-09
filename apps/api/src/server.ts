@@ -49,11 +49,9 @@ import { registerWsRoutes } from './sync/ws.ts';
 
 const PORT = parseInt(process.env.PORT || '4000', 10);
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-only-change-me-in-production';
-if (JWT_SECRET === 'dev-only-change-me-in-production') {
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('JWT_SECRET must be set to a strong random value in production');
-  }
-  console.warn('[server] WARNING: using dev JWT secret — set JWT_SECRET outside local dev');
+const DEV_JWT_SECRET = JWT_SECRET === 'dev-only-change-me-in-production';
+if (DEV_JWT_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('JWT_SECRET must be set to a strong random value in production');
 }
 // CORS allowlist (comma-separated). Empty = reflect any origin (local dev only).
 const CORS_ORIGINS = (process.env.CORS_ORIGIN || '')
@@ -84,6 +82,9 @@ async function buildServer() {
       },
     },
   });
+  if (DEV_JWT_SECRET) {
+    app.log.warn('using dev JWT secret — set JWT_SECRET outside local dev');
+  }
 
   // Plugins
   // Compression des réponses JSON (gzip/brotli selon Accept-Encoding) — sans
@@ -208,6 +209,11 @@ async function buildServer() {
 }
 
 async function start() {
+  // L'application d'abord : pino (app.log) couvre ainsi TOUT le boot —
+  // migrations, seeds et backfills ci-dessous loggeront en JSON structuré.
+  // buildServer n'ouvre pas la DB, la réordonnancer avant migrate/seed est sûr.
+  const app = await buildServer();
+
   // Auto-migrate + seed on boot (idempotent)
   migrate();
   runDrizzleMigrations();
@@ -215,22 +221,22 @@ async function start() {
   try {
     seedItems();
   } catch (err) {
-    console.warn(`[server] seed skipped: ${(err as Error).message}`);
+    app.log.warn(`[server] seed skipped: ${(err as Error).message}`);
   }
   try {
     seedSpells();
   } catch (err) {
-    console.warn(`[server] spell seed skipped: ${(err as Error).message}`);
+    app.log.warn(`[server] spell seed skipped: ${(err as Error).message}`);
   }
   try {
     seedMonsters();
   } catch (err) {
-    console.warn(`[server] monster seed skipped: ${(err as Error).message}`);
+    app.log.warn(`[server] monster seed skipped: ${(err as Error).message}`);
   }
   try {
     backfillMonsterSearchText();
   } catch (err) {
-    console.warn(`[server] monster search backfill skipped: ${(err as Error).message}`);
+    app.log.warn(`[server] monster search backfill skipped: ${(err as Error).message}`);
   }
   try {
     // #143/A7 : réconcilie les lots de munitions ajoutés AVANT le fix — les
@@ -239,7 +245,7 @@ async function start() {
     // aucune ligne de lot n'existe.
     reconcileAmmoPacks();
   } catch (err) {
-    console.warn(`[server] ammo pack reconciliation skipped: ${(err as Error).message}`);
+    app.log.warn(`[server] ammo pack reconciliation skipped: ${(err as Error).message}`);
   }
   try {
     // 2026-11 : la Potion de soin basique existait en double au seed SRD —
@@ -247,21 +253,19 @@ async function start() {
     // « commune », puis la ligne obsolète disparaît. Idempotent.
     reconcileHealingPotionDuplicate();
   } catch (err) {
-    console.warn(`[server] healing potion dedup skipped: ${(err as Error).message}`);
+    app.log.warn(`[server] healing potion dedup skipped: ${(err as Error).message}`);
   }
-
-  const app = await buildServer();
 
   try {
     await app.listen({ port: PORT, host: '0.0.0.0' });
-    console.log(`🚀 API running at http://localhost:${PORT}`);
-    console.log(`🔌 WebSocket at ws://localhost:${PORT}/ws`);
-    console.log(
+    app.log.info(`🚀 API running at http://localhost:${PORT}`);
+    app.log.info(`🔌 WebSocket at ws://localhost:${PORT}/ws`);
+    app.log.info(
       pushEnabled
         ? '🔔 Push notifications: activé'
         : '🔕 Push notifications: désactivé (VAPID absent)',
     );
-    console.log(
+    app.log.info(
       emailEnabled
         ? '📧 Emails transactionnels: activé (mailjet)'
         : '📭 Emails transactionnels: désactivés (MAILJET absent)',
