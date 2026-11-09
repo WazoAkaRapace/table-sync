@@ -12,9 +12,6 @@
     "apps/api/src/routes/helpers.ts": {
       "lines": 734
     },
-    "apps/api/src/routes/inventory.ts": {
-      "lines": 1430
-    },
     "apps/web/src/components/CharacterStateBand.tsx": {
       "lines": 1236
     },

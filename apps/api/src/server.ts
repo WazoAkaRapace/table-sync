@@ -34,7 +34,7 @@ import { characterRoutes } from './routes/characters/index.ts';
 import { combatRoutes } from './routes/combat.ts';
 import { domainSpellRoutes } from './routes/domain-spells.ts';
 import { gmaRoutes } from './routes/gma.ts';
-import { inventoryRoutes } from './routes/inventory.ts';
+import { inventoryRoutes } from './routes/inventory/index.ts';
 import { itemImageRoutes } from './routes/item-images.ts';
 import { itemRoutes } from './routes/items.ts';
 import { locationRoutes } from './routes/locations.ts';

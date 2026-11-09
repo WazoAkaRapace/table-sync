@@ -30,7 +30,7 @@ import {
 } from '../helpers.ts';
 import { sendCachedJson } from '../httpCache.ts';
 // Imports hérités du monolithe (R4_LEGACY, shrink-only) : extraction routes/lib en phase 4b.
-import { loadInventoryView } from '../inventory.ts';
+import { loadInventoryView } from '../inventory/index.ts';
 import { activeAcEffectsOf } from '../character-spell-effects.ts';
 import { langFromReq } from '../lang.ts';
 import { apiMsg } from '../messages.ts';
