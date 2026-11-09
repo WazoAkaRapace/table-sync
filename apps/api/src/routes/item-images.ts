@@ -61,7 +61,12 @@ function getItem(itemId: number): any {
  * creation: the GM always, a member when the party lets players create items.
  * Returns an error reply, or null when allowed.
  */
-function rejectImageMutation(item: any, userId: number, reply: FastifyReply): FastifyReply | null {
+function rejectImageMutation(
+  item: any,
+  req: FastifyRequest,
+  userId: number,
+  reply: FastifyReply,
+): FastifyReply | null {
   if (item.source !== 'custom') {
     return reply.code(403).send({ error: apiMsg(req, 'can only modify custom items') });
   }
@@ -143,7 +148,7 @@ export async function itemImageRoutes(app: FastifyInstance) {
       const itemId = Number(req.params.id);
       const item = getItem(itemId);
       if (!item) return reply.code(404).send({ error: apiMsg(req, 'item not found') });
-      const rejected = rejectImageMutation(item, userId, reply);
+      const rejected = rejectImageMutation(item, req, userId, reply);
       if (rejected) return rejected;
 
       const data = (await req.file()) as MultipartFile | undefined;
@@ -186,7 +191,7 @@ export async function itemImageRoutes(app: FastifyInstance) {
       const itemId = Number(req.params.id);
       const item = getItem(itemId);
       if (!item) return reply.code(404).send({ error: apiMsg(req, 'item not found') });
-      const rejected = rejectImageMutation(item, userId, reply);
+      const rejected = rejectImageMutation(item, req, userId, reply);
       if (rejected) return rejected;
 
       if (item.image_url) {

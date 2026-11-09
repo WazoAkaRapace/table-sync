@@ -9,7 +9,7 @@ import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
 import multipart from '@fastify/multipart';
 import websocket from '@fastify/websocket';
-import Fastify from 'fastify';
+import Fastify, { type FastifyError, type FastifyReply, type FastifyRequest } from 'fastify';
 import { verifyAccess } from './auth/refresh.ts';
 import {
   backfillItemBases,
@@ -49,11 +49,9 @@ import { registerWsRoutes } from './sync/ws.ts';
 
 const PORT = parseInt(process.env.PORT || '4000', 10);
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-only-change-me-in-production';
-if (JWT_SECRET === 'dev-only-change-me-in-production') {
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('JWT_SECRET must be set to a strong random value in production');
-  }
-  console.warn('[server] WARNING: using dev JWT secret — set JWT_SECRET outside local dev');
+const DEV_JWT_SECRET = JWT_SECRET === 'dev-only-change-me-in-production';
+if (DEV_JWT_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('JWT_SECRET must be set to a strong random value in production');
 }
 // CORS allowlist (comma-separated). Empty = reflect any origin (local dev only).
 const CORS_ORIGINS = (process.env.CORS_ORIGIN || '')
@@ -66,7 +64,10 @@ async function buildServer() {
     logger: {
       serializers: {
         // Strip the WS auth token (?token=<JWT>) from logged URLs.
-        req(req: any) {
+        // remoteAddress/remotePort existent sur l'objet requête à l'exécution
+        // mais pas sur le type FastifyRequest de cette version — typage
+        // structurel minimal au lieu de `any`.
+        req(req: FastifyRequest & { remoteAddress?: string; remotePort?: number }) {
           const url =
             typeof req.url === 'string'
               ? req.url.replace(/([?&])token=[^&]*/, '$1token=***')
@@ -81,6 +82,9 @@ async function buildServer() {
       },
     },
   });
+  if (DEV_JWT_SECRET) {
+    app.log.warn('using dev JWT secret — set JWT_SECRET outside local dev');
+  }
 
   // Plugins
   // Compression des réponses JSON (gzip/brotli selon Accept-Encoding) — sans
@@ -109,12 +113,38 @@ async function buildServer() {
   await app.register(multipart, { limits: { fileSize: 5 * 1024 * 1024, files: 1 } });
   await app.register(websocket);
 
+  // Gestionnaire d'erreurs global : toute erreur NON anticipée rend un 500
+  // JSON structuré { error: <message> } (le contrat {error} existant) au lieu
+  // du payload Fastify par défaut — la stack part dans les logs serveur
+  // (app.log.error), JAMAIS dans la réponse ; en NODE_ENV=production le
+  // message client devient générique. Les erreurs < 500 (validation Fastify,
+  // 4xx métier) passent telles quelles : les 400 apiMsg i18n des routes ne
+  // doivent jamais être réécrits (des tests les épignent).
+  app.setErrorHandler((err: FastifyError, _request: FastifyRequest, reply: FastifyReply) => {
+    const status = err.statusCode ?? 500;
+    if (reply.sent) return; // la route a déjà répondu : ne rien réécrire
+    if (status < 500) return reply.send(err);
+    app.log.error(err);
+    const message =
+      process.env.NODE_ENV === 'production' ? 'erreur interne' : (err.message ?? 'erreur interne');
+    return reply.status(500).send({ error: message });
+  });
+
   // Health check (public)
   app.get('/api/health', async () => ({ status: 'ok', time: new Date().toISOString() }));
 
+  // Route de test du gestionnaire d'erreurs — montée UNIQUEMENT sous
+  // TEST_ONLY=error-handler (mod-error-handler.ts boote sa propre instance
+  // avec cette variable). Hors /api : hors du garde d'auth global.
+  if (process.env.TEST_ONLY === 'error-handler') {
+    app.get('/__test/boom', async () => {
+      throw new Error('boom intentionnel (error-handler)');
+    });
+  }
+
   // Auth decorator — header Authorization d'abord (scripts/tests), sinon le
   // cookie HttpOnly ts_access (le chemin du navigateur). Cf. verifyAccess.
-  app.decorate('authenticate', async (request: any, reply: any) => {
+  app.decorate('authenticate', async (request: FastifyRequest, reply: FastifyReply) => {
     if (!(await verifyAccess(request))) {
       reply.code(401).send({ error: 'unauthorized' });
     }
@@ -126,7 +156,7 @@ async function buildServer() {
   // siblings self-authenticate via their onRequest hook). GET /api/auth/token
   // n'est PAS dans l'allowlist : elle est authentifiée par le cookie
   // ts_access (c'est l'échange contrôlé JWT ↔ cookie pour WS/images).
-  app.addHook('onRequest', async (request: any, reply: any) => {
+  app.addHook('onRequest', async (request: FastifyRequest, reply: FastifyReply) => {
     const url = request.url.split('?')[0];
     if (
       url === '/api/health' ||
@@ -179,6 +209,11 @@ async function buildServer() {
 }
 
 async function start() {
+  // L'application d'abord : pino (app.log) couvre ainsi TOUT le boot —
+  // migrations, seeds et backfills ci-dessous loggeront en JSON structuré.
+  // buildServer n'ouvre pas la DB, la réordonnancer avant migrate/seed est sûr.
+  const app = await buildServer();
+
   // Auto-migrate + seed on boot (idempotent)
   migrate();
   runDrizzleMigrations();
@@ -186,22 +221,22 @@ async function start() {
   try {
     seedItems();
   } catch (err) {
-    console.warn(`[server] seed skipped: ${(err as Error).message}`);
+    app.log.warn(`[server] seed skipped: ${(err as Error).message}`);
   }
   try {
     seedSpells();
   } catch (err) {
-    console.warn(`[server] spell seed skipped: ${(err as Error).message}`);
+    app.log.warn(`[server] spell seed skipped: ${(err as Error).message}`);
   }
   try {
     seedMonsters();
   } catch (err) {
-    console.warn(`[server] monster seed skipped: ${(err as Error).message}`);
+    app.log.warn(`[server] monster seed skipped: ${(err as Error).message}`);
   }
   try {
     backfillMonsterSearchText();
   } catch (err) {
-    console.warn(`[server] monster search backfill skipped: ${(err as Error).message}`);
+    app.log.warn(`[server] monster search backfill skipped: ${(err as Error).message}`);
   }
   try {
     // #143/A7 : réconcilie les lots de munitions ajoutés AVANT le fix — les
@@ -210,7 +245,7 @@ async function start() {
     // aucune ligne de lot n'existe.
     reconcileAmmoPacks();
   } catch (err) {
-    console.warn(`[server] ammo pack reconciliation skipped: ${(err as Error).message}`);
+    app.log.warn(`[server] ammo pack reconciliation skipped: ${(err as Error).message}`);
   }
   try {
     // 2026-11 : la Potion de soin basique existait en double au seed SRD —
@@ -218,21 +253,19 @@ async function start() {
     // « commune », puis la ligne obsolète disparaît. Idempotent.
     reconcileHealingPotionDuplicate();
   } catch (err) {
-    console.warn(`[server] healing potion dedup skipped: ${(err as Error).message}`);
+    app.log.warn(`[server] healing potion dedup skipped: ${(err as Error).message}`);
   }
-
-  const app = await buildServer();
 
   try {
     await app.listen({ port: PORT, host: '0.0.0.0' });
-    console.log(`🚀 API running at http://localhost:${PORT}`);
-    console.log(`🔌 WebSocket at ws://localhost:${PORT}/ws`);
-    console.log(
+    app.log.info(`🚀 API running at http://localhost:${PORT}`);
+    app.log.info(`🔌 WebSocket at ws://localhost:${PORT}/ws`);
+    app.log.info(
       pushEnabled
         ? '🔔 Push notifications: activé'
         : '🔕 Push notifications: désactivé (VAPID absent)',
     );
-    console.log(
+    app.log.info(
       emailEnabled
         ? '📧 Emails transactionnels: activé (mailjet)'
         : '📭 Emails transactionnels: désactivés (MAILJET absent)',

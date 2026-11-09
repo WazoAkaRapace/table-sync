@@ -26,6 +26,7 @@ import { run as combat } from './api-tests/mod-combat.ts';
 import { run as combatAudit } from './api-tests/mod-combat-audit.ts';
 import { run as containerTransfer } from './api-tests/mod-container-transfer.ts';
 import { run as email } from './api-tests/mod-email.ts';
+import { run as errorHandler } from './api-tests/mod-error-handler.ts';
 import { run as featuresNotes } from './api-tests/mod-features-notes.ts';
 import { run as gma } from './api-tests/mod-gma.ts';
 import { run as heartbeat } from './api-tests/mod-heartbeat.ts';
@@ -79,6 +80,7 @@ const MODULES: Array<{
   { name: 'heartbeat websocket', run: heartbeat },
   { name: 'push notifications', run: push },
   { name: 'emails transactionnels', run: email },
+  { name: 'gestionnaire d’erreurs global', run: errorHandler },
 ];
 
 async function main(): Promise<void> {

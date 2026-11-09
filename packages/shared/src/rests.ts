@@ -15,6 +15,7 @@ import {
 } from './classFeatures.ts';
 import {
   type Character,
+  type CharacterFeature,
   classesOf,
   findClass,
   hitDiceByClassOf,
