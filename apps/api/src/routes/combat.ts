@@ -406,7 +406,8 @@ export async function combatRoutes(app: FastifyInstance) {
           .select({ one: sql`1` })
           .from(combatantsTable)
           .innerJoin(charactersTable, eq(charactersTable.id, combatantsTable.characterId))
-          .where(and(eq(combatantsTable.encounterId, enc.id), eq(charactersTable.ownerId, userId)))
+          // Route sous le garde global : userId toujours résolu ici
+          .where(and(eq(combatantsTable.encounterId, enc.id), eq(charactersTable.ownerId, userId!)))
           .limit(1)
           .get();
         if (!isInEncounter) {

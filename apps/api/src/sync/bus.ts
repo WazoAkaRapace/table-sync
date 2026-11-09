@@ -66,6 +66,12 @@ export interface SyncEvent {
     | 'note'
     | 'quest'
     | 'countdown'
+    // Carnet du MD — édition directe d'un jour archivé (météo/note)
+    | 'calendar'
+    // Renommage du groupe (registre /parties)
+    | 'rename'
+    // CA de combatant resynchronisée depuis la fiche (character-spell-effects)
+    | 'ac'
     | 'delete';
   itemName?: string;
   actorUserId?: number;

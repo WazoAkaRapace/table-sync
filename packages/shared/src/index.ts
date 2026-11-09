@@ -787,6 +787,8 @@ export interface CreateCharacterPayload {
   maxHp?: number;
   currentHp?: number;
   capacityMultiplier?: number;
+  /** Vitesse de base explicite (m) — absente = dérivée de l'espèce SRD (API). */
+  speed?: number;
   characterClass?: string;
   level?: number;
   /** Multiclass creation (campaigns starting above level 1); position 0 = starting class. */
@@ -823,7 +825,9 @@ export interface PatchCharacterPayload {
   intelligence?: number;
   wisdom?: number;
   charisma?: number;
-  characterClass?: string | null;
+  /** Toujours une clé de classe NON NULLLE (character_classes.class_key NOT NULL) ;
+   *  null n'est jamais envoyé par le client — absent = inchangé. */
+  characterClass?: string;
   race?: string | null;
   background?: string | null;
   speed?: number;
@@ -5549,9 +5553,10 @@ export const ENCUMBRANCE_LABELS_FR: Record<EncumbranceState['tier'], string> = {
 export interface MonsterAction {
   name: string;
   desc: string;
-  attackBonus?: number;
-  damageDice?: string;
-  damageType?: string;
+  /** null = non analysé du texte (import bilingue — voir mergeLocalizedActions). */
+  attackBonus?: number | null;
+  damageDice?: string | null;
+  damageType?: string | null;
   cost?: number; // legendary actions only: 1/2/3
 }
 
