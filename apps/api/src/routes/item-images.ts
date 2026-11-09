@@ -137,24 +137,13 @@ export async function itemImageRoutes(app: FastifyInstance) {
     '/items/:id/image',
     { onRequest: [(app as any).authenticate], bodyLimit: 5 * 1024 * 1024 },
     async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const itemId = Number(req.params.id);
-      const item = getItem(itemId);
-      if (!item) return reply.code(404).send({ error: apiMsg(req, 'item not found') });
-      const rejected = rejectImageMutation(item, req, userId, reply);
-      if (rejected) return rejected;
+      const ctx = getImageItem(req, reply);
+      if (ctx === null) return;
+      const { userId, itemId, item } = ctx;
 
-      const data = (await req.file()) as MultipartFile | undefined;
-      if (!data) return reply.code(400).send({ error: apiMsg(req, 'image field is required') });
-      const buffer = await data.toBuffer();
-
-      if (buffer.length === 0 || buffer.length > MAX_IMAGE_BYTES) {
-        return reply.code(413).send({ error: apiMsg(req, 'image must be at most 2 MB') });
-      }
-      if (!sniffImageMime(buffer)) {
-        return reply.code(400).send({ error: apiMsg(req, 'file is not a JPEG or PNG image') });
-      }
+      const upload = await readImageUpload(req, reply);
+      if (upload === null) return;
+      const buffer = upload.buffer;
 
       const dir = getItemImagesDir();
       mkdirSync(dir, { recursive: true });
@@ -180,13 +169,9 @@ export async function itemImageRoutes(app: FastifyInstance) {
     '/items/:id/image',
     { onRequest: [(app as any).authenticate] },
     async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const itemId = Number(req.params.id);
-      const item = getItem(itemId);
-      if (!item) return reply.code(404).send({ error: apiMsg(req, 'item not found') });
-      const rejected = rejectImageMutation(item, req, userId, reply);
-      if (rejected) return rejected;
+      const ctx = getImageItem(req, reply);
+      if (ctx === null) return;
+      const { userId, itemId, item } = ctx;
 
       if (item.image_url) {
         const filePath = join(getItemImagesDir(), item.image_url);
@@ -213,48 +198,21 @@ export async function itemImageRoutes(app: FastifyInstance) {
   // de base n'est jamais touchée. Re-annoter un dérivé écrase SON fichier —
   // jamais de second niveau de dérivation.
 
-  /** The inventory row (with its item, i_ aliases) for one inventory id. */
-  const getEntryWithItem = (invId: number): any =>
-    getDrizzle()
-      .select(INVENTORY_WITH_ITEM)
-      .from(inventory)
-      .innerJoin(items, eq(items.id, inventory.itemId))
-      .where(eq(inventory.id, invId))
-      .get() ?? null;
-
   app.post(
     '/inventory/:id/annotation',
     { onRequest: [(app as any).authenticate], bodyLimit: 5 * 1024 * 1024 },
     async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const drizzle = getDrizzle();
-
-      const entry = getEntryWithItem(Number(req.params.id));
-      if (!entry) return reply.code(404).send({ error: apiMsg(req, 'inventory entry not found') });
-      const char = drizzle
-        .select(cols(characters))
-        .from(characters)
-        .where(eq(characters.id, entry.character_id))
-        .get() as any;
-      if (!char) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
-      if (!isOwnerOrGM(char, userId)) {
-        return reply.code(403).send({ error: apiMsg(req, 'only the owner or GM can annotate') });
-      }
+      const ctx = await getAnnotationEntry(req, reply);
+      if (ctx === null) return;
+      const { userId, entry, char, drizzle } = ctx;
       // Annoter n'a de sens que sur un objet illustré — on dessine SUR l'image.
       if (!entry.i_image_url) {
         return reply.code(400).send({ error: apiMsg(req, 'item has no illustration to annotate') });
       }
 
-      const data = (await req.file()) as MultipartFile | undefined;
-      if (!data) return reply.code(400).send({ error: apiMsg(req, 'image field is required') });
-      const buffer = await data.toBuffer();
-      if (buffer.length === 0 || buffer.length > MAX_IMAGE_BYTES) {
-        return reply.code(413).send({ error: apiMsg(req, 'image must be at most 2 MB') });
-      }
-      if (!sniffImageMime(buffer)) {
-        return reply.code(400).send({ error: apiMsg(req, 'file is not a JPEG or PNG image') });
-      }
+      const upload = await readImageUpload(req, reply);
+      if (upload === null) return;
+      const buffer = upload.buffer;
 
       // L'objet porté : dérivé existant (écrasement) ou objet de base (dérivation).
       const carried = getItem(entry.item_id);
@@ -335,22 +293,7 @@ export async function itemImageRoutes(app: FastifyInstance) {
         }
       })();
 
-      bus.emitChange({
-        type: 'inventory:change',
-        partyId: char.party_id,
-        characterId: char.id,
-        action: 'adjust',
-        actorUserId: userId,
-      });
-      bus.emitChange({
-        type: 'party:change',
-        partyId: char.party_id,
-        action: 'custom-item',
-        actorUserId: userId,
-      });
-      return reply
-        .code(200)
-        .send({ entry: mapInventoryEntry(getEntryWithItem(updatedEntryId), langFromReq(req)) });
+      emitAnnotationChanges(char, userId, updatedEntryId, req, reply);
     },
   );
 
@@ -359,21 +302,9 @@ export async function itemImageRoutes(app: FastifyInstance) {
     '/inventory/:id/annotation/reset',
     { onRequest: [(app as any).authenticate] },
     async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const drizzle = getDrizzle();
-
-      const entry = getEntryWithItem(Number(req.params.id));
-      if (!entry) return reply.code(404).send({ error: apiMsg(req, 'inventory entry not found') });
-      const char = drizzle
-        .select(cols(characters))
-        .from(characters)
-        .where(eq(characters.id, entry.character_id))
-        .get() as any;
-      if (!char) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
-      if (!isOwnerOrGM(char, userId)) {
-        return reply.code(403).send({ error: apiMsg(req, 'only the owner or GM can annotate') });
-      }
+      const ctx = await getAnnotationEntry(req, reply);
+      if (ctx === null) return;
+      const { userId, entry, char, drizzle } = ctx;
       const derived = getItem(entry.item_id);
       // Base supprimée entre-temps → SET NULL → la ligne n'est plus « annotée ».
       if (!derived || derived.derived_from_item_id == null) {
@@ -431,22 +362,131 @@ export async function itemImageRoutes(app: FastifyInstance) {
         }
       })();
 
-      bus.emitChange({
-        type: 'inventory:change',
-        partyId: char.party_id,
-        characterId: char.id,
-        action: 'adjust',
-        actorUserId: userId,
-      });
-      bus.emitChange({
-        type: 'party:change',
-        partyId: char.party_id,
-        action: 'custom-item',
-        actorUserId: userId,
-      });
-      return reply
-        .code(200)
-        .send({ entry: mapInventoryEntry(getEntryWithItem(updatedEntryId), langFromReq(req)) });
+      emitAnnotationChanges(char, userId, updatedEntryId, req, reply);
     },
   );
+}
+
+/** The inventory row (with its item, i_ aliases) for one inventory id. */
+function getEntryWithItem(invId: number): any {
+  return (
+    getDrizzle()
+      .select(INVENTORY_WITH_ITEM)
+      .from(inventory)
+      .innerJoin(items, eq(items.id, inventory.itemId))
+      .where(eq(inventory.id, invId))
+      .get() ?? null
+  );
+}
+
+/**
+ * Porte « objet illustrable » (PUT/DELETE /items/:id/image) : 404 « item not
+ * found », puis la garde des mutations d'image (custom + droits du groupe).
+ * Renvoie null après avoir envoyé la réponse — l'appelant fait `return`.
+ */
+function getImageItem(
+  req: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply,
+): { userId: number; itemId: number; item: any } | null {
+  const userId = requireUser(req, reply);
+  if (userId === null) return null;
+  const itemId = Number(req.params.id);
+  const item = getItem(itemId);
+  if (!item) {
+    reply.code(404).send({ error: apiMsg(req, 'item not found') });
+    return null;
+  }
+  const rejected = rejectImageMutation(item, req, userId, reply);
+  if (rejected) return null;
+  return { userId, itemId, item };
+}
+
+/**
+ * Porte « annotation d'entrée » (POST /inventory/:id/annotation[/reset]) :
+ * 404 entrée, 404 personnage, puis owner/MD (403 « …can annotate »). Renvoie
+ * null après avoir envoyé la réponse — l'appelant fait `return`.
+ */
+async function getAnnotationEntry(
+  req: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply,
+): Promise<{ userId: number; entry: any; char: any; drizzle: ReturnType<typeof getDrizzle> } | null> {
+  const userId = requireUser(req, reply);
+  if (userId === null) return null;
+  const drizzle = getDrizzle();
+
+  const entry = getEntryWithItem(Number(req.params.id));
+  if (!entry) {
+    reply.code(404).send({ error: apiMsg(req, 'inventory entry not found') });
+    return null;
+  }
+  const char = drizzle
+    .select(cols(characters))
+    .from(characters)
+    .where(eq(characters.id, entry.character_id))
+    .get() as any;
+  if (!char) {
+    reply.code(404).send({ error: apiMsg(req, 'character not found') });
+    return null;
+  }
+  if (!isOwnerOrGM(char, userId)) {
+    reply.code(403).send({ error: apiMsg(req, 'only the owner or GM can annotate') });
+    return null;
+  }
+  return { userId, entry, char, drizzle };
+}
+
+/**
+ * Upload d'image partagé (PUT image, POST annotation) : champ multipart
+ * requis (400), taille ≤ MAX_IMAGE_BYTES (413), JPEG/PNG détecté au sniff
+ * (400). Renvoie null après avoir envoyé la réponse.
+ */
+async function readImageUpload(
+  req: FastifyRequest,
+  reply: FastifyReply,
+): Promise<{ data: MultipartFile; buffer: Buffer } | null> {
+  const data = (await req.file()) as MultipartFile | undefined;
+  if (!data) {
+    reply.code(400).send({ error: apiMsg(req, 'image field is required') });
+    return null;
+  }
+  const buffer = await data.toBuffer();
+  if (buffer.length === 0 || buffer.length > MAX_IMAGE_BYTES) {
+    reply.code(413).send({ error: apiMsg(req, 'image must be at most 2 MB') });
+    return null;
+  }
+  if (!sniffImageMime(buffer)) {
+    reply.code(400).send({ error: apiMsg(req, 'file is not a JPEG or PNG image') });
+    return null;
+  }
+  return { data, buffer };
+}
+
+/**
+ * Queue d'annotation : émission inventory:change 'adjust' + party:change
+ * 'custom-item', puis réponse 200 { entry } rechargée (même contrat que le
+ * PATCH quantité).
+ */
+function emitAnnotationChanges(
+  char: any,
+  userId: number,
+  updatedEntryId: number,
+  req: FastifyRequest,
+  reply: FastifyReply,
+): FastifyReply {
+  bus.emitChange({
+    type: 'inventory:change',
+    partyId: char.party_id,
+    characterId: char.id,
+    action: 'adjust',
+    actorUserId: userId,
+  });
+  bus.emitChange({
+    type: 'party:change',
+    partyId: char.party_id,
+    action: 'custom-item',
+    actorUserId: userId,
+  });
+  return reply
+    .code(200)
+    .send({ entry: mapInventoryEntry(getEntryWithItem(updatedEntryId), langFromReq(req)) });
 }
