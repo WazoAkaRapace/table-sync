@@ -140,7 +140,7 @@ export function breakConcentrationEffectsOnTracker(
   for (const bearerId of bearerIds) {
     // Les lignes « Autre » vivent sur la fiche du lanceur mais n'y portent
     // aucune CA ; le miroir est idempotent — sans combatant, rien ne bouge.
-    mirrorAcToCombatants(bearerId, actorUserId, { emit: false });
+    mirrorAcToCombatants(bearerId, actorUserId, { emit: 'per-encounter' });
   }
   return bearerIds;
 }
@@ -225,13 +225,17 @@ export function trackerAcOf(char: any): number {
 export function mirrorAcToCombatants(
   charId: number,
   actorUserId: number,
-  options: { emit?: boolean } = {},
+  options: { emit?: boolean | 'per-encounter' } = {},
 ): void {
   const drizzle = getDrizzle();
   const char = getCharacter(drizzle, charId);
   if (!char || char.wild_shape_slug) return;
   const rows = drizzle
-    .select({ id: combatants.id, armor_class: combatants.armorClass })
+    .select({
+      id: combatants.id,
+      armor_class: combatants.armorClass,
+      encounter_id: encounters.id,
+    })
     .from(combatants)
     .innerJoin(encounters, eq(combatants.encounterId, encounters.id))
     .where(
@@ -245,12 +249,28 @@ export function mirrorAcToCombatants(
   if (rows.length === 0) return;
   const ac = trackerAcOf(char);
   let changed = false;
+  const affectedEncounterIds = new Set<number>();
   for (const row of rows) {
     if (row.armor_class === ac) continue;
     drizzle.update(combatants).set({ armorClass: ac }).where(eq(combatants.id, row.id)).run();
     changed = true;
+    affectedEncounterIds.add(row.encounter_id);
   }
-  if (changed && options.emit !== false) {
+  if (!changed) return;
+  if (options.emit === 'per-encounter') {
+    // Une émission CHIRURGICALE par rencontre affectée (CodeRabbit #281 :
+    // le porteur peut combattre dans PLUSIEURS rencontres — l'émission
+    // unique de la route appelante ne couvre que la sienne).
+    for (const encounterId of affectedEncounterIds) {
+      bus.emitChange({
+        type: 'combat:change',
+        partyId: char.party_id,
+        encounterId,
+        action: 'ac',
+        actorUserId,
+      });
+    }
+  } else if (options.emit !== false) {
     bus.emitChange({ type: 'combat:change', partyId: char.party_id, action: 'ac', actorUserId });
   }
 }

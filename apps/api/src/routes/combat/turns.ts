@@ -366,7 +366,9 @@ function advanceTurnTx(
         if (c.characterId) {
           const expiredBearers = expireEphemeralEffects(c.characterId);
           for (const bearerId of expiredBearers) {
-            mirrorAcToCombatants(bearerId, userId, { emit: false });
+            // per-encounter : le porteur peut combattre ailleurs — chaque
+            // traqueur affecté reçoit SON combat:change (CodeRabbit #281).
+            mirrorAcToCombatants(bearerId, userId, { emit: 'per-encounter' });
             bus.emitChange({
               type: 'character:change',
               partyId: enc.partyId,
