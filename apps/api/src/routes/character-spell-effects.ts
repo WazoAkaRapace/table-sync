@@ -29,7 +29,12 @@ import { cols } from '../db/projections.ts';
 import { characterSpellEffects, characters, combatants, encounters, spells } from '../db/schema.ts';
 import { bus } from '../sync/bus.ts';
 import { equippedAcRows } from './lib/conditions.ts';
-import { characterVisibleTo, isPartyGM, isPartyMember, requireUser } from './lib/membership.ts';
+import {
+  checkCharacterAccess,
+  getCharacterById,
+  requireCharacterAccess,
+} from './lib/access.ts';
+import { requireUser } from './lib/membership.ts';
 import { type AppLang, langFromReq } from './lang.ts';
 import { apiMsg } from './messages.ts';
 import { abilityModifier, computeAC, SPELL_AC_EFFECTS } from '@table-sync/shared';
@@ -40,19 +45,6 @@ interface CreateSpellEffectPayload {
   targetCharacterId?: number;
   /** v2 « Autre » : nom libre de la cible sans fiche (trim non vide, ≤ 60). */
   targetLabel?: string;
-}
-
-function getCharacter(drizzle: ReturnType<typeof getDrizzle>, id: number): any {
-  return drizzle
-    .select(cols(characters))
-    .from(characters)
-    .where(eq(characters.id, id))
-    .get() as any;
-}
-
-/** Returns true if the user is the owner or the GM of the character's party. */
-function isOwnerOrGM(char: any, userId: number): boolean {
-  return char.owner_id === userId || isPartyGM(char.party_id, userId);
 }
 
 /**
@@ -223,7 +215,7 @@ export function mirrorAcToCombatants(
   options: { emit?: boolean | 'per-encounter' } = {},
 ): void {
   const drizzle = getDrizzle();
-  const char = getCharacter(drizzle, charId);
+  const char = getCharacterById(drizzle, charId);
   if (!char || char.wild_shape_slug) return;
   const rows = drizzle
     .select({
@@ -306,18 +298,12 @@ export async function characterSpellEffectRoutes(app: FastifyInstance) {
   app.get(
     '/characters/:id/spell-effects',
     async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
+      const access = requireCharacterAccess(req, reply, Number(req.params.id), {
+        access: 'member-visible',
+      });
+      if (!access) return;
+      const { char } = access;
       const drizzle = getDrizzle();
-      const char = getCharacter(drizzle, Number(req.params.id));
-      if (!char) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
-      if (!isPartyMember(char.party_id, userId)) {
-        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
-      }
-      // Personnage caché : 404 pour tout le monde sauf owner + MD.
-      if (!characterVisibleTo(char, userId)) {
-        return reply.code(404).send({ error: apiMsg(req, 'character not found') });
-      }
       const lang = langFromReq(req);
       // v2 : les effets PORTÉS par :id (SA CA) plus les effets CASTÉS par
       // :id vers autrui / « Autre » (les chips du lanceur) — role sur chaque
@@ -376,19 +362,14 @@ export async function characterSpellEffectRoutes(app: FastifyInstance) {
       req: FastifyRequest<{ Params: { id: string }; Body: CreateSpellEffectPayload }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
+      const access = requireCharacterAccess(req, reply, Number(req.params.id), {
+        access: 'owner-or-gm',
+        requireMember: true,
+        forbiddenMsg: 'only the owner or GM can modify spell effects',
+      });
+      if (!access) return;
+      const { char, userId } = access;
       const drizzle = getDrizzle();
-      const char = getCharacter(drizzle, Number(req.params.id));
-      if (!char) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
-      if (!isPartyMember(char.party_id, userId)) {
-        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
-      }
-      if (!isOwnerOrGM(char, userId)) {
-        return reply
-          .code(403)
-          .send({ error: apiMsg(req, 'only the owner or GM can modify spell effects') });
-      }
       const body = req.body || ({} as CreateSpellEffectPayload);
       if (typeof body.spellId !== 'number' || !Number.isInteger(body.spellId)) {
         return reply.code(400).send({ error: apiMsg(req, 'spellId is required') });
@@ -427,7 +408,7 @@ export async function characterSpellEffectRoutes(app: FastifyInstance) {
         ) {
           return reply.code(400).send({ error: apiMsg(req, 'targetCharacterId is required') });
         }
-        const targetChar = getCharacter(drizzle, body.targetCharacterId);
+        const targetChar = getCharacterById(drizzle, body.targetCharacterId);
         // Le picker ne liste que des persos du même groupe non cachés — la
         // règle est répliquée côté API : autre groupe / caché / inexistant
         // → même 404 (un 404 ne divulgue pas l'existence d'une fiche secrète).
@@ -528,7 +509,7 @@ export async function characterSpellEffectRoutes(app: FastifyInstance) {
       // ET le LANCEUR (ses chips / sa concentration) rafraîchissent chacun —
       // deux emitChange, chacun avec actorUserId. Pour « Autre » : le lanceur
       // seul (aucune fiche cible).
-      const bearerRow = target.kind === 'character' ? getCharacter(drizzle, target.id) : null;
+      const bearerRow = target.kind === 'character' ? getCharacterById(drizzle, target.id) : null;
       bus.emitChange({
         type: 'character:change',
         partyId: char.party_id,
@@ -562,19 +543,19 @@ export async function characterSpellEffectRoutes(app: FastifyInstance) {
         .where(eq(characterSpellEffects.id, Number(req.params.effectId)))
         .get() as any;
       if (!effect) return reply.code(404).send({ error: apiMsg(req, 'effect not found') });
-      const char = getCharacter(drizzle, effect.character_id);
+      const char = getCharacterById(drizzle, effect.character_id);
       if (!char) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
-      if (!isPartyMember(char.party_id, userId)) {
-        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
-      }
       // Le porteur de ligne reste la porte d'entrée (le MD lève depuis la
       // fiche de la CIBLE comme depuis celle du lanceur — les deux voient
       // la ligne) : owner du porteur ou MD du groupe.
-      if (!isOwnerOrGM(char, userId)) {
-        return reply
-          .code(403)
-          .send({ error: apiMsg(req, 'only the owner or GM can modify spell effects') });
-      }
+      if (
+        !checkCharacterAccess(req, reply, char, userId, {
+          access: 'owner-or-gm',
+          requireMember: true,
+          forbiddenMsg: 'only the owner or GM can modify spell effects',
+        })
+      )
+        return;
       if (!effect.active) {
         return reply.code(409).send({ error: apiMsg(req, 'cet effet est déjà levé') });
       }
@@ -582,7 +563,7 @@ export async function characterSpellEffectRoutes(app: FastifyInstance) {
       // juge sur LUI. Lignes sans lanceur (posées à la main par un MD) : la
       // concentration du porteur n'est plus gérée par ces lignes-là.
       const caster = effect.caster_character_id
-        ? getCharacter(drizzle, effect.caster_character_id)
+        ? getCharacterById(drizzle, effect.caster_character_id)
         : null;
 
       const stillConcentrating = getDb().transaction(() => {
