@@ -13,12 +13,18 @@ import type {
   ForgotPasswordPayload,
   ResetPasswordPayload,
   UpdateProfilePayload,
-  User,
   VerifyEmailPayload,
 } from '@table-sync/shared';
 import bcrypt from 'bcryptjs';
 import { and, eq, gt, isNull, sql } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import {
+  emailError,
+  issueEmailVerification,
+  normalizeEmail,
+  sanitizeUser,
+  setSessionCookies,
+} from '../auth/account.ts';
 import {
   ACCESS_COOKIE_NAME,
   accessCookieOptions,
@@ -39,36 +45,25 @@ import { emailEnabled } from '../email/config.ts';
 import { appAssets, appLinkBase } from '../email/links.ts';
 import { sendEmail } from '../email/send.ts';
 import { buildResetPasswordEmail } from '../email/templates/reset-password.ts';
-import { buildVerifyEmail } from '../email/templates/verify-email.ts';
 import { langFromReq } from './lang.ts';
 import { apiMsg } from './messages.ts';
+import {
+  ChangePasswordBody,
+  ForgotPasswordBody,
+  LoginBody,
+  NoBody,
+  RegisterBody,
+  ResetPasswordBody,
+  UpdateProfileBody,
+  VerifyEmailBody,
+} from '../validation.ts';
 
 const BCRYPT_ROUNDS = 10;
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-/**
- * Pose le couple de cookies de session : ts_access (JWT, Path=/api — c'est
- * lui qui authentifie le navigateur) + ts_refresh (Path=/api/auth). Le corps
- * JSON garde `token` (le JS en a besoin pour WS/images immédiatement — il ne
- * vit qu'en mémoire client), mais AUCUN refresh token : la preuve de
- * renouvellement ne quitte jamais le cookie HttpOnly.
- */
-function setSessionCookies(
-  reply: FastifyReply,
-  req: FastifyRequest,
-  jwtToken: string,
-  refreshToken: string,
-): void {
-  reply.setCookie(ACCESS_COOKIE_NAME, jwtToken, accessCookieOptions(req));
-  reply.setCookie(REFRESH_COOKIE_NAME, refreshToken, refreshCookieOptions(req));
-}
 
 /** Durée de validité d'un lien de réinitialisation. */
 const RESET_TTL_MINUTES = 60;
 /** Anti-bombardement : une demande par utilisateur et par fenêtre (silencieux). */
 const RESET_COOLDOWN_SECONDS = 60;
-/** Un lien de vérification vit plus longtemps : l'enjeu est moindre qu'un reset. */
-const VERIFY_TTL_HOURS = 24;
 const VERIFY_COOLDOWN_SECONDS = 60;
 
 interface AuthBody {
@@ -78,169 +73,112 @@ interface AuthBody {
   email?: string;
 }
 
-function normalizeEmail(raw: string): string {
-  return raw.trim().toLowerCase();
-}
-
-function emailError(raw: string): string | null {
-  const email = normalizeEmail(raw);
-  if (!EMAIL_RE.test(email)) return 'adresse e-mail invalide';
-  if (email.length > 254) return 'adresse e-mail trop longue';
-  return null;
-}
-
-function sanitizeUser(row: any): User {
-  let tutorialTabsDone: string[] = [];
-  try {
-    const raw = JSON.parse(row.tutorial_tabs_done ?? '[]');
-    if (Array.isArray(raw))
-      tutorialTabsDone = raw.filter((id): id is string => typeof id === 'string');
-  } catch {
-    /* JSON illisible : aucun onglet visité */
-  }
-  return {
-    id: row.id,
-    username: row.username,
-    displayName: row.display_name,
-    email: row.email ?? null,
-    emailVerifiedAt: row.email_verified_at ?? null,
-    pendingEmail: row.pending_email ?? null,
-    tutorialSeenAt: row.tutorial_seen_at ?? null,
-    tutorialTabsDone,
-    tutorialDisabled: !!row.tutorial_disabled,
-    createdAt: row.created_at,
-  };
-}
-
-/**
- * Crée un jeton de vérification pour `email` et envoie le lien (fire-and-
- * forget). Un seul jeton actif par utilisateur — les précédents non
- * consommés sont remplacés. No-op silencieux si les e-mails sont désactivés
- * sur ce serveur : l'inscription ne doit jamais échouer pour ça, l'utilisateur
- * relancera la vérification depuis Mon compte une fois la config posée.
- */
-function issueEmailVerification(
-  drizzle: ReturnType<typeof getDrizzle>,
-  userId: number,
-  displayName: string,
-  email: string,
-  locale: 'fr' | 'en',
-  req: FastifyRequest,
-  change: boolean,
-): void {
-  if (!emailEnabled) return;
-  drizzle.delete(emailVerificationTokens).where(eq(emailVerificationTokens.userId, userId)).run();
-  const rawToken = randomBytes(32).toString('base64url');
-  drizzle
-    .insert(emailVerificationTokens)
-    .values({
-      userId,
-      tokenHash: sha256Hex(rawToken),
-      locale,
-      expiresAt: sql`datetime('now', ${`+${VERIFY_TTL_HOURS * 60} minutes`})`,
-    })
-    .run();
-  const link = `${appLinkBase(req)}/verifier-email?token=${rawToken}`;
-  void sendEmail({
-    to: email,
-    toName: displayName,
-    ...buildVerifyEmail(displayName, link, locale, change, appAssets(req)),
-  });
-}
-
 export async function authRoutes(app: FastifyInstance) {
   // ---------- Register ----------
-  app.post('/register', async (req: FastifyRequest<{ Body: AuthBody }>, reply: FastifyReply) => {
-    const { username, password, displayName, email } = req.body || {};
-    if (!username || !password || !displayName || !email) {
-      return reply.code(400).send({
-        error: apiMsg(req, 'nom d’utilisateur, mot de passe, nom affiché et adresse e-mail requis'),
-      });
-    }
-    if (username.length < 3) {
-      return reply
-        .code(400)
-        .send({ error: apiMsg(req, 'le nom d’utilisateur doit faire au moins 3 caractères') });
-    }
-    if (password.length < 6) {
-      return reply
-        .code(400)
-        .send({ error: apiMsg(req, 'le mot de passe doit faire au moins 6 caractères') });
-    }
-    const badEmail = emailError(email);
-    if (badEmail) return reply.code(400).send({ error: badEmail });
+  app.post(
+    '/register',
+    { schema: { body: RegisterBody } },
+    async (req: FastifyRequest<{ Body: AuthBody }>, reply: FastifyReply) => {
+      const { username, password, displayName, email } = req.body || {};
+      if (!username || !password || !displayName || !email) {
+        return reply.code(400).send({
+          error: apiMsg(
+            req,
+            'nom d’utilisateur, mot de passe, nom affiché et adresse e-mail requis',
+          ),
+        });
+      }
+      if (username.length < 3) {
+        return reply
+          .code(400)
+          .send({ error: apiMsg(req, 'le nom d’utilisateur doit faire au moins 3 caractères') });
+      }
+      if (password.length < 6) {
+        return reply
+          .code(400)
+          .send({ error: apiMsg(req, 'le mot de passe doit faire au moins 6 caractères') });
+      }
+      const badEmail = emailError(email);
+      if (badEmail) return reply.code(400).send({ error: badEmail });
 
-    const drizzle = getDrizzle();
-    const existing = drizzle
-      .select({ id: users.id })
-      .from(users)
-      .where(eq(users.username, username))
-      .get();
-    if (existing)
-      return reply.code(409).send({ error: apiMsg(req, 'ce nom d’utilisateur est déjà pris') });
+      const drizzle = getDrizzle();
+      const existing = drizzle
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.username, username))
+        .get();
+      if (existing)
+        return reply.code(409).send({ error: apiMsg(req, 'ce nom d’utilisateur est déjà pris') });
 
-    const emailClash = drizzle
-      .select({ id: users.id })
-      .from(users)
-      .where(eq(users.email, normalizeEmail(email)))
-      .get();
-    if (emailClash) {
-      return reply.code(409).send({ error: apiMsg(req, 'cette adresse e-mail est déjà utilisée') });
-    }
+      const emailClash = drizzle
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.email, normalizeEmail(email)))
+        .get();
+      if (emailClash) {
+        return reply
+          .code(409)
+          .send({ error: apiMsg(req, 'cette adresse e-mail est déjà utilisée') });
+      }
 
-    const hash = bcrypt.hashSync(password, BCRYPT_ROUNDS);
-    // users.username is COLLATE NOCASE at the column level (schema.sql) — the
-    // uniqueness check above inherits it, no query-text collation needed.
-    const normalizedEmail = normalizeEmail(email);
-    const row = drizzle
-      .insert(users)
-      .values({ username, passwordHash: hash, displayName, email: normalizedEmail })
-      .returning(cols(users))
-      .get() as any;
-    // L'adresse part non vérifiée : lien de vérification immédiat (no-op si
-    // les e-mails sont désactivés — l'inscription ne doit jamais échouer).
-    issueEmailVerification(
-      drizzle,
-      row.id,
-      row.display_name,
-      normalizedEmail,
-      langFromReq(req),
-      req,
-      false,
-    );
-    const user = sanitizeUser(row);
-    const token = app.jwt.sign({ sub: user.id, username: user.username });
-    const refreshToken = issueRefreshToken(drizzle, user.id, req);
-    setSessionCookies(reply, req, token, refreshToken);
-    return reply.code(201).send({ token, user });
-  });
+      const hash = bcrypt.hashSync(password, BCRYPT_ROUNDS);
+      // users.username is COLLATE NOCASE at the column level (schema.sql) — the
+      // uniqueness check above inherits it, no query-text collation needed.
+      const normalizedEmail = normalizeEmail(email);
+      const row = drizzle
+        .insert(users)
+        .values({ username, passwordHash: hash, displayName, email: normalizedEmail })
+        .returning(cols(users))
+        .get() as any;
+      // L'adresse part non vérifiée : lien de vérification immédiat (no-op si
+      // les e-mails sont désactivés — l'inscription ne doit jamais échouer).
+      issueEmailVerification(
+        drizzle,
+        row.id,
+        row.display_name,
+        normalizedEmail,
+        langFromReq(req),
+        req,
+        false,
+      );
+      const user = sanitizeUser(row);
+      const token = app.jwt.sign({ sub: user.id, username: user.username });
+      const refreshToken = issueRefreshToken(drizzle, user.id, req);
+      setSessionCookies(reply, req, token, refreshToken);
+      return reply.code(201).send({ token, user });
+    },
+  );
 
   // ---------- Login ----------
-  app.post('/login', async (req: FastifyRequest<{ Body: AuthBody }>, reply: FastifyReply) => {
-    const { username, password } = req.body || {};
-    if (!username || !password) {
-      return reply
-        .code(400)
-        .send({ error: apiMsg(req, 'nom d’utilisateur et mot de passe requis') });
-    }
+  app.post(
+    '/login',
+    { schema: { body: LoginBody } },
+    async (req: FastifyRequest<{ Body: AuthBody }>, reply: FastifyReply) => {
+      const { username, password } = req.body || {};
+      if (!username || !password) {
+        return reply
+          .code(400)
+          .send({ error: apiMsg(req, 'nom d’utilisateur et mot de passe requis') });
+      }
 
-    const drizzle = getDrizzle();
-    const row = drizzle
-      .select(cols(users))
-      .from(users)
-      .where(eq(users.username, username))
-      .get() as any;
-    if (!row) return reply.code(401).send({ error: apiMsg(req, 'identifiants invalides') });
+      const drizzle = getDrizzle();
+      const row = drizzle
+        .select(cols(users))
+        .from(users)
+        .where(eq(users.username, username))
+        .get() as any;
+      if (!row) return reply.code(401).send({ error: apiMsg(req, 'identifiants invalides') });
 
-    const ok = bcrypt.compareSync(password, row.password_hash);
-    if (!ok) return reply.code(401).send({ error: apiMsg(req, 'identifiants invalides') });
+      const ok = bcrypt.compareSync(password, row.password_hash);
+      if (!ok) return reply.code(401).send({ error: apiMsg(req, 'identifiants invalides') });
 
-    const user = sanitizeUser(row);
-    const token = app.jwt.sign({ sub: user.id, username: user.username });
-    const refreshToken = issueRefreshToken(drizzle, user.id, req);
-    setSessionCookies(reply, req, token, refreshToken);
-    return reply.send({ token, user });
-  });
+      const user = sanitizeUser(row);
+      const token = app.jwt.sign({ sub: user.id, username: user.username });
+      const refreshToken = issueRefreshToken(drizzle, user.id, req);
+      setSessionCookies(reply, req, token, refreshToken);
+      return reply.send({ token, user });
+    },
+  );
 
   // ---------- Me (current user) ----------
   app.get(
@@ -262,7 +200,7 @@ export async function authRoutes(app: FastifyInstance) {
   // ---------- Update my profile (display name, email) ----------
   app.patch(
     '/me',
-    { onRequest: [(app as any).authenticate] },
+    { onRequest: [(app as any).authenticate], schema: { body: UpdateProfileBody } },
     async (req: FastifyRequest<{ Body: UpdateProfilePayload }>, reply: FastifyReply) => {
       const userId = (req as any).user?.sub;
       if (!userId) return reply.code(401).send({ error: apiMsg(req, 'non autorisé') });
@@ -435,7 +373,7 @@ export async function authRoutes(app: FastifyInstance) {
   // ---------- Change my password ----------
   app.post(
     '/password',
-    { onRequest: [(app as any).authenticate] },
+    { onRequest: [(app as any).authenticate], schema: { body: ChangePasswordBody } },
     async (req: FastifyRequest<{ Body: ChangePasswordPayload }>, reply: FastifyReply) => {
       const userId = (req as any).user?.sub;
       if (!userId) return reply.code(401).send({ error: apiMsg(req, 'non autorisé') });
@@ -476,6 +414,7 @@ export async function authRoutes(app: FastifyInstance) {
   // correspond à un compte (anti-énumération). Le mail part en fire-and-forget.
   app.post(
     '/forgot-password',
+    { schema: { body: ForgotPasswordBody } },
     async (req: FastifyRequest<{ Body: ForgotPasswordPayload }>, reply: FastifyReply) => {
       const { email } = req.body || {};
       if (!email) {
@@ -552,6 +491,7 @@ export async function authRoutes(app: FastifyInstance) {
   // maîtrise de l'adresse e-mail du compte).
   app.post(
     '/reset-password',
+    { schema: { body: ResetPasswordBody } },
     async (req: FastifyRequest<{ Body: ResetPasswordPayload }>, reply: FastifyReply) => {
       const { token, newPassword } = req.body || {};
       if (!token || !newPassword) {
@@ -629,6 +569,7 @@ export async function authRoutes(app: FastifyInstance) {
   // changement en attente, la nouvelle adresse ne prend le compte qu'ici.
   app.post(
     '/verify-email',
+    { schema: { body: VerifyEmailBody } },
     async (req: FastifyRequest<{ Body: VerifyEmailPayload }>, reply: FastifyReply) => {
       const { token } = req.body || {};
       if (!token) {
@@ -738,7 +679,7 @@ export async function authRoutes(app: FastifyInstance) {
   // ---------- Resend verification link (authenticated) ----------
   app.post(
     '/verify-email/resend',
-    { onRequest: [(app as any).authenticate] },
+    { onRequest: [(app as any).authenticate], schema: { body: NoBody } },
     async (req: FastifyRequest, reply: FastifyReply) => {
       const userId = (req as any).user?.sub;
       if (!userId) return reply.code(401).send({ error: apiMsg(req, 'non autorisé') });
@@ -794,40 +735,44 @@ export async function authRoutes(app: FastifyInstance) {
   // — le client purgera sur le 401. La preuve arrive UNIQUEMENT par cookie
   // HttpOnly ts_refresh (l'en-tête/corps de transition PR #127 n'ont jamais été
   // déployés : chemin supprimé sans grâce).
-  app.post('/refresh', async (req: FastifyRequest, reply: FastifyReply) => {
-    const raw = req.cookies[REFRESH_COOKIE_NAME] || '';
-    if (!raw) {
-      return reply.code(400).send({ error: apiMsg(req, 'jeton de rafraîchissement requis') });
-    }
+  app.post(
+    '/refresh',
+    { schema: { body: NoBody } },
+    async (req: FastifyRequest, reply: FastifyReply) => {
+      const raw = req.cookies[REFRESH_COOKIE_NAME] || '';
+      if (!raw) {
+        return reply.code(400).send({ error: apiMsg(req, 'jeton de rafraîchissement requis') });
+      }
 
-    const result = rotateRefreshToken(getDrizzle(), String(raw));
-    if (!result) {
-      // Inconnu/expiré/révoqué (et famille déjà tuée dans ce dernier cas).
-      // Les miettes mortes ne survivent pas : le prochain login les repose.
-      reply.clearCookie(REFRESH_COOKIE_NAME, refreshCookieOptions(req));
-      reply.clearCookie(ACCESS_COOKIE_NAME, accessCookieOptions(req));
-      return reply
-        .code(401)
-        .send({ error: apiMsg(req, 'jeton de rafraîchissement invalide ou expiré') });
-    }
+      const result = rotateRefreshToken(getDrizzle(), String(raw));
+      if (!result) {
+        // Inconnu/expiré/révoqué (et famille déjà tuée dans ce dernier cas).
+        // Les miettes mortes ne survivent pas : le prochain login les repose.
+        reply.clearCookie(REFRESH_COOKIE_NAME, refreshCookieOptions(req));
+        reply.clearCookie(ACCESS_COOKIE_NAME, accessCookieOptions(req));
+        return reply
+          .code(401)
+          .send({ error: apiMsg(req, 'jeton de rafraîchissement invalide ou expiré') });
+      }
 
-    // Hygiène best-effort : purge des lignes mortes depuis plus d'un cycle.
-    const drizzle = getDrizzle();
-    purgeStaleRefreshTokens(drizzle);
+      // Hygiène best-effort : purge des lignes mortes depuis plus d'un cycle.
+      const drizzle = getDrizzle();
+      purgeStaleRefreshTokens(drizzle);
 
-    const row = drizzle
-      .select(cols(users))
-      .from(users)
-      .where(eq(users.id, result.userId))
-      .get() as any;
-    if (!row) {
-      return reply.code(401).send({ error: apiMsg(req, 'utilisateur introuvable') });
-    }
-    const user = sanitizeUser(row);
-    const token = app.jwt.sign({ sub: user.id, username: user.username });
-    setSessionCookies(reply, req, token, result.raw);
-    return reply.send({ token, user });
-  });
+      const row = drizzle
+        .select(cols(users))
+        .from(users)
+        .where(eq(users.id, result.userId))
+        .get() as any;
+      if (!row) {
+        return reply.code(401).send({ error: apiMsg(req, 'utilisateur introuvable') });
+      }
+      const user = sanitizeUser(row);
+      const token = app.jwt.sign({ sub: user.id, username: user.username });
+      setSessionCookies(reply, req, token, result.raw);
+      return reply.send({ token, user });
+    },
+  );
 
   // ---------- Token lisible JS (authentifié : cookie ts_access ou header) ----------
   // Le compromis assumé de la bascule cookies : WS (sous-protocole) et URLs
@@ -845,7 +790,7 @@ export async function authRoutes(app: FastifyInstance) {
   });
 
   // ---------- Logout ----------
-  app.post('/logout', async (req, reply) => {
+  app.post('/logout', { schema: { body: NoBody } }, async (req, reply) => {
     // Le JWT reste stateless (le client jette sa mémoire) ; le refresh token
     // du cookie est révoqué — l'appareil ne pourra plus se rafraîchir — et
     // les deux cookies sont effacés. Le navigateur pose ts_refresh tout seul

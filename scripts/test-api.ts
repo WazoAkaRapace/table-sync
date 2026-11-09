@@ -45,6 +45,7 @@ import { run as spells } from './api-tests/mod-spells.ts';
 import { run as spellEffects } from './api-tests/mod-spell-effects.ts';
 import { run as syncStress } from './api-tests/mod-sync-stress.ts';
 import { run as syncWs } from './api-tests/mod-sync-ws.ts';
+import { run as validation } from './api-tests/mod-validation.ts';
 import { run as wildshapeRest } from './api-tests/mod-wildshape-rest.ts';
 
 const MODULES: Array<{
@@ -81,6 +82,7 @@ const MODULES: Array<{
   { name: 'push notifications', run: push },
   { name: 'emails transactionnels', run: email },
   { name: 'gestionnaire d’erreurs global', run: errorHandler },
+  { name: 'validation typebox (schémas + 400 i18n)', run: validation },
 ];
 
 async function main(): Promise<void> {
