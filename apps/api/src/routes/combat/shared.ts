@@ -24,7 +24,7 @@ import {
   encounters as encountersTable,
 } from '../../db/schema.ts';
 import { type PushPayload, type PushSendOptions, sendPushToUser } from '../../push/send.ts';
-import { isPartyMember, requireUser } from '../lib/membership.ts';
+import { isPartyGM, isPartyMember, requireUser } from '../lib/membership.ts';
 import { apiMsg } from '../messages.ts';
 
 // ---------- Row mappers ----------
@@ -238,7 +238,7 @@ export function notifyTurnPush(enc: any): void {
 export async function getEncounterForUser(
   req: FastifyRequest<{ Params: { id: string } }>,
   reply: FastifyReply,
-): Promise<any | null> {
+): Promise<{ userId: number; enc: any } | null> {
   const userId = requireUser(req, reply);
   if (userId === null) return null;
   const enc = getEncounter(getDrizzle(), Number(req.params.id));
@@ -250,5 +250,53 @@ export async function getEncounterForUser(
     reply.code(403).send({ error: apiMsg(req, 'Pas membre du groupe') });
     return null;
   }
-  return enc;
+  return { userId, enc };
+}
+
+/** Porte « rencontre + MD » des routes d'écriture du domaine combat :
+ *  requireUser, 404 « Rencontre introuvable », 403 « Réservé au MD ».
+ *  Renvoie null après avoir envoyé la réponse — l'appelant fait `return`. */
+export function getEncounterForGM(
+  req: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply,
+): { userId: number; enc: any } | null {
+  const userId = requireUser(req, reply);
+  if (userId === null) return null;
+  const enc = getEncounter(getDrizzle(), Number(req.params.id));
+  if (!enc) {
+    reply.code(404).send({ error: apiMsg(req, 'Rencontre introuvable') });
+    return null;
+  }
+  if (!isPartyGM(enc.party_id, userId)) {
+    reply.code(403).send({ error: apiMsg(req, 'Réservé au MD') });
+    return null;
+  }
+  return { userId, enc };
+}
+
+/** Porte « combattant + MD » (PATCH/DELETE /combatants/:cid) : 404 combattant,
+ *  re-lecture de sa rencontre (projection party_id/id), 403 « Réservé au MD ». */
+export function getCombatantForGM(
+  req: FastifyRequest,
+  reply: FastifyReply,
+  combatantId: number,
+): { userId: number; combatant: any; enc: any } | null {
+  const userId = requireUser(req, reply);
+  if (userId === null) return null;
+  const drizzle = getDrizzle();
+  const combatant = getCombatant(drizzle, combatantId);
+  if (!combatant) {
+    reply.code(404).send({ error: apiMsg(req, 'Combattant introuvable') });
+    return null;
+  }
+  const enc = drizzle
+    .select({ party_id: encountersTable.partyId, id: encountersTable.id })
+    .from(encountersTable)
+    .where(eq(encountersTable.id, combatant.encounter_id))
+    .get() as any;
+  if (!isPartyGM(enc.party_id, userId)) {
+    reply.code(403).send({ error: apiMsg(req, 'Réservé au MD') });
+    return null;
+  }
+  return { userId, combatant, enc };
 }

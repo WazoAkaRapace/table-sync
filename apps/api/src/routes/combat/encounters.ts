@@ -27,6 +27,7 @@ import { apiMsg } from '../messages.ts';
 import {
   buildRosters,
   getEncounter,
+  getEncounterForGM,
   getEncounterForUser,
   mapCombatant,
   mapEncounter,
@@ -144,8 +145,9 @@ export async function encounterRoutes(app: FastifyInstance) {
   app.get(
     '/encounters/:id',
     async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-      const enc = await getEncounterForUser(req, reply);
-      if (!enc) return;
+      const ctx = await getEncounterForUser(req, reply);
+      if (!ctx) return;
+      const { enc } = ctx;
 
       const userId = getUserId(req);
       const gm = isPartyGM(enc.party_id, userId!);
@@ -245,13 +247,10 @@ export async function encounterRoutes(app: FastifyInstance) {
       req: FastifyRequest<{ Params: { id: string }; Body: PatchEncounterPayload }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
+      const ctx = getEncounterForGM(req, reply);
+      if (ctx === null) return;
+      const { userId, enc } = ctx;
       const drizzle = getDrizzle();
-      const enc = getEncounter(drizzle, Number(req.params.id));
-      if (!enc) return reply.code(404).send({ error: apiMsg(req, 'Rencontre introuvable') });
-      if (!isPartyGM(enc.party_id, userId))
-        return reply.code(403).send({ error: apiMsg(req, 'Réservé au MD') });
 
       const body = req.body || {};
       const values: Record<string, unknown> = {};
@@ -295,13 +294,10 @@ export async function encounterRoutes(app: FastifyInstance) {
   app.delete(
     '/encounters/:id',
     async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
+      const ctx = getEncounterForGM(req, reply);
+      if (ctx === null) return;
+      const { userId, enc } = ctx;
       const drizzle = getDrizzle();
-      const enc = getEncounter(drizzle, Number(req.params.id));
-      if (!enc) return reply.code(404).send({ error: apiMsg(req, 'Rencontre introuvable') });
-      if (!isPartyGM(enc.party_id, userId))
-        return reply.code(403).send({ error: apiMsg(req, 'Réservé au MD') });
 
       drizzle.delete(encountersTable).where(eq(encountersTable.id, enc.id)).run();
       bus.emitChange({

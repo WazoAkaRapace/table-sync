@@ -21,14 +21,20 @@ import { cols } from '../../db/projections.ts';
 import {
   characters as charactersTable,
   combatants as combatantsTable,
-  encounters as encountersTable,
   monsters,
 } from '../../db/schema.ts';
 import { bus } from '../../sync/bus.ts';
 import { trackerAcOf } from '../character-spell-effects.ts';
-import { isPartyGM, isPartyMember, requireUser } from '../lib/membership.ts';
+import { isPartyGM } from '../lib/membership.ts';
 import { apiMsg } from '../messages.ts';
-import { getCombatant, getEncounter, mapCombatant, pushSafe } from './shared.ts';
+import {
+  getCombatant,
+  getCombatantForGM,
+  getEncounterForGM,
+  getEncounterForUser,
+  mapCombatant,
+  pushSafe,
+} from './shared.ts';
 
 export async function combatantRoutes(app: FastifyInstance) {
   // ===== Add monster combatant (GM only) =====
@@ -38,13 +44,10 @@ export async function combatantRoutes(app: FastifyInstance) {
       req: FastifyRequest<{ Params: { id: string }; Body: AddMonsterPayload }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
+      const ctx = getEncounterForGM(req, reply);
+      if (ctx === null) return;
+      const { userId, enc } = ctx;
       const drizzle = getDrizzle();
-      const enc = getEncounter(drizzle, Number(req.params.id));
-      if (!enc) return reply.code(404).send({ error: apiMsg(req, 'Rencontre introuvable') });
-      if (!isPartyGM(enc.party_id, userId))
-        return reply.code(403).send({ error: apiMsg(req, 'Réservé au MD') });
 
       const body = req.body || ({} as AddMonsterPayload);
       if (!body.monsterSlug)
@@ -178,13 +181,10 @@ export async function combatantRoutes(app: FastifyInstance) {
       req: FastifyRequest<{ Params: { id: string }; Body: AddPlayerPayload }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
+      const ctx = getEncounterForGM(req, reply);
+      if (ctx === null) return;
+      const { userId, enc } = ctx;
       const drizzle = getDrizzle();
-      const enc = getEncounter(drizzle, Number(req.params.id));
-      if (!enc) return reply.code(404).send({ error: apiMsg(req, 'Rencontre introuvable') });
-      if (!isPartyGM(enc.party_id, userId))
-        return reply.code(403).send({ error: apiMsg(req, 'Réservé au MD') });
 
       const body = req.body || ({} as AddPlayerPayload);
       // Accept a batch (characterIds) or a single legacy characterId
@@ -318,13 +318,10 @@ export async function combatantRoutes(app: FastifyInstance) {
       req: FastifyRequest<{ Params: { id: string; cid: string }; Body: SetInitiativePayload }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
+      const ctx = await getEncounterForUser(req, reply);
+      if (ctx === null) return;
+      const { userId, enc } = ctx;
       const drizzle = getDrizzle();
-      const enc = getEncounter(drizzle, Number(req.params.id));
-      if (!enc) return reply.code(404).send({ error: apiMsg(req, 'Rencontre introuvable') });
-      if (!isPartyMember(enc.party_id, userId))
-        return reply.code(403).send({ error: apiMsg(req, 'Pas membre du groupe') });
 
       const combatant = getCombatant(drizzle, Number(req.params.cid));
       if (!combatant || combatant.encounter_id !== enc.id) {
@@ -386,19 +383,10 @@ export async function combatantRoutes(app: FastifyInstance) {
   app.delete(
     '/combatants/:cid',
     async (req: FastifyRequest<{ Params: { cid: string } }>, reply: FastifyReply) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
+      const ctx = getCombatantForGM(req, reply, Number(req.params.cid));
+      if (ctx === null) return;
+      const { userId, combatant, enc } = ctx;
       const drizzle = getDrizzle();
-      const combatant = getCombatant(drizzle, Number(req.params.cid));
-      if (!combatant) return reply.code(404).send({ error: apiMsg(req, 'Combattant introuvable') });
-
-      const enc = drizzle
-        .select({ party_id: encountersTable.partyId, id: encountersTable.id })
-        .from(encountersTable)
-        .where(eq(encountersTable.id, combatant.encounter_id))
-        .get() as any;
-      if (!isPartyGM(enc.party_id, userId))
-        return reply.code(403).send({ error: apiMsg(req, 'Réservé au MD') });
 
       // If grouped, delete ALL members of the group (they were added together)
       if (combatant.group_id) {
