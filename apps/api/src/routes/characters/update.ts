@@ -16,7 +16,6 @@ import { and, eq, inArray, ne } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../../db/drizzle.ts';
 import { getDb } from '../../db/index.ts';
-import { cols } from '../../db/projections.ts';
 import { characters, characterSpellEffects, combatants, encounters } from '../../db/schema.ts';
 import { bus } from '../../sync/bus.ts';
 import {
@@ -26,11 +25,11 @@ import {
 } from '../lib/character-classes.ts';
 import { equippedAcRows, mirrorConditionsToCombatants } from '../lib/conditions.ts';
 import { mapCharacter } from '../lib/mappers.ts';
-import { isPartyGM, requireUser } from '../lib/membership.ts';
+import { getCharacterWithOwnerById, requireCharacterAccess } from '../lib/access.ts';
 // Import hérité du monolithe (R4_LEGACY, shrink-only) : miroir CA des effets de sort.
 import { activeAcEffectsOf, mirrorAcToCombatants } from '../character-spell-effects.ts';
 import { apiMsg } from '../messages.ts';
-import { activePlayerCombatants, getCharacterWithOwner } from './sheet.ts';
+import { activePlayerCombatants } from './sheet.ts';
 import { applyLegacyClassFields } from './classes.ts';
 
 export async function characterUpdateRoutes(app: FastifyInstance) {
@@ -41,20 +40,13 @@ export async function characterUpdateRoutes(app: FastifyInstance) {
       req: FastifyRequest<{ Params: { id: string }; Body: PatchCharacterPayload }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
+      const access = requireCharacterAccess(req, reply, Number(req.params.id), {
+        access: 'owner-or-gm',
+        forbiddenMsg: 'only the owner or GM can edit',
+      });
+      if (!access) return;
+      const { char, userId } = access;
       const drizzle = getDrizzle();
-      const char = drizzle
-        .select(cols(characters))
-        .from(characters)
-        .where(eq(characters.id, Number(req.params.id)))
-        .get() as any;
-      if (!char) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
-      // Owner or GM can edit
-      const isGM = isPartyGM(char.party_id, userId);
-      if (char.owner_id !== userId && !isGM) {
-        return reply.code(403).send({ error: apiMsg(req, 'only the owner or GM can edit') });
-      }
       // Visibility is the owner's call alone — not even the GM flips it
       const body = req.body || {};
       if (body.hidden !== undefined && char.owner_id !== userId) {
@@ -316,7 +308,7 @@ export async function characterUpdateRoutes(app: FastifyInstance) {
         (body as any).currentHp = undefined;
         const remaining = Object.entries(body).filter(([, v]) => v !== undefined);
         if (remaining.length === 0) {
-          const rowAfter = getCharacterWithOwner(drizzle, char.id);
+          const rowAfter = getCharacterWithOwnerById(drizzle, char.id);
           attachCharacterClasses([rowAfter]);
           return reply.send({ character: mapCharacter(rowAfter) });
         }
@@ -593,7 +585,7 @@ export async function characterUpdateRoutes(app: FastifyInstance) {
         });
       }
 
-      const row = getCharacterWithOwner(drizzle, char.id);
+      const row = getCharacterWithOwnerById(drizzle, char.id);
       attachCharacterClasses([row]);
       // Detect if this was a coin change vs stat change for the event action
       const coinKeys = ['copper', 'silver', 'electrum', 'gold', 'platinum'];
