@@ -1228,3 +1228,8 @@ html.ts-dark .card {
     transition: none;
   }
 }
+
+/* Glyphes SVG remplaçant les emoji : alignés sur la ligne de texte */
+.inline-glyph {
+  vertical-align: -0.15em;
+}

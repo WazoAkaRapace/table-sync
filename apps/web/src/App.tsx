@@ -6,6 +6,7 @@ import api from './api';
 import { useAuth } from './auth';
 import CampaignDayChip from './CampaignDayChip';
 import CombatWidget from './components/CombatWidget';
+import { Glyph } from './components/Glyph';
 import ConcentrationAlert from './components/ConcentrationAlert';
 import IOSViewportAnchor from './components/IOSViewportAnchor';
 import MessageAlert, { type MessageAlertPayload } from './components/MessageAlert';
@@ -197,7 +198,7 @@ function Nav() {
               className="btn-ghost text-night-50 hover:bg-night-700 text-sm min-h-11"
             >
               <span className="hidden sm:inline">{t('app.mes.groupes')}</span>
-              <span className="sm:hidden">🏠</span>
+              <span className="sm:hidden"><Glyph name="home" /></span>
             </Link>
           )}
           {/* Le nom affiché mène au compte (desktop) ; sur /parties un bouton
