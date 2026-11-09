@@ -1143,6 +1143,56 @@ check(
   ['short', 'short'],
 );
 
+// --- Magicien : compteurs des écoles (PHB 2014) ---
+// Un compteur par capacité limitée : 1 utilisation au palier SRD, recharge SRD.
+const magicienEcole = (subclass: string, level: number) =>
+  mkChar({ characterClass: 'Magicien', level, subclass });
+// PHB 2014 p.115 : Protection arcanique (Abjuration @2) — 1 / repos long
+check(
+  'protection arcanique @2 : 1 utilisation, recharge repos long',
+  [
+    resourceMaxOf('abjuration-protection-arcanique', magicienEcole('abjuration', 2)),
+    findClassFeature('abjuration-protection-arcanique')?.resource?.reset,
+  ],
+  [1, 'long'],
+);
+// PHB 2014 p.118 : Double illusoire (Illusion @10) — 1 / repos court
+check(
+  'double illusoire @10 : 1 utilisation, recharge repos court',
+  [
+    resourceMaxOf('illusion-double-illusoire', magicienEcole('illusion', 10)),
+    findClassFeature('illusion-double-illusoire')?.resource?.reset,
+  ],
+  [1, 'short'],
+);
+// PHB 2014 p.120 : Permutation (Invocation @6) — 1 / repos long
+check(
+  'permutation @6 : 1 utilisation, recharge repos long',
+  [
+    resourceMaxOf('invocation-permutation', magicienEcole('invocation', 6)),
+    findClassFeature('invocation-permutation')?.resource?.reset,
+  ],
+  [1, 'long'],
+);
+// PHB 2014 p.119 : Métamorphe (Transmutation @10) — 1 / repos court
+check(
+  'métamorphe @10 : 1 utilisation, recharge repos court',
+  [
+    resourceMaxOf('transmutation-metamorphe', magicienEcole('transmutation', 10)),
+    findClassFeature('transmutation-metamorphe')?.resource?.reset,
+  ],
+  [1, 'short'],
+);
+// PHB 2014 p.119 : Maître transmutateur (Transmutation @14) — 1 / repos long
+check(
+  'maître transmutateur @14 : 1 utilisation, recharge repos long',
+  [
+    resourceMaxOf('transmutation-maitre-transmutateur', magicienEcole('transmutation', 14)),
+    findClassFeature('transmutation-maitre-transmutateur')?.resource?.reset,
+  ],
+  [1, 'long'],
+);
+
 // Récupération naturelle (cercle de la Terre) : idem, 1× par repos court (PHB 2014 p.69)
 check(
   'effectiveReset : Récupération naturelle recharge au repos court',
