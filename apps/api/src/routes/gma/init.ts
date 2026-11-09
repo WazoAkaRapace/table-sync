@@ -13,16 +13,12 @@ import { cols } from '../../db/projections.ts';
 import { gmaPcLinks, parties, partyGmaLinks, userGmaLinks } from '../../db/schema.ts';
 import { GmaError, gmaErrorToResponse, gmaRequest } from '../../gma/client.ts';
 import { apiMsg } from '../messages.ts';
-import { requireUser } from '../lib/membership.ts';
 import {
-  decryptUserKey,
   desiredPc,
   emitGma,
-  getPartyLink,
-  getUserKeyRow,
   loadPartyCharacters,
   noteScope,
-  requirePartyGM,
+  requireGmaFreshKey,
 } from './shared.ts';
 
 export async function initRoutes(app: FastifyInstance) {
@@ -34,23 +30,9 @@ export async function initRoutes(app: FastifyInstance) {
       req: FastifyRequest<{ Params: { partyId: string }; Body: GmaInitPayload }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const partyId = Number(req.params.partyId);
-      if (!requirePartyGM(req, reply, partyId)) return;
-      if (getPartyLink(partyId)) {
-        return reply.code(409).send({
-          error: apiMsg(req, 'already_linked'),
-          message: apiMsg(req, 'Ce groupe est déjà lié à une campagne GM Assistant.'),
-        });
-      }
-      const key = decryptUserKey(getUserKeyRow(userId));
-      if (!key) {
-        return reply.code(400).send({
-          error: apiMsg(req, 'no_key'),
-          message: apiMsg(req, 'Enregistre d’abord ta clé GM Assistant ci-dessus.'),
-        });
-      }
+      const ctx = requireGmaFreshKey(req, reply, req.params.partyId);
+      if (ctx === null) return;
+      const { userId, partyId, key } = ctx;
       const party = getDrizzle()
         .select(cols(parties))
         .from(parties)

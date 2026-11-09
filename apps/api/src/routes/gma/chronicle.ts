@@ -8,7 +8,7 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { gmaErrorToResponse } from '../../gma/client.ts';
 import { apiMsg } from '../messages.ts';
-import { isPartyGM, isPartyMember, requireUser } from '../lib/membership.ts';
+import { isPartyGM } from '../lib/membership.ts';
 import {
   cachedMoments,
   cachedRecaps,
@@ -17,7 +17,7 @@ import {
   syncRecaps,
   syncSessions,
 } from './cache.ts';
-import { getPartyLink, isFresh, resolveLinkKey } from './shared.ts';
+import { isFresh, requireGmaMemberLink, resolveLinkKey } from './shared.ts';
 
 export async function chronicleRoutes(app: FastifyInstance) {
   // =================== Chronicle (sessions + recaps, cache-first) ===================
@@ -28,22 +28,9 @@ export async function chronicleRoutes(app: FastifyInstance) {
       req: FastifyRequest<{ Params: { partyId: string }; Querystring: { refresh?: string } }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const partyId = Number(req.params.partyId);
-      if (!isPartyMember(partyId, userId)) {
-        return reply.code(403).send({
-          error: apiMsg(req, 'not a member'),
-          message: apiMsg(req, 'Tu n’es pas membre de ce groupe.'),
-        });
-      }
-      const link = getPartyLink(partyId);
-      if (!link) {
-        return reply.code(404).send({
-          error: apiMsg(req, 'not_linked'),
-          message: apiMsg(req, 'Aucune campagne GM Assistant liée à ce groupe.'),
-        });
-      }
+      const ctx = requireGmaMemberLink(req, reply, req.params.partyId);
+      if (ctx === null) return;
+      const { userId, partyId, link } = ctx;
       let rows = cachedSessions(partyId);
       const wantRefresh = req.query?.refresh === '1' && isPartyGM(partyId, userId);
       let stale = false;
@@ -90,23 +77,10 @@ export async function chronicleRoutes(app: FastifyInstance) {
       }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const partyId = Number(req.params.partyId);
+      const ctx = requireGmaMemberLink(req, reply, req.params.partyId);
+      if (ctx === null) return;
+      const { userId, partyId, link } = ctx;
       const sessionId = String(req.params.sessionId ?? '');
-      if (!isPartyMember(partyId, userId)) {
-        return reply.code(403).send({
-          error: apiMsg(req, 'not a member'),
-          message: apiMsg(req, 'Tu n’es pas membre de ce groupe.'),
-        });
-      }
-      const link = getPartyLink(partyId);
-      if (!link) {
-        return reply.code(404).send({
-          error: apiMsg(req, 'not_linked'),
-          message: apiMsg(req, 'Aucune campagne GM Assistant liée à ce groupe.'),
-        });
-      }
       let session = cachedSessionRow(partyId, sessionId);
       if (!session) {
         // Robustness: a recap asked before any sessions sync — sync once, then 404.

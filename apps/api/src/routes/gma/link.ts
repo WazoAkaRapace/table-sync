@@ -30,6 +30,8 @@ import {
   emitGma,
   getPartyLink,
   getUserKeyRow,
+  requireGmaFreshKey,
+  requireGmaLinked,
   requirePartyGM,
 } from './shared.ts';
 
@@ -99,23 +101,9 @@ export async function linkRoutes(app: FastifyInstance) {
       req: FastifyRequest<{ Params: { partyId: string }; Body: GmaLinkCampaignPayload }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const partyId = Number(req.params.partyId);
-      if (!requirePartyGM(req, reply, partyId)) return;
-      if (getPartyLink(partyId)) {
-        return reply.code(409).send({
-          error: apiMsg(req, 'already_linked'),
-          message: apiMsg(req, 'Ce groupe est déjà lié à une campagne GM Assistant.'),
-        });
-      }
-      const key = decryptUserKey(getUserKeyRow(userId));
-      if (!key) {
-        return reply.code(400).send({
-          error: apiMsg(req, 'no_key'),
-          message: apiMsg(req, 'Enregistre d’abord ta clé GM Assistant ci-dessus.'),
-        });
-      }
+      const ctx = requireGmaFreshKey(req, reply, req.params.partyId);
+      if (ctx === null) return;
+      const { userId, partyId, key } = ctx;
       const { campaignId } = req.body || { campaignId: '' };
       if (typeof campaignId !== 'string' || !UUID_RE.test(campaignId)) {
         return reply.code(400).send({
@@ -160,16 +148,9 @@ export async function linkRoutes(app: FastifyInstance) {
   app.delete(
     '/parties/:partyId/gma/link',
     async (req: FastifyRequest<{ Params: { partyId: string } }>, reply: FastifyReply) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const partyId = Number(req.params.partyId);
-      if (!requirePartyGM(req, reply, partyId)) return;
-      if (!getPartyLink(partyId)) {
-        return reply.code(404).send({
-          error: apiMsg(req, 'not_linked'),
-          message: apiMsg(req, 'Ce groupe n’est pas lié à une campagne GM Assistant.'),
-        });
-      }
+      const ctx = requireGmaLinked(req, reply, req.params.partyId);
+      if (ctx === null) return;
+      const { userId, partyId } = ctx;
       getDb().transaction(() => {
         const drizzle = getDrizzle();
         drizzle.delete(partyGmaLinks).where(eq(partyGmaLinks.partyId, partyId)).run();

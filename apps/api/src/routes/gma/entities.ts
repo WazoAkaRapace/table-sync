@@ -37,6 +37,7 @@ import {
   mayEditNpcContent,
   npcVisibleToUser,
   nowIso,
+  requireGmaMemberLink,
 } from './shared.ts';
 
 export async function entityRoutes(app: FastifyInstance) {
@@ -54,22 +55,9 @@ export async function entityRoutes(app: FastifyInstance) {
       req: FastifyRequest<{ Params: { partyId: string }; Querystring: { refresh?: string } }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const partyId = Number(req.params.partyId);
-      if (!isPartyMember(partyId, userId)) {
-        return reply.code(403).send({
-          error: apiMsg(req, 'not a member'),
-          message: apiMsg(req, 'Tu n’es pas membre de ce groupe.'),
-        });
-      }
-      const link = getPartyLink(partyId);
-      if (!link) {
-        return reply.code(404).send({
-          error: apiMsg(req, 'not_linked'),
-          message: apiMsg(req, 'Aucune campagne GM Assistant liée à ce groupe.'),
-        });
-      }
+      const ctx = requireGmaMemberLink(req, reply, req.params.partyId);
+      if (ctx === null) return;
+      const { userId, partyId, link } = ctx;
       let rows = cachedEntities(partyId);
       const wantRefresh = req.query?.refresh === '1' && isPartyGM(partyId, userId);
       let stale = false;
@@ -211,22 +199,9 @@ export async function entityRoutes(app: FastifyInstance) {
       req: FastifyRequest<{ Params: { partyId: string; entityId: string } }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const partyId = Number(req.params.partyId);
-      if (!isPartyMember(partyId, userId)) {
-        return reply.code(403).send({
-          error: apiMsg(req, 'not a member'),
-          message: apiMsg(req, 'Tu n’es pas membre de ce groupe.'),
-        });
-      }
-      const link = getPartyLink(partyId);
-      if (!link) {
-        return reply.code(404).send({
-          error: apiMsg(req, 'not_linked'),
-          message: apiMsg(req, 'Aucune campagne GM Assistant liée à ce groupe.'),
-        });
-      }
+      const ctx = requireGmaMemberLink(req, reply, req.params.partyId);
+      if (ctx === null) return;
+      const { userId, partyId, link } = ctx;
       const entity = await resolveEntity(partyId, link, String(req.params.entityId));
       if (!entity) {
         return reply.code(404).send({
@@ -329,22 +304,9 @@ export async function entityRoutes(app: FastifyInstance) {
       }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const partyId = Number(req.params.partyId);
-      if (!isPartyMember(partyId, userId)) {
-        return reply.code(403).send({
-          error: apiMsg(req, 'not a member'),
-          message: apiMsg(req, 'Tu n’es pas membre de ce groupe.'),
-        });
-      }
-      const link = getPartyLink(partyId);
-      if (!link) {
-        return reply.code(404).send({
-          error: apiMsg(req, 'not_linked'),
-          message: apiMsg(req, 'Aucune campagne GM Assistant liée à ce groupe.'),
-        });
-      }
+      const ctx = requireGmaMemberLink(req, reply, req.params.partyId);
+      if (ctx === null) return;
+      const { userId, partyId, link } = ctx;
       const entity = await resolveEntity(partyId, link, String(req.params.entityId));
       if (!entity) {
         return reply.code(404).send({
@@ -612,21 +574,9 @@ export async function entityRoutes(app: FastifyInstance) {
       req: FastifyRequest<{ Params: { partyId: string; entityId: string } }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const partyId = Number(req.params.partyId);
-      if (!isPartyMember(partyId, userId)) {
-        return reply.code(403).send({
-          error: apiMsg(req, 'not a member'),
-          message: apiMsg(req, 'Tu n’es pas membre de ce groupe.'),
-        });
-      }
-      if (!getPartyLink(partyId)) {
-        return reply.code(404).send({
-          error: apiMsg(req, 'not_linked'),
-          message: apiMsg(req, 'Aucune campagne GM Assistant liée à ce groupe.'),
-        });
-      }
+      const ctx = requireGmaMemberLink(req, reply, req.params.partyId);
+      if (ctx === null) return;
+      const { userId, partyId } = ctx;
       // No cache lookup on purpose: discards reference GMA ids that must keep
       // working across cache replaces — the id arrives from the GET we serve.
       getDrizzle()
@@ -650,21 +600,9 @@ export async function entityRoutes(app: FastifyInstance) {
       req: FastifyRequest<{ Params: { partyId: string; entityId: string } }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const partyId = Number(req.params.partyId);
-      if (!isPartyMember(partyId, userId)) {
-        return reply.code(403).send({
-          error: apiMsg(req, 'not a member'),
-          message: apiMsg(req, 'Tu n’es pas membre de ce groupe.'),
-        });
-      }
-      if (!getPartyLink(partyId)) {
-        return reply.code(404).send({
-          error: apiMsg(req, 'not_linked'),
-          message: apiMsg(req, 'Aucune campagne GM Assistant liée à ce groupe.'),
-        });
-      }
+      const ctx = requireGmaMemberLink(req, reply, req.params.partyId);
+      if (ctx === null) return;
+      const { userId, partyId } = ctx;
       getDrizzle()
         .delete(gmaEntityDiscards)
         .where(
