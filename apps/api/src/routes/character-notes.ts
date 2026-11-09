@@ -16,7 +16,7 @@ import { getDb } from '../db/index.ts';
 import { cols } from '../db/projections.ts';
 import { characterNotes, characters } from '../db/schema.ts';
 import { bus } from '../sync/bus.ts';
-import { characterVisibleTo, isPartyGM, isPartyMember, requireUser } from './helpers.ts';
+import { characterVisibleTo, isPartyGM, isPartyMember, requireUser } from './lib/membership.ts';
 import { apiMsg } from './messages.ts';
 
 function mapNote(row: any): CharacterNote {

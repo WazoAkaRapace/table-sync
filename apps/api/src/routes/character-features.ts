@@ -25,15 +25,9 @@ import { getDb } from '../db/index.ts';
 import { cols } from '../db/projections.ts';
 import { characterFeatures, characters } from '../db/schema.ts';
 import { bus } from '../sync/bus.ts';
-import {
-  attachCharacterClasses,
-  characterVisibleTo,
-  isPartyGM,
-  isPartyMember,
-  mapCharacter,
-  mapFeature,
-  requireUser,
-} from './helpers.ts';
+import { attachCharacterClasses } from './lib/character-classes.ts';
+import { mapCharacter, mapFeature } from './lib/mappers.ts';
+import { characterVisibleTo, isPartyGM, isPartyMember, requireUser } from './lib/membership.ts';
 import { apiMsg } from './messages.ts';
 
 /** Traits « Faveur de pacte » MUTEX (Occultiste niveau 3) : poser l'une retire les autres. */

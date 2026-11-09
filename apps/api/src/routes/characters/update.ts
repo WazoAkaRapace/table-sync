@@ -21,14 +21,12 @@ import { characters, characterSpellEffects, combatants, encounters } from '../..
 import { bus } from '../../sync/bus.ts';
 import {
   attachCharacterClasses,
-  equippedAcRows,
-  isPartyGM,
-  mapCharacter,
-  mirrorConditionsToCombatants,
   replaceCharacterClasses,
-  requireUser,
   validateClassEntries,
-} from '../helpers.ts';
+} from '../lib/character-classes.ts';
+import { equippedAcRows, mirrorConditionsToCombatants } from '../lib/conditions.ts';
+import { mapCharacter } from '../lib/mappers.ts';
+import { isPartyGM, requireUser } from '../lib/membership.ts';
 // Import hérité du monolithe (R4_LEGACY, shrink-only) : miroir CA des effets de sort.
 import { activeAcEffectsOf, mirrorAcToCombatants } from '../character-spell-effects.ts';
 import { apiMsg } from '../messages.ts';

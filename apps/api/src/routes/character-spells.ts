@@ -18,13 +18,8 @@ import { getDrizzle } from '../db/drizzle.ts';
 import { cols } from '../db/projections.ts';
 import { characterClasses, characterSpells, characters, spells } from '../db/schema.ts';
 import { bus } from '../sync/bus.ts';
-import {
-  characterVisibleTo,
-  isPartyGM,
-  isPartyMember,
-  mapCharacterSpell,
-  requireUser,
-} from './helpers.ts';
+import { mapCharacterSpell } from './lib/mappers.ts';
+import { characterVisibleTo, isPartyGM, isPartyMember, requireUser } from './lib/membership.ts';
 import { sendCachedJson } from './httpCache.ts';
 import { type AppLang, langFromReq } from './lang.ts';
 import { apiMsg } from './messages.ts';

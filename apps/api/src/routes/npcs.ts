@@ -16,7 +16,7 @@ import { getDrizzle } from '../db/drizzle.ts';
 import { cols } from '../db/projections.ts';
 import { npcs, users } from '../db/schema.ts';
 import { bus } from '../sync/bus.ts';
-import { isPartyGM, isPartyMember, requireUser } from './helpers.ts';
+import { isPartyGM, isPartyMember, requireUser } from './lib/membership.ts';
 import { sendCachedJson } from './httpCache.ts';
 import { apiMsg } from './messages.ts';
 

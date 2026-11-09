@@ -11,7 +11,7 @@ import { getDb } from '../db/index.ts';
 import { cols } from '../db/projections.ts';
 import { characters, inventory, storageLocations } from '../db/schema.ts';
 import { bus } from '../sync/bus.ts';
-import { characterVisibleTo, isOwnerOrGM, isPartyMember, requireUser } from './helpers.ts';
+import { characterVisibleTo, isOwnerOrGM, isPartyMember, requireUser } from './lib/membership.ts';
 import { apiMsg } from './messages.ts';
 
 /**

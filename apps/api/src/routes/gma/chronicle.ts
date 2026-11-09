@@ -8,7 +8,7 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { gmaErrorToResponse } from '../../gma/client.ts';
 import { apiMsg } from '../messages.ts';
-import { isPartyGM, isPartyMember, requireUser } from '../helpers.ts';
+import { isPartyGM, isPartyMember, requireUser } from '../lib/membership.ts';
 import {
   cachedMoments,
   cachedRecaps,

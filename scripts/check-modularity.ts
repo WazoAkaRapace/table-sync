@@ -6,8 +6,11 @@
  *       (ratchet shrink-only : la baseline ne peut que baisser, un fichier
  *       repassé sous le seuil en est retiré, AUCUN nouveau fichier géant ne
  *       peut y entrer).
- *  R2 — fourre-tout : fichiers listés SHRINK_ONLY (routes/helpers.ts) — leur
- *       nombre d'exports ne peut que baisser, tout nouvel export est refusé.
+ *  R2 — fourre-tout : fichiers listés SHRINK_ONLY — leur nombre d'exports
+ *       ne peut que baisser, tout nouvel export est refusé. La carte est
+ *       VIDE depuis la phase 4f (2026-11-09) : helpers.ts, le dernier
+ *       fourre-tout, est dissous en routes/lib/* — la règle reste posée
+ *       pour tout futur fichier fourre-tout.
  *  R3 — un registrar par fichier routes : routes/*.ts n'exporte qu'UNE
  *       fonction *Routes (+ types/const privés autorisés).
  *  R4 — pas d'import d'un autre fichier routes/* TOP-LEVEL (hors lib
@@ -28,7 +31,8 @@
  *       INITIALISATION : les géants actuels y entrent une seule fois.
  *   tsx scripts/check-modularity.ts --selftest        # auto-test (comme
  *       check-changelog) : fichier 701 l. hors baseline, hausse vs ratchet,
- *       baisse acceptée, exempté déclaratif, nouvel export helpers.ts, double
+ *       baisse acceptée, exempté déclaratif, nouvel export fourre-tout
+ *       (SHRINK_ONLY synthétique), entrée SHRINK_ONLY orpheline, double
  *       registrar, import croisé, import cross-dossier (R4 raffiné).
  *
  * Exemptions déclaratives (fichiers de définition de données, jamais de logique) :
@@ -58,13 +62,22 @@ const DECLARATIVE_EXEMPT: Record<string, string> = {
   'apps/api/src/db/schema.ts': 'déclaratif Drizzle (tables, index) — pas de logique',
 };
 
-/** R2 : fourre-tout historiques — exports en ratchet shrink-only (mesuré 2026-11-09). */
-const SHRINK_ONLY: Record<string, number> = {
-  'apps/api/src/routes/helpers.ts': 22,
-};
+/**
+ * R2 : fourre-tout historiques — exports en ratchet shrink-only. VIDE depuis
+ * la phase 4f (2026-11-09) : helpers.ts (22 exports) est dissous en
+ * routes/lib/* (membership, json, character-classes, mappers, conditions).
+ * Le mécanisme reste en place pour tout futur fichier fourre-tout.
+ */
+const SHRINK_ONLY: Record<string, number> = {};
 
-/** R4 : bibliothèque partagée autorisée pour les imports entre fichiers routes. */
-const ROUTE_LIB_ALLOWLIST = new Set(['helpers', 'lang', 'messages', 'httpCache']);
+/**
+ * R4 : bibliothèque partagée TOP-LEVEL autorisée pour les imports entre
+ * fichiers routes. La bibliothèque GÉNÉRALE est désormais routes/lib/*
+ * (phase 4f) — autorisée par la règle sous-dossier ci-dessous, pas via
+ * cette allowlist ; helpers.ts (l'ancienne lib) en a été retiré avec sa
+ * suppression.
+ */
+const ROUTE_LIB_ALLOWLIST = new Set(['lang', 'messages', 'httpCache']);
 
 /**
  * R4 : imports croisés hérités (pré-découpage), shrink-only — retirez une
@@ -167,6 +180,7 @@ function resolveRelative(fromFile: string, spec: string): string {
  */
 function findRouteCrossImports(text: string, repoPath: string): string[] {
   if (!repoPath.startsWith(ROUTES_DIR)) return [];
+  if (repoPath.startsWith(`${ROUTES_DIR}lib/`)) return []; // la lib ne cible jamais une ressource routes (db/, sync/, lang, messages)
   const offenders: string[] = [];
   const srcDir = repoPath.slice(0, repoPath.lastIndexOf('/'));
   for (const m of text.matchAll(/from\s+'(\.[^']*)'/g)) {
@@ -224,7 +238,11 @@ interface Violation {
   message: string;
 }
 
-function check(files: FileInfo[], baseline: Baseline): Violation[] {
+function check(
+  files: FileInfo[],
+  baseline: Baseline,
+  shrinkOnly: Record<string, number> = SHRINK_ONLY,
+): Violation[] {
   const violations: Violation[] = [];
   const byPath = new Map(files.map((f) => [f.repoPath, f]));
 
@@ -255,7 +273,7 @@ function check(files: FileInfo[], baseline: Baseline): Violation[] {
   }
 
   // R2 — fourre-tout shrink-only
-  for (const [path, maxExports] of Object.entries(SHRINK_ONLY)) {
+  for (const [path, maxExports] of Object.entries(shrinkOnly)) {
     const f = byPath.get(path);
     if (!f) continue;
     if (f.exports > maxExports) {
@@ -287,13 +305,17 @@ function check(files: FileInfo[], baseline: Baseline): Violation[] {
     violations.push({
       rule: 'R4',
       file: f.repoPath,
-      message: `import(s) croisé(s) vers un autre fichier routes top-level : ${offenders.join(', ')} — factorisez dans routes/helpers.ts (shrink-only : préférez routes/lib/*).`,
+      message: `import(s) croisé(s) vers un autre fichier routes top-level : ${offenders.join(', ')} — factorisez dans routes/lib/*.`,
     });
   }
   return violations;
 }
 
-function checkBaselineIntegrity(files: FileInfo[], baseline: Baseline): Violation[] {
+function checkBaselineIntegrity(
+  files: FileInfo[],
+  baseline: Baseline,
+  shrinkOnly: Record<string, number> = SHRINK_ONLY,
+): Violation[] {
   const violations: Violation[] = [];
   const byPath = new Map(files.map((f) => [f.repoPath, f]));
   for (const path of Object.keys(baseline.files)) {
@@ -314,7 +336,7 @@ function checkBaselineIntegrity(files: FileInfo[], baseline: Baseline): Violatio
       });
     }
   }
-  for (const path of [...Object.keys(SHRINK_ONLY), ...Object.keys(R4_LEGACY)]) {
+  for (const path of [...Object.keys(shrinkOnly), ...Object.keys(R4_LEGACY)]) {
     if (!byPath.has(path)) {
       violations.push({
         rule: 'R2',
@@ -404,12 +426,24 @@ function selftest(): number {
     v = check([mk('apps/api/src/db/schema.ts', 1300)], { files: {} });
     if (v.length !== 0) throw new Error('exempté déclaratif flaggé');
 
-    // 5. R2 : helpers.ts avec un export de plus que SHRINK_ONLY
-    const helpers = Object.keys(SHRINK_ONLY)[0];
-    v = check([mk(helpers, 100, { exports: SHRINK_ONLY[helpers] + 1 })], { files: {} });
-    if (!v.some((x) => x.rule === 'R2' && x.file === helpers)) {
-      throw new Error('nouvel export helpers.ts non détecté');
+    // 5. R2 : fourre-tout synthétique avec un export de plus que le ratchet
+    const fakeShrink: Record<string, number> = { 'apps/api/src/routes/fat.ts': 3 };
+    v = check([mk('apps/api/src/routes/fat.ts', 100, { exports: 4 })], { files: {} }, fakeShrink);
+    if (!v.some((x) => x.rule === 'R2' && x.file.endsWith('fat.ts'))) {
+      throw new Error('nouvel export fourre-tout non détecté');
     }
+
+    // 5b. entrée SHRINK_ONLY orpheline (fichier supprimé) → retrait signalé,
+    //     et SHRINK_ONLY vide → aucune erreur (retrait propre, phase 4f)
+    v = checkBaselineIntegrity([], { files: {} }, fakeShrink);
+    if (!v.some((x) => x.rule === 'R2' && x.file.endsWith('fat.ts'))) {
+      throw new Error('entrée SHRINK_ONLY orpheline non détectée');
+    }
+    v = checkBaselineIntegrity(
+      [mk('apps/api/src/db/schema.ts', 1300), ...Object.keys(R4_LEGACY).map((p) => mk(p, 100))],
+      { files: {} },
+    );
+    if (v.length !== 0) throw new Error('SHRINK_ONLY vide flaggé à tort');
 
     // 6. R3 : deux registrars
     const two = mk('apps/api/src/routes/dual.ts', 100, { routeRegistrars: ['aRoutes', 'bRoutes'] });
@@ -419,7 +453,7 @@ function selftest(): number {
     // 7. R4 parsing : './combat.ts' flaggé ; allowlist/sous-dossier/hors routes non
     const src = [
       "import { x } from './combat.ts';",
-      "import { y } from './helpers.ts';",
+      "import { y } from './lang.ts';",
       "import { z } from '../db/schema.ts';",
       "import { w } from './lib/membership.ts';",
     ].join('\n');
@@ -445,7 +479,7 @@ function selftest(): number {
     // agrège ses sous-modules), vers un AUTRE dossier routes/<autre>/ refusé.
     const subSrc = [
       "import { x } from './sheet.ts';",
-      "import { y } from '../helpers.ts';",
+      "import { y } from '../lib/json.ts';",
       "import { z } from '../inventory/sheet.ts';",
     ].join('\n');
     const foundSub = findRouteCrossImports(subSrc, 'apps/api/src/routes/characters/index.ts');
@@ -464,7 +498,7 @@ function selftest(): number {
       throw new Error('import cross-dossier non détecté');
     }
 
-    console.log('✓ selftest check-modularity : 9/9 scénarios.');
+    console.log('✓ selftest check-modularity : 10/10 scénarios.');
     return 0;
   } catch (err) {
     console.error(`✗ selftest échoué : ${(err as Error).message}`);

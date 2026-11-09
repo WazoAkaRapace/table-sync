@@ -17,7 +17,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../../db/drizzle.ts';
 import { cols } from '../../db/projections.ts';
 import { campaignState, dmNotes, dmQuests } from '../../db/schema.ts';
-import { isPartyGM, isPartyMember } from '../helpers.ts';
+import { isPartyGM, isPartyMember } from '../lib/membership.ts';
 import { apiMsg } from '../messages.ts';
 
 export const MAX_DAY = 100000; // ~274 ans de campagne — au-delà, c'est une erreur de saisie

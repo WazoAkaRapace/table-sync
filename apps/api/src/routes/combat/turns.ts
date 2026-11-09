@@ -24,7 +24,8 @@ import {
 } from '../../db/schema.ts';
 import { bus } from '../../sync/bus.ts';
 import { expireEphemeralEffects, mirrorAcToCombatants } from '../character-spell-effects.ts';
-import { isPartyGM, mirrorConditionsToCharacter, requireUser } from '../helpers.ts';
+import { mirrorConditionsToCharacter } from '../lib/conditions.ts';
+import { isPartyGM, requireUser } from '../lib/membership.ts';
 import { apiMsg } from '../messages.ts';
 import { mapCombatant, mapEncounter, notifyTurnPush, sortCombatants } from './shared.ts';
 
@@ -321,7 +322,7 @@ function parseTurnSnapshot(raw: string | null): TurnSnapshot | null {
  * turn), then updates turn/round skipping defeated combatants. Queries use the
  * Drizzle query-builder over the same better-sqlite3 connection; the native
  * db.transaction() wrapper keeps the condition-mirror writes (raw SQL in
- * helpers.ts, same connection) inside the same unit — a mid-failure must not
+ * lib/character-classes.ts, same connection) inside the same unit — a mid-failure must not
  * expire conditions without advancing the turn (or vice-versa). Sync events
  * emitted from inside are best-effort refresh nudges; a rollback just leaves
  * clients on the pre-tx state.

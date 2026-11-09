@@ -15,14 +15,9 @@ import { getDb } from '../db/index.ts';
 import { cols } from '../db/projections.ts';
 import { characters, parties, partyBans, partyMembers, users } from '../db/schema.ts';
 import { bus } from '../sync/bus.ts';
-import {
-  attachCharacterClasses,
-  generateInviteCode,
-  isPartyGM,
-  isPartyMember,
-  mapCharacterSummary,
-  requireUser,
-} from './helpers.ts';
+import { attachCharacterClasses } from './lib/character-classes.ts';
+import { mapCharacterSummary } from './lib/mappers.ts';
+import { generateInviteCode, isPartyGM, isPartyMember, requireUser } from './lib/membership.ts';
 import { sendCachedJson } from './httpCache.ts';
 import { apiMsg } from './messages.ts';
 import {

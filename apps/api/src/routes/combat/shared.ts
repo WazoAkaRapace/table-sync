@@ -24,7 +24,7 @@ import {
   encounters as encountersTable,
 } from '../../db/schema.ts';
 import { type PushPayload, type PushSendOptions, sendPushToUser } from '../../push/send.ts';
-import { isPartyMember, requireUser } from '../helpers.ts';
+import { isPartyMember, requireUser } from '../lib/membership.ts';
 import { apiMsg } from '../messages.ts';
 
 // ---------- Row mappers ----------

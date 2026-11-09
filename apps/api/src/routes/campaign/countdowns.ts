@@ -14,7 +14,7 @@ import { getDrizzle } from '../../db/drizzle.ts';
 import { cols } from '../../db/projections.ts';
 import { campaignCountdowns } from '../../db/schema.ts';
 import { bus } from '../../sync/bus.ts';
-import { requireUser } from '../helpers.ts';
+import { requireUser } from '../lib/membership.ts';
 import { apiMsg } from '../messages.ts';
 import { MAX_DAY, MAX_LABEL_LEN, gmGuard, mapCountdown } from './shared.ts';
 

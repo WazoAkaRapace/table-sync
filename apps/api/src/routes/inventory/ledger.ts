@@ -9,7 +9,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../../db/drizzle.ts';
 import { cols } from '../../db/projections.ts';
 import { transactions, users } from '../../db/schema.ts';
-import { isPartyGM, requireUser } from '../helpers.ts';
+import { isPartyGM, requireUser } from '../lib/membership.ts';
 import { sendCachedJson } from '../httpCache.ts';
 import { apiMsg } from '../messages.ts';
 

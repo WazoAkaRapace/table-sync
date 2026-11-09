@@ -12,7 +12,7 @@ import { eq } from 'drizzle-orm';
 import { getDrizzle } from '../../db/drizzle.ts';
 import { cols } from '../../db/projections.ts';
 import { characterClasses } from '../../db/schema.ts';
-import { replaceCharacterClasses, validateClassEntries } from '../helpers.ts';
+import { replaceCharacterClasses, validateClassEntries } from '../lib/character-classes.ts';
 
 export function applyLegacyClassFields(char: any, body: PatchCharacterPayload): void {
   // --- Champs de classe « plats » (rétrocompat mono-classe) : les reporter

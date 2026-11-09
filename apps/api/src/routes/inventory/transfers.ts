@@ -21,7 +21,7 @@ import { cols } from '../../db/projections.ts';
 import { characters, inventory } from '../../db/schema.ts';
 import { bus } from '../../sync/bus.ts';
 import { mirrorAcToCombatants } from '../character-spell-effects.ts';
-import { isOwnerOrGM, requireUser } from '../helpers.ts';
+import { isOwnerOrGM, requireUser } from '../lib/membership.ts';
 import { apiMsg } from '../messages.ts';
 import { getCharacter, itemDisplayName, logTransaction } from './shared.ts';
 

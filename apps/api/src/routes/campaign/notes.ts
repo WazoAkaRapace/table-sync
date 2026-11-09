@@ -12,7 +12,7 @@ import { getDb } from '../../db/index.ts';
 import { cols } from '../../db/projections.ts';
 import { dmNotes } from '../../db/schema.ts';
 import { bus } from '../../sync/bus.ts';
-import { requireUser } from '../helpers.ts';
+import { requireUser } from '../lib/membership.ts';
 import { apiMsg } from '../messages.ts';
 import { MAX_TITLE_LEN, gmGuard, mapNote, nextSort } from './shared.ts';
 

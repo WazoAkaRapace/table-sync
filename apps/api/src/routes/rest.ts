@@ -27,14 +27,10 @@ import {
   encounters,
 } from '../db/schema.ts';
 import { bus } from '../sync/bus.ts';
-import {
-  attachCharacterClasses,
-  isPartyGM,
-  isPartyMember,
-  mapCharacter,
-  mirrorConditionsToCombatants,
-  requireUser,
-} from './helpers.ts';
+import { attachCharacterClasses } from './lib/character-classes.ts';
+import { mirrorConditionsToCombatants } from './lib/conditions.ts';
+import { mapCharacter } from './lib/mappers.ts';
+import { isPartyGM, isPartyMember, requireUser } from './lib/membership.ts';
 import { mirrorAcToCombatants } from './character-spell-effects.ts';
 import { apiMsg } from './messages.ts';
 
