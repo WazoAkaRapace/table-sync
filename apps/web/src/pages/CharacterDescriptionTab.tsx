@@ -22,6 +22,7 @@ import {
   raceSpeedMeters,
 } from '@table-sync/shared';
 import { CLASS_SUBCLASSES } from '@table-sync/shared/classFeatures';
+import { Glyph } from '../components/Glyph';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../api';
@@ -261,7 +262,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
             onClick={() => setIdentityOpen(true)}
             className="btn-secondary text-sm px-3 py-2"
           >
-            {t('desc.modifier')}
+            <Glyph name="edit" /> {t('desc.modifier')}
           </button>
         </div>
         <div className="space-y-1">
@@ -365,7 +366,8 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
                       </div>
                     </div>
                     {issue && !issue.satisfied && (
-                      <p className="text-xs text-orange-600">
+                      <p className="text-xs text-orange-600 inline-flex items-center gap-1">
+                        <Glyph name="warn" />{' '}
                         {t('desc.prerequis', { details: issue.details.join(' / ') })}
                       </p>
                     )}
@@ -500,7 +502,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
               />
             ) : (
               <div className="w-24 h-24 rounded-full bg-parchment-200 flex items-center justify-center text-3xl text-ink-400 border-2 border-parchment-300">
-                👤
+                <Glyph name="user" />
               </div>
             )}
           </div>
@@ -616,7 +618,7 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
           <p className="text-sm text-ink-500">
             {character.hidden ? (
               <>
-                {t('desc.ce.personnage.est')}
+                <Glyph name="hide" /> {t('desc.ce.personnage.est')}
                 <strong>{t('desc.cache')}</strong>
                 {t('desc.les.autres.joueurs.ne.le.voient')}
               </>
@@ -638,9 +640,15 @@ export default function CharacterDescriptionTab({ character, charId, onSaved, on
                 )
               }
             >
-              {character.hidden
-                ? t('desc.reveler.a.la.table')
-                : t('desc.cacher.des.autres.joueurs')}
+              {character.hidden ? (
+                <span className="inline-flex items-center gap-1">
+                  <Glyph name="eye" /> {t('desc.reveler.a.la.table')}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1">
+                  <Glyph name="hide" /> {t('desc.cacher.des.autres.joueurs')}
+                </span>
+              )}
             </button>
           </div>
         </Panel>

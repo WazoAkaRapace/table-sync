@@ -29,6 +29,7 @@ import {
   spellSaveDC,
 } from '@table-sync/shared';
 import { findWarlockInvocation } from '@table-sync/shared/warlockInvocations';
+import { Glyph } from '../components/Glyph';
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../api';
@@ -793,7 +794,9 @@ export default function CharacterSpellsTab({
   if (!isCaster && charSpells.length === 0) {
     return (
       <div className="card p-8 text-center space-y-3">
-        <p className="text-4xl">✨</p>
+        <p className="text-4xl">
+          <Glyph name="spark" />
+        </p>
         <p className="text-ink-500">{t('sorts.cette.classe.ne.lance.pas.de')}</p>
         <p className="text-xs text-ink-400">{t('sorts.definissez.une.classe.de.lanceur.de')}</p>
       </div>
@@ -1076,7 +1079,11 @@ export default function CharacterSpellsTab({
                                       cs.prepared ? t('sorts.prepare') : t('sorts.non.prepare')
                                     }
                                   >
-                                    {cs.prepared ? '★' : '☆'}
+                                    {cs.prepared ? (
+                                      <Glyph name="star" />
+                                    ) : (
+                                      <Glyph name="star-outline" />
+                                    )}
                                   </button>
                                 )}
                                 <button
@@ -1099,7 +1106,7 @@ export default function CharacterSpellsTab({
                                         className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-gold-700"
                                         title={t('cast.a.volonte.manifestation')}
                                       >
-                                        ✦ {t('sorts.a.volonte')}
+                                        <Glyph name="spark-outline" /> {t('sorts.a.volonte')}
                                       </span>
                                     )}
                                     {spell.castingTime && (
@@ -1116,7 +1123,7 @@ export default function CharacterSpellsTab({
                                         className="shrink-0 text-indigo-500 text-[11px]"
                                         title={t('sorts.necessite.de.la.concentration')}
                                       >
-                                        🌀
+                                        <Glyph name="concentration" />
                                       </span>
                                     )}
                                     {spell.ritual && (
@@ -1501,7 +1508,7 @@ function SpellStatBadges({
     <div className="flex flex-wrap gap-1.5 pt-0.5">
       {dc && (
         <Chip tone="blue">
-          🛡 {t('sorts.dd')} {dcValue}
+          <Glyph name="shield" /> {t('sorts.dd')} {dcValue}
           {dc.dc_type?.index && (
             <span className="text-blue-700">
               ·{' '}
@@ -1518,7 +1525,7 @@ function SpellStatBadges({
       )}
       {spell.attackType && (
         <Chip tone="red">
-          🎯 {formatModifier(attackBonus)}
+          <Glyph name="target" /> {formatModifier(attackBonus)}
           <span className="text-red-700">
             · {spell.attackType === 'ranged' ? t('sorts.distance') : t('sorts.corps.a.corps')}
           </span>
@@ -1526,7 +1533,7 @@ function SpellStatBadges({
       )}
       {damageDice && (
         <Chip tone="orange" title={potentTitle}>
-          ⚔ {damageDice}
+          <Glyph name="combat" /> {damageDice}
         </Chip>
       )}
       {healing.dice && (
@@ -1554,7 +1561,7 @@ function spellDurationLabel(spell: Spell, concLabel: string): string | null {
   let d = spell.duration ?? '';
   if (spell.concentration && /^concentration,?\s*/i.test(d)) {
     d = d.replace(/^concentration,?\s*/i, '');
-    return `🌀 ${d ? d.charAt(0).toUpperCase() + d.slice(1) : concLabel}`;
+    return `${d ? d.charAt(0).toUpperCase() + d.slice(1) : concLabel}`;
   }
   if (spell.concentration) return `🌀 ${d || concLabel}`;
   return d.charAt(0).toUpperCase() + d.slice(1);
@@ -1573,7 +1580,13 @@ function SpellMetaLine({ spell }: { spell: Spell }) {
   ]);
   if (spell.rangeText) parts.push(['range', <span key="range">{spell.rangeText}</span>]);
   const duration = spellDurationLabel(spell, t('sorts.concentration'));
-  if (duration) parts.push(['duration', <span key="duration">{duration}</span>]);
+  if (duration)
+    parts.push([
+      'duration',
+      <span key="duration" className="inline-flex items-center gap-0.5">
+        {spell.concentration && <Glyph name="concentration" />} {duration}
+      </span>,
+    ]);
   if (spell.components.length > 0)
     parts.push(['components', <span key="components">{spell.components.join(', ')}</span>]);
   if (spell.ritual)
@@ -1741,7 +1754,9 @@ function SpellCatalog({
           </p>
         ) : (
           <div className="text-center py-8 space-y-1">
-            <p className="text-3xl">📝</p>
+            <p className="text-3xl">
+              <Glyph name="note" />
+            </p>
             <p className="text-sm text-ink-400">{t('sorts.recherchez.un.sort')}</p>
             <p className="text-xs text-ink-400">{t('sorts.tapez.le.nom.d.un.sort')}</p>
           </div>
@@ -1787,7 +1802,7 @@ function SpellCatalog({
                             className="shrink-0 text-indigo-500 text-[11px]"
                             title={t('sorts.necessite.de.la.concentration')}
                           >
-                            🌀
+                            <Glyph name="concentration" />
                           </span>
                         )}
                         {spell.ritual && (
@@ -1795,7 +1810,7 @@ function SpellCatalog({
                             className="shrink-0 text-purple-600 text-[11px]"
                             title={t('sorts.lancable.en.rituel')}
                           >
-                            ⚗
+                            <Glyph name="alchemy" />
                           </span>
                         )}
                       </span>
@@ -1806,7 +1821,13 @@ function SpellCatalog({
                       disabled={isKnown || addingSpellId === spell.id}
                       className="text-xs px-2.5 py-2 rounded-lg bg-blood-600 text-white hover:bg-blood-700 disabled:opacity-40 disabled:cursor-not-allowed shrink-0 transition-colors"
                     >
-                      {isKnown ? '✓' : addingSpellId === spell.id ? '…' : t('sorts.ajouter')}
+                      {isKnown ? (
+                        <Glyph name="check" />
+                      ) : addingSpellId === spell.id ? (
+                        '…'
+                      ) : (
+                        t('sorts.ajouter')
+                      )}
                     </button>
                   </div>
                   {isExpanded && (
@@ -1948,7 +1969,9 @@ function SwipeToReveal({
           aria-label={actionLabel}
           tabIndex={open ? 0 : -1}
         >
-          <span className="text-base leading-none">🗑</span>
+          <span className="text-base leading-none">
+            <Glyph name="trash" />
+          </span>
           {t('sorts.oublier')}
         </button>
       </div>

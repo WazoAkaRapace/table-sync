@@ -26,6 +26,7 @@ import {
   spellSaveDC,
   unarmoredDefensesOf,
 } from '@table-sync/shared';
+import { Glyph } from '../components/Glyph';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../api';
@@ -280,7 +281,7 @@ export default function CharacterStatsTab({
               >
                 {effectiveAC}
                 <span className="text-sm font-normal text-ink-500" aria-hidden="true">
-                  ✎
+                  <Glyph name="edit" />
                 </span>
               </button>
             )}

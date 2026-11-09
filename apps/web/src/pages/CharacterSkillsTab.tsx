@@ -41,6 +41,7 @@ import {
   toolProficiencyLevel,
 } from '@table-sync/shared';
 import type { TFunction } from 'i18next';
+import { Glyph } from '../components/Glyph';
 import { type FormEvent, Fragment, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../api';
@@ -254,11 +255,15 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
             className="flex-1 min-w-0 space-y-1 rounded-lg border border-gold-400/40 bg-gold-400/10 px-2.5 py-1.5"
           >
             <p className="text-xs text-gold-700 flex items-center gap-2">
-              <span className="text-sm leading-none">✎</span>
+              <span className="text-sm leading-none">
+                <Glyph name="edit" />
+              </span>
               <span>{t('skills.mode.edition.touche.une.ligne.pour')}</span>
             </p>
             <p className="text-xs text-ink-600 flex items-center gap-2">
-              <span className="text-sm leading-none">⭐</span>
+              <span className="text-sm leading-none">
+                <Glyph name="star" />
+              </span>
               <span>{expertiseBanner}</span>
             </p>
           </div>
@@ -276,7 +281,15 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
           }}
           className={`shrink-0 text-sm px-3 py-2 ${editMode ? 'btn-primary' : 'btn-secondary'}`}
         >
-          {editMode ? t('skills.terminer') : t('skills.modifier')}
+          {editMode ? (
+            <span className="inline-flex items-center gap-1">
+              <Glyph name="check" /> {t('skills.terminer')}
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1">
+              <Glyph name="edit" /> {t('skills.modifier')}
+            </span>
+          )}
         </button>
       </div>
 
@@ -291,7 +304,8 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
               </span>
             </div>
             {auraOfProtection > 0 && (
-              <p className="text-xs text-gold-700 bg-gold-400/10 border border-gold-400/40 rounded-lg px-2.5 py-1.5">
+              <p className="text-xs text-gold-700 bg-gold-400/10 border border-gold-400/40 rounded-lg px-2.5 py-1.5 inline-flex items-center gap-1">
+                <Glyph name="shield" />{' '}
                 {t('skills.aura.de.protection', {
                   bonus: auraOfProtection,
                   radius: auraRadiusMeters(level),
@@ -314,7 +328,7 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
                     <span className="flex items-center justify-center gap-1.5 text-xs font-medium text-ink-500">
                       {proficient && <span className="text-blood-500">●</span>}
                       <span>{abilityLabel(abi.key)}</span>
-                      {auraOfProtection > 0 && <span aria-hidden="true">🛡️</span>}
+                      {auraOfProtection > 0 && <Glyph name="shield" />}
                     </span>
                     <span className="block mt-0.5 text-xl font-bold tabular-nums text-ink-800">
                       {formatModifier(total)}
@@ -453,7 +467,9 @@ export default function CharacterSkillsTab({ character, charId, onSaved, onError
           <Panel title={t('skills.outils')} tuto="skills-outils">
             {hasAutomaticToolExpertise(character) && (
               <p className="text-xs text-ink-500 flex items-center gap-2">
-                <span className="text-sm leading-none">⭐</span>
+                <span className="text-sm leading-none">
+                  <Glyph name="star" />
+                </span>
                 <span>{t('skills.maitrise.des.outils.niv.6.bonus')}</span>
               </p>
             )}
@@ -668,7 +684,7 @@ function WeaponMasteryCard({
               className={chip(effective.martial)}
               aria-pressed={effective.martial}
             >
-              <span aria-hidden="true">⚔️</span>
+              <Glyph name="combat" />
               {t('skills.armes.de.guerre')}
             </button>
           </div>
@@ -831,13 +847,15 @@ function ArmorMasteryCard({
               aria-pressed={effective[token]}
             >
               <span aria-hidden="true">
-                {token === 'light'
-                  ? '🪶'
-                  : token === 'medium'
-                    ? '🧥'
-                    : token === 'heavy'
-                      ? '⚓'
-                      : '🛡️'}
+                {token === 'light' ? (
+                  '🪶'
+                ) : token === 'medium' ? (
+                  '🧥'
+                ) : token === 'heavy' ? (
+                  '⚓'
+                ) : (
+                  <Glyph name="shield" />
+                )}
               </span>{' '}
               {armorTokenLabel(t, token)}
             </button>

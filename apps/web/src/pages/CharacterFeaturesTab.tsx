@@ -31,6 +31,7 @@ import {
   findClassFeatureClass,
   nextClassFeatureGains,
 } from '@table-sync/shared/classFeatures';
+import { Glyph } from '../components/Glyph';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../api';
@@ -450,7 +451,7 @@ export default function CharacterFeaturesTab({
                                   featName: featName(feature),
                                 })}
                               >
-                                ✎
+                                <Glyph name="edit" />
                               </button>
                               <ConfirmButton
                                 onConfirm={() => remove(feature.id)}
@@ -954,8 +955,8 @@ function CatalogCard({
                       )}
                     </button>
                     {added ? (
-                      <span className="text-xs text-green-700 font-semibold shrink-0">
-                        {t('traits.ajoute')}
+                      <span className="text-xs text-green-700 font-semibold shrink-0 inline-flex items-center gap-0.5">
+                        <Glyph name="check" /> {t('traits.ajoute')}
                       </span>
                     ) : (
                       <button
@@ -1108,13 +1109,15 @@ function CatalogCard({
                                       })
                               }
                             >
-                              {addingId === inv.id
-                                ? '…'
-                                : locked
-                                  ? '🔒'
-                                  : atCap
-                                    ? '＋'
-                                    : t('traits.ajouter')}
+                              {addingId === inv.id ? (
+                                '…'
+                              ) : locked ? (
+                                <Glyph name="lock" />
+                              ) : atCap ? (
+                                '＋'
+                              ) : (
+                                t('traits.ajouter')
+                              )}
                             </button>
                           )}
                         </div>
