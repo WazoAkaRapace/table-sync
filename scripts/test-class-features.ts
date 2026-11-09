@@ -18,6 +18,7 @@ import {
   renderFeatureTemplate,
   songOfRestDie,
   SPELL_SLOTS_ARTIFICIER,
+  SPELL_SLOTS_HALF,
   SPELL_SLOTS_PACT,
 } from '@table-sync/shared';
 import {
@@ -341,6 +342,61 @@ check(
   'canalisation paladin @18 = 3',
   resourceMaxOf('paladin-canalisation-divine', mkChar({ characterClass: 'Paladin', level: 18 })),
   3,
+);
+
+// --- Clerc : paliers complémentaires & compteurs de domaine (PHB 2014) ---
+
+// PHB 2014 : canalisation divine clerc passe à 3 au niveau 18
+check(
+  'canalisation clerc @18 = 3',
+  resourceMaxOf('clerc-canalisation-divine', mkChar({ characterClass: 'Clerc', level: 18 })),
+  3,
+);
+// PHB 2014 : canalisation divine paladin passe à 2 au niveau 6
+check(
+  'canalisation paladin @6 = 2',
+  resourceMaxOf('paladin-canalisation-divine', mkChar({ characterClass: 'Paladin', level: 6 })),
+  2,
+);
+// PHB 2014 p.59 : Intervention divine — 1 utilisation, recharge repos long
+const clerc = (level: number) => mkChar({ characterClass: 'Clerc', level });
+check(
+  'intervention divine @10 : 1 utilisation, recharge repos long',
+  [
+    resourceMaxOf('clerc-intervention-divine', clerc(10)),
+    findClassFeature('clerc-intervention-divine')?.resource?.reset,
+  ],
+  [1, 'long'],
+);
+// PHB 2014 : domaines — Illumination protectrice (Lumière) = MOD SAG / RL
+const clercDomaine = (wis: number) => mkChar({ characterClass: 'Clerc', level: 3, wisdom: wis });
+check(
+  'illumination protectrice : SAG 16 → 3, SAG 6 → 1 (min, PHB 2014)',
+  [16, 6].map((wis) =>
+    resourceMaxOf('lumiere-illumination-protectrice', clercDomaine(wis)),
+  ),
+  [3, 1],
+);
+// PHB 2014 : Fureur de l'ouragan (Tempête) = MOD SAG / RL
+check(
+  'fureur de l’ouragan : SAG 14 → 2 (PHB 2014)',
+  resourceMaxOf('tempete-fureur-ouragan', clercDomaine(14)),
+  2,
+);
+// PHB 2014 : Prêtre de la guerre (Guerre) = MOD SAG / RL
+check(
+  'prêtre de la guerre : SAG 12 → 1 (PHB 2014)',
+  resourceMaxOf('guerre-pretre-de-guerre', clercDomaine(12)),
+  1,
+);
+// PHB 2014 p.63 : Visions du passé (Savoir @17) — 1 utilisation, recharge repos court
+check(
+  'visions du passé @17 : 1 utilisation, recharge repos court',
+  [
+    resourceMaxOf('savoir-visions-du-passe', clerc(17)),
+    findClassFeature('savoir-visions-du-passe')?.resource?.reset,
+  ],
+  [1, 'short'],
 );
 
 // Second souffle ×1 (court) ; Élan d'action 1→2@17 (court) ; Indomptable 1/2/3 (long)
