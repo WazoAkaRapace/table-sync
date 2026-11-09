@@ -13,8 +13,10 @@ import {
   agonizingBlastBonus,
   eldritchBlastRays,
   maxSpellSlots,
+  bardicInspirationDie,
   rageDamageBonus,
   renderFeatureTemplate,
+  songOfRestDie,
   SPELL_SLOTS_ARTIFICIER,
   SPELL_SLOTS_PACT,
 } from '@table-sync/shared';
@@ -292,6 +294,21 @@ check(
   'inspiration bardique : repos court dès le niv 5',
   findClassFeature('barde-inspiration-bardique')?.resource?.shortFromLevel,
   5,
+);
+
+// --- Barde : dés d'inspiration et du chant reposant (PHB 2014) ---
+
+// PHB 2014 : dé d'Inspiration bardique 1d6 @1, 1d8 @5, 1d10 @10, 1d12 @15
+check(
+  'dé d’inspiration bardique : d6/d8/d10/d12 aux paliers 1/5/10/15 (PHB 2014)',
+  [1, 5, 10, 15].map(bardicInspirationDie),
+  ['1d6', '1d8', '1d10', '1d12'],
+);
+// PHB 2014 : dé du Chant reposant 1d6 @2, 1d8 @9, 1d10 @13, 1d12 @17
+check(
+  'dé du chant reposant : d6/d8/d10/d12 aux paliers 2/9/13/17 (PHB 2014)',
+  [1, 2, 9, 13, 17].map(songOfRestDie),
+  ['1d6', '1d6', '1d8', '1d10', '1d12'],
 );
 
 // Canalisation divine : 1/2@6/3@18 (Clerc & Paladin, repos court)
