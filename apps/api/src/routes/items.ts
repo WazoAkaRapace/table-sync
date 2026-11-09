@@ -345,7 +345,8 @@ export async function itemRoutes(app: FastifyInstance) {
         return reply.code(403).send({ error: apiMsg(req, 'only the GM can modify items') });
       }
 
-      const body = req.body || {};
+      // PATCH partiel : clés dynamiques lues une à une ci-dessous (body[k]).
+      const body: Record<string, any> = req.body || {};
       const values: Record<string, unknown> = {};
       if (body.name !== undefined) values.name = body.name.trim();
       if (body.category !== undefined) values.category = body.category;
