@@ -209,7 +209,7 @@ export function ItemImageField({
             disabled={processing}
             className="btn-ghost text-xs disabled:opacity-50"
           >
-            {t('champ.remplacer')}
+            <Glyph name="camera" /> {t('champ.remplacer')}
           </button>
           <ConfirmButton
             onConfirm={() => {

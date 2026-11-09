@@ -637,23 +637,37 @@ export default function CastSpellSheet({
           disabled={casting || (!chosenOption && !isCantrip)}
           className="btn-primary w-full mt-4 py-2.5 disabled:opacity-40"
         >
-          {casting
-            ? '…'
-            : isShield
-              ? t('cast.reagir.bouclier')
-              : concConflict
-                ? t('cast.lancer.et.rompre.la.concentration')
-                : isCantrip
-                  ? t('cast.lancer.le.tour.de.magie')
-                  : isTargetable && target.kind !== 'self'
-                    ? t('cast.lancer.sur', { target: targetName })
-                    : chosenOption?.pool === 'free'
-                      ? freeCast?.label === 'at-will'
-                        ? t('cast.lancer.a.volonte')
-                        : t('cast.lancer.gratuit')
-                      : t('cast.lancer.au.niveau.level', {
-                          level: chosenOption ? chosenOption.level : '—',
-                        })}
+          {casting ? (
+            '…'
+          ) : isShield ? (
+            t('cast.reagir.bouclier')
+          ) : concConflict ? (
+            <span className="inline-flex items-center gap-1.5">
+              <Glyph name="spark" /> {t('cast.lancer.et.rompre.la.concentration')}
+            </span>
+          ) : isCantrip ? (
+            <span className="inline-flex items-center gap-1.5">
+              <Glyph name="spark" /> {t('cast.lancer.le.tour.de.magie')}
+            </span>
+          ) : isTargetable && target.kind !== 'self' ? (
+            <span className="inline-flex items-center gap-1.5">
+              <Glyph name="spark" /> {t('cast.lancer.sur', { target: targetName })}
+            </span>
+          ) : chosenOption?.pool === 'free' ? (
+            <span className="inline-flex items-center gap-1.5">
+              <Glyph name="spark" />
+              {freeCast?.label === 'at-will'
+                ? ` ${t('cast.lancer.a.volonte')}`
+                : ` ${t('cast.lancer.gratuit')}`}
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5">
+              <Glyph name="spark" />
+              {` ${t('cast.lancer.au.niveau.level', {
+                level: chosenOption ? chosenOption.level : '—',
+              })}`}
+            </span>
+          )}
         </button>
 
         {/* Ritual cast: no slot consumed, +10 minutes */}
