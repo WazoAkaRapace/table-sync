@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { Modal, NumberField } from '../../components/ui';
 import { coinLabel } from '../../i18n/labels';
 import { COIN_FIELDS, type CoinMode } from './CoinPurse';
+import { formatPlainCp, formatPurse } from './coinFormat';
 import type { CoinsState } from './types';
 
 // ---------- Coin transaction modal (encaisser / dépenser / corriger) ----------
@@ -40,29 +41,6 @@ function coinsOf(amounts: CoinAmounts): CoinsState {
     gold: amounts.gp,
     platinum: amounts.pp,
   };
-}
-
-/** The purse's own denominations, largest first, zeros skipped — the ledger
- * mirrors what the purse actually HOLDS, never a canonical re-breakdown. */
-function formatPurse(amounts: CoinAmounts): string {
-  const parts = COIN_FIELDS.map(({ unit }) => ({ unit, qty: amounts[unit] }))
-    .reverse()
-    .filter((p) => p.qty > 0)
-    .map((p) => `${p.qty} ${coinLabel(p.unit)}`);
-  return parts.length > 0 ? parts.join(' · ') : '0';
-}
-
-/** A copper amount the player is SHORT, in everyday coins only (PO → PA → PC —
- * never electrum or platinum, which no one at the table thinks in). */
-function formatPlainCp(totalCp: number): string {
-  const gp = Math.floor(totalCp / 100);
-  const sp = Math.floor((totalCp % 100) / 10);
-  const cp = totalCp % 10;
-  const parts: string[] = [];
-  if (gp > 0) parts.push(`${gp} ${coinLabel('gp')}`);
-  if (sp > 0) parts.push(`${sp} ${coinLabel('sp')}`);
-  if (cp > 0 || parts.length === 0) parts.push(`${cp} ${coinLabel('cp')}`);
-  return parts.join(' · ');
 }
 
 interface CoinTransactionModalProps {

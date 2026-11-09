@@ -1,11 +1,12 @@
-import type { CharacterSummary, PartyDetail } from '@table-sync/shared';
 import { coinsTotalCp, EMPTY_COINS, spendCoins, type CoinAmounts } from '@table-sync/shared';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../../api';
 import { EmptyState, LoadingSpinner, Modal, NumberField } from '../../components/ui';
 import { coinLabel } from '../../i18n/labels';
+import { usePartyRecipients } from '../../usePartyRecipients';
 import { COIN_FIELDS } from './CoinPurse';
+import { formatPlainCp, formatPurse } from './coinFormat';
 import { apiError, type CoinsState } from './types';
 
 // ---------- Donner à… (transfert de bourse entre personnages) ----------
@@ -24,27 +25,6 @@ function amountsOf(coins: CoinsState): CoinAmounts {
     gp: coins.gold,
     pp: coins.platinum,
   };
-}
-
-/** Les dénominations de la bourse, plus grandes d'abord, zéros sautés. */
-function formatPurse(amounts: CoinAmounts): string {
-  const parts = COIN_FIELDS.map(({ unit }) => ({ unit, qty: amounts[unit] }))
-    .reverse()
-    .filter((p) => p.qty > 0)
-    .map((p) => `${p.qty} ${coinLabel(p.unit)}`);
-  return parts.length > 0 ? parts.join(' · ') : '0';
-}
-
-/** Un manque en cuivre, en pièces courantes seulement (PO · PA · PC). */
-function formatPlainCp(totalCp: number): string {
-  const gp = Math.floor(totalCp / 100);
-  const sp = Math.floor((totalCp % 100) / 10);
-  const cp = totalCp % 10;
-  const parts: string[] = [];
-  if (gp > 0) parts.push(`${gp} ${coinLabel('gp')}`);
-  if (sp > 0) parts.push(`${sp} ${coinLabel('sp')}`);
-  if (cp > 0 || parts.length === 0) parts.push(`${cp} ${coinLabel('cp')}`);
-  return parts.join(' · ');
 }
 
 interface CoinGiveModalProps {
@@ -70,43 +50,21 @@ export function CoinGiveModal({
   onError,
 }: CoinGiveModalProps) {
   const { t } = useTranslation();
-  const [party, setParty] = useState<PartyDetail | null>(null);
-  const [loadingParty, setLoadingParty] = useState(false);
+  const { loadingParty, others } = usePartyRecipients(open, partyId, charId, onError);
   const [targetId, setTargetId] = useState<number | null>(null);
   const [amounts, setAmounts] = useState<CoinAmounts>({ ...EMPTY_COINS });
   const [submitting, setSubmitting] = useState(false);
 
-  // Même source que TransferModal : le groupe porte les destinataires.
-  useEffect(() => {
-    if (!open || !partyId) return;
-    let cancelled = false;
-    setLoadingParty(true);
-    api
-      .get<PartyDetail>(`/api/parties/${partyId}`)
-      .then((res) => {
-        if (!cancelled) setParty(res.data);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) onError(apiError(err, t('transfert.groupe.introuvable')));
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingParty(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [open, partyId, onError, t]);
-
-  // Brouillon vierge à chaque ouverture — la bourse est figée à l'ouverture
-  // de la porte (un rafraîchi WS en pleine saisie n'écrase pas le brouillon).
+  // Même source que TransferModal : le groupe porte les destinataires (hook
+  // usePartyRecipients) ; le brouillon reste vierge à chaque ouverture — la
+  // bourse est figée à l'ouverture de la porte (un rafraîchi WS en pleine
+  // saisie n'écrase pas le brouillon).
   useEffect(() => {
     if (open) {
       setAmounts({ ...EMPTY_COINS });
       setTargetId(null);
     }
   }, [open]);
-
-  const others: CharacterSummary[] = party ? party.characters.filter((c) => c.id !== charId) : [];
 
   const step = (unit: keyof CoinAmounts, delta: number) => {
     setAmounts((a) => ({ ...a, [unit]: Math.max(0, a[unit] + delta) }));
