@@ -926,6 +926,73 @@ check(
   true,
 );
 
+// --- Occultiste : arcanums mystiques & compteurs de patron (PHB 2014) ---
+
+// PHB 2014 p.110 : Arcanum mystique — sort de niv.6 @11, niv.7 @13, niv.8 @15, niv.9 @17
+check(
+  'arcanum mystique : niveaux d’acquisition 11/13/15/17',
+  ['occultiste-arcanum-6', 'occultiste-arcanum-7', 'occultiste-arcanum-8', 'occultiste-arcanum-9'].map(
+    (id) => findClassFeature(id)?.level,
+  ),
+  [11, 13, 15, 17],
+);
+// PHB 2014 : chaque arcanum = 1 utilisation, recharge repos LONG (1 sort par repos)
+const arcanumIds = ['occultiste-arcanum-6', 'occultiste-arcanum-7', 'occultiste-arcanum-8', 'occultiste-arcanum-9'];
+const occ20 = mkChar({ characterClass: 'Occultiste', level: 20 });
+check(
+  'arcanum mystique : 1 utilisation chacun, recharge repos long',
+  arcanumIds.map((id) => [
+    resourceMaxOf(id, occ20),
+    findClassFeature(id)?.resource?.reset,
+  ]),
+  arcanumIds.map(() => [1, 'long']),
+);
+// PHB 2014 p.111 : Maître occulte @20 — 1 arcanum de niv.6 supplémentaire / repos long
+check(
+  'maître occulte @20 : 1 utilisation, recharge repos long',
+  [
+    resourceMaxOf('occultiste-maitre-occulte', occ20),
+    findClassFeature('occultiste-maitre-occulte')?.resource?.reset,
+  ],
+  [1, 'long'],
+);
+// PHB 2014 : compteurs de patron — 1 utilisation, recharge SRD (court sauf mention)
+const occultistePatron = (subclass: string) =>
+  mkChar({ characterClass: 'Occultiste', level: 20, subclass });
+check(
+  'présence féerique (Archée @1) : 1 utilisation, recharge repos court',
+  [
+    resourceMaxOf('archfee-presence-feerique', occultistePatron('archfee')),
+    findClassFeature('archfee-presence-feerique')?.resource?.reset,
+  ],
+  [1, 'short'],
+);
+check(
+  'chance du ténébreux (Fiélon @6) : 1 utilisation, recharge repos court',
+  [
+    resourceMaxOf('fielon-chance-du-tenebreux', occultistePatron('fielon')),
+    findClassFeature('fielon-chance-du-tenebreux')?.resource?.reset,
+  ],
+  [1, 'short'],
+);
+check(
+  'protection entropique (Grand ancien @6) : 1 utilisation, recharge repos court',
+  [
+    resourceMaxOf('grand-ancien-protection-entropique', occultistePatron('grand-ancien')),
+    findClassFeature('grand-ancien-protection-entropique')?.resource?.reset,
+  ],
+  [1, 'short'],
+);
+// PHB 2014 p.110 : Traversée des enfers (Fiélon @14) — 1 / repos long
+check(
+  'traversée des enfers (Fiélon @14) : 1 utilisation, recharge repos long',
+  [
+    resourceMaxOf('fielon-traversee-des-enfers', occultistePatron('fielon')),
+    findClassFeature('fielon-traversee-des-enfers')?.resource?.reset,
+  ],
+  [1, 'long'],
+);
+
 // --- applyRest ---
 
 const restChar = (over: Partial<Character> = {}) =>
