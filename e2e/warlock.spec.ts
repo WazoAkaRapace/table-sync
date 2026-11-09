@@ -157,7 +157,7 @@ playerTest.describe('Occultiste (manifestations)', () => {
       await row.getByRole('button', { name: 'Lancer Détection de la magie' }).click();
       const cast = page.getByRole('dialog', { name: 'Lancer Détection de la magie' });
       await expect(cast.getByText('À volonté — manifestation occulte')).toBeVisible();
-      await cast.getByRole('button', { name: '🪄 Lancer à volonté' }).click();
+      await cast.getByRole('button', { name: 'Lancer à volonté' }).click();
       await expect(cast).toHaveCount(0);
       await expect(pactFull).toBeVisible();
     },
@@ -183,7 +183,7 @@ playerTest.describe('Occultiste (manifestations)', () => {
         name: 'Niveau 5 : 3 emplacements disponibles sur 3 — corriger',
       });
       await expect(pactFull).toBeVisible();
-      await cast.getByRole('button', { name: '🪄 Lancer sans emplacement' }).click();
+      await cast.getByRole('button', { name: 'Lancer sans emplacement' }).click();
       await expect(cast).toHaveCount(0);
       await expect(pactFull).toBeVisible();
 

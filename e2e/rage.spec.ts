@@ -26,7 +26,7 @@ gmTest('rage: consommer une charge pose l’état, rompre le retire', async ({ p
 
   await page.goto(sheetUrl(cid));
   await openTab(page, 'Survie');
-  await expect(page.getByRole('heading', { name: '⚡ Ressources' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Ressources' })).toBeVisible();
 
   // Pas d'état au repos : ni pastille bandeau, ni chip
   await expect(page.locator('[title="Rage en cours"]')).toHaveCount(0);

@@ -1545,7 +1545,7 @@ function SpellStatBadges({
               : t('sorts.points.de.vie.restaures')
           }
         >
-          ✚ {healing.dice}
+          <Glyph name="heart" /> {healing.dice}
           {healing.addsModifier ? formatModifier(castingMod) : ''} {t('sorts.pv')}
         </Chip>
       )}

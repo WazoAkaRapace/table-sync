@@ -48,7 +48,7 @@ playerTest.describe('Survie (guerrier)', () => {
   playerTest('dés de vie et boutons de repos sont présents', async ({ page }) => {
     await expect(page.getByRole('heading', { name: 'Repos' })).toBeVisible();
     await expect(page.getByLabel('Dépenser un dé de vie')).toBeVisible();
-    await expect(page.getByRole('button', { name: '⛺ Repos court' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Repos court' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Repos long' })).toBeVisible();
   });
 });

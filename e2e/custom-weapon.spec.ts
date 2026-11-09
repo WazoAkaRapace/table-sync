@@ -89,7 +89,7 @@ playerTest.describe('Arme personnalisée (joueur)', () => {
     await expect(modal.locator('span.inline-flex').filter({ hasText: '+2' })).toBeVisible();
     await page.screenshot({ path: 'e2e/.captures/custom-weapon-joueur.png' });
 
-    await modal.getByRole('button', { name: '✨ Créer et ajouter' }).click();
+    await modal.getByRole('button', { name: 'Créer et ajouter' }).click();
 
     // L'arme atterrit dans le sac : la ligne déployée rend les puces moteur.
     await expandCategory(page, 'Arme');

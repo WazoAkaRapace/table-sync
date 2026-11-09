@@ -30,7 +30,7 @@ affiché sans application mécanique, ❌ est absent (candidat roadmap).
    tous emplacements, ½ niveau en dés (min 1), épuisement −1, concentration,
    toutes ressources (max recalculé). Boutons dans l'onglet Survie + sheets de
    confirmation.
-3. **Ressources de classe** — carte « ⚡ Ressources » dans Survie pour
+3. **Ressources de classe** — carte « Ressources » dans Survie pour
    tout trait du catalogue possédant un compteur (rage, ki, canalisation,
    second souffle, sursaut d'activité, indomptable, points de sorcellerie,
    inspiration bardique, imposition des mains, arcanum…).

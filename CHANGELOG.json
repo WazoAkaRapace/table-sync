@@ -2,6 +2,17 @@
   {
     "version": null,
     "sha": null,
+    "date": "2026-11-10",
+    "title": "fin de conversion des emoji d'interface vers les glyphes SVG (conditions, météo, statuts, types, chronique)",
+    "items": [
+      "Derniers emoji d'interface remplacés : conditions et types d'emplacement, préréglages météo du calendrier, états de quêtes et de rencontres (points CSS), registre de chronique, prérequis et libellés d'action.",
+      "Les libellés portent désormais le glyphe en début de chaîne retiré : l'icône est rendue en SVG à côté du texte, le nom accessible reste le libellé seul.",
+      "Push et e-mails inchangés : leurs emoji conservés."
+    ]
+  },
+  {
+    "version": null,
+    "sha": null,
     "date": "2026-11-09",
     "title": "glyphes d'interface cohérents (SVG) remplaçant les emoji",
     "items": [

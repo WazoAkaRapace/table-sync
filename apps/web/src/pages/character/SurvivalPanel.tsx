@@ -1880,7 +1880,7 @@ export function SurvivalPanel({
                 }`}
               >
                 <span className="text-lg shrink-0" aria-hidden="true">
-                  {CONDITION_ICONS[cond] ?? '❓'}
+                  {CONDITION_ICONS[cond] ?? <Glyph name="question" />}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-medium text-ink-800">

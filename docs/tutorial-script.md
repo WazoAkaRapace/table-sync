@@ -48,7 +48,7 @@ Les cibles sont **des conteneurs de section stables et toujours présents** (tit
 | `survie-attaques` | Bloc « Attaques » (glyphe épées) | `apps/web/src/pages/character/SurvivalPanel.tsx` | les deux |
 | `survie-des-vie` | Bloc « Dés de vie » (glyphe dé) | `apps/web/src/pages/character/SurvivalPanel.tsx` | les deux |
 | `survie-etats` | Bloc « États » (glyphe masques) | `apps/web/src/pages/character/SurvivalPanel.tsx` | les deux |
-| `survie-ressources` | Bloc « ⚡ Ressources » | `apps/web/src/pages/character/SurvivalPanel.tsx` | les deux |
+| `survie-ressources` | Bloc « Ressources » | `apps/web/src/pages/character/SurvivalPanel.tsx` | les deux |
 | `survie-repos` | Bloc « Repos » (glyphe dé) | `apps/web/src/pages/character/SurvivalPanel.tsx` | les deux |
 | `survie-forme` | Bloc « Forme sauvage » (glyphe patte) | `apps/web/src/pages/character/SurvivalPanel.tsx` | les deux · `when` druide |
 | `stats-caracts` | Section « Caractéristiques » | `apps/web/src/pages/CharacterStatsTab.tsx` | les deux |
@@ -108,8 +108,8 @@ Se joue à l'arrivée sur la fiche (drapeau absent ou réinitialisé), quel que 
 | 2 | `attaques` | `survie-attaques` | les deux | **Attaques** Tes armes avec les bons chiffres : la puce 🎯 donne le bonus, ⚔ les dégâts, ✨ la magie. Caractéristique, maîtrise, style de combat… tout est calculé selon les règles. | **⚔ Attacks** Your weapons with the right numbers: the 🎯 chip shows the attack bonus, ⚔ damage, ✨ magic. Ability, proficiency, fighting style… it's all computed by the rules. |
 | 3 | `des-vie` | `survie-des-vie` | les deux | **Dés de vie** Ta réserve de dés de vie, un compteur par classe. Un repos long t'en rend la moitié ; pendant un repos court, dépenses-en pour te soigner. | **🎲 Hit dice** Your hit-dice pool, one counter per class. A long rest returns half of them; during a short rest, spend them to heal. |
 | 4 | `etats` | `survie-etats` | les deux | **États** Conditions et épuisement, avec durées. Ils suivent ton personnage partout : ta fiche et le traqueur du MD restent synchronisés. | **🎭 Conditions** Conditions and exhaustion, with durations. They follow your character everywhere: your sheet and the GM's tracker stay in sync. |
-| 5 | `ressources` | `survie-ressources` | les deux | **⚡ Ressources** Rage, ki, points de sorcellerie… les compteurs de tes traits (classe, race, historique, dons, personnalisé), avec leur maximum calculé à ton niveau actuel. | **⚡ Resources** Rage, ki, sorcery points… your features' counters (class, race, background, feats, custom), with their maximum computed at your current level. |
-| 6 | `repos` | `survie-repos` | les deux | **⛺ Repos court, Repos long (glyphe lune)** Un appui applique les règles : emplacements, ressources, dés de vie. Et ton MD te voit te reposer en direct. | **⛺ Short rest, 🌙 long rest** One tap applies the rules: slots, resources, hit dice. And your GM watches you rest live. |
+| 5 | `ressources` | `survie-ressources` | les deux | **Ressources** Rage, ki, points de sorcellerie… les compteurs de tes traits (classe, race, historique, dons, personnalisé), avec leur maximum calculé à ton niveau actuel. | **Resources** Rage, ki, sorcery points… your features' counters (class, race, background, feats, custom), with their maximum computed at your current level. |
+| 6 | `repos` | `survie-repos` | les deux | **Repos court, 🌙 repos long** Un appui applique les règles : emplacements, ressources, dés de vie. Et ton MD te voit te reposer en direct. | **Short rest, 🌙 long rest** One tap applies the rules: slots, resources, hit dice. And your GM watches you rest live. |
 | 7 | `forme` | `survie-forme` | les deux · `when` druide | **Forme sauvage** Choisis une bête déjà vue : la fiche gère ses PV, le retour automatique à 0 et le DD maximal selon ton niveau. | **🐾 Wild shape** Pick a beast you've seen: the sheet tracks its HP, the auto-revert at 0, and the CR gates for your level. |
 
 ## 7. Script « Caractéristiques » (5 étapes · onglet `stats`)
