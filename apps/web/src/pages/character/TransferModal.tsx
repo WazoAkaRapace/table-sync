@@ -1,13 +1,9 @@
-import type {
-  CharacterSummary,
-  InventoryEntry,
-  PartyDetail,
-  StorageLocation,
-} from '@table-sync/shared';
+import type { InventoryEntry, StorageLocation } from '@table-sync/shared';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../../api';
 import { EmptyState, LoadingSpinner, Modal, NumberField } from '../../components/ui';
+import { usePartyRecipients } from '../../usePartyRecipients';
 
 // ---------- Transfer modal ----------
 
@@ -31,31 +27,10 @@ export function TransferModal({
   onError,
 }: TransferModalProps) {
   const { t } = useTranslation();
-  const [party, setParty] = useState<PartyDetail | null>(null);
-  const [loadingParty, setLoadingParty] = useState(false);
+  const { loadingParty, others } = usePartyRecipients(open, partyId, charId, onError);
   const [targetId, setTargetId] = useState<number | null>(null);
   const [qty, setQty] = useState(1);
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (!open || !partyId) return;
-    let cancelled = false;
-    setLoadingParty(true);
-    api
-      .get<PartyDetail>(`/api/parties/${partyId}`)
-      .then((res) => {
-        if (!cancelled) setParty(res.data);
-      })
-      .catch((err: any) => {
-        if (!cancelled) onError(err.response?.data?.error || t('transfert.groupe.introuvable'));
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingParty(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [open, partyId, onError, t]);
 
   useEffect(() => {
     if (open && entry) {
@@ -66,7 +41,6 @@ export function TransferModal({
 
   if (!entry) return null;
 
-  const others: CharacterSummary[] = party ? party.characters.filter((c) => c.id !== charId) : [];
   const maxQty = entry.quantity;
   const itemName = entry.item.name;
 
@@ -175,38 +149,15 @@ export function ContainerTransferModal({
   onError,
 }: ContainerTransferModalProps) {
   const { t } = useTranslation();
-  const [party, setParty] = useState<PartyDetail | null>(null);
-  const [loadingParty, setLoadingParty] = useState(false);
+  const { loadingParty, others } = usePartyRecipients(open, partyId, charId, onError);
   const [targetId, setTargetId] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (!open || !partyId) return;
-    let cancelled = false;
-    setLoadingParty(true);
-    api
-      .get<PartyDetail>(`/api/parties/${partyId}`)
-      .then((res) => {
-        if (!cancelled) setParty(res.data);
-      })
-      .catch((err: any) => {
-        if (!cancelled) onError(err.response?.data?.error || t('transfert.groupe.introuvable'));
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingParty(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [open, partyId, onError, t]);
 
   useEffect(() => {
     if (open) setTargetId(null);
   }, [open]);
 
   if (!location) return null;
-
-  const others: CharacterSummary[] = party ? party.characters.filter((c) => c.id !== charId) : [];
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();

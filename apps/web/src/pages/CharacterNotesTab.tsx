@@ -7,12 +7,11 @@ import type { Character, CharacterNote } from '@table-sync/shared';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../api';
-import { renderMarkdown } from '../components/markdown';
-import { SortableCard, SortableGrid } from '../components/SortableGrid';
-import { ConfirmButton, EmptyState, Modal } from '../components/ui';
-import { appLocale } from '../i18n';
+import { NoteCard } from '../components/NoteCard';
+import { NoteEditorModal } from '../components/NoteEditorModal';
+import { SortableGrid } from '../components/SortableGrid';
+import { EmptyState } from '../components/ui';
 import { useOwnEchoGuard, useResyncOnReconnect, useSyncEvent } from '../sync';
-import { parseSqliteDate } from '../utils';
 
 interface Props {
   character: Character;
@@ -40,7 +39,6 @@ export default function CharacterNotesTab({
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [saving, setSaving] = useState(false);
-  const [previewMode, setPreviewMode] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -78,7 +76,6 @@ export default function CharacterNotesTab({
     setEditing(null);
     setTitle('');
     setContent('');
-    setPreviewMode(false);
     setShowModal(true);
   };
 
@@ -86,7 +83,6 @@ export default function CharacterNotesTab({
     setEditing(note);
     setTitle(note.title);
     setContent(note.content ?? '');
-    setPreviewMode(false);
     setShowModal(true);
   };
 
@@ -172,141 +168,30 @@ export default function CharacterNotesTab({
           className="grid gap-3 sm:grid-cols-2"
         >
           {notes.map((note) => (
-            <SortableCard
+            <NoteCard
               key={note.id}
-              id={note.id}
-              label={t('notes.deplacer.note.title', { note_title: note.title })}
-            >
-              {(handle, isDragging) => (
-                <div
-                  className={`card p-4 flex flex-col gap-2 ${isDragging ? 'card-dragging' : ''}`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-display font-semibold text-ink-800">{note.title}</h3>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => openEdit(note)}
-                        className="text-ink-400 hover:text-blood-500 text-sm p-1"
-                        aria-label={t('notes.modifier.note.title', { note_title: note.title })}
-                      >
-                        ✎
-                      </button>
-                      <ConfirmButton
-                        onConfirm={() => remove(note.id)}
-                        className="text-ink-400 hover:text-red-700 text-sm p-1 rounded-full transition-colors"
-                        armedClassName="bg-red-600 hover:brightness-90 text-white! px-2.5 py-1 font-semibold"
-                        title={t('notes.supprimer.note.title', { note_title: note.title })}
-                        ariaLabel={t('notes.supprimer.note.title', { note_title: note.title })}
-                        confirmChildren={t('notes.supprimer')}
-                      >
-                        ×
-                      </ConfirmButton>
-                      {notes.length > 1 && handle}
-                    </div>
-                  </div>
-                  {note.content && (
-                    <div
-                      className="text-sm text-ink-600 prose-sm max-w-none"
-                      // Note de dépendances (ex-suppression Biome) : renderMarkdown escapes <, > and & in inline() before injecting its own trusted tags — no user HTML reaches the DOM.
-                      dangerouslySetInnerHTML={{ __html: renderMarkdown(note.content) }}
-                    />
-                  )}
-                  <span className="text-[10px] text-ink-400 mt-auto">
-                    {t('notes.modifie.le', {
-                      date: parseSqliteDate(note.updatedAt).toLocaleDateString(appLocale()),
-                    })}
-                  </span>
-                </div>
-              )}
-            </SortableCard>
+              note={note}
+              showHandle={notes.length > 1}
+              onEdit={() => openEdit(note)}
+              onRemove={() => remove(note.id)}
+            />
           ))}
         </SortableGrid>
       )}
 
       {/* Add/Edit modal */}
-      <Modal
+      <NoteEditorModal
         open={showModal}
+        editing={editing !== null}
         onClose={() => setShowModal(false)}
-        title={editing ? t('notes.modifier.la.note') : t('notes.nouvelle.note')}
-      >
-        <div className="space-y-3">
-          <label className="block">
-            <span className="label">{t('notes.titre')}</span>
-            <input
-              className="input"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder={t('notes.mes.quetes.en.cours')}
-              autoFocus
-            />
-          </label>
-
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <span className="label">{t('notes.contenu')}</span>
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => setPreviewMode(false)}
-                  className={`text-xs px-2 py-0.5 rounded ${!previewMode ? 'bg-blood-600 text-white' : 'bg-parchment-200 text-ink-500'}`}
-                >
-                  {t('notes.editer')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPreviewMode(true)}
-                  className={`text-xs px-2 py-0.5 rounded ${previewMode ? 'bg-blood-600 text-white' : 'bg-parchment-200 text-ink-500'}`}
-                >
-                  {t('notes.apercu')}
-                </button>
-              </div>
-            </div>
-            {previewMode ? (
-              <div className="input min-h-[180px] overflow-y-auto">
-                {content.trim() ? (
-                  // Note de dépendances (ex-suppression Biome) : renderMarkdown escapes <, > and & in inline() before injecting its own trusted tags — no user HTML reaches the DOM.
-                  <div dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }} />
-                ) : (
-                  <span className="text-ink-400 italic">{t('notes.rien.a.previsualiser')}</span>
-                )}
-              </div>
-            ) : (
-              <textarea
-                className="input min-h-[180px] resize-y font-mono text-sm"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder={t('notes.modele.de.contenu')}
-              />
-            )}
-          </div>
-
-          <div className="bg-parchment-50 rounded-lg p-2 border border-parchment-200">
-            <p className="text-[11px] text-ink-500">
-              <strong>{t('notes.formatage')}</strong>
-              {t('notes.gras.italique.code.titre.liste.gt')}
-            </p>
-          </div>
-
-          <div className="flex gap-2 pt-1">
-            <button
-              type="button"
-              onClick={save}
-              disabled={saving || !title.trim()}
-              className="btn-primary flex-1 disabled:opacity-50"
-            >
-              {saving ? '…' : editing ? t('common.save') : t('notes.creer')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowModal(false)}
-              className="btn-ghost text-ink-700"
-            >
-              {t('notes.annuler')}
-            </button>
-          </div>
-        </div>
-      </Modal>
+        title={title}
+        onTitleChange={setTitle}
+        content={content}
+        onContentChange={setContent}
+        saving={saving}
+        onSave={save}
+        titlePlaceholder={t('notes.mes.quetes.en.cours')}
+      />
     </div>
   );
 }

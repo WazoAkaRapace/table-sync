@@ -431,6 +431,24 @@ export function SurvivalPanel({
     }
   };
 
+  // Pied COMMUN des feuilles de repos (court & long) — mêmes verbes, mêmes
+  // états (doRest / restBusy / fermeture), un seul fragment partagé.
+  const restSheetFooter = (
+    <>
+      <button
+        type="button"
+        onClick={doRest}
+        disabled={restBusy}
+        className="btn-primary flex-1 disabled:opacity-50"
+      >
+        {restBusy ? '…' : t('survie.se.reposer')}
+      </button>
+      <button type="button" onClick={() => setRestSheet(null)} className="btn-ghost text-ink-700">
+        {t('survie.annuler')}
+      </button>
+    </>
+  );
+
   // --- Châtiment divin (Paladin) : consomme un emplacement de sort ---
   const smiteMaxSlots = computeSpellcastingPools(character).spellcasting;
   const smiteUsed = character.spellSlotsUsed ?? [0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -1562,25 +1580,7 @@ export function SurvivalPanel({
         title={t('survie.repos.court.1.h')}
         mobileOnly={false}
         size="md"
-        footer={
-          <>
-            <button
-              type="button"
-              onClick={doRest}
-              disabled={restBusy}
-              className="btn-primary flex-1 disabled:opacity-50"
-            >
-              {restBusy ? '…' : t('survie.se.reposer')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setRestSheet(null)}
-              className="btn-ghost text-ink-700"
-            >
-              {t('survie.annuler')}
-            </button>
-          </>
-        }
+        footer={restSheetFooter}
       >
         <div className="space-y-3 text-sm text-ink-700">
           <p>{t('survie.recupere.apres.un.repos.court.emplacements')}</p>
@@ -1732,25 +1732,7 @@ export function SurvivalPanel({
         title={t('survie.repos.long.8.h')}
         mobileOnly={false}
         size="md"
-        footer={
-          <>
-            <button
-              type="button"
-              onClick={doRest}
-              disabled={restBusy}
-              className="btn-primary flex-1 disabled:opacity-50"
-            >
-              {restBusy ? '…' : t('survie.se.reposer')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setRestSheet(null)}
-              className="btn-ghost text-ink-700"
-            >
-              {t('survie.annuler')}
-            </button>
-          </>
-        }
+        footer={restSheetFooter}
       >
         <div className="space-y-3 text-sm text-ink-700">
           <p>{t('survie.apres.un.repos.long.au.plus')}</p>
