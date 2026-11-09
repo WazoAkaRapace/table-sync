@@ -96,6 +96,7 @@ import {
   type NewLocationPayload,
 } from './character/types';
 import NpcPage from './NpcPage';
+import { Glyph } from '../components/Glyph';
 
 const CATALOG_PAGE_SIZE = 30;
 
@@ -1113,7 +1114,7 @@ export default function CharacterInventoryPage() {
               className="block w-full px-3 min-h-11 py-2 text-xs font-semibold text-ink-900"
               aria-expanded={hubInitOpen}
             >
-              {t('inv.lance.ton.initiative')}
+              <Glyph name="dice" /> {t('inv.lance.ton.initiative')}
             </button>
             {hubInitOpen && (
               <>
@@ -1170,7 +1171,7 @@ export default function CharacterInventoryPage() {
                       initiativeBonus: hubCombat.initiativeBonus,
                     })}
                   >
-                    🎲
+                    <Glyph name="dice" />
                   </button>
                 </div>
                 {hubInitError && (
@@ -1190,7 +1191,7 @@ export default function CharacterInventoryPage() {
           // corps bat en rythme cardiaque (synchrone du halo).
           <div className="combat-turn-banner relative mb-[-1px] mx-auto w-fit max-w-full rounded-t-xl rounded-b-md shadow-md border border-b-0 bg-blood-600 border-blood-700 combat-turn-glow">
             <div className="combat-turn-stamp relative px-3 py-1.5 text-xs font-bold text-white text-center">
-              {t('inv.a.toi.de.jouer')}
+              <Glyph name="combat" /> {t('inv.a.toi.de.jouer')}
             </div>
             <div className="flex items-center gap-2 px-2 py-1.5 bg-parchment-50 border-t border-blood-300">
               <button
@@ -1200,7 +1201,9 @@ export default function CharacterInventoryPage() {
                 className="btn-primary relative overflow-hidden min-h-[44px] flex-1 px-4 text-sm whitespace-nowrap"
                 aria-label={t('inv.terminer.mon.tour.passer.au.combattant')}
               >
-                {t('inv.j.ai.fini.mon.tour')}
+                <span className="inline-flex items-center gap-1">
+                  <Glyph name="check" /> {t('inv.j.ai.fini.mon.tour')}
+                </span>
                 <span className="btn-sheen" aria-hidden="true" />
               </button>
               <Link
@@ -1218,9 +1221,15 @@ export default function CharacterInventoryPage() {
               className="relative block mb-[-1px] mx-auto w-fit max-w-full px-3 py-1.5 rounded-t-xl rounded-b-md text-xs font-semibold shadow-md border border-b-0 transition-colors bg-night-900 text-night-100 border-night-700"
               aria-label={t('inv.combat.en.cours.ouvrir.le.traqueur')}
             >
-              {hubCombat.currentCombatantName
-                ? `⚔ ${hubCombat.currentCombatantName}`
-                : t('inv.combat.en.preparation')}
+              {hubCombat.currentCombatantName ? (
+                <span className="inline-flex items-center gap-1">
+                  <Glyph name="combat" /> {hubCombat.currentCombatantName}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1">
+                  <Glyph name="combat" /> {t('inv.combat.en.preparation')}
+                </span>
+              )}
             </Link>
           )
         )}
@@ -1304,7 +1313,15 @@ export default function CharacterInventoryPage() {
                   className="icon-swap"
                   aria-hidden="true"
                 >
-                  {moreOpen ? '✕' : hubCombat ? '⚔' : secondary ? secondary.icon : '☰'}
+                  {moreOpen ? (
+                    <Glyph name="close" />
+                  ) : hubCombat ? (
+                    <Glyph name="combat" />
+                  ) : secondary ? (
+                    secondary.icon
+                  ) : (
+                    <Glyph name="list" />
+                  )}
                 </span>
                 {/* Non-lus de correspondance : la pastille vit sur le hub, seul
                     bouton toujours visible — même combattant, même anneau. */}
@@ -1561,7 +1578,7 @@ export default function CharacterInventoryPage() {
                             isConfirming ? t('inv.confirmer') : t('inv.supprimer.ce.transport')
                           }
                         >
-                          {isConfirming ? '✓' : '🗑'}
+                          {isConfirming ? <Glyph name="check" /> : <Glyph name="trash" />}
                         </button>
                       )}
                     </div>
@@ -1599,7 +1616,7 @@ export default function CharacterInventoryPage() {
                   className="btn-ghost text-ink-500 text-sm shrink-0"
                   aria-label={t('inv.fermer.l.erreur')}
                 >
-                  ✕
+                  <Glyph name="close" />
                 </button>
               </div>
             )}
@@ -1839,7 +1856,13 @@ export default function CharacterInventoryPage() {
             disabled={creatingItem || !createItemName.trim()}
             className="btn-primary w-full"
           >
-            {creatingItem ? '…' : t('inv.creer.et.ajouter')}
+            {creatingItem ? (
+              '…'
+            ) : (
+              <span className="inline-flex items-center gap-1">
+                <Glyph name="spark" /> {t('inv.creer.et.ajouter')}
+              </span>
+            )}
           </button>
           <p className="text-xs text-ink-400">{t('inv.l.objet.rejoint.le.catalogue.du')}</p>
         </form>

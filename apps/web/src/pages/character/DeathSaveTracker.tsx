@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../../api';
 import type { SheetActionProps } from './types';
+import { Glyph } from '../../components/Glyph';
 
 interface DeathSaveTrackerProps extends SheetActionProps {
   character: Character;
@@ -91,7 +92,7 @@ export function DeathSaveTracker({
                     filled: filled ? t('mort.coche') : t('mort.vide'),
                   })}
                 >
-                  ✓
+                  <Glyph name="check" />
                 </button>
               );
             })}
@@ -117,7 +118,7 @@ export function DeathSaveTracker({
                     filled: filled ? t('mort.coche') : t('mort.vide'),
                   })}
                 >
-                  ✗
+                  <Glyph name="close" />
                 </button>
               );
             })}

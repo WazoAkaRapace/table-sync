@@ -15,6 +15,7 @@ import { coinLabel } from '../../i18n/labels';
 import { COIN_FIELDS, type CoinMode } from './CoinPurse';
 import { formatPlainCp, formatPurse } from './coinFormat';
 import type { CoinsState } from './types';
+import { Glyph } from '../../components/Glyph';
 
 // ---------- Coin transaction modal (encaisser / dépenser / corriger) ----------
 // The moneychanger's sheet: enter a delta per denomination, the shared engine
@@ -150,11 +151,15 @@ export function CoinTransactionModal({
                   : 'bg-parchment-50 text-ink-600 border-parchment-300 hover:border-parchment-400'
               }`}
             >
-              {m === 'gain'
-                ? `＋ ${t('bourse.encaisser')}`
-                : m === 'spend'
-                  ? `− ${t('bourse.depenser')}`
-                  : `✎ ${t('bourse.corriger')}`}
+              {m === 'gain' ? (
+                `＋ ${t('bourse.encaisser')}`
+              ) : m === 'spend' ? (
+                `− ${t('bourse.depenser')}`
+              ) : (
+                <span className="inline-flex items-center gap-1">
+                  <Glyph name="edit" /> {t('bourse.corriger')}
+                </span>
+              )}
             </button>
           ))}
         </fieldset>

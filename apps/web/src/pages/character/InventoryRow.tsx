@@ -18,6 +18,7 @@ import {
 } from '../../i18n/labels';
 import { useItemDescription } from '../../lazyDetails';
 import { LOCATION_TYPE_ICON } from './types';
+import { Glyph } from '../../components/Glyph';
 
 // ---------- Inventory row ----------
 
@@ -176,14 +177,14 @@ export function InventoryRow({
                   aria-pressed={entry.equipped}
                   title={entry.equipped ? t('rangee.equipe') : t('rangee.non.equipe')}
                 >
-                  {entry.equipped ? '★' : '☆'}
+                  {entry.equipped ? <Glyph name="star" /> : <Glyph name="star-outline" />}
                 </button>
               ) : (
                 <span
                   className={`shrink-0 mt-0.5 text-lg leading-none ${entry.equipped ? 'text-gold-600' : 'text-ink-400/40'}`}
                   title={entry.equipped ? t('rangee.equipe') : t('rangee.non.equipe')}
                 >
-                  {entry.equipped ? '★' : '☆'}
+                  {entry.equipped ? <Glyph name="star" /> : <Glyph name="star-outline" />}
                 </span>
               )}
 
@@ -209,7 +210,7 @@ export function InventoryRow({
                       title={t('rangee.illustration.touche.la.ligne.pour.la')}
                       className="ml-0.5 text-sm text-ink-400"
                     >
-                      🗺
+                      <Glyph name="map" />
                     </span>
                   )}
                   {canExpand && (
@@ -391,7 +392,7 @@ export function InventoryRow({
                                   : t('rangee.attaque.non.qualifie', { breakdown: breakdown })
                               }
                             >
-                              🎯 {formatModifier(stats.attackBonus)}
+                              <Glyph name="target" /> {formatModifier(stats.attackBonus)}
                               {!stats.proficient && ' ⚠'}
                             </Chip>
                             {stats.damageStr && (
@@ -406,7 +407,7 @@ export function InventoryRow({
                                     : ''
                                 }`}
                               >
-                                ⚔ {stats.damageStr}
+                                <Glyph name="combat" /> {stats.damageStr}
                                 {stats.damageTypeFr ? ` ${damageType(stats.damageTypeFr)}` : ''}
                               </Chip>
                             )}
@@ -417,7 +418,7 @@ export function InventoryRow({
                             )}
                             {stats.magicBonus > 0 && (
                               <Chip tone="gold" className="font-semibold">
-                                ✨ +{stats.magicBonus}
+                                <Glyph name="spark" /> +{stats.magicBonus}
                               </Chip>
                             )}
                             {stats.presumedBase && (
