@@ -40,6 +40,7 @@
     "check:modularity": "tsx scripts/check-modularity.ts",
     "check:duplication": "tsx scripts/check-duplication.ts",
     "check:duplication:report": "tsx scripts/check-duplication.ts --report",
+    "check:validation": "tsx scripts/check-validation.ts",
     "typecheck:api": "tsc -p apps/api/tsconfig.typecheck.json"
   },
   "devDependencies": {

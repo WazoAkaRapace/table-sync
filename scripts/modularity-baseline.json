@@ -1,7 +1,7 @@
 {
   "files": {
     "apps/api/src/routes/auth.ts": {
-      "lines": 861
+      "lines": 806
     },
     "apps/api/src/routes/campaign.ts": {
       "lines": 1060
