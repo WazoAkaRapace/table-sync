@@ -25,6 +25,40 @@ import {
 } from './helpers.ts';
 import { sendCachedJson } from './httpCache.ts';
 import { apiMsg } from './messages.ts';
+import {
+  BanMemberBody,
+  CreatePartyBody,
+  JoinPartyBody,
+  NoBody,
+  UpdatePartyBody,
+} from '../validation.ts';
+
+/** Ligne `parties` → vue API (contrat Party de @table-sync/shared). */
+function partyView(row: any) {
+  return {
+    id: row.id,
+    name: row.name,
+    gmUserId: row.gm_user_id,
+    inviteCode: row.invite_code,
+    encumbranceMode: row.encumbrance_mode,
+    playersCreateItems: !!row.players_create_items,
+    createdAt: row.created_at,
+  };
+}
+
+/**
+ * Préambule commun des routes d'administration d'un groupe : authentifie
+ * puis exige le rôle MD. Réponse déjà envoyée (401/403) → null.
+ */
+function requirePartyGM(partyId: number, req: FastifyRequest, reply: FastifyReply): number | null {
+  const userId = requireUser(req, reply);
+  if (userId === null) return null;
+  if (!isPartyGM(partyId, userId)) {
+    reply.code(403).send({ error: apiMsg(req, 'GM only') });
+    return null;
+  }
+  return userId;
+}
 
 export async function partyRoutes(app: FastifyInstance) {
   // ---------- List my parties ----------
@@ -103,6 +137,7 @@ export async function partyRoutes(app: FastifyInstance) {
   // ---------- Create party (creator becomes GM) ----------
   app.post(
     '/parties',
+    { schema: { body: CreatePartyBody } },
     async (req: FastifyRequest<{ Body: CreatePartyPayload }>, reply: FastifyReply) => {
       const userId = requireUser(req, reply);
       if (userId === null) return;
@@ -128,17 +163,7 @@ export async function partyRoutes(app: FastifyInstance) {
         .from(parties)
         .where(eq(parties.id, partyId))
         .get() as any;
-      return reply.code(201).send({
-        party: {
-          id: row.id,
-          name: row.name,
-          gmUserId: row.gm_user_id,
-          inviteCode: row.invite_code,
-          encumbranceMode: row.encumbrance_mode,
-          playersCreateItems: !!row.players_create_items,
-          createdAt: row.created_at,
-        },
-      });
+      return reply.code(201).send({ party: partyView(row) });
     },
   );
 
@@ -197,15 +222,7 @@ export async function partyRoutes(app: FastifyInstance) {
       // les personnages) et les clients le refetchent à chaque vague
       // d'invalidation — inchangé, il ne doit repartir qu'en 304.
       return sendCachedJson(req, reply, {
-        party: {
-          id: party.id,
-          name: party.name,
-          gmUserId: party.gm_user_id,
-          inviteCode: party.invite_code,
-          encumbranceMode: party.encumbrance_mode,
-          playersCreateItems: !!party.players_create_items,
-          createdAt: party.created_at,
-        },
+        party: partyView(party),
         members: members.map((m: any) => ({
           userId: m.user_id,
           username: m.username,
@@ -259,6 +276,7 @@ export async function partyRoutes(app: FastifyInstance) {
   // view changes because I opened my table).
   app.post(
     '/parties/:id/open',
+    { schema: { body: NoBody } },
     async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
       const userId = requireUser(req, reply);
       if (userId === null) return;
@@ -279,6 +297,7 @@ export async function partyRoutes(app: FastifyInstance) {
   // ---------- Join party via invite code ----------
   app.post(
     '/parties/join',
+    { schema: { body: JoinPartyBody } },
 
     async (req: FastifyRequest<{ Body: JoinPartyPayload }>, reply: FastifyReply) => {
       const userId = requireUser(req, reply);
@@ -329,13 +348,12 @@ export async function partyRoutes(app: FastifyInstance) {
   // ---------- Remove a member (GM only) — door stays open, invite code works ----------
   app.delete(
     '/parties/:id/members/:userId',
+    { schema: { body: NoBody } },
     async (req: FastifyRequest<{ Params: { id: string; userId: string } }>, reply) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
       const partyId = Number(req.params.id);
       const targetId = Number(req.params.userId);
-      if (!isPartyGM(partyId, userId))
-        return reply.code(403).send({ error: apiMsg(req, 'GM only') });
+      const userId = requirePartyGM(partyId, req, reply);
+      if (userId === null) return;
 
       const drizzle = getDrizzle();
       const target = drizzle
@@ -366,6 +384,7 @@ export async function partyRoutes(app: FastifyInstance) {
   // ---------- Ban a member (GM only) — seat freed AND the invite code is locked for them ----------
   app.post(
     '/parties/:id/bans',
+    { schema: { body: BanMemberBody } },
     async (req: FastifyRequest<{ Params: { id: string }; Body: { userId?: number } }>, reply) => {
       const userId = requireUser(req, reply);
       if (userId === null) return;
@@ -413,13 +432,12 @@ export async function partyRoutes(app: FastifyInstance) {
   // ---------- Unban (GM only) — the invite code works again, no auto re-seat ----------
   app.delete(
     '/parties/:id/bans/:userId',
+    { schema: { body: NoBody } },
     async (req: FastifyRequest<{ Params: { id: string; userId: string } }>, reply) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
       const partyId = Number(req.params.id);
       const targetId = Number(req.params.userId);
-      if (!isPartyGM(partyId, userId))
-        return reply.code(403).send({ error: apiMsg(req, 'GM only') });
+      const userId = requirePartyGM(partyId, req, reply);
+      if (userId === null) return;
 
       const drizzle = getDrizzle();
       const info = drizzle
@@ -442,6 +460,7 @@ export async function partyRoutes(app: FastifyInstance) {
   // ---------- Update party (GM only) ----------
   app.patch(
     '/parties/:id',
+    { schema: { body: UpdatePartyBody } },
     async (
       req: FastifyRequest<{
         Params: { id: string };
@@ -501,17 +520,7 @@ export async function partyRoutes(app: FastifyInstance) {
         .where(eq(parties.id, partyId))
         .get() as any;
       bus.emitChange({ type: 'party:change', partyId, action: 'stats', actorUserId: userId });
-      return reply.send({
-        party: {
-          id: row.id,
-          name: row.name,
-          gmUserId: row.gm_user_id,
-          inviteCode: row.invite_code,
-          encumbranceMode: row.encumbrance_mode,
-          playersCreateItems: !!row.players_create_items,
-          createdAt: row.created_at,
-        },
-      });
+      return reply.send({ party: partyView(row) });
     },
   );
 
@@ -522,6 +531,7 @@ export async function partyRoutes(app: FastifyInstance) {
   // custom items. Global SRD items (party_id NULL) are untouched.
   app.delete(
     '/parties/:id',
+    { schema: { body: NoBody } },
     async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
       const userId = requireUser(req, reply);
       if (userId === null) return;
