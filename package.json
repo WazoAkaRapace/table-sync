@@ -37,12 +37,16 @@
     "site": "node scripts/serve-site.mjs",
     "i18n:ratchet": "tsx scripts/i18n/check-ui-strings.ts",
     "changelog:check": "tsx scripts/check-changelog.ts",
+    "check:modularity": "tsx scripts/check-modularity.ts",
+    "check:duplication": "tsx scripts/check-duplication.ts",
+    "check:duplication:report": "tsx scripts/check-duplication.ts --report",
     "typecheck:api": "tsc -p apps/api/tsconfig.typecheck.json"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
     "concurrently": "^10.0.6",
     "drizzle-orm": "^0.45.3",
+    "jscpd": "^5.4.3",
     "oxfmt": "^0.75.0",
     "oxlint": "^1.91.0",
     "playwright": "^1.64.1",
