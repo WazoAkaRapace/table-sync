@@ -409,7 +409,12 @@ function getImageItem(
 async function getAnnotationEntry(
   req: FastifyRequest<{ Params: { id: string } }>,
   reply: FastifyReply,
-): Promise<{ userId: number; entry: any; char: any; drizzle: ReturnType<typeof getDrizzle> } | null> {
+): Promise<{
+  userId: number;
+  entry: any;
+  char: any;
+  drizzle: ReturnType<typeof getDrizzle>;
+} | null> {
   const userId = requireUser(req, reply);
   if (userId === null) return null;
   const drizzle = getDrizzle();

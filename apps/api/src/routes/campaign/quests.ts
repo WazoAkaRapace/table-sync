@@ -63,7 +63,13 @@ export async function questsRoutes(app: FastifyInstance) {
       req: FastifyRequest<{ Params: { id: string }; Body: PatchDmQuestPayload }>,
       reply: FastifyReply,
     ) => {
-      const ctx = getCampaignRowForGM(req, reply, dmQuests, Number(req.params.id), 'quest not found');
+      const ctx = getCampaignRowForGM(
+        req,
+        reply,
+        dmQuests,
+        Number(req.params.id),
+        'quest not found',
+      );
       if (ctx === null) return;
       const { userId, row: quest, drizzle } = ctx;
 
@@ -108,7 +114,13 @@ export async function questsRoutes(app: FastifyInstance) {
   app.delete(
     '/dm-quests/:id',
     async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-      const ctx = getCampaignRowForGM(req, reply, dmQuests, Number(req.params.id), 'quest not found');
+      const ctx = getCampaignRowForGM(
+        req,
+        reply,
+        dmQuests,
+        Number(req.params.id),
+        'quest not found',
+      );
       if (ctx === null) return;
       const { userId, row: quest, drizzle } = ctx;
 

@@ -62,7 +62,12 @@ function isOwnerOrGM(char: any, userId: number): boolean {
 
 /** Garde « éditeur de notes » : membre du groupe, puis owner/MD (les libellés
  *  403 sont propres à ce fichier). Renvoie false après réponse envoyée. */
-function guardNoteEditor(req: FastifyRequest, reply: FastifyReply, char: any, userId: number): boolean {
+function guardNoteEditor(
+  req: FastifyRequest,
+  reply: FastifyReply,
+  char: any,
+  userId: number,
+): boolean {
   if (!isPartyMember(char.party_id, userId)) {
     reply.code(403).send({ error: apiMsg(req, 'Not a party member') });
     return false;

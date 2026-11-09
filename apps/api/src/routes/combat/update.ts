@@ -18,10 +18,7 @@ import { and, eq } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../../db/drizzle.ts';
 import { getDb } from '../../db/index.ts';
-import {
-  characters as charactersTable,
-  combatants as combatantsTable,
-} from '../../db/schema.ts';
+import { characters as charactersTable, combatants as combatantsTable } from '../../db/schema.ts';
 import { bus } from '../../sync/bus.ts';
 import { breakConcentrationEffectsOnTracker } from '../character-spell-effects.ts';
 import { mirrorConditionsToCharacter } from '../lib/conditions.ts';
@@ -69,11 +66,7 @@ function breakConcentrationAndRage(
         .run();
     }
     if (ch.raging) {
-      drizzle
-        .update(charactersTable)
-        .set({ raging: 0 })
-        .where(eq(charactersTable.id, ch.id))
-        .run();
+      drizzle.update(charactersTable).set({ raging: 0 }).where(eq(charactersTable.id, ch.id)).run();
     }
     // v2 : la rupture se juge sur le LANCEUR — les lignes CASTÉES par ce
     // perso tombent (sur lui, sur autrui ou « Autre »), et la CA de CHAQUE

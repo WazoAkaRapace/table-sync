@@ -475,11 +475,7 @@ function finishTurn(
   userId: number,
   reply: FastifyReply,
 ): FastifyReply {
-  const row = drizzle
-    .select()
-    .from(encountersTable)
-    .where(eq(encountersTable.id, enc.id))
-    .get();
+  const row = drizzle.select().from(encountersTable).where(eq(encountersTable.id, enc.id)).get();
   bus.emitChange({
     type: 'combat:change',
     partyId: enc.partyId,
