@@ -1,5 +1,15 @@
 [
   {
+    "version": null,
+    "sha": null,
+    "date": "2026-11-09",
+    "title": "glyphes d'interface cohérents (SVG) remplaçant les emoji",
+    "items": [
+      "Les emoji d'interface (pages et libellés) laissent place à des glyphes SVG cohérents (trait encre, couleur du texte, taille 1em).",
+      "Push et e-mails inchangés : leurs emoji conservés."
+    ]
+  },
+  {
     "version": "2026.11.09-16",
     "sha": "390c9ef1",
     "date": "2026-11-09",
@@ -166,7 +176,9 @@
     "sha": "0e294a76",
     "date": "2026-11-07",
     "title": "potions de soin renommées",
-    "items": ["Les noms des potions de soin sont corrigés."]
+    "items": [
+      "Les noms des potions de soin sont corrigés."
+    ]
   },
   {
     "version": "2026.11.07-5",
@@ -191,7 +203,9 @@
     "sha": "b725405a",
     "date": "2026-11-07",
     "title": "armes personnalisées complètes",
-    "items": ["Le MD et les joueurs créent des armes personnalisées avec aperçu des dégâts."]
+    "items": [
+      "Le MD et les joueurs créent des armes personnalisées avec aperçu des dégâts."
+    ]
   },
   {
     "version": "2026.11.07-2",
@@ -344,28 +358,36 @@
     "sha": "990a8e27",
     "date": "2026-10-20",
     "title": "correction des versions",
-    "items": ["Le dépôt des numéros de version ne casse plus les vérifications automatiques."]
+    "items": [
+      "Le dépôt des numéros de version ne casse plus les vérifications automatiques."
+    ]
   },
   {
     "version": "2026.10.20-2",
     "sha": "2dde5a62",
     "date": "2026-10-20",
     "title": "correction silencieuse des versions",
-    "items": ["Le dépôt des numéros de version ne casse plus les vérifications automatiques."]
+    "items": [
+      "Le dépôt des numéros de version ne casse plus les vérifications automatiques."
+    ]
   },
   {
     "version": "2026.10.20",
     "sha": "8976f880",
     "date": "2026-10-20",
     "title": "mises à jour internes",
-    "items": ["Les mises à jour internes de sécurité et de stabilité sont appliquées."]
+    "items": [
+      "Les mises à jour internes de sécurité et de stabilité sont appliquées."
+    ]
   },
   {
     "version": "2026.10.15-3",
     "sha": "a1d850a8",
     "date": "2026-10-15",
     "title": "la relève du rail",
-    "items": ["L'animation de l'ordre d'initiative à la fin du tour est corrigée."]
+    "items": [
+      "L'animation de l'ordre d'initiative à la fin du tour est corrigée."
+    ]
   },
   {
     "version": "2026.10.15-2",
