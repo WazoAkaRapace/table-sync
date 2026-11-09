@@ -247,6 +247,28 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   });
   eq(r.status, 400, 'foreign note id in order → 400');
 
+  // CodeRabbit #279 : un id EXISTANT mais d'un AUTRE groupe doit aussi être
+  // refusé (le check d'appartenance filtre par partyId).
+  r = await api(base, 'POST', '/api/parties', {
+    token: fx.gm.token,
+    body: { name: 'Autre groupe' },
+  });
+  eq(r.status, 201, 'second party created');
+  const otherPartyId = r.data.party.id;
+  r = await api(base, 'POST', `/api/parties/${otherPartyId}/dm-notes`, {
+    token: fx.gm.token,
+    body: { title: 'Note de l autre groupe' },
+  });
+  eq(r.status, 201, 'foreign party note created');
+  const foreignNote = r.data.note;
+  r = await api(base, 'PATCH', `/api/parties/${P}/dm-notes/order`, {
+    token: fx.gm.token,
+    body: { order: [foreignNote.id, note1.id] },
+  });
+  eq(r.status, 400, 'existing foreign-party note id in order → 400');
+  r = await api(base, 'GET', `/api/parties/${otherPartyId}/campaign`, { token: fx.gm.token });
+  eq(r.data.campaign.notes[0].sortOrder, foreignNote.sortOrder, 'foreign party order untouched');
+
   r = await api(base, 'DELETE', `/api/dm-notes/${note2.id}`, { token: fx.gm.token });
   eq(r.status, 204, 'dm-note deleted');
 

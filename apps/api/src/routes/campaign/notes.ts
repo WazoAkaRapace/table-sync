@@ -5,7 +5,7 @@
  */
 
 import type { CreateDmNotePayload, PatchDmNotePayload, ReorderPayload } from '@table-sync/shared';
-import { eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../../db/drizzle.ts';
 import { getDb } from '../../db/index.ts';
@@ -120,13 +120,14 @@ export async function notesRoutes(app: FastifyInstance) {
         return reply.code(400).send({ error: apiMsg(req, 'order is required') });
       }
       // Every id must belong to this party — a foreign id would silently
-      // rewrite another group's ordering.
+      // rewrite another group's ordering (CodeRabbit #279 : le filtre
+      // partyId manquait — un id d'un AUTRE groupe passait le check).
       const owned = new Set(
         (
           getDrizzle()
             .select({ id: dmNotes.id })
             .from(dmNotes)
-            .where(inArray(dmNotes.id, order))
+            .where(and(inArray(dmNotes.id, order), eq(dmNotes.partyId, partyId)))
             .all() as any[]
         ).map((r) => r.id),
       );
