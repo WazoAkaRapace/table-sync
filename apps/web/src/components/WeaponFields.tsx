@@ -24,6 +24,7 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { appLang } from '../i18n';
 import { damageType, weaponPropertyLabel } from '../i18n/labels';
+import { Glyph } from './Glyph';
 import { Chip } from './ui';
 
 /** Brouillon d'arme édité par le panneau — porté par le state du modal hôte. */
@@ -332,7 +333,7 @@ export function WeaponFields({
         {mainLine ? (
           <div className="flex flex-wrap items-center gap-1.5">
             <Chip tone="orange" title={draft.damageDice}>
-              ⚔ {mainLine}
+              <Glyph name="combat" /> {mainLine}
               {typeLabel ? ` · ${typeLabel}` : ''}
             </Chip>
             {twoHandedLine && (
@@ -342,7 +343,7 @@ export function WeaponFields({
             )}
             {draft.magicBonus > 0 && (
               <Chip tone="gold" className="font-semibold">
-                ✨ +{draft.magicBonus}
+                <Glyph name="spark" /> +{draft.magicBonus}
               </Chip>
             )}
           </div>

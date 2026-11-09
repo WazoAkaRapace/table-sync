@@ -10,6 +10,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../api';
 import { monsterSizeLabel } from '../i18n/labels';
+import { Glyph } from './Glyph';
 import { Modal, NumberField } from './ui';
 
 interface Props {
@@ -97,8 +98,12 @@ export default function AddMonsterModal({ open, onClose, onAdd }: Props) {
                     <span className="text-xs text-ink-400 ml-2">{m.type}</span>
                   </div>
                   <div className="text-xs text-ink-500 flex gap-3">
-                    <span>🛡 {m.armorClass}</span>
-                    <span>❤ {m.hitPoints}</span>
+                    <span>
+                      <Glyph name="shield" /> {m.armorClass}
+                    </span>
+                    <span>
+                      <Glyph name="heart" /> {m.hitPoints}
+                    </span>
                     <span>FP {formatCR(m.challengeRating)}</span>
                   </div>
                 </div>
@@ -127,10 +132,10 @@ export default function AddMonsterModal({ open, onClose, onAdd }: Props) {
             </div>
             <div className="flex gap-4 mt-3 text-sm">
               <span className="px-2 py-1 rounded bg-blood-50 text-blood-500">
-                🛡 CA {selected.armorClass}
+                <Glyph name="shield" /> CA {selected.armorClass}
               </span>
               <span className="px-2 py-1 rounded bg-red-50 text-red-700">
-                ❤ PV {selected.hitPoints}
+                <Glyph name="heart" /> PV {selected.hitPoints}
               </span>
             </div>
           </div>

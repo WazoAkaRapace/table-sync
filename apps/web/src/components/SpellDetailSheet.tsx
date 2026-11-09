@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../api';
 import { schoolLabel } from '../i18n/labels';
+import { Glyph } from './Glyph';
 import { BottomSheet } from './ui';
 
 interface Props {
@@ -68,12 +69,12 @@ export default function SpellDetailSheet({ open, spellId, onClose }: Props) {
           <div className="flex flex-wrap gap-1.5 text-xs">
             {spell.concentration && (
               <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200 font-semibold">
-                🌀 {t('detail.concentration')}
+                <Glyph name="concentration" /> {t('detail.concentration')}
               </span>
             )}
             {spell.ritual && (
               <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200 font-medium">
-                ⚗ {t('detail.rituel')}
+                <Glyph name="alchemy" /> {t('detail.rituel')}
               </span>
             )}
           </div>
