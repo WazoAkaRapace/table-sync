@@ -166,11 +166,9 @@ export async function partyRoutes(app: FastifyInstance) {
   app.get(
     '/parties/:id',
     async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const partyId = Number(req.params.id);
-      if (!isPartyMember(partyId, userId))
-        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
+      const ctx = requirePartyMember(req, reply);
+      if (ctx === null) return;
+      const { userId, partyId } = ctx;
 
       const drizzle = getDrizzle();
       const party = drizzle
@@ -245,13 +243,11 @@ export async function partyRoutes(app: FastifyInstance) {
   app.get(
     '/parties/:id/me',
     async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const partyId = Number(req.params.id);
+      const ctx = requirePartyMember(req, reply);
+      if (ctx === null) return;
+      const { userId, partyId } = ctx;
       // Même ordre que le détail : la non-appartenance répond AVANT l'inconnue
       // (une partie qui n'existe pas ne doit pas se distinguer d'une privée).
-      if (!isPartyMember(partyId, userId))
-        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
       const party = getDrizzle()
         .select({ playersCreateItems: parties.playersCreateItems })
         .from(parties)
@@ -273,11 +269,9 @@ export async function partyRoutes(app: FastifyInstance) {
     '/parties/:id/open',
     { schema: { body: NoBody } },
     async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const partyId = Number(req.params.id);
-      if (!isPartyMember(partyId, userId))
-        return reply.code(403).send({ error: apiMsg(req, 'not a member') });
+      const ctx = requirePartyMember(req, reply);
+      if (ctx === null) return;
+      const { userId, partyId } = ctx;
 
       const drizzle = getDrizzle();
       drizzle
@@ -351,14 +345,8 @@ export async function partyRoutes(app: FastifyInstance) {
       if (userId === null) return;
 
       const drizzle = getDrizzle();
-      const target = drizzle
-        .select(cols(partyMembers))
-        .from(partyMembers)
-        .where(and(eq(partyMembers.partyId, partyId), eq(partyMembers.userId, targetId)))
-        .get() as any;
-      if (!target) return reply.code(404).send({ error: apiMsg(req, 'member not found') });
-      if (target.role === 'gm')
-        return reply.code(403).send({ error: apiMsg(req, 'cannot remove the GM') });
+      const target = getPartyTarget(req, reply, drizzle, partyId, targetId, 'cannot remove the GM');
+      if (target === null) return;
 
       drizzle
         .delete(partyMembers)
@@ -390,14 +378,8 @@ export async function partyRoutes(app: FastifyInstance) {
         return reply.code(403).send({ error: apiMsg(req, 'GM only') });
 
       const drizzle = getDrizzle();
-      const target = drizzle
-        .select(cols(partyMembers))
-        .from(partyMembers)
-        .where(and(eq(partyMembers.partyId, partyId), eq(partyMembers.userId, targetId)))
-        .get() as any;
-      if (!target) return reply.code(404).send({ error: apiMsg(req, 'member not found') });
-      if (target.role === 'gm')
-        return reply.code(403).send({ error: apiMsg(req, 'cannot ban the GM') });
+      const target = getPartyTarget(req, reply, drizzle, partyId, targetId, 'cannot ban the GM');
+      if (target === null) return;
 
       getDb().transaction(() => {
         drizzle
@@ -556,4 +538,53 @@ export async function partyRoutes(app: FastifyInstance) {
       return reply.code(204).send();
     },
   );
+}
+
+/**
+ * Préambule membre des routes /parties/:id : requireUser puis 403 « not a
+ * member » AVANT toute lecture (une partie inconnue ne doit pas se distinguer
+ * d'une privée). Renvoie null après avoir envoyé la réponse — l'appelant fait
+ * `return`.
+ */
+function requirePartyMember(
+  req: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply,
+): { userId: number; partyId: number } | null {
+  const userId = requireUser(req, reply);
+  if (userId === null) return null;
+  const partyId = Number(req.params.id);
+  if (!isPartyMember(partyId, userId)) {
+    reply.code(403).send({ error: apiMsg(req, 'not a member') });
+    return null;
+  }
+  return { userId, partyId };
+}
+
+/**
+ * Porte « membre cible » (remove/ban) : 404 « member not found », puis le
+ * rôle GM est intouchable (403 au libellé propre au geste). Renvoie null
+ * après avoir envoyé la réponse.
+ */
+function getPartyTarget(
+  req: FastifyRequest,
+  reply: FastifyReply,
+  drizzle: ReturnType<typeof getDrizzle>,
+  partyId: number,
+  targetId: number,
+  gmGuardMsg: string,
+): any | null {
+  const target = drizzle
+    .select(cols(partyMembers))
+    .from(partyMembers)
+    .where(and(eq(partyMembers.partyId, partyId), eq(partyMembers.userId, targetId)))
+    .get() as any;
+  if (!target) {
+    reply.code(404).send({ error: apiMsg(req, 'member not found') });
+    return null;
+  }
+  if (target.role === 'gm') {
+    reply.code(403).send({ error: apiMsg(req, gmGuardMsg) });
+    return null;
+  }
+  return target;
 }
