@@ -115,7 +115,10 @@ function loadBaseline(): { baseline: ValBaseline | null; invalid: boolean } {
   try {
     const raw = JSON.parse(text) as Partial<ValBaseline> & { withoutSchema?: number };
     if (Array.isArray(raw.routes)) return { baseline: { routes: raw.routes }, invalid: false };
-    return { baseline: null, invalid: true }; // ancien format compteur = à ré-init
+    // Ancien format compteur (sansSchema numérique, pas de routes) : considéré
+    // ABSENT mais valide — ré-initialisable via --update-baseline (migration).
+    if (typeof raw.withoutSchema === 'number') return { baseline: null, invalid: false };
+    return { baseline: null, invalid: true }; // format inconnu
   } catch {
     return { baseline: null, invalid: true }; // JSON invalide = ne jamais réécrire
   }
