@@ -31,6 +31,7 @@ import {
   sqliteTable,
   text,
   unique,
+  type AnySQLiteColumn,
 } from 'drizzle-orm/sqlite-core';
 
 export const users = sqliteTable('users', {
@@ -314,7 +315,7 @@ export const items = sqliteTable(
     // Annotation d'exemplaire : copie dérivée de l'objet de base (dessin/notes
     // aplatis dans SON image). SET NULL si la base disparaît — l'exemplaire
     // annoté vit sa vie. Toujours NULL sur les objets de catalogue.
-    derivedFromItemId: integer('derived_from_item_id').references(() => items.id, {
+    derivedFromItemId: integer('derived_from_item_id').references((): AnySQLiteColumn => items.id, {
       onDelete: 'set null',
     }),
   },
