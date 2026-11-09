@@ -178,11 +178,7 @@ check(
   'long',
 );
 // PHB 2014 : palier intermédiaire 12-16 — la rage reste à 5 (6 seulement à 17)
-check(
-  'rage @14 = 5 (palier 12-16, PHB 2014)',
-  resourceMaxOf('barbare-rage', barb(14)),
-  5,
-);
+check('rage @14 = 5 (palier 12-16, PHB 2014)', resourceMaxOf('barbare-rage', barb(14)), 5);
 
 // Ki = niveau (repos court) ; points de sorcellerie = niveau (repos long)
 check('ki @7 = 7', resourceMaxOf('moine-ki', mkChar({ characterClass: 'Moine', level: 7 })), 7);
@@ -411,9 +407,7 @@ check(
 const clercDomaine = (wis: number) => mkChar({ characterClass: 'Clerc', level: 3, wisdom: wis });
 check(
   'illumination protectrice : SAG 16 → 3, SAG 6 → 1 (min, PHB 2014)',
-  [16, 6].map((wis) =>
-    resourceMaxOf('lumiere-illumination-protectrice', clercDomaine(wis)),
-  ),
+  [16, 6].map((wis) => resourceMaxOf('lumiere-illumination-protectrice', clercDomaine(wis))),
   [3, 1],
 );
 // PHB 2014 : Fureur de l'ouragan (Tempête) = MOD SAG / RL
@@ -441,11 +435,7 @@ check(
 // --- Paladin : rayon d'aura & capstones de serment (PHB 2014) ---
 
 // PHB 2014 : rayon d'aura 10 pieds (3 m) ; Aura améliorée @18 → 30 pieds (9 m)
-check(
-  'rayon d’aura : 3 m @6, 9 m @18 (PHB 2014)',
-  [6, 17, 18].map(auraRadiusMeters),
-  [3, 3, 9],
-);
+check('rayon d’aura : 3 m @6, 9 m @18 (PHB 2014)', [6, 17, 18].map(auraRadiusMeters), [3, 3, 9]);
 const paladinOath = (sacredOath: string, id: string, level: number) => [
   resourceMaxOf(id, mkChar({ characterClass: 'Paladin', level, sacredOath })),
   findClassFeature(id)?.resource?.reset,
@@ -572,12 +562,16 @@ const SRD_ARTIFICIER_SLOTS: number[][] = [
   [4, 3, 3, 3, 2, 0, 0, 0, 0], // L19
   [4, 3, 3, 3, 2, 0, 0, 0, 0], // L20
 ];
-check('emplacements artificier (TCE) == SPELL_SLOTS_ARTIFICIER', SPELL_SLOTS_ARTIFICIER, SRD_ARTIFICIER_SLOTS);
+check(
+  'emplacements artificier (TCE) == SPELL_SLOTS_ARTIFICIER',
+  SPELL_SLOTS_ARTIFICIER,
+  SRD_ARTIFICIER_SLOTS,
+);
 // TCE : Imprégnation d'objet — 2 objets @2, 3 @6, 4 @10, 5 @14, 6 @18
 check(
   'imprégnation d’objet : 2/3/4/5/6 objets aux paliers 2/6/10/14/18 (TCE)',
-  [2, 6, 10, 14, 18].map(
-    (lv) => resourceMaxOf('artificier-objets-infuses', mkChar({ characterClass: 'Artificier', level: lv })),
+  [2, 6, 10, 14, 18].map((lv) =>
+    resourceMaxOf('artificier-objets-infuses', mkChar({ characterClass: 'Artificier', level: lv })),
   ),
   [2, 3, 4, 5, 6],
 );
@@ -594,9 +588,7 @@ check(
 const artificier = (level: number) => mkChar({ characterClass: 'Artificier', level });
 check(
   'élixir expérimental : 1/2/3 aux paliers 3/6/15 (TCE)',
-  [3, 6, 15].map(
-    (lv) => resourceMaxOf('alchimiste-elixir-experimental', artificier(lv)),
-  ),
+  [3, 6, 15].map((lv) => resourceMaxOf('alchimiste-elixir-experimental', artificier(lv))),
   [1, 2, 3],
 );
 // TCE : Ingrédients revigorants — Restauration partielle gratuite MOD INT, min 1
@@ -995,20 +987,25 @@ check(
 // PHB 2014 : Arcanum mystique — sort de niv.6 @11, niv.7 @13, niv.8 @15, niv.9 @17
 check(
   'arcanum mystique : niveaux d’acquisition 11/13/15/17',
-  ['occultiste-arcanum-6', 'occultiste-arcanum-7', 'occultiste-arcanum-8', 'occultiste-arcanum-9'].map(
-    (id) => findClassFeature(id)?.level,
-  ),
+  [
+    'occultiste-arcanum-6',
+    'occultiste-arcanum-7',
+    'occultiste-arcanum-8',
+    'occultiste-arcanum-9',
+  ].map((id) => findClassFeature(id)?.level),
   [11, 13, 15, 17],
 );
 // PHB 2014 : chaque arcanum = 1 utilisation, recharge repos LONG (1 sort par repos)
-const arcanumIds = ['occultiste-arcanum-6', 'occultiste-arcanum-7', 'occultiste-arcanum-8', 'occultiste-arcanum-9'];
+const arcanumIds = [
+  'occultiste-arcanum-6',
+  'occultiste-arcanum-7',
+  'occultiste-arcanum-8',
+  'occultiste-arcanum-9',
+];
 const occ20 = mkChar({ characterClass: 'Occultiste', level: 20 });
 check(
   'arcanum mystique : 1 utilisation chacun, recharge repos long',
-  arcanumIds.map((id) => [
-    resourceMaxOf(id, occ20),
-    findClassFeature(id)?.resource?.reset,
-  ]),
+  arcanumIds.map((id) => [resourceMaxOf(id, occ20), findClassFeature(id)?.resource?.reset]),
   arcanumIds.map(() => [1, 'long']),
 );
 // PHB 2014 : Maître occulte @20 — 1 arcanum de niv.6 supplémentaire / repos long
