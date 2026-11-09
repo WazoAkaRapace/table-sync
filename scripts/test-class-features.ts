@@ -806,7 +806,7 @@ check(
 );
 // Lance occulte : 45 m (150 ft) en PHB 2014 — pas 90 m / 300 ft (règle 2024)
 check(
-  'Lance occulte : portée 45 m (150 ft, PHB 2014 )',
+  'Lance occulte : portée 45 m (150 ft, PHB 2014 p.111)',
   [
     findWarlockInvocation('occultiste-invo-lance-occulte')?.description.includes('45 mètres'),
     WARLOCK_INVOCATIONS_EN['occultiste-invo-lance-occulte']?.description.includes('150 feet'),
@@ -1299,7 +1299,7 @@ check(
   ['none', 'long', null],
 );
 
-// Restauration arcanique (magicien) : 1×/jour après un repos court (PHB 2014 )
+// Restauration arcanique (magicien) : 1×/jour après un repos court (PHB 2014 p.114)
 check(
   'effectiveReset : Restauration arcanique recharge au repos court',
   [
