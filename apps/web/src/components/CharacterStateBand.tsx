@@ -43,6 +43,7 @@ import {
   type SpellEffectRow,
   toActiveAcEffects,
 } from '../spellEffects';
+import { Glyph } from './Glyph';
 import { BottomSheet, Chip, EncumbranceBar, HpBar, VitalButton } from './ui';
 
 /** Combat snapshot relevant to the band (subset of the page's hubCombat). */
@@ -525,7 +526,7 @@ export default function CharacterStateBand({
                       aria-label={t('band.en.concentration.ouvrir.la.survie')}
                       title={t('band.concentration.en.cours')}
                     >
-                      🌀
+                      <Glyph name="concentration" />
                     </button>
                   )}
                   {character.raging && (
@@ -536,7 +537,7 @@ export default function CharacterStateBand({
                       aria-label={t('band.en.rage.ouvrir.la.survie')}
                       title={t('band.rage.en.cours')}
                     >
-                      🔥
+                      <Glyph name="fire" />
                     </button>
                   )}
                   {character.inspiration && (
@@ -546,7 +547,7 @@ export default function CharacterStateBand({
                       aria-label={t('band.inspiration.acquise')}
                       role="img"
                     >
-                      ✨
+                      <Glyph name="spark" />
                     </span>
                   )}
                 </p>
@@ -583,7 +584,7 @@ export default function CharacterStateBand({
                     character_maxHp: character.maxHp,
                   })}
                 >
-                  🐺 {character.currentHp}
+                  <Glyph name="wolf" /> {character.currentHp}
                 </Chip>
               )}
               {character.currentHp <= 0 && (character.tempHp ?? 0) <= 0 && (
@@ -613,7 +614,7 @@ export default function CharacterStateBand({
                     effectiveAC,
                   })}
                 >
-                  🛡 {effectiveAC}
+                  <Glyph name="shield" /> {effectiveAC}
                 </button>
               ) : (
                 <span
@@ -624,7 +625,7 @@ export default function CharacterStateBand({
                   }`}
                   title={character.armorClassOverride ? t('band.ca.manuelle') : acResult.source}
                 >
-                  🛡 {effectiveAC}
+                  <Glyph name="shield" /> {effectiveAC}
                 </span>
               )}
               {slotsTotal > 0 && (
@@ -641,7 +642,7 @@ export default function CharacterStateBand({
                     slotsTotal: slotsTotal,
                   })}
                 >
-                  ✨ {slotsLeft}/{slotsTotal}
+                  <Glyph name="spark" /> {slotsLeft}/{slotsTotal}
                 </button>
               )}
               {stateCount > 0 && (
@@ -782,7 +783,7 @@ export default function CharacterStateBand({
                 )}
                 {character.raging && (
                   <Chip tone="red" title={t('band.rage.en.cours')}>
-                    🔥 {t('band.rage')}
+                    <Glyph name="fire" /> {t('band.rage')}
                   </Chip>
                 )}
                 {character.foodDays > 0 && (
@@ -824,7 +825,7 @@ export default function CharacterStateBand({
                         r_max: r.max,
                       })}
                     >
-                      {r.pact ? '☾' : 'N'}
+                      {r.pact ? <Glyph name="moon" /> : 'N'}
                       {r.level} {r.left}/{r.max}
                     </span>
                   ))}
@@ -943,7 +944,7 @@ export default function CharacterStateBand({
         <div className="space-y-2">
           {hasAcOverride && (
             <p className="rounded-lg bg-orange-50 border border-orange-300 px-3 py-2 text-sm text-orange-800">
-              ⚠ {t('band.ca.manuelle.effet.non.applique')}
+              <Glyph name="warn" /> {t('band.ca.manuelle.effet.non.applique')}
             </p>
           )}
           {bearerRows.length === 0 && castRows.length === 0 && (
@@ -964,7 +965,7 @@ export default function CharacterStateBand({
                   {row.spellName || t('band.effets.sort')}
                 </p>
                 <p className="text-xs text-gold-700 font-mono">
-                  ⛨ {effectModLabel(row)}
+                  <Glyph name="shield-cross" /> {effectModLabel(row)}
                   {row.tiedToConcentration ? ` · ${t('band.effets.concentre')}` : ''}
                   {casterDisplayName(row)
                     ? ` · ${t('band.effets.pose.par.court', { name: casterDisplayName(row) ?? '' })}`
@@ -1005,7 +1006,13 @@ export default function CharacterStateBand({
                           {row.spellName || t('band.effets.sort')} → {who}
                         </p>
                         <p className="text-xs text-gold-700 font-mono">
-                          {row.targetLabel ? t('band.effets.sans.ca') : `⛨ ${effectModLabel(row)}`}
+                          {row.targetLabel ? (
+                            t('band.effets.sans.ca')
+                          ) : (
+                            <>
+                              <Glyph name="shield-cross" /> {effectModLabel(row)}
+                            </>
+                          )}
                           {row.tiedToConcentration
                             ? ` · ${t('band.effets.concentre')}`
                             : row.effectKind === 'ac_set_formula'
@@ -1079,11 +1086,11 @@ export default function CharacterStateBand({
                           : 'border-parchment-200'
                       }`}
                     >
-                      🛡 {effectiveAC}
+                      <Glyph name="shield" /> {effectiveAC}
                     </span>
                     {slotsTotal > 0 && (
                       <span className="font-mono text-sm font-semibold text-gold-700 bg-gold-100/70 border border-gold-300 rounded-md px-2 py-1">
-                        ✨ {slotsLeft}/{slotsTotal}
+                        <Glyph name="spark" /> {slotsLeft}/{slotsTotal}
                       </span>
                     )}
                     {stateCount > 0 && (
