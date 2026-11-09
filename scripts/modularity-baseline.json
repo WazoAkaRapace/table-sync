@@ -3,9 +3,6 @@
     "apps/api/src/routes/auth.ts": {
       "lines": 806
     },
-    "apps/api/src/routes/campaign.ts": {
-      "lines": 1060
-    },
     "apps/api/src/routes/combat.ts": {
       "lines": 1827
     },

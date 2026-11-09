@@ -1,7 +1,7 @@
 /**
  * Carnet du MD — campaign clock (day/season/weather + countdowns + archived
  * days), DM notes and quests. Every route is GM-only; players get 403 and
- * nothing else. Covers routes/campaign.ts.
+ * nothing else. Covers routes/campaign/.
  */
 import { api, eq, type Fixtures, ok, type ServerHandle } from './harness.ts';
 
