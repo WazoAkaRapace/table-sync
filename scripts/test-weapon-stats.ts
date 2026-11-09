@@ -542,6 +542,12 @@ check(
   [2, 2, 1],
 );
 check('Extra Attack : Moine 4 → 1 (débloqué au niveau 5)', extraAttacks('Moine', 4), 1);
+// PHB 2014 : Paladin @5 → 2 attaques (4 → 1, débloqué au niveau 5)
+check(
+  'Extra Attack : Paladin 4 → 1, Paladin 5 → 2 (PHB 2014)',
+  [extraAttacks('Paladin', 4), extraAttacks('Paladin', 5)],
+  [1, 2],
+);
 
 const bouleDeFeu: any = {
   level: 3,

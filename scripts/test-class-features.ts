@@ -20,6 +20,7 @@ import {
   SPELL_SLOTS_ARTIFICIER,
   SPELL_SLOTS_HALF,
   SPELL_SLOTS_PACT,
+  auraRadiusMeters,
   wildShapeCanFly,
   wildShapeCanSwim,
   wildShapeDurationHours,
@@ -435,6 +436,69 @@ check(
     findClassFeature('savoir-visions-du-passe')?.resource?.reset,
   ],
   [1, 'short'],
+);
+
+// --- Paladin : rayon d'aura & capstones de serment (PHB 2014) ---
+
+// PHB 2014 p.85 : rayon d'aura 10 pieds (3 m) ; Aura améliorée @18 → 30 pieds (9 m)
+check(
+  'rayon d’aura : 3 m @6, 9 m @18 (PHB 2014)',
+  [6, 17, 18].map(auraRadiusMeters),
+  [3, 3, 9],
+);
+const paladinOath = (sacredOath: string, id: string, level: number) => [
+  resourceMaxOf(id, mkChar({ characterClass: 'Paladin', level, sacredOath })),
+  findClassFeature(id)?.resource?.reset,
+];
+// PHB 2014 : Nimbe sacré (Dévotion @20) — 1 / repos long
+check(
+  'nimbe sacré (Dévotion @20) : 1 utilisation, recharge repos long',
+  paladinOath('devotion', 'paladin-nimbe-sacre', 20),
+  [1, 'long'],
+);
+// PHB 2014 p.88 : Sentinelle immortelle (Anciennes @15) — 1 / repos long
+check(
+  'sentinelle immortelle (Anciennes @15) : 1 utilisation, recharge repos long',
+  paladinOath('anciennes', 'paladin-sentinelle-immortelle', 15),
+  [1, 'long'],
+);
+// PHB 2014 p.89 : Ange vengeur (Vengeance @20) — 1 / repos long
+check(
+  'ange vengeur (Vengeance @20) : 1 utilisation, recharge repos long',
+  paladinOath('vengeance', 'paladin-ange-vengeance', 20),
+  [1, 'long'],
+);
+
+// --- Table demi-incantateur (PHB 2014) : Paladin & Rôdeur (les Clerc et
+// Magicien suivent la table FULL, déjà couverte par l'oracle multiclassé). ---
+
+// PHB 2014 : Paladin & Rôdeur — AUCUN emplacement au niv. 1, 2×niv.1 @2 …
+const SRD_HALF_SLOTS: number[][] = [
+  [0, 0, 0, 0, 0, 0, 0, 0, 0], // L1
+  [2, 0, 0, 0, 0, 0, 0, 0, 0], // L2
+  [3, 0, 0, 0, 0, 0, 0, 0, 0], // L3
+  [3, 0, 0, 0, 0, 0, 0, 0, 0], // L4
+  [4, 2, 0, 0, 0, 0, 0, 0, 0], // L5
+  [4, 2, 0, 0, 0, 0, 0, 0, 0], // L6
+  [4, 3, 0, 0, 0, 0, 0, 0, 0], // L7
+  [4, 3, 0, 0, 0, 0, 0, 0, 0], // L8
+  [4, 3, 2, 0, 0, 0, 0, 0, 0], // L9
+  [4, 3, 2, 0, 0, 0, 0, 0, 0], // L10
+  [4, 3, 3, 0, 0, 0, 0, 0, 0], // L11
+  [4, 3, 3, 0, 0, 0, 0, 0, 0], // L12
+  [4, 3, 3, 1, 0, 0, 0, 0, 0], // L13
+  [4, 3, 3, 1, 0, 0, 0, 0, 0], // L14
+  [4, 3, 3, 2, 0, 0, 0, 0, 0], // L15
+  [4, 3, 3, 2, 0, 0, 0, 0, 0], // L16
+  [4, 3, 3, 3, 1, 0, 0, 0, 0], // L17
+  [4, 3, 3, 3, 1, 0, 0, 0, 0], // L18
+  [4, 3, 3, 3, 2, 0, 0, 0, 0], // L19
+  [4, 3, 3, 3, 2, 0, 0, 0, 0], // L20
+];
+check(
+  'table demi-incantateur (Paladin/Rôdeur, PHB 2014) == SPELL_SLOTS_HALF',
+  SPELL_SLOTS_HALF,
+  SRD_HALF_SLOTS,
 );
 
 // Second souffle ×1 (court) ; Élan d'action 1→2@17 (court) ; Indomptable 1/2/3 (long)
