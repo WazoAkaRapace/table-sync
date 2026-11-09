@@ -73,7 +73,8 @@ const ROUTE_LIB_ALLOWLIST = new Set(['helpers', 'lang', 'messages', 'httpCache']
  */
 const R4_LEGACY: Record<string, string[]> = {
   'apps/api/src/routes/character-spells.ts': ['./spells.ts'],
-  'apps/api/src/routes/characters.ts': ['./inventory.ts', './character-spell-effects.ts'],
+  'apps/api/src/routes/characters/sheet.ts': ['../inventory.ts', '../character-spell-effects.ts'],
+  'apps/api/src/routes/characters/update.ts': ['../character-spell-effects.ts'],
   'apps/api/src/routes/combat.ts': ['./character-spell-effects.ts'],
   'apps/api/src/routes/domain-spells.ts': ['./spells.ts'],
   'apps/api/src/routes/gma.ts': ['./npcs.ts'],
