@@ -29,6 +29,23 @@ import { apiMsg } from '../messages.ts';
 import { getCombatant, getCombatantForGM, mapCombatant, parseConditions } from './shared.ts';
 
 /**
+ * PV réels après un coup : dégâts + amortissement PV temporaires (hors forme
+ * sauvage — les dégâts partent dans la barre de la forme, les PV temp restent
+ * dehors). Juge identique aux deux branches (concentration / rage).
+ */
+function realHpAfterDamage(
+  combatant: { hit_points?: number | null },
+  ch: { wild_shape_slug?: unknown; temp_hp?: number | null },
+  newHitPoints: number,
+): { damage: number; realHp: number } {
+  const damage = (combatant.hit_points ?? 0) - Math.max(0, newHitPoints);
+  const tempHp = ch.wild_shape_slug ? 0 : (ch.temp_hp ?? 0);
+  const absorbed = damage > 0 ? Math.min(tempHp, damage) : 0;
+  const realHp = Math.max(0, newHitPoints) + absorbed;
+  return { damage, realHp };
+}
+
+/**
  * Rupture concentration + rage (Issue #189) DANS LA MÊME écriture — un effet
  * fantôme ne doit pas survivre à la rupture — puis character:change 'stats' :
  * la route appelante a déjà sa propre émission, chaque AUTRE porteur d'effet
@@ -187,11 +204,7 @@ export async function combatantUpdateRoutes(app: FastifyInstance) {
           .where(eq(charactersTable.id, combatant.character_id))
           .get() as any;
         if (ch?.concentrating) {
-          const damage = (combatant.hit_points ?? 0) - Math.max(0, body.hitPoints);
-          // While shaped, damage routes to the shape's bar — temp HP stays out of it.
-          const tempHp = ch.wild_shape_slug ? 0 : (ch.temp_hp ?? 0);
-          const absorbed = damage > 0 ? Math.min(tempHp, damage) : 0;
-          const realHp = Math.max(0, body.hitPoints) + absorbed;
+          const { damage, realHp } = realHpAfterDamage(combatant, ch, body.hitPoints);
           // PHB p.203: the damage TAKEN threatens concentration — absorbed by
           // temp HP or not, the save rolls against the full hit (DD 10 or ½ dégâts).
           if (damage > 0 && realHp > 0) {
@@ -214,10 +227,7 @@ export async function combatantUpdateRoutes(app: FastifyInstance) {
         // ci-dessus ne couvre que les lanceurs). Juge identique : 0 PV réel
         // (les PV temporaires restants amortissent la chute).
         if (ch && !ch.concentrating && ch.raging) {
-          const damage = (combatant.hit_points ?? 0) - Math.max(0, body.hitPoints);
-          const tempHp = ch.wild_shape_slug ? 0 : (ch.temp_hp ?? 0);
-          const absorbed = damage > 0 ? Math.min(tempHp, damage) : 0;
-          const realHp = Math.max(0, body.hitPoints) + absorbed;
+          const { realHp } = realHpAfterDamage(combatant, ch, body.hitPoints);
           if (realHp <= 0) {
             drizzle
               .update(charactersTable)

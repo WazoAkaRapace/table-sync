@@ -234,11 +234,16 @@ export function notifyTurnPush(enc: any): void {
   );
 }
 
-/** Fetch encounter, verify party membership, return the encounter row or send error. */
-export async function getEncounterForUser(
+/**
+ * Porte « rencontre » du domaine combat : requireUser, 404 « Rencontre
+ * introuvable », puis le garde propre au régime (membre simple, ou MD seul).
+ * Renvoie null après avoir envoyé la réponse — l'appelant fait `return`.
+ */
+function getEncounterWithGuard(
   req: FastifyRequest<{ Params: { id: string } }>,
   reply: FastifyReply,
-): Promise<{ userId: number; enc: any } | null> {
+  gmOnly: boolean,
+): { userId: number; enc: any } | null {
   const userId = requireUser(req, reply);
   if (userId === null) return null;
   const enc = getEncounter(getDrizzle(), Number(req.params.id));
@@ -246,11 +251,20 @@ export async function getEncounterForUser(
     reply.code(404).send({ error: apiMsg(req, 'Rencontre introuvable') });
     return null;
   }
-  if (!isPartyMember(enc.party_id, userId)) {
-    reply.code(403).send({ error: apiMsg(req, 'Pas membre du groupe') });
+  const allowed = gmOnly ? isPartyGM(enc.party_id, userId) : isPartyMember(enc.party_id, userId);
+  if (!allowed) {
+    reply.code(403).send({ error: apiMsg(req, gmOnly ? 'Réservé au MD' : 'Pas membre du groupe') });
     return null;
   }
   return { userId, enc };
+}
+
+/** Fetch encounter, verify party membership, return the encounter row or send error. */
+export async function getEncounterForUser(
+  req: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply,
+): Promise<{ userId: number; enc: any } | null> {
+  return getEncounterWithGuard(req, reply, false);
 }
 
 /** Porte « rencontre + MD » des routes d'écriture du domaine combat :
@@ -260,18 +274,7 @@ export function getEncounterForGM(
   req: FastifyRequest<{ Params: { id: string } }>,
   reply: FastifyReply,
 ): { userId: number; enc: any } | null {
-  const userId = requireUser(req, reply);
-  if (userId === null) return null;
-  const enc = getEncounter(getDrizzle(), Number(req.params.id));
-  if (!enc) {
-    reply.code(404).send({ error: apiMsg(req, 'Rencontre introuvable') });
-    return null;
-  }
-  if (!isPartyGM(enc.party_id, userId)) {
-    reply.code(403).send({ error: apiMsg(req, 'Réservé au MD') });
-    return null;
-  }
-  return { userId, enc };
+  return getEncounterWithGuard(req, reply, true);
 }
 
 /** Porte « combattant + MD » (PATCH/DELETE /combatants/:cid) : 404 combattant,
