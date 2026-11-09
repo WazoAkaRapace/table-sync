@@ -17,6 +17,7 @@ import {
   startServer,
 } from './api-tests/harness.ts';
 import { run as authParties } from './api-tests/mod-auth-parties.ts';
+import { run as characterAccess } from './api-tests/mod-character-access.ts';
 import { run as authRefresh } from './api-tests/mod-auth-refresh.ts';
 import { run as campaign } from './api-tests/mod-carnet.ts';
 import { run as campaignCalendar } from './api-tests/mod-campaign-calendar.ts';
@@ -83,6 +84,7 @@ const MODULES: Array<{
   { name: 'emails transactionnels', run: email },
   { name: 'gestionnaire d’erreurs global', run: errorHandler },
   { name: 'validation typebox (schémas + 400 i18n)', run: validation },
+  { name: 'accès personnage (préambule partagé)', run: characterAccess },
 ];
 
 async function main(): Promise<void> {
