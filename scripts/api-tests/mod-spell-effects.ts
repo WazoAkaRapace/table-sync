@@ -755,34 +755,40 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   );
   const wsMessages: any[] = [];
   ws.addEventListener('message', (ev) => wsMessages.push(JSON.parse(String(ev.data))));
-  await new Promise<void>((resolve) => ws.addEventListener('open', () => resolve()));
+  try {
+    await new Promise<void>((resolve, reject) => {
+      ws.addEventListener('open', () => resolve());
+      ws.addEventListener('error', () => reject(new Error('connexion WS échouée')));
+    });
 
-  r = await api(base, 'PATCH', '/api/combatants/' + combatantId, {
-    token: fx.gm.token,
-    body: { hitPoints: 0 },
-  });
-  eq(r.status, 200, 'traqueur à 0 PV (inconscient → rupture)');
+    r = await api(base, 'PATCH', '/api/combatants/' + combatantId, {
+      token: fx.gm.token,
+      body: { hitPoints: 0 },
+    });
+    eq(r.status, 200, 'traqueur à 0 PV (inconscient → rupture)');
 
-  const hit2 = await new Promise<any>((resolve, reject) => {
-    const started = Date.now();
-    const t = setInterval(() => {
-      const m = wsMessages.find((x) => x.type === 'combat:change' && x.encounterId === enc2Id);
-      if (m) {
-        clearInterval(t);
-        resolve(m);
-      } else if (Date.now() - started > 5000) {
-        clearInterval(t);
-        reject(new Error('pas de combat:change chirurgical pour la rencontre 2'));
-      }
-    }, 25);
-  });
-  eq(hit2.action, 'ac', 'rencontre 2 : combat:change action ac (CA resynchronisée)');
-  const ac2 = srv.query(
-    'SELECT armor_class AS ac FROM combatants WHERE encounter_id = ? AND character_id = ?',
-    enc2Id,
-    A,
-  ).ac;
-  ok(ac2 < enc2AcBefore, 'CA du traqueur 2 a perdu le bonus de concentration');
-  eq(ac2, combatantAc(), 'CA du traqueur 2 = CA du traqueur 1 (resynchronisées)');
-  ws.close();
+    const hit2 = await new Promise<any>((resolve, reject) => {
+      const started = Date.now();
+      const t = setInterval(() => {
+        const m = wsMessages.find((x) => x.type === 'combat:change' && x.encounterId === enc2Id);
+        if (m) {
+          clearInterval(t);
+          resolve(m);
+        } else if (Date.now() - started > 5000) {
+          clearInterval(t);
+          reject(new Error('pas de combat:change chirurgical pour la rencontre 2'));
+        }
+      }, 25);
+    });
+    eq(hit2.action, 'ac', 'rencontre 2 : combat:change action ac (CA resynchronisée)');
+    const ac2 = srv.query(
+      'SELECT armor_class AS ac FROM combatants WHERE encounter_id = ? AND character_id = ?',
+      enc2Id,
+      A,
+    ).ac;
+    ok(ac2 < enc2AcBefore, 'CA du traqueur 2 a perdu le bonus de concentration');
+    eq(ac2, combatantAc(), 'CA du traqueur 2 = CA du traqueur 1 (resynchronisées)');
+  } finally {
+    ws.close();
+  }
 }
