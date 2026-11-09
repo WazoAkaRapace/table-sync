@@ -16,11 +16,10 @@ import { characters, inventory, items } from '../../db/schema.ts';
 import { bus } from '../../sync/bus.ts';
 import { mirrorAcToCombatants } from '../character-spell-effects.ts';
 import { mapInventoryEntry } from '../lib/mappers.ts';
-import { isOwnerOrGM, requireUser } from '../lib/membership.ts';
+import { getInventoryEditor } from '../lib/access.ts';
 import { langFromReq } from '../lang.ts';
 import { apiMsg } from '../messages.ts';
 import {
-  getCharacter,
   getEntryWithItem,
   INVENTORY_WITH_ITEM,
   type EntryChange,
@@ -31,6 +30,30 @@ import {
 /** #143 : genres de munitions consommables — tags de survie posés par le seed,
  * valeurs de WEAPON_AMMUNITION (shared) : l'arme équipée désigne SON type. */
 const AMMO_KINDS = [...new Set(Object.values(WEAPON_AMMUNITION))];
+
+/**
+ * Consomme UNE unité de l'entrée dans la transaction appelante : dernière
+ * unité → ligne supprimée ({ removedId }), sinon quantity − 1 ({ entry }
+ * rechargée). Le push alimente le cache react-query du client (1 RTT).
+ */
+function consumeOneEntry(
+  drizzle: ReturnType<typeof getDrizzle>,
+  entry: { inv_id: number; quantity: number },
+  lang: Parameters<typeof mapInventoryEntry>[1],
+  changes: EntryChange[],
+): void {
+  if (entry.quantity <= 1) {
+    drizzle.delete(inventory).where(eq(inventory.id, entry.inv_id)).run();
+    changes.push({ removedId: entry.inv_id });
+  } else {
+    drizzle
+      .update(inventory)
+      .set({ quantity: sql`${inventory.quantity} - 1` })
+      .where(eq(inventory.id, entry.inv_id))
+      .run();
+    changes.push({ entry: mapInventoryEntry(getEntryWithItem(entry.inv_id), lang) });
+  }
+}
 
 /** Total d'un tag de survie après le geste (pleines gourdes seulement si
  *  demandé) — le toast du client annonce au joueur ce qu'il reste. */
@@ -57,15 +80,10 @@ export async function flowsRoutes(app: FastifyInstance) {
       req: FastifyRequest<{ Params: { id: string }; Body: AddInventoryPayload }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
+      const ctx = getInventoryEditor(req, reply, Number(req.params.id));
+      if (ctx === null) return;
+      const { userId, char } = ctx;
       const drizzle = getDrizzle();
-      const char = getCharacter(drizzle, Number(req.params.id));
-      if (!char) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
-      if (!isOwnerOrGM(char, userId))
-        return reply
-          .code(403)
-          .send({ error: apiMsg(req, 'only the owner or GM can edit this inventory') });
 
       const body = req.body || ({} as AddInventoryPayload);
       if (!body.itemId) return reply.code(400).send({ error: apiMsg(req, 'itemId is required') });
@@ -212,15 +230,10 @@ export async function flowsRoutes(app: FastifyInstance) {
       }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
+      const ctx = getInventoryEditor(req, reply, Number(req.params.id));
+      if (ctx === null) return;
+      const { userId, char } = ctx;
       const drizzle = getDrizzle();
-      const char = getCharacter(drizzle, Number(req.params.id));
-      if (!char) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
-      if (!isOwnerOrGM(char, userId))
-        return reply
-          .code(403)
-          .send({ error: apiMsg(req, 'only the owner or GM can edit this inventory') });
 
       const type = req.body?.type;
       if (type !== 'food' && type !== 'water' && type !== 'ammo')
@@ -281,17 +294,7 @@ export async function flowsRoutes(app: FastifyInstance) {
       if (type === 'food') {
         // Food is consumed (destroyed)
         getDb().transaction(() => {
-          if (entry.quantity <= 1) {
-            drizzle.delete(inventory).where(eq(inventory.id, entry.inv_id)).run();
-            changes.push({ removedId: entry.inv_id });
-          } else {
-            drizzle
-              .update(inventory)
-              .set({ quantity: sql`${inventory.quantity} - 1` })
-              .where(eq(inventory.id, entry.inv_id))
-              .run();
-            changes.push({ entry: mapInventoryEntry(getEntryWithItem(entry.inv_id), lang) });
-          }
+          consumeOneEntry(drizzle, entry, lang, changes);
           drizzle.update(characters).set({ foodDays: 0 }).where(eq(characters.id, char.id)).run();
           logTransaction(drizzle, {
             partyId: char.party_id,
@@ -307,17 +310,7 @@ export async function flowsRoutes(app: FastifyInstance) {
         // #143 : un tir consomme une munition — même geste que la ration,
         // sans toucher aux compteurs de privation.
         getDb().transaction(() => {
-          if (entry.quantity <= 1) {
-            drizzle.delete(inventory).where(eq(inventory.id, entry.inv_id)).run();
-            changes.push({ removedId: entry.inv_id });
-          } else {
-            drizzle
-              .update(inventory)
-              .set({ quantity: sql`${inventory.quantity} - 1` })
-              .where(eq(inventory.id, entry.inv_id))
-              .run();
-            changes.push({ entry: mapInventoryEntry(getEntryWithItem(entry.inv_id), lang) });
-          }
+          consumeOneEntry(drizzle, entry, lang, changes);
           logTransaction(drizzle, {
             partyId: char.party_id,
             characterId: char.id,
@@ -333,17 +326,7 @@ export async function flowsRoutes(app: FastifyInstance) {
         // The entry found is a "full" waterskin (not marked empty in notes)
         getDb().transaction(() => {
           // Decrement the full entry
-          if (entry.quantity <= 1) {
-            drizzle.delete(inventory).where(eq(inventory.id, entry.inv_id)).run();
-            changes.push({ removedId: entry.inv_id });
-          } else {
-            drizzle
-              .update(inventory)
-              .set({ quantity: sql`${inventory.quantity} - 1` })
-              .where(eq(inventory.id, entry.inv_id))
-              .run();
-            changes.push({ entry: mapInventoryEntry(getEntryWithItem(entry.inv_id), lang) });
-          }
+          consumeOneEntry(drizzle, entry, lang, changes);
 
           // Check if an "empty" entry already exists for this item+character
           // Empty entries are stored with storage_location_id = NULL to avoid UNIQUE collision
@@ -422,15 +405,10 @@ export async function flowsRoutes(app: FastifyInstance) {
     '/characters/:id/refill',
     async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
       // No body expected — this endpoint just refills all empty waterskins
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
+      const ctx = getInventoryEditor(req, reply, Number(req.params.id));
+      if (ctx === null) return;
+      const { userId, char } = ctx;
       const drizzle = getDrizzle();
-      const char = getCharacter(drizzle, Number(req.params.id));
-      if (!char) return reply.code(404).send({ error: apiMsg(req, 'character not found') });
-      if (!isOwnerOrGM(char, userId))
-        return reply
-          .code(403)
-          .send({ error: apiMsg(req, 'only the owner or GM can edit this inventory') });
 
       // Find all empty waterskins
       const empties = drizzle

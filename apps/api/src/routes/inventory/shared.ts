@@ -7,9 +7,12 @@
  */
 
 import { eq, sql } from 'drizzle-orm';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../../db/drizzle.ts';
 import { cols } from '../../db/projections.ts';
 import { characters, inventory, items, transactions } from '../../db/schema.ts';
+import { isOwnerOrGM, requireUser } from '../lib/membership.ts';
+import { apiMsg } from '../messages.ts';
 
 /**
  * inventory JOIN items with the item columns prefixed `i_` — the shape
@@ -91,6 +94,70 @@ export function getCharacter(drizzle: ReturnType<typeof getDrizzle>, id: number)
     .from(characters)
     .where(eq(characters.id, id))
     .get() as any;
+}
+
+/**
+ * Porte « entrée d'inventaire + éditeur » (PATCH/DELETE /inventory/:invId) :
+ * requireUser, 404 « inventory entry not found », puis owner/MD requis
+ * (403 « only the owner or GM can edit this inventory »). Renvoie null après
+ * avoir envoyé la réponse — l'appelant fait `return`.
+ */
+export function getInvEntryForEditor(
+  req: FastifyRequest,
+  reply: FastifyReply,
+  invId: number,
+): { userId: number; inv: any; char: any } | null {
+  const userId = requireUser(req, reply);
+  if (userId === null) return null;
+  const drizzle = getDrizzle();
+  const inv = drizzle
+    .select(cols(inventory))
+    .from(inventory)
+    .where(eq(inventory.id, invId))
+    .get() as any;
+  if (!inv) {
+    reply.code(404).send({ error: apiMsg(req, 'inventory entry not found') });
+    return null;
+  }
+  const char = getCharacter(drizzle, inv.character_id);
+  if (!isOwnerOrGM(char, userId)) {
+    reply.code(403).send({ error: apiMsg(req, 'only the owner or GM can edit this inventory') });
+    return null;
+  }
+  return { userId, inv, char };
+}
+
+/**
+ * Porte « transfert entre deux fiches » (transfer objet, pièces, conteneur) :
+ * 404 « character not found », 400 « characters must be in the same party »,
+ * puis owner/MD requis sur la fiche SOURCE (403 « …transfer from this
+ * character »). Renvoie null après avoir envoyé la réponse.
+ */
+export function resolveTransferChars(
+  req: FastifyRequest,
+  reply: FastifyReply,
+  drizzle: ReturnType<typeof getDrizzle>,
+  userId: number,
+  fromCharId: number,
+  toCharacterId: number,
+): { fromChar: any; toChar: any } | null {
+  const fromChar = getCharacter(drizzle, fromCharId);
+  const toChar = getCharacter(drizzle, Number(toCharacterId));
+  if (!fromChar || !toChar) {
+    reply.code(404).send({ error: apiMsg(req, 'character not found') });
+    return null;
+  }
+  if (fromChar.party_id !== toChar.party_id) {
+    reply.code(400).send({ error: apiMsg(req, 'characters must be in the same party') });
+    return null;
+  }
+  if (!isOwnerOrGM(fromChar, userId)) {
+    reply
+      .code(403)
+      .send({ error: apiMsg(req, 'only the owner or GM can transfer from this character') });
+    return null;
+  }
+  return { fromChar, toChar };
 }
 
 export function logTransaction(

@@ -37,7 +37,94 @@ import {
   mayEditNpcContent,
   npcVisibleToUser,
   nowIso,
+  requireGmaMemberLink,
 } from './shared.ts';
+
+/**
+ * Résout l'entité GMA ou envoie le 404 « unknown_entity » (import, link).
+ * Renvoie null après avoir envoyé la réponse — l'appelant fait `return`.
+ */
+async function resolveEntityOr404(
+  req: FastifyRequest,
+  reply: FastifyReply,
+  partyId: number,
+  link: any,
+  entityIdRaw: string,
+): Promise<any | null> {
+  const entity = await resolveEntity(partyId, link, String(entityIdRaw));
+  if (!entity) {
+    reply.code(404).send({
+      error: apiMsg(req, 'unknown_entity'),
+      message: apiMsg(req, 'Entrée GM Assistant inconnue — actualise la liste des PNJ repérés.'),
+    });
+    return null;
+  }
+  return entity;
+}
+
+/** 409 si l'entité est déjà liée au registre — renvoie la réponse ou null. */
+function alreadyLinkedReply(req: FastifyRequest, reply: FastifyReply, gmaEntityId: string) {
+  if (
+    getDrizzle()
+      .select({ id: gmaNpcLinks.id })
+      .from(gmaNpcLinks)
+      .where(eq(gmaNpcLinks.gmaEntityId, gmaEntityId))
+      .get()
+  ) {
+    return reply.code(409).send({
+      error: apiMsg(req, 'entity_already_linked'),
+      message: apiMsg(req, 'Cette entrée GM Assistant est déjà liée au registre.'),
+    });
+  }
+  return null;
+}
+
+/** Ligne de liaison PNJ ↔ entité du groupe, ou 404 « no_link » (pull, unlink).
+ *  Renvoie null après avoir envoyé la réponse — l'appelant fait `return`. */
+function getLinkedNpcRow(
+  req: FastifyRequest,
+  reply: FastifyReply,
+  drizzle: ReturnType<typeof getDrizzle>,
+  partyId: number,
+  entityIdRaw: string,
+): any | null {
+  const linkRow = drizzle
+    .select(cols(gmaNpcLinks))
+    .from(gmaNpcLinks)
+    .where(eq(gmaNpcLinks.gmaEntityId, String(entityIdRaw)))
+    .get() as any;
+  if (!linkRow || linkRow.party_id !== partyId) {
+    reply.code(404).send({
+      error: apiMsg(req, 'no_link'),
+      message: apiMsg(req, 'Cette entrée GM Assistant n’est pas liée au registre.'),
+    });
+    return null;
+  }
+  return linkRow;
+}
+
+/** Queue commune import/pull : émissions GMA + party:change, puis relecture
+ *  du PNJ avec le nom de son créateur (le mapper a besoin des deux). */
+function emitAndReloadNpc(
+  drizzle: ReturnType<typeof getDrizzle>,
+  partyId: number,
+  userId: number,
+  npcId: number,
+): any {
+  emitGma(partyId, userId, 'entity');
+  bus.emitChange({
+    type: 'party:change',
+    partyId,
+    action: 'custom-item',
+    actorUserId: userId,
+  });
+  return drizzle
+    .select({ ...cols(npcs), creator_name: users.displayName })
+    .from(npcs)
+    .innerJoin(users, eq(npcs.createdBy, users.id))
+    .where(eq(npcs.id, npcId))
+    .get();
+}
 
 export async function entityRoutes(app: FastifyInstance) {
   // =================== Entities (« PNJ repérés » — member-facing rail) ===================
@@ -54,22 +141,9 @@ export async function entityRoutes(app: FastifyInstance) {
       req: FastifyRequest<{ Params: { partyId: string }; Querystring: { refresh?: string } }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const partyId = Number(req.params.partyId);
-      if (!isPartyMember(partyId, userId)) {
-        return reply.code(403).send({
-          error: apiMsg(req, 'not a member'),
-          message: apiMsg(req, 'Tu n’es pas membre de ce groupe.'),
-        });
-      }
-      const link = getPartyLink(partyId);
-      if (!link) {
-        return reply.code(404).send({
-          error: apiMsg(req, 'not_linked'),
-          message: apiMsg(req, 'Aucune campagne GM Assistant liée à ce groupe.'),
-        });
-      }
+      const ctx = requireGmaMemberLink(req, reply, req.params.partyId);
+      if (ctx === null) return;
+      const { userId, partyId, link } = ctx;
       let rows = cachedEntities(partyId);
       const wantRefresh = req.query?.refresh === '1' && isPartyGM(partyId, userId);
       let stale = false;
@@ -211,44 +285,13 @@ export async function entityRoutes(app: FastifyInstance) {
       req: FastifyRequest<{ Params: { partyId: string; entityId: string } }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const partyId = Number(req.params.partyId);
-      if (!isPartyMember(partyId, userId)) {
-        return reply.code(403).send({
-          error: apiMsg(req, 'not a member'),
-          message: apiMsg(req, 'Tu n’es pas membre de ce groupe.'),
-        });
-      }
-      const link = getPartyLink(partyId);
-      if (!link) {
-        return reply.code(404).send({
-          error: apiMsg(req, 'not_linked'),
-          message: apiMsg(req, 'Aucune campagne GM Assistant liée à ce groupe.'),
-        });
-      }
-      const entity = await resolveEntity(partyId, link, String(req.params.entityId));
-      if (!entity) {
-        return reply.code(404).send({
-          error: apiMsg(req, 'unknown_entity'),
-          message: apiMsg(
-            req,
-            'Entrée GM Assistant inconnue — actualise la liste des PNJ repérés.',
-          ),
-        });
-      }
-      if (
-        getDrizzle()
-          .select({ id: gmaNpcLinks.id })
-          .from(gmaNpcLinks)
-          .where(eq(gmaNpcLinks.gmaEntityId, entity.entity_id))
-          .get()
-      ) {
-        return reply.code(409).send({
-          error: apiMsg(req, 'entity_already_linked'),
-          message: apiMsg(req, 'Cette entrée GM Assistant est déjà liée au registre.'),
-        });
-      }
+      const ctx = requireGmaMemberLink(req, reply, req.params.partyId);
+      if (ctx === null) return;
+      const { userId, partyId, link } = ctx;
+      const entity = await resolveEntityOr404(req, reply, partyId, link, req.params.entityId);
+      if (entity === null) return;
+      const blocked = alreadyLinkedReply(req, reply, entity.entity_id);
+      if (blocked) return blocked;
 
       const description = entity.description ?? null;
       const now = nowIso();
@@ -301,19 +344,7 @@ export async function entityRoutes(app: FastifyInstance) {
         });
       }
 
-      emitGma(partyId, userId, 'entity');
-      bus.emitChange({
-        type: 'party:change',
-        partyId,
-        action: 'custom-item',
-        actorUserId: userId,
-      });
-      const row = drizzle
-        .select({ ...cols(npcs), creator_name: users.displayName })
-        .from(npcs)
-        .innerJoin(users, eq(npcs.createdBy, users.id))
-        .where(eq(npcs.id, npcId))
-        .get();
+      const row = emitAndReloadNpc(drizzle, partyId, userId, npcId);
       return reply.code(201).send({ npc: mapNpc(row, false), entityId: entity.entity_id });
     },
   );
@@ -329,32 +360,11 @@ export async function entityRoutes(app: FastifyInstance) {
       }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const partyId = Number(req.params.partyId);
-      if (!isPartyMember(partyId, userId)) {
-        return reply.code(403).send({
-          error: apiMsg(req, 'not a member'),
-          message: apiMsg(req, 'Tu n’es pas membre de ce groupe.'),
-        });
-      }
-      const link = getPartyLink(partyId);
-      if (!link) {
-        return reply.code(404).send({
-          error: apiMsg(req, 'not_linked'),
-          message: apiMsg(req, 'Aucune campagne GM Assistant liée à ce groupe.'),
-        });
-      }
-      const entity = await resolveEntity(partyId, link, String(req.params.entityId));
-      if (!entity) {
-        return reply.code(404).send({
-          error: apiMsg(req, 'unknown_entity'),
-          message: apiMsg(
-            req,
-            'Entrée GM Assistant inconnue — actualise la liste des PNJ repérés.',
-          ),
-        });
-      }
+      const ctx = requireGmaMemberLink(req, reply, req.params.partyId);
+      if (ctx === null) return;
+      const { userId, partyId, link } = ctx;
+      const entity = await resolveEntityOr404(req, reply, partyId, link, req.params.entityId);
+      if (entity === null) return;
       const npcId = Number(req.body?.npcId);
       const npc = Number.isInteger(npcId)
         ? (getDrizzle()
@@ -470,17 +480,9 @@ export async function entityRoutes(app: FastifyInstance) {
         });
       }
       const partyLink = getPartyLink(partyId);
-      const linkRow = getDrizzle()
-        .select(cols(gmaNpcLinks))
-        .from(gmaNpcLinks)
-        .where(eq(gmaNpcLinks.gmaEntityId, String(req.params.entityId)))
-        .get() as any;
-      if (!linkRow || linkRow.party_id !== partyId) {
-        return reply.code(404).send({
-          error: apiMsg(req, 'no_link'),
-          message: apiMsg(req, 'Cette entrée GM Assistant n’est pas liée au registre.'),
-        });
-      }
+      const drizzle = getDrizzle();
+      const linkRow = getLinkedNpcRow(req, reply, drizzle, partyId, req.params.entityId);
+      if (linkRow === null) return;
       const entity = await resolveEntity(partyId, partyLink, linkRow.gma_entity_id);
       if (!entity) {
         return reply.code(404).send({
@@ -521,7 +523,6 @@ export async function entityRoutes(app: FastifyInstance) {
       }
       const append = req.body?.append === true;
       const now = nowIso();
-      const drizzle = getDrizzle();
       getDb().transaction(() => {
         drizzle
           .update(npcs)
@@ -536,19 +537,7 @@ export async function entityRoutes(app: FastifyInstance) {
           .where(eq(gmaNpcLinks.id, linkRow.id))
           .run();
       })();
-      emitGma(partyId, userId, 'entity');
-      bus.emitChange({
-        type: 'party:change',
-        partyId,
-        action: 'custom-item',
-        actorUserId: userId,
-      });
-      const row = drizzle
-        .select({ ...cols(npcs), creator_name: users.displayName })
-        .from(npcs)
-        .innerJoin(users, eq(npcs.createdBy, users.id))
-        .where(eq(npcs.id, npc.id))
-        .get();
+      const row = emitAndReloadNpc(drizzle, partyId, userId, npc.id);
       return reply.send({ npc: mapNpc(row, gm), appended: append, entityId: entity.entity_id });
     },
   );
@@ -569,17 +558,9 @@ export async function entityRoutes(app: FastifyInstance) {
           message: apiMsg(req, 'Tu n’es pas membre de ce groupe.'),
         });
       }
-      const linkRow = getDrizzle()
-        .select(cols(gmaNpcLinks))
-        .from(gmaNpcLinks)
-        .where(eq(gmaNpcLinks.gmaEntityId, String(req.params.entityId)))
-        .get() as any;
-      if (!linkRow || linkRow.party_id !== partyId) {
-        return reply.code(404).send({
-          error: apiMsg(req, 'no_link'),
-          message: apiMsg(req, 'Cette entrée GM Assistant n’est pas liée au registre.'),
-        });
-      }
+      const drizzle = getDrizzle();
+      const linkRow = getLinkedNpcRow(req, reply, drizzle, partyId, req.params.entityId);
+      if (linkRow === null) return;
       const npc = getDrizzle()
         .select(cols(npcs))
         .from(npcs)
@@ -612,21 +593,9 @@ export async function entityRoutes(app: FastifyInstance) {
       req: FastifyRequest<{ Params: { partyId: string; entityId: string } }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const partyId = Number(req.params.partyId);
-      if (!isPartyMember(partyId, userId)) {
-        return reply.code(403).send({
-          error: apiMsg(req, 'not a member'),
-          message: apiMsg(req, 'Tu n’es pas membre de ce groupe.'),
-        });
-      }
-      if (!getPartyLink(partyId)) {
-        return reply.code(404).send({
-          error: apiMsg(req, 'not_linked'),
-          message: apiMsg(req, 'Aucune campagne GM Assistant liée à ce groupe.'),
-        });
-      }
+      const ctx = requireGmaMemberLink(req, reply, req.params.partyId);
+      if (ctx === null) return;
+      const { userId, partyId } = ctx;
       // No cache lookup on purpose: discards reference GMA ids that must keep
       // working across cache replaces — the id arrives from the GET we serve.
       getDrizzle()
@@ -650,21 +619,9 @@ export async function entityRoutes(app: FastifyInstance) {
       req: FastifyRequest<{ Params: { partyId: string; entityId: string } }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
-      const partyId = Number(req.params.partyId);
-      if (!isPartyMember(partyId, userId)) {
-        return reply.code(403).send({
-          error: apiMsg(req, 'not a member'),
-          message: apiMsg(req, 'Tu n’es pas membre de ce groupe.'),
-        });
-      }
-      if (!getPartyLink(partyId)) {
-        return reply.code(404).send({
-          error: apiMsg(req, 'not_linked'),
-          message: apiMsg(req, 'Aucune campagne GM Assistant liée à ce groupe.'),
-        });
-      }
+      const ctx = requireGmaMemberLink(req, reply, req.params.partyId);
+      if (ctx === null) return;
+      const { userId, partyId } = ctx;
       getDrizzle()
         .delete(gmaEntityDiscards)
         .where(

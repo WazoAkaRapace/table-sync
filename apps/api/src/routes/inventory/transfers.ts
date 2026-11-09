@@ -21,9 +21,9 @@ import { cols } from '../../db/projections.ts';
 import { characters, inventory } from '../../db/schema.ts';
 import { bus } from '../../sync/bus.ts';
 import { mirrorAcToCombatants } from '../character-spell-effects.ts';
-import { isOwnerOrGM, requireUser } from '../lib/membership.ts';
+import { requireUser } from '../lib/membership.ts';
 import { apiMsg } from '../messages.ts';
-import { getCharacter, itemDisplayName, logTransaction } from './shared.ts';
+import { itemDisplayName, logTransaction, resolveTransferChars } from './shared.ts';
 
 export async function transfersRoutes(app: FastifyInstance) {
   // ---------- Transfer item between characters ----------
@@ -40,18 +40,9 @@ export async function transfersRoutes(app: FastifyInstance) {
       const qty = Math.max(1, Math.floor(quantity ?? 1));
 
       const drizzle = getDrizzle();
-      const fromChar = getCharacter(drizzle, fromCharId);
-      const toChar = getCharacter(drizzle, toCharacterId);
-      if (!fromChar || !toChar)
-        return reply.code(404).send({ error: apiMsg(req, 'character not found') });
-      if (fromChar.party_id !== toChar.party_id) {
-        return reply.code(400).send({ error: apiMsg(req, 'characters must be in the same party') });
-      }
-      if (!isOwnerOrGM(fromChar, userId)) {
-        return reply
-          .code(403)
-          .send({ error: apiMsg(req, 'only the owner or GM can transfer from this character') });
-      }
+      const pair = resolveTransferChars(req, reply, drizzle, userId, fromCharId, toCharacterId);
+      if (pair === null) return;
+      const { fromChar, toChar } = pair;
 
       const inv = drizzle
         .select(cols(inventory))
@@ -165,18 +156,9 @@ export async function transfersRoutes(app: FastifyInstance) {
       const toCharacterId = Number(body.toCharacterId);
 
       const drizzle = getDrizzle();
-      const fromChar = getCharacter(drizzle, fromCharId);
-      const toChar = getCharacter(drizzle, toCharacterId);
-      if (!fromChar || !toChar)
-        return reply.code(404).send({ error: apiMsg(req, 'character not found') });
-      if (fromChar.party_id !== toChar.party_id) {
-        return reply.code(400).send({ error: apiMsg(req, 'characters must be in the same party') });
-      }
-      if (!isOwnerOrGM(fromChar, userId)) {
-        return reply
-          .code(403)
-          .send({ error: apiMsg(req, 'only the owner or GM can transfer from this character') });
-      }
+      const pair = resolveTransferChars(req, reply, drizzle, userId, fromCharId, toCharacterId);
+      if (pair === null) return;
+      const { fromChar, toChar } = pair;
 
       // Montants : entiers >= 0 par dénomination, total strictement positif.
       const amounts: CoinAmounts = { ...EMPTY_COINS };

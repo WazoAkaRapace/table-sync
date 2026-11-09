@@ -18,17 +18,82 @@ import { and, eq } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../../db/drizzle.ts';
 import { getDb } from '../../db/index.ts';
-import {
-  characters as charactersTable,
-  combatants as combatantsTable,
-  encounters as encountersTable,
-} from '../../db/schema.ts';
+import { characters as charactersTable, combatants as combatantsTable } from '../../db/schema.ts';
 import { bus } from '../../sync/bus.ts';
 import { breakConcentrationEffectsOnTracker } from '../character-spell-effects.ts';
 import { mirrorConditionsToCharacter } from '../lib/conditions.ts';
-import { isPartyGM, requireUser } from '../lib/membership.ts';
 import { apiMsg } from '../messages.ts';
-import { getCombatant, mapCombatant, parseConditions } from './shared.ts';
+import { getCombatant, getCombatantForGM, mapCombatant, parseConditions } from './shared.ts';
+
+/**
+ * PV réels après un coup : dégâts + amortissement PV temporaires (hors forme
+ * sauvage — les dégâts partent dans la barre de la forme, les PV temp restent
+ * dehors). Juge identique aux deux branches (concentration / rage).
+ */
+function realHpAfterDamage(
+  combatant: { hit_points?: number | null },
+  ch: { wild_shape_slug?: unknown; temp_hp?: number | null },
+  newHitPoints: number,
+): { damage: number; realHp: number } {
+  const damage = (combatant.hit_points ?? 0) - Math.max(0, newHitPoints);
+  const tempHp = ch.wild_shape_slug ? 0 : (ch.temp_hp ?? 0);
+  const absorbed = damage > 0 ? Math.min(tempHp, damage) : 0;
+  const realHp = Math.max(0, newHitPoints) + absorbed;
+  return { damage, realHp };
+}
+
+/**
+ * Rupture concentration + rage (Issue #189) DANS LA MÊME écriture — un effet
+ * fantôme ne doit pas survivre à la rupture — puis character:change 'stats' :
+ * la route appelante a déjà sa propre émission, chaque AUTRE porteur d'effet
+ * rafraîchit sa CA. Les gardes internes rendent les deux sites jumeaux
+ * (0 PV réel / condition incapacitante) strictement équivalents ; l'émission
+ * reste HORS transaction, comme aux sites d'origine.
+ */
+function breakConcentrationAndRage(
+  ch: { id: number; concentrating: unknown; raging: unknown },
+  drizzle: ReturnType<typeof getDrizzle>,
+  userId: number,
+  partyId: number,
+): void {
+  let droppedBearers: number[] = [];
+  getDb().transaction(() => {
+    if (ch.concentrating) {
+      drizzle
+        .update(charactersTable)
+        .set({ concentrating: 0 })
+        .where(eq(charactersTable.id, ch.id))
+        .run();
+    }
+    if (ch.raging) {
+      drizzle.update(charactersTable).set({ raging: 0 }).where(eq(charactersTable.id, ch.id)).run();
+    }
+    // v2 : la rupture se juge sur le LANCEUR — les lignes CASTÉES par ce
+    // perso tombent (sur lui, sur autrui ou « Autre »), et la CA de CHAQUE
+    // porteur fiche touché resynchronise (emit: false — la route émet déjà
+    // son combat:change chirurgical).
+    droppedBearers = breakConcentrationEffectsOnTracker(ch.id, userId);
+  })();
+  bus.emitChange({
+    type: 'character:change',
+    partyId,
+    characterId: ch.id,
+    action: 'stats',
+    actorUserId: userId,
+  });
+  // v2 : les porteurs AUTRES que le lanceur rafraîchissent aussi (leur CA
+  // vient de retomber).
+  for (const bearerId of droppedBearers) {
+    if (bearerId === ch.id) continue;
+    bus.emitChange({
+      type: 'character:change',
+      partyId,
+      characterId: bearerId,
+      action: 'stats',
+      actorUserId: userId,
+    });
+  }
+}
 
 export async function combatantUpdateRoutes(app: FastifyInstance) {
   // ===== Update combatant (GM only): HP, conditions, count, etc. =====
@@ -38,19 +103,10 @@ export async function combatantUpdateRoutes(app: FastifyInstance) {
       req: FastifyRequest<{ Params: { cid: string }; Body: PatchCombatantPayload }>,
       reply: FastifyReply,
     ) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
+      const ctx = getCombatantForGM(req, reply, Number(req.params.cid));
+      if (ctx === null) return;
+      const { userId, combatant, enc } = ctx;
       const drizzle = getDrizzle();
-      const combatant = getCombatant(drizzle, Number(req.params.cid));
-      if (!combatant) return reply.code(404).send({ error: apiMsg(req, 'Combattant introuvable') });
-
-      const enc = drizzle
-        .select({ party_id: encountersTable.partyId, id: encountersTable.id })
-        .from(encountersTable)
-        .where(eq(encountersTable.id, combatant.encounter_id))
-        .get() as any;
-      if (!isPartyGM(enc.party_id, userId))
-        return reply.code(403).send({ error: apiMsg(req, 'Réservé au MD') });
 
       const body = req.body || {};
       const values: Record<string, unknown> = {};
@@ -141,11 +197,7 @@ export async function combatantUpdateRoutes(app: FastifyInstance) {
           .where(eq(charactersTable.id, combatant.character_id))
           .get() as any;
         if (ch?.concentrating) {
-          const damage = (combatant.hit_points ?? 0) - Math.max(0, body.hitPoints);
-          // While shaped, damage routes to the shape's bar — temp HP stays out of it.
-          const tempHp = ch.wild_shape_slug ? 0 : (ch.temp_hp ?? 0);
-          const absorbed = damage > 0 ? Math.min(tempHp, damage) : 0;
-          const realHp = Math.max(0, body.hitPoints) + absorbed;
+          const { damage, realHp } = realHpAfterDamage(combatant, ch, body.hitPoints);
           // PHB p.203: the damage TAKEN threatens concentration — absorbed by
           // temp HP or not, the save rolls against the full hit (DD 10 or ½ dégâts).
           if (damage > 0 && realHp > 0) {
@@ -160,47 +212,7 @@ export async function combatantUpdateRoutes(app: FastifyInstance) {
             // Unconscious → concentration ends automatically on the sheet too.
             // Les lignes d'effet liées tombent DANS la même écriture — un
             // effet fantôme ne doit pas survivre à la rupture.
-            let droppedBearers: number[] = [];
-            getDb().transaction(() => {
-              drizzle
-                .update(charactersTable)
-                .set({ concentrating: 0 })
-                .where(eq(charactersTable.id, ch.id))
-                .run();
-              // Issue #189 — inconscient : la rage tombe avec la
-              // concentration (même transaction, pas d'état fantôme).
-              if (ch.raging) {
-                drizzle
-                  .update(charactersTable)
-                  .set({ raging: 0 })
-                  .where(eq(charactersTable.id, ch.id))
-                  .run();
-              }
-              // v2 : la rupture se juge sur le LANCEUR — les lignes CASTÉES
-              // par ce perso tombent (sur lui, sur autrui ou « Autre »), et
-              // la CA de CHAQUE porteur fiche touché resynchronise (emit:
-              // false — la route émet déjà son combat:change chirurgical).
-              droppedBearers = breakConcentrationEffectsOnTracker(ch.id, userId);
-            })();
-            bus.emitChange({
-              type: 'character:change',
-              partyId: enc.party_id,
-              characterId: ch.id,
-              action: 'stats',
-              actorUserId: userId,
-            });
-            // v2 : les porteurs AUTRES que le lanceur rafraîchissent aussi
-            // (leur CA vient de retomber).
-            for (const bearerId of droppedBearers) {
-              if (bearerId === ch.id) continue;
-              bus.emitChange({
-                type: 'character:change',
-                partyId: enc.party_id,
-                characterId: bearerId,
-                action: 'stats',
-                actorUserId: userId,
-              });
-            }
+            breakConcentrationAndRage(ch, drizzle, userId, enc.party_id);
           }
         }
         // Issue #189 — Rage : KO au traqueur → inconscient → la rage tombe,
@@ -208,10 +220,7 @@ export async function combatantUpdateRoutes(app: FastifyInstance) {
         // ci-dessus ne couvre que les lanceurs). Juge identique : 0 PV réel
         // (les PV temporaires restants amortissent la chute).
         if (ch && !ch.concentrating && ch.raging) {
-          const damage = (combatant.hit_points ?? 0) - Math.max(0, body.hitPoints);
-          const tempHp = ch.wild_shape_slug ? 0 : (ch.temp_hp ?? 0);
-          const absorbed = damage > 0 ? Math.min(tempHp, damage) : 0;
-          const realHp = Math.max(0, body.hitPoints) + absorbed;
+          const { realHp } = realHpAfterDamage(combatant, ch, body.hitPoints);
           if (realHp <= 0) {
             drizzle
               .update(charactersTable)
@@ -369,47 +378,7 @@ export async function combatantUpdateRoutes(app: FastifyInstance) {
             // Condition brisante → concentration rompue : les lignes d'effet
             // liées tombent dans la même écriture (pas d'effet fantôme).
             // Issue #189 — la rage tombe aussi (incapacité).
-            let droppedBearers: number[] = [];
-            getDb().transaction(() => {
-              if (ch?.concentrating) {
-                drizzle
-                  .update(charactersTable)
-                  .set({ concentrating: 0 })
-                  .where(eq(charactersTable.id, ch.id))
-                  .run();
-              }
-              if (ch?.raging) {
-                drizzle
-                  .update(charactersTable)
-                  .set({ raging: 0 })
-                  .where(eq(charactersTable.id, ch.id))
-                  .run();
-              }
-              // v2 : la rupture se juge sur le LANCEUR — les lignes CASTÉES
-              // par ce perso tombent, et la CA de CHAQUE porteur fiche
-              // touché resynchronise (emit: false — la route émet déjà son
-              // combat:change chirurgical).
-              droppedBearers = breakConcentrationEffectsOnTracker(ch.id, userId);
-            })();
-            bus.emitChange({
-              type: 'character:change',
-              partyId: enc.party_id,
-              characterId: ch.id,
-              action: 'stats',
-              actorUserId: userId,
-            });
-            // v2 : les porteurs AUTRES que le lanceur rafraîchissent aussi
-            // (leur CA vient de retomber).
-            for (const bearerId of droppedBearers) {
-              if (bearerId === ch.id) continue;
-              bus.emitChange({
-                type: 'character:change',
-                partyId: enc.party_id,
-                characterId: bearerId,
-                action: 'stats',
-                actorUserId: userId,
-              });
-            }
+            breakConcentrationAndRage(ch, drizzle, userId, enc.party_id);
             concentrationBroken = breaking.name;
             if (ch?.raging) rageEndedByCondition = breaking.name;
           }

@@ -17,7 +17,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import { getDrizzle } from '../../db/drizzle.ts';
 import { cols } from '../../db/projections.ts';
 import { campaignState, dmNotes, dmQuests } from '../../db/schema.ts';
-import { isPartyGM, isPartyMember } from '../lib/membership.ts';
+import { isPartyGM, isPartyMember, requireUser } from '../lib/membership.ts';
 import { apiMsg } from '../messages.ts';
 
 export const MAX_DAY = 100000; // ~274 ans de campagne — au-delà, c'est une erreur de saisie
@@ -107,6 +107,31 @@ export function gmGuard(
     return false;
   }
   return true;
+}
+
+/**
+ * Porte « ligne carnet + MD » (PATCH/DELETE dm-notes, dm-quests,
+ * campaign-countdowns) : requireUser, 404 au libellé de la ressource, puis
+ * gmGuard sur la ligne chargée. Renvoie null après avoir envoyé la réponse —
+ * l'appelant fait `return`.
+ */
+export function getCampaignRowForGM(
+  req: FastifyRequest,
+  reply: FastifyReply,
+  table: any,
+  rowId: number,
+  notFoundMsg: string,
+): { userId: number; row: any; drizzle: ReturnType<typeof getDrizzle> } | null {
+  const userId = requireUser(req, reply);
+  if (userId === null) return null;
+  const drizzle = getDrizzle();
+  const row = drizzle.select(cols(table)).from(table).where(eq(table.id, rowId)).get() as any;
+  if (!row) {
+    reply.code(404).send({ error: apiMsg(req, notFoundMsg) });
+    return null;
+  }
+  if (!gmGuard(req, reply, row.party_id, userId)) return null;
+  return { userId, row, drizzle };
 }
 
 /** Membership gate alone — the shared calendar (#159) trusts every member

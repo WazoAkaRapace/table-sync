@@ -84,20 +84,8 @@ export async function journalRoutes(app: FastifyInstance) {
       const query = (req.query ?? {}) as { characterId?: string; day?: string };
       const characterId = Number(query.characterId);
       const day = Number(query.day);
-      if (!Number.isInteger(day) || day < 1 || day > MAX_DAY) {
-        return reply.code(400).send({ error: apiMsg(req, 'day out of range') });
-      }
-      const char = getDrizzle()
-        .select(cols(characters))
-        .from(characters)
-        .where(eq(characters.id, characterId))
-        .get() as any;
-      if (!char || char.party_id !== partyId) {
-        return reply.code(404).send({ error: apiMsg(req, 'character not found') });
-      }
-      if (!isOwnerOrGM(char, userId)) {
-        return reply.code(403).send({ error: apiMsg(req, 'Réservé au propriétaire ou au MD') });
-      }
+      const char = resolveJournalChar(req, reply, partyId, userId, characterId, day);
+      if (char === null) return;
       const row = getDrizzle()
         .select(cols(campaignDayNotes))
         .from(campaignDayNotes)
@@ -127,20 +115,8 @@ export async function journalRoutes(app: FastifyInstance) {
       const body = (req.body ?? {}) as PutCampaignDayNotePayload;
       const characterId = Number(body.characterId);
       const day = Number(body.day);
-      if (!Number.isInteger(day) || day < 1 || day > MAX_DAY) {
-        return reply.code(400).send({ error: apiMsg(req, 'day out of range') });
-      }
-      const char = getDrizzle()
-        .select(cols(characters))
-        .from(characters)
-        .where(eq(characters.id, characterId))
-        .get() as any;
-      if (!char || char.party_id !== partyId) {
-        return reply.code(404).send({ error: apiMsg(req, 'character not found') });
-      }
-      if (!isOwnerOrGM(char, userId)) {
-        return reply.code(403).send({ error: apiMsg(req, 'Réservé au propriétaire ou au MD') });
-      }
+      const char = resolveJournalChar(req, reply, partyId, userId, characterId, day);
+      if (char === null) return;
       if (typeof body.note !== 'string' || body.note.length > MAX_TABLE_NOTE_LEN) {
         return reply.code(400).send({ error: apiMsg(req, 'invalid note') });
       }
@@ -172,4 +148,38 @@ export async function journalRoutes(app: FastifyInstance) {
       return reply.send({ note });
     },
   );
+}
+
+/**
+ * Préambule partagé des routes du journal de table : jour dans le domaine
+ * (400 « day out of range »), personnage du groupe (404 « character not
+ * found »), puis owner/MD (403 « Réservé au propriétaire ou au MD »).
+ * Renvoie null après avoir envoyé la réponse — l'appelant fait `return`.
+ */
+function resolveJournalChar(
+  req: FastifyRequest,
+  reply: FastifyReply,
+  partyId: number,
+  userId: number,
+  characterId: number,
+  day: number,
+): any | null {
+  if (!Number.isInteger(day) || day < 1 || day > MAX_DAY) {
+    reply.code(400).send({ error: apiMsg(req, 'day out of range') });
+    return null;
+  }
+  const char = getDrizzle()
+    .select(cols(characters))
+    .from(characters)
+    .where(eq(characters.id, characterId))
+    .get() as any;
+  if (!char || char.party_id !== partyId) {
+    reply.code(404).send({ error: apiMsg(req, 'character not found') });
+    return null;
+  }
+  if (!isOwnerOrGM(char, userId)) {
+    reply.code(403).send({ error: apiMsg(req, 'Réservé au propriétaire ou au MD') });
+    return null;
+  }
+  return char;
 }

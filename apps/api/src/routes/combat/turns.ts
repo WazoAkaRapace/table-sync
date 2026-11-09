@@ -34,15 +34,10 @@ export async function turnRoutes(app: FastifyInstance) {
   app.post(
     '/encounters/:id/next-turn',
     async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
+      const ctx = loadTurnEncounter(req, reply);
+      if (ctx === null) return;
+      const { userId, enc } = ctx;
       const drizzle = getDrizzle();
-      const enc = drizzle
-        .select()
-        .from(encountersTable)
-        .where(eq(encountersTable.id, Number(req.params.id)))
-        .get();
-      if (!enc) return reply.code(404).send({ error: apiMsg(req, 'Rencontre introuvable') });
       if (!isPartyGM(enc.partyId, userId))
         return reply.code(403).send({ error: apiMsg(req, 'Réservé au MD') });
 
@@ -50,14 +45,7 @@ export async function turnRoutes(app: FastifyInstance) {
       if (enc.status === 'ended')
         return reply.code(400).send({ error: apiMsg(req, 'Combat terminé') });
 
-      const sorted = sortCombatants(
-        drizzle
-          .select()
-          .from(combatantsTable)
-          .where(eq(combatantsTable.encounterId, enc.id))
-          .all()
-          .map(mapCombatant),
-      );
+      const sorted = loadSortedCombatants(drizzle, enc.id);
       const active = sorted.filter((c) => !c.defeated);
 
       if (active.length === 0) {
@@ -96,20 +84,7 @@ export async function turnRoutes(app: FastifyInstance) {
       const currentIdx = Math.min(enc.turnIndex, sorted.length - 1);
       advanceTurnTx(enc, sorted, currentIdx, userId);
 
-      const row = drizzle
-        .select()
-        .from(encountersTable)
-        .where(eq(encountersTable.id, enc.id))
-        .get();
-      bus.emitChange({
-        type: 'combat:change',
-        partyId: enc.partyId,
-        encounterId: enc.id,
-        action: 'turn',
-        actorUserId: userId,
-      });
-      notifyTurnPush(row);
-      return reply.send({ encounter: mapEncounter(row) });
+      return finishTurn(enc, drizzle, userId, reply);
     },
   );
 
@@ -120,26 +95,14 @@ export async function turnRoutes(app: FastifyInstance) {
   app.post(
     '/encounters/:id/end-my-turn',
     async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
+      const ctx = loadTurnEncounter(req, reply);
+      if (ctx === null) return;
+      const { userId, enc } = ctx;
       const drizzle = getDrizzle();
-      const enc = drizzle
-        .select()
-        .from(encountersTable)
-        .where(eq(encountersTable.id, Number(req.params.id)))
-        .get();
-      if (!enc) return reply.code(404).send({ error: apiMsg(req, 'Rencontre introuvable') });
       if (enc.status !== 'active')
         return reply.code(400).send({ error: apiMsg(req, 'Combat non actif') });
 
-      const sorted = sortCombatants(
-        drizzle
-          .select()
-          .from(combatantsTable)
-          .where(eq(combatantsTable.encounterId, enc.id))
-          .all()
-          .map(mapCombatant),
-      );
+      const sorted = loadSortedCombatants(drizzle, enc.id);
       const active = sorted.filter((c) => !c.defeated);
 
       if (active.length === 0) {
@@ -177,20 +140,7 @@ export async function turnRoutes(app: FastifyInstance) {
 
       advanceTurnTx(enc, sorted, currentIdx, userId);
 
-      const row = drizzle
-        .select()
-        .from(encountersTable)
-        .where(eq(encountersTable.id, enc.id))
-        .get();
-      bus.emitChange({
-        type: 'combat:change',
-        partyId: enc.partyId,
-        encounterId: enc.id,
-        action: 'turn',
-        actorUserId: userId,
-      });
-      notifyTurnPush(row);
-      return reply.send({ encounter: mapEncounter(row) });
+      return finishTurn(enc, drizzle, userId, reply);
     },
   );
 
@@ -203,15 +153,10 @@ export async function turnRoutes(app: FastifyInstance) {
   app.post(
     '/encounters/:id/prev-turn',
     async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-      const userId = requireUser(req, reply);
-      if (userId === null) return;
+      const ctx = loadTurnEncounter(req, reply);
+      if (ctx === null) return;
+      const { userId, enc } = ctx;
       const drizzle = getDrizzle();
-      const enc = drizzle
-        .select()
-        .from(encountersTable)
-        .where(eq(encountersTable.id, Number(req.params.id)))
-        .get();
-      if (!enc) return reply.code(404).send({ error: apiMsg(req, 'Rencontre introuvable') });
       if (!isPartyGM(enc.partyId, userId))
         return reply.code(403).send({ error: apiMsg(req, 'Réservé au MD') });
       if (enc.status !== 'active')
@@ -436,14 +381,7 @@ function advanceTurnTx(
     }
 
     // Skip defeated combatants (and their group members)
-    const refetchedSorted = sortCombatants(
-      drizzle
-        .select()
-        .from(combatantsTable)
-        .where(eq(combatantsTable.encounterId, enc.id))
-        .all()
-        .map(mapCombatant),
-    );
+    const refetchedSorted = loadSortedCombatants(drizzle, enc.id);
     let guard = 0;
     while (refetchedSorted[nextIndex]?.defeated && guard < refetchedSorted.length * 2) {
       const skipGroup = refetchedSorted[nextIndex]?.groupId;
@@ -485,4 +423,66 @@ function advanceTurnTx(
       .run();
   });
   advanceTx();
+}
+
+/**
+ * Préambule des routes de tour : requireUser + fetch encounter (404 « Rencontre
+ * introuvable »). Les gardes propres à chaque route (MD / combat actif) restent
+ * sur le site appelant.
+ */
+function loadTurnEncounter(
+  req: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply,
+): { userId: number; enc: any } | null {
+  const userId = requireUser(req, reply);
+  if (userId === null) return null;
+  const enc = getDrizzle()
+    .select()
+    .from(encountersTable)
+    .where(eq(encountersTable.id, Number(req.params.id)))
+    .get();
+  if (!enc) {
+    reply.code(404).send({ error: apiMsg(req, 'Rencontre introuvable') });
+    return null;
+  }
+  return { userId, enc };
+}
+
+/** Combattants de la rencontre dans l'ordre canonique d'initiative. */
+function loadSortedCombatants(
+  drizzle: ReturnType<typeof getDrizzle>,
+  encounterId: number,
+): Combatant[] {
+  return sortCombatants(
+    drizzle
+      .select()
+      .from(combatantsTable)
+      .where(eq(combatantsTable.encounterId, encounterId))
+      .all()
+      .map(mapCombatant),
+  );
+}
+
+/**
+ * Queue commune next-turn / end-my-turn : relecture de la rencontre après
+ * advanceTurnTx, combat:change 'turn', push « À toi de jouer » au nouveau
+ * courant, réponse { encounter }. (prev-turn ne passe PAS ici : un undo ne
+ * pousse pas de notification.)
+ */
+function finishTurn(
+  enc: { id: number; partyId: number },
+  drizzle: ReturnType<typeof getDrizzle>,
+  userId: number,
+  reply: FastifyReply,
+): FastifyReply {
+  const row = drizzle.select().from(encountersTable).where(eq(encountersTable.id, enc.id)).get();
+  bus.emitChange({
+    type: 'combat:change',
+    partyId: enc.partyId,
+    encounterId: enc.id,
+    action: 'turn',
+    actorUserId: userId,
+  });
+  notifyTurnPush(row);
+  return reply.send({ encounter: mapEncounter(row) });
 }
