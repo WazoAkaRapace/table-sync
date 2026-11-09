@@ -293,7 +293,7 @@ export async function itemImageRoutes(app: FastifyInstance) {
         }
       })();
 
-      emitAnnotationChanges(char, userId, updatedEntryId, req, reply);
+      return emitAnnotationChanges(char, userId, updatedEntryId, req, reply);
     },
   );
 
@@ -362,7 +362,7 @@ export async function itemImageRoutes(app: FastifyInstance) {
         }
       })();
 
-      emitAnnotationChanges(char, userId, updatedEntryId, req, reply);
+      return emitAnnotationChanges(char, userId, updatedEntryId, req, reply);
     },
   );
 }
