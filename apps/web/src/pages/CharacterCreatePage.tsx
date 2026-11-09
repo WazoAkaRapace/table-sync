@@ -50,6 +50,8 @@ import {
   raceInfo,
   skillInfoLabel,
 } from '../i18n/labels';
+import { Glyph } from '../components/Glyph';
+import type { ReactNode } from 'react';
 
 /** Marker for the « Autre… » free-text escape on every catalog picker. */
 const CUSTOM = '__custom__';
@@ -110,7 +112,7 @@ function DotLeader() {
 }
 
 /** Step heading — the register's numeral grammar (TocHeader dialect). */
-function StepHeader({ numeral, title }: { numeral: string; title: string }) {
+function StepHeader({ numeral, title }: { numeral: ReactNode; title: string }) {
   return (
     <div className="pb-3">
       <div className="flex items-center gap-3">
@@ -336,7 +338,10 @@ export default function CharacterCreatePage() {
   if (!partyId) return null;
 
   const steps = STEPS.map((s) => ({ numeral: s.numeral, title: t(s.titleKey) }));
-  const current = step === RECAP ? { numeral: '✒', title: t('create.recap.titre') } : steps[step];
+  const current =
+    step === RECAP
+      ? { numeral: <Glyph name="annotate" />, title: t('create.recap.titre') }
+      : steps[step];
 
   return (
     <div className="mx-auto w-full max-w-3xl pb-8">
@@ -388,7 +393,7 @@ export default function CharacterCreatePage() {
               : 'text-ink-300 hover:bg-parchment-100'
           }`}
         >
-          ✒
+          <Glyph name="annotate" />
         </button>
       </nav>
 
@@ -630,7 +635,9 @@ export default function CharacterCreatePage() {
                   <p className="label">{t('create.tableau.standard.a.repartir')}</p>
                   <div className="flex flex-wrap gap-2">
                     {pool.length === 0 && (
-                      <span className="text-sm text-ink-400">{t('create.tout.est.pose')}</span>
+                      <span className="text-sm text-ink-400 inline-flex items-center gap-1">
+                        {t('create.tout.est.pose')} <Glyph name="check" />
+                      </span>
                     )}
                     {pool.map((v) => (
                       <button
@@ -975,7 +982,13 @@ export default function CharacterCreatePage() {
             disabled={creating}
             onClick={submit}
           >
-            {creating ? t('create.inscription') : t('create.creer.le.personnage')}
+            {creating ? (
+              t('create.inscription')
+            ) : (
+              <span className="inline-flex items-center gap-1">
+                <Glyph name="annotate" /> {t('create.creer.le.personnage')}
+              </span>
+            )}
           </button>
         )}
       </div>

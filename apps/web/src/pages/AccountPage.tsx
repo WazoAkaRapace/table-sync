@@ -20,6 +20,7 @@ import {
 import { resetTutorial } from '../tutorial/serverSync';
 import { formatSince } from '../utils';
 import { isDark, setThemePref, themePref } from '../theme';
+import { Glyph } from '../components/Glyph';
 
 /**
  * Mon compte — nom affiché, adresse e-mail (optionnelle pour les comptes
@@ -302,7 +303,7 @@ export default function AccountPage() {
               </label>
               {user.email && user.emailVerifiedAt && !user.pendingEmail && (
                 <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
-                  ✓ {t('account.email.verifiee')}
+                  <Glyph name="check" /> {t('account.email.verifiee')}
                 </span>
               )}
             </div>

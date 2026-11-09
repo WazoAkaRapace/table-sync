@@ -51,6 +51,7 @@ import WeekCalendar from './character/WeekCalendar';
 import { useResyncOnReconnect, useSyncEvent } from '../sync';
 import { parseSqliteDate, toRoman } from '../utils';
 import NpcPage from './NpcPage';
+import { Glyph } from '../components/Glyph';
 
 type NotebookTab = 'notes' | 'quests' | 'calendar' | 'npcs';
 
@@ -479,7 +480,7 @@ function CountdownRow({
         aria-label={t('carnet.rebours.modifier', { label: countdown.label })}
         onClick={() => setEditing(true)}
       >
-        ✎
+        <Glyph name="edit" />
       </button>
       <ConfirmButton
         onConfirm={onDelete}
@@ -693,7 +694,7 @@ function QuestsTab({ campaign, partyId, reload, onError }: TabProps) {
                             setShowModal(true);
                           }}
                         >
-                          ✎ {t('carnet.qu.modifier')}
+                          <Glyph name="edit" /> {t('carnet.qu.modifier')}
                         </button>
                         <ConfirmButton
                           onConfirm={() => removeQuest(quest.id)}
