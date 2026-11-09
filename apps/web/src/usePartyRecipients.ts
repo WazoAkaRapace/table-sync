@@ -1,5 +1,5 @@
 import type { CharacterSummary, PartyDetail } from '@table-sync/shared';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from './api';
 import { apiError } from './pages/character/types';
@@ -19,6 +19,11 @@ export function usePartyRecipients(
   const { t } = useTranslation();
   const [party, setParty] = useState<PartyDetail | null>(null);
   const [loadingParty, setLoadingParty] = useState(false);
+  // CodeRabbit #288 : l'identité du callback change à chaque rendu des
+  // appelants — la dernière valeur vit dans une ref, jamais dans les deps
+  // (sinon l'effet refetcherait à chaque rendu de la modale ouverte).
+  const onErrorRef = useRef(onError);
+  onErrorRef.current = onError;
 
   useEffect(() => {
     if (!open || !partyId) return;
@@ -30,7 +35,7 @@ export function usePartyRecipients(
         if (!cancelled) setParty(res.data);
       })
       .catch((err: unknown) => {
-        if (!cancelled) onError(apiError(err, t('transfert.groupe.introuvable')));
+        if (!cancelled) onErrorRef.current(apiError(err, t('transfert.groupe.introuvable')));
       })
       .finally(() => {
         if (!cancelled) setLoadingParty(false);
@@ -38,7 +43,7 @@ export function usePartyRecipients(
     return () => {
       cancelled = true;
     };
-  }, [open, partyId, onError, t]);
+  }, [open, partyId, t]);
 
   const others: CharacterSummary[] = party ? party.characters.filter((c) => c.id !== charId) : [];
   return { loadingParty, others };
