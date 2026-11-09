@@ -398,7 +398,7 @@ check(
   16,
 );
 check('Moine en armure → règle normale', computeAC([entry(cuir)], 4, false, moine).ac, 15);
-// --- Style de combat Défense (Guerrier/Paladin/Rôdeur, PHB 2014 p.72) ---
+// --- Style de combat Défense (Guerrier/Paladin/Rôdeur, PHB 2014) ---
 // PHB 2014 : +1 CA tant que l'on PORTE une armure (bouclier cumule)
 check(
   'style Défense en armure → Cuir 11 + 4 DEX + 1 = 16 (PHB 2014)',
