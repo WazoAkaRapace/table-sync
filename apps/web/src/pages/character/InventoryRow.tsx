@@ -393,7 +393,7 @@ export function InventoryRow({
                               }
                             >
                               <Glyph name="target" /> {formatModifier(stats.attackBonus)}
-                              {!stats.proficient && ' ⚠'}
+                              {!stats.proficient && <Glyph name="warn" />}
                             </Chip>
                             {stats.damageStr && (
                               <Chip

@@ -1131,7 +1131,7 @@ export default function CharacterSpellsTab({
                                         className="shrink-0 text-purple-600 text-[11px]"
                                         title={t('sorts.lancable.en.rituel')}
                                       >
-                                        ⚗
+                                        <Glyph name="alchemy" />
                                       </span>
                                     )}
                                   </span>

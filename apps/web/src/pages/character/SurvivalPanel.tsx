@@ -1476,7 +1476,7 @@ export function SurvivalPanel({
                         s: n > 1 ? 's' : '',
                       })}
                     >
-                      🐾
+                      <Glyph name="paw" />
                     </button>
                   ))}
                 </span>
@@ -1503,7 +1503,7 @@ export function SurvivalPanel({
                       })}
                       title={t('survie.bloc.de.stats.de.la.forme')}
                     >
-                      📜
+                      <Glyph name="scroll" />
                     </button>
                   </div>
                   <button
@@ -1889,7 +1889,7 @@ export function SurvivalPanel({
                     className="text-sm shrink-0 text-indigo-600"
                     title={t('survie.interrompt.la.concentration')}
                   >
-                    🌀
+                    <Glyph name="concentration" />
                   </span>
                 )}
               </button>
