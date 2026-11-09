@@ -36,7 +36,7 @@ import {
   mapInventoryEntry,
   requireUser,
 } from './helpers.ts';
-import { INVENTORY_WITH_ITEM } from './inventory.ts';
+import { INVENTORY_WITH_ITEM } from './inventory/index.ts';
 import { langFromReq } from './lang.ts';
 import { apiMsg } from './messages.ts';
 

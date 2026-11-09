@@ -70,16 +70,31 @@ const ROUTE_LIB_ALLOWLIST = new Set(['helpers', 'lang', 'messages', 'httpCache']
  * R4 : imports croisés hérités (pré-découpage), shrink-only — retirez une
  * entrée quand l'import disparaît (le découpage phase 4 les élimine au fil
  * des PR). Toute NOUVELLE cible top-level routes/* hors allowlist échoue.
+ *
+ * Phase 4c (2026-11-09, split inventory) : l'entrée routes/inventory.ts a
+ * disparu avec le fichier ; le couplage mirrorAcToCombatants (character-
+ * spell-effects) est UN SITE PHYSIQUE inchangé par le split, désormais
+ * importé depuis les 4 sous-modules qui l'utilisent (entries, flows,
+ * transfers, containers) ; les specs '../inventory.ts'/'./inventory.ts' deviennent
+ * '../inventory/index.ts'/'./inventory/index.ts' (même import, nouveau
+ * chemin du registrar). Pas de nouveau couplage : extraction routes/lib en
+ * phase 4b retirera ces entrées.
  */
 const R4_LEGACY: Record<string, string[]> = {
   'apps/api/src/routes/character-spells.ts': ['./spells.ts'],
-  'apps/api/src/routes/characters/sheet.ts': ['../inventory.ts', '../character-spell-effects.ts'],
+  'apps/api/src/routes/characters/sheet.ts': [
+    '../inventory/index.ts',
+    '../character-spell-effects.ts',
+  ],
   'apps/api/src/routes/characters/update.ts': ['../character-spell-effects.ts'],
   'apps/api/src/routes/combat.ts': ['./character-spell-effects.ts'],
   'apps/api/src/routes/domain-spells.ts': ['./spells.ts'],
   'apps/api/src/routes/gma.ts': ['./npcs.ts'],
-  'apps/api/src/routes/inventory.ts': ['./character-spell-effects.ts'],
-  'apps/api/src/routes/item-images.ts': ['./inventory.ts'],
+  'apps/api/src/routes/inventory/containers.ts': ['../character-spell-effects.ts'],
+  'apps/api/src/routes/inventory/entries.ts': ['../character-spell-effects.ts'],
+  'apps/api/src/routes/inventory/flows.ts': ['../character-spell-effects.ts'],
+  'apps/api/src/routes/inventory/transfers.ts': ['../character-spell-effects.ts'],
+  'apps/api/src/routes/item-images.ts': ['./inventory/index.ts'],
   'apps/api/src/routes/rest.ts': ['./character-spell-effects.ts'],
   'apps/api/src/routes/wildshape.ts': ['./character-spell-effects.ts'],
 };
