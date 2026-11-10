@@ -34,7 +34,7 @@ gmTest.describe('Combat (MD)', () => {
 
     // Tolérant aux retries (combat déjà démarré) : roll-all et démarrage
     // n'existent qu'en setup — on ne les touche que s'ils sont là.
-    const rollAll = page.getByRole('button', { name: '🎲 Tout lancer' });
+    const rollAll = page.getByRole('button', { name: 'Tout lancer' });
     if (
       await rollAll.waitFor({ state: 'visible', timeout: 3000 }).then(
         () => true,

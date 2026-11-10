@@ -22,7 +22,6 @@
 import type {
   Combatant,
   EncounterDetail,
-  EncounterRosterEntry,
   EncounterStatus,
   EncounterSummary,
   PartyDetail,
@@ -60,55 +59,16 @@ import {
 import { useHeaderOverride } from '../headerContext';
 import { useResyncOnReconnect, useSyncEvent } from '../sync';
 import { formatCreated, toRoman } from '../utils';
+import { Glyph } from '../components/Glyph';
 
-// ---------- Small combat helpers ----------
-
-function rollD20(bonus: number): number {
-  return Math.floor(Math.random() * 20) + 1 + bonus;
-}
-
-/** Signed initiative bonus, e.g. "+3" / "-1". */
-function signedBonus(bonus: number): string {
-  return `${bonus >= 0 ? '+' : ''}${bonus}`;
-}
-
-/**
- * Next combatant to act after the current one (mirrors the server's
- * next-turn skips: whole groups act together, defeated combatants are
- * skipped with their group). Null when nobody else can act.
- */
-function findNext(combatants: Combatant[], turnIndex: number): Combatant | null {
-  const cur = combatants[turnIndex];
-  if (!cur) return null;
-  const inCurrentTurn = (c: Combatant) =>
-    cur.groupId !== null ? c.groupId === cur.groupId : c.id === cur.id;
-
-  let i = turnIndex + 1;
-  if (cur.groupId !== null) {
-    while (i < combatants.length && combatants[i]?.groupId === cur.groupId) i++;
-  }
-  let guard = 0;
-  const maxGuard = combatants.length * 2 + 2;
-  while (guard++ < maxGuard) {
-    if (i >= combatants.length) i = 0;
-    const c = combatants[i];
-    if (c && !c.defeated && !inCurrentTurn(c)) return c;
-    const g = c?.groupId ?? null;
-    i++;
-    if (g !== null) {
-      while (i < combatants.length && combatants[i]?.groupId === g) i++;
-    }
-  }
-  return null;
-}
-
-/** Roster preview label: characters plain, monster groups as "Nom ×N". */
-function rosterLine(roster: EncounterRosterEntry[]): string {
-  return roster
-    .map((r) => (r.player || r.count <= 1 ? r.name : `${r.name} ×${r.count}`))
-    .join(' · ');
-}
-
+import {
+  CARD_COLORS,
+  CARD_COLOR_NAMES,
+  findNext,
+  rollD20,
+  rosterLine,
+  signedBonus,
+} from './CombatPage-lib';
 export default function CombatPage() {
   const { t } = useTranslation();
   const { partyId } = useParams();
@@ -179,7 +139,7 @@ export default function CombatPage() {
       myCharacter && partyId
         ? {
             label: t('desc.ma.fiche'),
-            short: '🧙',
+            short: <Glyph name="mage" />,
             to: `/party/${partyId}/character/${myCharacter.id}`,
           }
         : null,
@@ -770,7 +730,7 @@ function EncounterRegister({
           </section>
         ) : (
           <EmptyState
-            icon="⚔"
+            icon={<Glyph name="combat" />}
             title={t('combat.aucune.rencontre')}
             hint={t('combat.le.md.n.a.pas.encore.ouvert')}
           />
@@ -861,16 +821,28 @@ function EncounterRegister({
                     </span>
                     {isLive && (
                       <span className="mt-1.5 block text-sm text-ink-500">
+                        <span
+                          aria-hidden="true"
+                          className="mr-1.5 inline-block h-2 w-2 shrink-0 rounded-full bg-blood-600"
+                        />
                         {t('combat.registre.en.cours.ligne', { count: enc.combatantCount })}
                       </span>
                     )}
                     {!isLive && !isDone && (
                       <span className="mt-0.5 block text-sm text-ink-400">
+                        <span
+                          aria-hidden="true"
+                          className="mr-1.5 inline-block h-2 w-2 shrink-0 rounded-full bg-parchment-300 ring-1 ring-ink-400"
+                        />
                         {t('combat.registre.preparation.ligne', { count: enc.combatantCount })}
                       </span>
                     )}
                     {isDone && (
                       <span className="mt-0.5 block text-sm text-ink-400">
+                        <span
+                          aria-hidden="true"
+                          className="mr-1.5 inline-block h-2 w-2 shrink-0 rounded-full bg-ink-500"
+                        />
                         {t('combat.terminee.tour.created', {
                           round: enc.round,
                           created: formatCreated(enc.createdAt, t('combat.creee')),
@@ -1070,7 +1042,9 @@ function CombatTheatre({
           className="btn-primary min-h-[44px] text-sm"
           aria-label={t('combat.terminer.mon.tour.passer.au.combattant')}
         >
-          {t('combat.j.ai.fini.mon.tour')}
+          <span className="inline-flex items-center gap-1">
+            <Glyph name="check" /> {t('combat.j.ai.fini.mon.tour')}
+          </span>
         </button>
         {nextHint}
       </div>
@@ -1118,9 +1092,13 @@ function CombatTheatre({
                   needsInitiative ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'
                 }`}
               >
-                {needsInitiative
-                  ? t('combat.en.attente.d.initiative')
-                  : t('combat.pret.a.demarrer')}
+                {needsInitiative ? (
+                  t('combat.en.attente.d.initiative')
+                ) : (
+                  <span className="inline-flex items-center gap-1">
+                    <Glyph name="check" /> {t('combat.pret.a.demarrer')}
+                  </span>
+                )}
               </span>
               <div className="ml-auto flex flex-wrap items-center gap-2">
                 {needsInitiative && (
@@ -1131,7 +1109,15 @@ function CombatTheatre({
                     className="btn-secondary min-h-[44px] text-sm disabled:opacity-40"
                     title={t('combat.lancer.d20.dex.pour.toutes.les')}
                   >
-                    {rollingInit ? t('combat.lances') : t('combat.tout.lancer')}
+                    {rollingInit ? (
+                      <span className="inline-flex items-center gap-1">
+                        <Glyph name="dice" /> {t('combat.lances')}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1">
+                        <Glyph name="dice" /> {t('combat.tout.lancer')}
+                      </span>
+                    )}
                   </button>
                 )}
                 <button
@@ -1185,7 +1171,7 @@ function CombatTheatre({
               )}
             </div>
             <EmptyState
-              icon="🎭"
+              icon={<Glyph name="masks" />}
               title={t('combat.aucun.combattant')}
               hint={
                 isGM
@@ -1324,7 +1310,7 @@ function InitiativeRail({
                       className="shrink-0 text-xs"
                       title={t('combat.nom.masque.aide')}
                     >
-                      🙈
+                      <Glyph name="hide" />
                     </span>
                   )}
                   {c.conditions.length > 0 && (
@@ -1346,7 +1332,7 @@ function InitiativeRail({
                   )}
                   {c.defeated && (
                     <span aria-hidden="true" className="shrink-0 text-xs">
-                      💀
+                      <Glyph name="death" />
                     </span>
                   )}
                   {!c.defeated &&
@@ -1360,7 +1346,7 @@ function InitiativeRail({
                         className="shrink-0 text-xs"
                         title={t('combat.mourant')}
                       >
-                        🩸
+                        <Glyph name="water" className="text-blood" />
                       </span>
                     )}
                 </span>
@@ -1410,7 +1396,10 @@ function DamageChipDock({
           }`}
           title={applyMode ? t('combat.annuler.echap') : t('combat.appliquer.a.une.cible')}
         >
-          {t('combat.chip.degats', { n: Math.floor(chip.value * (chip.half ? 0.5 : 1)) })}
+          <span className="inline-flex items-center gap-1">
+            <Glyph name="combat" />{' '}
+            {t('combat.chip.degats', { n: Math.floor(chip.value * (chip.half ? 0.5 : 1)) })}
+          </span>
           <span className="ml-1.5 font-sans text-xs font-normal opacity-75">{chip.source}</span>
         </button>
         <button
@@ -1433,7 +1422,7 @@ function DamageChipDock({
           className="btn-ghost min-h-[44px] min-w-[44px] p-2 text-sm text-ink-400 hover:text-ink-700"
           aria-label={t('combat.annuler.la.puce.de.degats')}
         >
-          ✕
+          <Glyph name="close" />
         </button>
         <span className="ml-auto text-xs text-ink-500">
           {applyMode ? t('combat.touchez.une.cible') : t('combat.touchez.la.puce.puis.une.cible')}
@@ -1444,34 +1433,6 @@ function DamageChipDock({
 }
 
 // ---------- The stage ----------
-
-const CARD_COLORS = [
-  null, // default
-  '#fef3c7', // amber
-  '#dcfce7', // green
-  '#dbeafe', // blue
-  '#fce7f3', // pink
-  '#f3e8ff', // purple
-  '#fed7aa', // orange
-  '#fee2e2', // red
-  '#e0e7ff', // indigo
-];
-
-/* Les pastilles de couleur portent un IDENTIFIANT stocké (cardColor en
-   base) : les valeurs hex ci-dessus sont l'identité lumineuse (le
-   rendu bougie vit dans combatDisplay.ts). */
-
-/** Color marks — i18n keys announced when picking a swatch. */
-const CARD_COLOR_NAMES: Record<string, string> = {
-  '#fef3c7': 'combat.couleur.ambre',
-  '#dcfce7': 'combat.couleur.vert',
-  '#dbeafe': 'combat.couleur.bleu',
-  '#fce7f3': 'combat.couleur.rose',
-  '#f3e8ff': 'combat.couleur.violet',
-  '#fed7aa': 'combat.couleur.orange',
-  '#fee2e2': 'combat.couleur.rouge',
-  '#e0e7ff': 'combat.couleur.indigo',
-};
 
 function StagePanel({
   encounter,
@@ -1565,7 +1526,9 @@ function StagePanel({
               </span>
             )}
             {combatant.defeated && (
-              <span className="text-sm font-medium text-ink-400">{t('combat.mort.vaincu')}</span>
+              <span className="text-sm font-medium text-ink-400 inline-flex items-center gap-1">
+                <Glyph name="death" /> {t('combat.mort.vaincu')}
+              </span>
             )}
           </div>
           {/* The name carries its own mask — the toggle sits beside what it
@@ -1595,7 +1558,9 @@ function StagePanel({
                     : 'rounded-full border border-parchment-300 px-3 py-1.5 font-sans text-xs font-medium text-ink-400 transition-colors hover:border-ink-300 hover:text-ink-600'
                 }
               >
-                <span aria-hidden="true">{combatant.nameHidden ? '🙈' : '👁'}</span>{' '}
+                <span aria-hidden="true">
+                  {combatant.nameHidden ? <Glyph name="hide" /> : <Glyph name="eye" />}
+                </span>{' '}
                 {combatant.nameHidden
                   ? t('combat.nom.masque.aux.joueurs')
                   : t('combat.nom.masquer.le.nom')}
@@ -1615,7 +1580,9 @@ function StagePanel({
               className="flex items-center gap-1 rounded-lg border border-parchment-200 bg-parchment-100 px-2 py-1 font-mono text-sm font-semibold text-ink-700"
               title={t('combat.classe.d.armure')}
             >
-              <span aria-hidden="true">🛡</span>
+              <span aria-hidden="true">
+                <Glyph name="shield" />
+              </span>
               {combatant.armorClass}
             </span>
           )}
@@ -1657,7 +1624,7 @@ function StagePanel({
         {hp ? (
           <div className="flex items-center gap-2">
             <span className="shrink-0 text-sm text-ink-400" aria-hidden="true">
-              ❤
+              <Glyph name="heart" />
             </span>
             <HpBar
               current={combatant.hitPoints ?? 0}
@@ -1728,7 +1695,9 @@ function StagePanel({
               className="btn-secondary text-sm"
               title={t('combat.lancer.l.initiative.d20.dex')}
             >
-              {t('combat.lancer')}
+              <span className="inline-flex items-center gap-1">
+                <Glyph name="dice" /> {t('combat.lancer')}
+              </span>
             </button>
           )}
           <span className="text-xs text-ink-400">
@@ -1750,7 +1719,7 @@ function StagePanel({
             className="btn-secondary flex items-center justify-center gap-1 py-3 text-sm"
             title={t('combat.degats.soins.pv')}
           >
-            {t('combat.degats')}
+            <Glyph name="combat" /> {t('combat.degats')}
           </button>
           {!combatant.defeated && (
             <button
@@ -1759,7 +1728,7 @@ function StagePanel({
               className="btn-secondary flex items-center justify-center gap-1 py-3 text-sm"
               title={t('combat.conditions')}
             >
-              ✎ <span>{t('combat.cond')}</span>
+              <Glyph name="edit" /> <span>{t('combat.cond')}</span>
             </button>
           )}
           {combatant.monsterSlug && (
@@ -1769,7 +1738,7 @@ function StagePanel({
               className="btn-secondary flex items-center justify-center gap-1 py-3 text-sm"
               title={t('combat.bloc.de.stats')}
             >
-              📜 <span>{t('combat.stats')}</span>
+              <Glyph name="scroll" /> <span>{t('combat.stats')}</span>
             </button>
           )}
           <button
@@ -1778,7 +1747,7 @@ function StagePanel({
             className="btn-secondary flex items-center justify-center gap-1 py-3 text-sm"
             title={t('combat.marque.de.couleur.relier.l.ecran')}
           >
-            🎨 <span>{t('combat.marque')}</span>
+            <Glyph name="draw" /> <span>{t('combat.marque')}</span>
           </button>
         </div>
       )}
@@ -1971,7 +1940,7 @@ function DamageSheet({
           onClick={() => applyDamage(1)}
           className="btn-secondary bg-red-100 py-3 text-sm text-red-700 hover:bg-red-200"
         >
-          {t('combat.degats')}
+          <Glyph name="combat" /> {t('combat.degats')}
         </button>
         <button
           type="button"
@@ -1979,14 +1948,14 @@ function DamageSheet({
           className="btn-secondary bg-orange-100 py-3 text-sm text-orange-700 hover:bg-orange-200"
           title={t('combat.resistance.demi.degats')}
         >
-          {t('combat.resist')}
+          <Glyph name="shield" /> {t('combat.resist')}
         </button>
         <button
           type="button"
           onClick={applyHeal}
           className="btn-secondary bg-green-100 py-3 text-sm text-green-700 hover:bg-green-200"
         >
-          {t('combat.soins')}
+          <Glyph name="heart" /> {t('combat.soins')}
         </button>
         <button
           type="button"
@@ -1996,7 +1965,15 @@ function DamageSheet({
           }}
           className="btn-secondary py-3 text-sm"
         >
-          {combatant.defeated ? t('combat.reanimer') : t('combat.mort.vaincu')}
+          {combatant.defeated ? (
+            <span className="inline-flex items-center gap-1">
+              <Glyph name="spark" /> {t('combat.reanimer')}
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1">
+              <Glyph name="death" /> {t('combat.mort.vaincu')}
+            </span>
+          )}
         </button>
       </div>
 

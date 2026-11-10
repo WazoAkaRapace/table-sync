@@ -62,9 +62,10 @@ playerTest.describe('Objets-illustrations (joueur)', () => {
       name: "Agrandir l'illustration de Lettre du duc",
     });
     await expect(chassis).toBeVisible();
-    // La pastille 🔍 ne s'affiche qu'une fois l'octet arrivé (onLoad) —
-    // preuve du chargement réel depuis l'API, pas d'un plateau vide.
-    await expect(chassis.getByText('🔍')).toBeVisible();
+    // La pastille loupe (glyphe SVG) ne s'affiche qu'une fois l'octet
+    // arrivé (onLoad) — preuve du chargement réel depuis l'API, pas d'un
+    // plateau vide.
+    await expect(chassis.locator('svg.inline-glyph')).toBeVisible();
     await expect(chassis.locator('img')).toHaveJSProperty('naturalWidth', 400);
   });
 

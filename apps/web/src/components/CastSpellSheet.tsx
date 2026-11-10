@@ -1,6 +1,4 @@
-import type { Spell } from '@table-sync/shared';
 import {
-  type CharacterClassSource,
   agonizingBlastBonus,
   applyAcEffects,
   classLevelOf,
@@ -15,15 +13,11 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { damageType } from '../i18n/labels';
-import {
-  defToEffect,
-  effectModLabel,
-  type TargetableMember,
-  isTargetableAcSpell,
-  previewAc,
-} from '../spellEffects';
+import { defToEffect, effectModLabel, isTargetableAcSpell, previewAc } from '../spellEffects';
+import { Glyph } from './Glyph';
 import { Chip } from './ui';
 import TargetPickerSheet, { type CastTarget } from './TargetPickerSheet';
+import type { CastSpellSheetProps } from './CastSpellSheet-parts';
 
 /**
  * Bottom sheet (mobile) / dialog (desktop) to cast a known spell:
@@ -53,62 +47,7 @@ export default function CastSpellSheet({
   targets,
   onClose,
   onCast,
-}: {
-  spell: Spell;
-  /** Max slots per level 1-9 (index 0 = level 1) — Incantation pool. */
-  slots: number[];
-  slotsUsed: number[];
-  /** Pact magic pool (Occultiste) — interchangeable with Incantation (SRD). */
-  pactSlots?: number[];
-  pactUsed?: number[];
-  concentrating: boolean;
-  /** For the DD / attack preview chips. */
-  castingMod?: number;
-  profBonus?: number;
-  charLevel?: number;
-  /** Fiche du lanceur — manifestations occultes : aperçu Décharge occulte
-   *  (rayons par niveau de classe, +CHA de Décharge déchirante, portée de
-   *  Lance occulte). Passe la fiche ENTIÈRE : classLevelOf lit les lignes
-   *  de classe (multiclassage), pas le seul niveau total. */
-  character?: CharacterClassSource & {
-    charisma?: number | null;
-    level?: number | null;
-    name?: string | null;
-    portraitUrl?: string | null;
-  };
-  /** Ids de manifestations connues (invocationIdsOf sur les traits chargés). */
-  invocationIds?: string[];
-  /** Effets de sort CA actifs (bandeau) — l'annonce part de la CA effective
-   *  ACTUELLE, effets déjà posés inclus. */
-  activeAcEffects?: Array<{ effectKind: string; acValue: number }>;
-  /** CA effective actuelle (override manuel inclus) — base de l'annonce. */
-  currentEffectiveAc?: number;
-  /** Modificateur de DEX — formules « 13 + DEX » (Armure de mage). */
-  dexMod?: number;
-  /** Lancers gratuits 1/RL des manifestations free-cast et Arcanum : clé =
-   * slug du sort, valeur = { featureId, counterCurrent, label }. */
-  freeCasts?: Record<string, { featureId: number; counterCurrent: number; label: string }>;
-  /** Autres membres du groupe non cachés, avec CA effective et DEX — picker
-   *  de cible (v2 ciblage) pour les 5 sorts ciblables. Bouclier EXCLU
-   *  (réaction self, pas de picker). */
-  targets?: TargetableMember[];
-  onClose: () => void;
-  /** Called with the chosen slot level (0 = cantrip, no slot), whether it's
-   *  a ritual cast (no slot either) and WHICH pool the slot comes from —
-   *  SRD magie de pacte : les deux pools sont interchangeables, LE JOUEUR
-   *  choisit (un emplacement de pacte lance le sort au niveau de SON dé).
-   *  'free' : lancer sans emplacement (manifestation à volonté / compteur
-   *  free-cast / Arcanum) — le parent décrémente le compteur du trait.
-   *  target : cible choisie (v2) — self par défaut, fiche du groupe ou
-   *  « Autre » à nom libre ; le parent enchaîne PATCH puis POST
-   *  spell-effects avec targetCharacterId/targetLabel selon la sélection. */
-  onCast: (
-    level: number,
-    ritual?: boolean,
-    pool?: 'spellcasting' | 'pact' | 'free',
-    target?: CastTarget,
-  ) => Promise<void> | void;
-}) {
+}: CastSpellSheetProps) {
   const { t } = useTranslation();
   const isCantrip = spell.level === 0;
   // Scalable à un niveau supérieur ? Les listes ne portent PLUS la prose
@@ -303,7 +242,9 @@ export default function CastSpellSheet({
       >
         <div className="flex items-start justify-between gap-2 mb-3">
           <div>
-            <h3 className="section-title">🪄 {spell.name}</h3>
+            <h3 className="section-title">
+              <Glyph name="spark" /> {spell.name}
+            </h3>
             <p className="text-xs text-ink-400">
               {isCantrip
                 ? t('cast.tour.de.magie')
@@ -328,7 +269,7 @@ export default function CastSpellSheet({
             className="text-ink-400 hover:text-ink-700 text-lg leading-none px-1"
             aria-label={t('cast.fermer')}
           >
-            ✕
+            <Glyph name="close" />
           </button>
         </div>
 
@@ -367,7 +308,7 @@ export default function CastSpellSheet({
           >
             {acAnnouncement.flat ? (
               <p className="font-medium">
-                ⛨{' '}
+                <Glyph name="shield-cross" />{' '}
                 {t('cast.ca.annonce.plate.from.mod.autant', {
                   from: acAnnouncement.from,
                   mod: acAnnouncement.mod,
@@ -375,7 +316,7 @@ export default function CastSpellSheet({
               </p>
             ) : (
               <p className="font-medium">
-                ⛨{' '}
+                <Glyph name="shield-cross" />{' '}
                 {t('cast.ca.annonce.from.to.mod', {
                   from: acAnnouncement.from,
                   to: acAnnouncement.to,
@@ -396,7 +337,8 @@ export default function CastSpellSheet({
             })}
           >
             <p className="font-medium">
-              ⛨ {t('cast.ca.annonce.autre', { mod: otherAnnouncement.mod, name: targetName })}
+              <Glyph name="shield-cross" />{' '}
+              {t('cast.ca.annonce.autre', { mod: otherAnnouncement.mod, name: targetName })}
             </p>
             <p className="mt-0.5 text-xs text-gold-700">
               {isMageArmor
@@ -563,7 +505,7 @@ export default function CastSpellSheet({
                         : undefined
                   }
                 >
-                  ⚔{' '}
+                  <Glyph name="combat" />{' '}
                   {isEldritchBlast && blastRays > 1
                     ? `${blastRays} × ${dmg.dice}${perRayBonus ? formatModifier(perRayBonus) : ''}`
                     : `${dmg.dice}${isEldritchBlast && perRayBonus ? formatModifier(perRayBonus) : ''}`}
@@ -576,7 +518,7 @@ export default function CastSpellSheet({
               )}
               {isEldritchBlast && (
                 <Chip tone="gold" title={t('cast.decharge.occulte.rayons.title')}>
-                  ✦{' '}
+                  <Glyph name="spark-outline" />{' '}
                   {t('cast.rayons.count', {
                     count: blastRays,
                     rays: blastRays,
@@ -585,12 +527,13 @@ export default function CastSpellSheet({
               )}
               {isEldritchBlast && perRayBonus !== 0 && (
                 <Chip tone="gold" title={t('cast.decharge.dechirante.title')}>
-                  ✦ {formatModifier(perRayBonus)} {t('cast.par.rayon.court')}
+                  <Glyph name="spark-outline" /> {formatModifier(perRayBonus)}{' '}
+                  {t('cast.par.rayon.court')}
                 </Chip>
               )}
               {spearRange && (
                 <Chip tone="gold" title={t('cast.lance.occulte.title')}>
-                  🎯 {t('cast.portee.45m')}
+                  <Glyph name="target" /> {t('cast.portee.45m')}
                 </Chip>
               )}
               {healing.dice && (
@@ -602,7 +545,7 @@ export default function CastSpellSheet({
                       : t('sorts.points.de.vie.restaures')
                   }
                 >
-                  ✚ {healing.dice}
+                  <Glyph name="heart" /> {healing.dice}
                   {healing.addsModifier && castingMod !== undefined
                     ? formatModifier(castingMod)
                     : ''}{' '}
@@ -611,11 +554,13 @@ export default function CastSpellSheet({
               )}
               {spell.dcJson && castingMod !== undefined && profBonus !== undefined && (
                 <Chip tone="blue">
-                  🛡 {t('sorts.dd')} {spellSaveDC(castingMod, profBonus)}
+                  <Glyph name="shield" /> {t('sorts.dd')} {spellSaveDC(castingMod, profBonus)}
                 </Chip>
               )}
               {spell.attackType && castingMod !== undefined && profBonus !== undefined && (
-                <Chip tone="red">🎯 {formatModifier(castingMod + profBonus)}</Chip>
+                <Chip tone="red">
+                  <Glyph name="target" /> {formatModifier(castingMod + profBonus)}
+                </Chip>
               )}
             </div>
           );
@@ -630,23 +575,37 @@ export default function CastSpellSheet({
           disabled={casting || (!chosenOption && !isCantrip)}
           className="btn-primary w-full mt-4 py-2.5 disabled:opacity-40"
         >
-          {casting
-            ? '…'
-            : isShield
-              ? t('cast.reagir.bouclier')
-              : concConflict
-                ? t('cast.lancer.et.rompre.la.concentration')
-                : isCantrip
-                  ? t('cast.lancer.le.tour.de.magie')
-                  : isTargetable && target.kind !== 'self'
-                    ? t('cast.lancer.sur', { target: targetName })
-                    : chosenOption?.pool === 'free'
-                      ? freeCast?.label === 'at-will'
-                        ? t('cast.lancer.a.volonte')
-                        : t('cast.lancer.gratuit')
-                      : t('cast.lancer.au.niveau.level', {
-                          level: chosenOption ? chosenOption.level : '—',
-                        })}
+          {casting ? (
+            '…'
+          ) : isShield ? (
+            t('cast.reagir.bouclier')
+          ) : concConflict ? (
+            <span className="inline-flex items-center gap-1.5">
+              <Glyph name="spark" /> {t('cast.lancer.et.rompre.la.concentration')}
+            </span>
+          ) : isCantrip ? (
+            <span className="inline-flex items-center gap-1.5">
+              <Glyph name="spark" /> {t('cast.lancer.le.tour.de.magie')}
+            </span>
+          ) : isTargetable && target.kind !== 'self' ? (
+            <span className="inline-flex items-center gap-1.5">
+              <Glyph name="spark" /> {t('cast.lancer.sur', { target: targetName })}
+            </span>
+          ) : chosenOption?.pool === 'free' ? (
+            <span className="inline-flex items-center gap-1.5">
+              <Glyph name="spark" />
+              {freeCast?.label === 'at-will'
+                ? ` ${t('cast.lancer.a.volonte')}`
+                : ` ${t('cast.lancer.gratuit')}`}
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5">
+              <Glyph name="spark" />
+              {` ${t('cast.lancer.au.niveau.level', {
+                level: chosenOption ? chosenOption.level : '—',
+              })}`}
+            </span>
+          )}
         </button>
 
         {/* Ritual cast: no slot consumed, +10 minutes */}

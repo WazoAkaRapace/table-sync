@@ -13,6 +13,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TargetableMember } from '../spellEffects';
 import { BottomSheet } from './ui';
+import { Glyph } from './Glyph';
 
 /** Sélection courante du picker — l'état vit dans la feuille d'incantation. */
 export type CastTarget =
@@ -121,7 +122,7 @@ export default function TargetPickerSheet({
             className={`shrink-0 text-base ${isSelfSelected ? 'text-gold-600' : 'text-ink-300'}`}
             aria-hidden="true"
           >
-            {isSelfSelected ? '✓' : ''}
+            {isSelfSelected ? <Glyph name="check" /> : ''}
           </span>
         </button>
 
@@ -151,14 +152,14 @@ export default function TargetPickerSheet({
                   className="shrink-0 font-mono text-xs text-ink-500"
                   title={t('cast.cible.ca.title')}
                 >
-                  🛡 {m.ac}
+                  <Glyph name="shield" /> {m.ac}
                 </span>
               )}
               <span
                 className={`shrink-0 text-base ${isSelected ? 'text-gold-600' : 'text-ink-300'}`}
                 aria-hidden="true"
               >
-                {isSelected ? '✓' : ''}
+                {isSelected ? <Glyph name="check" /> : ''}
               </span>
             </button>
           );

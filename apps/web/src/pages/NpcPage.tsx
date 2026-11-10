@@ -8,7 +8,6 @@ import type {
   NpcStatus,
   PatchNpcPayload,
 } from '@table-sync/shared';
-import { NPC_DISPOSITION_LABELS_FR, NPC_STATUS_LABELS_FR } from '@table-sync/shared';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
@@ -22,91 +21,22 @@ import {
   SkeletonCard,
   SkeletonRegion,
 } from '../components/ui';
-import { appLocale } from '../i18n';
 import { useResyncOnReconnect, useSyncEvent } from '../sync';
 import { usePartyRole } from '../usePartyRole';
-import { parseSqliteDate, toRoman } from '../utils';
-
-// ---------- Status / disposition styling ----------
-
-const STATUS_DOT_CLASS: Record<NpcStatus, string> = {
-  alive: 'bg-green-500',
-  dead: 'bg-red-500',
-  missing: 'bg-yellow-500',
-  turned: 'bg-purple-500',
-};
-
-const STATUS_TEXT_CLASS: Record<NpcStatus, string> = {
-  alive: 'text-green-700',
-  dead: 'text-red-700',
-  missing: 'text-yellow-700',
-  turned: 'text-purple-700',
-};
-
-// Les maps partagées restent la source des CLÉS (ordre + exhaustivité) ;
-// le libellé affiché passe par i18next — FR = copies verbatim des maps.
-const DISPOSITION_OPTIONS: { value: NpcDisposition; labelKey: string }[] = (
-  Object.keys(NPC_DISPOSITION_LABELS_FR) as NpcDisposition[]
-).map((d) => ({ value: d, labelKey: `pnj.disposition.${d}` }));
-
-const STATUS_OPTIONS: { value: NpcStatus; labelKey: string }[] = (
-  Object.keys(NPC_STATUS_LABELS_FR) as NpcStatus[]
-).map((s) => ({ value: s, labelKey: `pnj.status.${s}` }));
-
-type ViewFilter = 'all' | 'shared' | 'mine';
-
-// Sentinel for the un-factioned group: a stable map key independent of the
-// display language ("Sans faction" / "No faction").
-const NO_FACTION = '__no_faction__';
-
-/** Name matching for the link suggestion: accents & case aside, same name. */
-function normalizeName(s: string): string {
-  return s
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-/** Sessions across ALL entities réconciliées on one NPC — deduped (the same
-    séance may report several sightings) and in chronicle order. */
-function mergeGmaSessions(entities: GmaEntity[]): GmaEntitySessionRef[] {
-  const seen = new Set<string>();
-  const out: GmaEntitySessionRef[] = [];
-  for (const e of entities) {
-    for (const s of e.sessions) {
-      if (!seen.has(s.id)) {
-        seen.add(s.id);
-        out.push(s);
-      }
-    }
-  }
-  return out.sort((a, b) => a.ordinal - b.ordinal);
-}
-
-function gmaDateLabel(value: string | null): string | null {
-  if (!value) return null;
-  const d = parseSqliteDate(value);
-  if (Number.isNaN(d.getTime())) return null;
-  return d.toLocaleDateString(appLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
-}
-
-/**
- * Failure copy for the GMA link/import actions, attributed honestly: when our
- * API answered, it carries the real cause (including its own GM Assistant
- * translations — those upstream errors DO mention GM Assistant); the fallbacks
- * are OUR side (network to Table Sync, or an API error without a message) and
- * must not blame GM Assistant for them.
- */
-function gmaActionErrorMessage(err: any, t: (key: string) => string): string {
-  const msg = err?.response?.data?.message;
-  if (typeof msg === 'string' && msg.trim()) return msg;
-  if (!err?.response) return t('pnj.gma.erreur.reseau');
-  return t('pnj.gma.erreur.serveur');
-}
-
-// ---------- Main component ----------
+import { toRoman } from '../utils';
+import { Glyph } from '../components/Glyph';
+import {
+  DISPOSITION_OPTIONS,
+  NO_FACTION,
+  STATUS_DOT_CLASS,
+  STATUS_OPTIONS,
+  STATUS_TEXT_CLASS,
+  gmaActionErrorMessage,
+  gmaDateLabel,
+  mergeGmaSessions,
+  normalizeName,
+  type ViewFilter,
+} from './npc-parts';
 
 export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation();
@@ -552,7 +482,9 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
             className="w-full min-h-11 flex items-center justify-between gap-2 text-left"
           >
             <span className="flex items-center gap-2 min-w-0">
-              <span aria-hidden="true">📜</span>
+              <span aria-hidden="true">
+                <Glyph name="scroll" />
+              </span>
               <span className="text-sm font-semibold text-ink-800 truncate">
                 {t('pnj.gma.rail.titre')}
               </span>
@@ -714,7 +646,7 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
       ) : filtered.length === 0 ? (
         <div className="card p-4">
           <EmptyState
-            icon="🎭"
+            icon={<Glyph name="masks" />}
             title={npcs.length === 0 ? t('pnj.aucun') : t('pnj.aucun.resultat')}
             hint={
               npcs.length === 0 ? t('pnj.ajoutez.vos.rencontres') : t('pnj.modifiez.vos.filtres')
@@ -736,7 +668,7 @@ export default function NpcPage({ embedded = false }: { embedded?: boolean }) {
                     className="w-full min-h-11 flex items-center gap-2 text-left"
                   >
                     <span className="text-blood-500 shrink-0" aria-hidden="true">
-                      ⚜
+                      <Glyph name="lily" />
                     </span>
                     <span className="section-title truncate">{label}</span>
                     <span className="text-ink-400 text-sm font-normal tabular-nums shrink-0">
@@ -1011,7 +943,7 @@ function NpcCard({
           role="img"
           aria-label={npc.isShared ? t('pnj.partage') : t('pnj.prive')}
         >
-          {npc.isShared ? '🔗' : '🔒'}
+          {npc.isShared ? <Glyph name="link" /> : <Glyph name="lock" />}
         </span>
         {groupEditable && (
           <span
@@ -1020,7 +952,7 @@ function NpcCard({
             role="img"
             aria-label={t('pnj.modifiable.par.le.groupe')}
           >
-            ✏️
+            <Glyph name="draw" />
           </span>
         )}
       </div>
@@ -1048,7 +980,9 @@ function NpcCard({
       {/* Location */}
       {npc.location && (
         <p className="text-sm text-ink-600 flex items-center gap-1">
-          <span aria-hidden="true">📍</span>
+          <span aria-hidden="true">
+            <Glyph name="pin" />
+          </span>
           <span className="truncate">{npc.location}</span>
         </p>
       )}
@@ -1081,7 +1015,9 @@ function NpcCard({
             title={t('pnj.gma.badge.title')}
             aria-label={t('pnj.gma.badge.aria', { name: npc.name })}
           >
-            <span aria-hidden="true">📜</span>
+            <span aria-hidden="true">
+              <Glyph name="scroll" />
+            </span>
           </button>
           <GmaSessionOrdinals sessions={mergeGmaSessions(gma)} partyId={partyId} />
         </div>
@@ -1096,7 +1032,9 @@ function NpcCard({
             className="text-xs font-medium text-purple-700 hover:underline flex items-center gap-1"
             aria-expanded={showSecret}
           >
-            <span aria-hidden="true">🤫</span>
+            <span aria-hidden="true">
+              <Glyph name="hide" />
+            </span>
             {t('pnj.secret')}
             <span className={`text-ink-400 chevron ${showSecret ? 'is-open' : 'is-closed'}`}>
               ▼
@@ -1125,7 +1063,7 @@ function NpcCard({
               className="text-xs px-2 min-h-11 inline-flex items-center rounded-lg text-ink-600 hover:bg-parchment-100"
               aria-label={t('pnj.modifier.npc.name', { npc_name: npc.name })}
             >
-              {t('pnj.modifier')}
+              <Glyph name="edit" /> {t('pnj.modifier')}
             </button>
             {canDelete && (
               <button
@@ -1134,7 +1072,7 @@ function NpcCard({
                 className="text-xs inline-flex items-center justify-center min-w-11 min-h-11 rounded-lg text-red-700 hover:bg-red-50"
                 aria-label={t('pnj.supprimer.npc.name', { npc_name: npc.name })}
               >
-                🗑
+                <Glyph name="trash" />
               </button>
             )}
           </div>
@@ -1186,7 +1124,9 @@ function NpcDetailModal({
 
         {npc.location && (
           <p className="text-sm text-ink-600 flex items-center gap-1">
-            <span aria-hidden="true">📍</span>
+            <span aria-hidden="true">
+              <Glyph name="pin" />
+            </span>
             <span>{npc.location}</span>
           </p>
         )}
@@ -1500,7 +1440,9 @@ function NpcFormModal({
           // Éditeur « groupe » : contenu seulement — la pastille encre des
           // états discrets (idiome « Caché »), le sang est réservé
           <span className="inline-flex items-center gap-1.5 self-start text-xs font-medium text-ink-600 bg-ink-100 rounded-full px-2.5 py-1">
-            <span aria-hidden="true">✏️</span>
+            <span aria-hidden="true">
+              <Glyph name="draw" />
+            </span>
             {t('pnj.vous.pouvez.modifier.ce.pnj.partage')}
           </span>
         )}
@@ -1872,7 +1814,7 @@ function GmaNpcPickerModal({
                       </span>
                     </span>
                     <span className="text-xs text-ink-400 shrink-0" aria-hidden="true">
-                      {n.isShared ? '🔗' : '🔒'}
+                      {n.isShared ? <Glyph name="link" /> : <Glyph name="lock" />}
                     </span>
                   </button>
                 </li>
@@ -1946,7 +1888,7 @@ function GmaOriginModal({
                     className="w-full min-h-11 flex items-center gap-3 py-2 text-left group"
                   >
                     <span className="w-8 shrink-0 text-center" aria-hidden="true">
-                      📜
+                      <Glyph name="scroll" />
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block text-sm font-medium text-ink-800 truncate group-hover:text-blood-500">

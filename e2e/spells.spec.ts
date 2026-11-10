@@ -52,7 +52,7 @@ playerTest.describe('Sorts (clerc)', () => {
     await expect(castSheet).toBeVisible();
 
     // …et le lancer consomme l'emplacement : 4 → 3 dans le rail.
-    await castSheet.getByRole('button', { name: '🪄 Lancer au niveau 1' }).click();
+    await castSheet.getByRole('button', { name: 'Lancer au niveau 1' }).click();
     await expect(
       page.getByRole('button', {
         name: 'Niveau 1 : 3 emplacements disponibles sur 4 — corriger',

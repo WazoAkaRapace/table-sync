@@ -557,6 +557,7 @@ html.ts-dark .card {
 
 /* Bottom-sheet slide-up for mobile catalog */
 @keyframes sheet-up {
+  text-wrap: pretty;
   from {
     transform: translateY(100%);
   }
@@ -1227,4 +1228,12 @@ html.ts-dark .card {
   .chevron {
     transition: none;
   }
+}
+
+/* Glyphes SVG remplaçant les emoji : coulent dans le texte comme un caractère.
+   display:inline surcharge le preflight Tailwind (svg { display:block }) —
+   sans ça, chaque glyphe casse la ligne. */
+.inline-glyph {
+  display: inline;
+  vertical-align: -0.15em;
 }

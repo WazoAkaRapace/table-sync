@@ -45,30 +45,9 @@ import {
 import { appLocale } from '../i18n';
 import { useResyncOnReconnect, useSyncEvent } from '../sync';
 import { activeCharactersFirst, parseSqliteDate } from '../utils';
+import { Glyph } from '../components/Glyph';
 
-/** Vue d'ensemble du roster (GET /parties/:id/roster-overview) : par
- *  personnage, les 4 chiffres dérivés que rend la carte du tableau MD. */
-interface RosterOverviewEntry {
-  characterId: number;
-  ac: number | null;
-  weightPct: number | null;
-  weightKg: number | null;
-  capacityKg: number | null;
-  foodCount: number;
-  fullWaterCount: number;
-}
-
-interface Transaction {
-  id: number;
-  partyId: number;
-  characterId: number | null;
-  itemId: number | null;
-  itemName: string;
-  deltaQty: number;
-  reason: string;
-  actorName: string | null;
-  at: string;
-}
+import { type RosterOverviewEntry, type Transaction } from './GmDashboardPage-lib';
 
 export default function GmDashboardPage() {
   const { t } = useTranslation();
@@ -505,7 +484,7 @@ function CharactersTab({
   if (characters.length === 0) {
     return (
       <EmptyState
-        icon="🧙"
+        icon={<Glyph name="mage" />}
         title={t('md.aucun.personnage')}
         hint={t('md.les.joueurs.doivent.creer.leurs')}
       />
@@ -599,14 +578,16 @@ function CharactersTab({
                 aria-label={t('md.supprimer.c.name', { c_name: c.name })}
                 title={t('md.supprimer.le.personnage')}
               >
-                🗑
+                <Glyph name="trash" />
               </button>
             </div>
 
             {/* HP bar */}
             <div className="mt-3">
               <div className="flex items-center justify-between text-xs text-ink-500 mb-1">
-                <span>{t('md.pv')}</span>
+                <span className="inline-flex items-center gap-0.5">
+                  <Glyph name="heart" /> {t('md.pv')}
+                </span>
                 <span className="font-medium">
                   {c.currentHp}
                   {c.tempHp > 0 ? ` (+${c.tempHp})` : ''} / {c.maxHp}
@@ -624,7 +605,9 @@ function CharactersTab({
             {ov?.weightKg != null && ov?.capacityKg != null && (
               <div className="mt-2">
                 <div className="flex items-center justify-between text-xs text-ink-500 mb-1">
-                  <span>{t('md.sac')}</span>
+                  <span className="inline-flex items-center gap-0.5">
+                    <Glyph name="pack" /> {t('md.sac')}
+                  </span>
                   <span>
                     {ov.weightKg.toFixed(1)} / {ov.capacityKg.toFixed(0)} kg ({weightPct}%)
                   </span>
@@ -646,14 +629,20 @@ function CharactersTab({
 
             {/* Stats row: CA, PP, food, water */}
             <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-              <span className="font-medium">
-                {t('md.ca')} <span className="text-ink-800 font-bold">{effectiveAC}</span>
+              <span className="font-medium inline-flex items-center gap-0.5">
+                <Glyph name="shield" /> {t('md.ca')}{' '}
+                <span className="text-ink-800 font-bold">{effectiveAC}</span>
               </span>
-              <span className="font-medium">
-                {t('md.pp')} <span className="text-ink-800 font-bold">{pp}</span>
+              <span className="font-medium inline-flex items-center gap-0.5">
+                <Glyph name="eye" /> {t('md.pp')}{' '}
+                <span className="text-ink-800 font-bold">{pp}</span>
               </span>
-              <span className="text-ink-500">🍖 {foodCount}</span>
-              <span className="text-ink-500">💧 {fullWaterCount}</span>
+              <span className="text-ink-500 inline-flex items-center gap-0.5">
+                <Glyph name="food" /> {foodCount}
+              </span>
+              <span className="text-ink-500 inline-flex items-center gap-0.5">
+                <Glyph name="water" /> {fullWaterCount}
+              </span>
               {c.exhaustion > 0 && (
                 <span className="inline-flex items-center gap-1">
                   <span className={`w-2 h-2 rounded-full ${exhColor}`} />
@@ -662,7 +651,8 @@ function CharactersTab({
               )}
               {c.currentHp <= 0 && (
                 <span className="text-red-700 font-medium">
-                  🩸 {c.deathSaveSuccesses}/3 ✓ · {c.deathSaveFailures}/3 ✗
+                  <Glyph name="water" className="text-blood" /> {c.deathSaveSuccesses}/3{' '}
+                  <Glyph name="check" /> · {c.deathSaveFailures}/3 <Glyph name="close" />
                 </span>
               )}
             </div>
@@ -955,7 +945,7 @@ function TransactionsTab({ transactions }: { transactions: Transaction[] }) {
   if (transactions.length === 0) {
     return (
       <EmptyState
-        icon="📋"
+        icon={<Glyph name="list" />}
         title={t('md.aucune.transaction')}
         hint={t('md.les.modifications.d.inventaire')}
       />
@@ -1230,7 +1220,7 @@ function CustomItemsTab({
       ) : customItems.length === 0 ? (
         <div className="card p-8">
           <EmptyState
-            icon="✨"
+            icon={<Glyph name="spark" />}
             title={t('md.aucun.objet.personnalise')}
             hint={t('md.cree.des.objets.non.srd')}
           />
@@ -1292,7 +1282,7 @@ function CustomItemsTab({
                   className="text-ink-400 hover:text-blood-500 text-sm p-1"
                   aria-label={t('md.modifier')}
                 >
-                  ✎
+                  <Glyph name="edit" />
                 </button>
                 <ConfirmButton
                   onConfirm={() => remove(item.id)}

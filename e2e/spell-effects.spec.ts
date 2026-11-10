@@ -114,7 +114,7 @@ playerTest.describe('Effets de sort sur la CA', () => {
       // — Lancer : l'annonce or « CA 16 → 18 (+2) » précède la consommation —
       const sheet = await openCastSheet(page, 'Bouclier de la foi');
       await expect(sheet.getByText('CA 16 → 18 (+2)')).toBeVisible();
-      await sheet.getByRole('button', { name: '🪄 Lancer au niveau 1' }).click();
+      await sheet.getByRole('button', { name: 'Lancer au niveau 1' }).click();
       await expect(sheet).toBeHidden();
 
       // — Bandeau : tuile CA 18 liserée or + chip de l'effet actif —
@@ -125,7 +125,7 @@ playerTest.describe('Effets de sort sur la CA', () => {
 
       // — Rupture par condition brisante : Neutralisé via le picker d'états —
       await openTab(page, 'Survie');
-      await page.getByRole('button', { name: '🎭 Ajouter un état' }).click();
+      await page.getByRole('button', { name: 'Ajouter un état' }).click();
       await page.getByRole('button', { name: /^Neutralisé/ }).click();
       // Toast règle : la concentration est rompue, le sort interrompu…
       await expect(
@@ -145,7 +145,7 @@ playerTest.describe('Effets de sort sur la CA', () => {
     const sheet = await openCastSheet(page, 'Armure de mage');
     // Annonce « plate » : la CA ne bouge pas mais l'effet se pose quand même.
     await expect(sheet.getByText('CA 16 — reste 16 (13 + DEX déjà atteint)')).toBeVisible();
-    await sheet.getByRole('button', { name: '🪄 Lancer au niveau 1' }).click();
+    await sheet.getByRole('button', { name: 'Lancer au niveau 1' }).click();
     await expect(sheet).toBeHidden();
 
     // La chip est là, la tuile ne bouge pas : 16 avant comme après.

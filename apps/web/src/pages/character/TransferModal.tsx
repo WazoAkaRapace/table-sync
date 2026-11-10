@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import api from '../../api';
 import { EmptyState, LoadingSpinner, Modal, NumberField } from '../../components/ui';
 import { usePartyRecipients } from '../../usePartyRecipients';
+import { Glyph } from '../../components/Glyph';
 
 // ---------- Transfer modal ----------
 
@@ -73,7 +74,7 @@ export function TransferModal({
         <LoadingSpinner label={t('transfert.chargement.du.groupe')} />
       ) : others.length === 0 ? (
         <EmptyState
-          icon="👤"
+          icon={<Glyph name="user" />}
           title={t('transfert.aucun.autre.personnage')}
           hint={t('transfert.aucun.destinataire.dans.ce.groupe')}
         />
@@ -186,7 +187,7 @@ export function ContainerTransferModal({
         <LoadingSpinner label={t('transfert.chargement.du.groupe')} />
       ) : others.length === 0 ? (
         <EmptyState
-          icon="👤"
+          icon={<Glyph name="user" />}
           title={t('transfert.aucun.autre.personnage')}
           hint={t('transfert.aucun.destinataire.dans.ce.groupe')}
         />

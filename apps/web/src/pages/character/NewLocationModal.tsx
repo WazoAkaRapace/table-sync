@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal } from '../../components/ui';
 import type { NewLocationPayload } from './types';
+import { Glyph } from '../../components/Glyph';
 
 // ---------- New transport (storage location) modal ----------
 
@@ -77,7 +78,7 @@ export function NewLocationModal({ open, onClose, onCreate }: NewLocationModalPr
             }`}
             aria-pressed={type === 'mount'}
           >
-            {t('empl.monture')}
+            <Glyph name="mount" /> {t('empl.monture')}
           </button>
           <button
             type="button"
@@ -89,7 +90,7 @@ export function NewLocationModal({ open, onClose, onCreate }: NewLocationModalPr
             }`}
             aria-pressed={type === 'container'}
           >
-            📦 Conteneur
+            <Glyph name="box" /> Conteneur
           </button>
         </div>
 

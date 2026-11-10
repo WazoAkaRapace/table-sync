@@ -162,7 +162,7 @@ playerTest.describe('Effets de sort sur la CA — ciblage v2', () => {
       await page.goto(sheetUrl(mira.id));
       await expect(page.getByText(mira.name).first()).toBeVisible();
       await openTab(page, 'Survie');
-      await page.getByRole('button', { name: '🎭 Ajouter un état' }).click();
+      await page.getByRole('button', { name: 'Ajouter un état' }).click();
       await page.getByRole('button', { name: /^Neutralisé/ }).click();
       await expect(
         page.getByText('Concentration rompue : Neutralisé — le sort en cours est interrompu'),

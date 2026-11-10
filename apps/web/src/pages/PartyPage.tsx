@@ -27,6 +27,8 @@ import { ErrorMsg, RegisterHead, SkeletonRegister } from '../components/ui';
 import { useResyncOnReconnect, useSyncEvent } from '../sync';
 import { useMessagesUnread } from '../useMessagesUnread';
 import { activeCharactersFirst, copyText } from '../utils';
+import { Glyph } from '../components/Glyph';
+import { DotLeader, TocHeader, TocLink } from './party-toc';
 
 // ---------- Small pieces of the contents ----------
 
@@ -88,88 +90,6 @@ function Portrait({
 }
 
 /** The dotted run between a table-of-contents label and its trailing value. */
-function DotLeader() {
-  return (
-    <span
-      aria-hidden="true"
-      className="mx-2 min-w-6 flex-1 self-center border-b border-dotted border-parchment-300"
-    />
-  );
-}
-
-function TocHeader({ numeral, title, id }: { numeral: string; title: string; id: string }) {
-  return (
-    <div className="pb-3">
-      <div className="flex items-center gap-3">
-        <span
-          aria-hidden="true"
-          className="w-8 shrink-0 text-right font-display text-base text-ink-300"
-        >
-          {numeral}
-        </span>
-        <h2 id={id} className="section-title">
-          {title}
-        </h2>
-        <span
-          aria-hidden="true"
-          className="min-w-4 flex-1 self-center border-b border-parchment-200"
-        />
-      </div>
-    </div>
-  );
-}
-
-/** A ruled annex line that opens somewhere — tool glyph, label, arrow chip.
- *  `badge` counts what waits behind the door (correspondance non lue);
- *  `queue` is a trailing measured value (the carnet's campaign clock). */
-function TocLink({
-  to,
-  label,
-  glyph,
-  badge,
-  badgeLabel,
-  queue,
-}: {
-  to: string;
-  label: string;
-  glyph: string;
-  badge?: number;
-  badgeLabel?: string;
-  queue?: string;
-}) {
-  return (
-    <li className="border-b border-parchment-200">
-      <Link
-        to={to}
-        className="group -mx-3 flex items-center gap-3 rounded-lg px-3 py-3.5 transition-colors hover:bg-parchment-100/70"
-      >
-        <span aria-hidden="true" className="shrink-0 text-lg">
-          {glyph}
-        </span>
-        <span className="text-sm font-medium text-ink-800">{label}</span>
-        {badge !== undefined && badge > 0 && (
-          <span
-            className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-blood-600 px-1 text-[10px] font-bold text-white"
-            role="status"
-            aria-label={badgeLabel}
-            title={badgeLabel}
-          >
-            {badge > 9 ? '9+' : badge}
-          </span>
-        )}
-        <DotLeader />
-        {queue && <span className="shrink-0 font-mono text-xs text-ink-500">{queue}</span>}
-        <span
-          aria-hidden="true"
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-parchment-300 text-sm text-ink-500 transition-colors group-hover:border-blood-500 group-hover:text-blood-500"
-        >
-          →
-        </span>
-      </Link>
-    </li>
-  );
-}
-
 /**
  * Un instrument du pupitre du MD — la section III cesse d'être une liste pour
  * le MD : un panneau de travail `.card` (comme la scène de combat — le monde
@@ -186,7 +106,7 @@ function Instrument({
   className,
 }: {
   to: string;
-  glyph: string;
+  glyph: ReactNode;
   name: string;
   value?: ReactNode;
   className?: string;
@@ -244,7 +164,7 @@ function MemberCharacters({
               className="shrink-0 text-xs text-ink-300"
               title={t('party.seul.son.joueur.peut.ouvrir.cette')}
             >
-              🔒
+              <Glyph name="lock" />
             </span>
           </li>
         ))}
@@ -686,21 +606,21 @@ export default function PartyPage() {
             <ul className="card grid list-none grid-cols-2 overflow-hidden">
               <Instrument
                 to={`/party/${partyId}/gm`}
-                glyph="🛡"
+                glyph={<Glyph name="shield" />}
                 name={t('party.toc.md')}
                 value={t('party.toc.md.meta')}
                 className="border-r border-b border-parchment-200"
               />
               <Instrument
                 to={`/party/${partyId}/combat`}
-                glyph="⚔"
+                glyph={<Glyph name="combat" />}
                 name={t('party.toc.combat')}
                 value={combatLeadMeta}
                 className="border-b border-parchment-200"
               />
               <Instrument
                 to={`/party/${partyId}/carnet`}
-                glyph="📓"
+                glyph={<Glyph name="note" />}
                 name={t('party.toc.carnet')}
                 value={
                   carnetClock
@@ -714,7 +634,7 @@ export default function PartyPage() {
               />
               <Instrument
                 to={`/party/${partyId}/npcs`}
-                glyph="🎭"
+                glyph={<Glyph name="masks" />}
                 name={t('party.toc.pnj')}
                 value={t('party.toc.pnj.meta')}
               />
@@ -724,13 +644,13 @@ export default function PartyPage() {
                 <TocLink
                   to={`/party/${partyId}/chronique`}
                   label={t('party.toc.chronique')}
-                  glyph="📜"
+                  glyph={<Glyph name="scroll" />}
                 />
               )}
               <TocLink
                 to={`/party/${partyId}/messages`}
                 label={t('party.toc.correspondance')}
-                glyph="✉️"
+                glyph={<Glyph name="mail" />}
                 badge={messagesUnread}
                 badgeLabel={t('msgs.non.lus', { n: messagesUnread })}
               />
@@ -758,11 +678,15 @@ export default function PartyPage() {
                       party_party_inviteCode: party.party.inviteCode,
                     })}
                   >
-                    {inviteCopied
-                      ? t('commun.copie.ok')
-                      : inviteCopyFailed
-                        ? t('commun.copie.impossible')
-                        : t('commun.copier')}
+                    {inviteCopied ? (
+                      <span className="inline-flex items-center gap-1">
+                        <Glyph name="check" /> {t('commun.copie.ok')}
+                      </span>
+                    ) : inviteCopyFailed ? (
+                      t('commun.copie.impossible')
+                    ) : (
+                      t('commun.copier')
+                    )}
                   </button>
                 </div>
               </li>
@@ -773,17 +697,21 @@ export default function PartyPage() {
             <TocLink
               to={`/party/${partyId}/combat`}
               label={t('party.toc.combat')}
-              glyph="⚔"
+              glyph={<Glyph name="combat" />}
               queue={combatPlayerQueue}
             />
             {gmaLinked && (
               <TocLink
                 to={`/party/${partyId}/chronique`}
                 label={t('party.toc.chronique')}
-                glyph="📜"
+                glyph={<Glyph name="scroll" />}
               />
             )}
-            <TocLink to={`/party/${partyId}/npcs`} label={t('party.toc.pnj')} glyph="🎭" />
+            <TocLink
+              to={`/party/${partyId}/npcs`}
+              label={t('party.toc.pnj')}
+              glyph={<Glyph name="masks" />}
+            />
           </ul>
         )}
       </section>

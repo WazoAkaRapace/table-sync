@@ -18,6 +18,8 @@ import {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import { UnreadBadge } from '../../useMessagesUnread';
+import type { ReactNode } from 'react';
+import { Glyph } from '../../components/Glyph';
 
 export type CharacterTab =
   | 'inventory'
@@ -38,27 +40,57 @@ export type CharacterTab =
 export const CHARACTER_TABS: {
   key: CharacterTab;
   label: string;
-  icon: string;
+  icon: ReactNode;
   primary: boolean;
   short?: string;
 }[] = [
-  { key: 'survival', label: 'onglet.survie', icon: '🩸', primary: true, short: 'onglet.survie' },
+  {
+    key: 'survival',
+    label: 'onglet.survie',
+    icon: <Glyph name="water" className="text-blood" />,
+    primary: true,
+    short: 'onglet.survie',
+  },
   {
     key: 'stats',
     label: 'onglet.caracteristiques',
-    icon: '⚔️',
+    icon: <Glyph name="combat" />,
     primary: true,
     short: 'onglet.caract',
   },
-  { key: 'spells', label: 'onglet.sorts', icon: '✨', primary: true, short: 'onglet.sorts' },
-  { key: 'skills', label: 'onglet.competences', icon: '🎯', primary: true, short: 'onglet.comp' },
-  { key: 'inventory', label: 'onglet.inventaire', icon: '🎒', primary: false },
-  { key: 'features', label: 'onglet.traits', icon: '📋', primary: false, short: 'onglet.traits' },
-  { key: 'description', label: 'onglet.description', icon: '👤', primary: false },
-  { key: 'npcs', label: 'onglet.pnj', icon: '🎭', primary: false },
-  { key: 'notes', label: 'onglet.notes', icon: '📝', primary: false },
-  { key: 'calendar', label: 'onglet.calendrier', icon: '📅', primary: true, short: 'onglet.cal' },
-  { key: 'messages', label: 'onglet.messages', icon: '✉️', primary: false },
+  {
+    key: 'spells',
+    label: 'onglet.sorts',
+    icon: <Glyph name="spark" />,
+    primary: true,
+    short: 'onglet.sorts',
+  },
+  {
+    key: 'skills',
+    label: 'onglet.competences',
+    icon: <Glyph name="target" />,
+    primary: true,
+    short: 'onglet.comp',
+  },
+  { key: 'inventory', label: 'onglet.inventaire', icon: <Glyph name="pack" />, primary: false },
+  {
+    key: 'features',
+    label: 'onglet.traits',
+    icon: <Glyph name="scroll" />,
+    primary: false,
+    short: 'onglet.traits',
+  },
+  { key: 'description', label: 'onglet.description', icon: <Glyph name="user" />, primary: false },
+  { key: 'npcs', label: 'onglet.pnj', icon: <Glyph name="masks" />, primary: false },
+  { key: 'notes', label: 'onglet.notes', icon: <Glyph name="note" />, primary: false },
+  {
+    key: 'calendar',
+    label: 'onglet.calendrier',
+    icon: <Glyph name="calendar" />,
+    primary: true,
+    short: 'onglet.cal',
+  },
+  { key: 'messages', label: 'onglet.messages', icon: <Glyph name="mail" />, primary: false },
 ];
 
 const TAB_GAP = 4; // gap-1 entre les pilules
@@ -246,7 +278,7 @@ export function SheetTabBar({
               aria-label={t('onglet.plus.aria')}
             >
               <span key={menuOpen ? 'x' : 'dots'} className="icon-swap" aria-hidden="true">
-                {menuOpen ? '✕' : '⋯'}
+                {menuOpen ? <Glyph name="close" /> : '⋯'}
               </span>
               <span>{t('onglet.plus')}</span>
               {messagesHidden && unreadBadge()}

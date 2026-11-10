@@ -1,9 +1,10 @@
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 interface DeprivationBoxProps {
   label: string;
   days: number;
-  icon: string;
+  icon: ReactNode;
   onStep: (delta: number) => void;
 }
 

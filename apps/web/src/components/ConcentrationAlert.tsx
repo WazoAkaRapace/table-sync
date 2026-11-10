@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Trans, useTranslation } from 'react-i18next';
 import api from '../api';
+import { Glyph } from './Glyph';
 
 /**
  * Floating banner telling the player to roll a Constitution save
@@ -57,7 +58,7 @@ export default function ConcentrationAlert({
       >
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-display text-base font-semibold text-blood-800 flex items-center gap-2">
-            <span aria-hidden="true">🌀</span>
+            <Glyph name="concentration" />
             {t('concentration.jet.de.concentration')}
           </h3>
           <button
@@ -66,7 +67,7 @@ export default function ConcentrationAlert({
             className="text-blood-400 hover:text-blood-400 text-lg leading-none px-1"
             aria-label={t('concentration.fermer')}
           >
-            ✕
+            <Glyph name="close" />
           </button>
         </div>
         <p className="text-sm text-blood-900">

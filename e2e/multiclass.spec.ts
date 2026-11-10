@@ -99,7 +99,7 @@ playerTest.describe('Multiclassage', () => {
       await page.goto(sheetUrl(korgId));
       await expect(page.getByText('Korg').first()).toBeVisible();
       await openTab(page, 'Description');
-      await page.getByRole('button', { name: '✎ Modifier' }).click();
+      await page.getByRole('button', { name: 'Modifier' }).click();
       await expect(
         page.getByRole('dialog', { name: 'Identité & classe' }).getByText('Barbare'),
       ).toBeVisible();
@@ -164,7 +164,7 @@ playerTest.describe('Multiclassage', () => {
         await page.getByRole('button', { name: 'Lancer Boule de feu' }).click();
         const castSheet = page.getByRole('dialog', { name: 'Lancer Boule de feu' });
         await expect(castSheet).toBeVisible();
-        await castSheet.getByRole('button', { name: '🪄 Lancer au niveau 3' }).click();
+        await castSheet.getByRole('button', { name: 'Lancer au niveau 3' }).click();
         // Le pool de pacte passe de 2/2 à 1/2 — le label reste unique car
         // l'incantation de niveau 3 est à 0/2.
         await expect(
@@ -222,7 +222,7 @@ playerTest.describe('Multiclassage', () => {
 
         // Choix explicite du PACTE : seul ce pool se décrémente.
         await pacte.click();
-        await castSheet.getByRole('button', { name: '🪄 Lancer au niveau 3' }).click();
+        await castSheet.getByRole('button', { name: 'Lancer au niveau 3' }).click();
         await expect(
           page.getByRole('button', {
             name: 'Niveau 3 : 1 emplacement disponible sur 2 — corriger',

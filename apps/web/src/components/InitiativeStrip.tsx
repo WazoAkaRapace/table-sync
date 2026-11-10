@@ -49,6 +49,7 @@ import {
   hpVisible,
   numberedCombatantLabels,
 } from '../combatDisplay';
+import { Glyph } from './Glyph';
 import { HpBar } from './ui';
 
 /** La courbe de sortie de la maison (index.css la partage). */
@@ -494,12 +495,12 @@ function Dent({
           )}
           {c.defeated && (
             <span aria-hidden="true" className="shrink-0 text-xs">
-              💀
+              <Glyph name="death" />
             </span>
           )}
           {dying && (
             <span aria-hidden="true" className="shrink-0 text-xs" title={t('combat.mourant')}>
-              🩸
+              <Glyph name="water" className="text-blood-500" />
             </span>
           )}
         </span>

@@ -97,8 +97,8 @@ playerTest.describe('Occultiste (manifestations)', () => {
       await expect(cast).toBeVisible();
       // Niv. occultiste 11 → 3 rayons ; CHA 16 → +3 par rayon.
       await expect(cast.getByText(/3 × 1d10\+3/)).toBeVisible();
-      await expect(cast.getByText('✦ 3 rayons')).toBeVisible();
-      await expect(cast.getByText('✦ +3 / rayon')).toBeVisible();
+      await expect(cast.getByText('3 rayons')).toBeVisible();
+      await expect(cast.getByText('+3 / rayon')).toBeVisible();
     },
   );
 
@@ -157,7 +157,7 @@ playerTest.describe('Occultiste (manifestations)', () => {
       await row.getByRole('button', { name: 'Lancer Détection de la magie' }).click();
       const cast = page.getByRole('dialog', { name: 'Lancer Détection de la magie' });
       await expect(cast.getByText('À volonté — manifestation occulte')).toBeVisible();
-      await cast.getByRole('button', { name: '🪄 Lancer à volonté' }).click();
+      await cast.getByRole('button', { name: 'Lancer à volonté' }).click();
       await expect(cast).toHaveCount(0);
       await expect(pactFull).toBeVisible();
     },
@@ -183,7 +183,7 @@ playerTest.describe('Occultiste (manifestations)', () => {
         name: 'Niveau 5 : 3 emplacements disponibles sur 3 — corriger',
       });
       await expect(pactFull).toBeVisible();
-      await cast.getByRole('button', { name: '🪄 Lancer sans emplacement' }).click();
+      await cast.getByRole('button', { name: 'Lancer sans emplacement' }).click();
       await expect(cast).toHaveCount(0);
       await expect(pactFull).toBeVisible();
 
@@ -203,8 +203,8 @@ playerTest.describe('Occultiste (manifestations)', () => {
 
       // Repos long : le compteur revient, l'option Arcanum réapparaît.
       await openTab(page, 'Survie');
-      await page.getByRole('button', { name: '🌙 Repos long' }).click();
-      const restSheet = page.getByRole('dialog', { name: '🌙 Repos long (8 h)' });
+      await page.getByRole('button', { name: 'Repos long' }).click();
+      const restSheet = page.getByRole('dialog', { name: 'Repos long (8 h)' });
       await restSheet.getByRole('button', { name: 'Se reposer' }).click();
       await expect(restSheet).toHaveCount(0);
       await openTab(page, 'Traits');

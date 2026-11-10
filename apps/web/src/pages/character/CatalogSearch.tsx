@@ -11,6 +11,7 @@ import {
   WeightBadge,
 } from '../../components/ui';
 import { categoryLabel, rarityLabel } from '../../i18n/labels';
+import { Glyph } from '../../components/Glyph';
 
 // ---------- Filter option sets ----------
 
@@ -134,7 +135,7 @@ export function CatalogSearch({
           {wanted || category || rarity ? (
             <>
               <EmptyState
-                icon="🔍"
+                icon={<Glyph name="search" />}
                 title={t('recherche.aucun.objet.trouve')}
                 hint={
                   wanted && canCreateItem
@@ -146,7 +147,7 @@ export function CatalogSearch({
             </>
           ) : (
             <EmptyState
-              icon="📝"
+              icon={<Glyph name="note" />}
               title={t('recherche.recherchez.un.objet')}
               hint={t('recherche.tapez.le.nom.d.un.objet')}
             />

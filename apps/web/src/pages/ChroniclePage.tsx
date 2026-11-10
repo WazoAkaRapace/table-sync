@@ -17,6 +17,8 @@ import { useHeaderOverride } from '../headerContext';
 import { appLang, appLocale } from '../i18n';
 import { useResyncOnReconnect, useSyncEvent } from '../sync';
 import { parseSqliteDate, toRoman } from '../utils';
+import type { ReactNode } from 'react';
+import { Glyph } from '../components/Glyph';
 
 function playedAtLabel(playedAt: string | null, t: (key: string) => string): string {
   if (!playedAt) return t('chronique.date.inconnue');
@@ -40,7 +42,7 @@ function fetchedAtLabel(fetchedAt: string | null): string | null {
 // (vert/jaune/orange/rouge des PV et de l'encombrance). Types inconnus
 // (enum ouvert côté GM Assistant) → registre neutre.
 interface MomentStyle {
-  glyph: string;
+  glyph: ReactNode;
   ring: string;
   filet: string;
   text: string;
@@ -50,38 +52,38 @@ interface MomentStyle {
 
 const MOMENT_TYPE_STYLE: Record<string, MomentStyle> = {
   epic: {
-    glyph: '⚔',
+    glyph: <Glyph name="combat" />,
     ring: 'border-gold-500',
     filet: 'border-l-gold-500',
     text: 'font-display text-[15px] tracking-wide text-ink-900',
     ornament: true,
   },
   funny: {
-    glyph: '😄',
+    glyph: <Glyph name="smile" />,
     ring: 'border-amber-400',
     filet: 'border-l-amber-400',
     text: 'text-[15px]',
   },
   dramatic: {
-    glyph: '🎭',
+    glyph: <Glyph name="masks" />,
     ring: 'border-blood-700',
     filet: 'border-l-blood-700',
     text: 'font-body italic text-[15px]',
   },
   tragic: {
-    glyph: '🕯',
+    glyph: <Glyph name="candle" />,
     ring: 'border-ink-900',
     filet: 'border-l-ink-900',
     text: 'font-body italic text-[15px] text-ink-500',
   },
   intriguing: {
-    glyph: '🗝',
+    glyph: <Glyph name="key" />,
     ring: 'border-indigo-400',
     filet: 'border-l-indigo-400',
     text: 'text-[15px]',
   },
   other: {
-    glyph: '📌',
+    glyph: <Glyph name="pin" />,
     ring: 'border-parchment-300',
     filet: 'border-l-parchment-300',
     text: 'text-[15px]',
@@ -200,7 +202,7 @@ export default function ChroniclePage() {
     return (
       <div className="mx-auto w-full max-w-xl">
         <EmptyState
-          icon="📜"
+          icon={<Glyph name="scroll" />}
           title={t('chronique.pas.de.chronique.pour.ce.groupe')}
           hint={t('chronique.lier.hint')}
         />
@@ -273,7 +275,7 @@ export default function ChroniclePage() {
           {recapsError && <ErrorMsg message={recapsError} />}
           {!recapsLoading && !recapsError && !active && (
             <EmptyState
-              icon="🖋"
+              icon={<Glyph name="annotate" />}
               title={t('chronique.aucun.resume.pour.cette.seance')}
               hint={t('chronique.recaps.hint')}
             />
@@ -325,7 +327,7 @@ export default function ChroniclePage() {
                         <p className={`leading-relaxed ${style.text}`}>
                           {style.ornament && (
                             <span aria-hidden="true" className="mr-1.5 text-gold-500">
-                              ✦
+                              <Glyph name="spark-outline" />
                             </span>
                           )}
                           {m.isQuote ? `« ${m.description} »` : m.description}
@@ -376,7 +378,7 @@ export default function ChroniclePage() {
       {ordered.length === 0 ? (
         <div className="pt-8">
           <EmptyState
-            icon="📜"
+            icon={<Glyph name="scroll" />}
             title={t('chronique.aucune.seance.pour.l.instant')}
             hint={t('chronique.seances.hint')}
           />

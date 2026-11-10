@@ -22,6 +22,7 @@ import api from '../api';
 import { useAuth } from '../auth';
 import { invalidateCombat, useActiveEncounters } from '../combatLive';
 import { useSyncEvent } from '../sync';
+import { Glyph } from './Glyph';
 import { combatVibrate, useTurnSlash } from './TurnSlash';
 
 interface ActiveCombat {
@@ -228,7 +229,7 @@ export default function CombatWidget() {
         className="group flex items-center gap-1.5 min-w-0 shrink"
       >
         <span className="text-base leading-none shrink-0" aria-hidden="true">
-          ⚔
+          <Glyph name="combat" />
         </span>
         <span
           className="text-xs font-semibold text-night-100 truncate max-w-40 group-hover:text-night-50 transition-colors"
@@ -298,14 +299,14 @@ export default function CombatWidget() {
             className="btn-secondary"
             title={t('widget.lancer.d20.dex')}
           >
-            🎲
+            <Glyph name="dice" />
           </button>
           {initError && (
             <span
               className="text-sm leading-none text-red-400"
               title={t('widget.echec.de.l.enregistrement.reessaie')}
             >
-              <span aria-hidden="true">⚠</span>
+              <Glyph name="warn" />
               <span className="sr-only" role="alert">
                 {t('widget.echec.de.l.enregistrement.reessaie')}
               </span>

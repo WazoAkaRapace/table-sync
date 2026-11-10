@@ -1,42 +1,14 @@
-import type { CostUnit, EncumbranceState, ItemCategory, Rarity } from '@table-sync/shared';
+import type { CostUnit, EncumbranceState } from '@table-sync/shared';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import i18next from '../i18n';
-import { categoryLabel, coinLabel, encumbranceLabel, rarityLabel } from '../i18n/labels';
+import { Glyph } from './Glyph';
+import { coinLabel, encumbranceLabel } from '../i18n/labels';
 
-export function RarityBadge({ rarity }: { rarity: Rarity }) {
-  const cls = `rarity-${rarity}`;
-  return (
-    <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium ${cls}`}>
-      {rarityLabel(rarity)}
-    </span>
-  );
-}
-
-export function CategoryBadge({ category }: { category: ItemCategory }) {
-  return (
-    <span className="inline-block text-xs px-2 py-0.5 rounded-full bg-parchment-100 text-ink-500 font-medium">
-      {categoryLabel(category)}
-    </span>
-  );
-}
-
-// Weight display convention (DESIGN.md « Poids ») : 1 décimale comme partout
-// dans l'app, mais les poids < 0,1 kg gardent 2 décimales — une gemme de
-// 0,01 kg ne doit pas s'arrondir à « 0,0 kg ».
-function formatWeightKg(kg: number): string {
-  if (kg < 0.1) return kg.toFixed(2);
-  return kg.toFixed(1);
-}
-
-export function WeightBadge({ weightKg }: { weightKg: number | null }) {
-  const { t } = useTranslation();
-  if (weightKg === null) return <span className="text-xs text-ink-400">{t('ui.poids')}</span>;
-  return <span className="text-xs text-ink-500">{formatWeightKg(weightKg)} kg</span>;
-}
+export { CategoryBadge, RarityBadge, WeightBadge } from './ui-parts';
 
 // ---------- Register head ----------
 // The ruled page's head: centered volume title (font-display), meta line,
@@ -690,7 +662,15 @@ export function ErrorMsg({ message, onRetry }: { message: string; onRetry?: () =
   );
 }
 
-export function EmptyState({ icon, title, hint }: { icon: string; title: string; hint?: string }) {
+export function EmptyState({
+  icon,
+  title,
+  hint,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  hint?: string;
+}) {
   return (
     <div className="text-center py-12 px-4">
       <div className="text-4xl mb-2" aria-hidden="true">
@@ -1068,7 +1048,7 @@ export function Modal({
             className="btn-ghost shrink-0 text-ink-500 p-1"
             aria-label={t('common.close')}
           >
-            ✕
+            <Glyph name="close" />
           </button>
         </div>
         {children}
@@ -1139,7 +1119,7 @@ export function BottomSheet({
             className="btn-ghost text-ink-500 p-1"
             aria-label={t('common.close')}
           >
-            ✕
+            <Glyph name="close" />
           </button>
         </div>
         <div className={`overflow-y-auto overscroll-contain p-4 flex-1 ${bodyClassName}`}>

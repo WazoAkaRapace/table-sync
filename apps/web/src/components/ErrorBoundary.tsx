@@ -1,6 +1,7 @@
 import type { ErrorInfo, ReactNode } from 'react';
 import { Component } from 'react';
 import i18next from '../i18n';
+import { Glyph } from './Glyph';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -43,7 +44,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         <div className="flex min-h-dvh items-center justify-center p-4">
           <div className="card w-full max-w-md p-6" role="alert">
             <div className="mb-2 text-4xl" aria-hidden="true">
-              🎲
+              <Glyph name="dice" />
             </div>
             <h1 className="section-title mb-2">{title ?? i18next.t('err.titre')}</h1>
             <p className="mb-4 text-sm text-ink-500">{i18next.t('err.corps')}</p>

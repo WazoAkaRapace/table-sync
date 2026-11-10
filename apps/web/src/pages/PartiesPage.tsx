@@ -23,6 +23,7 @@ import { useAuth } from '../auth';
 import { ErrorMsg, Modal, RegisterHead, SkeletonRegister } from '../components/ui';
 import { useSyncEvent } from '../sync';
 import { copyText, formatSince, toRoman } from '../utils';
+import { Glyph } from '../components/Glyph';
 
 // ---------- Small helpers ----------
 
@@ -332,11 +333,15 @@ export default function PartiesPage() {
                   current_inviteCode: current.inviteCode,
                 })}
               >
-                {copiedId === current.id
-                  ? t('commun.copie.ok')
-                  : copyFailedId === current.id
-                    ? t('commun.copie.impossible')
-                    : t('commun.copier')}
+                {copiedId === current.id ? (
+                  <span className="inline-flex items-center gap-1">
+                    <Glyph name="check" /> {t('commun.copie.ok')}
+                  </span>
+                ) : copyFailedId === current.id ? (
+                  t('commun.copie.impossible')
+                ) : (
+                  t('commun.copier')
+                )}
               </button>
             </div>
           )}

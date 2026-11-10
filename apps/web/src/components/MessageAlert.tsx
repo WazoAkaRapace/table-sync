@@ -10,6 +10,7 @@
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { Glyph } from './Glyph';
 
 export interface MessageAlertPayload {
   partyId: number;
@@ -47,7 +48,7 @@ export default function MessageAlert({
       <div className="rounded-xl border-2 border-ink-700 bg-parchment-50/95 p-3 shadow-xl backdrop-blur-sm">
         <div className="flex items-center gap-2.5">
           <span className="text-xl leading-none" aria-hidden="true">
-            ✉️
+            <Glyph name="mail" />
           </span>
           <p className="min-w-0 flex-1 text-sm font-semibold text-ink-900">
             {notice.fromGM
@@ -61,7 +62,7 @@ export default function MessageAlert({
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-ink-400 hover:bg-parchment-200 hover:text-ink-700"
             aria-label={t('cast.fermer')}
           >
-            ✕
+            <Glyph name="close" />
           </button>
         </div>
         <button type="button" onClick={open} className="btn-primary mt-2 w-full text-sm">

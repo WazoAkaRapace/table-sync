@@ -44,13 +44,13 @@ Les cibles sont **des conteneurs de section stables et toujours présents** (tit
 | `dock` | Barre d'onglets flottante (conteneur du dock) | `apps/web/src/pages/CharacterInventoryPage.tsx` | mobile |
 | `dock-hub` | Bouton central du dock (hub) | `apps/web/src/pages/CharacterInventoryPage.tsx` | mobile |
 | `tabbar` | Barre d'onglets en haut de fiche | `apps/web/src/pages/CharacterInventoryPage.tsx` | desktop |
-| `survie-vitalite` | Bloc « ❤️ Vitalité » | `apps/web/src/pages/character/SurvivalPanel.tsx` | les deux |
-| `survie-attaques` | Bloc « ⚔ Attaques » | `apps/web/src/pages/character/SurvivalPanel.tsx` | les deux |
-| `survie-des-vie` | Bloc « 🎲 Dés de vie » | `apps/web/src/pages/character/SurvivalPanel.tsx` | les deux |
-| `survie-etats` | Bloc « 🎭 États » | `apps/web/src/pages/character/SurvivalPanel.tsx` | les deux |
-| `survie-ressources` | Bloc « ⚡ Ressources » | `apps/web/src/pages/character/SurvivalPanel.tsx` | les deux |
-| `survie-repos` | Bloc « 🎲 Repos » | `apps/web/src/pages/character/SurvivalPanel.tsx` | les deux |
-| `survie-forme` | Bloc « 🐾 Forme sauvage » | `apps/web/src/pages/character/SurvivalPanel.tsx` | les deux · `when` druide |
+| `survie-vitalite` | Bloc « Vitalité » (glyphe cœur) | `apps/web/src/pages/character/SurvivalPanel.tsx` | les deux |
+| `survie-attaques` | Bloc « Attaques » (glyphe épées) | `apps/web/src/pages/character/SurvivalPanel.tsx` | les deux |
+| `survie-des-vie` | Bloc « Dés de vie » (glyphe dé) | `apps/web/src/pages/character/SurvivalPanel.tsx` | les deux |
+| `survie-etats` | Bloc « États » (glyphe masques) | `apps/web/src/pages/character/SurvivalPanel.tsx` | les deux |
+| `survie-ressources` | Bloc « Ressources » | `apps/web/src/pages/character/SurvivalPanel.tsx` | les deux |
+| `survie-repos` | Bloc « Repos » (glyphe dé) | `apps/web/src/pages/character/SurvivalPanel.tsx` | les deux |
+| `survie-forme` | Bloc « Forme sauvage » (glyphe patte) | `apps/web/src/pages/character/SurvivalPanel.tsx` | les deux · `when` druide |
 | `stats-caracts` | Section « Caractéristiques » | `apps/web/src/pages/CharacterStatsTab.tsx` | les deux |
 | `stats-derivees` | Section « Statistiques dérivées » | `apps/web/src/pages/CharacterStatsTab.tsx` | les deux |
 | `stats-ca` | Tuile Classe d'armure | `apps/web/src/pages/CharacterStatsTab.tsx` | les deux |
@@ -60,7 +60,7 @@ Les cibles sont **des conteneurs de section stables et toujours présents** (tit
 | `skills-outils-langues` | Sections « Outils » + « Langues » (enveloppe commune) | `apps/web/src/pages/CharacterSkillsTab.tsx` | les deux |
 | `skills-maitrises` | Section « Maîtrise d'armes » | `apps/web/src/pages/CharacterSkillsTab.tsx` | les deux |
 | `sorts-emplacements` | Section « Emplacements de sort » | `apps/web/src/pages/CharacterSpellsTab.tsx` | les deux |
-| `sorts-connus` | Section « Sorts connus » (liste, étoile ★ de préparation) | `apps/web/src/pages/CharacterSpellsTab.tsx` | les deux |
+| `sorts-connus` | Section « Sorts connus » (liste, étoile de préparation — glyphe) | `apps/web/src/pages/CharacterSpellsTab.tsx` | les deux |
 | `sorts-cantrips` | Groupe « Tours de magie » (niveau 0) | `apps/web/src/pages/CharacterSpellsTab.tsx` | les deux · `when` tours |
 | `inv-rangs` | Rangée des pastilles de rangement (+ barre de poids) | `apps/web/src/pages/CharacterInventoryPage.tsx` | les deux |
 | `inv-sac` | Grille « Sac à dos » | `apps/web/src/pages/CharacterInventoryPage.tsx` | les deux |
@@ -104,13 +104,13 @@ Se joue à l'arrivée sur la fiche (drapeau absent ou réinitialisé), quel que 
 
 | # | id | Cible | Vue | Texte FR | Texte EN |
 |---|---|---|---|---|---|
-| 1 | `vitalite` | `survie-vitalite` | les deux | **❤️ Vitalité** Tes points de vie et leurs temporaires. Les boutons ±1 / ±5 vont vite ; à 0 PV, les jets de sauvegarde contre la mort s'affichent tout seuls. | **❤️ Vitality** Your hit points and temp HP. The ±1 / ±5 buttons are quick; at 0 HP, death saves appear on their own. |
-| 2 | `attaques` | `survie-attaques` | les deux | **⚔ Attaques** Tes armes avec les bons chiffres : la puce 🎯 donne le bonus, ⚔ les dégâts, ✨ la magie. Caractéristique, maîtrise, style de combat… tout est calculé selon les règles. | **⚔ Attacks** Your weapons with the right numbers: the 🎯 chip shows the attack bonus, ⚔ damage, ✨ magic. Ability, proficiency, fighting style… it's all computed by the rules. |
-| 3 | `des-vie` | `survie-des-vie` | les deux | **🎲 Dés de vie** Ta réserve de dés de vie, un compteur par classe. Un repos long t'en rend la moitié ; pendant un repos court, dépenses-en pour te soigner. | **🎲 Hit dice** Your hit-dice pool, one counter per class. A long rest returns half of them; during a short rest, spend them to heal. |
-| 4 | `etats` | `survie-etats` | les deux | **🎭 États** Conditions et épuisement, avec durées. Ils suivent ton personnage partout : ta fiche et le traqueur du MD restent synchronisés. | **🎭 Conditions** Conditions and exhaustion, with durations. They follow your character everywhere: your sheet and the GM's tracker stay in sync. |
-| 5 | `ressources` | `survie-ressources` | les deux | **⚡ Ressources** Rage, ki, points de sorcellerie… les compteurs de tes traits (classe, race, historique, dons, personnalisé), avec leur maximum calculé à ton niveau actuel. | **⚡ Resources** Rage, ki, sorcery points… your features' counters (class, race, background, feats, custom), with their maximum computed at your current level. |
-| 6 | `repos` | `survie-repos` | les deux | **⛺ Repos court, 🌙 repos long** Un appui applique les règles : emplacements, ressources, dés de vie. Et ton MD te voit te reposer en direct. | **⛺ Short rest, 🌙 long rest** One tap applies the rules: slots, resources, hit dice. And your GM watches you rest live. |
-| 7 | `forme` | `survie-forme` | les deux · `when` druide | **🐾 Forme sauvage** Choisis une bête déjà vue : la fiche gère ses PV, le retour automatique à 0 et le DD maximal selon ton niveau. | **🐾 Wild shape** Pick a beast you've seen: the sheet tracks its HP, the auto-revert at 0, and the CR gates for your level. |
+| 1 | `vitalite` | `survie-vitalite` | les deux | **Vitalité** Tes points de vie et leurs temporaires. Les boutons ±1 / ±5 vont vite ; à 0 PV, les jets de sauvegarde contre la mort s'affichent tout seuls. | **❤️ Vitality** Your hit points and temp HP. The ±1 / ±5 buttons are quick; at 0 HP, death saves appear on their own. |
+| 2 | `attaques` | `survie-attaques` | les deux | **Attaques** Tes armes avec les bons chiffres : la puce 🎯 donne le bonus, ⚔ les dégâts, ✨ la magie. Caractéristique, maîtrise, style de combat… tout est calculé selon les règles. | **⚔ Attacks** Your weapons with the right numbers: the 🎯 chip shows the attack bonus, ⚔ damage, ✨ magic. Ability, proficiency, fighting style… it's all computed by the rules. |
+| 3 | `des-vie` | `survie-des-vie` | les deux | **Dés de vie** Ta réserve de dés de vie, un compteur par classe. Un repos long t'en rend la moitié ; pendant un repos court, dépenses-en pour te soigner. | **🎲 Hit dice** Your hit-dice pool, one counter per class. A long rest returns half of them; during a short rest, spend them to heal. |
+| 4 | `etats` | `survie-etats` | les deux | **États** Conditions et épuisement, avec durées. Ils suivent ton personnage partout : ta fiche et le traqueur du MD restent synchronisés. | **🎭 Conditions** Conditions and exhaustion, with durations. They follow your character everywhere: your sheet and the GM's tracker stay in sync. |
+| 5 | `ressources` | `survie-ressources` | les deux | **Ressources** Rage, ki, points de sorcellerie… les compteurs de tes traits (classe, race, historique, dons, personnalisé), avec leur maximum calculé à ton niveau actuel. | **Resources** Rage, ki, sorcery points… your features' counters (class, race, background, feats, custom), with their maximum computed at your current level. |
+| 6 | `repos` | `survie-repos` | les deux | **Repos court, 🌙 repos long** Un appui applique les règles : emplacements, ressources, dés de vie. Et ton MD te voit te reposer en direct. | **Short rest, 🌙 long rest** One tap applies the rules: slots, resources, hit dice. And your GM watches you rest live. |
+| 7 | `forme` | `survie-forme` | les deux · `when` druide | **Forme sauvage** Choisis une bête déjà vue : la fiche gère ses PV, le retour automatique à 0 et le DD maximal selon ton niveau. | **🐾 Wild shape** Pick a beast you've seen: the sheet tracks its HP, the auto-revert at 0, and the CR gates for your level. |
 
 ## 7. Script « Caractéristiques » (5 étapes · onglet `stats`)
 
@@ -137,7 +137,7 @@ Se joue à l'arrivée sur la fiche (drapeau absent ou réinitialisé), quel que 
 |---|---|---|---|---|---|
 | 1 | `emplacements` | `sorts-emplacements` | les deux · `when` a des emplacements | **Emplacements de sort** Un compteur par niveau. La magie de pacte recharge au repos court, le reste au repos long — la fiche sait laquelle dépenser. | **Spell slots** One counter per level. Pact magic recharges on a short rest, the rest on a long one — the sheet knows which to spend. |
 | 2 | `lancer` | `sorts-connus` | les deux · `when` a des sorts | **Lancer un sort** Le bouton ✨ ouvre l'incantation : choisis le niveau, la fiche montre dégâts ou soins mis à l'échelle, puis dépense l'emplacement. | **Cast a spell** The ✨ button opens casting: pick the level, the sheet shows damage or healing scaled, then spends the slot. |
-| 3 | `concentration` | `sorts-connus` | les deux · `when` a des sorts | **🌀 Concentration** Un seul sort de concentration à la fois. Si tu prends des dégâts, la fiche te rappelle le jet à faire — et le rompt si tu tombes. | **🌀 Concentration** One concentration spell at a time. Take damage and the sheet prompts the save — break it if you drop. |
+| 3 | `concentration` | `sorts-connus` | les deux · `when` a des sorts | **Concentration (glyphe)** Un seul sort de concentration à la fois. Si tu prends des dégâts, la fiche te rappelle le jet à faire — et le rompt si tu tombes. | **Concentration (glyphe)** One concentration spell at a time. Take damage and the sheet prompts the save — break it if you drop. |
 | 4 | `toujours-prepares` | `sorts-connus` | les deux · `when` sorts de domaine | **◆ Toujours préparés** Les sorts de domaine, cercle ou serment portent un ◆ : toujours prêts, et ils ne comptent pas dans ta limite de sorts préparés. | **◆ Always prepared** Domain, circle or oath spells carry a ◆: always ready, and they don't count against your prepared limit. |
 | 5 | `grimoire` | `sorts-connus` | les deux | **Tes sorts connus** L'étoile ★ prépare un sort, dans la limite de ta classe ; glisse la ligne vers la gauche pour l'oublier. | **Your known spells** The ★ star prepares a spell, within your class's limit; swipe the row left to forget it. |
 | 6 | `cantrips` | `sorts-cantrips` | les deux · `when` tours de magie | **Tours de magie** Niveau 0, donc toujours « à volonté » : ils ne consomment aucun emplacement, repos ou pas. | **Cantrips** Level 0, so always “at will”: they consume no slot, rest or not. |

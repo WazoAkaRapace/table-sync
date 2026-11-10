@@ -1,3 +1,4 @@
+import type { GlyphName } from '../../components/Glyph';
 import type { StorageLocation, StorageType } from '@table-sync/shared';
 
 // ---------- Shared types & helpers for the character sheet modules ----------
@@ -40,10 +41,10 @@ export function apiError(err: unknown, fallback: string): string {
 }
 
 /** Glyph per storage location type (tabs, rows, move menus). */
-export const LOCATION_TYPE_ICON: Record<StorageType, string> = {
-  carried: '🧍',
-  mount: '🐴',
-  container: '📦',
+export const LOCATION_TYPE_ICON: Record<StorageType, GlyphName> = {
+  carried: 'user',
+  mount: 'mount',
+  container: 'box',
 };
 
 /** Find the carried location (there should always be exactly one). */

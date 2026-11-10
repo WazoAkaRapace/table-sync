@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../../api';
 import type { SheetActionProps } from './types';
+import { Glyph } from '../../components/Glyph';
 
 interface DeathSaveTrackerProps extends SheetActionProps {
   character: Character;
@@ -81,7 +82,7 @@ export function DeathSaveTracker({
                   type="button"
                   key={i}
                   onClick={() => updateSaves('successes', filled ? i : i + 1)}
-                  className={`w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all ${
+                  className={`relative w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all after:absolute after:-inset-2 after:rounded-full after:content-[''] ${
                     filled
                       ? 'bg-green-500 border-green-500 text-white'
                       : 'bg-raised border-green-300 text-green-300 hover:border-green-600 hover:scale-110'
@@ -91,7 +92,7 @@ export function DeathSaveTracker({
                     filled: filled ? t('mort.coche') : t('mort.vide'),
                   })}
                 >
-                  ✓
+                  <Glyph name="check" />
                 </button>
               );
             })}
@@ -107,7 +108,7 @@ export function DeathSaveTracker({
                   type="button"
                   key={i}
                   onClick={() => updateSaves('failures', filled ? i : i + 1)}
-                  className={`w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all ${
+                  className={`relative w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all after:absolute after:-inset-2 after:rounded-full after:content-[''] ${
                     filled
                       ? 'bg-red-500 border-red-500 text-white'
                       : 'bg-raised border-red-300 text-red-300 hover:border-red-600 hover:scale-110'
@@ -117,7 +118,7 @@ export function DeathSaveTracker({
                     filled: filled ? t('mort.coche') : t('mort.vide'),
                   })}
                 >
-                  ✗
+                  <Glyph name="close" />
                 </button>
               );
             })}

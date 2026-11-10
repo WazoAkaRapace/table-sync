@@ -9,9 +9,10 @@
 
 import type { CombatantCondition } from '@table-sync/shared';
 import { CONCENTRATION_BREAKING_CONDITIONS_FR, DND_CONDITIONS_FR } from '@table-sync/shared';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { conditionHintKey, conditionLabel } from '../i18n/labels';
+import { Glyph } from './Glyph';
 import { BottomSheet } from './ui';
 
 interface Props {
@@ -22,23 +23,23 @@ interface Props {
   combatantName: string;
 }
 
-export const CONDITION_ICONS: Record<string, string> = {
-  Aveuglé: '🙈',
-  Assourdi: '🔇',
-  Charmé: '💕',
-  Effrayé: '😱',
-  Empoisonné: '☠️',
-  'En feu': '🔥',
-  Entravé: '🪢',
-  Étourdi: '💫',
-  Inconscient: '😴',
-  Invisible: '👻',
-  Agrippé: '🤝',
-  'À terre': '🔽',
-  Paralysé: '🧊',
-  Pétrifié: '🗿',
-  Possédé: '👁',
-  Neutralisé: '✖️',
+export const CONDITION_ICONS: Record<string, ReactNode> = {
+  Aveuglé: <Glyph name="hide" />,
+  Assourdi: <Glyph name="deafened" />,
+  Charmé: <Glyph name="charmed" />,
+  Effrayé: <Glyph name="frightened" />,
+  Empoisonné: <Glyph name="death" />,
+  'En feu': <Glyph name="fire" />,
+  Entravé: <Glyph name="link" />,
+  Étourdi: <Glyph name="spark-outline" />,
+  Inconscient: <Glyph name="unconscious" />,
+  Invisible: <Glyph name="invisible" />,
+  Agrippé: <Glyph name="grappled" />,
+  'À terre': <Glyph name="prone" />,
+  Paralysé: <Glyph name="paralyzed" />,
+  Pétrifié: <Glyph name="petrified" />,
+  Possédé: <Glyph name="eye" />,
+  Neutralisé: <Glyph name="close" />,
 };
 
 export default function ConditionsEditor({
@@ -122,7 +123,7 @@ export default function ConditionsEditor({
               className="flex min-w-0 flex-1 items-center gap-3 px-3 py-2.5 text-left"
             >
               <span className="text-lg shrink-0" aria-hidden="true">
-                {CONDITION_ICONS[cond] ?? '❓'}
+                {CONDITION_ICONS[cond] ?? <Glyph name="question" />}
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-medium text-ink-800">
@@ -135,7 +136,7 @@ export default function ConditionsEditor({
                   className="text-sm shrink-0 text-indigo-600"
                   title={t('survie.interrompt.la.concentration')}
                 >
-                  🌀
+                  <Glyph name="concentration" />
                 </span>
               )}
             </button>

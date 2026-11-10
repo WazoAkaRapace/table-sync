@@ -15,12 +15,11 @@
  * finish review, the verdict, and DESIGN.md
  */
 
-import type { AbilityKey, ClassInfo, CreateCharacterPayload, SkillKey } from '@table-sync/shared';
+import type { AbilityKey, CreateCharacterPayload, SkillKey } from '@table-sync/shared';
 import {
   abilityModifier,
   averageMaxHp,
   classSkillChoices,
-  classWeaponProficiencies,
   computeAC,
   DND_ABILITIES,
   DND_BACKGROUNDS,
@@ -34,7 +33,6 @@ import {
   raceSpeedMeters,
   STANDARD_ARRAY,
 } from '@table-sync/shared';
-import type { TFunction } from 'i18next';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -50,54 +48,17 @@ import {
   raceInfo,
   skillInfoLabel,
 } from '../i18n/labels';
+import { Glyph } from '../components/Glyph';
+import type { ReactNode } from 'react';
 
-/** Marker for the « Autre… » free-text escape on every catalog picker. */
-const CUSTOM = '__custom__';
-
-// Titres d'étapes résolus via t() dans le composant (clés du catalogue).
-const STEPS = [
-  { numeral: 'I', titleKey: 'create.step.identite' },
-  { numeral: 'II', titleKey: 'create.step.classe' },
-  { numeral: 'III', titleKey: 'create.step.espece' },
-  { numeral: 'IV', titleKey: 'create.step.historique' },
-  { numeral: 'V', titleKey: 'create.step.caracteristiques' },
-  { numeral: 'VI', titleKey: 'create.step.maitrises' },
-] as const;
-const RECAP = STEPS.length; // step index of the signing screen
-
-const DEFAULT_SCORES: Record<AbilityKey, number> = {
-  strength: 10,
-  dexterity: 10,
-  constitution: 10,
-  intelligence: 10,
-  wisdom: 10,
-  charisma: 10,
-};
-
-/** One-line class teaching: hit die, saves, spellcasting nature. */
-function classSummary(t: TFunction, cls: ClassInfo): string {
-  const saves = cls.savingThrows.map((a) => abilityShort(a)).join(' & ');
-  const castAbility = abilityShort(cls.spellcastingAbility ?? 'charisma');
-  const cast =
-    cls.spellcasting === 'none'
-      ? t('create.aucune.magie')
-      : cls.spellcasting === 'pact'
-        ? t('create.magie.de.pacte.abil', { ability: castAbility })
-        : cls.spellcasting === 'artificier'
-          ? t('create.magie.d.artificier.abil', { ability: castAbility })
-          : cls.preparesSpells
-            ? t('create.sorts.prepares.abil', { ability: castAbility })
-            : t('create.sorts.connus.abil', { ability: castAbility });
-  return t('create.class.summary', { hitDie: cls.hitDie, saves, cast });
-}
-
-function weaponSummary(t: TFunction, className: string | null): string {
-  const set = classWeaponProficiencies(className);
-  if (set.simple && set.martial) return t('create.armes.simples.et.de.guerre');
-  if (set.simple) return t('create.armes.simples');
-  if (set.specific.length > 0) return t('create.quelques.armes.precises');
-  return t('create.aucune.armes.par.defaut');
-}
+import {
+  CUSTOM,
+  DEFAULT_SCORES,
+  RECAP,
+  STEPS,
+  classSummary,
+  weaponSummary,
+} from './CharacterCreatePage-lib';
 
 /** The dotted run between a register label and its trailing value. */
 function DotLeader() {
@@ -110,7 +71,7 @@ function DotLeader() {
 }
 
 /** Step heading — the register's numeral grammar (TocHeader dialect). */
-function StepHeader({ numeral, title }: { numeral: string; title: string }) {
+function StepHeader({ numeral, title }: { numeral: ReactNode; title: string }) {
   return (
     <div className="pb-3">
       <div className="flex items-center gap-3">
@@ -336,7 +297,10 @@ export default function CharacterCreatePage() {
   if (!partyId) return null;
 
   const steps = STEPS.map((s) => ({ numeral: s.numeral, title: t(s.titleKey) }));
-  const current = step === RECAP ? { numeral: '✒', title: t('create.recap.titre') } : steps[step];
+  const current =
+    step === RECAP
+      ? { numeral: <Glyph name="annotate" />, title: t('create.recap.titre') }
+      : steps[step];
 
   return (
     <div className="mx-auto w-full max-w-3xl pb-8">
@@ -388,7 +352,7 @@ export default function CharacterCreatePage() {
               : 'text-ink-300 hover:bg-parchment-100'
           }`}
         >
-          ✒
+          <Glyph name="annotate" />
         </button>
       </nav>
 
@@ -630,7 +594,9 @@ export default function CharacterCreatePage() {
                   <p className="label">{t('create.tableau.standard.a.repartir')}</p>
                   <div className="flex flex-wrap gap-2">
                     {pool.length === 0 && (
-                      <span className="text-sm text-ink-400">{t('create.tout.est.pose')}</span>
+                      <span className="text-sm text-ink-400 inline-flex items-center gap-1">
+                        {t('create.tout.est.pose')} <Glyph name="check" />
+                      </span>
                     )}
                     {pool.map((v) => (
                       <button
@@ -975,7 +941,13 @@ export default function CharacterCreatePage() {
             disabled={creating}
             onClick={submit}
           >
-            {creating ? t('create.inscription') : t('create.creer.le.personnage')}
+            {creating ? (
+              t('create.inscription')
+            ) : (
+              <span className="inline-flex items-center gap-1">
+                <Glyph name="annotate" /> {t('create.creer.le.personnage')}
+              </span>
+            )}
           </button>
         )}
       </div>

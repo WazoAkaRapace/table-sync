@@ -10,11 +10,13 @@ import {
 } from '@table-sync/shared';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Modal, NumberField } from '../../components/ui';
+import { CoinStepper } from './CoinStepper';
+import { Modal } from '../../components/ui';
 import { coinLabel } from '../../i18n/labels';
 import { COIN_FIELDS, type CoinMode } from './CoinPurse';
 import { formatPlainCp, formatPurse } from './coinFormat';
 import type { CoinsState } from './types';
+import { Glyph } from '../../components/Glyph';
 
 // ---------- Coin transaction modal (encaisser / dépenser / corriger) ----------
 // The moneychanger's sheet: enter a delta per denomination, the shared engine
@@ -150,11 +152,15 @@ export function CoinTransactionModal({
                   : 'bg-parchment-50 text-ink-600 border-parchment-300 hover:border-parchment-400'
               }`}
             >
-              {m === 'gain'
-                ? `＋ ${t('bourse.encaisser')}`
-                : m === 'spend'
-                  ? `− ${t('bourse.depenser')}`
-                  : `✎ ${t('bourse.corriger')}`}
+              {m === 'gain' ? (
+                `＋ ${t('bourse.encaisser')}`
+              ) : m === 'spend' ? (
+                `− ${t('bourse.depenser')}`
+              ) : (
+                <span className="inline-flex items-center gap-1">
+                  <Glyph name="edit" /> {t('bourse.corriger')}
+                </span>
+              )}
             </button>
           ))}
         </fieldset>
@@ -173,39 +179,15 @@ export function CoinTransactionModal({
                 />
                 {coinLabel(unit)}
               </label>
-              <div className="flex-1 flex items-center justify-end gap-1">
-                <button
-                  type="button"
-                  onClick={() => step(unit, -1)}
-                  className="w-11 h-11 rounded-lg bg-parchment-200 hover:bg-parchment-300 text-lg font-medium flex items-center justify-center transition-colors"
-                  aria-label={t('rangee.diminuer.itemname', { itemName: coinLabel(unit) })}
-                >
-                  −
-                </button>
-                <NumberField
-                  id={`coin-amt-${unit}`}
-                  min={0}
-                  className="input w-20 text-center font-mono"
-                  value={amounts[unit]}
-                  zeroAsEmpty
-                  emptyAsZero // an emptied denomination counts as 0 (#107)
-                  inputMode="numeric"
-                  onChange={(n) =>
-                    setAmounts((a) => ({ ...a, [unit]: Math.max(0, Math.floor(n)) }))
-                  }
-                  aria-label={t('bourse.quantite.de.coinlabel.unit', {
-                    coinLabel_unit: coinLabel(unit),
-                  })}
-                />
-                <button
-                  type="button"
-                  onClick={() => step(unit, 1)}
-                  className="w-11 h-11 rounded-lg bg-parchment-200 hover:bg-parchment-300 text-lg font-medium flex items-center justify-center transition-colors"
-                  aria-label={t('rangee.augmenter.itemname', { itemName: coinLabel(unit) })}
-                >
-                  +
-                </button>
-              </div>
+              <CoinStepper
+                idPrefix="coin-amt"
+                unit={unit}
+                coinLabel={coinLabel}
+                value={amounts[unit]}
+                onSet={(u, n) => setAmounts((a) => ({ ...a, [u]: n }))}
+                onStep={step}
+                t={t}
+              />
             </div>
           ))}
         </div>

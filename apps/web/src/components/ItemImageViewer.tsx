@@ -26,10 +26,11 @@
  */
 
 import { useQueryClient } from '@tanstack/react-query';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import api, { itemImageUrl, useAccessJwt } from '../api';
+import { Glyph } from './Glyph';
 import { STAMPS, type StampKey, stampUrl } from './stamps';
 import { ConfirmButton } from './ui';
 
@@ -116,7 +117,7 @@ export function ItemVignette({
                 aria-hidden="true"
                 className="absolute right-2.5 top-2.5 rounded-full bg-night-900/55 px-1.5 py-0.5 text-xs text-night-50"
               >
-                🔍
+                <Glyph name="search" />
               </span>
             )}
           </span>
@@ -137,16 +138,7 @@ export function ItemVignette({
 
 // ---------- Visionneuse plein écran ----------
 
-const MAX_ZOOM = 5;
-const DOUBLE_TAP_ZOOM = 2.5;
-
-interface View {
-  scale: number;
-  x: number;
-  y: number;
-}
-
-const VIEW_1X: View = { scale: 1, x: 0, y: 0 };
+import { type View, DOUBLE_TAP_ZOOM, MAX_ZOOM, VIEW_1X } from './ItemImageViewer-parts';
 
 type Tool = 'navigate' | 'draw' | 'text' | 'stamp';
 
@@ -747,7 +739,7 @@ export function ItemImageViewer({
   };
 
   const zoomed = view.scale > 1.01;
-  const toolButton = (toolId: Tool, label: string, glyph: string) => (
+  const toolButton = (toolId: Tool, label: string, glyph: ReactNode) => (
     <button
       type="button"
       aria-label={label}
@@ -1172,7 +1164,7 @@ export function ItemImageViewer({
           aria-label={t('image.fermer')}
           className="pointer-events-auto flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xl text-night-50 transition-colors hover:bg-white/10"
         >
-          ✕
+          <Glyph name="close" />
         </button>
       </div>
 
@@ -1523,10 +1515,10 @@ export function ItemImageViewer({
             </>
           )}
           <div className="pointer-events-auto flex items-center gap-1 rounded-full bg-night-900/70 p-1.5 backdrop-blur">
-            {toolButton('navigate', t('image.outil.naviguer'), '🖐')}
-            {toolButton('draw', t('image.outil.dessiner'), '✏️')}
+            {toolButton('navigate', t('image.outil.naviguer'), <Glyph name="hand" />)}
+            {toolButton('draw', t('image.outil.dessiner'), <Glyph name="draw" />)}
             {toolButton('text', t('image.outil.ecrire'), 'T')}
-            {toolButton('stamp', t('image.outil.tampons'), '📍')}
+            {toolButton('stamp', t('image.outil.tampons'), <Glyph name="pin" />)}
             <button
               type="button"
               aria-label={t('image.annuler.la.derniere.annotation')}
@@ -1543,7 +1535,7 @@ export function ItemImageViewer({
               className="flex h-11 min-w-11 items-center justify-center rounded-full px-1 text-base text-night-50 transition-colors hover:bg-white/10"
               armedClassName="bg-red-600"
             >
-              🗑
+              <Glyph name="trash" />
             </ConfirmButton>
             <button
               type="button"

@@ -24,7 +24,6 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import {
-  lazy,
   Suspense,
   useCallback,
   useEffect,
@@ -67,7 +66,6 @@ import {
   ToastStack,
 } from '../components/ui';
 import { useOwnEchoGuard, useSync, useSyncEvent } from '../sync';
-import { TUTORIAL_SCRIPTS } from '../tutorial/scripts';
 import { UnreadBadge, useMessagesUnread } from '../useMessagesUnread';
 import { usePartyRole } from '../usePartyRole';
 import CharacterDescriptionTab from './CharacterDescriptionTab';
@@ -85,7 +83,8 @@ import { CoinTransactionModal } from './character/CoinTransactionModal';
 import { LocationWeightBar } from './character/LocationWeightBar';
 import { NewLocationModal } from './character/NewLocationModal';
 import { CHARACTER_TABS, type CharacterTab, SheetTabBar } from './character/SheetTabBar';
-import { SurvivalPanel, type SurvivalConsumeResult } from './character/SurvivalPanel';
+import { SurvivalPanel } from './character/SurvivalPanel';
+import { type SurvivalConsumeResult } from './character/survival-lib';
 import WeekCalendar from './character/WeekCalendar';
 import { ContainerTransferModal, TransferModal } from './character/TransferModal';
 import {
@@ -96,36 +95,14 @@ import {
   type NewLocationPayload,
 } from './character/types';
 import NpcPage from './NpcPage';
+import { Glyph } from '../components/Glyph';
 
-const CATALOG_PAGE_SIZE = 30;
-
-// Visite guidée : joyride (~75 KB avec floating-ui) n'a pas sa place dans le
-// chunk de la fiche pour les joueurs qui ont tout vu — chargement paresseux,
-// gardé par une lecture locale des mêmes clés que TutorialHost. Le calcul
-// refait à chaque montage de la page : « Réinitialiser le tutoriel » (Mon
-// compte) efface les clés, le prochain montage de fiche les relit.
-const TutorialHost = lazy(() =>
-  import('../tutorial/TutorialHost').then((m) => ({ default: m.TutorialHost })),
-);
-function tutorialPending(): boolean {
-  try {
-    if (!localStorage.getItem('dnd-inv-tour-seen')) return true;
-    const raw = localStorage.getItem('dnd-inv-tour-tabs');
-    let done: string[] = [];
-    if (raw) {
-      const parsed: unknown = JSON.parse(raw);
-      if (Array.isArray(parsed)) done = parsed.filter((x): x is string => typeof x === 'string');
-    }
-    // Seuls les scripts PAR ONGLET s'enregistrent dans dnd-inv-tour-tabs
-    // (TutorialHost : `if (ended !== 'shell') markTutorialTabDone(ended)`) —
-    // la chaîne d'accueil 'shell' ne doit donc pas compter comme dû.
-    const owedTabs = Object.keys(TUTORIAL_SCRIPTS).filter((k) => k !== 'shell');
-    return owedTabs.some((tab) => !done.includes(tab));
-  } catch {
-    return true; // localStorage bloqué : on monte, TutorialHost gère sa dégradation
-  }
-}
-
+import {
+  CATALOG_PAGE_SIZE,
+  TutorialHost,
+  groupByCategory,
+  tutorialPending,
+} from './CharacterInventoryPage-lib';
 // ---------- Main component ----------
 
 export default function CharacterInventoryPage() {
@@ -1113,7 +1090,7 @@ export default function CharacterInventoryPage() {
               className="block w-full px-3 min-h-11 py-2 text-xs font-semibold text-ink-900"
               aria-expanded={hubInitOpen}
             >
-              {t('inv.lance.ton.initiative')}
+              <Glyph name="dice" /> {t('inv.lance.ton.initiative')}
             </button>
             {hubInitOpen && (
               <>
@@ -1170,7 +1147,7 @@ export default function CharacterInventoryPage() {
                       initiativeBonus: hubCombat.initiativeBonus,
                     })}
                   >
-                    🎲
+                    <Glyph name="dice" />
                   </button>
                 </div>
                 {hubInitError && (
@@ -1190,7 +1167,7 @@ export default function CharacterInventoryPage() {
           // corps bat en rythme cardiaque (synchrone du halo).
           <div className="combat-turn-banner relative mb-[-1px] mx-auto w-fit max-w-full rounded-t-xl rounded-b-md shadow-md border border-b-0 bg-blood-600 border-blood-700 combat-turn-glow">
             <div className="combat-turn-stamp relative px-3 py-1.5 text-xs font-bold text-white text-center">
-              {t('inv.a.toi.de.jouer')}
+              <Glyph name="combat" /> {t('inv.a.toi.de.jouer')}
             </div>
             <div className="flex items-center gap-2 px-2 py-1.5 bg-parchment-50 border-t border-blood-300">
               <button
@@ -1200,7 +1177,9 @@ export default function CharacterInventoryPage() {
                 className="btn-primary relative overflow-hidden min-h-[44px] flex-1 px-4 text-sm whitespace-nowrap"
                 aria-label={t('inv.terminer.mon.tour.passer.au.combattant')}
               >
-                {t('inv.j.ai.fini.mon.tour')}
+                <span className="inline-flex items-center gap-1">
+                  <Glyph name="check" /> {t('inv.j.ai.fini.mon.tour')}
+                </span>
                 <span className="btn-sheen" aria-hidden="true" />
               </button>
               <Link
@@ -1218,9 +1197,15 @@ export default function CharacterInventoryPage() {
               className="relative block mb-[-1px] mx-auto w-fit max-w-full px-3 py-1.5 rounded-t-xl rounded-b-md text-xs font-semibold shadow-md border border-b-0 transition-colors bg-night-900 text-night-100 border-night-700"
               aria-label={t('inv.combat.en.cours.ouvrir.le.traqueur')}
             >
-              {hubCombat.currentCombatantName
-                ? `⚔ ${hubCombat.currentCombatantName}`
-                : t('inv.combat.en.preparation')}
+              {hubCombat.currentCombatantName ? (
+                <span className="inline-flex items-center gap-1">
+                  <Glyph name="combat" /> {hubCombat.currentCombatantName}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1">
+                  <Glyph name="combat" /> {t('inv.combat.en.preparation')}
+                </span>
+              )}
             </Link>
           )
         )}
@@ -1304,7 +1289,15 @@ export default function CharacterInventoryPage() {
                   className="icon-swap"
                   aria-hidden="true"
                 >
-                  {moreOpen ? '✕' : hubCombat ? '⚔' : secondary ? secondary.icon : '☰'}
+                  {moreOpen ? (
+                    <Glyph name="close" />
+                  ) : hubCombat ? (
+                    <Glyph name="combat" />
+                  ) : secondary ? (
+                    secondary.icon
+                  ) : (
+                    <Glyph name="list" />
+                  )}
                 </span>
                 {/* Non-lus de correspondance : la pastille vit sur le hub, seul
                     bouton toujours visible — même combattant, même anneau. */}
@@ -1509,7 +1502,7 @@ export default function CharacterInventoryPage() {
                         }`}
                         aria-pressed={isActive}
                       >
-                        <span aria-hidden="true">{LOCATION_TYPE_ICON[loc.type]}</span>
+                        <Glyph name={LOCATION_TYPE_ICON[loc.type]} />
                         <span>{loc.name}</span>
                         <span
                           className={`text-xs px-1.5 py-0.5 rounded-full ${
@@ -1561,7 +1554,7 @@ export default function CharacterInventoryPage() {
                             isConfirming ? t('inv.confirmer') : t('inv.supprimer.ce.transport')
                           }
                         >
-                          {isConfirming ? '✓' : '🗑'}
+                          {isConfirming ? <Glyph name="check" /> : <Glyph name="trash" />}
                         </button>
                       )}
                     </div>
@@ -1599,7 +1592,7 @@ export default function CharacterInventoryPage() {
                   className="btn-ghost text-ink-500 text-sm shrink-0"
                   aria-label={t('inv.fermer.l.erreur')}
                 >
-                  ✕
+                  <Glyph name="close" />
                 </button>
               </div>
             )}
@@ -1617,9 +1610,11 @@ export default function CharacterInventoryPage() {
                   <div className="card p-4">
                     <EmptyState
                       icon={
-                        isActiveCarried
-                          ? '🎒'
-                          : LOCATION_TYPE_ICON[activeLocation?.type ?? 'carried']
+                        isActiveCarried ? (
+                          <Glyph name="pack" />
+                        ) : (
+                          <Glyph name={LOCATION_TYPE_ICON[activeLocation?.type ?? 'carried']} />
+                        )
                       }
                       title={isActiveCarried ? t('inv.sac.a.dos.vide') : t('inv.aucun.objet.ici')}
                       hint={t('inv.appuie.sur.ajouter')}
@@ -1839,7 +1834,13 @@ export default function CharacterInventoryPage() {
             disabled={creatingItem || !createItemName.trim()}
             className="btn-primary w-full"
           >
-            {creatingItem ? '…' : t('inv.creer.et.ajouter')}
+            {creatingItem ? (
+              '…'
+            ) : (
+              <span className="inline-flex items-center gap-1">
+                <Glyph name="spark" /> {t('inv.creer.et.ajouter')}
+              </span>
+            )}
           </button>
           <p className="text-xs text-ink-400">{t('inv.l.objet.rejoint.le.catalogue.du')}</p>
         </form>
@@ -1861,44 +1862,4 @@ export default function CharacterInventoryPage() {
       <ToastStack toasts={toasts} onDismiss={dismissToast} />
     </div>
   );
-}
-
-// ---------- Category grouping ----------
-
-interface CategoryGroupData {
-  category: ItemCategory;
-  entries: InventoryEntry[];
-}
-
-function groupByCategory(entries: InventoryEntry[]): CategoryGroupData[] {
-  const map = new Map<ItemCategory, InventoryEntry[]>();
-  for (const e of entries) {
-    const cat = e.item.category;
-    if (!map.has(cat)) map.set(cat, []);
-    map.get(cat)!.push(e);
-  }
-  // Sort groups: equipped items float within their category
-  const result: CategoryGroupData[] = [];
-  for (const [category, items] of map) {
-    items.sort((a, b) => {
-      if (a.equipped !== b.equipped) return a.equipped ? -1 : 1;
-      const na = a.item.name.toLowerCase();
-      const nb = b.item.name.toLowerCase();
-      return na.localeCompare(nb);
-    });
-    result.push({ category, entries: items });
-  }
-  // Sort categories in display order
-  const order: ItemCategory[] = [
-    'weapon',
-    'armor',
-    'ammunition',
-    'gear',
-    'tool',
-    'mount',
-    'magic',
-    'custom',
-  ];
-  result.sort((a, b) => order.indexOf(a.category) - order.indexOf(b.category));
-  return result;
 }

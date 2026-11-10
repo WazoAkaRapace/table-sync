@@ -24,6 +24,7 @@ import {
   monsterSkill,
   monsterTypeLabel,
 } from '../i18n/labels';
+import { Glyph } from './Glyph';
 import SpellDetailSheet from './SpellDetailSheet';
 
 interface Props {
@@ -158,7 +159,7 @@ export default function MonsterStatBlock({
         className="btn-ghost text-ink-500 p-1 shrink-0"
         aria-label={t('bestiaire.fermer')}
       >
-        ✕
+        <Glyph name="close" />
       </button>
     </div>
   );
@@ -546,7 +547,7 @@ function ActionEntry({
             className="px-1.5 py-0.5 rounded text-xs font-mono bg-red-100 text-red-700 shrink-0 hover:bg-red-200 active:scale-95 transition-all cursor-pointer"
             title={t('bestiaire.cliquer.pour.lancer.le.jet.d')}
           >
-            🎲 +{action.attackBonus}
+            <Glyph name="dice" /> +{action.attackBonus}
           </button>
         )}
         {/* Damage dice — clickable to roll */}
@@ -557,7 +558,7 @@ function ActionEntry({
             className="px-1.5 py-0.5 rounded text-xs font-mono bg-orange-100 text-orange-700 shrink-0 hover:bg-orange-200 active:scale-95 transition-all cursor-pointer"
             title={t('bestiaire.cliquer.pour.lancer.les.degats')}
           >
-            🎲 {action.damageDice}
+            <Glyph name="dice" /> {action.damageDice}
             {action.damageType ? ` ${damageType(action.damageType)}` : ''}
           </button>
         )}
@@ -592,7 +593,11 @@ function ActionEntry({
                 isCrit ? 'bg-green-200 text-green-800' : 'bg-orange-200 text-orange-800'
               }`}
             >
-              {isCrit && '🎯 '}
+              {isCrit && (
+                <>
+                  <Glyph name="target" />{' '}
+                </>
+              )}
               {damageResult.total} {t('bestiaire.degats')}
               {action.damageType ? ` ${damageType(action.damageType)}` : ''}
               {isCrit && <span className="text-xs font-normal ml-1">×2!</span>}
@@ -608,9 +613,10 @@ function ActionEntry({
               setAttackResult(null);
               setDamageResult(null);
             }}
+            aria-label={t('common.close')}
             className="text-xs text-ink-400 hover:text-ink-700"
           >
-            ✕
+            <Glyph name="close" />
           </button>
         </div>
       )}
@@ -628,7 +634,7 @@ function ActionEntry({
               className="px-2 py-0.5 rounded-full text-xs bg-indigo-100 text-indigo-700 hover:bg-indigo-200 active:scale-95 transition-all"
               title={t('bestiaire.voir.le.sort.s.name', { s_name: s.name })}
             >
-              ✨ {s.name}
+              <Glyph name="spark" /> {s.name}
             </button>
           ))}
         </div>
