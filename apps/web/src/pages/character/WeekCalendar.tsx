@@ -379,7 +379,7 @@ function CalendarDayRow({
                     <button
                       type="button"
                       key={p.labelKey}
-                      className="rounded-full border border-parchment-300 px-2.5 py-1 text-sm hover:border-blood-500"
+                      className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-full border border-parchment-300 px-2.5 py-1 text-sm hover:border-blood-500"
                       title={t(p.labelKey)}
                       aria-label={t(p.labelKey)}
                       onClick={() => {
@@ -651,6 +651,5 @@ function WeatherGlyph({ weather }: { weather: string }) {
   const first = weather.trim().split(/\s+/)[0] ?? '';
   const glyph = WEATHER_GLYPH_BY_EMOJI[first];
   if (glyph) return <Glyph name={glyph} />;
-  const rest = weather.trim().split(/\s+/).slice(1).join(' ');
-  return <span className="text-sm text-ink-500">{rest || first}</span>;
+  return <span className="text-sm text-ink-500">{weather.trim()}</span>;
 }

@@ -195,6 +195,7 @@ function Nav() {
           {loc.pathname.startsWith('/party/') && !routeTitle?.backTo && (
             <Link
               to="/parties"
+              aria-label={t('app.mes.groupes')}
               className="btn-ghost text-night-50 hover:bg-night-700 text-sm min-h-11"
             >
               <span className="hidden sm:inline">{t('app.mes.groupes')}</span>

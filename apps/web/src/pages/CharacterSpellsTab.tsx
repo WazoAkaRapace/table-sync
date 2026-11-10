@@ -1783,6 +1783,7 @@ function SpellCatalog({
                       type="button"
                       onClick={() => onAdd(spell.id)}
                       disabled={isKnown || addingSpellId === spell.id}
+                      aria-label={isKnown ? t('sorts.sort.deja.connu') : undefined}
                       className="text-xs px-2.5 py-2 rounded-lg bg-blood-600 text-white hover:bg-blood-700 disabled:opacity-40 disabled:cursor-not-allowed shrink-0 transition-colors"
                     >
                       {isKnown ? (

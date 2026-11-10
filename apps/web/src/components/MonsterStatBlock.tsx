@@ -613,6 +613,7 @@ function ActionEntry({
               setAttackResult(null);
               setDamageResult(null);
             }}
+            aria-label={t('common.close')}
             className="text-xs text-ink-400 hover:text-ink-700"
           >
             <Glyph name="close" />
