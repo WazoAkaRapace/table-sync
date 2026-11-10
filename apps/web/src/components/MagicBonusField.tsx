@@ -1,5 +1,3 @@
-import { useTranslation } from 'react-i18next';
-
 /**
  * Grille « bonus magique » 0→3 — plan « Contenus personnalisés » (2026-11).
  * Partagée par les panneaux Arme et Armure (extraction du clone signalé par
@@ -9,21 +7,20 @@ import { useTranslation } from 'react-i18next';
 export function MagicBonusField({
   value,
   onChange,
-  labelKey,
-  noneKey,
+  label,
+  noneLabel,
 }: {
   value: number;
   onChange: (bonus: number) => void;
-  /** Clé i18n du libellé + aria-label du groupe (ex. 'arme.bonus.magique'). */
-  labelKey: string;
-  /** Clé i18n de l'option 0 (ex. 'arme.aucun'). */
-  noneKey: string;
+  /** Libellé traduit du groupe (ex. t('arme.bonus.magique')). */
+  label: string;
+  /** Libellé traduit de l'option 0 (ex. t('arme.aucun')). */
+  noneLabel: string;
 }) {
-  const { t } = useTranslation();
   return (
     <div>
-      <span className="label">{t(labelKey)}</span>
-      <div className="grid grid-cols-4 gap-2" role="group" aria-label={t(labelKey)}>
+      <span className="label">{label}</span>
+      <div className="grid grid-cols-4 gap-2" role="group" aria-label={label}>
         {[0, 1, 2, 3].map((bonus) => {
           const selected = value === bonus;
           return (
@@ -38,7 +35,7 @@ export function MagicBonusField({
                   : 'bg-parchment-100 border-parchment-300 text-ink-600 hover:bg-parchment-200'
               }`}
             >
-              {bonus === 0 ? t(noneKey) : `+${bonus}`}
+              {bonus === 0 ? noneLabel : `+${bonus}`}
             </button>
           );
         })}

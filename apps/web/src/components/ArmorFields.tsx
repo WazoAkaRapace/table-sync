@@ -163,13 +163,13 @@ export function ArmorFields({
   return (
     <div className="card p-4 space-y-3">
       <div>
-        <span className="label" id="armure-type-libelle">
+        <span className="label" id="armor-type-label">
           {t('armure.type')}
         </span>
         <div
           className="grid grid-cols-2 sm:grid-cols-4 gap-2"
           role="group"
-          aria-labelledby="armure-type-libelle"
+          aria-labelledby="armor-type-label"
         >
           {ARMOR_FAMILY_KEYS.map((key) => {
             const selected = draft.armorFamily === key;
@@ -229,10 +229,10 @@ export function ArmorFields({
             max={20}
             aria-label={t('armure.ca.base')}
             aria-invalid={acInvalid || undefined}
-            aria-describedby={acInvalid ? 'armure-ca-erreur' : undefined}
+            aria-describedby={acInvalid ? 'armor-ac-error' : undefined}
           />
           {acInvalid && (
-            <span id="armure-ca-erreur" className="block text-xs text-orange-700 mt-1">
+            <span id="armor-ac-error" className="block text-xs text-orange-700 mt-1">
               {t('armure.ca.invalide')}
             </span>
           )}
@@ -242,8 +242,8 @@ export function ArmorFields({
       <MagicBonusField
         value={draft.magicBonus}
         onChange={(magicBonus) => onChange({ ...draft, magicBonus })}
-        labelKey="armure.bonus.magique"
-        noneKey="armure.aucun"
+        label={t('armure.bonus.magique')}
+        noneLabel={t('armure.aucun')}
       />
 
       <div className="grid grid-cols-2 gap-3 items-end">
@@ -261,7 +261,7 @@ export function ArmorFields({
         </label>
         <label className="flex items-center gap-2 min-h-11 pb-1 text-sm text-ink-700">
           <input
-            id="armure-malus-discretion"
+            id="armor-stealth-malus"
             type="checkbox"
             className="h-4 w-4 accent-blood-600"
             checked={draft.stealthDisadvantage}

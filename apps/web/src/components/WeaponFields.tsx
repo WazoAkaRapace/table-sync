@@ -264,8 +264,8 @@ export function WeaponFields({
       <MagicBonusField
         value={draft.magicBonus}
         onChange={(magicBonus) => onChange({ ...draft, magicBonus })}
-        labelKey="arme.bonus.magique"
-        noneKey="arme.aucun"
+        label={t('arme.bonus.magique')}
+        noneLabel={t('arme.aucun')}
       />
 
       <div>
