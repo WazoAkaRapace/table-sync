@@ -1,7 +1,7 @@
 [
   {
-    "version": null,
-    "sha": null,
+    "version": "2026.11.10-7",
+    "sha": "fc24a39b",
     "date": "2026-11-10",
     "title": "contenus personnalisés en vitrine",
     "items": [
@@ -10,8 +10,8 @@
     ]
   },
   {
-    "version": null,
-    "sha": null,
+    "version": "2026.11.10-6",
+    "sha": "fc24a39b",
     "date": "2026-11-10",
     "title": "sorts personnalisés",
     "items": [
@@ -23,8 +23,8 @@
     ]
   },
   {
-    "version": null,
-    "sha": null,
+    "version": "2026.11.10-5",
+    "sha": "fc24a39b",
     "date": "2026-11-10",
     "title": "monstres personnalisés",
     "items": [
@@ -36,8 +36,8 @@
     ]
   },
   {
-    "version": null,
-    "sha": null,
+    "version": "2026.11.10-4",
+    "sha": "fc24a39b",
     "date": "2026-11-10",
     "title": "armures personnalisées",
     "items": [
@@ -48,8 +48,8 @@
     ]
   },
   {
-    "version": null,
-    "sha": null,
+    "version": "2026.11.10-3",
+    "sha": "fc24a39b",
     "date": "2026-11-10",
     "title": "mise à jour technique des dépendances",
     "items": [
