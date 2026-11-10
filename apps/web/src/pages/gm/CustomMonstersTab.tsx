@@ -4,7 +4,7 @@
 // garde-fou de suppression (Q6a) vit ici — DELETE 409 → modal de
 // conséquences listant les rencontres vivantes.
 import type { Monster, MonsterSummary } from '@table-sync/shared';
-import { formatCR } from '@table-sync/shared';
+import { formatCR, parseMonsterActionCombatInfo } from '@table-sync/shared';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -65,7 +65,10 @@ function draftToMonster(draft: MonsterDraft): Monster {
       .map((e) => ({ name: e.name, desc: e.text })),
     actions: draft.actions
       .filter((e) => e.name.trim() && e.text.trim())
-      .map((e) => ({ name: e.name, desc: e.text })),
+      // MÊME détection de dés que l'API à l'écriture (withCombatInfo :
+      // spread du parseur shared) — l'aperçu montre les puces 🎲 cliquables
+      // exactement comme le bestiaire les rendra après enregistrement.
+      .map((e) => ({ name: e.name, desc: e.text, ...parseMonsterActionCombatInfo(e.text) })),
     legendaryActions: [],
     origin: 'custom',
   };

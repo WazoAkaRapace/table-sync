@@ -6,7 +6,8 @@
     "title": "aperçus des formulaires MD réparés",
     "items": [
       "Les aperçus embarqués des formulaires de monstre et de sort personnalisés ne sont plus piégés dans un double défilement : le bloc vit dans le défilement de la modale (fini le doigt coincé sur tablette et le bloc tronqué au ras de l'écran).",
-      "Un bouton « Masquer/Montrer l'aperçu » remplace la croix du bloc de stats, qui fermait l'aperçu sans moyen de le rouvrir."
+      "Un bouton « Masquer/Montrer l'aperçu » remplace la croix du bloc de stats, qui fermait l'aperçu sans moyen de le rouvrir.",
+      "L'aperçu du monstre détecte et affiche les dés au fil de la frappe — les puces cliquables (jet d'attaque, dégâts) apparaissent exactement comme le bestiaire les rendra après enregistrement."
     ]
   },
   {
