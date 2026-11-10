@@ -5,7 +5,7 @@
 // conséquences listant les rencontres vivantes.
 import type { Monster, MonsterSummary } from '@table-sync/shared';
 import { formatCR } from '@table-sync/shared';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   EMPTY_MONSTER_DRAFT,
@@ -18,9 +18,9 @@ import {
 import MonsterStatBlock from '../../components/MonsterStatBlock';
 import { ConfirmButton, EmptyState, Fab, Modal } from '../../components/ui';
 import { monsterSizeLabel } from '../../i18n/labels';
-import { useResyncOnReconnect, useSyncEvent } from '../../sync';
 import { Glyph } from '../../components/Glyph';
 import api from '../../api';
+import { usePartyContentSync } from './usePartyContentSync';
 
 /** Bloc de stats DÉRIVÉ du draft — l'aperçu embarqué rend la vraie fiche. */
 function draftToMonster(draft: MonsterDraft): Monster {
@@ -100,21 +100,7 @@ export function CustomMonstersTab({ partyId }: { partyId: string }) {
     }
   }, [partyId]);
 
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  // Rattrapage de reconnexion : page à état local, les événements du trou ne
-  // seront jamais rejoués.
-  useResyncOnReconnect(() => void load());
-  useSyncEvent(
-    (event) => {
-      if (event.partyId === Number(partyId) && event.action === 'custom-monster') {
-        load();
-      }
-    },
-    [partyId],
-  );
+  usePartyContentSync(partyId, 'custom-monster', load);
 
   const openCreate = () => {
     setEditingSlug(null);

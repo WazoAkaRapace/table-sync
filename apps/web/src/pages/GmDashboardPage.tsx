@@ -45,6 +45,7 @@ export default function GmDashboardPage() {
     | 'characters'
     | 'transactions'
     | 'custom'
+    | 'customSpells'
     | 'customMonsters'
     | 'members'
     | 'assistant'
@@ -179,6 +180,9 @@ export default function GmDashboardPage() {
         <TabButton active={tab === 'custom'} onClick={() => setTab('custom')}>
           {t('md.objets.custom')}
         </TabButton>
+        <TabButton active={tab === 'customSpells'} onClick={() => setTab('customSpells')}>
+          {t('md.sorts.custom')}
+        </TabButton>
         <TabButton active={tab === 'customMonsters'} onClick={() => setTab('customMonsters')}>
           {t('md.monstres.custom')}
         </TabButton>
@@ -207,6 +211,8 @@ export default function GmDashboardPage() {
       {tab === 'transactions' && <TransactionsTab transactions={transactions} />}
 
       {tab === 'custom' && <CustomItemsTab partyId={partyId!} party={party} />}
+
+      {tab === 'customSpells' && <CustomSpellsTab partyId={partyId!} />}
 
       {tab === 'customMonsters' && <CustomMonstersTab partyId={partyId!} />}
 
@@ -990,3 +996,4 @@ function TransactionsTab({ transactions }: { transactions: Transaction[] }) {
 
 import { CustomItemsTab } from './gm/CustomItemsTab';
 import { CustomMonstersTab } from './gm/CustomMonstersTab';
+import { CustomSpellsTab } from './gm/CustomSpellsTab';
