@@ -1241,7 +1241,7 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
       await endFights(c);
       const page = await openSheet(c.bastien, c.webPort, c.refs.partyId, c.refs.chars.kael);
       await openTab(page, S('Survie', 'Survival'));
-      const section = page.getByText(S('⚔ Attaques', '⚔ Attacks')).first();
+      const section = page.getByText(S('Attaques', 'Attacks')).first();
       await section.waitFor({ timeout: 10_000 });
       await section.scrollIntoViewIfNeeded();
       await page.waitForTimeout(250);
@@ -1255,10 +1255,10 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
       // Tour de Lyra : la carte de combat au-dessus du dock clignote « À toi ».
       await ensureAmbushMidFight(c);
       const page = await openSheet(c.aurore, c.webPort, c.refs.partyId, c.refs.chars.lyra);
-      await page
-        .getByText(S('⚔ À toi de jouer !', '⚔ Your turn!'))
-        .first()
-        .waitFor({ timeout: 10_000 });
+      // Cible le tampon du tour directement : getByText('À toi de jouer')
+      // .first() attrape un span sr-only 0×0 en tête de DOM et n'est jamais
+      // « visible » pour Playwright.
+      await page.locator('.combat-turn-stamp').waitFor({ timeout: 25_000 });
       // animations: 'allow' — la lueur pulsée combat-turn-glow fait partie de la démo
       await shoot(page, '05-widget-combat.png', { animations: 'allow' });
       await page.close();
@@ -1319,7 +1319,7 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
       await endFights(c);
       const page = await openSheet(c.aurore, c.webPort, c.refs.partyId, c.refs.chars.lyra);
       await openTab(page, S('Survie', 'Survival'));
-      const section = page.getByText(S('🐾 Forme sauvage', '🐾 Wild shape')).first();
+      const section = page.getByText(S('Forme sauvage', 'Wild shape')).first();
       await section.waitFor({ timeout: 10_000 });
       await section.scrollIntoViewIfNeeded();
       await page.waitForTimeout(250);
@@ -1334,7 +1334,7 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
       const page = await openSheet(c.aurore, c.webPort, c.refs.partyId, c.refs.chars.lyra);
       await openTab(page, S('Survie', 'Survival'));
       const take = page.getByRole('button', {
-        name: S('🐾 Prendre une forme', '🐾 Take a form'),
+        name: S('Prendre une forme', 'Take a form'),
       });
       await take.waitFor({ timeout: 10_000 });
       await take.scrollIntoViewIfNeeded();
@@ -1342,7 +1342,10 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
       const dialog = page.getByRole('dialog');
       await dialog.waitFor({ timeout: 10_000 });
       // Filtre « bêtes déjà vues » — la liste emblématique du README
-      await dialog.getByRole('button', { name: S('👁 Vues', '👁 Seen') }).click();
+      await dialog
+        .getByRole('button', { name: S('Vues', 'Seen') })
+        .first() // EN : « Seen » matche aussi les libellés de bêtes — la 1ʳᵉ est le filtre
+        .click();
       await page.waitForTimeout(400);
       await dialog.getByText(S('Loup', 'Wolf')).first().waitFor({ timeout: 5000 });
       await shoot(page, '10-formes.png');
@@ -1399,10 +1402,7 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
       // nom accessible du h2 embarque aussi le bouton « 👁 Masquer le nom »
       // (GM + monstre) : on ancre sur le préfixe, jamais sur l'exactitude.
       await page.getByRole('heading', { name: /^Ogre/ }).waitFor({ timeout: 10_000 });
-      await page
-        .getByRole('button', { name: /📜\s*Stats/ })
-        .first()
-        .click();
+      await page.getByRole('button', { name: /Stats/ }).first().click();
       // Sur mobile le bloc de stats est une feuille portée SANS role="dialog" —
       // on attend son titre : le second <h2> « Ogre » (porté en fin de DOM),
       // après celui de la scène.
@@ -1653,7 +1653,7 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
       try {
         await endFights(c);
         const page = await openSheet(ctx, c.webPort, c.refs.partyId, c.refs.chars.lyra);
-        await page.getByText(S('❤️ Vitalité', '❤️ Vitality')).first().waitFor({ timeout: 10_000 });
+        await page.getByText(S('Vitalité', 'Vitality')).first().waitFor({ timeout: 10_000 });
         await page.waitForTimeout(300);
         await shoot(page, '25-survie-paysage.png');
         await page.close();
@@ -1688,10 +1688,7 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
         // La scène titre l'ogre d'un <h2> dont le nom accessible embarque le
         // bouton « 👁 Masquer le nom » — ancre sur le préfixe, pas l'exact.
         await page.getByRole('heading', { name: /^Ogre/ }).waitFor({ timeout: 10_000 });
-        await page
-          .getByRole('button', { name: /📜\s*Stats/ })
-          .first()
-          .click();
+        await page.getByRole('button', { name: /Stats/ }).first().click();
         // Le bloc amarré porte son propre <h2> « Ogre », après celui de la
         // scène dans le DOM (l'aside est la 3e colonne de la grille).
         await page.getByRole('heading', { name: /^Ogre/ }).last().waitFor({ timeout: 10_000 });
@@ -1770,7 +1767,7 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
       // ancre sur la bascule de la carte du dock, la seule avec
       // aria-expanded, et on exige qu'elle soit dépliée.
       const card = page.locator('button[aria-expanded="true"]').filter({
-        hasText: S('🎲 Lance ton initiative !', '🎲 Roll your initiative!'),
+        hasText: S('Lance ton initiative !', 'Roll your initiative!'),
       });
       await card.waitFor({ timeout: 10_000 });
       await page.getByLabel(S('Ton initiative', 'Your initiative')).waitFor({ timeout: 10_000 });
@@ -1828,7 +1825,7 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
       try {
         await endFights(c);
         const page = await openSheet(ctx, c.webPort, c.refs.partyId, c.refs.chars.lyra);
-        await page.getByText(S('❤️ Vitalité', '❤️ Vitality')).first().waitFor({ timeout: 10_000 });
+        await page.getByText(S('Vitalité', 'Vitality')).first().waitFor({ timeout: 10_000 });
         await page.waitForTimeout(300);
         await shoot(page, '32-bougie-fiche.png');
         await page.close();
@@ -1947,9 +1944,19 @@ async function main() {
     const playerShots = selected.filter((s) => !GM_SHOTS.has(s.file) && !INIT_SHOTS.has(s.file));
     const advanceTurn = () =>
       makeApi(stack.apiPort, mdS.token)('POST', `/api/encounters/${refs.encounterId}/next-turn`);
-    if (gmShots.length > 0 && playerShots.length === 0) await advanceTurn(); // déjà en tour gobelins
+    // L'encounter peut déjà être clos (des shots joueurs appellent endFights) —
+    // un 400 « Combat terminé » n'est pas fatal : les gmShots re-stagent une
+    // embuscade à mi-combat via ensureAmbushMidFight de toute façon.
+    const advanceTurnSafe = async () => {
+      try {
+        await advanceTurn();
+      } catch {
+        // combat déjà terminé — les gmShots re-stagent leur propre état.
+      }
+    };
+    if (gmShots.length > 0 && playerShots.length === 0) await advanceTurnSafe(); // déjà en tour gobelins
     for (const s of playerShots) await runShot(s);
-    if (gmShots.length > 0 && playerShots.length > 0) await advanceTurn();
+    if (gmShots.length > 0 && playerShots.length > 0) await advanceTurnSafe();
     for (const s of gmShots) await runShot(s);
     for (const s of initShots) await runShot(s);
 
