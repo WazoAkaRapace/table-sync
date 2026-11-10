@@ -24,7 +24,6 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import {
-  lazy,
   Suspense,
   useCallback,
   useEffect,
@@ -67,7 +66,6 @@ import {
   ToastStack,
 } from '../components/ui';
 import { useOwnEchoGuard, useSync, useSyncEvent } from '../sync';
-import { TUTORIAL_SCRIPTS } from '../tutorial/scripts';
 import { UnreadBadge, useMessagesUnread } from '../useMessagesUnread';
 import { usePartyRole } from '../usePartyRole';
 import CharacterDescriptionTab from './CharacterDescriptionTab';
@@ -85,7 +83,8 @@ import { CoinTransactionModal } from './character/CoinTransactionModal';
 import { LocationWeightBar } from './character/LocationWeightBar';
 import { NewLocationModal } from './character/NewLocationModal';
 import { CHARACTER_TABS, type CharacterTab, SheetTabBar } from './character/SheetTabBar';
-import { SurvivalPanel, type SurvivalConsumeResult } from './character/SurvivalPanel';
+import { SurvivalPanel } from './character/SurvivalPanel';
+import { type SurvivalConsumeResult } from './character/survival-lib';
 import WeekCalendar from './character/WeekCalendar';
 import { ContainerTransferModal, TransferModal } from './character/TransferModal';
 import {
@@ -98,35 +97,12 @@ import {
 import NpcPage from './NpcPage';
 import { Glyph } from '../components/Glyph';
 
-const CATALOG_PAGE_SIZE = 30;
-
-// Visite guidée : joyride (~75 KB avec floating-ui) n'a pas sa place dans le
-// chunk de la fiche pour les joueurs qui ont tout vu — chargement paresseux,
-// gardé par une lecture locale des mêmes clés que TutorialHost. Le calcul
-// refait à chaque montage de la page : « Réinitialiser le tutoriel » (Mon
-// compte) efface les clés, le prochain montage de fiche les relit.
-const TutorialHost = lazy(() =>
-  import('../tutorial/TutorialHost').then((m) => ({ default: m.TutorialHost })),
-);
-function tutorialPending(): boolean {
-  try {
-    if (!localStorage.getItem('dnd-inv-tour-seen')) return true;
-    const raw = localStorage.getItem('dnd-inv-tour-tabs');
-    let done: string[] = [];
-    if (raw) {
-      const parsed: unknown = JSON.parse(raw);
-      if (Array.isArray(parsed)) done = parsed.filter((x): x is string => typeof x === 'string');
-    }
-    // Seuls les scripts PAR ONGLET s'enregistrent dans dnd-inv-tour-tabs
-    // (TutorialHost : `if (ended !== 'shell') markTutorialTabDone(ended)`) —
-    // la chaîne d'accueil 'shell' ne doit donc pas compter comme dû.
-    const owedTabs = Object.keys(TUTORIAL_SCRIPTS).filter((k) => k !== 'shell');
-    return owedTabs.some((tab) => !done.includes(tab));
-  } catch {
-    return true; // localStorage bloqué : on monte, TutorialHost gère sa dégradation
-  }
-}
-
+import {
+  CATALOG_PAGE_SIZE,
+  TutorialHost,
+  groupByCategory,
+  tutorialPending,
+} from './CharacterInventoryPage-lib';
 // ---------- Main component ----------
 
 export default function CharacterInventoryPage() {
@@ -1886,44 +1862,4 @@ export default function CharacterInventoryPage() {
       <ToastStack toasts={toasts} onDismiss={dismissToast} />
     </div>
   );
-}
-
-// ---------- Category grouping ----------
-
-interface CategoryGroupData {
-  category: ItemCategory;
-  entries: InventoryEntry[];
-}
-
-function groupByCategory(entries: InventoryEntry[]): CategoryGroupData[] {
-  const map = new Map<ItemCategory, InventoryEntry[]>();
-  for (const e of entries) {
-    const cat = e.item.category;
-    if (!map.has(cat)) map.set(cat, []);
-    map.get(cat)!.push(e);
-  }
-  // Sort groups: equipped items float within their category
-  const result: CategoryGroupData[] = [];
-  for (const [category, items] of map) {
-    items.sort((a, b) => {
-      if (a.equipped !== b.equipped) return a.equipped ? -1 : 1;
-      const na = a.item.name.toLowerCase();
-      const nb = b.item.name.toLowerCase();
-      return na.localeCompare(nb);
-    });
-    result.push({ category, entries: items });
-  }
-  // Sort categories in display order
-  const order: ItemCategory[] = [
-    'weapon',
-    'armor',
-    'ammunition',
-    'gear',
-    'tool',
-    'mount',
-    'magic',
-    'custom',
-  ];
-  result.sort((a, b) => order.indexOf(a.category) - order.indexOf(b.category));
-  return result;
 }
