@@ -465,11 +465,18 @@ export const spells = sqliteTable(
     dcJson: text('dc_json'),
     classesJson: text('classes_json').notNull().default('[]'),
     sortOrder: integer('sort_order').default(0),
+    // Socle contenus personnalisés (PR3 sorts) : un sort custom vit dans son
+    // groupe (motif items/monstres) ; `source` est validée en route (le SQL
+    // généré par drizzle-kit ne porte pas de CHECK — voir 0041).
+    source: text('source').notNull().default('srd'),
+    partyId: integer('party_id').references(() => parties.id, { onDelete: 'cascade' }),
+    createdBy: integer('created_by').references(() => users.id, { onDelete: 'set null' }),
   },
   (t) => [
     index('idx_spells_level').on(t.level),
     index('idx_spells_name').on(t.name),
     index('idx_spells_name_fr').on(t.nameFr),
+    index('idx_spells_party').on(t.partyId),
   ],
 );
 

@@ -72,3 +72,72 @@ export function generateInviteCode(): string {
   for (let i = 0; i < 6; i++) out += chars[randomInt(chars.length)];
   return out;
 }
+
+// ---------- Contenus personnalisés (plan 2026-11, PR2 monstres / PR3 sorts) ----------
+
+/**
+ * Périmètre de groupe d'une requête catalogue (query `partyId`) : renvoie
+ * l'id parsé, `null` si le paramètre est absent (catalogue SRD pur), ou
+ * `undefined` après avoir répondu 400/403 (groupe invalide / non-membre).
+ * Sans partyId les customs ne fuient jamais entre tables et la fenêtre
+ * maxAge du catalogue SRD reste de mise.
+ */
+export function partyScopeFromQuery(
+  raw: string | undefined,
+  req: FastifyRequest,
+  reply: FastifyReply,
+  userId: number,
+): number | null | undefined {
+  if (raw === undefined || raw === '') return null;
+  const partyId = Number(raw);
+  if (!Number.isInteger(partyId) || partyId <= 0) {
+    reply.code(400).send({ error: apiMsg(req, 'groupe invalide') });
+    return undefined;
+  }
+  if (!isPartyMember(partyId, userId)) {
+    reply.code(403).send({ error: apiMsg(req, 'pas membre du groupe') });
+    return undefined;
+  }
+  return partyId;
+}
+
+/** Porte GM d'une création `POST /parties/:partyId/<contenu>` (MD seul,
+ *  règle 3 — pas de branche joueur, pas de toggle) : renvoie l'id du groupe,
+ *  ou `undefined` après avoir répondu 403. */
+export function partyGMParamOr403(
+  req: FastifyRequest<{ Params: { partyId: string } }>,
+  reply: FastifyReply,
+  userId: number,
+  forbiddenMsg: string,
+): number | undefined {
+  const partyId = Number(req.params.partyId);
+  if (!isPartyGM(partyId, userId)) {
+    reply.code(403).send({ error: apiMsg(req, forbiddenMsg) });
+    return undefined;
+  }
+  return partyId;
+}
+
+/** Garde PATCH/DELETE d'un contenu personnalisé : la ligne doit être un
+ *  CUSTOM appartenant à un groupe dont l'auteur de la requête est MD —
+ *  répond 403 et renvoie false sinon (le 404 reste à l'appelant : la clé
+ *  diffère selon la table, slug ou id). */
+export function denyUnlessCustomOfGM(
+  row: any,
+  isCustom: boolean,
+  userId: number,
+  req: FastifyRequest,
+  reply: FastifyReply,
+  notCustomMsg: string,
+  notGMMsg: string,
+): boolean {
+  if (!isCustom) {
+    reply.code(403).send({ error: apiMsg(req, notCustomMsg) });
+    return false;
+  }
+  if (!isPartyGM(row.party_id, userId)) {
+    reply.code(403).send({ error: apiMsg(req, notGMMsg) });
+    return false;
+  }
+  return true;
+}
