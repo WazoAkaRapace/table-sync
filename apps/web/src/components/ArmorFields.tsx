@@ -78,11 +78,7 @@ export function armorDraftPayload(draft: ArmorDraft) {
   return {
     armorFamily: draft.armorFamily || null,
     acBase:
-      draft.armorFamily === 'shield'
-        ? 2
-        : draft.acBase.trim() === ''
-          ? null
-          : Number(draft.acBase),
+      draft.armorFamily === 'shield' ? 2 : draft.acBase.trim() === '' ? null : Number(draft.acBase),
     strMin: draft.strMin.trim() === '' ? null : Number(draft.strMin),
     stealthDisadvantage: draft.stealthDisadvantage,
     magicBonus: draft.magicBonus,
@@ -107,7 +103,9 @@ export function ArmorFields({
   const acRaw = draft.acBase.trim();
   const acNum = Number(acRaw);
   const acInvalid =
-    !isShield && draft.armorFamily !== '' && (acRaw === '' || !Number.isInteger(acNum) || acNum < 8 || acNum > 20);
+    !isShield &&
+    draft.armorFamily !== '' &&
+    (acRaw === '' || !Number.isInteger(acNum) || acNum < 8 || acNum > 20);
 
   const baseOptions = useMemo(
     () =>
@@ -329,11 +327,7 @@ function armorPreviewItem(draft: ArmorDraft) {
   return {
     category: 'armor' as const,
     acBase:
-      draft.armorFamily === 'shield'
-        ? 2
-        : draft.acBase.trim() === ''
-          ? null
-          : Number(draft.acBase),
+      draft.armorFamily === 'shield' ? 2 : draft.acBase.trim() === '' ? null : Number(draft.acBase),
     strMin: draft.strMin.trim() === '' ? null : Number(draft.strMin),
     name: '',
     nameFr: null,

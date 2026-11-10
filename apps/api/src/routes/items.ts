@@ -148,8 +148,7 @@ function validateArmorFields(input: {
   let armorFamily: ArmorFamily | null = null;
   const rawFamily = input.armorFamily;
   if (typeof rawFamily === 'string' && rawFamily !== '') {
-    if (!(ARMOR_FAMILIES as readonly string[]).includes(rawFamily))
-      return "type d'armure invalide";
+    if (!(ARMOR_FAMILIES as readonly string[]).includes(rawFamily)) return "type d'armure invalide";
     armorFamily = rawFamily as ArmorFamily;
   }
 
@@ -170,12 +169,7 @@ function validateArmorFields(input: {
   }
 
   const strMin = asInt(input.strMin);
-  if (
-    input.strMin !== undefined &&
-    input.strMin !== null &&
-    input.strMin !== '' &&
-    strMin === null
-  )
+  if (input.strMin !== undefined && input.strMin !== null && input.strMin !== '' && strMin === null)
     return 'force minimale invalide';
   if (strMin !== null && (strMin < 1 || strMin > 30)) return 'force minimale invalide';
 
@@ -434,9 +428,9 @@ export async function itemRoutes(app: FastifyInstance) {
           baseArmor: armor ? (armor.baseArmor ?? bases.baseArmor) : bases.baseArmor,
           armorFamily: armor ? (armor.armorFamily ?? bases.armorFamily) : bases.armorFamily,
           magicBonus: weapon
-            ? weapon.magicBonus ?? bases.magicBonus
+            ? (weapon.magicBonus ?? bases.magicBonus)
             : armor
-              ? armor.magicBonus ?? bases.magicBonus
+              ? (armor.magicBonus ?? bases.magicBonus)
               : bases.magicBonus,
           damageDice: weapon?.damageDice ?? null,
           damageType: weapon?.damageType ?? null,

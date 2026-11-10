@@ -912,8 +912,8 @@ check(
 );
 // Bouclier par famille explicite (+2 suivi à part), nom sans le mot bouclier.
 const eideCustom = mkArmor({
-  name: "Égide du temple",
-  nameFr: "Égide du temple",
+  name: 'Égide du temple',
+  nameFr: 'Égide du temple',
   acBase: 2,
   description: '',
   armorFamily: 'shield',
@@ -925,8 +925,8 @@ check(
 );
 // Bouclier custom MAGIQUE : le bonus explicite rejoint le +2 (Bouclier +3).
 const eideMagique = mkArmor({
-  name: "Égide du temple +1",
-  nameFr: "Égide du temple +1",
+  name: 'Égide du temple +1',
+  nameFr: 'Égide du temple +1',
   acBase: 2,
   description: '',
   armorFamily: 'shield',
@@ -934,7 +934,11 @@ const eideMagique = mkArmor({
 });
 const acEideMagique = computeAC([entry(eideMagique)], dex4);
 check('Custom bouclier +1 → 10 + 4 + 3 = 17', acEideMagique.ac, 17);
-check('Custom bouclier +1 → source « Bouclier +3 »', acEideMagique.source.includes('Bouclier +3'), true);
+check(
+  'Custom bouclier +1 → source « Bouclier +3 »',
+  acEideMagique.source.includes('Bouclier +3'),
+  true,
+);
 // Bonus magique explicite AVEC CA explicite (position 5 du plan §8).
 const cuirMagique = computeAC(
   [
@@ -952,7 +956,11 @@ const cuirMagique = computeAC(
   dex4,
 );
 check('Custom légère CA 13 +2 magique → 13 + 4 + 2 = 19', cuirMagique.ac, 19);
-check('Bonus magique explicite visible dans la source (+2)', cuirMagique.source.includes('+2'), true);
+check(
+  'Bonus magique explicite visible dans la source (+2)',
+  cuirMagique.source.includes('+2'),
+  true,
+);
 // Repli heuristique : famille ABSENTE → comportement d'avant (CA 12 → légère).
 check(
   'Sans famille explicite → repli heuristique (CA 12 → légère 16)',
