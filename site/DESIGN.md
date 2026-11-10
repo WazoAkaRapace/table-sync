@@ -11,7 +11,8 @@ verbe et le tour courant. Parti pris structurel : **le tour de table**
 (graine 27bfed1c, candidat 3/7) — la landing JOUE un round de combat. La
 lecture descend l'ordre d'initiative : pastille de rencontre dans le hero
 (« Embuscade gobeline · round 2 »), mesures monumentales du SRD, registre à
-ordinaux I–IX dont l'entrée I (le temps réel) porte le sang, correspondance,
+ordinaux I–XI dont l'entrée I (le temps réel) porte le sang, la création de
+contenus (« Votre monde, vos règles », V), correspondance,
 chronique, puis le « Repos long » de l'auto-hébergement et « La table
 t'attend. » en clôture. Refusé : l'agencement hero→fonctionnalités→CTA du
 SaaS, et le parchemin diurne posé à plat de la version précédente. La page
@@ -111,10 +112,19 @@ qui dépasserait le nom briserait la hiérarchie de la séance.
 
 Le dialecte réglé de l'app, transplanté sur la nuit : pas de fond, pas de
 grille de cartes — les entrées sont posées à même l'obscurité et séparées
-par des hairlines d'encre claire. Neuf entrées I–IX (`#table`, `#fiche`,
-`#inventaire`, `#md`, `#correspondance`, `#chronique`, `#personnalite`,
-`#tutoriel`, `#repos-long`) ; la marge du registre et la bande du tour
-(accès bas) les accueillent seules dès qu'elles portent un `id`.
+par des hairlines d'encre claire. Onze entrées I–XI (`#table`, `#fiche`,
+`#inventaire`, `#md`, `#vos-regles`, `#correspondance`, `#chronique`,
+`#deux-lumieres`, `#personnalite`, `#tutoriel`, `#repos-long`) ; la marge du
+registre et la bande du tour (accès bas) les accueillent seules dès qu'elles
+portent un `id`.
+
+**Votre monde, vos règles (entrée V, 2026-11)** — la vitrine des contenus
+personnalisés (objets, armes, sorts, monstres, armures — PR #304/#305/#306) :
+grammaire standard `subentries + phonepost story --views:6` (la puce « L'arme
+de légende » couvre deux vues, création MD puis lame calculée sur la fiche)
+fermée par une fenêtre bureau `entry-wide` (39 — le monstre custom en pleine
+rencontre). Un paragraphe d'ouverture précède les sous-entrées (première
+entrée à le faire) ; aucune règle CSS nouvelle — idiomes existants seuls.
 
 | Dispositif | Recette |
 |---|---|
@@ -189,9 +199,11 @@ le saut d'entrée réveille l'histoire téléphone déjà passée et lui vole
 l'emphase de la copie feuille. L'entrée I garde sa fenêtre bureau
 unique (30) en vue élargie classique.
 
-**Les deux lumières (entrée VII, 2026-09)** — la section du mode bougie
-de l'app (PR #132-133) : registre I–X désormais (Personnalité→VIII,
-Visite→IX, Repos long→X). L'histoire Parchemin↔Bougie (04-survie clair ↔
+**Les deux lumières (entrée VIII, 2026-09)** — la section du mode bougie
+de l'app (PR #132-133) : registre I–XI désormais (Personnalité→IX,
+Visite→X, Repos long→XI — l'entrée V « Votre monde, vos règles », 2026-11,
+a pris sa place entre l'écran du MD et la correspondance). L'histoire
+Parchemin↔Bougie (04-survie clair ↔
 32-bougie-fiche, même onglet) joue LA BASCULE DU MODE sur sa propre
 scène : `--candle` (main.js, posé sur l'ENTRÉE — la palette `--day/*--night/--mix-*`
 vit sur `#deux-lumieres`, tout ce qui en descend suit d'un bloc ; la
@@ -332,7 +344,7 @@ le doigt. Cadence : un rAF par défilement AVEC filet de secours
 (`frameGuarded` — dans un onglet étranglé, un verrou booléen gèlerait le
 dispositif pour de bon ; le minuteur à 160 ms reprend la main).
 
-## Repos long (IX) et pied de page
+## Repos long (XI) et pied de page
 
 - **Le panneau lamplit** : `.panel.deploy` est le seul grand îlot de parchemin
   après le hero — le repas de fin de séance, près de la lampe. La

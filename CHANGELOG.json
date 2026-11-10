@@ -3,6 +3,16 @@
     "version": null,
     "sha": null,
     "date": "2026-11-10",
+    "title": "contenus personnalisés en vitrine",
+    "items": [
+      "Le site présente la création d’objets, d’armes, de sorts, de monstres et d’armures dans une section dédiée.",
+      "Sept nouvelles captures illustrent les contenus inventés par la table, de la création au combat."
+    ]
+  },
+  {
+    "version": null,
+    "sha": null,
+    "date": "2026-11-10",
     "title": "sorts personnalisés",
     "items": [
       "Le MD inscrit ses propres sorts dans un onglet du pupitre, avec fiche complète et aperçu en direct.",
