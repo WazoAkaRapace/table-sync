@@ -2,13 +2,14 @@ import { coinsTotalCp, EMPTY_COINS, spendCoins, type CoinAmounts } from '@table-
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../../api';
-import { EmptyState, LoadingSpinner, Modal, NumberField } from '../../components/ui';
+import { EmptyState, LoadingSpinner, Modal } from '../../components/ui';
 import { coinLabel } from '../../i18n/labels';
 import { usePartyRecipients } from '../../usePartyRecipients';
 import { COIN_FIELDS } from './CoinPurse';
 import { formatPlainCp, formatPurse } from './coinFormat';
 import { apiError, type CoinsState } from './types';
 import { Glyph } from '../../components/Glyph';
+import { CoinStepper } from './CoinStepper';
 
 // ---------- Donner à… (transfert de bourse entre personnages) ----------
 // Quatrième verbe de la bourse : la main tendue. Le destinataire vient du
@@ -149,39 +150,15 @@ export function CoinGiveModal({
                   />
                   {coinLabel(unit)}
                 </label>
-                <div className="flex-1 flex items-center justify-end gap-1">
-                  <button
-                    type="button"
-                    onClick={() => step(unit, -1)}
-                    className="w-11 h-11 rounded-lg bg-parchment-200 hover:bg-parchment-300 text-lg font-medium flex items-center justify-center transition-colors"
-                    aria-label={t('rangee.diminuer.itemname', { itemName: coinLabel(unit) })}
-                  >
-                    −
-                  </button>
-                  <NumberField
-                    id={`give-coin-amt-${unit}`}
-                    min={0}
-                    className="input w-20 text-center font-mono"
-                    value={amounts[unit]}
-                    zeroAsEmpty
-                    emptyAsZero // une dénomination vidée compte pour 0 (#107)
-                    inputMode="numeric"
-                    onChange={(n) =>
-                      setAmounts((a) => ({ ...a, [unit]: Math.max(0, Math.floor(n)) }))
-                    }
-                    aria-label={t('bourse.quantite.de.coinlabel.unit', {
-                      coinLabel_unit: coinLabel(unit),
-                    })}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => step(unit, 1)}
-                    className="w-11 h-11 rounded-lg bg-parchment-200 hover:bg-parchment-300 text-lg font-medium flex items-center justify-center transition-colors"
-                    aria-label={t('rangee.augmenter.itemname', { itemName: coinLabel(unit) })}
-                  >
-                    +
-                  </button>
-                </div>
+                <CoinStepper
+                  idPrefix="give-coin-amt"
+                  unit={unit}
+                  coinLabel={coinLabel}
+                  value={amounts[unit]}
+                  onSet={(u, n) => setAmounts((a) => ({ ...a, [u]: n }))}
+                  onStep={step}
+                  t={t}
+                />
               </div>
             ))}
           </div>
