@@ -92,7 +92,11 @@ function SpellPreview({ draft }: { draft: SpellDraft }) {
             {t('sortcustom.concentration')}
           </Chip>
         )}
-        {draft.ritual && <Chip tone="orange" soft>{t('sortcustom.rituel')}</Chip>}
+        {draft.ritual && (
+          <Chip tone="orange" soft>
+            {t('sortcustom.rituel')}
+          </Chip>
+        )}
         {atNative.dice && (
           <Chip tone="gold">
             ⚔ {atNative.dice} {atNative.typeFr}
@@ -138,7 +142,12 @@ export function CustomSpellsTab({ partyId }: { partyId: string }) {
   /** Modal de conséquences : personnages qui connaissent le sort. */
   const [deleteTarget, setDeleteTarget] = useState<{
     spell: SpellRow;
-    knownBy: { characterId: number; name: string; className: string | null; level: number | null }[];
+    knownBy: {
+      characterId: number;
+      name: string;
+      className: string | null;
+      level: number | null;
+    }[];
   } | null>(null);
 
   const load = useCallback(async () => {
@@ -287,14 +296,13 @@ export function CustomSpellsTab({ partyId }: { partyId: string }) {
                 </div>
                 <div className="flex items-center gap-2 flex-wrap mt-1">
                   {s.concentration && (
-                    <span
-                      className="text-xs text-indigo-500"
-                      title={t('sortcustom.concentration')}
-                    >
+                    <span className="text-xs text-indigo-500" title={t('sortcustom.concentration')}>
                       <Glyph name="concentration" />
                     </span>
                   )}
-                  {s.ritual && <span className="text-xs text-ink-400">{t('sortcustom.rituel')}</span>}
+                  {s.ritual && (
+                    <span className="text-xs text-ink-400">{t('sortcustom.rituel')}</span>
+                  )}
                   {(s.knownBy ?? 0) > 0 && (
                     <span className="text-xs text-ink-400">
                       {t('md.connu.par.n', { count: s.knownBy })}

@@ -182,8 +182,7 @@ export async function run(base: string, fx: Fixtures, _srv: ServerHandle): Promi
       'custom-spell : actorUserId présent',
     );
     eq(
-      bob.messages.filter((m) => m.type === 'party:change' && m.action === 'custom-monster')
-        .length,
+      bob.messages.filter((m) => m.type === 'party:change' && m.action === 'custom-monster').length,
       monsterEventsBefore,
       "l'écriture sort ne réveille pas l'onglet Monstres custom (action dédiée)",
     );

@@ -111,63 +111,54 @@ gmTest.describe('Sort personnalisé (MD)', () => {
 });
 
 playerTest.describe('Sort personnalisé (joueur)', () => {
-  playerTest(
-    'grimoire fusionné + apprentissage + upcast du CastSpellSheet',
-    async ({ page }) => {
-      // Le MD a préparé le terrain (création idempotente au nom du MD).
-      const spell = await ensureCustomSpell();
+  playerTest('grimoire fusionné + apprentissage + upcast du CastSpellSheet', async ({ page }) => {
+    // Le MD a préparé le terrain (création idempotente au nom du MD).
+    const spell = await ensureCustomSpell();
 
-      // ---------- 3. Grimoire : fusion + badge or ----------
-      await page.goto(sheetUrl(seed().clerc.id));
-      await expect(page.getByText(seed().clerc.name).first()).toBeVisible();
-      await openTab(page, 'Sorts');
-      await expect(page.getByRole('heading', { name: 'Emplacements de sort' })).toBeVisible();
+    // ---------- 3. Grimoire : fusion + badge or ----------
+    await page.goto(sheetUrl(seed().clerc.id));
+    await expect(page.getByText(seed().clerc.name).first()).toBeVisible();
+    await openTab(page, 'Sorts');
+    await expect(page.getByRole('heading', { name: 'Emplacements de sort' })).toBeVisible();
 
-      // Mobile : le grimoire vit dans une bottom sheet ouverte par « + Ajouter ».
-      await page.getByRole('button', { name: '+ Ajouter' }).first().click();
-      // Le catalogue desktop (`hidden lg:block`) reste dans le DOM : on SCOPE
-      // la sheet pour ne viser que le catalogue visible.
-      const sheet = page.getByRole('dialog', { name: 'Grimoire' });
-      // Recherche du catalogue : le custom fusionne, badge or en suffixe.
-      await sheet.getByPlaceholder('Rechercher un sort…').fill('Serpente');
-      const catalogRow = sheet
-        .getByRole('listitem')
-        .filter({ hasText: SPELL_NAME })
-        .first();
-      await expect(catalogRow).toBeVisible();
-      await expect(catalogRow.getByText('Sort de la table')).toBeVisible();
-      const addBtn = catalogRow.getByRole('button', { name: '+ Ajouter' });
-      // Idempotent (replay/retry) : « Sort déjà connu » = déjà appris.
-      if ((await addBtn.count()) > 0) await addBtn.click();
+    // Mobile : le grimoire vit dans une bottom sheet ouverte par « + Ajouter ».
+    await page.getByRole('button', { name: '+ Ajouter' }).first().click();
+    // Le catalogue desktop (`hidden lg:block`) reste dans le DOM : on SCOPE
+    // la sheet pour ne viser que le catalogue visible.
+    const sheet = page.getByRole('dialog', { name: 'Grimoire' });
+    // Recherche du catalogue : le custom fusionne, badge or en suffixe.
+    await sheet.getByPlaceholder('Rechercher un sort…').fill('Serpente');
+    const catalogRow = sheet.getByRole('listitem').filter({ hasText: SPELL_NAME }).first();
+    await expect(catalogRow).toBeVisible();
+    await expect(catalogRow.getByText('Sort de la table')).toBeVisible();
+    const addBtn = catalogRow.getByRole('button', { name: '+ Ajouter' });
+    // Idempotent (replay/retry) : « Sort déjà connu » = déjà appris.
+    if ((await addBtn.count()) > 0) await addBtn.click();
 
-      // ---------- 4. Lancer : l'aperçu d'upcast lit la table ----------
-      // Mira Clerc 5 : emplacements 4/3/2/1 — le niveau 3 est un cran
-      // supérieur au niveau natif 2, la table donne « 4d6 ».
-      // Le filtre « Préparés » est actif par défaut : fermer la sheet puis
-      // déplier « Tous » pour voir le sort fraîchement appris (non préparé).
-      await page.getByRole('button', { name: 'Fermer' }).click();
-      await page.getByRole('button', { name: 'Tous' }).click();
-      await expect(page.getByRole('button', { name: `Lancer ${SPELL_NAME}` })).toBeVisible();
-      // Ligne connue (la première du DOM — le catalogue desktop caché vient
-      // après le panneau des sorts connus) : badge or en suffixe du nom.
-      const knownRow = page
-        .getByRole('listitem')
-        .filter({ hasText: SPELL_NAME })
-        .first();
-      await expect(knownRow.getByText('Sort de la table')).toBeVisible();
-      await page.getByRole('button', { name: `Lancer ${SPELL_NAME}` }).click();
-      const castSheet = page.getByRole('dialog', { name: `Lancer ${SPELL_NAME}` });
-      await expect(castSheet).toBeVisible();
-      await castSheet.getByRole('button', { name: /^Niveau 2/ }).click();
-      await expect(castSheet.getByText('3d6 dégâts de poison')).toBeVisible();
-      await castSheet.getByRole('button', { name: /^Niveau 3 supérieur/ }).click();
-      await expect(castSheet.getByText('4d6 dégâts de poison')).toBeVisible();
-      // Concentration 🌀 : le flux du custom est celui du SRD.
-      await expect(castSheet.getByText(/concentration/i).first()).toBeVisible();
-      await page.keyboard.press('Escape'); // contrat du CastSpellSheet : Échap ferme
-      expect(spell.source).toBe('custom');
-    },
-  );
+    // ---------- 4. Lancer : l'aperçu d'upcast lit la table ----------
+    // Mira Clerc 5 : emplacements 4/3/2/1 — le niveau 3 est un cran
+    // supérieur au niveau natif 2, la table donne « 4d6 ».
+    // Le filtre « Préparés » est actif par défaut : fermer la sheet puis
+    // déplier « Tous » pour voir le sort fraîchement appris (non préparé).
+    await page.getByRole('button', { name: 'Fermer' }).click();
+    await page.getByRole('button', { name: 'Tous' }).click();
+    await expect(page.getByRole('button', { name: `Lancer ${SPELL_NAME}` })).toBeVisible();
+    // Ligne connue (la première du DOM — le catalogue desktop caché vient
+    // après le panneau des sorts connus) : badge or en suffixe du nom.
+    const knownRow = page.getByRole('listitem').filter({ hasText: SPELL_NAME }).first();
+    await expect(knownRow.getByText('Sort de la table')).toBeVisible();
+    await page.getByRole('button', { name: `Lancer ${SPELL_NAME}` }).click();
+    const castSheet = page.getByRole('dialog', { name: `Lancer ${SPELL_NAME}` });
+    await expect(castSheet).toBeVisible();
+    await castSheet.getByRole('button', { name: /^Niveau 2/ }).click();
+    await expect(castSheet.getByText('3d6 dégâts de poison')).toBeVisible();
+    await castSheet.getByRole('button', { name: /^Niveau 3 supérieur/ }).click();
+    await expect(castSheet.getByText('4d6 dégâts de poison')).toBeVisible();
+    // Concentration 🌀 : le flux du custom est celui du SRD.
+    await expect(castSheet.getByText(/concentration/i).first()).toBeVisible();
+    await page.keyboard.press('Escape'); // contrat du CastSpellSheet : Échap ferme
+    expect(spell.source).toBe('custom');
+  });
 });
 
 gmTest.describe('Sort personnalisé (MD, suite)', () => {

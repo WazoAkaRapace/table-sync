@@ -323,7 +323,10 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   });
   eq(r.status, 201, 'GM creates custom spell');
   const grace = r.data.spell;
-  ok(grace.srdIndex.startsWith(`custom-${fx.partyId}-`), 'srd_index synthétique custom-<party>-<hex>');
+  ok(
+    grace.srdIndex.startsWith(`custom-${fx.partyId}-`),
+    'srd_index synthétique custom-<party>-<hex>',
+  );
   ok(grace.source === 'custom', 'source custom servie');
   eq(grace.name, GRACE.name, 'nom FR servi');
   ok(graceDamageTable(grace), 'damage_at_slot_level développée (2→3d6, 3→4d6, … 9→10d6)');
@@ -337,7 +340,12 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   // Homonymie SRD permise + second srd_index synthétique distinct.
   r = await api(base, 'POST', `/api/parties/${fx.partyId}/spells`, {
     token: fx.gm.token,
-    body: { ...GRACE, name: 'Boule de feu', level: 3, damage: { dice: '8d6', perSlotLevel: '1d6' } },
+    body: {
+      ...GRACE,
+      name: 'Boule de feu',
+      level: 3,
+      damage: { dice: '8d6', perSlotLevel: '1d6' },
+    },
   });
   eq(r.status, 201, 'homonymie SRD permise');
   const homonym = r.data.spell;
@@ -350,17 +358,33 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
       ...GRACE,
       name: 'Don du pacte serpentin',
       classes: [
-        'Artificier', 'Barbare', 'Barde', 'Clerc', 'Druide', 'Ensorceleur', 'Guerrier',
-        'Magicien', 'Moine', 'Occultiste', 'Paladin', 'Rôdeur', 'Roublard',
+        'Artificier',
+        'Barbare',
+        'Barde',
+        'Clerc',
+        'Druide',
+        'Ensorceleur',
+        'Guerrier',
+        'Magicien',
+        'Moine',
+        'Occultiste',
+        'Paladin',
+        'Rôdeur',
+        'Roublard',
       ],
     },
   });
   eq(r.status, 201, 'sort « toutes les classes » créé');
   eq(r.data.spell.classes.length, 13, '« toutes » = liste explicite des 13 classes');
   // Le filtre classe du grimoire le trouve pour un Guerrier comme pour un Clerc.
-  r = await api(base, 'GET', '/api/spells?partyId=' + fx.partyId + '&class=Guerrier&search=Don%20du%20pacte', {
-    token: fx.player.token,
-  });
+  r = await api(
+    base,
+    'GET',
+    '/api/spells?partyId=' + fx.partyId + '&class=Guerrier&search=Don%20du%20pacte',
+    {
+      token: fx.player.token,
+    },
+  );
   ok(
     (r.data.spells as any[]).some((s) => s.name === 'Don du pacte serpentin'),
     'filtre classes_json attrape la liste explicite',
@@ -456,9 +480,15 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
     learned.spell.damageJson.includes('"2":"4d6"'),
     'la fiche suit au refetch (JOIN, aucune copie figée)',
   );
-  r = await api(base, 'PATCH', `/api/spells/${grace.id}`, { token: fx.outsider.token, body: { name: 'X' } });
+  r = await api(base, 'PATCH', `/api/spells/${grace.id}`, {
+    token: fx.outsider.token,
+    body: { name: 'X' },
+  });
   eq(r.status, 403, 'PATCH par un non-MD → 403');
-  r = await api(base, 'PATCH', `/api/spells/${fireball.id}`, { token: fx.gm.token, body: { name: 'X' } });
+  r = await api(base, 'PATCH', `/api/spells/${fireball.id}`, {
+    token: fx.gm.token,
+    body: { name: 'X' },
+  });
   eq(r.status, 403, 'PATCH d’un sort SRD → 403');
   r = await api(base, 'PATCH', `/api/spells/${homonym.id}`, { token: fx.gm.token, body: {} });
   eq(r.status, 400, 'PATCH vide → 400');
@@ -467,7 +497,9 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   r = await api(base, 'DELETE', `/api/spells/${grace.id}`, { token: fx.gm.token });
   eq(r.status, 409, 'suppression refusée tant qu’appris');
   ok(
-    (r.data.knownBy as any[]).some((c) => c.characterId === serpentine.id && c.className === 'Clerc'),
+    (r.data.knownBy as any[]).some(
+      (c) => c.characterId === serpentine.id && c.className === 'Clerc',
+    ),
     '409 liste les porteurs (personnage + classe)',
   );
   r = await api(base, 'DELETE', `/api/spells/${grace.id}?force=1`, { token: fx.gm.token });

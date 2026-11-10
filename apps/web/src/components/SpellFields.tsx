@@ -176,7 +176,9 @@ export function spellDraftFromSpell(s: Spell): SpellDraft {
     const dc = s.dcJson ? (JSON.parse(s.dcJson) as Record<string, any>) : null;
     if (dc?.dc_type?.index && DC_ABILITIES.includes(dc.dc_type.index)) {
       dcAbility = dc.dc_type.index;
-      dcSuccess = (['half', 'none', 'other'].includes(dc.dc_success) ? dc.dc_success : '') as SpellDraft['dcSuccess'];
+      dcSuccess = (
+        ['half', 'none', 'other'].includes(dc.dc_success) ? dc.dc_success : ''
+      ) as SpellDraft['dcSuccess'];
     }
   } catch {
     // dc_json illisible : champs vides
@@ -202,7 +204,9 @@ export function spellDraftFromSpell(s: Spell): SpellDraft {
   return {
     name: s.name,
     level: s.level,
-    school: SCHOOL_KEYS.includes(s.school as keyof typeof SPELL_SCHOOL_LABELS_FR) ? s.school : 'evocation',
+    school: SCHOOL_KEYS.includes(s.school as keyof typeof SPELL_SCHOOL_LABELS_FR)
+      ? s.school
+      : 'evocation',
     castingTime: s.castingTime ?? '',
     rangeText: s.rangeText ?? '',
     duration: s.duration ?? '',

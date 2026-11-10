@@ -14,12 +14,8 @@
  * un éditeur complet.
  */
 
-import { DND_CLASSES, DAMAGE_TYPE_LABELS_FR, parseDamageTemplate } from '@table-sync/shared';
-import {
-  buildSpellDamageJson,
-  buildSpellDcJson,
-  expandSpellSlotTable,
-} from '@table-sync/shared';
+import { DND_CLASSES, parseDamageTemplate } from '@table-sync/shared';
+import { buildSpellDamageJson, buildSpellDcJson, expandSpellSlotTable } from '@table-sync/shared';
 import { randomBytes } from 'node:crypto';
 import { spells } from '../../db/schema.ts';
 
@@ -303,7 +299,9 @@ function effectFromDamageJson(damageJson: any, tableKey: string): SpellEffectInp
     d && typeof d === 'object' && d[tableKey] && typeof d[tableKey] === 'object'
       ? d[tableKey]
       : undefined;
-  const slots = Object.keys(table ?? {}).map(Number).sort((a, b) => a - b);
+  const slots = Object.keys(table ?? {})
+    .map(Number)
+    .sort((a, b) => a - b);
   const native = slots.length > 0 ? table[String(slots[0])] : undefined;
   return { dice: native, atSlotLevel: table };
 }
@@ -330,13 +328,15 @@ export function mergeSpellBody(row: any, body: Record<string, any>): Record<stri
     damageType:
       body.damageType !== undefined
         ? body.damageType
-        : json(row.damage_json, {}).damage_type?.index ?? null,
+        : (json(row.damage_json, {}).damage_type?.index ?? null),
     damage:
       body.damage !== undefined
         ? body.damage
         : effectFromDamageJson(row.damage_json, 'damage_at_slot_level'),
     heal:
-      body.heal !== undefined ? body.heal : effectFromDamageJson(row.damage_json, 'heal_at_slot_level'),
+      body.heal !== undefined
+        ? body.heal
+        : effectFromDamageJson(row.damage_json, 'heal_at_slot_level'),
     healAddsModifier:
       body.healAddsModifier !== undefined
         ? body.healAddsModifier
