@@ -47,29 +47,7 @@ import { useResyncOnReconnect, useSyncEvent } from '../sync';
 import { activeCharactersFirst, parseSqliteDate } from '../utils';
 import { Glyph } from '../components/Glyph';
 
-/** Vue d'ensemble du roster (GET /parties/:id/roster-overview) : par
- *  personnage, les 4 chiffres dérivés que rend la carte du tableau MD. */
-interface RosterOverviewEntry {
-  characterId: number;
-  ac: number | null;
-  weightPct: number | null;
-  weightKg: number | null;
-  capacityKg: number | null;
-  foodCount: number;
-  fullWaterCount: number;
-}
-
-interface Transaction {
-  id: number;
-  partyId: number;
-  characterId: number | null;
-  itemId: number | null;
-  itemName: string;
-  deltaQty: number;
-  reason: string;
-  actorName: string | null;
-  at: string;
-}
+import { type RosterOverviewEntry, type Transaction } from './GmDashboardPage-lib';
 
 export default function GmDashboardPage() {
   const { t } = useTranslation();
