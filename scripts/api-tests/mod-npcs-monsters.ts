@@ -372,15 +372,17 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
 
   // Scoping de lecture : le catalogue du groupe mêle SRD + customs ; le
   // catalogue global reste SRD pur ; l'extérieur ne voit pas les customs.
-  r = await api(base, 'GET', `/api/monsters?partyId=${P}&search=zalkir`, { token: fx.player.token });
+  r = await api(base, 'GET', `/api/monsters?partyId=${P}&search=zalkir`, {
+    token: fx.player.token,
+  });
   eq(r.status, 200, 'member searches scoped catalog');
   ok(
     (r.data.monsters as any[]).some((m) => m.slug === zalkir.slug),
     'custom found via search_text (accents insensibles)',
   );
   ok(
-    (r.data.monsters as any[]).every((m) => m.origin === 'custom' || m.origin === 'srd'),
-    'summary porte le badge origin',
+    (r.data.monsters as any[]).some((m) => m.slug === zalkir.slug && m.origin === 'custom'),
+    'summary du custom porte le badge origin',
   );
   r = await api(base, 'GET', `/api/monsters?search=zalkir`, { token: fx.gm.token });
   eq((r.data.monsters as any[]).length, 0, 'catalogue global : le custom ne fuit pas (SRD pur)');
@@ -440,7 +442,10 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   });
   eq(r.status, 201, 'custom monster added ×3');
   const group = (r.data.combatants as any[])[0].groupId;
-  ok((r.data.combatants as any[]).every((c) => c.groupId === group), 'groupe partagé');
+  ok(
+    (r.data.combatants as any[]).every((c) => c.groupId === group),
+    'groupe partagé',
+  );
   ok(
     (r.data.combatants as any[]).every((c) => c.armorClass === 15),
     'CA snapshot copiée',

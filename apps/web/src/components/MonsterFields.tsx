@@ -152,7 +152,7 @@ export function monsterDraftFromMonster(m: {
   const speed = { ...EMPTY_MONSTER_DRAFT.speed };
   for (const mode of SPEED_MODES) {
     const v = m.speed?.[mode.key];
-    speed[mode.key] = v !== undefined && v !== null ? String(v) : mode.key === 'walk' ? '' : '';
+    speed[mode.key] = v !== undefined && v !== null ? String(v) : '';
   }
   const abilities = { ...EMPTY_MONSTER_DRAFT.abilities };
   for (const key of ABILITY_KEYS) abilities[key] = String(m.abilities?.[key] ?? 10);

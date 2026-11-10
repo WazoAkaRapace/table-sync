@@ -79,6 +79,8 @@ export function CustomMonstersTab({ partyId }: { partyId: string }) {
   const [draft, setDraft] = useState<MonsterDraft>(EMPTY_MONSTER_DRAFT);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  /** Aperçu embarqué repliable (pied de modal) — recalcule à chaque ouverture. */
+  const [previewOpen, setPreviewOpen] = useState(true);
   /** Modal de conséquences : rencontres vivantes qui référencent le monstre. */
   const [blockedBy, setBlockedBy] = useState<{
     name: string;
@@ -118,6 +120,7 @@ export function CustomMonstersTab({ partyId }: { partyId: string }) {
     setEditingSlug(null);
     setDraft(EMPTY_MONSTER_DRAFT);
     setError('');
+    setPreviewOpen(true);
     setShowModal(true);
   };
 
@@ -127,6 +130,7 @@ export function CustomMonstersTab({ partyId }: { partyId: string }) {
       const res = await api.get(`/api/monsters/${slug}`);
       setEditingSlug(slug);
       setDraft(monsterDraftFromMonster(res.data.monster));
+      setPreviewOpen(true);
       setShowModal(true);
     } catch (err: any) {
       setError(err.response?.data?.error || t('md.erreur'));
@@ -279,18 +283,20 @@ export function CustomMonstersTab({ partyId }: { partyId: string }) {
               {t('md.annuler')}
             </button>
           </div>
-          <div className="pt-2 border-t border-parchment-200">
-            <span className="section-title">{t('monstrecustom.apercu')}</span>
-            <div className="mt-2 max-h-72 overflow-y-auto rounded-xl">
-              <MonsterStatBlock
-                open={showModal}
-                slug={null}
-                monsterOverride={draftToMonster(draft)}
-                onClose={() => {}}
-                variant="panel"
-              />
+          {previewOpen ? (
+            <div className="pt-2 border-t border-parchment-200">
+              <span className="section-title">{t('monstrecustom.apercu')}</span>
+              <div className="mt-2 max-h-72 overflow-y-auto rounded-xl">
+                <MonsterStatBlock
+                  open={showModal}
+                  slug={null}
+                  monsterOverride={draftToMonster(draft)}
+                  onClose={() => setPreviewOpen(false)}
+                  variant="panel"
+                />
+              </div>
             </div>
-          </div>
+          ) : null}
         </div>
       </Modal>
 
