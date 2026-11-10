@@ -3,6 +3,19 @@
     "version": null,
     "sha": null,
     "date": "2026-11-10",
+    "title": "sorts personnalisés",
+    "items": [
+      "Le MD inscrit ses propres sorts dans un onglet du pupitre, avec fiche complète et aperçu en direct.",
+      "Un sort de la table rejoint le grimoire des classes autorisées et se lance exactement comme un sort officiel.",
+      "L'incantation à un niveau supérieur recalcule les dés du sort de la table, et la sauvegarde s'affiche.",
+      "La concentration, le rituel et les composantes du sort suivent les règles habituelles du grimoire.",
+      "Un sort connu d'une fiche ne se supprime pas par erreur : la table est prévenue des porteurs."
+    ]
+  },
+  {
+    "version": null,
+    "sha": null,
+    "date": "2026-11-10",
     "title": "monstres personnalisés",
     "items": [
       "Le MD dresse ses propres créatures dans un onglet du pupitre, avec bloc de stats complet et aperçu en direct.",
