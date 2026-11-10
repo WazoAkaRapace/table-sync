@@ -47,6 +47,10 @@ export interface SyncEvent {
     // recherche bestiaire du traqueur (distinct de 'custom-item'/'npcs' :
     // chaque onglet ne se réveille que sur ses propres écritures)
     | 'custom-monster'
+    // Sorts personnalisés — onglet « Sorts custom » du pupitre MD et grimoire
+    // joueur (distinct de 'custom-monster'/'custom-item' : chaque onglet ne
+    // se réveille que sur ses propres écritures)
+    | 'custom-spell'
     | 'join'
     | 'remove'
     | 'ban'

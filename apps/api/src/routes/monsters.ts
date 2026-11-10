@@ -11,18 +11,24 @@ import {
 } from '@table-sync/shared';
 import { and, eq, inArray, sql, type SQL } from 'drizzle-orm';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { getDb } from '../db/index.ts';
 import { normalizeText } from '../db/index.ts';
 import { getDrizzle } from '../db/drizzle.ts';
 import { cols } from '../db/projections.ts';
 import { combatants, encounters, monsters } from '../db/schema.ts';
-import { isPartyGM, isPartyMember, requireUser } from './lib/membership.ts';
+import {
+  denyUnlessCustomOfGM,
+  isPartyMember,
+  partyGMParamOr403,
+  partyScopeFromQuery,
+  requireUser,
+} from './lib/membership.ts';
 import {
   customMonsterSlug,
   mergeMonsterBody,
   monsterValues,
   validateMonsterFields,
 } from './lib/monster-fields.ts';
+import { retryInsertUnique } from './lib/unique-insert.ts';
 import { sendCachedJson } from './httpCache.ts';
 import { type AppLang, langFromReq } from './lang.ts';
 import { apiMsg } from './messages.ts';
@@ -205,19 +211,16 @@ function customMonsterForGM(
     reply.code(404).send({ error: apiMsg(req, 'Monstre introuvable') });
     return null;
   }
-  if (monster.origin !== 'custom') {
-    reply.code(403).send({
-      error: apiMsg(req, `seuls les monstres personnalisés peuvent être ${verb}`),
-    });
-    return null;
-  }
-  if (!isPartyGM(monster.party_id, userId)) {
-    reply.code(403).send({
-      error: apiMsg(req, `seul le MD peut ${verb === 'modifiés' ? 'modifier' : 'supprimer'}`),
-    });
-    return null;
-  }
-  return monster;
+  const ok = denyUnlessCustomOfGM(
+    monster,
+    monster.origin === 'custom',
+    userId,
+    req,
+    reply,
+    `seuls les monstres personnalisés peuvent être ${verb}`,
+    `seul le MD peut ${verb === 'modifiés' ? 'modifier' : 'supprimer'}`,
+  );
+  return ok ? monster : null;
 }
 
 export async function monsterRoutes(app: FastifyInstance) {
@@ -235,16 +238,8 @@ export async function monsterRoutes(app: FastifyInstance) {
       // Sans partyId, le catalogue reste le SRD pur (les customs ne fuient
       // jamais entre tables) et garde sa fenêtre maxAge ; AVEC partyId le
       // périmètre peut porter du contenu mutable → ETag seul (Q11a).
-      const partyIdRaw = req.query.partyId;
-      const partyId = partyIdRaw !== undefined && partyIdRaw !== '' ? Number(partyIdRaw) : null;
-      if (partyId !== null) {
-        if (!Number.isInteger(partyId) || partyId <= 0) {
-          return reply.code(400).send({ error: apiMsg(req, 'groupe invalide') });
-        }
-        if (!isPartyMember(partyId, userId)) {
-          return reply.code(403).send({ error: apiMsg(req, 'pas membre du groupe') });
-        }
-      }
+      const partyId = partyScopeFromQuery(req.query.partyId, req, reply, userId);
+      if (partyId === undefined) return;
       const customsOnly = req.query.origin === 'custom' && partyId !== null;
 
       const lang = langFromReq(req);
@@ -386,11 +381,9 @@ export async function monsterRoutes(app: FastifyInstance) {
     ) => {
       const userId = requireUser(req, reply);
       if (userId === null) return;
-      const partyId = Number(req.params.partyId);
       // MD SEUL (règle 3) : pas de branche joueur, pas de toggle.
-      if (!isPartyGM(partyId, userId)) {
-        return reply.code(403).send({ error: apiMsg(req, 'seul le MD peut créer des monstres') });
-      }
+      const partyId = partyGMParamOr403(req, reply, userId, 'seul le MD peut créer des monstres');
+      if (partyId === undefined) return;
       const checked = validateMonsterFields(req.body || {});
       if (typeof checked === 'string') {
         return reply.code(400).send({ error: apiMsg(req, checked) });
@@ -399,26 +392,21 @@ export async function monsterRoutes(app: FastifyInstance) {
       const drizzle = getDrizzle();
       // Unicité du slug : SELECT puis INSERT en transaction avec retry — la
       // clé primaire est le slug (pas d'autoincrement, pas de rowid fiable).
-      const row = getDb().transaction(() => {
-        for (let attempt = 0; attempt < 5; attempt++) {
-          const slug = customMonsterSlug(checked.nameFr);
-          if (
-            drizzle
-              .select({ one: sql`1` })
-              .from(monsters)
-              .where(eq(monsters.slug, slug))
-              .get()
-          ) {
-            continue;
-          }
-          return drizzle
+      const row = retryInsertUnique(
+        () => customMonsterSlug(checked.nameFr),
+        (slug) =>
+          !!drizzle
+            .select({ one: sql`1` })
+            .from(monsters)
+            .where(eq(monsters.slug, slug))
+            .get(),
+        (slug) =>
+          drizzle
             .insert(monsters)
             .values(monsterValues(slug, checked, partyId, userId))
             .returning(cols(monsters))
-            .get() as any;
-        }
-        return null;
-      })();
+            .get() as any,
+      );
       if (!row) {
         return reply.code(409).send({ error: apiMsg(req, 'slug déjà pris') });
       }

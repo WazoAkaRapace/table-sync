@@ -140,6 +140,53 @@ export async function run(base: string, fx: Fixtures, _srv: ServerHandle): Promi
       "l'écriture monstre ne réveille pas l'onglet Objets custom (action dédiée)",
     );
 
+    // Sort personnalisé (PR3) : party:change action 'custom-spell' — distinct
+    // de 'custom-monster'/'custom-item' (chaque onglet ne se réveille que sur
+    // ses propres écritures), porte actorUserId, echo supprimé pour l'acteur.
+    const monsterEventsBefore = bob.messages.filter(
+      (m) => m.type === 'party:change' && m.action === 'custom-monster',
+    ).length;
+    const customSpellRes = await api(base, 'POST', `/api/parties/${fx.partyId}/spells`, {
+      token: fx.gm.token,
+      body: {
+        name: 'Écho de la Serpente',
+        level: 1,
+        school: 'enchantment',
+        classes: ['Barde'],
+        damage: { dice: '2d6', perSlotLevel: '1d6' },
+        damageType: 'poison',
+      },
+    });
+    ok(
+      customSpellRes.status === 201,
+      `custom spell created (reçu: ${customSpellRes.status} ${JSON.stringify(customSpellRes.data)})`,
+    );
+    await waitMsg(
+      bob.messages,
+      (m) => m.type === 'party:change' && m.action === 'custom-spell',
+      5000,
+    );
+    await silence(
+      alice.messages,
+      (m) => m.type === 'party:change' && m.action === 'custom-spell',
+      700,
+    );
+    ok(
+      !alice.messages.some((m) => m.type === 'party:change' && m.action === 'custom-spell'),
+      'custom-spell : echo supprimé pour le MD acteur',
+    );
+    ok(
+      bob.messages
+        .filter((m) => m.type === 'party:change' && m.action === 'custom-spell')
+        .every((m) => m.actorUserId === fx.gm.userId),
+      'custom-spell : actorUserId présent',
+    );
+    eq(
+      bob.messages.filter((m) => m.type === 'party:change' && m.action === 'custom-monster').length,
+      monsterEventsBefore,
+      "l'écriture sort ne réveille pas l'onglet Monstres custom (action dédiée)",
+    );
+
     // hidden character: character:change reaches owner + GM only
     await api(base, 'PATCH', `/api/characters/${fx.charSecret.id}`, {
       token: fx.gm.token,

@@ -200,6 +200,56 @@ export const CustomMonsterBody = Type.Object({
 /** PATCH /api/monsters/:slug — même contrat, champs tous partiels. */
 export const UpdateMonsterBody = CustomMonsterBody;
 
+// ---------- Schémas : sorts personnalisés ----------
+
+/**
+ * POST /api/parties/:partyId/spells + PATCH /api/spells/:id — structure
+ * grossière seulement (gabarit CustomMonsterBody) : les règles de VALEUR
+ * (nom requis, niveau 0-9, école SRD, classes SRD, templates de dés, tables
+ * d'upcast, DD) restent dans validateSpellFields de routes/lib/spell-fields.ts,
+ * messages métier FR à l'appui. Les objets composites (damage/heal/dc,
+ * components, classes) passent par Type.Unknown() : la route les valide
+ * champ à champ (coerceTypes 'array' transformerait un scalaire en tableau
+ * et court-circuiterait ses checks).
+ */
+export const CustomSpellBody = Type.Object({
+  name: Type.Optional(Type.String()),
+  level: Type.Optional(Type.Unknown()),
+  school: Type.Optional(Type.String()),
+  castingTime: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  rangeText: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  duration: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  components: Type.Optional(Type.Unknown()),
+  material: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  concentration: Type.Optional(Type.Unknown()),
+  ritual: Type.Optional(Type.Unknown()),
+  classes: Type.Optional(Type.Unknown()),
+  attackType: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  damageType: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  damage: Type.Optional(Type.Unknown()),
+  heal: Type.Optional(Type.Unknown()),
+  healAddsModifier: Type.Optional(Type.Unknown()),
+  dc: Type.Optional(Type.Unknown()),
+  description: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  higherLevel: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+});
+
+/** PATCH /api/spells/:id — même contrat, champs tous partiels. */
+export const UpdateSpellBody = CustomSpellBody;
+
+/**
+ * POST /api/characters/:id/spells — apprentissage (route modifiée par la PR3
+ * sorts : garde de périmètre inter-groupes). spellId reste vérifié par la
+ * route (« spellId is required »), les booléens/chaînes passent par Unknown
+ * pour ne pas changer le comportement coercé d'avant.
+ */
+export const AddCharacterSpellBody = Type.Object({
+  spellId: Type.Optional(Type.Unknown()),
+  prepared: Type.Optional(Type.Unknown()),
+  classSource: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  source: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+});
+
 // ---------- Mapping erreur de validation → message métier i18n ----------
 
 /**
@@ -236,6 +286,9 @@ const VALIDATION_MESSAGES: Record<string, string | Record<string, string>> = {
   // monstres personnalisés
   'POST /api/parties/:partyId/monsters': 'nom du monstre requis',
   'PATCH /api/monsters/:slug': 'requête invalide',
+  // sorts personnalisés
+  'POST /api/parties/:partyId/spells': 'nom du sort requis',
+  'PATCH /api/spells/:id': 'requête invalide',
 };
 
 /** Une entrée de err.validation (ajv) — seul instancePath nous intéresse. */

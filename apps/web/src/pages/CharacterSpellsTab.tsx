@@ -36,6 +36,7 @@ import api from '../api';
 import CastSpellSheet from '../components/CastSpellSheet';
 import type { CastTarget } from '../components/TargetPickerSheet';
 import { SpellProse } from '../components/SpellProse';
+import { TableBadge } from '../components/TableBadge';
 import {
   BottomSheet,
   Chip,
@@ -453,6 +454,8 @@ export default function CharacterSpellsTab({
       setCatalogError(false);
       try {
         const params: Record<string, string | number> = { limit: PAGE_SIZE, offset };
+        // Scope groupe (Q4a) : les sorts de la table fusionnent dans le catalogue.
+        if (character.partyId) params.partyId = character.partyId;
         if (catalogClass) params.class = catalogClass;
         if (catalogLevel !== '') params.level = catalogLevel;
         if (catalogSchool) params.school = catalogSchool;
@@ -469,7 +472,7 @@ export default function CharacterSpellsTab({
         setCatalogLoading(false);
       }
     },
-    [catalogClass, catalogLevel, catalogSchool, debouncedSearch],
+    [catalogClass, catalogLevel, catalogSchool, debouncedSearch, character.partyId],
   );
 
   // Only fetch when there's a search query or active filters — don't preload all spells
@@ -1059,6 +1062,7 @@ export default function CharacterSpellsTab({
                                   <span className="font-medium text-sm text-ink-800 block truncate">
                                     {name}
                                   </span>
+                                  {spell.source === 'custom' && <TableSpellBadge />}
                                   <span className="flex items-center gap-1.5 text-xs text-ink-400 min-w-0">
                                     {isMultiClass && cs.classSource && (
                                       <span className="shrink-0 text-[10px] uppercase tracking-wide text-ink-300">
@@ -1421,6 +1425,13 @@ function cantripScaleLevel(spell: Spell, character: Character, classSource: stri
 }
 
 /** Render spell stat badges: save DC, attack bonus, damage — computed from character stats. */
+/** Pilule or « sort de la table » — suffixe du nom, lignes du grimoire ET
+ * du catalogue (jamais de la feuille d'incantation : le lancé ne distingue pas). */
+function TableSpellBadge() {
+  const { t } = useTranslation();
+  return <TableBadge label={t('sorts.de.la.table')} className="ml-1 align-middle" />;
+}
+
 function SpellStatBadges({
   spell,
   castingMod,
@@ -1755,6 +1766,7 @@ function SpellCatalog({
                       <span className="font-medium text-sm text-ink-800 block truncate">
                         {name}
                       </span>
+                      {spell.source === 'custom' && <TableSpellBadge />}
                       <span className="flex items-center gap-1.5 text-xs text-ink-400 min-w-0">
                         <span className="shrink-0">
                           {spell.level === 0

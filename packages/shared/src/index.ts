@@ -3885,6 +3885,97 @@ export function spellHealingAtLevel(
   }
 }
 
+// ---------- Sorts personnalisés : construction du damage_json / dc_json ----------
+// (plan « Contenus personnalisés », PR3) — l'API écrit ces colonnes, l'aperçu
+// du formulaire MD les RELIT via spellDamageAtLevel/spellHealingAtLevel :
+// même construction, même lecture que le CastSpellSheet.
+
+/** Effet chiffré validé d'un sort personnalisé (sortie du validateur API). */
+export interface SpellEffectData {
+  level: number;
+  damageDice: string | null;
+  damageType: string | null;
+  /** Table d'upcast complète {niveau d'emplacement: template} (ou null). */
+  damageAtSlotLevel: Record<string, string> | null;
+  healDice: string | null;
+  healAtSlotLevel: Record<string, string> | null;
+  healAddsModifier: boolean;
+  dcAbility: string | null;
+  dcSuccess: string | null;
+}
+
+/** damage_json au CONTRAT exact du CastSpellSheet (tables + drapeaux SRD). */
+export function buildSpellDamageJson(f: SpellEffectData): string | null {
+  const parts: Record<string, unknown> = {};
+  if (f.damageType !== null) {
+    parts.damage_type = { index: f.damageType, name: f.damageType };
+  }
+  const damageTable =
+    f.damageAtSlotLevel ?? (f.damageDice !== null ? { [String(f.level)]: f.damageDice } : null);
+  if (damageTable !== null && Object.keys(damageTable).length > 0) {
+    parts.damage_at_slot_level = damageTable;
+  }
+  const healTable =
+    f.healAtSlotLevel ?? (f.healDice !== null ? { [String(f.level)]: f.healDice } : null);
+  if (healTable !== null && Object.keys(healTable).length > 0) {
+    parts.heal_at_slot_level = healTable;
+  }
+  if (f.healAddsModifier) parts.heal_adds_modifier = true;
+  return Object.keys(parts).length > 0 ? JSON.stringify(parts) : null;
+}
+
+/** dc_json au contrat SRD ({dc_type:{index,name}, dc_success}). */
+export function buildSpellDcJson(
+  f: Pick<SpellEffectData, 'dcAbility' | 'dcSuccess'>,
+): string | null {
+  if (f.dcAbility === null || f.dcSuccess === null) return null;
+  return JSON.stringify({
+    dc_type: { index: f.dcAbility, name: f.dcAbility.toUpperCase() },
+    dc_success: f.dcSuccess,
+  });
+}
+
+/** Somme les dés d'un template (par faces) + bonus fixes — « 3d6 »+« 1d6 » → 4d6. */
+export function combineDiceTemplates(base: string, times: number, upcast: string): string {
+  const acc = new Map<number, number>();
+  let fixed = 0;
+  const add = (tpl: string, mult: number) => {
+    const parsed = parseDamageTemplate(tpl);
+    if (!parsed) return;
+    for (const tok of parsed.tokens) {
+      if (tok.kind === 'dice') acc.set(tok.faces, (acc.get(tok.faces) ?? 0) + tok.count * mult);
+      else if (tok.kind === 'fixed') fixed += tok.value * mult;
+    }
+  };
+  add(base, 1);
+  if (times > 0) add(upcast, times);
+  const parts: string[] = [];
+  for (const faces of [...acc.keys()].sort((a, b) => a - b)) {
+    const n = acc.get(faces) ?? 0;
+    if (n > 0) parts.push(`${n}d${faces}`);
+  }
+  if (fixed !== 0) parts.push(`${fixed > 0 ? '+' : ''}${fixed}`);
+  return parts.join('+').replace(/\+-/g, '-');
+}
+
+/**
+ * Développe le raccourci « +Nd6 par cran » en table {niveau: template}
+ * complète (niveau natif → 9), forme exacte du SRD (fireball :
+ * {"3":"8d6","4":"9d6",…}). Servie à l'écriture par l'API, rejouée par
+ * l'aperçu du formulaire MD — même table, même lecture.
+ */
+export function expandSpellSlotTable(
+  level: number,
+  baseDice: string,
+  perSlotLevel: string,
+): Record<string, string> {
+  const table: Record<string, string> = {};
+  for (let slot = level; slot <= 9; slot++) {
+    table[String(slot)] = combineDiceTemplates(baseDice, slot - level, perSlotLevel);
+  }
+  return table;
+}
+
 // ---------- Divine domains (Clerc, SRD) ----------
 
 export interface DivineDomainInfo {
@@ -4648,6 +4739,17 @@ export interface Spell {
   damageJson: string | null;
   dcJson: string | null;
   classes: string[]; // French class names: ["Magicien","Ensorceleur"]
+  /**
+   * Provenance (plan « Contenus personnalisés ») : 'custom' = sort inventé
+   * par la table (badge or « sort de la table ») ; 'srd' = catalogue seedé.
+   * Optionnel pour compat avec les vieux payloads.
+   */
+  source?: 'srd' | 'custom';
+  /**
+   * Méta du pupitre MD (listes `?partyId&source=custom` seules) : nombre de
+   * personnages qui connaissent le sort — garde-fou de suppression.
+   */
+  knownBy?: number;
 }
 
 export interface CharacterSpell {

@@ -311,6 +311,9 @@ export function mapSpell(row: any, lang: AppLang = 'fr', summary = false): Spell
     damageJson: row.damage_json ?? null,
     dcJson: row.dc_json ?? null,
     classes: parseJsonArray(row.classes_json, []),
+    // Provenance (PR3 sorts custom) : 'custom' = sort de la table — badge or
+    // du grimoire ; absent des projections anciennes ⇒ SRD.
+    source: row.source === 'custom' ? 'custom' : 'srd',
   };
 }
 
@@ -344,6 +347,7 @@ export function mapCharacterSpell(row: any, lang: AppLang = 'fr'): CharacterSpel
     damage_json: row.s_damage_json,
     dc_json: row.s_dc_json,
     classes_json: row.s_classes_json,
+    source: row.s_source,
   };
   return {
     id: row.id,

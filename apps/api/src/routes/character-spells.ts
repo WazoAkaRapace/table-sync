@@ -25,6 +25,7 @@ import { sendCachedJson } from './httpCache.ts';
 import { type AppLang, langFromReq } from './lang.ts';
 import { apiMsg } from './messages.ts';
 import { withSpellEnMeta } from './spells.ts';
+import { AddCharacterSpellBody } from '../validation.ts';
 
 /** Applique la méta EN au sort embarqué d'un CharacterSpell mappé. */
 function localizeCharacterSpell<T extends { spell: Parameters<typeof withSpellEnMeta>[0] }>(
@@ -91,6 +92,8 @@ const LINK_WITH_SPELL = {
   s_damage_json: spells.damageJson,
   s_dc_json: spells.dcJson,
   s_classes_json: spells.classesJson,
+  // Badge « sort de la table » (PR3 sorts custom) — la projection résumée.
+  s_source: spells.source,
 };
 
 /**
@@ -151,6 +154,7 @@ export async function characterSpellRoutes(app: FastifyInstance) {
   // ---------- Add a spell to a character ----------
   app.post(
     '/characters/:id/spells',
+    { schema: { body: AddCharacterSpellBody } },
     async (
       req: FastifyRequest<{ Params: { id: string }; Body: AddCharacterSpellPayload }>,
       reply: FastifyReply,
@@ -168,11 +172,18 @@ export async function characterSpellRoutes(app: FastifyInstance) {
       if (!body.spellId) return reply.code(400).send({ error: apiMsg(req, 'spellId is required') });
 
       const spell = drizzle
-        .select({ id: spells.id })
+        .select({ id: spells.id, source: spells.source, party_id: spells.partyId })
         .from(spells)
         .where(eq(spells.id, body.spellId))
-        .get();
+        .get() as any;
       if (!spell) return reply.code(404).send({ error: apiMsg(req, 'spell not found') });
+      // Garde de périmètre (position 8) : un sort personnalisé n'est
+      // apprenable que par les personnages de SON groupe — sans elle, un
+      // joueur pourrait apprendre le sort maison d'une autre table en
+      // devinant l'id. L'apprentissage lui-même reste libre (Q2a).
+      if (spell.source === 'custom' && spell.party_id !== char.party_id) {
+        return reply.code(403).send({ error: apiMsg(req, 'sort hors de portée') });
+      }
 
       const prepared = body.prepared ? 1 : 0;
 

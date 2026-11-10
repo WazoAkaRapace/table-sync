@@ -55,6 +55,11 @@ for (const file of walk(ROOT)) {
     // lecteur du rail et l'échelle du MD la lisent partout), pas du texte
     // affiché — le libellé UI « Initiative » nu, lui, continue de compter.
     .replace(/\.initiative\b/g, '.')
+    // Sorts personnalisés (PR3) : `concentration` est la CLÉ du contrat API
+    // Spell (payload POST/PATCH, colonne spells, champ embarqué des listes) —
+    // identifiant de donnée comme .initiative, et mot identique en anglais.
+    // Les libellés UI passent par t('sortcustom.concentration').
+    .replace(/\bconcentration\b/g, '')
     // Noms de glyphes SVG (Glyph.tsx) : `name="concentration"`, clé du
     // registre `concentration: (` et membre de l'union GlyphName — ce sont
     // des identifiants d'icône (comme .initiative ou id: de tuto), jamais
