@@ -1,7 +1,7 @@
 [
   {
-    "version": null,
-    "sha": null,
+    "version": "2026.11.10-2",
+    "sha": "8d03196d",
     "date": "2026-11-10",
     "title": "fin de conversion des emoji d'interface vers les glyphes SVG (conditions, météo, statuts, types, chronique)",
     "items": [
@@ -11,8 +11,8 @@
     ]
   },
   {
-    "version": null,
-    "sha": null,
+    "version": "2026.11.10",
+    "sha": "8d03196d",
     "date": "2026-11-09",
     "title": "glyphes d'interface cohérents (SVG) remplaçant les emoji",
     "items": [
