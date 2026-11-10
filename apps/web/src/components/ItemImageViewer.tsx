@@ -138,16 +138,7 @@ export function ItemVignette({
 
 // ---------- Visionneuse plein écran ----------
 
-const MAX_ZOOM = 5;
-const DOUBLE_TAP_ZOOM = 2.5;
-
-interface View {
-  scale: number;
-  x: number;
-  y: number;
-}
-
-const VIEW_1X: View = { scale: 1, x: 0, y: 0 };
+import { type View, DOUBLE_TAP_ZOOM, MAX_ZOOM, VIEW_1X } from './ItemImageViewer-parts';
 
 type Tool = 'navigate' | 'draw' | 'text' | 'stamp';
 
