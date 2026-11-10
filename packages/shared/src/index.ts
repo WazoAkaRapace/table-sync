@@ -149,6 +149,17 @@ export interface CreateCustomItem {
   baseWeapon?: string | null;
   /** Propriétés SRD (clés de WEAPON_PROPERTY_LABELS_FR). */
   properties?: string[] | null;
+  // ----- Champs d'armure (category === 'armor' uniquement — plan contenus personnalisés 2026-11) -----
+  /** Famille SRD vraie type — lue par computeAC AVANT l'heuristique. */
+  armorFamily?: 'light' | 'medium' | 'heavy' | 'shield' | null;
+  /** CA de base 8-20 (bouclier : valeur SRD 2). */
+  acBase?: number | null;
+  /** Force minimale (lourde : malus vitesse −3 m si non respectée — affiché). */
+  strMin?: number | null;
+  /** Malus de discrétion (indicateur fiche, jamais appliqué en silence). */
+  stealthDisadvantage?: boolean;
+  /** Clé stable de l'armure SRD de base (sélecteur « Basée sur »). */
+  baseArmor?: string | null;
 }
 
 // ---------- Users & auth ----------

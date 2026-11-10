@@ -70,8 +70,6 @@
     "apps/api/src/routes/item-images.ts DELETE /items/:id/image",
     "apps/api/src/routes/item-images.ts POST /inventory/:id/annotation",
     "apps/api/src/routes/item-images.ts POST /inventory/:id/annotation/reset",
-    "apps/api/src/routes/items.ts POST /parties/:partyId/items",
-    "apps/api/src/routes/items.ts PATCH /items/:id",
     "apps/api/src/routes/items.ts DELETE /items/:id",
     "apps/api/src/routes/locations.ts POST /characters/:id/locations",
     "apps/api/src/routes/locations.ts DELETE /locations/:locId",

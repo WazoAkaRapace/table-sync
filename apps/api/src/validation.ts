@@ -122,6 +122,48 @@ export const UpdatePartyBody = Type.Object({
   playersCreateItems: Type.Optional(Type.Unknown()),
 });
 
+// ---------- Schémas : items (objets personnalisés) ----------
+
+/**
+ * POST /api/parties/:partyId/items + PATCH /api/items/:id — structure
+ * grossière seulement : les règles de VALEUR (familles d'armure, bornes
+ * CA 8-20, bonus magique 0-3, propriétés d'arme) restent dans
+ * validateWeaponFields/validateArmorFields de routes/items.ts, messages
+ * métier FR à l'appui. Pièges ajv : les champs resettables (null : acBase,
+ * strMin, magicBonus, weightKg…) passent par Type.Unknown() — une Union
+ * Number|Null verrait le null coercé en 0 ; properties reste Unknown
+ * (coerceTypes 'array' transformerait un scalaire en tableau et
+ * court-circuiterait le filtrage de la route).
+ */
+export const CustomItemBody = Type.Object({
+  name: Type.Optional(Type.String()),
+  nameFr: Type.Optional(Type.String()),
+  category: Type.Optional(Type.String()),
+  rarity: Type.Optional(Type.String()),
+  weightKg: Type.Optional(Type.Unknown()),
+  costQty: Type.Optional(Type.Unknown()),
+  costUnit: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  // null = effacer la prose (PATCH du pupitre) — l'union évite la coercion
+  // ajv null → '' qui écraserait un « effacer » en « chaîne vide ».
+  description: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  // ----- champs d'arme (category 'weapon') -----
+  damageDice: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  damageType: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  twoHandedDice: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  magicBonus: Type.Optional(Type.Unknown()),
+  baseWeapon: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  properties: Type.Optional(Type.Unknown()),
+  // ----- champs d'armure (category 'armor') -----
+  armorFamily: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  acBase: Type.Optional(Type.Unknown()),
+  strMin: Type.Optional(Type.Unknown()),
+  stealthDisadvantage: Type.Optional(Type.Unknown()),
+  baseArmor: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+});
+
+/** PATCH /api/items/:id — même contrat, champs tous partiels. */
+export const UpdateItemBody = CustomItemBody;
+
 // ---------- Mapping erreur de validation → message métier i18n ----------
 
 /**
