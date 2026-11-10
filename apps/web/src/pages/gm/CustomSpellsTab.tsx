@@ -26,6 +26,7 @@ import { TableBadge } from '../../components/TableBadge';
 import { Chip, ConfirmButton, EmptyState, Fab, Modal } from '../../components/ui';
 import { classNameLabel, schoolLabel } from '../../i18n/labels';
 import { Glyph } from '../../components/Glyph';
+import { PreviewToggle } from '../../components/PreviewToggle';
 import api from '../../api';
 import { usePartyContentSync } from './usePartyContentSync';
 
@@ -372,14 +373,19 @@ export function CustomSpellsTab({ partyId }: { partyId: string }) {
               {t('md.annuler')}
             </button>
           </div>
-          {previewOpen ? (
-            <div className="pt-2 border-t border-parchment-200">
+          <div className="pt-2 border-t border-parchment-200">
+            <div className="flex items-center justify-between gap-2">
               <span className="section-title">{t('sortcustom.apercu')}</span>
-              <div className="mt-2 max-h-72 overflow-y-auto">
+              <PreviewToggle open={previewOpen} onToggle={() => setPreviewOpen((v) => !v)} />
+            </div>
+            {previewOpen ? (
+              // Pas de scroll imbriqué : la fiche vit dans LE scroll de la
+              // modale (même correction que l'aperçu monstre).
+              <div className="mt-2">
                 <SpellPreview draft={draft} />
               </div>
-            </div>
-          ) : null}
+            ) : null}
+          </div>
         </div>
       </Modal>
 

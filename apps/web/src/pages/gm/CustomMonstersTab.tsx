@@ -4,7 +4,7 @@
 // garde-fou de suppression (Q6a) vit ici — DELETE 409 → modal de
 // conséquences listant les rencontres vivantes.
 import type { Monster, MonsterSummary } from '@table-sync/shared';
-import { formatCR } from '@table-sync/shared';
+import { formatCR, parseMonsterActionCombatInfo } from '@table-sync/shared';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -19,6 +19,7 @@ import MonsterStatBlock from '../../components/MonsterStatBlock';
 import { ConfirmButton, EmptyState, Fab, Modal } from '../../components/ui';
 import { monsterSizeLabel } from '../../i18n/labels';
 import { Glyph } from '../../components/Glyph';
+import { PreviewToggle } from '../../components/PreviewToggle';
 import api from '../../api';
 import { usePartyContentSync } from './usePartyContentSync';
 
@@ -64,7 +65,10 @@ function draftToMonster(draft: MonsterDraft): Monster {
       .map((e) => ({ name: e.name, desc: e.text })),
     actions: draft.actions
       .filter((e) => e.name.trim() && e.text.trim())
-      .map((e) => ({ name: e.name, desc: e.text })),
+      // MÊME détection de dés que l'API à l'écriture (withCombatInfo :
+      // spread du parseur shared) — l'aperçu montre les puces 🎲 cliquables
+      // exactement comme le bestiaire les rendra après enregistrement.
+      .map((e) => ({ name: e.name, desc: e.text, ...parseMonsterActionCombatInfo(e.text) })),
     legendaryActions: [],
     origin: 'custom',
   };
@@ -269,20 +273,27 @@ export function CustomMonstersTab({ partyId }: { partyId: string }) {
               {t('md.annuler')}
             </button>
           </div>
-          {previewOpen ? (
-            <div className="pt-2 border-t border-parchment-200">
+          <div className="pt-2 border-t border-parchment-200">
+            <div className="flex items-center justify-between gap-2">
               <span className="section-title">{t('monstrecustom.apercu')}</span>
-              <div className="mt-2 max-h-72 overflow-y-auto rounded-xl">
+              <PreviewToggle open={previewOpen} onToggle={() => setPreviewOpen((v) => !v)} />
+            </div>
+            {previewOpen ? (
+              // Pas de scroll imbriqué : le bloc vit dans LE scroll de la
+              // modale (un max-h interne + overscroll-contain piègeait le
+              // doigt sur iPad et tronquait le bloc au ras de l'écran).
+              <div className="mt-2 rounded-xl">
                 <MonsterStatBlock
                   open={showModal}
                   slug={null}
                   monsterOverride={draftToMonster(draft)}
                   onClose={() => setPreviewOpen(false)}
+                  hideClose
                   variant="panel"
                 />
               </div>
-            </div>
-          ) : null}
+            ) : null}
+          </div>
         </div>
       </Modal>
 

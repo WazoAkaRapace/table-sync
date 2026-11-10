@@ -1669,6 +1669,8 @@
   "monstrecustom.texte.libre": "Free text…",
   "monstrecustom.texte.de": "Text of {{label}}",
   "monstrecustom.apercu": "Preview",
+  "common.apercu.masquer": "Hide preview",
+  "common.apercu.montrer": "Show preview",
   "md.sorts.custom": "Custom spells",
   "md.sorts.custom.n": "Custom spells ({{count}})",
   "md.aucun.sort.custom": "No custom spells yet",
