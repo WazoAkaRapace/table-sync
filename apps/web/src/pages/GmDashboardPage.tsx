@@ -42,7 +42,13 @@ export default function GmDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [tab, setTab] = useState<
-    'characters' | 'transactions' | 'custom' | 'members' | 'assistant' | 'settings'
+    | 'characters'
+    | 'transactions'
+    | 'custom'
+    | 'customMonsters'
+    | 'members'
+    | 'assistant'
+    | 'settings'
   >('characters');
 
   const load = useCallback(
@@ -173,6 +179,9 @@ export default function GmDashboardPage() {
         <TabButton active={tab === 'custom'} onClick={() => setTab('custom')}>
           {t('md.objets.custom')}
         </TabButton>
+        <TabButton active={tab === 'customMonsters'} onClick={() => setTab('customMonsters')}>
+          {t('md.monstres.custom')}
+        </TabButton>
         <TabButton active={tab === 'members'} onClick={() => setTab('members')}>
           {t('md.joueurs.n', { count: party.members.length })}
         </TabButton>
@@ -198,6 +207,8 @@ export default function GmDashboardPage() {
       {tab === 'transactions' && <TransactionsTab transactions={transactions} />}
 
       {tab === 'custom' && <CustomItemsTab partyId={partyId!} party={party} />}
+
+      {tab === 'customMonsters' && <CustomMonstersTab partyId={partyId!} />}
 
       {tab === 'members' && (
         <MembersTab
@@ -978,3 +989,4 @@ function TransactionsTab({ transactions }: { transactions: Transaction[] }) {
 }
 
 import { CustomItemsTab } from './gm/CustomItemsTab';
+import { CustomMonstersTab } from './gm/CustomMonstersTab';

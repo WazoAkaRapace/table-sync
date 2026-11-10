@@ -6100,7 +6100,11 @@ export const MONSTER_TYPES_FR = [
 
 /** Valeurs de FP saisissables (SRD 5.1 : 0, 1/8, 1/4, 1/2 puis 1 à 30). */
 export const MONSTER_CR_VALUES: readonly number[] = [
-  0, 0.125, 0.25, 0.5, ...Array.from({ length: 30 }, (_, i) => i + 1),
+  0,
+  0.125,
+  0.25,
+  0.5,
+  ...Array.from({ length: 30 }, (_, i) => i + 1),
 ];
 
 /**

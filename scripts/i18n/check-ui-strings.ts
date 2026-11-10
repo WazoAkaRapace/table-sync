@@ -60,6 +60,11 @@ for (const file of walk(ROOT)) {
     // des identifiants d'icône (comme .initiative ou id: de tuto), jamais
     // du texte affiché.
     .replace(/\bname="[a-z-]+"/g, 'name=""')
+    // Données SRD FR du panneau monstre (MonsterFields.tsx) : valeurs par
+    // défaut et listes de types comparées aux constantes shared
+    // (MONSTER_TYPES_FR, types de dégâts) — des CLÉS de données, pas du
+    // texte affiché (les libellés passent par t()).
+    .replace(/'(Humanoïde|nécrotique)'/g, "''")
     .replace(/^\s*\| '[a-z-]+'(;)?\s*$/gm, "| '';")
     .replace(/'\{\{[^}]*\}\}'/g, "''")
     .replace(/^([ \t]+)[a-z][a-z-]*: \($/gm, '$1: (')
