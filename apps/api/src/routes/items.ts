@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import type { CreateCustomItem } from '@table-sync/shared';
 import {
   DAMAGE_TYPE_LABELS_FR,
+  MUNDANE_ARMORS,
   MUNDANE_WEAPONS,
   WEAPON_PROPERTY_LABELS_FR,
   parseDamageTemplate,
@@ -24,6 +25,7 @@ import { isPartyGM, isPartyMember, requireUser } from './lib/membership.ts';
 import { sendCachedJson } from './httpCache.ts';
 import { langFromReq } from './lang.ts';
 import { apiMsg } from './messages.ts';
+import { CustomItemBody, UpdateItemBody } from '../validation.ts';
 
 interface ItemQuery {
   search?: string;
@@ -108,6 +110,107 @@ function validateWeaponFields(input: {
     return 'arme de base inconnue';
 
   return { damageDice, damageType, twoHandedDice, magicBonus, baseWeapon, properties };
+}
+
+// ---------- Champs d'armure des objets custom (plan contenus personnalisés 2026-11) ----------
+
+/** Familles d'armure SRD (vrai type explicite — le moteur les lit avant l'heuristique). */
+const ARMOR_FAMILIES = ['light', 'medium', 'heavy', 'shield'] as const;
+type ArmorFamily = (typeof ARMOR_FAMILIES)[number];
+
+/** Champs d'armure normalisés prêts à écrire en base (ou message d'erreur FR). */
+interface ArmorFields {
+  armorFamily: ArmorFamily | null;
+  acBase: number | null;
+  strMin: number | null;
+  stealthDisadvantage: boolean;
+  magicBonus: number | null;
+  baseArmor: string | null;
+}
+
+/**
+ * Valide les champs d'armure d'une payload POST/PATCH — gabarit exact de
+ * `validateWeaponFields` : `input` porte les champs fournis (ou fusionnés
+ * avec la ligne existante pour un PATCH) ; tout champ absent vaut null.
+ * Retourne le message d'erreur FR, ou les champs validés. La famille est
+ * optionnelle (repli heuristique garanti pour les armures d'avant la
+ * feature), mais ses valeurs comme la CA 8-20 sont contrôlées à la main
+ * pour des messages précis.
+ */
+function validateArmorFields(input: {
+  armorFamily?: unknown;
+  acBase?: unknown;
+  strMin?: unknown;
+  stealthDisadvantage?: unknown;
+  magicBonus?: unknown;
+  baseArmor?: unknown;
+}): string | ArmorFields {
+  let armorFamily: ArmorFamily | null = null;
+  const rawFamily = input.armorFamily;
+  if (typeof rawFamily === 'string' && rawFamily !== '') {
+    if (!(ARMOR_FAMILIES as readonly string[]).includes(rawFamily)) return "type d'armure invalide";
+    armorFamily = rawFamily as ArmorFamily;
+  }
+
+  const asInt = (v: unknown): number | null => {
+    if (v === undefined || v === null || v === '') return null;
+    return typeof v === 'number' && Number.isInteger(v) ? v : null;
+  };
+
+  const acBase = asInt(input.acBase);
+  if (input.acBase !== undefined && input.acBase !== null && input.acBase !== '' && acBase === null)
+    return 'CA de base invalide';
+  if (acBase !== null) {
+    // Un bouclier porte la valeur SRD 2 (suivie à part, +2 à la CA) ; les
+    // vraies armures se bornent 8-20.
+    if (armorFamily === 'shield') {
+      if (acBase !== 2) return 'CA de base invalide';
+    } else if (acBase < 8 || acBase > 20) return 'CA de base invalide';
+  }
+
+  const strMin = asInt(input.strMin);
+  if (input.strMin !== undefined && input.strMin !== null && input.strMin !== '' && strMin === null)
+    return 'force minimale invalide';
+  if (strMin !== null && (strMin < 1 || strMin > 30)) return 'force minimale invalide';
+
+  const rawBonus = input.magicBonus;
+  if (rawBonus !== undefined && rawBonus !== null) {
+    if (typeof rawBonus !== 'number' || ![0, 1, 2, 3].includes(rawBonus))
+      return 'bonus magique invalide';
+  }
+  const magicBonus = rawBonus === undefined || rawBonus === null ? null : rawBonus;
+
+  const baseArmor =
+    typeof input.baseArmor === 'string' && input.baseArmor.trim() !== ''
+      ? input.baseArmor.trim()
+      : null;
+  if (baseArmor && !MUNDANE_ARMORS.some((m) => m.nameEn === baseArmor))
+    return 'armure de base inconnue';
+
+  return {
+    armorFamily,
+    acBase,
+    strMin,
+    stealthDisadvantage: !!input.stealthDisadvantage,
+    magicBonus,
+    baseArmor,
+  };
+}
+
+/**
+ * « Basée sur » : complète famille/CA depuis la base SRD quand la payload
+ * ne les porte pas (le panneau de création pré-remplit ; l'API garantit).
+ * Une base bouclier pré-positionne la famille bouclier (+2 suivi à part).
+ */
+function withArmorBaseDefaults(armor: ArmorFields): ArmorFields {
+  if (!armor.baseArmor) return armor;
+  const base = MUNDANE_ARMORS.find((m) => m.nameEn === armor.baseArmor);
+  if (!base) return armor;
+  return {
+    ...armor,
+    armorFamily: armor.armorFamily ?? base.armorType,
+    acBase: armor.acBase ?? base.acBase,
+  };
 }
 
 export async function itemRoutes(app: FastifyInstance) {
@@ -244,7 +347,7 @@ export async function itemRoutes(app: FastifyInstance) {
   // ---------- Create custom item (GM always; players when the party allows) ----------
   app.post(
     '/parties/:partyId/items',
-    { onRequest: [(app as any).authenticate] },
+    { onRequest: [(app as any).authenticate], schema: { body: CustomItemBody } },
     async (
       req: FastifyRequest<{ Params: { partyId: string }; Body: CreateCustomItem }>,
       reply: FastifyReply,
@@ -284,6 +387,16 @@ export async function itemRoutes(app: FastifyInstance) {
         }
         weapon = checked;
       }
+      // Champs d'armure (category 'armor' uniquement) : famille SRD vraie
+      // type, CA de base, force min, malus discrétion, bonus magique, base.
+      let armor: ArmorFields | null = null;
+      if (category === 'armor') {
+        const checked = validateArmorFields(body);
+        if (typeof checked === 'string') {
+          return reply.code(400).send({ error: apiMsg(req, checked) });
+        }
+        armor = withArmorBaseDefaults(checked);
+      }
 
       // Clés de base résolues à la création (découplage moteur/noms) — la clé
       // explicite « Basée sur » et le bonus magique de la payload sont
@@ -311,14 +424,21 @@ export async function itemRoutes(app: FastifyInstance) {
           costQty: body.costQty ?? null,
           costUnit: body.costUnit || null,
           description: body.description || null,
-          baseWeapon: bases.baseWeapon,
-          baseArmor: bases.baseArmor,
-          armorFamily: bases.armorFamily,
-          magicBonus: weapon ? (weapon.magicBonus ?? bases.magicBonus) : bases.magicBonus,
+          baseWeapon: weapon ? bases.baseWeapon : null,
+          baseArmor: armor ? (armor.baseArmor ?? bases.baseArmor) : bases.baseArmor,
+          armorFamily: armor ? (armor.armorFamily ?? bases.armorFamily) : bases.armorFamily,
+          magicBonus: weapon
+            ? (weapon.magicBonus ?? bases.magicBonus)
+            : armor
+              ? (armor.magicBonus ?? bases.magicBonus)
+              : bases.magicBonus,
           damageDice: weapon?.damageDice ?? null,
           damageType: weapon?.damageType ?? null,
           twoHandedDice: weapon?.twoHandedDice ?? null,
           propertiesJson: JSON.stringify(weapon?.properties ?? []),
+          acBase: armor?.acBase ?? null,
+          strMin: armor?.strMin ?? null,
+          stealthDisadvantage: armor?.stealthDisadvantage ? 1 : 0,
         })
         .returning(cols(items))
         .get() as any;
@@ -330,7 +450,7 @@ export async function itemRoutes(app: FastifyInstance) {
   // ---------- GM: update a custom item ----------
   app.patch(
     '/items/:id',
-    { onRequest: [(app as any).authenticate] },
+    { onRequest: [(app as any).authenticate], schema: { body: UpdateItemBody } },
     async (req: FastifyRequest<{ Params: { id: string }; Body: any }>, reply: FastifyReply) => {
       const userId = requireUser(req, reply);
       if (userId === null) return;
@@ -406,6 +526,58 @@ export async function itemRoutes(app: FastifyInstance) {
         values.baseArmor = bases.baseArmor;
         values.armorFamily = bases.armorFamily;
         values.propertiesJson = JSON.stringify(checked.properties);
+      }
+
+      // Champs d'armure (category 'armor') : validés sur le contexte FUSIONNÉ
+      // (payload + colonnes existantes), puis réécrits. Une armure ne porte
+      // pas de champs d'arme — ils partent à null (bascule de catégorie
+      // comprise). Les clés explicites de la payload gagnent sur le parse
+      // de nom/description de resolveItemBases.
+      const ARMOR_KEYS = [
+        'armorFamily',
+        'acBase',
+        'strMin',
+        'stealthDisadvantage',
+        'magicBonus',
+        'baseArmor',
+      ] as const;
+      const hasArmorKey = ARMOR_KEYS.some((k) => body[k] !== undefined);
+      if (
+        category === 'armor' &&
+        (hasArmorKey || values.name !== undefined || values.category !== undefined)
+      ) {
+        const merged = validateArmorFields({
+          armorFamily: body.armorFamily !== undefined ? body.armorFamily : item.armor_family,
+          acBase: body.acBase !== undefined ? body.acBase : item.ac_base,
+          strMin: body.strMin !== undefined ? body.strMin : item.str_min,
+          stealthDisadvantage:
+            body.stealthDisadvantage !== undefined
+              ? body.stealthDisadvantage
+              : item.stealth_disadvantage,
+          magicBonus: body.magicBonus !== undefined ? body.magicBonus : item.magic_bonus,
+          baseArmor: body.baseArmor !== undefined ? body.baseArmor : item.base_armor,
+        });
+        if (typeof merged === 'string') {
+          return reply.code(400).send({ error: apiMsg(req, merged) });
+        }
+        const checked = withArmorBaseDefaults(merged);
+        const bases = resolveItemBases({
+          category,
+          name: ((values.name as string) ?? item.name) || null,
+          nameFr: item.name_fr ?? null,
+          description: ((values.description as string) ?? item.description) || null,
+        });
+        values.armorFamily = checked.armorFamily ?? bases.armorFamily ?? null;
+        values.baseArmor = checked.baseArmor ?? bases.baseArmor ?? null;
+        values.acBase = checked.acBase;
+        values.strMin = checked.strMin;
+        values.stealthDisadvantage = checked.stealthDisadvantage ? 1 : 0;
+        values.magicBonus = checked.magicBonus ?? bases.magicBonus ?? null;
+        values.damageDice = null;
+        values.damageType = null;
+        values.twoHandedDice = null;
+        values.baseWeapon = null;
+        values.propertiesJson = '[]';
       }
 
       if (Object.keys(values).length === 0) {

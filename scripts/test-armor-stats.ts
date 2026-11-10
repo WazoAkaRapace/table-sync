@@ -831,5 +831,228 @@ check(
   22,
 );
 
+// --- Armures personnalisées : famille explicite + bonus magique (2026-11) ---
+// Le type EXPLICITE (armorFamily) est lu AVANT l'heuristique — repli garanti.
+// Légère explicite : +DEX intégral.
+check(
+  'Custom légère (CA 13, famille explicite) → 13 + DEX = 17',
+  computeAC(
+    [
+      entry(
+        mkArmor({
+          name: 'Robe des vents',
+          nameFr: 'Robe des vents',
+          acBase: 13,
+          description: '',
+          armorFamily: 'light',
+        }),
+      ),
+    ],
+    dex4,
+  ).ac,
+  17,
+);
+// Intermédiaire explicite : DEX plafonné à +2.
+check(
+  'Custom intermédiaire (CA 14, famille explicite) → 14 + min(4,2) = 16',
+  computeAC(
+    [
+      entry(
+        mkArmor({
+          name: 'Cuirasse du temple',
+          nameFr: 'Cuirasse du temple',
+          acBase: 14,
+          description: '',
+          armorFamily: 'medium',
+        }),
+      ),
+    ],
+    dex4,
+  ).ac,
+  16,
+);
+// Lourde explicite SANS strMin : l'heuristique (CA 17 hors 13-15 → légère)
+// aurait ajouté DEX — la famille déclarée fait foi.
+check(
+  'Custom lourde (CA 17, sans FOR min) → 17 fixe, pas de DEX',
+  computeAC(
+    [
+      entry(
+        mkArmor({
+          name: 'Carapace de fer',
+          nameFr: 'Carapace de fer',
+          acBase: 17,
+          description: '',
+          armorFamily: 'heavy',
+        }),
+      ),
+    ],
+    dex4,
+  ).ac,
+  17,
+);
+// CA 12 déclarée lourde : l'heuristique aurait dit LÉGÈRE (12 + DEX = 16).
+check(
+  'Custom lourde CA 12 (contre l\u2019heuristique) → 12',
+  computeAC(
+    [
+      entry(
+        mkArmor({
+          name: 'Forge-monture',
+          nameFr: 'Forge-monture',
+          acBase: 12,
+          description: '',
+          armorFamily: 'heavy',
+        }),
+      ),
+    ],
+    dex4,
+  ).ac,
+  12,
+);
+// Bouclier par famille explicite (+2 suivi à part), nom sans le mot bouclier.
+const eideCustom = mkArmor({
+  name: 'Égide du temple',
+  nameFr: 'Égide du temple',
+  acBase: 2,
+  description: '',
+  armorFamily: 'shield',
+});
+check(
+  'Custom bouclier (famille explicite) → 10 + DEX + 2 = 16',
+  computeAC([entry(eideCustom)], dex4).ac,
+  16,
+);
+// Bouclier custom MAGIQUE : le bonus explicite rejoint le +2 (Bouclier +3).
+const eideMagique = mkArmor({
+  name: 'Égide du temple +1',
+  nameFr: 'Égide du temple +1',
+  acBase: 2,
+  description: '',
+  armorFamily: 'shield',
+  magicBonus: 1,
+});
+const acEideMagique = computeAC([entry(eideMagique)], dex4);
+check('Custom bouclier +1 → 10 + 4 + 3 = 17', acEideMagique.ac, 17);
+check(
+  'Custom bouclier +1 → source « Bouclier +3 »',
+  acEideMagique.source.includes('Bouclier +3'),
+  true,
+);
+// Bonus magique explicite AVEC CA explicite (position 5 du plan §8).
+const cuirMagique = computeAC(
+  [
+    entry(
+      mkArmor({
+        name: 'Cuir du voleur',
+        nameFr: 'Cuir du voleur',
+        acBase: 13,
+        description: '',
+        armorFamily: 'light',
+        magicBonus: 2,
+      }),
+    ),
+  ],
+  dex4,
+);
+check('Custom légère CA 13 +2 magique → 13 + 4 + 2 = 19', cuirMagique.ac, 19);
+check(
+  'Bonus magique explicite visible dans la source (+2)',
+  cuirMagique.source.includes('+2'),
+  true,
+);
+// Repli heuristique : famille ABSENTE → comportement d'avant (CA 12 → légère).
+check(
+  'Sans famille explicite → repli heuristique (CA 12 → légère 16)',
+  computeAC(
+    [entry(mkArmor({ name: 'Haillon', nameFr: 'Haillon', acBase: 12, description: '' }))],
+    dex4,
+  ).ac,
+  16,
+);
+// Double assurance : la base SRD résolue reste prioritaire sur la famille —
+// même une famille aberrante ne déclasse pas un « Cuir » seedé (légère).
+check(
+  'Base SRD résolue prioritaire (Cuir + famille aberrante) → 11 + DEX = 15',
+  computeAC(
+    [
+      entry(
+        mkArmor({
+          name: 'Leather',
+          nameFr: 'Cuir',
+          acBase: 11,
+          description: '',
+          armorFamily: 'heavy',
+        }),
+      ),
+    ],
+    dex4,
+  ).ac,
+  15,
+);
+// Fixture seedée à famille remplie = heuristique (cuisse de la rétro-compat) :
+// cuirasse par sa clé de base, intermédiaire par les deux chemins.
+check(
+  'Cuirasse seedée (clé de base + famille) → 14 + min(4,2) = 16',
+  computeAC(
+    [
+      entry(
+        mkArmor({
+          name: 'Breastplate',
+          nameFr: 'Cuirasse',
+          acBase: 14,
+          description: '',
+          baseArmor: 'Breastplate',
+          armorFamily: 'medium',
+        }),
+      ),
+    ],
+    dex4,
+  ).ac,
+  16,
+);
+// computeSpeed : lourde explicite FOR insuffisante → malus −3 m AFFICHÉ.
+check(
+  'Custom lourde (famille explicite, FOR 10 < min 15) → −3 m dans la source',
+  computeSpeed(
+    { characterClass: 'Guerrier', level: 5, speed: 9, strength: 10 },
+    [
+      entry(
+        mkArmor({
+          name: 'Cuirasse du temple',
+          nameFr: 'Cuirasse du temple',
+          acBase: 17,
+          description: '',
+          armorFamily: 'heavy',
+          strMin: 15,
+        }),
+      ),
+    ],
+    'fr',
+  ),
+  { speed: 6, bonus: -3, sources: ['Armure lourde −3 m (FOR insuffisante)'] },
+);
+// Bouclier custom par famille : PAS une armure portée mais bien un bouclier
+// (il bloque le déplacement sans armure du Moine, comme un bouclier SRD).
+check(
+  'Custom bouclier par famille → compte comme bouclier, pas comme armure',
+  computeSpeed(
+    { characterClass: 'Moine', level: 6, speed: 9 },
+    [
+      entry(
+        mkArmor({
+          name: 'Égide du temple',
+          nameFr: 'Égide du temple',
+          acBase: 2,
+          description: '',
+          armorFamily: 'shield',
+        }),
+      ),
+    ],
+    'fr',
+  ),
+  { speed: 9, bonus: 0, sources: [] },
+);
+
 console.log(failures === 0 ? '\n✅ All armor stats checks pass' : `\n❌ ${failures} failure(s)`);
 process.exit(failures === 0 ? 0 : 1);

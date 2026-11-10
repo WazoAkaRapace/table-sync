@@ -149,6 +149,17 @@ export interface CreateCustomItem {
   baseWeapon?: string | null;
   /** Propriétés SRD (clés de WEAPON_PROPERTY_LABELS_FR). */
   properties?: string[] | null;
+  // ----- Champs d'armure (category === 'armor' uniquement — plan contenus personnalisés 2026-11) -----
+  /** Famille SRD vraie type — lue par computeAC AVANT l'heuristique. */
+  armorFamily?: 'light' | 'medium' | 'heavy' | 'shield' | null;
+  /** CA de base 8-20 (bouclier : valeur SRD 2). */
+  acBase?: number | null;
+  /** Force minimale (lourde : malus vitesse −3 m si non respectée — affiché). */
+  strMin?: number | null;
+  /** Malus de discrétion (indicateur fiche, jamais appliqué en silence). */
+  stealthDisadvantage?: boolean;
+  /** Clé stable de l'armure SRD de base (sélecteur « Basée sur »). */
+  baseArmor?: string | null;
 }
 
 // ---------- Users & auth ----------
@@ -2218,6 +2229,16 @@ export function computeAC(
     if (entry.item.category !== 'armor') continue;
     const name = (entry.item.nameFr ?? entry.item.name).toLowerCase();
 
+    // Bouclier par famille EXPLICITE (armures custom — plan contenus
+    // personnalisés 2026-11) : suivi à part (+2), jamais cumulé comme
+    // armure ; le bonus magique explicite rejoint celui de la résolution
+    // de base. Le repli par nom/base SRD suit ci-dessous.
+    if (entry.item.armorFamily === 'shield') {
+      hasShield = true;
+      shieldMagicBonus = Math.max(shieldMagicBonus, entry.item.magicBonus ?? 0);
+      continue;
+    }
+
     // Magic armor: resolve its mundane base (+ bonus) before the acBase filter
     let acBase = entry.item.acBase;
     let base: MundaneArmor | null = null;
@@ -2241,6 +2262,11 @@ export function computeAC(
         ? MUNDANE_ARMORS.find((a) => a.nameEn === entry.item.baseArmor)
         : undefined;
       base = keyedArmor ?? findMundaneArmorByName(entry.item.name, entry.item.nameFr);
+      // Bonus magique EXPLICITE avec CA explicite (plan contenus
+      // personnalisés §8 pos. 5) : sans lui, une armure custom « CA 13,
+      // +2 magique » perdait silencieusement son bonus. Aucun item seedé
+      // ne porte magic_bonus avec ac_base rempli (vérifié) — neutre SRD.
+      magicBonus = entry.item.magicBonus ?? 0;
     }
 
     // Shield gives +2 and is tracked separately
@@ -2250,17 +2276,24 @@ export function computeAC(
     }
     // First equipped armor piece wins
     if (!armor) {
+      // Famille explicite de l'item (armures custom) : lue AVANT
+      // l'heuristique strMin/acBase — la base SRD résolue (quand elle
+      // existe) reste prioritaire (elle porte le vrai type SRD). Le repli
+      // heuristique garantit qu'aucune armure existante ne change de CA.
+      const explicit = entry.item.armorFamily;
       armor = {
         acBase,
-        // (a shield base already `continue`d above, so base.armorType is
-        // never 'shield' here — the type was narrowed accordingly)
+        // (a shield base already `continue`d above — explicit shields too —
+        // so the type below is never 'shield'; narrowed accordingly)
         armorType: base
           ? base.armorType
-          : entry.item.strMin !== null && entry.item.strMin >= 13
-            ? 'heavy'
-            : acBase >= 13 && acBase <= 15
-              ? 'medium'
-              : 'light',
+          : explicit === 'light' || explicit === 'medium' || explicit === 'heavy'
+            ? explicit
+            : entry.item.strMin !== null && entry.item.strMin >= 13
+              ? 'heavy'
+              : acBase >= 13 && acBase <= 15
+                ? 'medium'
+                : 'light',
         name: entry.item.nameFr ?? entry.item.name,
         nameEn: base?.nameEn ?? null,
       };
@@ -3611,6 +3644,7 @@ export function computeSpeed(
 
   const worn = entries.filter((e) => {
     if (!e.equipped || e.item.category !== 'armor') return false;
+    if (e.item.armorFamily === 'shield') return false;
     const name = (e.item.nameFr ?? e.item.name).toLowerCase();
     if (name.includes('bouclier') || name.includes('shield')) return false;
     if (e.item.acBase !== null && e.item.acBase !== 0) return true;
@@ -3618,15 +3652,30 @@ export function computeSpeed(
     return resolveMagicArmorBase(e.item).base !== null;
   });
   const wearingArmor = worn.length > 0;
-  const wearingHeavy = worn.some((e) => {
+  // Vrai type lourd : base SRD résolue d'abord, famille EXPLICITE de l'item
+  // (armures custom) avant l'heuristique strMin ≥ 13 (même ordre que
+  // computeAC — repli garanti, aucune armure seedée ne change).
+  const isHeavyArmor = (e: {
+    item: {
+      acBase: number | null;
+      strMin: number | null;
+      nameFr?: string | null;
+      name: string;
+    } & ItemBaseKeys;
+  }): boolean => {
     if (e.item.acBase !== null && e.item.acBase !== 0) {
       const base = findMundaneArmorByName(e.item.name, e.item.nameFr);
-      return base ? base.armorType === 'heavy' : e.item.strMin !== null && e.item.strMin >= 13;
+      if (base) return base.armorType === 'heavy';
+      return e.item.armorFamily
+        ? e.item.armorFamily === 'heavy'
+        : e.item.strMin !== null && e.item.strMin >= 13;
     }
     return resolveMagicArmorBase(e.item).base?.armorType === 'heavy';
-  });
+  };
+  const wearingHeavy = worn.some(isHeavyArmor);
   const hasShield = entries.some((e) => {
     if (!e.equipped || e.item.category !== 'armor') return false;
+    if (e.item.armorFamily === 'shield') return true;
     const name = (e.item.nameFr ?? e.item.name).toLowerCase();
     if (name.includes('bouclier') || name.includes('shield')) return true;
     if (e.item.acBase === null || e.item.acBase === 0) return resolveMagicArmorBase(e.item).shield;
@@ -3655,16 +3704,7 @@ export function computeSpeed(
   }
 
   // SRD: heavy armor worn below its STR minimum costs 3 m of speed
-  const heavyWorn = entries.filter((e) => {
-    if (!e.equipped || e.item.category !== 'armor') return false;
-    const name = (e.item.nameFr ?? e.item.name).toLowerCase();
-    if (name.includes('bouclier') || name.includes('shield')) return false;
-    if (e.item.acBase !== null && e.item.acBase !== 0) {
-      const base = findMundaneArmorByName(e.item.name, e.item.nameFr);
-      return base ? base.armorType === 'heavy' : e.item.strMin !== null && e.item.strMin >= 13;
-    }
-    return resolveMagicArmorBase(e.item).base?.armorType === 'heavy';
-  });
+  const heavyWorn = worn.filter(isHeavyArmor);
   const strScore = character.strength ?? 10;
   const underStrMin = heavyWorn.some((e) => {
     if (e.item.acBase !== null && e.item.acBase !== 0) {

@@ -22,6 +22,7 @@ import {
 } from '@table-sync/shared';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { MagicBonusField } from './MagicBonusField';
 import { appLang } from '../i18n';
 import { damageType, weaponPropertyLabel } from '../i18n/labels';
 import { Glyph } from './Glyph';
@@ -260,29 +261,12 @@ export function WeaponFields({
         </select>
       </label>
 
-      <div>
-        <span className="label">{t('arme.bonus.magique')}</span>
-        <div className="grid grid-cols-4 gap-2" role="group" aria-label={t('arme.bonus.magique')}>
-          {[0, 1, 2, 3].map((bonus) => {
-            const selected = draft.magicBonus === bonus;
-            return (
-              <button
-                key={bonus}
-                type="button"
-                onClick={() => onChange({ ...draft, magicBonus: bonus })}
-                aria-pressed={selected}
-                className={`min-h-11 rounded-lg border text-sm font-medium transition-colors ${
-                  selected
-                    ? 'bg-gold-100 border-gold-300 text-gold-700 font-semibold'
-                    : 'bg-parchment-100 border-parchment-300 text-ink-600 hover:bg-parchment-200'
-                }`}
-              >
-                {bonus === 0 ? t('arme.aucun') : `+${bonus}`}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      <MagicBonusField
+        value={draft.magicBonus}
+        onChange={(magicBonus) => onChange({ ...draft, magicBonus })}
+        label={t('arme.bonus.magique')}
+        noneLabel={t('arme.aucun')}
+      />
 
       <div>
         <span className="label">{t('arme.proprietes')}</span>

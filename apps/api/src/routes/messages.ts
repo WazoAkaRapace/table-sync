@@ -264,6 +264,10 @@ const EN: Record<string, string> = {
   'type de dégâts invalide': 'invalid damage type',
   'bonus magique invalide': 'invalid magic bonus',
   'arme de base inconnue': 'unknown base weapon',
+  "type d'armure invalide": 'invalid armor type',
+  'CA de base invalide': 'invalid base AC',
+  'force minimale invalide': 'invalid minimum Strength',
+  'armure de base inconnue': 'unknown base armor',
   'propriétés invalides': 'invalid properties',
 };
 

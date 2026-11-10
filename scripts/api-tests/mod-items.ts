@@ -153,6 +153,29 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
   });
   eq(r.status, 201, 'player creates a full custom weapon when the party allows it');
 
+  // armure complète par un JOUEUR (setting on) — plan contenus personnalisés 2026-11
+  r = await api(base, 'POST', `/api/parties/${P}/items`, {
+    token: fx.player.token,
+    body: {
+      name: 'Cuirasse du temple',
+      category: 'armor',
+      armorFamily: 'medium',
+      acBase: 14,
+      stealthDisadvantage: true,
+      magicBonus: 1,
+    },
+  });
+  eq(r.status, 201, 'player creates a full custom armor when the party allows it');
+  const cuirasse = r.data.item;
+  eq(cuirasse.armorFamily, 'medium', 'custom armor stores the explicit family');
+  eq(cuirasse.acBase, 14, 'custom armor stores the base AC');
+  eq(cuirasse.magicBonus, 1, 'custom armor stores the magic bonus');
+  eq(cuirasse.stealthDisadvantage, true, 'custom armor stores the stealth flag');
+  eq(cuirasse.damageDice, null, 'an armor carries no weapon fields');
+  const rowCuirasse = srv.query('SELECT * FROM items WHERE id = ?', cuirasse.id);
+  eq(rowCuirasse.armor_family, 'medium', 'armor_family column in DB');
+  eq(rowCuirasse.stealth_disadvantage, 1, 'stealth_disadvantage column in DB');
+
   // the GM's kill switch: once off, players are back to GM-only creation
   r = await api(base, 'PATCH', `/api/parties/${P}`, {
     token: fx.gm.token,
@@ -169,6 +192,11 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
     body: { name: 'Interdite aussi', category: 'weapon', damageDice: '1d6' },
   });
   eq(r.status, 403, 'player WEAPON creation blocked once the setting is off');
+  r = await api(base, 'POST', `/api/parties/${P}/items`, {
+    token: fx.player.token,
+    body: { name: 'Interdite encore', category: 'armor', armorFamily: 'light' },
+  });
+  eq(r.status, 403, 'player ARMOR creation blocked once the setting is off');
 
   // non-members never create, whatever the setting
   r = await api(base, 'POST', `/api/parties/${P}/items`, {
@@ -296,6 +324,53 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
     body: { name: 'Invalide base', category: 'weapon', damageDice: '1d8', baseWeapon: 'Excalibur' },
   });
   eq(r.status, 400, 'unknown base weapon → 400');
+
+  // ---------- armures personnalisées complètes (plan contenus personnalisés 2026-11) ----------
+  // « Basée sur » : la base SRD complète famille/CA quand la payload ne les
+  // porte pas (le panneau pré-remplit ; l'API garantit).
+  r = await api(base, 'POST', `/api/parties/${P}/items`, {
+    token: fx.gm.token,
+    body: { name: 'Égide de la serre', category: 'armor', baseArmor: 'Shield', magicBonus: 1 },
+  });
+  eq(r.status, 201, 'create custom shield from SRD base');
+  const egide = r.data.item;
+  eq(egide.armorFamily, 'shield', 'base copy fills the family (shield)');
+  eq(egide.acBase, 2, 'base copy fills the SRD shield AC');
+  eq(egide.magicBonus, 1, 'explicit magic bonus kept on the shield');
+
+  // validations → 400
+  r = await api(base, 'POST', `/api/parties/${P}/items`, {
+    token: fx.gm.token,
+    body: { name: 'Invalide famille', category: 'armor', armorFamily: 'siège' },
+  });
+  eq(r.status, 400, 'invalid armor family → 400');
+  r = await api(base, 'POST', `/api/parties/${P}/items`, {
+    token: fx.gm.token,
+    body: { name: 'CA hors bornes', category: 'armor', armorFamily: 'light', acBase: 25 },
+  });
+  eq(r.status, 400, 'base AC out of 8-20 → 400');
+  r = await api(base, 'POST', `/api/parties/${P}/items`, {
+    token: fx.gm.token,
+    body: { name: 'CA non entière', category: 'armor', armorFamily: 'light', acBase: 'treize' },
+  });
+  eq(r.status, 400, 'non-integer base AC → 400');
+  r = await api(base, 'POST', `/api/parties/${P}/items`, {
+    token: fx.gm.token,
+    body: { name: 'Bonus fou', category: 'armor', armorFamily: 'light', acBase: 13, magicBonus: 4 },
+  });
+  eq(r.status, 400, 'armor magic bonus out of +1/+2/+3 → 400');
+  r = await api(base, 'POST', `/api/parties/${P}/items`, {
+    token: fx.gm.token,
+    body: { name: 'Base inconnue', category: 'armor', baseArmor: 'Mithril fullplate' },
+  });
+  eq(r.status, 400, 'unknown base armor → 400');
+
+  // armure sans famille NI base : autorisée — repli heuristique garanti
+  r = await api(base, 'POST', `/api/parties/${P}/items`, {
+    token: fx.gm.token,
+    body: { name: 'Haillons anciens', category: 'armor', acBase: 11 },
+  });
+  eq(r.status, 201, 'armor without family falls back to the heuristic');
 
   // party context: SRD catalog + this party's customs — and nothing from
   // other parties, even for a user member of both (DM here, player there)
@@ -434,6 +509,35 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
     body: { damageDice: '2d6+OUPS' },
   });
   eq(r.status, 400, 'patch with invalid template → 400');
+
+  // PATCH d'une armure custom : re-validation sur le contexte FUSIONNÉ (les
+  // champs non portés par la payload viennent des colonnes existantes).
+  r = await api(base, 'PATCH', `/api/items/${cuirasse.id}`, {
+    token: fx.player.token,
+    body: { acBase: 15 },
+  });
+  eq(r.status, 403, 'only GM modifies custom armor');
+  r = await api(base, 'PATCH', `/api/items/${cuirasse.id}`, {
+    token: fx.gm.token,
+    body: { armorFamily: 'heavy', strMin: 15 },
+  });
+  eq(r.status, 200, 'patch custom armor fields');
+  eq(r.data.item.armorFamily, 'heavy', 'patched family stored');
+  eq(r.data.item.acBase, 14, 'unpatched field preserved through the merge');
+  eq(r.data.item.strMin, 15, 'patched STR min stored');
+  eq(r.data.item.stealthDisadvantage, true, 'stealth flag preserved through the merge');
+  eq(r.data.item.magicBonus, 1, 'magic bonus preserved through the merge');
+  r = await api(base, 'PATCH', `/api/items/${cuirasse.id}`, {
+    token: fx.gm.token,
+    body: { acBase: 30 },
+  });
+  eq(r.status, 400, 'patch with out-of-range AC → 400');
+  r = await api(base, 'PATCH', `/api/items/${cuirasse.id}`, {
+    token: fx.gm.token,
+    body: { armorFamily: 'cuirassée' },
+  });
+  eq(r.status, 400, 'patch with invalid family → 400');
+
   r = await api(base, 'PATCH', '/api/items/999999', { token: fx.gm.token, body: { name: 'x' } });
   eq(r.status, 404, 'patch item 404');
 

@@ -3,6 +3,18 @@
     "version": null,
     "sha": null,
     "date": "2026-11-10",
+    "title": "armures personnalisées",
+    "items": [
+      "Les armures inventées par la table se créent avec un vrai type (légère, intermédiaire, lourde, bouclier) et une CA de base.",
+      "La CA d'une armure personnalisée se calcule sur la fiche dès l'équipement, avec son détail au toucher.",
+      "Les joueurs peuvent créer ces armures depuis la recherche de leur inventaire quand le MD ouvre le réglage existant.",
+      "La force minimale et le malus de discrétion s'affichent sur la ligne d'armure, sans jamais être appliqués en silence."
+    ]
+  },
+  {
+    "version": null,
+    "sha": null,
+    "date": "2026-11-10",
     "title": "mise à jour technique des dépendances",
     "items": [
       "L'application reçoit une mise à jour technique interne, sans changement visible à table."
