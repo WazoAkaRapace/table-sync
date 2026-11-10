@@ -18,7 +18,7 @@
  */
 
 import { eq, sql } from 'drizzle-orm';
-import webpush, { type WebPushError } from 'web-push';
+import { sendNotification, type WebPushError } from 'web-push';
 import { getDrizzle } from '../db/drizzle.ts';
 import { pushSubscriptions } from '../db/schema.ts';
 import { pushVapidConfig } from './config.ts';
@@ -79,7 +79,7 @@ export async function sendPushToUser(
   await Promise.all(
     subs.map(async (sub) => {
       try {
-        await webpush.sendNotification(
+        await sendNotification(
           { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
           JSON.stringify({
             kind: payload.kind,

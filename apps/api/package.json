@@ -13,17 +13,17 @@
   "dependencies": {
     "@fastify/compress": "^9.3.0",
     "@fastify/cookie": "^11.1.5",
-    "@fastify/cors": "^11.4.0",
+    "@fastify/cors": "^11.4.1",
     "@fastify/jwt": "^10.2.7",
-    "@fastify/multipart": "^10.1.7",
+    "@fastify/multipart": "^10.1.8",
     "@fastify/websocket": "^11.3.7",
     "@sinclair/typebox": "^0.34.52",
     "@table-sync/shared": "*",
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^13.0.3",
     "drizzle-orm": "^0.45.3",
-    "fastify": "^5.12.7",
-    "web-push": "^3.6.7"
+    "fastify": "^5.12.8",
+    "web-push": "^4.0.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^3.0.0",
