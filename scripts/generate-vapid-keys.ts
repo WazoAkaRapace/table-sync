@@ -4,9 +4,9 @@
  * Une seule paire pour toute la vie du serveur : les clés identifient le
  * serveur auprès des push services, les changer déconnecte tous les abonnés.
  */
-import webpush from 'web-push';
+import { generateVAPIDKeys } from 'web-push';
 
-const keys = webpush.generateVAPIDKeys();
+const keys = generateVAPIDKeys();
 console.log('# .env — Web Push (VAPID)');
 console.log(`VAPID_PUBLIC_KEY=${keys.publicKey}`);
 console.log(`VAPID_PRIVATE_KEY=${keys.privateKey}`);
