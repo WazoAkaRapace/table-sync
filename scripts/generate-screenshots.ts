@@ -27,7 +27,7 @@
  *              pour le traqueur du MD (24) — les captures de vue élargie
  *              créent leur propre contexte Playwright via newSession().
  *
- * Bilingue : `--lang en` produit les mêmes 31 captures en anglais vers
+ * Bilingue : `--lang en` produit les mêmes 40 captures en anglais vers
  * docs/screenshots-en/ — l'API reçoit ?lang=en sur chaque appel du seed
  * (payloads mono-locale : `name` devient anglais), Chromium démarre en
  * locale en-US avec localStorage dnd-inv-lang=en, et tous les sélecteurs /
@@ -37,7 +37,7 @@
  * captures 11–13 peuvent différer entre deux runs d'une même langue).
  *
  * Usage :
- *   npm run screenshots                    # régénère les 31 captures (FR)
+ *   npm run screenshots                    # régénère les 40 captures (FR)
  *   npm run screenshots -- --only 03,07    # seulement certaines (numéros ou noms)
  *   npm run screenshots -- --lang en       # version anglaise → docs/screenshots-en/
  *   npm run screenshots -- --keep          # laisser les serveurs tourner (debug)
@@ -108,6 +108,14 @@ const S = <T>(fr: T, en: T): T => (lang === 'en' ? en : fr);
 /** Titre de la dernière séance de la chronique de démo — semé dans le mock
  * GMA puis attendu par les captures 16 et 17. */
 const LAST_SESSION_TITLE = S('Le campement des batiri', 'The Batiri campsite');
+
+/** Contenus personnalisés de la démo (section « Votre monde, vos règles »,
+ *  captures 34–40) : même règle mono-locale que le reste du seed — en EN les
+ *  noms créés sont anglais. */
+const CUSTOM_WEAPON_NAME = S('Croc de mégalodon', 'Megashark Fang');
+const CUSTOM_SPELL_NAME = S('Chant des neuvièmes vagues', 'Song of the Ninth Waves');
+const CUSTOM_MONSTER_NAME = S('Rôdeur batiri à plumes', 'Feathered Batiri Ranger');
+const CUSTOM_ENCOUNTER_NAME = S('Embuscade du rôdeur', "Ranger's Ambush");
 
 // ---------------------------------------------------------------------------
 // Processus : lancement + arrêt en groupe
@@ -370,6 +378,11 @@ interface SeedRefs {
   partyId: number;
   encounterId: number;
   chars: { lyra: number; kael: number; mira: number; vesper: number };
+  /** Slug du monstre personnalisé « Rôdeur batiri à plumes » (posé par
+   *  ensureCustomContent, consommé par ensureCustomEncounter — capture 39). */
+  customMonsterSlug?: string;
+  /** Id de « Embuscade du rôdeur » dressée par ensureCustomEncounter. */
+  customEncounterId?: number;
 }
 
 /** Dresse « Embuscade gobeline » en pleine morsure : initiatives posées,
@@ -1013,6 +1026,202 @@ async function ensureAmbushMidFight(c: ShotCtx): Promise<void> {
   c.refs.encounterId = await stageAmbushMidFight(c.mdApi, c.refs.partyId, c.refs.chars);
 }
 
+/** Sème les contenus personnalisés de la démo (captures 34–40) : l'arme
+ *  « Croc de mégalodon » créée par le MD et posée dans le sac de Kael, le
+ *  sort « Chant des neuvièmes vagues » (avec table d'incantation
+ *  supérieure) et le monstre « Rôdeur batiri à plumes ». Idempotent :
+ *  chaque pièce vérifie son existence avant création — `--only 36` comme
+ *  `--only 39` tournent seuls. Le sort 37 et l'objet 34/40 montrent des
+ *  formulaires EN COURS de remplissage (aucun POST n'est déclenché par la
+ *  capture elle-même). */
+async function ensureCustomContent(c: ShotCtx): Promise<void> {
+  const partyId = c.refs.partyId;
+
+  // — Arme personnalisée (création MD) + sac de Kael —
+  const itemRes = await c.mdApi<{ items: { id: number; name: string }[] }>(
+    'GET',
+    `/api/items?partyId=${partyId}&source=custom&limit=200`,
+  );
+  let weapon = itemRes.items.find((i) => i.name === CUSTOM_WEAPON_NAME);
+  if (!weapon) {
+    const { item } = await c.mdApi<{ item: { id: number } }>(
+      'POST',
+      `/api/parties/${partyId}/items`,
+      {
+        name: CUSTOM_WEAPON_NAME,
+        category: 'weapon',
+        weightKg: 2,
+        rarity: 'rare',
+        damageDice: '1d8+FOR',
+        damageType: 'Slashing',
+        twoHandedDice: '1d10',
+        magicBonus: 2,
+        baseWeapon: 'Longsword',
+        properties: ['versatile'],
+        description: S(
+          "Arrachée à la mâchoire d'un mégalodon des côtes de Chult.",
+          'Torn from the jaw of a megalodon off the Chult coast.',
+        ),
+      },
+    );
+    weapon = item;
+  }
+  const inv = await c.mdApi<{ entries: any[] }>(
+    'GET',
+    `/api/characters/${c.refs.chars.kael}/inventory`,
+  );
+  if (!inv.entries.some((e) => (e.itemId ?? e.item?.id) === weapon.id)) {
+    await c.mdApi('POST', `/api/characters/${c.refs.chars.kael}/inventory`, {
+      itemId: weapon.id,
+      quantity: 1,
+      equipped: false,
+    });
+  }
+
+  // — Sort personnalisé (MD) avec incantation supérieure par cran —
+  const spellRes = await c.mdApi<{ spells: { id: number; name: string }[] }>(
+    'GET',
+    `/api/spells?partyId=${partyId}&source=custom&limit=200`,
+  );
+  if (!spellRes.spells.some((s) => s.name === CUSTOM_SPELL_NAME)) {
+    await c.mdApi('POST', `/api/parties/${partyId}/spells`, {
+      name: CUSTOM_SPELL_NAME,
+      level: 3,
+      school: 'evocation',
+      castingTime: S('1 action', '1 action'),
+      rangeText: S('18 mètres', '18 meters'),
+      duration: S('Instantané', 'Instantaneous'),
+      components: ['V', 'S', 'M'],
+      material: S('une conque des tempêtes', 'a storm conch'),
+      classes: ['Barde', 'Druide'],
+      damageType: 'cold',
+      damage: { dice: '3d6', perSlotLevel: '1d6' },
+      dc: { ability: 'con', success: 'half' },
+      description: S(
+        "La marée répond : une vague hurlante submerge la scène et givre tout ce qu'elle touche.",
+        'The tide answers: a howling wave floods the scene and frosts everything it touches.',
+      ),
+      higherLevel: S('+1d6 par niveau d’emplacement supérieur.', '+1d6 per slot level above 3rd.'),
+    });
+  }
+
+  // — Monstre personnalisé (MD) —
+  const monsterRes = await c.mdApi<{ monsters: { slug: string; name: string }[] }>(
+    'GET',
+    `/api/monsters?partyId=${partyId}&origin=custom&limit=100`,
+  );
+  let monster = monsterRes.monsters.find((m) => m.name === CUSTOM_MONSTER_NAME);
+  if (!monster) {
+    const { monster: created } = await c.mdApi<{ monster: { slug: string } }>(
+      'POST',
+      `/api/parties/${partyId}/monsters`,
+      {
+        nameFr: CUSTOM_MONSTER_NAME,
+        type: 'Humanoïde',
+        size: 'M',
+        alignment: S('neutre', 'neutral'),
+        armorClass: 14,
+        armorDesc: S('cuir renforcé', 'reinforced leather'),
+        hitPoints: 65,
+        hitDice: '10d8+20',
+        speed: { walk: 9 },
+        abilities: { for: 14, dex: 16, con: 14, int: 11, sag: 15, cha: 10 },
+        challengeRating: 3,
+        traits: [
+          {
+            name: S('Camouflage batiri', 'Batiri camouflage'),
+            // NB : le contrat API lit `text` (le draft UI), pas `desc`.
+            text: S(
+              'Avantage aux jets de Discrétion dans la jungle.',
+              'Advantage on Stealth checks in the jungle.',
+            ),
+          },
+        ],
+        actions: [
+          {
+            name: S('Arc de chasse', 'Hunting bow'),
+            text: S(
+              'Attaque à distance +5, portée 18 m : 6 (1d8 + 3) dégâts perforants.',
+              'Ranged attack +5, range 18 m: 6 (1d8 + 3) piercing damage.',
+            ),
+          },
+          {
+            name: S('Croc rituel', 'Ritual fang'),
+            text: S(
+              'Attaque au corps à corps +5 : 6 (1d6 + 3) dégâts tranchants.',
+              'Melee attack +5: 6 (1d6 + 3) slashing damage.',
+            ),
+          },
+        ],
+        senses: S('perception passive 14', 'passive Perception 14'),
+        languages: ['commun'],
+      },
+    );
+    monster = created;
+  }
+  c.refs.customMonsterSlug = monster.slug;
+}
+
+/** « Embuscade du rôdeur » vivante pour la capture 39 (traqueur bureau) :
+ *  le monstre personnalisé côtoie les PJ en pleine rencontre. Miroir de
+ *  ensureAmbushMidFight — recréée à l'identique si une pause l'a close.
+ *  C'est la DERNIÈRE capture GM : elle clore l'embuscade gobeline au
+ *  passage (endFights) comme les captures d'initiative closent la leur. */
+async function ensureCustomEncounter(c: ShotCtx): Promise<void> {
+  await ensureCustomContent(c);
+  const list = await c.mdApi<{ encounters: { id: number; name: string; status: string }[] }>(
+    'GET',
+    `/api/parties/${c.refs.partyId}/encounters`,
+  );
+  const existing = list.encounters.find(
+    (e) => e.name === CUSTOM_ENCOUNTER_NAME && e.status === 'active',
+  );
+  if (existing) {
+    c.refs.customEncounterId = existing.id;
+    return;
+  }
+  await endFights(c);
+  const { encounter } = await c.mdApi<{ encounter: { id: number } }>(
+    'POST',
+    `/api/parties/${c.refs.partyId}/encounters`,
+    { name: CUSTOM_ENCOUNTER_NAME },
+  );
+  const enc = encounter.id;
+  await c.mdApi('POST', `/api/encounters/${enc}/combatants/monster`, {
+    monsterSlug: c.refs.customMonsterSlug,
+    count: 1,
+    name: CUSTOM_MONSTER_NAME,
+  });
+  await c.mdApi('POST', `/api/encounters/${enc}/combatants/player`, {
+    characterIds: [c.refs.chars.lyra, c.refs.chars.kael],
+  });
+  const { encounter: full } = await c.mdApi<{
+    encounter: {
+      combatants: {
+        id: number;
+        name: string;
+        monsterSlug: string | null;
+        characterId: number | null;
+      }[];
+    };
+  }>('GET', `/api/encounters/${enc}`);
+  const cbs = full.combatants;
+  const byCharacter = (cid: number) => cbs.find((cb) => cb.characterId === cid);
+  const ranger = cbs.find((cb) => cb.monsterSlug === c.refs.customMonsterSlug);
+  const setInit = (cid: number, initiative: number) =>
+    c.mdApi('PATCH', `/api/encounters/${enc}/combatants/${cid}/initiative`, { initiative });
+  await setInit(byCharacter(c.refs.chars.lyra)!.id, 17);
+  await setInit(ranger!.id, 13);
+  await setInit(byCharacter(c.refs.chars.kael)!.id, 11);
+  await c.mdApi('POST', `/api/encounters/${enc}/next-turn`);
+  // La rencontre a déjà mordu : le rôdeur entamé (PV max posé à la fiche,
+  // pas aux dés — la barre 52/65 colle au bloc de stats), Lyra égratignée.
+  const patchC = (cid: number, body: unknown) => c.mdApi('PATCH', `/api/combatants/${cid}`, body);
+  await patchC(ranger!.id, { hitPoints: 52, maxHitPoints: 65 });
+  await patchC(byCharacter(c.refs.chars.lyra)!.id, { hitPoints: 33 });
+  c.refs.customEncounterId = enc;
+}
+
 async function shoot(page: Page, file: string, opts: { animations?: 'allow' | 'disabled' } = {}) {
   await page.screenshot({
     path: path.join(OUT_DIR, file),
@@ -1022,7 +1231,7 @@ async function shoot(page: Page, file: string, opts: { animations?: 'allow' | 'd
 }
 
 // ---------------------------------------------------------------------------
-// Les 31 captures du README
+// Les 40 captures du README
 // ---------------------------------------------------------------------------
 
 interface ShotCtx {
@@ -1056,6 +1265,7 @@ const GM_SHOTS = new Set([
   '24-traqueur-bureau.png',
   '31-groupe-pupitre.png',
   '33-bougie-traqueur.png',
+  '39-monstre-custom-rencontre.png',
 ]);
 
 // Captures tardives : elles clorent l'embuscade et dressent « Embuscade
@@ -1858,6 +2068,312 @@ const SHOTS: { file: string; run: (c: ShotCtx) => Promise<void> }[] = [
         await page.getByText('Ogre').first().waitFor({ timeout: 10_000 });
         await page.waitForTimeout(300);
         await shoot(page, '33-bougie-traqueur.png');
+        await page.close();
+      } finally {
+        await ctx.close();
+      }
+    },
+  },
+  {
+    file: '34-objet-personnalise.png',
+    async run(c) {
+      // Le joueur crée un objet que le SRD n'a jamais connu : depuis la
+      // recherche du catalogue (l'autonomie players_create_items est à 1 par
+      // défaut), le bouton « + Créer “…” » ouvre la feuille de création —
+      // nom déjà saisi par la recherche, poids et description à la main, la
+      // porte « ✨ Créer et ajouter » en bas. Aucun envoi : la capture
+      // montre le geste, pas le résultat.
+      await endFights(c);
+      const page = await openSheet(c.aurore, c.webPort, c.refs.partyId, c.refs.chars.lyra);
+      await openTab(page, S('Inventaire', 'Inventory'));
+      await page
+        .getByRole('button', {
+          name: S('Ajouter un objet au catalogue', 'Add an item from the catalog'),
+        })
+        .click();
+      const sheet = page.getByRole('dialog');
+      await sheet.waitFor({ timeout: 10_000 });
+      const itemName = S('Idole de jade batiri', 'Batiri jade idol');
+      await sheet
+        .getByLabel(S('Rechercher dans le catalogue', 'Search the catalog'))
+        .fill(itemName);
+      await sheet
+        .getByRole('button', {
+          name: S(`+ Créer « ${itemName} »`, `+ Create “${itemName}”`),
+        })
+        .waitFor({ timeout: 10_000 });
+      await sheet
+        .getByRole('button', {
+          name: S(`+ Créer « ${itemName} »`, `+ Create “${itemName}”`),
+        })
+        .click();
+      const modal = page.getByRole('dialog').last();
+      await modal.waitFor({ timeout: 10_000 });
+      await modal.getByLabel(S('Poids (kg)', 'Weight (kg)')).fill('2');
+      await modal
+        .getByLabel(S('Description', 'Description'), { exact: true })
+        .fill(
+          S(
+            'Idole de jade vert de la taille du poing, tiède même la nuit.',
+            'Fist-sized green jade idol, warm even at night.',
+          ),
+        );
+      await modal
+        .getByRole('button', { name: S('Créer et ajouter', 'Create and add') })
+        .scrollIntoViewIfNeeded();
+      await page.waitForTimeout(400); // la feuille se pose
+      await shoot(page, '34-objet-personnalise.png');
+      await page.close();
+    },
+  },
+  {
+    file: '35-arme-personnalisee.png',
+    async run(c) {
+      // Le formulaire d'arme du MD : onglet « Objets custom » du pupitre,
+      // « + Ajouter » catégorie Arme — « Basée sur » une épée longue,
+      // modèle de dégâts libre, propriété Polyvalente cochée, bonus magique
+      // +2. Aucun POST avant la capture : le panneau montre l'arme en
+      // devenir (aperçu symbolique, le MD n'a pas de porteur).
+      const page = await c.md.newPage();
+      await page.goto(webUrl(c.webPort, `/party/${c.refs.partyId}/gm`), {
+        waitUntil: 'networkidle',
+        timeout: 90_000,
+      });
+      await settle(page, 600);
+      await page.getByRole('button', { name: S('Objets custom', 'Custom items') }).click();
+      await page
+        .getByRole('button', { name: S('+ Ajouter', '+ Add') })
+        .first()
+        .click();
+      const modal = page.getByRole('dialog');
+      await modal.waitFor({ timeout: 10_000 });
+      await modal.getByLabel(S('Nom *', 'Name *'), { exact: true }).fill(CUSTOM_WEAPON_NAME);
+      // NB : le label enveloppant du select embarque le TEXTE DES OPTIONS dans
+      // son nom accessible (« CatégoriePersonnaliséArme… ») — jamais d'exact.
+      await modal
+        .getByLabel(S('Catégorie', 'Category'))
+        .selectOption({ label: S('Arme', 'Weapon') });
+      await page.waitForTimeout(250); // le panneau d'arme se pose
+      await modal.getByLabel(S('Basée sur', 'Based on')).selectOption('Longsword');
+      await modal
+        .getByLabel(S('Dégâts (dés, FOR, DEX ou magie)', 'Damage (dice, FOR, DEX or magie)'))
+        .fill('1d8+FOR');
+      // La puce Polyvalente : le clic peut tomber pendant un re-rendu du
+      // panneau (constaté : aria-pressed reste false) — on vérifie l'état et
+      // on réessaie, puis le champ deux mains suit l'état.
+      const poly = modal.getByRole('button', { name: S('Polyvalente', 'Versatile') });
+      for (let guard = 0; guard < 3; guard++) {
+        if ((await poly.getAttribute('aria-pressed')) === 'true') break;
+        await poly.click();
+        await page.waitForTimeout(300);
+      }
+      await modal.getByLabel(S('Dés à deux mains', 'Two-handed dice')).fill('1d10');
+      await modal
+        .getByRole('group', { name: S('Bonus magique', 'Magic bonus') })
+        .getByRole('button', { name: '+2', exact: true })
+        .click();
+      await page.waitForTimeout(300);
+      // Composition : le champ deux mains au centre — type, bonus et
+      // propriétés se lisent au-dessus, l'aperçu suit en dessous.
+      await modal
+        .getByLabel(S('Dés à deux mains', 'Two-handed dice'))
+        .evaluate((el) => el.scrollIntoView({ block: 'center' }));
+      await page.waitForTimeout(250);
+      await shoot(page, '35-arme-personnalisee.png');
+      await page.close();
+    },
+  },
+  {
+    file: '36-arme-custom-fiche.png',
+    async run(c) {
+      // L'arme custom sur la fiche de Kael : la ligne d'inventaire dépliée
+      // porte les puces 🎯 ⚔ ✨ calculées par le moteur — la lame inventée
+      // est traitée comme une lame du SRD (miroir de la 03, le geste du MD
+      // est cette fois passé par ensureCustomContent).
+      await endFights(c);
+      await ensureCustomContent(c);
+      const page = await openSheet(c.bastien, c.webPort, c.refs.partyId, c.refs.chars.kael);
+      await openTab(page, S('Inventaire', 'Inventory'));
+      await expandInventoryCategories(page);
+      const row = page.getByRole('button', {
+        name: S(`${CUSTOM_WEAPON_NAME}, 1 exemplaire`, `${CUSTOM_WEAPON_NAME} × 1`),
+      });
+      await row.waitFor({ timeout: 10_000 });
+      await row.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+      await row.click(); // déploie description + puces 🎯 ⚔ ✨
+      await page.waitForTimeout(350);
+      await row.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+      await page.waitForTimeout(250);
+      await shoot(page, '36-arme-custom-fiche.png');
+      await page.close();
+    },
+  },
+  {
+    file: '37-sort-personnalise.png',
+    async run(c) {
+      // Le MD inscrit un sort de la table : onglet « Sorts custom » du
+      // pupitre, « + Ajouter » — nom, niveau 3, dés de dégâts et le
+      // raccourci d'incantation supérieure « +1d6 par cran » dont la puce
+      // or se pose sous le champ. ensureCustomContent a déjà semé le sort
+      // (compteur de l'onglet) ; la capture montre le formulaire vivant,
+      // sans envoi.
+      await ensureCustomContent(c);
+      const page = await c.md.newPage();
+      await page.goto(webUrl(c.webPort, `/party/${c.refs.partyId}/gm`), {
+        waitUntil: 'networkidle',
+        timeout: 90_000,
+      });
+      await settle(page, 600);
+      await page.getByRole('button', { name: S('Sorts custom', 'Custom spells') }).click();
+      await page
+        .getByRole('button', { name: S('+ Ajouter', '+ Add') })
+        .first()
+        .click();
+      const modal = page.getByRole('dialog');
+      await modal.waitFor({ timeout: 10_000 });
+      await modal.getByLabel(S('Nom', 'Name'), { exact: true }).fill(CUSTOM_SPELL_NAME);
+      // Id dédié : le label « Niveau » du select embarque ses options dans le
+      // nom accessible, et « Niveaux supérieurs » (textarea) le matcherait aussi.
+      await modal.locator('#spell-level-input').selectOption('3');
+      await modal.locator('#spell-damage-input').fill('3d6');
+      // Clés bas de casse côté SpellFields (« cold »), pas les clés
+      // capitalisées du catalogue d'objets (« Cold »).
+      await modal.locator('#spell-damage-type-input').selectOption('cold');
+      await modal.locator('#spell-upcast-damage-input').fill('1d6');
+      // La puce or « +1d6 par cran » vit sous le champ d'upcast : on l'ancre
+      // au centre — le raccourci et les dés de base lisent ensemble.
+      await modal.getByText(S('+1d6 par cran', '+1d6 per level')).first().scrollIntoViewIfNeeded();
+      await page.waitForTimeout(300);
+      await shoot(page, '37-sort-personnalise.png');
+      await page.close();
+    },
+  },
+  {
+    file: '38-monstre-personnalise.png',
+    async run(c) {
+      // Le bloc de stats du monstre custom : onglet « Monstres custom » du
+      // pupitre, « Modifier » sur la créature seedée — le pied de modal
+      // porte l'aperçu embarqué (CA, PV, actions, dés cliquables), la vraie
+      // fiche du bestiaire rendue par MonsterStatBlock.
+      await ensureCustomContent(c);
+      const page = await c.md.newPage();
+      await page.goto(webUrl(c.webPort, `/party/${c.refs.partyId}/gm`), {
+        waitUntil: 'networkidle',
+        timeout: 90_000,
+      });
+      await settle(page, 600);
+      await page.getByRole('button', { name: S('Monstres custom', 'Custom monsters') }).click();
+      await page.getByText(CUSTOM_MONSTER_NAME).first().waitFor({ timeout: 10_000 });
+      await page
+        .getByRole('button', { name: S('Modifier', 'Edit'), exact: true })
+        .first()
+        .click();
+      const modal = page.getByRole('dialog');
+      await modal.waitFor({ timeout: 10_000 });
+      // L'aperçu embarqué : le titre « Aperçu » du pied de modal (pas le
+      // panneau Arme/Aperçu d'un autre onglet — on est ici monstre).
+      await modal
+        .getByText(S('Aperçu', 'Preview'), { exact: true })
+        .last()
+        .scrollIntoViewIfNeeded();
+      await page.waitForTimeout(400); // le bloc se pose
+      await shoot(page, '38-monstre-personnalise.png');
+      await page.close();
+    },
+  },
+  {
+    file: '40-armure-personnalisee.png',
+    async run(c) {
+      // Le joueur façonne une armure : même feuille de création d'objet,
+      // catégorie Armure — type Intermédiaire, CA de base 14, et l'aperçu
+      // computeAC sur le personnage courant (Kael : 14 + DEX) qui chiffre
+      // la classe d'armure sur-le-champ. L'autonomie players_create_items
+      // (défaut 1) est le kill switch du MD.
+      await endFights(c);
+      const page = await openSheet(c.bastien, c.webPort, c.refs.partyId, c.refs.chars.kael);
+      await openTab(page, S('Inventaire', 'Inventory'));
+      await page
+        .getByRole('button', {
+          name: S('Ajouter un objet au catalogue', 'Add an item from the catalog'),
+        })
+        .click();
+      const sheet = page.getByRole('dialog');
+      await sheet.waitFor({ timeout: 10_000 });
+      const armorName = S('Écailles de mégalodon', 'Megashark scales');
+      await sheet
+        .getByLabel(S('Rechercher dans le catalogue', 'Search the catalog'))
+        .fill(armorName);
+      await sheet
+        .getByRole('button', {
+          name: S(`+ Créer « ${armorName} »`, `+ Create “${armorName}”`),
+        })
+        .waitFor({ timeout: 10_000 });
+      await sheet
+        .getByRole('button', {
+          name: S(`+ Créer « ${armorName} »`, `+ Create “${armorName}”`),
+        })
+        .click();
+      const modal = page.getByRole('dialog').last();
+      await modal.waitFor({ timeout: 10_000 });
+      // Label enveloppant du select : son nom accessible embarque les options
+      // (« CatégoriePersonnaliséArme… ») — jamais de matching exact.
+      await modal.getByLabel(S('Catégorie', 'Category')).selectOption('armor');
+      await page.waitForTimeout(250); // le panneau d'armure se pose
+      await modal.getByRole('button', { name: S('Intermédiaire', 'Medium'), exact: true }).click();
+      await modal.getByLabel(S('CA de base', 'Base AC'), { exact: true }).fill('14');
+      await page.waitForTimeout(300); // la puce CA calculée se pose
+      await modal.getByLabel(S('CA de base', 'Base AC'), { exact: true }).scrollIntoViewIfNeeded();
+      await page.waitForTimeout(250);
+      await shoot(page, '40-armure-personnalisee.png');
+      await page.close();
+    },
+  },
+  {
+    file: '39-monstre-custom-rencontre.png',
+    async run(c) {
+      // Le monstre custom en pleine rencontre, traqueur bureau (1440×900) —
+      // miroir de la 24 avec la créature inventée : rail d'initiative,
+      // scène du tour, bloc de stats amarré sur le rôdeur focalisé.
+      // Dernière capture GM : ensureCustomEncounter clore l'embuscade
+      // gobeline et dresse « Embuscade du rôdeur » (idempotent, --only 39
+      // tourne seul).
+      await ensureCustomEncounter(c);
+      const ctx = await newSession(c.browser, c.sessions.md, {
+        viewport: { width: 1440, height: 900 },
+        desktop: true,
+      });
+      try {
+        const page = await ctx.newPage();
+        await page.goto(
+          webUrl(c.webPort, `/party/${c.refs.partyId}/combat?enc=${c.refs.customEncounterId}`),
+          { waitUntil: 'networkidle', timeout: 90_000 },
+        );
+        await settle(page, 600);
+        await page.getByText(S('Tour suivant', 'Next turn')).first().waitFor({ timeout: 10_000 });
+        // Le rail numérote même une créature seule : « Rôdeur batiri à
+        // plumes 1 » — ancre sur le préfixe, jamais sur l'exactitude.
+        await page
+          .getByRole('button', {
+            name: new RegExp(`^${CUSTOM_MONSTER_NAME} 1,`),
+          })
+          .first()
+          .click();
+        await page
+          .getByRole('heading', { name: new RegExp(`^${CUSTOM_MONSTER_NAME}`) })
+          .waitFor({ timeout: 10_000 });
+        await page.getByRole('button', { name: /Stats/ }).first().click();
+        await page
+          .getByRole('heading', { name: new RegExp(`^${CUSTOM_MONSTER_NAME}`) })
+          .last()
+          .waitFor({ timeout: 10_000 });
+        // Les actions du bloc (dés cliquables) vivent sous le pli de la
+        // colonne : on les fait remonter sans chasser l'en-tête du bloc.
+        await page
+          .getByRole('heading', { name: S('Actions', 'Actions'), exact: true })
+          .last()
+          .evaluate((el) => el.scrollIntoView({ block: 'end' }));
+        await page.waitForTimeout(600);
+        await shoot(page, '39-monstre-custom-rencontre.png');
         await page.close();
       } finally {
         await ctx.close();

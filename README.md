@@ -30,6 +30,7 @@ Et quand la salle est tamisée, le même grimoire s'ouvre **à la lueur de la bo
 - **Moteur de règles SRD 5.1** — CA, armes et attaques calculées, sorts avec incantation supérieure, sorts toujours préparés, multiclassage complet, expertise — partagé par le web et l'API
 - **Inventaire** — 646 objets du SRD, encombrance en kg, conteneurs et montures, bourse avec rendu de monnaie automatique
 - **Sorts** — 490 sorts en français (SRD + Xanathar/Tasha/Fizban), traqueur d'emplacements par classe
+- **Contenus personnalisés** — objets et armes créés par la table (dégâts et attaque calculés par le moteur), sorts et monstres du MD, armures des joueurs
 - **Traqueur de combat (MD)** — 964 monstres, initiative saisie par les joueurs depuis leur écran, états qui expirent en fin de tour, PV synchronisés dans les deux sens entre traqueur et fiche
 - **Correspondance secrète MD ↔ joueur** — un fil par personnage, notifications Web Push hors app
 - **PWA** — installable, mises à jour versionnées avec bandeau de rechargement
