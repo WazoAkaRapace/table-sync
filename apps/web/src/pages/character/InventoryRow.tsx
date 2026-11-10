@@ -1,5 +1,7 @@
 import type { Character, InventoryEntry, StorageLocation } from '@table-sync/shared';
 import {
+  abilityModifier,
+  computeAC,
   computeWeaponStats,
   formatModifier,
   isProficientWithArmor,
@@ -8,6 +10,7 @@ import {
 } from '@table-sync/shared';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { appLang } from '../../i18n';
 import { ItemVignette } from '../../components/ItemImageViewer';
 import { Chip, NumberField, RarityBadge, StepButton, WeightBadge } from '../../components/ui';
 import {
@@ -91,6 +94,29 @@ export function InventoryRow({
     () => (item.category === 'weapon' ? computeWeaponStats(item, character) : null),
     [item, character],
   );
+
+  // CA calculée de l'armure SUR CE PORTEUR (computeAC lit la famille
+  // explicite des armures custom) — chip informatives, la CA de la tuile ne
+  // bouge qu'à l'équipement. Uniquement quand le moteur peut résoudre
+  // l'armure (CA explicite, famille ou base) — sinon on resterait sur le
+  // « sans armure 10 + DEX » du porteur.
+  const armorAc = useMemo(() => {
+    if (item.category !== 'armor') return null;
+    if (
+      item.acBase === null &&
+      !item.armorFamily &&
+      !item.baseArmor &&
+      !resolveMagicArmorBase(item).base
+    )
+      return null;
+    return computeAC(
+      [{ item, equipped: true }],
+      abilityModifier(character.dexterity ?? 10),
+      false,
+      undefined,
+      appLang(),
+    );
+  }, [item, character]);
 
   // Locations available to move this item to (everything except the active one)
   const otherLocations = locations.filter((l) => l.id !== activeLocationId);
@@ -429,6 +455,24 @@ export function InventoryRow({
                           </div>
                         );
                       })()}
+                    {/* CA calculée de l'armure sur ce porteur (armures
+                        custom comprises — la famille explicite pilote le
+                        calcul) : chip informative, breakdown en title. */}
+                    {armorAc && (
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <Chip
+                          tone="orange"
+                          title={`${t('rangee.ca.calcullee')} — ${armorAc.source}`}
+                        >
+                          <Glyph name="shield" /> {armorAc.ac}
+                        </Chip>
+                        {item.magicBonus != null && item.magicBonus > 0 && (
+                          <Chip tone="gold" className="font-semibold">
+                            <Glyph name="spark" /> +{item.magicBonus}
+                          </Chip>
+                        )}
+                      </div>
+                    )}
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-500">
                       {item.category === 'armor' &&
                         entry.equipped &&

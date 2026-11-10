@@ -54,6 +54,12 @@ import {
   weaponDraftPayload,
 } from '../components/WeaponFields';
 import {
+  EMPTY_ARMOR_DRAFT,
+  ArmorFields,
+  type ArmorDraft,
+  armorDraftPayload,
+} from '../components/ArmorFields';
+import {
   BottomSheet,
   EmptyState,
   ErrorMsg,
@@ -240,6 +246,9 @@ export default function CharacterInventoryPage() {
   // Panneau d'arme du créateur (category 'weapon') — l'aperçu vit dedans,
   // rendu chiffré sur CE personnage.
   const [createItemWeapon, setCreateItemWeapon] = useState<WeaponDraft>(EMPTY_WEAPON_DRAFT);
+  // Panneau d'armure du créateur (category 'armor') — même vie, aperçu
+  // chiffré par computeAC sur CE personnage (asymétrie armes).
+  const [createItemArmor, setCreateItemArmor] = useState<ArmorDraft>(EMPTY_ARMOR_DRAFT);
   const [creatingItem, setCreatingItem] = useState(false);
 
   // Transfer modal
@@ -616,13 +625,16 @@ export default function CharacterInventoryPage() {
 
   // ---------- Custom item creation (players too, party setting) ----------
 
-  function openItemCreator(name: string) {
+  function openItemCreator(name: string, presetCategory?: string) {
     setCreateItemName(name);
-    setCreateItemCategory('custom');
+    // Catégorie pré-positionnée quand le joueur vient d'une recherche
+    // filtrée (ex. « Armure ») — le sélecteur reste libre (S6).
+    setCreateItemCategory(presetCategory ?? 'custom');
     setCreateItemWeight('');
     setCreateItemDesc('');
     setCreateItemImage(EMPTY_ITEM_IMAGE);
     setCreateItemWeapon(EMPTY_WEAPON_DRAFT);
+    setCreateItemArmor(EMPTY_ARMOR_DRAFT);
     // Fold the catalog sheet: the creator modal takes over, and the freshly
     // created item lands in the bag (toast) rather than behind the sheet.
     setCatalogOpen(false);
@@ -644,6 +656,10 @@ export default function CharacterInventoryPage() {
       // et les rejette — sinon).
       if (createItemCategory === 'weapon') {
         Object.assign(body, weaponDraftPayload(createItemWeapon));
+      }
+      // Champs d'armure : uniquement pour la catégorie Armure (même règle).
+      if (createItemCategory === 'armor') {
+        Object.assign(body, armorDraftPayload(createItemArmor));
       }
       const res = await api.post(`/api/parties/${partyId}/items`, body);
       const created: Item = res.data.item;
@@ -994,7 +1010,9 @@ export default function CharacterInventoryPage() {
       offset={catalogOffset}
       readOnly={!canEdit}
       canCreateItem={canEdit && (isGM || (gmQuery.data?.playersCreateItems ?? false))}
-      onCreateItem={openItemCreator}
+      onCreateItem={(name) =>
+        openItemCreator(name, catalogCategory === 'armor' ? 'armor' : undefined)
+      }
       onAdd={addFromCatalog}
       onLoadMore={() => catalogQuery.fetchNextPage()}
     />
@@ -1813,6 +1831,15 @@ export default function CharacterInventoryPage() {
             <WeaponFields
               draft={createItemWeapon}
               onChange={setCreateItemWeapon}
+              previewCharacter={character}
+            />
+          )}
+          {/* Panneau Armure : même emplacement, aperçu chiffré par computeAC
+            sur le personnage courant (la CA bouge à l'équipement). */}
+          {createItemCategory === 'armor' && (
+            <ArmorFields
+              draft={createItemArmor}
+              onChange={setCreateItemArmor}
               previewCharacter={character}
             />
           )}

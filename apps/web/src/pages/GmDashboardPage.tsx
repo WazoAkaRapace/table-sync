@@ -30,6 +30,13 @@ import {
   weaponDraftPayload,
 } from '../components/WeaponFields';
 import {
+  EMPTY_ARMOR_DRAFT,
+  ArmorFields,
+  type ArmorDraft,
+  armorDraftFromItem,
+  armorDraftPayload,
+} from '../components/ArmorFields';
+import {
   CategoryBadge,
   ConfirmButton,
   EmptyState,
@@ -1036,6 +1043,8 @@ function CustomItemsTab({
   // Panneau d'arme (category 'weapon') : le draft vit ici, hydraté à
   // l'édition, remis à zéro en création.
   const [weaponDraft, setWeaponDraft] = useState<WeaponDraft>(EMPTY_WEAPON_DRAFT);
+  // Panneau d'armure (category 'armor') — même vie que le draft d'arme.
+  const [armorDraft, setArmorDraft] = useState<ArmorDraft>(EMPTY_ARMOR_DRAFT);
   // Mini-châssis de la liste → visionneuse plein écran (rev capturée à
   // l'ouverture : l'URL change si le fichier a changé entre-temps).
   const [viewingImage, setViewingImage] = useState<{
@@ -1100,6 +1109,7 @@ function CustomItemsTab({
     setDesc('');
     setImageValue(EMPTY_ITEM_IMAGE);
     setWeaponDraft(EMPTY_WEAPON_DRAFT);
+    setArmorDraft(EMPTY_ARMOR_DRAFT);
     setError('');
     setShowModal(true);
   };
@@ -1114,6 +1124,8 @@ function CustomItemsTab({
     // Le panneau d'arme repart de l'état réel de l'objet (dés, type, bonus,
     // propriétés, base) — la soumission PATCH les renvoie.
     setWeaponDraft(weaponDraftFromItem(item));
+    // Idem armure : famille, CA de base, force min, malus, bonus, base.
+    setArmorDraft(armorDraftFromItem(item));
     setError('');
     setShowModal(true);
   };
@@ -1135,6 +1147,10 @@ function CustomItemsTab({
     // et les rejette — sinon). Création comme édition : le modal d'édition
     // hydrate le draft depuis l'item, la payload remplace l'état complet.
     if (category === 'weapon') Object.assign(payload, weaponDraftPayload(weaponDraft));
+    // Champs d'armure : uniquement pour la catégorie Armure (l'API les
+    // ignore — et les rejette — sinon). Création comme édition : le modal
+    // d'édition hydrate le draft depuis l'item, la payload remplace l'état.
+    if (category === 'armor') Object.assign(payload, armorDraftPayload(armorDraft));
     try {
       let itemId = editing?.id as number | undefined;
       if (editing) {
@@ -1345,6 +1361,9 @@ function CustomItemsTab({
           {/* Panneau Arme : sous la catégorie, uniquement pour les armes —
             aperçu symbolique (le MD n'a pas de porteur). */}
           {category === 'weapon' && <WeaponFields draft={weaponDraft} onChange={setWeaponDraft} />}
+          {/* Panneau Armure : même emplacement, aperçu symbolique (la CA
+            reste « + DEX » en lettres — aucun porteur du côté MD). */}
+          {category === 'armor' && <ArmorFields draft={armorDraft} onChange={setArmorDraft} />}
           <label className="block">
             <span className="label">{t('md.poids.kg')}</span>
             <input
