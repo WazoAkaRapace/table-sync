@@ -22,7 +22,6 @@
 import type {
   Combatant,
   EncounterDetail,
-  EncounterRosterEntry,
   EncounterStatus,
   EncounterSummary,
   PartyDetail,

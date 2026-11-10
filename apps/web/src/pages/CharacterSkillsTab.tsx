@@ -64,7 +64,6 @@ interface Props {
 }
 
 import {
-  type BreakdownSegment,
   TOOL_CATEGORIES,
   abilityScore,
   saveProficiency,
