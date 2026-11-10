@@ -1,17 +1,10 @@
 {
   "name": "table-sync-glyphes",
-  "preset": "soft-custom",
-  "grid": 24,
-  "strokeWidth": 1.8,
-  "strokeLinecap": "round",
-  "strokeLinejoin": "round",
-  "padding": 2,
+  "preset": "game-icons-fill",
+  "grid": 512,
+  "render": "fill currentColor",
   "opticalBalance": true,
-  "secondaryStrokes": {
-    "detail": 1.3,
-    "secondary": 1.5,
-    "accent": 2
-  },
+  "source": "Game Icons v2025 (CC-BY 3.0) \u2014 Lorc, Delapouite, Felbrigg et al.",
   "iconCount": 73,
   "icons": [
     "combat",
