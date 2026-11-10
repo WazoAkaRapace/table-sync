@@ -97,6 +97,49 @@ export async function run(base: string, fx: Fixtures, _srv: ServerHandle): Promi
       'actor does not receive their own party:change (echo suppressed)',
     );
 
+    // Monstre personnalisé (PR2) : party:change action 'custom-monster' —
+    // distinct de 'custom-item'/'npcs' (chaque onglet ne se réveille que sur
+    // ses écritures), porte actorUserId, echo supprimé pour l'acteur MD.
+    const customRes = await api(base, 'POST', `/api/parties/${fx.partyId}/monsters`, {
+      token: fx.gm.token,
+      body: {
+        nameFr: 'Écho du serpentin',
+        armorClass: 12,
+        hitPoints: 12,
+        hitDice: '2d8+3',
+        abilities: { for: 10, dex: 12, con: 10, int: 10, sag: 10, cha: 10 },
+        challengeRating: 0.5,
+      },
+    });
+    ok(
+      customRes.status === 201,
+      `custom monster created (reçu: ${customRes.status} ${JSON.stringify(customRes.data)})`,
+    );
+    await waitMsg(
+      bob.messages,
+      (m) => m.type === 'party:change' && m.action === 'custom-monster',
+      5000,
+    );
+    await silence(
+      alice.messages,
+      (m) => m.type === 'party:change' && m.action === 'custom-monster',
+      700,
+    );
+    ok(
+      !alice.messages.some((m) => m.type === 'party:change' && m.action === 'custom-monster'),
+      'custom-monster : echo supprimé pour le MD acteur',
+    );
+    ok(
+      bob.messages
+        .filter((m) => m.type === 'party:change' && m.action === 'custom-monster')
+        .every((m) => m.actorUserId === fx.gm.userId),
+      'custom-monster : actorUserId présent',
+    );
+    ok(
+      !bob.messages.some((m) => m.type === 'party:change' && m.action === 'custom-item'),
+      "l'écriture monstre ne réveille pas l'onglet Objets custom (action dédiée)",
+    );
+
     // hidden character: character:change reaches owner + GM only
     await api(base, 'PATCH', `/api/characters/${fx.charSecret.id}`, {
       token: fx.gm.token,

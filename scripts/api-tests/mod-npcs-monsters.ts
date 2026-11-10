@@ -272,4 +272,229 @@ export async function run(base: string, fx: Fixtures, srv: ServerHandle): Promis
     ),
     'descriptions EN nettoyées (plus de balises 5e.tools)',
   );
+
+  // ---------- monstres personnalisés (PR2 « Contenus personnalisés ») ----------
+  const ZALKIR = {
+    nameFr: 'Zalkir, prêtre-serpent',
+    type: 'Humanoïde',
+    size: 'M',
+    alignment: 'loyal mauvais',
+    armorClass: 15,
+    armorDesc: 'armure d’écailles',
+    hitPoints: 65,
+    hitDice: '10d8+20',
+    speed: { walk: 9, swim: 6 },
+    abilities: { for: 13, dex: 14, con: 14, int: 11, sag: 16, cha: 16 },
+    challengeRating: 3,
+    traits: [{ name: 'Volonté du serpent', text: 'Avantage aux sauvegardes contre la peur.' }],
+    actions: [
+      {
+        name: 'Cimeterre',
+        text: 'Attaque au corps à corps : +4 pour toucher, 5 (1d6+2) dégâts tranchants.',
+      },
+    ],
+    damageResistances: ['poison'],
+    conditionImmunities: ['Empoisonné'],
+    senses: 'perception passive 13',
+    languages: 'commun, aberrant',
+  };
+
+  // Création MD seule — le joueur (même toggle objets ouvert) prend 403.
+  r = await api(base, 'POST', `/api/parties/${P}/monsters`, {
+    token: fx.player.token,
+    body: ZALKIR,
+  });
+  eq(r.status, 403, 'create custom monster as player → 403');
+  r = await api(base, 'POST', `/api/parties/${P}/monsters`, {
+    token: fx.outsider.token,
+    body: ZALKIR,
+  });
+  eq(r.status, 403, 'create custom monster as outsider → 403');
+
+  r = await api(base, 'POST', `/api/parties/${P}/monsters`, {
+    token: fx.gm.token,
+    body: ZALKIR,
+  });
+  eq(r.status, 201, 'GM creates custom monster');
+  const zalkir = r.data.monster;
+  ok(zalkir.slug.startsWith('custom-zalkir'), `slug serveur préfixé (reçu: ${zalkir.slug})`);
+  eq(zalkir.origin, 'custom', 'origin badge served');
+  eq(zalkir.xp, 700, 'XP dérivés du FP 3 (SRD)');
+  eq(zalkir.languages.join(','), 'commun,aberrant', 'langues servies en liste');
+  eq(zalkir.actions[0].attackBonus, 4, 'bonus d’attaque parsé au mieux');
+  eq(zalkir.actions[0].damageDice, '1d6+2', 'dés parsés au mieux');
+  // Colonnes précalculées remplies à l'insertion (recherche nom-d'abord).
+  eq(
+    srv.query('SELECT name_search FROM monsters WHERE slug = ?', zalkir.slug).name_search,
+    'zalkir, pretre-serpent',
+    'name_search calculé à l’insertion (accent-free)',
+  );
+
+  // Validations du noyau : chaque borne rend son message métier FR.
+  r = await api(base, 'POST', `/api/parties/${P}/monsters`, { token: fx.gm.token, body: {} });
+  eq(r.status, 400, 'create without name → 400');
+  r = await api(base, 'POST', `/api/parties/${P}/monsters`, {
+    token: fx.gm.token,
+    body: { ...ZALKIR, hitDice: '10d8++20' },
+  });
+  eq(r.status, 400, 'hit dice formula invalide → 400');
+  r = await api(base, 'POST', `/api/parties/${P}/monsters`, {
+    token: fx.gm.token,
+    body: { ...ZALKIR, abilities: { ...ZALKIR.abilities, dex: 99 } },
+  });
+  eq(r.status, 400, 'ability hors bornes → 400');
+  r = await api(base, 'POST', `/api/parties/${P}/monsters`, {
+    token: fx.gm.token,
+    body: { ...ZALKIR, challengeRating: 3.5 },
+  });
+  eq(r.status, 400, 'CR hors table SRD → 400');
+  r = await api(base, 'POST', `/api/parties/${P}/monsters`, {
+    token: fx.gm.token,
+    body: { ...ZALKIR, type: 'Pokémon' },
+  });
+  eq(r.status, 400, 'type non-SRD → 400');
+  // Corps non objet : le schéma TypeBox rejette, message FR mappé.
+  r = await api(base, 'POST', `/api/parties/${P}/monsters`, {
+    token: fx.gm.token,
+    body: [] as unknown as Record<string, unknown>,
+  });
+  eq(r.status, 400, 'body non objet → 400 (schéma TypeBox)');
+  eq(r.data.error, 'nom du monstre requis', 'message FR mappé (validationMessage)');
+
+  // Deux monstres de même nom : slugs distincts (suffixe aléatoire).
+  r = await api(base, 'POST', `/api/parties/${P}/monsters`, {
+    token: fx.gm.token,
+    body: { ...ZALKIR, nameFr: 'Zalkir, prêtre-serpent' },
+  });
+  eq(r.status, 201, 'homonyme SRD/custom permis');
+  ok(r.data.monster.slug !== zalkir.slug, 'slug unique par suffixe');
+  const zalkir2 = r.data.monster;
+
+  // Scoping de lecture : le catalogue du groupe mêle SRD + customs ; le
+  // catalogue global reste SRD pur ; l'extérieur ne voit pas les customs.
+  r = await api(base, 'GET', `/api/monsters?partyId=${P}&search=zalkir`, { token: fx.player.token });
+  eq(r.status, 200, 'member searches scoped catalog');
+  ok(
+    (r.data.monsters as any[]).some((m) => m.slug === zalkir.slug),
+    'custom found via search_text (accents insensibles)',
+  );
+  ok(
+    (r.data.monsters as any[]).every((m) => m.origin === 'custom' || m.origin === 'srd'),
+    'summary porte le badge origin',
+  );
+  r = await api(base, 'GET', `/api/monsters?search=zalkir`, { token: fx.gm.token });
+  eq((r.data.monsters as any[]).length, 0, 'catalogue global : le custom ne fuit pas (SRD pur)');
+  r = await api(base, 'GET', `/api/monsters?partyId=${P}&search=zalkir`, {
+    token: fx.outsider.token,
+  });
+  eq(r.status, 403, 'scoped catalog non-membre → 403');
+  r = await api(base, 'GET', `/api/monsters/${zalkir.slug}`, { token: fx.outsider.token });
+  eq(r.status, 403, 'custom detail non-membre → 403');
+  r = await api(base, 'GET', `/api/monsters/${zalkir.slug}`, { token: fx.player.token });
+  eq(r.status, 200, 'custom detail member → 200');
+
+  // Liste du pupitre : origin=custom + méta rencontres.
+  r = await api(base, 'GET', `/api/monsters?partyId=${P}&origin=custom&limit=100`, {
+    token: fx.gm.token,
+  });
+  eq(r.data.monsters.length, 2, 'pupitre liste les customs du groupe');
+  eq(r.data.monsters[0].encounterCount, 0, 'méta rencontres à zéro avant usage');
+
+  // Édition : PATCH re-valide fusionné, garde le slug, recalcul search_text.
+  r = await api(base, 'PATCH', `/api/monsters/${zalkir.slug}`, {
+    token: fx.outsider.token,
+    body: { hitPoints: 70 },
+  });
+  eq(r.status, 403, 'patch custom monster outsider → 403');
+  r = await api(base, 'PATCH', `/api/monsters/${goblin.slug}`, {
+    token: fx.gm.token,
+    body: { hitPoints: 70 },
+  });
+  eq(r.status, 403, 'patch un monstre SRD → 403');
+  r = await api(base, 'PATCH', `/api/monsters/${zalkir.slug}`, {
+    token: fx.gm.token,
+    body: { hitPoints: 70, nameFr: 'Zalkir, hiérophante du serpent' },
+  });
+  eq(r.status, 200, 'GM patches custom monster');
+  eq(r.data.monster.hitPoints, 70, 'hit points updated');
+  eq(r.data.monster.hitDice, '10d8+20', 'champ absent conservé (contexte fusionné)');
+  eq(r.data.monster.actions[0].name, 'Cimeterre', 'traits/actions conservés au PATCH');
+  r = await api(base, 'GET', `/api/monsters?partyId=${P}&search=hierophante`, {
+    token: fx.gm.token,
+  });
+  ok(
+    (r.data.monsters as any[]).some((m) => m.slug === zalkir.slug),
+    'search_text recalculé au renommage (sans accent)',
+  );
+
+  // Ajout en rencontre ×3 : PV roulés, groupe — un custom y est un SRD.
+  r = await api(base, 'POST', `/api/parties/${P}/encounters`, {
+    token: fx.gm.token,
+    body: { name: 'Sanctuaire du serpent' },
+  });
+  eq(r.status, 201, 'encounter created');
+  const encId = r.data.encounter.id;
+  r = await api(base, 'POST', `/api/encounters/${encId}/combatants/monster`, {
+    token: fx.gm.token,
+    body: { monsterSlug: zalkir.slug, count: 3, nameHidden: true },
+  });
+  eq(r.status, 201, 'custom monster added ×3');
+  const group = (r.data.combatants as any[])[0].groupId;
+  ok((r.data.combatants as any[]).every((c) => c.groupId === group), 'groupe partagé');
+  ok(
+    (r.data.combatants as any[]).every((c) => c.armorClass === 15),
+    'CA snapshot copiée',
+  );
+  r = await api(base, 'GET', `/api/monsters?partyId=${P}&origin=custom`, { token: fx.gm.token });
+  eq(
+    r.data.monsters.find((m: any) => m.slug === zalkir.slug).encounterCount,
+    1,
+    'méta « dans 1 rencontre » après ajout',
+  );
+
+  // Garde de périmètre : le custom d'une AUTRE table n'entre pas.
+  r = await api(base, 'POST', '/api/parties', {
+    token: fx.outsider.token,
+    body: { name: 'Autre table' },
+  });
+  eq(r.status, 201, 'second party created');
+  const otherPartyId = r.data.party.id;
+  r = await api(base, 'POST', `/api/parties/${otherPartyId}/monsters`, {
+    token: fx.outsider.token,
+    body: { ...ZALKIR, nameFr: 'Gardien d’une autre table' },
+  });
+  eq(r.status, 201, 'outsider GM creates custom in own party');
+  const foreign = r.data.monster;
+  r = await api(base, 'POST', `/api/encounters/${encId}/combatants/monster`, {
+    token: fx.gm.token,
+    body: { monsterSlug: foreign.slug, count: 1 },
+  });
+  eq(r.status, 404, 'custom d’un autre groupe → 404 à l’ajout');
+
+  // Suppression : bloquée 409 tant qu'une rencontre setup/active référence
+  // le slug (liste des rencontres servie), permise après `ended`.
+  r = await api(base, 'DELETE', `/api/monsters/${zalkir.slug}`, { token: fx.gm.token });
+  eq(r.status, 409, 'delete blocked while referenced');
+  ok(
+    (r.data.encounters as any[]).some((e) => e.id === encId && e.status === 'setup'),
+    '409 liste les rencontres vivantes',
+  );
+  r = await api(base, 'PATCH', `/api/encounters/${encId}`, {
+    token: fx.gm.token,
+    body: { status: 'ended' },
+  });
+  ok(r.status === 200 || r.status === 204, 'encounter ended');
+  r = await api(base, 'DELETE', `/api/monsters/${zalkir.slug}`, { token: fx.gm.token });
+  eq(r.status, 204, 'delete allowed once encounters ended');
+  // Le combatant snapshot survit (historique dégradé assumé, Q6a).
+  eq(
+    srv.query('SELECT COUNT(*) as c FROM combatants WHERE monster_slug = ?', zalkir.slug).c,
+    3,
+    'combatants snapshots survivants',
+  );
+  // Nettoyage : l'autre table et ses restes disparaissent (le second zalkir
+  // sert à la spec WS plus loin — il reste, lui).
+  await api(base, 'DELETE', `/api/monsters/${foreign.slug}`, { token: fx.outsider.token });
+  await api(base, 'DELETE', `/api/encounters/${encId}`, { token: fx.gm.token });
+  ok(zalkir2.slug.startsWith('custom-'), 'second custom kept for the sync module');
 }
