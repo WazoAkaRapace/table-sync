@@ -34,7 +34,7 @@ gmTest(
 
     await page.goto(sheetUrl(cid));
     await openTab(page, 'Survie');
-    await expect(page.getByRole('heading', { name: 'Ressources' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Ressources', exact: true })).toBeVisible();
     const sections = page.locator('h4', {
       hasText: /^(Classe|Race|Historique|Dons|Personnalisé)$/,
     });
@@ -62,5 +62,5 @@ gmTest('survie: aucun compteur → panneau Ressources absent', async ({ page }) 
   const cid = (await res.json()).character.id;
   await page.goto(sheetUrl(cid));
   await openTab(page, 'Survie');
-  await expect(page.getByRole('heading', { name: 'Ressources' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Ressources', exact: true })).toHaveCount(0);
 });
