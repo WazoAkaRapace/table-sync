@@ -1,5 +1,15 @@
 [
   {
+    "version": null,
+    "sha": null,
+    "date": "2026-11-10",
+    "title": "aperçus des formulaires MD réparés",
+    "items": [
+      "Les aperçus embarqués des formulaires de monstre et de sort personnalisés ne sont plus piégés dans un double défilement : le bloc vit dans le défilement de la modale (fini le doigt coincé sur tablette et le bloc tronqué au ras de l'écran).",
+      "Un bouton « Masquer/Montrer l'aperçu » remplace la croix du bloc de stats, qui fermait l'aperçu sans moyen de le rouvrir."
+    ]
+  },
+  {
     "version": "2026.11.10-7",
     "sha": "fc24a39b",
     "date": "2026-11-10",

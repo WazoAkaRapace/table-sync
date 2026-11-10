@@ -19,6 +19,7 @@ import MonsterStatBlock from '../../components/MonsterStatBlock';
 import { ConfirmButton, EmptyState, Fab, Modal } from '../../components/ui';
 import { monsterSizeLabel } from '../../i18n/labels';
 import { Glyph } from '../../components/Glyph';
+import { PreviewToggle } from '../../components/PreviewToggle';
 import api from '../../api';
 import { usePartyContentSync } from './usePartyContentSync';
 
@@ -269,20 +270,27 @@ export function CustomMonstersTab({ partyId }: { partyId: string }) {
               {t('md.annuler')}
             </button>
           </div>
-          {previewOpen ? (
-            <div className="pt-2 border-t border-parchment-200">
+          <div className="pt-2 border-t border-parchment-200">
+            <div className="flex items-center justify-between gap-2">
               <span className="section-title">{t('monstrecustom.apercu')}</span>
-              <div className="mt-2 max-h-72 overflow-y-auto rounded-xl">
+              <PreviewToggle open={previewOpen} onToggle={() => setPreviewOpen((v) => !v)} />
+            </div>
+            {previewOpen ? (
+              // Pas de scroll imbriqué : le bloc vit dans LE scroll de la
+              // modale (un max-h interne + overscroll-contain piègeait le
+              // doigt sur iPad et tronquait le bloc au ras de l'écran).
+              <div className="mt-2 rounded-xl">
                 <MonsterStatBlock
                   open={showModal}
                   slug={null}
                   monsterOverride={draftToMonster(draft)}
                   onClose={() => setPreviewOpen(false)}
+                  hideClose
                   variant="panel"
                 />
               </div>
-            </div>
-          ) : null}
+            ) : null}
+          </div>
         </div>
       </Modal>
 

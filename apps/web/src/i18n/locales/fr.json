@@ -1668,6 +1668,8 @@
   "monstrecustom.texte.libre": "Texte libre…",
   "monstrecustom.texte.de": "Texte de {{label}}",
   "monstrecustom.apercu": "Aperçu",
+  "common.apercu.masquer": "Masquer l'aperçu",
+  "common.apercu.montrer": "Montrer l'aperçu",
   "md.sorts.custom": "Sorts custom",
   "md.sorts.custom.n": "Sorts custom ({{count}})",
   "md.aucun.sort.custom": "Aucun sort personnalisé",

@@ -37,6 +37,13 @@ interface Props {
   /** 'panel' docks inline (desktop side panel); 'modal' (default) is the bottom sheet. */
   variant?: 'modal' | 'panel';
   /**
+   * Masque le bouton Fermer de l'en-tête (aperçu embarqué du formulaire :
+   * l'hôte possède SON propre contrôle de repli — un ✕ ici fermerait
+   * l'aperçu sans moyen de le rouvrir, et se confondrait avec la fermeture
+   * de la modale hôte).
+   */
+  hideClose?: boolean;
+  /**
    * Bloc servi DIRECTEMENT (aperçu du formulaire de monstre personnalisé) —
    * quand il est défini, la fiche ne télécharge rien : le MD voit la fiche
    * que le traqueur ouvrira, recalculée à la frappe.
@@ -118,6 +125,7 @@ export default function MonsterStatBlock({
   slug,
   onClose,
   onDamageRolled,
+  hideClose = false,
   variant = 'modal',
   monsterOverride,
 }: Props) {
@@ -177,6 +185,7 @@ export default function MonsterStatBlock({
         onClick={onClose}
         className="btn-ghost text-ink-500 p-1 shrink-0"
         aria-label={t('bestiaire.fermer')}
+        hidden={hideClose}
       >
         <Glyph name="close" />
       </button>
