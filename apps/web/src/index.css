@@ -1229,7 +1229,10 @@ html.ts-dark .card {
   }
 }
 
-/* Glyphes SVG remplaçant les emoji : alignés sur la ligne de texte */
+/* Glyphes SVG remplaçant les emoji : coulent dans le texte comme un caractère.
+   display:inline surcharge le preflight Tailwind (svg { display:block }) —
+   sans ça, chaque glyphe casse la ligne. */
 .inline-glyph {
+  display: inline;
   vertical-align: -0.15em;
 }
