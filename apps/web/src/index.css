@@ -557,6 +557,7 @@ html.ts-dark .card {
 
 /* Bottom-sheet slide-up for mobile catalog */
 @keyframes sheet-up {
+  text-wrap: pretty;
   from {
     transform: translateY(100%);
   }
