@@ -128,7 +128,9 @@ gmTest.describe('Monstre personnalisé (MD)', () => {
         headers: { authorization: `Bearer ${seed().gm.token}` },
         signal: AbortSignal.timeout(5000),
       })
-    ).json()) as { encounter: { combatants: { id: number; monsterSlug: string; groupId: number }[] } };
+    ).json()) as {
+      encounter: { combatants: { id: number; monsterSlug: string; groupId: number }[] };
+    };
     const zalkirs = detail.encounter.combatants.filter((c) => c.monsterSlug === created.slug);
     expect(zalkirs.length).toBe(3);
     expect(new Set(zalkirs.map((c) => c.groupId)).size).toBe(1);
@@ -176,9 +178,9 @@ gmTest.describe('Monstre personnalisé (MD)', () => {
 
     // ---------- 5. Garde-fou de suppression ----------
     // La méta « Dans 1 rencontre » est visible en continu sur la carte.
-    await expect(page.getByRole('listitem').filter({ hasText: MONSTER_NAME }).first()).toContainText(
-      'Dans 1 rencontre',
-    );
+    await expect(
+      page.getByRole('listitem').filter({ hasText: MONSTER_NAME }).first(),
+    ).toContainText('Dans 1 rencontre');
     // Confirmer la suppression → 409 → modal de conséquences listant la
     // rencontre vivante ; aucune porte de sortie force ici. (ConfirmButton :
     // premier tap armé, second tap sur le libellé « — confirmer ? ».)
