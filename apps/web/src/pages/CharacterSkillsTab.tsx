@@ -36,8 +36,6 @@ import {
   type SkillKey,
   skillModifier,
   skillProficiencyLevel,
-  TOOL_CATEGORY_LABELS_FR,
-  type ToolCategory,
   toolProficiencyLevel,
 } from '@table-sync/shared';
 import type { TFunction } from 'i18next';
@@ -65,51 +63,13 @@ interface Props {
   onError: (msg: string) => void;
 }
 
-/** Get the ability score value for a given ability key from the character. */
-function abilityScore(character: Character, key: AbilityKey): number {
-  return (character[key as keyof Character] as number) ?? 10;
-}
-
-/** Read proficiency for a saving throw. */
-function saveProficiency(character: Character, ability: AbilityKey): boolean {
-  return (character.savingThrowProficiencies ?? []).includes(ability);
-}
-
-/** One term of a skill modifier breakdown ("DEX +4", "maîtrise +3"…). */
-interface BreakdownSegment {
-  text: string;
-  className: string;
-}
-
-/** Decompose a skill modifier into its colored rule terms (teaches the math). */
-function skillBreakdownSegments(
-  t: TFunction,
-  character: Character,
-  ability: AbilityKey,
-  prof: number,
-  profBonus: number,
-): BreakdownSegment[] {
-  const mod = abilityModifier(abilityScore(character, ability));
-  const segments: BreakdownSegment[] = [
-    { text: `${abilityShort(ability)} ${formatModifier(mod)}`, className: 'text-ink-600' },
-  ];
-  if (prof === 2) {
-    segments.push({
-      text: t('skills.maitrise.x2', { mod: formatModifier(profBonus * 2) }),
-      className: 'text-gold-700',
-    });
-  } else if (prof === 1) {
-    segments.push({
-      text: t('skills.maitrise', { mod: formatModifier(profBonus) }),
-      className: 'text-blood-500',
-    });
-  } else {
-    segments.push({ text: t('skills.sans.maitrise'), className: 'text-ink-400' });
-  }
-  return segments;
-}
-
-const TOOL_CATEGORIES = Object.keys(TOOL_CATEGORY_LABELS_FR) as ToolCategory[];
+import {
+  type BreakdownSegment,
+  TOOL_CATEGORIES,
+  abilityScore,
+  saveProficiency,
+  skillBreakdownSegments,
+} from './CharacterSkillsTab-lib';
 
 export default function CharacterSkillsTab({ character, charId, onSaved, onError }: Props) {
   const { t } = useTranslation();
