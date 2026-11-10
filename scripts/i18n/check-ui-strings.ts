@@ -55,6 +55,14 @@ for (const file of walk(ROOT)) {
     // lecteur du rail et l'échelle du MD la lisent partout), pas du texte
     // affiché — le libellé UI « Initiative » nu, lui, continue de compter.
     .replace(/\.initiative\b/g, '.')
+    // Noms de glyphes SVG (Glyph.tsx) : `name="concentration"`, clé du
+    // registre `concentration: (` et membre de l'union GlyphName — ce sont
+    // des identifiants d'icône (comme .initiative ou id: de tuto), jamais
+    // du texte affiché.
+    .replace(/\bname="[a-z-]+"/g, 'name=""')
+    .replace(/^\s*\| '[a-z-]+'(;)?\s*$/gm, "| '';")
+    .replace(/'\{\{[^}]*\}\}'/g, "''")
+    .replace(/^([ \t]+)[a-z][a-z-]*: \($/gm, '$1: (')
     // Visite guidée : les ids d'étapes ({ id: 'portage', … }) et les cibles
     // tuto('stats-portage') / data-tuto="stats-portage" sont des identifiants
     // de logique (docs/tutorial-script.md), jamais du texte affiché.
