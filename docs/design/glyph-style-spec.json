@@ -81,5 +81,10 @@
     "snow",
     "fog"
   ],
-  "generated": "2026-11-10"
+  "generated": "2026-11-10",
+  "statePairs": {
+    "spark": "spark-outline",
+    "star": "star-outline",
+    "technique": "m\u00eame path \u2014 plein vs contour (anti-flicker)"
+  }
 }
