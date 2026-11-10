@@ -234,17 +234,22 @@ export async function wildShapeRoutes(app: FastifyInstance) {
         .select(BEAST_COLS)
         .from(monsters)
         .where(
-          includeElementals
-            ? or(
-                eq(monsters.type, 'Bête'),
-                inArray(monsters.slug, [
-                  'elementaire-de-l-air',
-                  'elementaire-de-l-eau',
-                  'elementaire-de-la-terre',
-                  'elementaire-du-feu',
-                ]),
-              )
-            : eq(monsters.type, 'Bête'),
+          // Anti-but PR2 : la forme sauvage reste le bestiaire SRD — les
+          // monstres personnalisés du groupe n'y entrent jamais.
+          and(
+            eq(monsters.origin, 'srd'),
+            includeElementals
+              ? or(
+                  eq(monsters.type, 'Bête'),
+                  inArray(monsters.slug, [
+                    'elementaire-de-l-air',
+                    'elementaire-de-l-eau',
+                    'elementaire-de-la-terre',
+                    'elementaire-du-feu',
+                  ]),
+                )
+              : eq(monsters.type, 'Bête'),
+          ),
         )
         .orderBy(monsters.challengeRating, sql`${monsters.nameFr} COLLATE NOCASE`)
         .all() as BeastRow[];

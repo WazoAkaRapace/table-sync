@@ -6029,6 +6029,8 @@ export interface Monster {
   traits: MonsterAction[];
   actions: MonsterAction[];
   legendaryActions: MonsterAction[];
+  /** 'custom' = créé par le MD du groupe (badge « monstre de la table »). */
+  origin?: 'srd' | 'custom';
 }
 
 /** Light row for the picker/search (no prose). */
@@ -6041,6 +6043,13 @@ export interface MonsterSummary {
   challengeRating: number;
   armorClass: number;
   hitPoints: number;
+  /** 'custom' = créé par le MD du groupe (badge « monstre de la table »). */
+  origin?: 'srd' | 'custom';
+  /** Présent sur la liste des monstres personnalisés du pupitre (MD). */
+  hitDice?: string | null;
+  xp?: number;
+  /** Rencontres setup/actives référençant ce slug (garde-fou suppression). */
+  encounterCount?: number;
 }
 
 export interface MonsterSearchQuery {
@@ -6066,6 +6075,98 @@ export function formatCR(cr: number): string {
   if (cr === 0.25) return '1/4';
   if (cr === 0.5) return '1/2';
   return String(cr);
+}
+
+// ---------- Monstres personnalisés (PR2 « Contenus personnalisés ») ----------
+
+/** Types SRD FR proposés à la création d'un monstre personnalisé. */
+export const MONSTER_TYPES_FR = [
+  'Aberration',
+  'Bête',
+  'Céleste',
+  'Créature artificielle',
+  'Dragon',
+  'Élémentaire',
+  'Fée',
+  'Fiélon',
+  'Géant',
+  'Humanoïde',
+  'Monstruosité',
+  'Mort-vivant',
+  'Nuée',
+  'Plante',
+  'Vase',
+] as const;
+
+/** Valeurs de FP saisissables (SRD 5.1 : 0, 1/8, 1/4, 1/2 puis 1 à 30). */
+export const MONSTER_CR_VALUES: readonly number[] = [
+  0,
+  0.125,
+  0.25,
+  0.5,
+  ...Array.from({ length: 30 }, (_, i) => i + 1),
+];
+
+/**
+ * Table PX par FP — SRD 5.1 (MM 2014, « Experience Points by Challenge
+ * Rating »). Les PX d'un monstre personnalisé en sont DÉRIVÉS, jamais saisis.
+ */
+export const MONSTER_XP_BY_CR: Readonly<Record<string, number>> = {
+  '0': 10,
+  '0.125': 25,
+  '0.25': 50,
+  '0.5': 100,
+  '1': 200,
+  '2': 450,
+  '3': 700,
+  '4': 1100,
+  '5': 1800,
+  '6': 2300,
+  '7': 2900,
+  '8': 3900,
+  '9': 5000,
+  '10': 5900,
+  '11': 7200,
+  '12': 8400,
+  '13': 10000,
+  '14': 11500,
+  '15': 13000,
+  '16': 15000,
+  '17': 18000,
+  '18': 20000,
+  '19': 22000,
+  '20': 25000,
+  '21': 33000,
+  '22': 41000,
+  '23': 50000,
+  '24': 62000,
+  '25': 75000,
+  '26': 90000,
+  '27': 105000,
+  '28': 120000,
+  '29': 135000,
+  '30': 155000,
+};
+
+/** PX dérivés d'un FP (SRD 5.1) — FP inconnu → 0. */
+export function monsterXpForCR(cr: number): number {
+  return MONSTER_XP_BY_CR[String(cr)] ?? 0;
+}
+
+/**
+ * Bonus de maîtrise d'un monstre, DÉRIVÉ de son FP (SRD 5.1 : FP 0-4 → +2,
+ * 5-8 → +3, 9-12 → +4, 13-16 → +5, 17-20 → +6, 21-24 → +7, 25-28 → +8,
+ * 29-30 → +9) — jamais saisi.
+ */
+export function monsterProficiencyBonus(cr: number): number {
+  if (cr < 5) return 2;
+  if (cr < 9) return 3;
+  if (cr < 13) return 4;
+  if (cr < 17) return 5;
+  if (cr < 21) return 6;
+  if (cr < 25) return 7;
+  if (cr < 29) return 8;
+  return 9;
 }
 
 // ---------- Combat (initiative tracker) ----------

@@ -164,6 +164,42 @@ export const CustomItemBody = Type.Object({
 /** PATCH /api/items/:id — même contrat, champs tous partiels. */
 export const UpdateItemBody = CustomItemBody;
 
+// ---------- Schémas : monstres personnalisés ----------
+
+/**
+ * POST /api/parties/:partyId/monsters + PATCH /api/monsters/:slug — structure
+ * grossière seulement (gabarit CustomItemBody) : les règles de VALEUR (nom
+ * requis, types/tailles SRD, bornes CA/PV/caractéristiques, formule de dés de
+ * vie, FP de la table SRD) restent dans validateMonsterFields de
+ * routes/monsters.ts, messages métier FR à l'appui. Les objets composites
+ * (speed, abilities, traits, actions, listes d'immunités) passent par
+ * Type.Unknown() : la route les valide champ à champ (coerceTypes 'array'
+ * transformerait un scalaire en tableau et court-circuiterait ses checks).
+ */
+export const CustomMonsterBody = Type.Object({
+  nameFr: Type.Optional(Type.String()),
+  type: Type.Optional(Type.String()),
+  size: Type.Optional(Type.String()),
+  alignment: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  armorClass: Type.Optional(Type.Unknown()),
+  armorDesc: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  hitPoints: Type.Optional(Type.Unknown()),
+  hitDice: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  speed: Type.Optional(Type.Unknown()),
+  abilities: Type.Optional(Type.Unknown()),
+  challengeRating: Type.Optional(Type.Unknown()),
+  traits: Type.Optional(Type.Unknown()),
+  actions: Type.Optional(Type.Unknown()),
+  damageResistances: Type.Optional(Type.Unknown()),
+  damageImmunities: Type.Optional(Type.Unknown()),
+  conditionImmunities: Type.Optional(Type.Unknown()),
+  senses: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  languages: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+});
+
+/** PATCH /api/monsters/:slug — même contrat, champs tous partiels. */
+export const UpdateMonsterBody = CustomMonsterBody;
+
 // ---------- Mapping erreur de validation → message métier i18n ----------
 
 /**
@@ -197,6 +233,9 @@ const VALIDATION_MESSAGES: Record<string, string | Record<string, string>> = {
     name: 'name cannot be empty',
     encumbranceMode: 'invalid encumbranceMode',
   },
+  // monstres personnalisés
+  'POST /api/parties/:partyId/monsters': 'nom du monstre requis',
+  'PATCH /api/monsters/:slug': 'requête invalide',
 };
 
 /** Une entrée de err.validation (ajv) — seul instancePath nous intéresse. */

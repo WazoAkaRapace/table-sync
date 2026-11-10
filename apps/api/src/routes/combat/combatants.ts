@@ -63,6 +63,14 @@ export async function combatantRoutes(app: FastifyInstance) {
           .code(404)
           .send({ error: apiMsg(req, 'Monstre introuvable dans le catalogue') });
 
+      // Garde de périmètre (PR2 monstres personnalisés) : un custom vit dans
+      // son groupe — il n'est pas ajoutable à la rencontre d'une autre table.
+      if (monster.origin === 'custom' && monster.party_id !== enc.party_id) {
+        return reply
+          .code(404)
+          .send({ error: apiMsg(req, 'Monstre introuvable dans le catalogue') });
+      }
+
       const abilities = monster.abilities_json ? JSON.parse(monster.abilities_json) : { dex: 10 };
       const dexMod = abilityModifier(abilities.dex ?? 10);
       const count = Math.max(1, Math.min(body.count ?? 1, 50));

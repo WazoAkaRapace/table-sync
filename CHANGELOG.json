@@ -3,6 +3,19 @@
     "version": null,
     "sha": null,
     "date": "2026-11-10",
+    "title": "monstres personnalisés",
+    "items": [
+      "Le MD dresse ses propres créatures dans un onglet du pupitre, avec bloc de stats complet et aperçu en direct.",
+      "Un monstre de la table rejoint le bestiaire du traqueur et s'ajoute aux rencontres comme un monstre officiel.",
+      "Les points de vie, l'initiative et le groupe se lancent à l'ajout, et le nom peut être masqué aux joueurs.",
+      "Les points d'expérience et le bonus de maîtrise se déduisent du facteur de puissance, sans saisie.",
+      "Un monstre utilisé par une rencontre en cours ne peut pas être supprimé par erreur."
+    ]
+  },
+  {
+    "version": null,
+    "sha": null,
+    "date": "2026-11-10",
     "title": "armures personnalisées",
     "items": [
       "Les armures inventées par la table se créent avec un vrai type (légère, intermédiaire, lourde, bouclier) et une CA de base.",

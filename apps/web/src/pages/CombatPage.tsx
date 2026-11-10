@@ -614,11 +614,12 @@ export default function CombatPage() {
         <NewEncounterForm onCreate={createEncounter} />
       </Modal>
 
-      {/* Add monster modal */}
+      {/* Add monster modal — scopé au groupe : SRD + monstres de la table */}
       <AddMonsterModal
         open={showAddMonster}
         onClose={() => setShowAddMonster(false)}
         onAdd={addMonster}
+        partyId={partyId}
       />
 
       {/* Add player modal */}

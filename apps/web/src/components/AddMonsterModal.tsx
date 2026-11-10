@@ -11,15 +11,18 @@ import { useTranslation } from 'react-i18next';
 import api from '../api';
 import { monsterSizeLabel } from '../i18n/labels';
 import { Glyph } from './Glyph';
+import { TableBadge } from './TableBadge';
 import { Modal, NumberField } from './ui';
 
 interface Props {
   open: boolean;
   onClose: () => void;
   onAdd: (slug: string, count: number, name: string, nameHidden: boolean) => void;
+  /** Scope groupe : mêle le bestiaire SRD et les monstres de la table. */
+  partyId?: string;
 }
 
-export default function AddMonsterModal({ open, onClose, onAdd }: Props) {
+export default function AddMonsterModal({ open, onClose, onAdd, partyId }: Props) {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [results, setResults] = useState<MonsterSummary[]>([]);
@@ -38,7 +41,7 @@ export default function AddMonsterModal({ open, onClose, onAdd }: Props) {
     const t = setTimeout(async () => {
       try {
         const res = await api.get('/api/monsters', {
-          params: { search: search.trim(), limit: 30 },
+          params: { search: search.trim(), limit: 30, ...(partyId ? { partyId } : {}) },
         });
         setResults(res.data.monsters || []);
       } catch {
@@ -48,7 +51,7 @@ export default function AddMonsterModal({ open, onClose, onAdd }: Props) {
       }
     }, 300);
     return () => clearTimeout(t);
-  }, [search]);
+  }, [search, partyId]);
 
   const handleAdd = useCallback(() => {
     if (!selected) return;
@@ -93,9 +96,12 @@ export default function AddMonsterModal({ open, onClose, onAdd }: Props) {
                 className="w-full text-left p-3 rounded-lg border border-parchment-200 hover:border-blood-300 hover:bg-blood-50 transition-colors"
               >
                 <div className="flex items-center justify-between">
-                  <div>
-                    <span className="font-medium">{m.name}</span>
-                    <span className="text-xs text-ink-400 ml-2">{m.type}</span>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="font-medium truncate">{m.name}</span>
+                    {m.origin === 'custom' && (
+                      <TableBadge label={t('bestiaire.monstre.de.la.table')} />
+                    )}
+                    <span className="text-xs text-ink-400 ml-1 shrink-0">{m.type}</span>
                   </div>
                   <div className="text-xs text-ink-500 flex gap-3">
                     <span>
@@ -115,8 +121,13 @@ export default function AddMonsterModal({ open, onClose, onAdd }: Props) {
         <>
           <div className="card p-4 bg-parchment-50">
             <div className="flex items-start justify-between">
-              <div>
-                <h3 className="section-title">{selected.name}</h3>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 min-w-0">
+                  <h3 className="section-title truncate">{selected.name}</h3>
+                  {selected.origin === 'custom' && (
+                    <TableBadge label={t('bestiaire.monstre.de.la.table')} />
+                  )}
+                </div>
                 <p className="text-sm text-ink-500">
                   {selected.type} · {monsterSizeLabel(selected.size)} · CR{' '}
                   {formatCR(selected.challengeRating)}

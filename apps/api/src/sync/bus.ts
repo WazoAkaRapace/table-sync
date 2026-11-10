@@ -43,6 +43,10 @@ export interface SyncEvent {
     // du MD ne se recharge plus sur une écriture PNJ, et réciproquement)
     | 'npcs'
     | 'custom-item'
+    // Monstres personnalisés — onglet « Monstres custom » du pupitre MD et
+    // recherche bestiaire du traqueur (distinct de 'custom-item'/'npcs' :
+    // chaque onglet ne se réveille que sur ses propres écritures)
+    | 'custom-monster'
     | 'join'
     | 'remove'
     | 'ban'

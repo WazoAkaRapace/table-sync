@@ -675,12 +675,22 @@ export const monsters = sqliteTable(
     traitsJson: text('traits_json'),
     actionsJson: text('actions_json'),
     legendaryActionsJson: text('legendary_actions_json'),
+    /** Provenance éditoriale du seed (« Livre des monstres », « AideDD », …)
+     *  — NE PAS confondre avec `origin` (srd vs custom de la table). */
     source: text('source'),
+    // ----- monstres personnalisés (PR2) — `origin` car `source` est pris -----
+    /** 'srd' = catalogue seedé ; 'custom' = créé par le MD du groupe. */
+    origin: text('origin').notNull().default('srd'),
+    /** Groupe propriétaire du custom (NULL = SRD/global). */
+    partyId: integer('party_id').references(() => parties.id, { onDelete: 'cascade' }),
+    /** Auteur du custom (MD — tracé). */
+    createdBy: integer('created_by').references(() => users.id, { onDelete: 'set null' }),
   },
   (t) => [
     index('idx_monsters_name_fr').on(t.nameFr),
     index('idx_monsters_type').on(t.type),
     index('idx_monsters_cr').on(t.challengeRating),
+    index('idx_monsters_party').on(t.partyId),
   ],
 );
 

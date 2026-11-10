@@ -26,6 +26,7 @@ import {
 } from '../i18n/labels';
 import { Glyph } from './Glyph';
 import SpellDetailSheet from './SpellDetailSheet';
+import { TableBadge } from './TableBadge';
 
 interface Props {
   open: boolean;
@@ -35,6 +36,12 @@ interface Props {
   onDamageRolled?: (total: number, source: string) => void;
   /** 'panel' docks inline (desktop side panel); 'modal' (default) is the bottom sheet. */
   variant?: 'modal' | 'panel';
+  /**
+   * Bloc servi DIRECTEMENT (aperçu du formulaire de monstre personnalisé) —
+   * quand il est défini, la fiche ne télécharge rien : le MD voit la fiche
+   * que le traqueur ouvrira, recalculée à la frappe.
+   */
+  monsterOverride?: Monster | null;
 }
 
 /** Light spell row from GET /api/spells/light */
@@ -112,13 +119,22 @@ export default function MonsterStatBlock({
   onClose,
   onDamageRolled,
   variant = 'modal',
+  monsterOverride,
 }: Props) {
   const { t } = useTranslation();
   const [monster, setMonster] = useState<Monster | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!open || !slug) return;
+    if (!open) return;
+    // Aperçu embarqué (formulaire MD) : le bloc vient de la prop, pas du
+    // catalogue — aucun fetch, recalcul immédiat à la frappe.
+    if (monsterOverride !== undefined) {
+      setMonster(monsterOverride);
+      setLoading(false);
+      return;
+    }
+    if (!slug) return;
     setLoading(true);
     setMonster(null);
     api
@@ -126,7 +142,7 @@ export default function MonsterStatBlock({
       .then((res) => setMonster(res.data.monster))
       .catch(() => setMonster(null))
       .finally(() => setLoading(false));
-  }, [open, slug]);
+  }, [open, slug, monsterOverride]);
 
   // Detect spellcasting entries (Incantation / Incantation innée)
   const hasSpellcasting =
@@ -150,8 +166,11 @@ export default function MonsterStatBlock({
 
   const header = (
     <div className="flex items-center justify-between p-4 border-b border-parchment-200 shrink-0">
-      <h2 className="section-title truncate">
-        {monster?.name ?? (loading ? t('app.chargement') : t('monster.one'))}
+      <h2 className="section-title truncate flex items-center gap-2">
+        <span className="truncate">
+          {monster?.name ?? (loading ? t('app.chargement') : t('monster.one'))}
+        </span>
+        {monster?.origin === 'custom' && <TableBadge label={t('bestiaire.monstre.de.la.table')} />}
       </h2>
       <button
         type="button"
