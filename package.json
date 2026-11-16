@@ -49,7 +49,7 @@
     "drizzle-orm": "^0.45.3",
     "jscpd": "^5.4.3",
     "oxfmt": "^0.77.0",
-    "oxlint": "^1.92.0",
+    "oxlint": "^1.93.0",
     "playwright": "^1.65.0",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
