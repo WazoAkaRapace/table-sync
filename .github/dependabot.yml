@@ -72,10 +72,12 @@ updates:
       prefix: "chore(web-deps)"
     ignore:
       # axios 1.21.0 (27/10/2026) casse la session par cookies et la synchro
-      # WebSocket temps réel — 1.20.0 épinglé exact dans apps/web. Une 1.22+
-      # sera reproposée par le bot pour re-test.
+      # WebSocket temps réel — 1.20.0 épinglé exact dans apps/web. 1.21.1 (CVE
+      # follow-redirects) ne corrige pas la régression : ligne 1.21.x bloquée
+      # par RANGE (le motif "1.21.x" ne matche pas, d'où la PR #313 passée).
+      # Une 1.22+ sera reproposée par le bot pour re-test.
       - dependency-name: "axios"
-        versions: ["1.21.x"]
+        versions: [">= 1.21.0, < 1.22.0"]
 
   # Shared workspace
   - package-ecosystem: "npm"
